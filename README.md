@@ -1,5 +1,7 @@
 # Vulkan Game Editor
 
+A game editor written in C++17 using the QT framework.
+
 ## Terminology
 
 ### Action
