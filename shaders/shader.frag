@@ -13,8 +13,8 @@ layout(location = 0) out vec4 outColor;
 void main() {
     vec2 sampleLocation = vec2(clamp(fragTexCoord.x, rect.x, rect.z), clamp(fragTexCoord.y, rect.w, rect.y));
     // vec2 sampleLocation = fragTexCoord;
-    // vec4 color = texture(texSampler, sampleLocation) * fragColor;
-    vec4 color = texture(texSampler, sampleLocation);
+    vec4 color = texture(texSampler, sampleLocation) * fragColor;
+    // vec4 color = texture(texSampler, sampleLocation);
     // color[3] = fragOpacity;
     outColor = color;
     // outColor = vec4(fragOpacity, fragOpacity, fragOpacity, 1.0f);

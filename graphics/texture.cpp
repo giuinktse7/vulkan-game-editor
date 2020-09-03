@@ -64,8 +64,8 @@ void Texture::init(uint32_t width, uint32_t height, uint8_t *pixels, Texture::De
 
   Buffer::copyToMemory(stagingBuffer.deviceMemory, pixels, imageSize);
 
-  // VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
-  VkFormat format = VK_FORMAT_B8G8R8A8_SRGB;
+  // QVulkanWindow works correctly with UNORM. If not using Vulkan, VK_FORMAT_B8G8R8A8_SRGB works.
+  VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
 
   createImage(width,
               height,
