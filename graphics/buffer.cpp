@@ -35,10 +35,12 @@ BoundBuffer::~BoundBuffer()
   if (buffer != VK_NULL_HANDLE)
   {
     g_vk->vkDestroyBuffer(g_window->device(), buffer, nullptr);
+    buffer = VK_NULL_HANDLE;
   }
   if (deviceMemory != VK_NULL_HANDLE)
   {
     g_vk->vkFreeMemory(g_window->device(), deviceMemory, nullptr);
+    deviceMemory = VK_NULL_HANDLE;
   }
 }
 

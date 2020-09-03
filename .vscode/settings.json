@@ -95,7 +95,10 @@
     "qsize": "cpp",
     "qvulkanwindow": "cpp",
     "compare": "cpp",
-    "qvulkaninstance": "cpp"
+    "qvulkaninstance": "cpp",
+    "qmenubar": "cpp",
+    "qmenu": "cpp",
+    "qplaintextedit": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

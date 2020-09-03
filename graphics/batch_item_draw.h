@@ -44,7 +44,6 @@ struct Batch
 	};
 
 	Batch();
-	~Batch();
 	BoundBuffer buffer;
 	BoundBuffer stagingBuffer;
 
@@ -92,14 +91,14 @@ struct Batch
 	void mapStagingBuffer();
 	void unmapStagingBuffer();
 
-    bool isValid() const
+	bool isValid() const
 	{
 		return this->valid;
 	}
 
 	void copyStagingToDevice(VkCommandBuffer commandBuffer);
 
-    bool canHold(uint32_t vertexCount) const
+	bool canHold(uint32_t vertexCount) const
 	{
 		return (this->vertexCount + vertexCount) * sizeof(Vertex) < BatchDeviceSize;
 	}

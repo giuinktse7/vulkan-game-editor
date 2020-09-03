@@ -63,7 +63,7 @@ struct FrameData
 	VkFramebuffer frameBuffer = nullptr;
 	VkCommandBuffer commandBuffer = nullptr;
 	BoundBuffer uniformBuffer{};
-	VkDescriptorSet descriptorSet = nullptr;
+	VkDescriptorSet uboDescriptorSet = nullptr;
 
 	BatchDraw batchDraw{};
 };
@@ -87,11 +87,6 @@ public:
 
 	void startNextFrame() override;
 
-	void initialize();
-	void recreate();
-
-	void recordFrame(uint32_t currentFrame);
-
 	VkDescriptorPool &getDescriptorPool()
 	{
 		return descriptorPool;
@@ -108,26 +103,30 @@ public:
 	}
 
 private:
+	bool debug = false;
+	bool initialized = false;
 	MapView *mapView;
 	VulkanWindow &window;
 	std::array<FrameData, 3> frames;
+
+	VkFormat colorFormat;
 
 	FrameData *currentFrame;
 
 	VkRenderPass renderPass;
 
-	VkCommandPool commandPool;
-	VkDescriptorPool descriptorPool;
+	VkDescriptorPool descriptorPool = 0;
 
 	VkPipelineLayout pipelineLayout;
-	VkPipeline graphicsPipeline = {};
+	VkPipeline graphicsPipeline = 0;
 
-	VkDescriptorSetLayout frameDescriptorSetLayout;
+	VkDescriptorSetLayout uboDescriptorSetLayout = 0;
 	VkDescriptorSetLayout textureDescriptorSetLayout;
+
+	std::vector<Texture *> activeTextures;
 
 	void createRenderPass();
 	void createGraphicsPipeline();
-	void createCommandPool();
 	void createUniformBuffers();
 	void createDescriptorPool();
 	void createDescriptorSetLayouts();
@@ -136,7 +135,6 @@ private:
 
 	void updateUniformBuffer();
 
-	void startCommandBuffer();
 	void beginRenderPass();
 
 	void drawMap();
@@ -148,8 +146,6 @@ private:
 	void drawItem(ObjectDrawInfo &info);
 
 	void drawBatches();
-
-	void cleanup();
 
 	void drawTestRectangle();
 };

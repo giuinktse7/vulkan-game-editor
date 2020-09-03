@@ -17,7 +17,7 @@
 #include "gui/vulkan_window.h"
 
 constexpr int GROUND_FLOOR = 7;
-constexpr VkClearColorValue ClearColor = {{1.0f, 1.0f, 1.0f, 1.0f}};
+constexpr VkClearColorValue ClearColor = {{0.0f, 0.0f, 0.0f, 1.0f}};
 
 namespace colors
 {
@@ -36,64 +36,20 @@ MapRenderer::MapRenderer(VulkanWindow &window)
 
 void MapRenderer::initResources()
 {
+  std::cout << "MapRenderer::initResources" << std::endl;
+  std::cout << window.device() << std::endl;
+
   g_vk = window.vulkanInstance()->deviceFunctions(window.device());
   g_vkf = window.vulkanInstance()->functions();
   g_window = &window;
-
-  initialize();
-}
-void MapRenderer::initSwapChainResources()
-{
-  const QSize sz = window.swapChainImageSize();
-  mapView->setViewportSize(sz.width(), sz.height());
-}
-
-void MapRenderer::releaseSwapChainResources()
-{
-  mapView->setViewportSize(0, 0);
-}
-
-void MapRenderer::releaseResources()
-{
-  g_vk->vkDestroyDescriptorSetLayout(window.device(), frameDescriptorSetLayout, nullptr);
-  g_vk->vkDestroyDescriptorSetLayout(window.device(), textureDescriptorSetLayout, nullptr);
-
-  g_vk->vkDestroyDescriptorPool(window.device(), descriptorPool, nullptr);
-
-  g_vk->vkDestroyCommandPool(window.device(), commandPool, nullptr);
-
-  g_vk->vkDestroyPipeline(window.device(), graphicsPipeline, nullptr);
-  g_vk->vkDestroyPipelineLayout(window.device(), pipelineLayout, nullptr);
-  g_vk->vkDestroyRenderPass(window.device(), renderPass, nullptr);
-  this->renderPass = VK_NULL_HANDLE;
-
-  for (auto &frame : frames)
-  {
-    frame.uniformBuffer = {};
-    frame.batchDraw = {};
-  }
-}
-void MapRenderer::startNextFrame()
-{
-  // std::cout << "MapRenderer::startNextFrame()" << std::endl;
-
-  // std::cout << "window.currentFrame(): " << window.currentFrame() << std::endl;
-  recordFrame(window.currentFrame());
-
-  window.frameReady();
-  window.requestUpdate();
-}
-
-void MapRenderer::initialize()
-{
-  std::cout << "Begin MapRenderer::initialize" << std::endl;
-  currentFrame = &frames.front();
+  colorFormat = window.colorFormat();
 
   createRenderPass();
+
+  currentFrame = &frames.front();
+
   createDescriptorSetLayouts();
   createGraphicsPipeline();
-  // createFrameBuffers();
-  createCommandPool();
   createUniformBuffers();
   createDescriptorPool();
   createDescriptorSets();
@@ -124,11 +80,85 @@ void MapRenderer::initialize()
   VulkanHelpers::endSingleTimeCommands(commandBuffer);
 
   g_vk->vkUnmapMemory(window.device(), indexStagingBuffer.deviceMemory);
-  std::cout << "End MapRenderer::initialize" << std::endl;
+
+  std::cout << "End MapRenderer::initResources" << std::endl;
+}
+
+void MapRenderer::initSwapChainResources()
+{
+  const QSize sz = window.swapChainImageSize();
+  mapView->setViewportSize(sz.width(), sz.height());
+}
+
+void MapRenderer::releaseSwapChainResources()
+{
+  mapView->setViewportSize(0, 0);
+}
+
+void MapRenderer::releaseResources()
+{
+  std::cout << "MapRenderer::releaseResources" << std::endl;
+  debug = true;
+  g_vk->vkDestroyDescriptorSetLayout(window.device(), uboDescriptorSetLayout, nullptr);
+  g_vk->vkDestroyDescriptorSetLayout(window.device(), textureDescriptorSetLayout, nullptr);
+
+  g_vk->vkDestroyDescriptorPool(window.device(), descriptorPool, nullptr);
+
+  g_vk->vkDestroyPipeline(window.device(), graphicsPipeline, nullptr);
+  g_vk->vkDestroyPipelineLayout(window.device(), pipelineLayout, nullptr);
+  g_vk->vkDestroyRenderPass(window.device(), renderPass, nullptr);
+  this->renderPass = VK_NULL_HANDLE;
+  this->indexBuffer = {};
+
+  Texture::Descriptor descriptor;
+  descriptor.layout = textureDescriptorSetLayout;
+  descriptor.pool = descriptorPool;
+
+  for (Texture *texture : activeTextures)
+  {
+    texture->releaseVulkanResources();
+  }
+
+  Texture::releaseSolidColorTextures();
+
+  for (auto &frame : frames)
+  {
+    frame.uniformBuffer = {};
+    frame.batchDraw = BatchDraw();
+  }
+}
+
+void MapRenderer::startNextFrame()
+{
+  // std::cout << "MapRenderer::startNextFrame()" << std::endl;
+
+  // std::cout << "window.currentFrame(): " << window.currentFrame() << std::endl;
+  this->currentFrame = &frames[window.currentFrame()];
+  currentFrame->commandBuffer = g_window->currentCommandBuffer();
+  currentFrame->frameBuffer = g_window->currentFramebuffer();
+  currentFrame->batchDraw.commandBuffer = currentFrame->commandBuffer;
+
+  updateUniformBuffer();
+
+  drawMap();
+
+  currentFrame->batchDraw.prepareDraw();
+
+  beginRenderPass();
+  g_vk->vkCmdBindPipeline(currentFrame->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
+  drawBatches();
+  g_vk->vkCmdEndRenderPass(currentFrame->commandBuffer);
+
+  window.frameReady();
+  window.requestUpdate();
 }
 
 void MapRenderer::drawBatches()
 {
+  if (this->debug)
+  {
+  }
   const QSize size = window.swapChainImageSize();
 
   VkViewport viewport;
@@ -148,7 +178,7 @@ void MapRenderer::drawBatches()
   VkDeviceSize offsets[] = {0};
   VkBuffer buffers[] = {nullptr};
 
-  VkDescriptorSet currentDescriptorSet = currentFrame->descriptorSet;
+  VkDescriptorSet currentDescriptorSet = currentFrame->uboDescriptorSet;
 
   std::array<VkDescriptorSet, 2> descriptorSets = {
       currentDescriptorSet,
@@ -192,43 +222,6 @@ void MapRenderer::drawBatches()
   }
 }
 
-void MapRenderer::recordFrame(uint32_t frameIndex)
-{
-
-  this->currentFrame = &frames[frameIndex];
-  currentFrame->commandBuffer = g_window->currentCommandBuffer();
-  currentFrame->frameBuffer = g_window->currentFramebuffer();
-  currentFrame->batchDraw.commandBuffer = currentFrame->commandBuffer;
-
-  // g_vk->vkResetCommandBuffer(currentFrame->commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-
-  // VkCommandBufferBeginInfo beginInfo = {};
-  // beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  // beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-  // if (g_vk->vkBeginCommandBuffer(currentFrame->commandBuffer, &beginInfo) != VK_SUCCESS)
-  // {
-  //   throw std::runtime_error("failed to begin recording command buffer");
-  // }
-
-  updateUniformBuffer();
-
-  drawMap();
-
-  currentFrame->batchDraw.prepareDraw();
-
-  beginRenderPass();
-  g_vk->vkCmdBindPipeline(currentFrame->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
-  drawBatches();
-  g_vk->vkCmdEndRenderPass(currentFrame->commandBuffer);
-
-  // if (g_vk->vkEndCommandBuffer(currentFrame->commandBuffer) != VK_SUCCESS)
-  // {
-  //   ABORT_PROGRAM("failed to record command buffer");
-  // }
-}
-
 void MapRenderer::drawMap()
 {
   bool isSelectionMoving = mapView->selection.moving;
@@ -241,43 +234,6 @@ void MapRenderer::drawMap()
 
   int startZ = aboveGround ? GROUND_FLOOR : MAP_LAYERS - 1;
   int endZ = floor;
-
-  // for (int mapZ = startZ; mapZ >= endZ; --mapZ)
-  // {
-  //   int x1 = mapRect.x1 & ~3;
-  //   int x2 = (mapRect.x2 & ~3) + 4;
-
-  //   int y1 = mapRect.y1 & ~3;
-  //   int y2 = (mapRect.y2 & ~3) + 4;
-
-  //   for (int mapX = x1; mapX <= x2; mapX += 4)
-  //   {
-  //     for (int mapY = y1; mapY <= y2; mapY += 4)
-  //     {
-  //       quadtree::Node *node = mapView->getMap()->getLeafUnsafe(mapX, mapY);
-  //       if (!node)
-  //         continue;
-
-  //       for (int x = 0; x < 4; ++x)
-  //       {
-  //         for (int y = 0; y < 4; ++y)
-  //         {
-  //           TileLocation *tile = node->getTile(mapX + x, mapY + y, mapZ);
-  //           if (tile && tile->hasTile())
-  //           {
-  //             /* Avoid drawing the tile only if the whole tile is selected
-  //                and the selection is moving
-  //             */
-  //             if (!(tile->getTile()->allSelected() && isSelectionMoving))
-  //             {
-  //               drawTile(*tile, mapView, ItemDrawFlags::DrawSelected);
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
 
   Position from{mapRect.x1, mapRect.y1, startZ};
   Position to{mapRect.x2, mapRect.y2, endZ};
@@ -315,17 +271,23 @@ void MapRenderer::drawMap()
     drawSelectionRectangle();
   }
 
-  drawTestRectangle();
+  // drawTestRectangle();
 }
 
 void MapRenderer::drawTestRectangle()
 {
+  Texture::Descriptor descriptor;
+  descriptor.layout = textureDescriptorSetLayout;
+  descriptor.pool = descriptorPool;
+
   RectangleDrawInfo info;
 
-  info.from = MapPosition(10, 10).worldPos();
+  info.from = MapPosition(5, 5).worldPos();
   info.to = MapPosition(12, 12).worldPos();
-  info.texture = &Texture::getOrCreateSolidTexture(SolidColor::Test, {textureDescriptorSetLayout, descriptorPool});
-  info.color = colors::Default;
+  Texture *texture = &Texture::getOrCreateSolidTexture(SolidColor::Blue, descriptor);
+  texture->update(descriptor);
+  info.texture = texture;
+  info.color = colors::SeeThrough;
 
   currentFrame->batchDraw.addRectangle(info);
 }
@@ -512,6 +474,11 @@ void MapRenderer::drawItem(ObjectDrawInfo &info)
   if (info.textureInfo.atlas->isCompressed())
   {
     info.textureInfo.atlas->decompressTexture(descriptor);
+    activeTextures.emplace_back(info.textureInfo.atlas->getTexture());
+  }
+  else
+  {
+    info.textureInfo.atlas->getTexture()->update(descriptor);
   }
 
   currentFrame->batchDraw.addItem(info);
@@ -551,63 +518,10 @@ void MapRenderer::beginRenderPass()
   g_vk->vkCmdBeginRenderPass(currentFrame->commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void MapRenderer::startCommandBuffer()
-{
-  VkCommandBufferAllocateInfo allocInfo = {};
-  allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  allocInfo.commandPool = commandPool;
-  allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  allocInfo.commandBufferCount = 1;
-
-  VkCommandBuffer commandBuffer = currentFrame->commandBuffer;
-
-  if (g_vk->vkAllocateCommandBuffers(window.device(), &allocInfo, &commandBuffer) != VK_SUCCESS)
-  {
-    throw std::runtime_error("failed to allocate command buffer");
-  }
-}
-
-void MapRenderer::cleanup()
-{
-  // for (auto &frame : frames)
-  // {
-  //   g_vk->vkDestroyFramebuffer(window.device(), frame.frameBuffer, nullptr);
-  //   frame.frameBuffer = VK_NULL_HANDLE;
-  // }
-
-  // for (auto &frame : frames)
-  // {
-  //   g_vk->vkFreeCommandBuffers(
-  //       window.device(),
-  //       commandPool,
-  //       1,
-  //       &frame.commandBuffer);
-  //   frame.commandBuffer = VK_NULL_HANDLE;
-  // }
-
-  g_vk->vkDestroyDescriptorSetLayout(window.device(), frameDescriptorSetLayout, nullptr);
-  g_vk->vkDestroyDescriptorSetLayout(window.device(), textureDescriptorSetLayout, nullptr);
-
-  g_vk->vkDestroyDescriptorPool(window.device(), descriptorPool, nullptr);
-
-  g_vk->vkDestroyPipeline(window.device(), graphicsPipeline, nullptr);
-  g_vk->vkDestroyPipelineLayout(window.device(), pipelineLayout, nullptr);
-  g_vk->vkDestroyRenderPass(window.device(), renderPass, nullptr);
-}
-
-void MapRenderer::recreate()
-{
-  cleanup();
-
-  createRenderPass();
-  createGraphicsPipeline();
-  // createFrameBuffers();
-}
-
 void MapRenderer::createRenderPass()
 {
   VkAttachmentDescription colorAttachment{};
-  colorAttachment.format = window.colorFormat();
+  colorAttachment.format = this->colorFormat;
   colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 
   colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -656,8 +570,6 @@ void MapRenderer::createGraphicsPipeline()
 {
   std::vector<uint8_t> vertShaderCode = File::read("shaders/vert.spv");
   std::vector<uint8_t> fragShaderCode = File::read("shaders/frag.spv");
-
-  const QSize size = window.swapChainImageSize();
 
   VkShaderModule vertShaderModule = VulkanHelpers::createShaderModule(window.device(), vertShaderCode);
   VkShaderModule fragShaderModule = VulkanHelpers::createShaderModule(window.device(), fragShaderCode);
@@ -741,7 +653,7 @@ void MapRenderer::createGraphicsPipeline()
   dynamicInfo.dynamicStateCount = sizeof(dynEnable) / sizeof(VkDynamicState);
   dynamicInfo.pDynamicStates = dynEnable;
 
-  std::array<VkDescriptorSetLayout, 2> layouts = {frameDescriptorSetLayout, textureDescriptorSetLayout};
+  std::array<VkDescriptorSetLayout, 2> layouts = {uboDescriptorSetLayout, textureDescriptorSetLayout};
   VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
@@ -780,10 +692,8 @@ void MapRenderer::createGraphicsPipeline()
   if (g_vk->vkCreateGraphicsPipelines(window.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) !=
       VK_SUCCESS)
   {
-    // throw std::runtime_error("failed to create graphics pipeline!");
+    throw std::runtime_error("failed to create graphics pipeline!");
   }
-
-  qDebug() << "hmm";
 
   g_vk->vkDestroyShaderModule(window.device(), fragShaderModule, nullptr);
   g_vk->vkDestroyShaderModule(window.device(), vertShaderModule, nullptr);
@@ -795,31 +705,31 @@ void MapRenderer::createDescriptorSetLayouts()
   layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
   layoutInfo.bindingCount = 1;
 
-  VkDescriptorSetLayoutBinding layoutBinding = {};
-  layoutBinding.binding = 0;
-  layoutBinding.descriptorCount = 1;
-  layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+  VkDescriptorSetLayoutBinding uboLayoutBinding = {};
+  uboLayoutBinding.binding = 0;
+  uboLayoutBinding.descriptorCount = 1;
+  uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-  layoutInfo.pBindings = &layoutBinding;
+  layoutInfo.pBindings = &uboLayoutBinding;
 
-  if (g_vk->vkCreateDescriptorSetLayout(window.device(), &layoutInfo, nullptr, &frameDescriptorSetLayout) != VK_SUCCESS)
+  if (g_vk->vkCreateDescriptorSetLayout(window.device(), &layoutInfo, nullptr, &uboDescriptorSetLayout) != VK_SUCCESS)
   {
-    throw std::runtime_error("failed to create descriptor set layout");
+    throw std::runtime_error("Failed to create descriptor set layout for the uniform buffer object.");
   }
 
-  VkDescriptorSetLayoutBinding po = {};
-  po.binding = 0;
-  po.descriptorCount = 1;
-  po.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  po.pImmutableSamplers = nullptr;
-  po.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  VkDescriptorSetLayoutBinding textureLayoutBinding = {};
+  textureLayoutBinding.binding = 0;
+  textureLayoutBinding.descriptorCount = 1;
+  textureLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  textureLayoutBinding.pImmutableSamplers = nullptr;
+  textureLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  layoutInfo.pBindings = &po;
+  layoutInfo.pBindings = &textureLayoutBinding;
 
   if (g_vk->vkCreateDescriptorSetLayout(window.device(), &layoutInfo, nullptr, &textureDescriptorSetLayout) != VK_SUCCESS)
   {
-    throw std::runtime_error("failed to create descriptor set layout");
+    throw std::runtime_error("Failed to create descriptor set layout for the textures.");
   }
 }
 
@@ -861,15 +771,15 @@ void MapRenderer::createDescriptorPool()
 
 void MapRenderer::createDescriptorSets()
 {
-  uint32_t maxFrames = window.MAX_CONCURRENT_FRAME_COUNT;
-  std::vector<VkDescriptorSetLayout> layouts(maxFrames, frameDescriptorSetLayout);
+  const uint32_t maxFrames = window.MAX_CONCURRENT_FRAME_COUNT;
+  std::vector<VkDescriptorSetLayout> layouts(maxFrames, uboDescriptorSetLayout);
   VkDescriptorSetAllocateInfo allocInfo = {};
   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
   allocInfo.descriptorPool = descriptorPool;
   allocInfo.descriptorSetCount = maxFrames;
   allocInfo.pSetLayouts = layouts.data();
 
-  std::array<VkDescriptorSet, 3> descriptorSets;
+  std::array<VkDescriptorSet, maxFrames> descriptorSets;
 
   if (g_vk->vkAllocateDescriptorSets(window.device(), &allocInfo, &descriptorSets[0]) != VK_SUCCESS)
   {
@@ -878,7 +788,7 @@ void MapRenderer::createDescriptorSets()
 
   for (uint32_t i = 0; i < descriptorSets.size(); ++i)
   {
-    frames[i].descriptorSet = descriptorSets[i];
+    frames[i].uboDescriptorSet = descriptorSets[i];
   }
 
   for (size_t i = 0; i < window.MAX_CONCURRENT_FRAME_COUNT; ++i)
@@ -890,7 +800,7 @@ void MapRenderer::createDescriptorSets()
 
     VkWriteDescriptorSet descriptorWrites = {};
     descriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrites.dstSet = frames[i].descriptorSet;
+    descriptorWrites.dstSet = frames[i].uboDescriptorSet;
     descriptorWrites.dstBinding = 0;
     descriptorWrites.dstArrayElement = 0;
     descriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -898,18 +808,5 @@ void MapRenderer::createDescriptorSets()
     descriptorWrites.pBufferInfo = &bufferInfo;
 
     g_vk->vkUpdateDescriptorSets(window.device(), 1, &descriptorWrites, 0, nullptr);
-  }
-}
-
-void MapRenderer::createCommandPool()
-{
-  VkCommandPoolCreateInfo poolInfo{};
-  poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  poolInfo.queueFamilyIndex = window.graphicsQueueFamilyIndex();
-  poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-
-  if (g_vk->vkCreateCommandPool(window.device(), &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
-  {
-    ABORT_PROGRAM("failed to create graphics command pool!");
   }
 }

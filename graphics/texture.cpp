@@ -15,6 +15,9 @@
 #include "buffer.h"
 #include "../util.h"
 
+// QVulkanWindow works correctly with UNORM. If not using Vulkan, VK_FORMAT_B8G8R8A8_SRGB works.
+constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
+
 std::unordered_map<SolidColor, std::unique_ptr<Texture>> solidColorTextures;
 
 Texture::Texture(uint32_t width, uint32_t height, std::vector<uint8_t> pixels, Texture::Descriptor descriptor)
@@ -52,25 +55,30 @@ Texture::Texture(const std::string &filename, Texture::Descriptor descriptor)
 
 void Texture::init(uint32_t width, uint32_t height, uint8_t *pixels, Texture::Descriptor descriptor)
 {
+  this->layout = VK_NULL_HANDLE;
   this->width = width;
   this->height = height;
-  VkDeviceSize imageSize = static_cast<uint64_t>(width) * height * 4;
+  imageSize = static_cast<uint64_t>(width) * height * 4;
 
   VkDevice device = g_window->device();
+  std::vector<uint8_t> vectorBuffer(pixels, pixels + width * height * 4);
+  this->pixels = vectorBuffer;
 
+  initVulkanResources(descriptor);
+}
+
+void Texture::initVulkanResources(Texture::Descriptor descriptor)
+{
   auto stagingBuffer = Buffer::create(imageSize,
                                       VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-  Buffer::copyToMemory(stagingBuffer.deviceMemory, pixels, imageSize);
-
-  // QVulkanWindow works correctly with UNORM. If not using Vulkan, VK_FORMAT_B8G8R8A8_SRGB works.
-  VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
+  Buffer::copyToMemory(stagingBuffer.deviceMemory, pixels.data(), imageSize);
 
   createImage(width,
               height,
               mipLevels,
-              format,
+              ColorFormat,
               VK_IMAGE_TILING_OPTIMAL,
               VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -90,9 +98,26 @@ void Texture::init(uint32_t width, uint32_t height, uint8_t *pixels, Texture::De
                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-  imageView = VulkanHelpers::createImageView(device, textureImage, format);
-  sampler = createSampler();
-  descriptorSet = createDescriptorSet(imageView, sampler, descriptor);
+  descriptorSet = createDescriptorSet(descriptor);
+  initialized = true;
+}
+
+void Texture::releaseVulkanResources()
+{
+  VkDevice device = g_window->device();
+  g_vk->vkDestroyImage(device, textureImage, nullptr);
+  g_vk->vkFreeMemory(device, textureImageMemory, nullptr);
+
+  initialized = false;
+}
+
+// static
+void Texture::releaseSolidColorTextures()
+{
+  for (auto &[_, texture] : solidColorTextures)
+  {
+    texture->releaseVulkanResources();
+  }
 }
 
 void Texture::createImage(uint32_t width,
@@ -168,8 +193,18 @@ VkSampler Texture::createSampler()
   return sampler;
 }
 
-VkDescriptorSet Texture::createDescriptorSet(VkImageView imageView, VkSampler sampler, Texture::Descriptor descriptor)
+void Texture::update(Texture::Descriptor descriptor)
 {
+  if (!initialized)
+  {
+    initVulkanResources(descriptor);
+  }
+}
+
+VkDescriptorSet Texture::createDescriptorSet(Texture::Descriptor descriptor)
+{
+  VkImageView imageView = VulkanHelpers::createImageView(g_window->device(), textureImage, ColorFormat);
+  VkSampler sampler = createSampler();
 
   VkDescriptorSetAllocateInfo allocInfo = {};
   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -177,7 +212,6 @@ VkDescriptorSet Texture::createDescriptorSet(VkImageView imageView, VkSampler sa
   allocInfo.descriptorSetCount = 1;
   allocInfo.pSetLayouts = &descriptor.layout;
 
-  VkDescriptorSet descriptorSet;
   if (g_vk->vkAllocateDescriptorSets(g_window->device(), &allocInfo, &descriptorSet) != VK_SUCCESS)
   {
     throw std::runtime_error("failed to allocate texture descriptor set");

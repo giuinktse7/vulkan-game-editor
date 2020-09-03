@@ -17,6 +17,7 @@ public:
 
   MapView *getMapView() const;
 
+protected:
 private:
   void mousePressEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;

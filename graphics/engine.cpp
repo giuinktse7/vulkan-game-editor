@@ -84,7 +84,7 @@ void Engine::initialize()
 
   swapChain.initialize();
   createCommandPool();
-  mapRenderer->initialize();
+  // mapRenderer->initialize();
 
   createSyncObjects();
 
@@ -406,7 +406,7 @@ FrameResult Engine::nextFrame()
   currentTime = TimePoint::now();
   mapView->updateViewport();
 
-  mapRenderer->recordFrame(currentFrameIndex);
+  // mapRenderer->recordFrame(currentFrameIndex);
 
   VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
@@ -506,8 +506,6 @@ void Engine::recreateSwapChain()
 {
   swapChain.recreate();
   swapChainImageInFlight.fill(VK_NULL_HANDLE);
-
-  mapRenderer->recreate();
 
   setFrameIndex(0);
 }

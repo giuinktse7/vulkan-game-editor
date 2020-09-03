@@ -10,16 +10,6 @@ BatchDraw::BatchDraw()
 {
 }
 
-Batch::~Batch()
-{
-  if (stagingBuffer.buffer != VK_NULL_HANDLE)
-  {
-    std::cerr << "ERROR: Non-null buffer with null deviceMemory. This should not happen." << std::endl;
-    // g_vk->vkDestroyBuffer(g_window->device(), stagingBuffer.buffer, nullptr);
-    // g_vk->vkFreeMemory(g_window->device(), stagingBuffer.deviceMemory, nullptr);
-  }
-}
-
 Batch::Batch()
     : vertexCount(0), descriptorSet(nullptr), valid(true)
 {

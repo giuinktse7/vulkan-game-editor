@@ -47,36 +47,35 @@ public:
 
   VkSampler createSampler();
 
-  VkImageView &getImageView()
-  {
-    return imageView;
-  }
-
-  VkSampler &getSampler()
-  {
-    return sampler;
-  }
-
   static Texture *getSolidTexture(SolidColor color);
   static Texture &getOrCreateSolidTexture(SolidColor color, Texture::Descriptor descriptor);
 
-private:
-  void init(uint32_t width, uint32_t height, uint8_t *pixels, Texture::Descriptor descriptor);
+  void update(Texture::Descriptor descriptor);
 
-  static std::unique_ptr<Texture> blackSquare;
+  void releaseVulkanResources();
+  static void releaseSolidColorTextures();
+
+private:
+  bool initialized = false;
+
+  std::vector<uint8_t> pixels;
 
   uint32_t width;
   uint32_t height;
 
+  VkDeviceSize imageSize;
   VkImage textureImage;
   VkDeviceMemory textureImageMemory;
 
-  VkImageView imageView;
-  VkSampler sampler;
-
   VkDescriptorSet descriptorSet;
+  VkDevice device;
+
+  // Used to check whether the descriptorSet needs to be recreated
+  VkDescriptorSetLayout layout;
 
   uint32_t mipLevels = 1;
+
+  void init(uint32_t width, uint32_t height, uint8_t *pixels, Texture::Descriptor descriptor);
 
   void createImage(uint32_t width,
                    uint32_t height,
@@ -88,5 +87,7 @@ private:
                    VkImage &image,
                    VkDeviceMemory &imageMemory);
 
-  VkDescriptorSet createDescriptorSet(VkImageView imageView, VkSampler sampler, Texture::Descriptor descriptor);
+  VkDescriptorSet createDescriptorSet(Texture::Descriptor descriptor);
+
+  void initVulkanResources(Texture::Descriptor descriptor);
 };
