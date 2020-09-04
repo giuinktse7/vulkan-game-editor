@@ -44,22 +44,22 @@ enum SlotPositionBits : uint32_t
 
 enum itemgroup_t : uint8_t
 {
-  ITEM_GROUP_NONE,
+  None,
 
-  ITEM_GROUP_GROUND,
-  ITEM_GROUP_CONTAINER,
-  ITEM_GROUP_WEAPON,     //deprecated
-  ITEM_GROUP_AMMUNITION, //deprecated
-  ITEM_GROUP_ARMOR,      //deprecated
-  ITEM_GROUP_CHARGES,
-  ITEM_GROUP_TELEPORT,   //deprecated
-  ITEM_GROUP_MAGICFIELD, //deprecated
-  ITEM_GROUP_WRITEABLE,  //deprecated
-  ITEM_GROUP_KEY,        //deprecated
-  ITEM_GROUP_SPLASH,
-  ITEM_GROUP_FLUID,
-  ITEM_GROUP_DOOR, //deprecated
-  ITEM_GROUP_DEPRECATED,
+  Ground,
+  Container,
+  Weapon,     //deprecated
+  Ammunition, //deprecated
+  Armor,      //deprecated
+  Charges,
+  Teleport,   //deprecated
+  MagicField, //deprecated
+  Writable,   //deprecated
+  Key,        //deprecated
+  Splash,
+  Fluid,
+  Door, //deprecated
+  Deprecated,
 
   ITEM_GROUP_LAST
 };
@@ -227,7 +227,7 @@ public:
 
   std::string getPluralName() const;
 
-  itemgroup_t group = ITEM_GROUP_NONE;
+  itemgroup_t group = None;
   ItemTypes_t type = ITEM_TYPE_NONE;
   uint16_t id = 0;
   uint16_t clientId = 0;
