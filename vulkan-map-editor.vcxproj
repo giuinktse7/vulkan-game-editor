@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{0CC814B2-B29A-325A-8E11-094720C6E087}</ProjectGuid>
+    <RootNamespace>vulkan-map-editor</RootNamespace>
+    <Keyword>QtVS_v303</Keyword>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
+  <QtMsBuild Condition="'$(QtMsBuild)'=='' or !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <PlatformToolset>v142</PlatformToolset>
+    <OutputDirectory>release\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>Application</ConfigurationType>
+    <IntermediateDirectory>release\</IntermediateDirectory>
+    <PrimaryOutput>vulkan-map-editor</PrimaryOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <PlatformToolset>v142</PlatformToolset>
+    <OutputDirectory>debug\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>Application</ConfigurationType>
+    <IntermediateDirectory>debug\</IntermediateDirectory>
+    <PrimaryOutput>vulkan-map-editor</PrimaryOutput>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" /><Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')"><Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." /></Target>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" /><ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')"><Import Project="$(QtMsBuild)\qt_defaults.props" /></ImportGroup><PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"><OutDir>debug\</OutDir><IntDir>debug\</IntDir><TargetName>vulkan-map-editor</TargetName><IgnoreImportLibrary>true</IgnoreImportLibrary></PropertyGroup><PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'"><OutDir>release\</OutDir><IntDir>release\</IntDir><TargetName>vulkan-map-editor</TargetName><IgnoreImportLibrary>true</IgnoreImportLibrary><LinkIncremental>false</LinkIncremental></PropertyGroup><PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"><QtInstall>QT 5.15</QtInstall><QtModules>core;gui;widgets</QtModules></PropertyGroup><PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|x64'"><QtInstall>QT 5.15</QtInstall><QtModules>core;gui;widgets</QtModules></PropertyGroup><ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')"><Import Project="$(QtMsBuild)\qt.props" /></ImportGroup>
+  
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;..\..\..\..\Programs\glm-0.9.9.8\glm;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\protobuf_x64-windows\include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\liblzma_x64-windows\include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\stb_x64-windows\include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\pugixml_x64-windows\include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\nlohmann-json_x64-windows\include;release;..\..\..\..\Programs\VulkanSDK\1.2.141.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>release\</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>release\</ObjectFileName>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QT_DEPRECATED_WARNINGS;NDEBUG;QT_NO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <ProgramDataBaseFileName></ProgramDataBaseFileName>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+    <MultiProcessorCompilation>true</MultiProcessorCompilation></ClCompile>
+    <Link>
+      <AdditionalDependencies>C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\protobuf_x64-windows\lib\libprotobuf.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\protobuf_x64-windows\lib\libprotobuf-lite.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\liblzma_x64-windows\lib\lzma.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\pugixml_x64-windows\lib\pugixml.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\liblzma_x64-windows\lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\pugixml_x64-windows\lib;C:\openssl\lib;C:\Utils\my_sql\mysql-5.7.25-winx64\lib;C:\Utils\postgresql\pgsql\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreImportLibrary>true</IgnoreImportLibrary>
+      <LinkIncremental>false</LinkIncremental>
+      <OptimizeReferences>true</OptimizeReferences>
+      <OutputFile>$(OutDir)\vulkan-map-editor.exe</OutputFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Link>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QT_DEPRECATED_WARNINGS;NDEBUG;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  <QtMoc><CompilerFlavor>msvc</CompilerFlavor><Include>./$(Configuration)/moc_predefs.h</Include><ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription><DynamicSource>output</DynamicSource><QtMocDir>$(Configuration)</QtMocDir><QtMocFileName>moc_%(Filename).cpp</QtMocFileName></QtMoc><QtUic><ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription><QtUicDir>$(ProjectDir)</QtUicDir><QtUicFileName>ui_%(Filename).h</QtUicFileName></QtUic></ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;..\..\..\..\Programs\glm-0.9.9.8\glm;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\protobuf_x64-windows\include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\liblzma_x64-windows\include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\stb_x64-windows\include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\pugixml_x64-windows\include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\nlohmann-json_x64-windows\include;debug;..\..\..\..\Programs\VulkanSDK\1.2.141.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>debug\</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>debug\</ObjectFileName>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QT_DEPRECATED_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+    <MultiProcessorCompilation>true</MultiProcessorCompilation></ClCompile>
+    <Link>
+      <AdditionalDependencies>C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\protobuf_x64-windows\debug\lib\libprotobufd.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\protobuf_x64-windows\debug\lib\libprotobuf-lited.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\liblzma_x64-windows\lib\lzma.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\pugixml_x64-windows\lib\pugixml.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\liblzma_x64-windows\lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\packages\pugixml_x64-windows\lib;C:\openssl\lib;C:\Utils\my_sql\mysql-5.7.25-winx64\lib;C:\Utils\postgresql\pgsql\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreImportLibrary>true</IgnoreImportLibrary>
+      <OutputFile>$(OutDir)\vulkan-map-editor.exe</OutputFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Link>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QT_DEPRECATED_WARNINGS;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  <QtMoc><CompilerFlavor>msvc</CompilerFlavor><Include>./$(Configuration)/moc_predefs.h</Include><ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription><DynamicSource>output</DynamicSource><QtMocDir>$(Configuration)</QtMocDir><QtMocFileName>moc_%(Filename).cpp</QtMocFileName></QtMoc><QtUic><ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription><QtUicDir>$(ProjectDir)</QtUicDir><QtUicFileName>ui_%(Filename).h</QtUicFileName></QtUic></ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="action\action.cpp" />
+    <ClCompile Include="graphics\appearances.cpp" />
+    <ClCompile Include="graphics\protobuf\appearances.pb.cc" />
+    <ClCompile Include="graphics\batch_item_draw.cpp" />
+    <ClCompile Include="graphics\buffer.cpp" />
+    <ClCompile Include="camera.cpp" />
+    <ClCompile Include="graphics\compression.cpp" />
+    <ClCompile Include="graphics\device_manager.cpp" />
+    <ClCompile Include="ecs\ecs.cpp" />
+    <ClCompile Include="graphics\engine.cpp" />
+    <ClCompile Include="file.cpp" />
+    <ClCompile Include="item.cpp" />
+    <ClCompile Include="ecs\item_animation.cpp" />
+    <ClCompile Include="item_attribute.cpp" />
+    <ClCompile Include="item_type.cpp" />
+    <ClCompile Include="items.cpp" />
+    <ClCompile Include="logger.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="gui\mainwindow.cpp" />
+    <ClCompile Include="map.cpp" />
+    <ClCompile Include="graphics\protobuf\map.pb.cc" />
+    <ClCompile Include="map_io.cpp" />
+    <ClCompile Include="map_renderer.cpp" />
+    <ClCompile Include="map_view.cpp" />
+    <ClCompile Include="otb.cpp" />
+    <ClCompile Include="position.cpp" />
+    <ClCompile Include="quad_tree.cpp" />
+    <ClCompile Include="random.cpp" />
+    <ClCompile Include="gui\renderer.cpp" />
+    <ClCompile Include="graphics\resource-descriptor.cpp" />
+    <ClCompile Include="selection.cpp" />
+    <ClCompile Include="graphics\protobuf\shared.pb.cc" />
+    <ClCompile Include="graphics\swapchain.cpp" />
+    <ClCompile Include="graphics\texture.cpp" />
+    <ClCompile Include="graphics\texture_atlas.cpp" />
+    <ClCompile Include="tile.cpp" />
+    <ClCompile Include="tile_location.cpp" />
+    <ClCompile Include="time_point.cpp" />
+    <ClCompile Include="town.cpp" />
+    <ClCompile Include="trianglerenderer.cpp" />
+    <ClCompile Include="util.cpp" />
+    <ClCompile Include="graphics\vulkan_debug.cpp" />
+    <ClCompile Include="graphics\vulkan_helpers.cpp" />
+    <ClCompile Include="gui\vulkan_window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="action\action.h" />
+    <ClInclude Include="graphics\appearances.h" />
+    <ClInclude Include="graphics\protobuf\appearances.pb.h" />
+    <ClInclude Include="graphics\batch_item_draw.h" />
+    <ClInclude Include="graphics\buffer.h" />
+    <ClInclude Include="camera.h" />
+    <ClInclude Include="ecs\component_array.h" />
+    <ClInclude Include="graphics\compression.h" />
+    <ClInclude Include="const.h" />
+    <ClInclude Include="debug.h" />
+    <ClInclude Include="definitions.h" />
+    <ClInclude Include="graphics\device_manager.h" />
+    <ClInclude Include="ecs\ecs.h" />
+    <ClInclude Include="graphics\engine.h" />
+    <ClInclude Include="ecs\entity.h" />
+    <ClInclude Include="file.h" />
+    <ClInclude Include="item.h" />
+    <ClInclude Include="ecs\item_animation.h" />
+    <ClInclude Include="item_attribute.h" />
+    <ClInclude Include="item_type.h" />
+    <ClInclude Include="items.h" />
+    <ClInclude Include="logger.h" />
+    <QtMoc Include="gui\mainwindow.h">
+      
+      
+      
+      
+      
+      
+      
+      
+    </QtMoc>
+    <ClInclude Include="map.h" />
+    <ClInclude Include="graphics\protobuf\map.pb.h" />
+    <ClInclude Include="map_io.h" />
+    <ClInclude Include="map_renderer.h" />
+    <ClInclude Include="map_view.h" />
+    <ClInclude Include="otb.h" />
+    <ClInclude Include="position.h" />
+    <ClInclude Include="quad_tree.h" />
+    <ClInclude Include="random.h" />
+    <ClInclude Include="gui\renderer.h" />
+    <ClInclude Include="graphics\resource-descriptor.h" />
+    <ClInclude Include="selection.h" />
+    <ClInclude Include="graphics\protobuf\shared.pb.h" />
+    <ClInclude Include="graphics\swapchain.h" />
+    <ClInclude Include="graphics\texture.h" />
+    <ClInclude Include="graphics\texture_atlas.h" />
+    <ClInclude Include="tile.h" />
+    <ClInclude Include="tile_location.h" />
+    <ClInclude Include="time_point.h" />
+    <ClInclude Include="town.h" />
+    <ClInclude Include="trianglerenderer.h" />
+    <ClInclude Include="type_trait.h" />
+    <ClInclude Include="util.h" />
+    <ClInclude Include="graphics\validation.h" />
+    <ClInclude Include="version.h" />
+    <ClInclude Include="graphics\vertex.h" />
+    <ClInclude Include="graphics\vulkan_debug.h" />
+    <ClInclude Include="graphics\vulkan_helpers.h" />
+    <ClInclude Include="gui\vulkan_window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    
+    
+    <CustomBuild Include="debug\moc_predefs.h.cbt">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -Zi -MDd -std:c++17 -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E $(QTDIR)\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;debug\moc_predefs.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generate moc_predefs.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\moc_predefs.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="release\moc_predefs.h.cbt">
+      <FileType>Document</FileType>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -O2 -MD -std:c++17 -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E $(QTDIR)\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;release\moc_predefs.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generate moc_predefs.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">release\moc_predefs.h;%(Outputs)</Outputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </CustomBuild>
+    
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="gui\mainwindow.ui">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+    </QtUic>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" /><ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')"><Import Project="$(QtMsBuild)\qt.targets" /></ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
