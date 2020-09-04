@@ -28,49 +28,6 @@
 
 enum class ItemTypes_t;
 
-class OtbReader
-{
-public:
-  OtbReader(const std::string &file);
-
-  enum class Token
-  {
-    Escape = 0xfd,
-    Start = 0xfe,
-    End = 0xff,
-    OTBM_ROOTV1 = 0x01
-  };
-
-  void parseOTB();
-
-private:
-  TimePoint start;
-
-  std::vector<uint8_t> buffer;
-  OTB::ByteIterator cursor;
-  std::string path;
-  bool lastEscaped;
-
-  OTB::VersionInfo info;
-  /*
-    Something like 'OTB 3.62.78-11.1'.
-  */
-  std::string description;
-
-  void readRoot();
-  void readNodes();
-  bool nodeEnd() const;
-
-  uint8_t peekByte();
-  uint8_t nextU8();
-  uint16_t nextU16();
-  uint32_t nextU32();
-  std::vector<uint8_t> nextBytes(size_t bytes);
-  void skipBytes(size_t bytes);
-
-  ItemTypes_t serverItemType(uint8_t byte);
-};
-
 class Items
 {
 public:
@@ -106,7 +63,47 @@ public:
   OTB::VersionInfo getOtbVersionInfo();
 
 private:
-  friend class OtbReader;
+  class OtbReader
+  {
+  public:
+    OtbReader(const std::string &file);
+
+    const uint8_t EscapeNode = 0xfd;
+    const uint8_t StartNode = 0xfe;
+    const uint8_t EndNode = 0xff;
+    const uint8_t OTBM_ROOTV1 = 0x01;
+
+    void parseOTB();
+
+  private:
+    TimePoint start;
+
+    std::vector<uint8_t> buffer;
+    OTB::ByteIterator cursor;
+    std::string path;
+    bool lastEscaped;
+
+    OTB::VersionInfo info;
+    /*
+    Something like 'OTB 3.62.78-11.1'.
+  */
+    std::string description;
+
+    void readRoot();
+    void readNodes();
+    bool nodeEnd() const;
+
+    uint8_t peekByte();
+    uint8_t nextU8();
+    uint16_t nextU16();
+    uint32_t nextU32();
+    std::vector<uint8_t> nextBytes(size_t bytes);
+    std::string nextString(size_t length);
+    void skipBytes(size_t bytes);
+
+    ItemTypes_t serverItemType(uint8_t byte);
+  };
+
   Items();
   using ServerID = uint16_t;
   using ClientID = uint16_t;

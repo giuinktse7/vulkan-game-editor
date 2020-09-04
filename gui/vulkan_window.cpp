@@ -3,18 +3,16 @@
 #include "map_renderer.h"
 #include "map_view.h"
 
-VulkanWindow::VulkanWindow(std::unique_ptr<MapView> mapView)
-    : mapView(std::move(mapView))
+VulkanWindow::VulkanWindow(MapView *mapView)
+    : mapView(mapView)
 {
 }
 
 QVulkanWindowRenderer *VulkanWindow::createRenderer()
 {
-  // std::cout << "Creating MapRenderer" << std::endl;
-  renderer = std::make_unique<MapRenderer>(*this);
-  return renderer.get();
-  // renderer = std::make_unique<TriangleRenderer>(this, true);
-  // return renderer.get();
+  // Memory deleted by QT when QT closes
+  renderer = new MapRenderer(*this);
+  return renderer;
 }
 
 void VulkanWindow::mousePressEvent(QMouseEvent *e)
@@ -35,5 +33,5 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
 
 MapView *VulkanWindow::getMapView() const
 {
-  return mapView.get();
+  return mapView;
 }

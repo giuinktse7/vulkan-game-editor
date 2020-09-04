@@ -24,8 +24,7 @@ void loadGameData()
     Appearances::loadTextureAtlases("data/catalog-content.json");
     Appearances::loadAppearanceData("data/appearances.dat");
 
-    // Items::loadFromOtb("data/items.otb");
-    OtbReader("data/items.otb").parseOTB();
+    Items::loadFromOtb("data/items.otb");
     Items::loadFromXml("data/items.xml");
 }
 
@@ -47,7 +46,8 @@ int main(int argc, char *argv[])
     if (!instance.create())
         qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
 
-    auto mapView = std::make_unique<MapView>();
+    // Memory deleted by QT when application closes because it is a member in VulkanWindow
+    auto mapView = new MapView;
 
     mapView->history.startGroup(ActionGroupType::AddMapItem);
     mapView->addItem(Position(5, 6, 7), 2148);
@@ -61,12 +61,11 @@ int main(int argc, char *argv[])
     }
     mapView->history.endGroup(ActionGroupType::AddMapItem);
 
-    std::unique_ptr<VulkanWindow> vulkanWindow = std::make_unique<VulkanWindow>(std::move(mapView));
-    VulkanWindow *windowPtr = vulkanWindow.get();
+    VulkanWindow *vulkanWindow = new VulkanWindow(mapView);
 
     vulkanWindow->setVulkanInstance(&instance);
 
-    MainWindow mainWindow(windowPtr);
+    MainWindow mainWindow(vulkanWindow);
     mainWindow.resize(1024, 768);
     mainWindow.show();
 

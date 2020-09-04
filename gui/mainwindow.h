@@ -8,7 +8,7 @@ class QLayout;
 class QTabWidget;
 QT_END_NAMESPACE
 
-class VulkanWindow;
+#include "vulkan_window.h"
 
 class MainWindow : public QWidget
 {
