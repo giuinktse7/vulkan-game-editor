@@ -10,7 +10,7 @@
 namespace OTB
 {
 
-  using NodeStack = std::stack<Node *, std::vector<Node *>>;
+  using NodeStack = std::stack<Node *>;
 
   constexpr Identifier wildcard = {{'\0', '\0', '\0', '\0'}};
 

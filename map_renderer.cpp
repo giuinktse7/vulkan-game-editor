@@ -291,7 +291,6 @@ void MapRenderer::drawTestRectangle()
 
   currentFrame->batchDraw.addRectangle(info);
 }
-
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags)
 {
   auto position = tileLocation.getPosition();

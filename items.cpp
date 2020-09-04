@@ -337,9 +337,9 @@ void Items::loadFromOtb(const std::string &file)
 	Items &items = Items::items;
 
 	// OTB::Loader loader{file, OTBI};
-	std::unique_ptr<OTB::Loader> loader = std::make_unique<OTB::Loader>(file, OTBI);
+	OTB::Loader loader = OTB::Loader(file, OTBI);
 
-	auto &root = loader->parseTree();
+	auto &root = loader.parseTree();
 
 	PropStream props;
 
@@ -348,7 +348,7 @@ void Items::loadFromOtb(const std::string &file)
 	// items.serverIdToMapId.reserve(RESERVED_ITEM_COUNT);
 	items.nameToItems.reserve(RESERVED_ITEM_COUNT);
 
-	if (loader->getProps(root, props))
+	if (loader.getProps(root, props))
 	{
 		//4 byte flags
 		//attributes
@@ -404,7 +404,7 @@ void Items::loadFromOtb(const std::string &file)
 	{
 		skipItem = false;
 		PropStream stream;
-		if (!loader->getProps(itemNode, stream))
+		if (!loader.getProps(itemNode, stream))
 		{
 			ABORT_PROGRAM("Could not get props for a node.");
 		}
