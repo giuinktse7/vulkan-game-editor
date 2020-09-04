@@ -410,7 +410,7 @@ inline std::ostream &operator<<(std::ostream &os, const HookType &hookType)
   return os;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const AppearancePlayerDefaultAction &action)
+inline std::ostringstream stringify(const AppearancePlayerDefaultAction &action)
 {
   std::ostringstream s;
 
@@ -435,14 +435,19 @@ inline std::ostream &operator<<(std::ostream &os, const AppearancePlayerDefaultA
     s << "Unknown AppearancePlayerDefaultAction";
     break;
   }
+  return s;
+}
 
-  os << s.str();
+inline std::ostream &operator<<(std::ostream &os, const AppearancePlayerDefaultAction &action)
+{
+  os << stringify(action).str();
   return os;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const Appearance::AppearanceFlagData &flags)
+inline std::ostringstream stringify(const Appearance::AppearanceFlagData &flags)
 {
   std::ostringstream s;
+
   s << "{\n";
 
 #define WRITE_INT(flag)                                      \
@@ -480,7 +485,12 @@ inline std::ostream &operator<<(std::ostream &os, const Appearance::AppearanceFl
 
   s << "}" << std::endl;
 
-  os << s.str();
+  return s;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const Appearance::AppearanceFlagData &flags)
+{
+  os << stringify(flags).str();
   return os;
 }
 

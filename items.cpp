@@ -10,15 +10,16 @@
 #include "version.h"
 #include "otb.h"
 #include "util.h"
+#include "file.h"
 
 #include "graphics/appearances.h"
 #include "graphics/engine.h"
 #include "item_type.h"
-#include "time_point.h"
 
 Items Items::items;
 
-constexpr uint32_t RESERVED_ITEM_COUNT = 30000;
+constexpr uint32_t RESERVED_ITEM_COUNT = 40000;
+constexpr int OtbEscapeToken = to_underlying(OtbReader::Token::Escape);
 
 using std::string;
 
@@ -89,7 +90,7 @@ void Items::loadFromXml(const std::filesystem::path path)
 		}
 	}
 
-	Logger::info() << "Loaded items.xml in " << start.elapsedMillis() << " ms." << std::endl;
+	VME_LOG("Loaded items.xml in " << start.elapsedMillis() << " ms.");
 }
 
 bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
@@ -145,40 +146,40 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 			to_lower_str(key);
 			if (typeValue == "depot")
 			{
-				it.type = ITEM_TYPE_DEPOT;
+				it.type = ItemTypes_t::Depot;
 			}
 			else if (typeValue == "mailbox")
 			{
-				it.type = ITEM_TYPE_MAILBOX;
+				it.type = ItemTypes_t::Mailbox;
 			}
 			else if (typeValue == "trashholder")
 			{
-				it.type = ITEM_TYPE_TRASHHOLDER;
+				it.type = ItemTypes_t::TrashHolder;
 			}
 			else if (typeValue == "container")
 			{
-				it.type = ITEM_TYPE_CONTAINER;
+				it.type = ItemTypes_t::Container;
 			}
 			else if (typeValue == "door")
 			{
-				it.type = ITEM_TYPE_DOOR;
+				it.type = ItemTypes_t::Door;
 			}
 			else if (typeValue == "magicfield")
 			{
-				it.group = ITEM_GROUP_MAGICFIELD;
-				it.type = ITEM_TYPE_MAGICFIELD;
+				it.group = itemgroup_t::MagicField;
+				it.type = ItemTypes_t::MagicField;
 			}
 			else if (typeValue == "teleport")
 			{
-				it.type = ITEM_TYPE_TELEPORT;
+				it.type = ItemTypes_t::Teleport;
 			}
 			else if (typeValue == "bed")
 			{
-				it.type = ITEM_TYPE_BED;
+				it.type = ItemTypes_t::Bed;
 			}
 			else if (typeValue == "key")
 			{
-				it.type = ITEM_TYPE_KEY;
+				it.type = ItemTypes_t::Key;
 			}
 		}
 		else if (key == "name")
@@ -324,6 +325,397 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 	}
 	return true;
 }
+
+void OtbReader::parseOTB()
+{
+	this->start = TimePoint::now();
+
+	if (!Appearances::isLoaded)
+	{
+		throw std::runtime_error("Appearances must be loaded before loading items.otb.");
+	}
+
+	readRoot();
+}
+void OtbReader::readRoot()
+{
+	// Read first 4 empty bytes
+	uint32_t value = nextU32();
+	if (value != 0)
+	{
+		ABORT_PROGRAM("Expected first 4 bytes to be 0");
+	}
+
+	uint8_t start = nextU8();
+	if (start != to_underlying(OtbReader::Token::Start))
+	{
+		ABORT_PROGRAM("Expected Token::Start");
+	}
+
+	nextU8();	 // First byte of otb is zero
+	nextU32(); // 4 unused bytes
+
+	// Root Header Version
+	uint8_t rootAttribute = nextU8();
+	if (rootAttribute != to_underlying(OtbReader::Token::OTBM_ROOTV1))
+	{
+		ABORT_PROGRAM("Unsupported RootHeaderVersion.");
+	}
+
+	uint16_t dataLength = nextU16();
+	if (dataLength != sizeof(OTB::VersionInfo))
+	{
+		ABORT_PROGRAM("Size of version header is invalid.");
+	}
+
+	info.majorVersion = nextU32(); // items otb format file version
+	info.minorVersion = nextU32(); // client version
+	info.buildNumber = nextU32();	 // build number, revision
+
+	// OTB description, something like 'OTB 3.62.78-11.1'
+	std::vector<uint8_t> buffer = util::sliceLeading<uint8_t>(nextBytes(128), 0);
+	description = std::string(buffer.begin(), buffer.end());
+
+	readNodes();
+
+	Items::items.itemTypes.shrink_to_fit();
+	VME_LOG("Loaded items.otb in " << this->start.elapsedMillis() << " ms.");
+}
+
+OtbReader::OtbReader(const std::string &file)
+		: buffer(File::read(file)), lastEscaped(false)
+{
+	cursor = buffer.begin();
+	path = file;
+}
+
+void OtbReader::readNodes()
+{
+	Items &items = Items::items;
+	items.itemTypes.resize(RESERVED_ITEM_COUNT);
+	// items.itemTypes.reserve(RESERVED_ITEM_COUNT);
+	items.clientIdToServerId.reserve(RESERVED_ITEM_COUNT);
+	// items.serverIdToMapId.reserve(RESERVED_ITEM_COUNT);
+	items.nameToItems.reserve(RESERVED_ITEM_COUNT);
+
+	do
+	{
+		uint8_t startNode = nextU8();
+		DEBUG_ASSERT(startNode == to_underlying(OtbReader::Token::Start), "startNode must be Token::Start.");
+
+		ItemType itemType;
+
+		uint8_t typeValue = nextU8();
+		itemType.type = serverItemType(typeValue);
+		uint32_t flags = nextU32();
+
+		uint16_t id = 0;
+		uint16_t clientId = 0;
+		uint16_t speed = 0;
+		uint16_t lightLevel = 0;
+		uint16_t lightColor = 0;
+		uint16_t alwaysOnTopOrder = 0;
+		uint16_t wareId = 0;
+		std::string name;
+		uint16_t maxTextLen = 0;
+
+		// Read attributes
+		while (!nodeEnd())
+		{
+			uint8_t attributeType = nextU8();
+			uint16_t attributeSize = nextU16();
+
+			switch (static_cast<itemproperty_t>(attributeType))
+			{
+
+			case itemproperty_t::ITEM_ATTR_SERVERID:
+			{
+				DEBUG_ASSERT(attributeSize == sizeof(uint16_t), "Invalid attribute length.");
+				itemType.id = nextU16();
+
+				// Not sure why we do this. It is possibly ids reserved for fluid types.
+				if (30000 < itemType.id && itemType.id < 30100)
+				{
+					itemType.id -= 30000;
+				}
+				break;
+			}
+
+			case itemproperty_t::ITEM_ATTR_CLIENTID:
+			{
+				DEBUG_ASSERT(attributeSize == sizeof(uint16_t), "Invalid attribute length.");
+				itemType.clientId = nextU16();
+				break;
+			}
+
+			case itemproperty_t::ITEM_ATTR_SPEED:
+			{
+				DEBUG_ASSERT(attributeSize == sizeof(uint16_t), "Invalid attribute length.");
+				itemType.speed = nextU16();
+				break;
+			}
+
+			case itemproperty_t::ITEM_ATTR_LIGHT2:
+			{
+				DEBUG_ASSERT(attributeSize == sizeof(OTB::LightInfo), "Invalid attribute length.");
+
+				itemType.lightLevel = nextU16();
+				itemType.lightColor = nextU16();
+				break;
+			}
+
+			case itemproperty_t::ITEM_ATTR_TOPORDER:
+			{
+				DEBUG_ASSERT(attributeSize == sizeof(uint8_t), "Invalid attribute length.");
+				itemType.alwaysOnTopOrder = nextU8();
+				break;
+			}
+
+			case itemproperty_t::ITEM_ATTR_WAREID:
+			{
+				DEBUG_ASSERT(attributeSize == sizeof(uint16_t), "Invalid attribute length.");
+				itemType.wareId = nextU16();
+				break;
+			}
+
+			case itemproperty_t::ITEM_ATTR_SPRITEHASH:
+			{
+				// Ignore spritehash
+				nextBytes(attributeSize);
+				break;
+			}
+
+			case itemproperty_t::ITEM_ATTR_MINIMAPCOLOR:
+			{
+				//Ignore it (get it from appearances as 'automapColor' instead)
+				nextBytes(attributeSize);
+				break;
+			}
+
+			case itemproperty_t::ITEM_ATTR_NAME:
+			{
+				auto bytes = nextBytes(attributeSize);
+				itemType.name = std::string(bytes.begin(), bytes.end());
+				break;
+			}
+
+			case itemproperty_t::ITEM_ATTR_MAX_TEXT_LENGTH:
+			{
+				itemType.maxTextLen = nextU16();
+				break;
+			}
+
+			case itemproperty_t::ITEM_ATTR_MAX_TEXT_LENGTH_ONCE:
+			{
+				itemType.maxTextLen = nextU16();
+				break;
+			}
+
+			default:
+			{
+				//skip unknown attributes
+				VME_LOG_D("Skipped unknown: " << static_cast<itemproperty_t>(attributeType));
+				std::vector<uint8_t> s(cursor - 8, cursor);
+				for (auto &k : s)
+				{
+					VME_LOG_D((int)k);
+				}
+				nextBytes(attributeSize);
+				break;
+			}
+			}
+		}
+
+		items.clientIdToServerId.emplace(itemType.clientId, itemType.id);
+
+		if (itemType.id >= items.size())
+		{
+			size_t arbitrarySizeIncrease = 2000;
+			size_t newSize = std::max<size_t>(static_cast<size_t>(itemType.id), items.size()) + arbitrarySizeIncrease;
+			items.itemTypes.resize(newSize);
+		}
+
+		if (Appearances::hasObject(itemType.clientId))
+		{
+			auto &appearance = Appearances::getObjectById(itemType.clientId);
+
+			// TODO: Check for items that do not have matching flags in .otb and appearances.dat
+			itemType.blockSolid = hasBitSet(FLAG_BLOCK_SOLID, flags);
+			itemType.blockProjectile = hasBitSet(FLAG_BLOCK_PROJECTILE, flags);
+			itemType.blockPathFind = hasBitSet(FLAG_BLOCK_PATHFIND, flags);
+			itemType.hasHeight = hasBitSet(FLAG_HAS_HEIGHT, flags);
+			itemType.useable = hasBitSet(FLAG_USEABLE, flags) || appearance.hasFlag(AppearanceFlag::Usable);
+			itemType.pickupable = hasBitSet(FLAG_PICKUPABLE, flags);
+			itemType.moveable = hasBitSet(FLAG_MOVEABLE, flags);
+			itemType.stackable = hasBitSet(FLAG_STACKABLE, flags);
+
+			itemType.alwaysOnTop = hasBitSet(FLAG_ALWAYSONTOP, flags);
+			itemType.isVertical = hasBitSet(FLAG_VERTICAL, flags);
+			itemType.isHorizontal = hasBitSet(FLAG_HORIZONTAL, flags);
+			itemType.isHangable = hasBitSet(FLAG_HANGABLE, flags);
+			itemType.allowDistRead = hasBitSet(FLAG_ALLOWDISTREAD, flags);
+			itemType.rotatable = hasBitSet(FLAG_ROTATABLE, flags);
+			itemType.canReadText = hasBitSet(FLAG_READABLE, flags);
+			itemType.lookThrough = hasBitSet(FLAG_LOOKTHROUGH, flags);
+			itemType.isAnimation = hasBitSet(FLAG_ANIMATION, flags);
+			// iType.walkStack = !hasBitSet(FLAG_FULLTILE, flags);
+			itemType.forceUse = hasBitSet(FLAG_FORCEUSE, flags);
+
+			itemType.appearance = &appearance;
+			itemType.cacheTextureAtlases();
+			itemType.name = appearance.name;
+		}
+
+		uint8_t endToken = nextU8();
+		DEBUG_ASSERT(endToken == to_underlying(OtbReader::Token::End), "Expected end token");
+
+		// uint16_t serverId = itemType.id;
+
+		items.itemTypes.at(itemType.id) = std::move(itemType);
+
+		// VME_LOG_D("Finished " << serverId);
+	} while (!nodeEnd());
+}
+
+bool OtbReader::nodeEnd() const
+{
+	bool endCursor = *cursor == to_underlying(OtbReader::Token::End);
+	return endCursor;
+}
+
+ItemTypes_t OtbReader::serverItemType(uint8_t byte)
+{
+	switch (static_cast<itemgroup_t>(byte))
+	{
+	case itemgroup_t::Container:
+		return ItemTypes_t::Container;
+	case itemgroup_t::Door:
+		return ItemTypes_t::Door;
+		break;
+	case itemgroup_t::MagicField:
+		//not used
+		return ItemTypes_t::MagicField;
+		break;
+	case itemgroup_t::Teleport:
+		//not used
+		return ItemTypes_t::Teleport;
+	case itemgroup_t::None:
+	case itemgroup_t::Ground:
+	case itemgroup_t::Splash:
+	case itemgroup_t::Fluid:
+	case itemgroup_t::Charges:
+	case itemgroup_t::Deprecated:
+		return ItemTypes_t::None;
+	default:
+		VME_LOG("Unknown item type!");
+		return ItemTypes_t::None;
+	}
+}
+
+uint8_t OtbReader::peekByte()
+{
+	if (*cursor == OtbEscapeToken)
+	{
+		return *(cursor + 1);
+	}
+	return *cursor;
+}
+
+uint8_t OtbReader::nextU8()
+{
+	if (*cursor == OtbEscapeToken)
+	{
+		++cursor;
+	}
+
+	uint8_t result = *cursor;
+	++cursor;
+	return result;
+}
+
+uint16_t OtbReader::nextU16()
+{
+	uint16_t result = 0;
+	int shift = 0;
+	while (shift < 2)
+	{
+		if (*cursor == OtbEscapeToken)
+		{
+			++cursor;
+		}
+
+		result += (*cursor) << (8 * shift);
+		++cursor;
+		++shift;
+	}
+
+	return result;
+}
+
+uint32_t OtbReader::nextU32()
+{
+	uint16_t result = 0;
+	int shift = 0;
+	while (shift < 4)
+	{
+		if (*cursor == OtbEscapeToken)
+		{
+			++cursor;
+		}
+
+		result += (*cursor) << (8 * shift);
+		++cursor;
+		++shift;
+	}
+
+	return result;
+}
+
+std::vector<uint8_t> OtbReader::nextBytes(size_t bytes)
+{
+	std::vector<uint8_t> buffer(bytes);
+	size_t current = 0;
+	while (current < bytes)
+	{
+		if (*cursor == OtbEscapeToken)
+		{
+			++cursor;
+			// VME_LOG_D("Skipped escape");
+		}
+
+		buffer[current] = *cursor;
+		++cursor;
+		++current;
+	}
+
+	return buffer;
+}
+
+// void SaveBuffer::writeBytes(const uint8_t *cursor, size_t amount)
+// {
+//   while (amount > 0)
+//   {
+//     if (*cursor == NODE_START || *cursor == NODE_END || *cursor == ESCAPE_CHAR)
+//     {
+//       if (buffer.size() + 1 >= maxBufferSize)
+//       {
+//         flushToFile();
+//       }
+//       buffer.emplace_back(ESCAPE_CHAR);
+//       std::cout << std::hex << static_cast<int>(buffer.back()) << std::endl;
+//     }
+
+//     if (buffer.size() + 1 >= maxBufferSize)
+//     {
+//       flushToFile();
+//     }
+//     buffer.emplace_back(*cursor);
+//     std::cout << std::hex << static_cast<int>(buffer.back()) << std::endl;
+
+//     ++cursor;
+//     --amount;
+//   }
+// }
 
 void Items::loadFromOtb(const std::string &file)
 {
@@ -569,38 +961,32 @@ void Items::loadFromOtb(const std::string &file)
 		iType.name = appearance.name;
 
 		iType.group = static_cast<itemgroup_t>(itemNode.type);
-		switch (itemNode.type)
+		switch (iType.group)
 		{
-		case itemgroup_t::ITEM_GROUP_CONTAINER:
-			iType.type = ITEM_TYPE_CONTAINER;
+		case itemgroup_t::Container:
+			iType.type = ItemTypes_t::Container;
 			break;
-		case ITEM_GROUP_DOOR:
+		case itemgroup_t::Door:
 			//not used
-			iType.type = ITEM_TYPE_DOOR;
+			iType.type = ItemTypes_t::Door;
 			break;
-		case itemgroup_t::ITEM_GROUP_MAGICFIELD:
+		case itemgroup_t::MagicField:
 			//not used
-			iType.type = ItemTypes_t::ITEM_TYPE_MAGICFIELD;
+			iType.type = ItemTypes_t::MagicField;
 			break;
-		case itemgroup_t::ITEM_GROUP_TELEPORT:
+		case itemgroup_t::Teleport:
 			//not used
-			iType.type = ItemTypes_t::ITEM_TYPE_TELEPORT;
+			iType.type = ItemTypes_t::Teleport;
 			break;
-		case itemgroup_t::ITEM_GROUP_NONE:
-		case itemgroup_t::ITEM_GROUP_GROUND:
-		case itemgroup_t::ITEM_GROUP_SPLASH:
-		case itemgroup_t::ITEM_GROUP_FLUID:
-		case itemgroup_t::ITEM_GROUP_CHARGES:
-		case itemgroup_t::ITEM_GROUP_DEPRECATED:
+		case itemgroup_t::None:
+		case itemgroup_t::Ground:
+		case itemgroup_t::Splash:
+		case itemgroup_t::Fluid:
+		case itemgroup_t::Charges:
+		case itemgroup_t::Deprecated:
 			break;
 		default:
 			ABORT_PROGRAM(DEFAULT_ERROR);
-		}
-
-		if (serverId == 4526 || serverId == 103)
-		{
-			Logger::debug() << serverId << ":" << std::endl;
-			std::cout << appearance << std::endl;
 		}
 
 		// TODO: Check for items that do not have matching flags in .otb and appearances.dat
@@ -658,7 +1044,7 @@ void Items::loadFromOtb(const std::string &file)
 
 	items.itemTypes.shrink_to_fit();
 
-	Logger::info() << "Loaded items.otb in " << start.elapsedMillis() << " ms." << std::endl;
+	VME_LOG("Loaded items.otb in " << start.elapsedMillis() << " ms.");
 }
 
 ItemType *Items::getNextValidItemType(uint16_t serverId)

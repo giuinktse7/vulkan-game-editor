@@ -42,7 +42,7 @@ enum SlotPositionBits : uint32_t
   SLOTP_HAND = (SLOTP_LEFT | SLOTP_RIGHT)
 };
 
-enum itemgroup_t : uint8_t
+enum class itemgroup_t
 {
   None,
 
@@ -85,8 +85,14 @@ enum itemproperty_t : uint8_t
   ITEM_ATTR_DECAY,
   ITEM_ATTR_SPRITEHASH,
   ITEM_ATTR_MINIMAPCOLOR,
-  ITEM_ATTR_07,
-  ITEM_ATTR_08,
+  /*
+    Can be rewritten.
+  */
+  ITEM_ATTR_MAX_TEXT_LENGTH,
+  /*
+    Can only be written once.
+  */
+  ITEM_ATTR_MAX_TEXT_LENGTH_ONCE,
   ITEM_ATTR_LIGHT,
 
   //1-byte aligned
@@ -104,20 +110,20 @@ enum itemproperty_t : uint8_t
   ITEM_ATTR_LAST
 };
 
-enum ItemTypes_t : uint8_t
+enum class ItemTypes_t
 {
-  ITEM_TYPE_NONE,
-  ITEM_TYPE_DEPOT,
-  ITEM_TYPE_MAILBOX,
-  ITEM_TYPE_TRASHHOLDER,
-  ITEM_TYPE_CONTAINER,
-  ITEM_TYPE_DOOR,
-  ITEM_TYPE_MAGICFIELD,
-  ITEM_TYPE_TELEPORT,
-  ITEM_TYPE_BED,
-  ITEM_TYPE_KEY,
-  ITEM_TYPE_RUNE,
-  ITEM_TYPE_LAST
+  None,
+  Depot,
+  Mailbox,
+  TrashHolder,
+  Container,
+  Door,
+  MagicField,
+  Teleport,
+  Bed,
+  Key,
+  Rune,
+  Last
 };
 
 enum ItemFlags_t
@@ -154,15 +160,13 @@ enum ItemFlags_t
 class ItemType
 {
 public:
+  ItemType() {}
   //non-copyable
   ItemType(const ItemType &other) = delete;
   ItemType &operator=(const ItemType &other) = delete;
 
   ItemType(ItemType &&) = default;
   ItemType &operator=(ItemType &&) = default;
-
-  ItemType() {}
-  ~ItemType();
 
   void cacheTextureAtlases();
 
@@ -227,8 +231,8 @@ public:
 
   std::string getPluralName() const;
 
-  itemgroup_t group = None;
-  ItemTypes_t type = ITEM_TYPE_NONE;
+  itemgroup_t group = itemgroup_t::None;
+  ItemTypes_t type = ItemTypes_t::None;
   uint16_t id = 0;
   uint16_t clientId = 0;
   bool stackable = false;
@@ -342,9 +346,6 @@ public:
 
 private:
   std::array<TextureAtlas *, CACHED_TEXTURE_ATLAS_AMOUNT> atlases = {};
-
-  // This item's index in the itemtype vector
-  uint16_t internalMapId = 0;
 
   void cacheTextureAtlas(uint32_t spriteId);
 };

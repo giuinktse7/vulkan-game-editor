@@ -28,6 +28,18 @@ constexpr auto to_underlying(E e) noexcept
 namespace util
 {
 	template <typename T>
+	inline std::vector<T> sliceLeading(std::vector<T> xs, T x)
+	{
+		auto cursor = xs.begin();
+		while (*cursor == x)
+		{
+			++cursor;
+		}
+
+		return std::vector<T>(cursor, xs.end());
+	}
+
+	template <typename T>
 	inline void appendVector(std::vector<T> &&source, std::vector<T> &destination)
 	{
 		if (destination.empty())
@@ -51,7 +63,7 @@ namespace util
 	};
 	// explicit deduction guide (not needed as of C++20)
 	template <class... Ts>
-	overloaded(Ts...) -> overloaded<Ts...>;
+	overloaded(Ts...)->overloaded<Ts...>;
 
 	template <typename T>
 	struct Rectangle

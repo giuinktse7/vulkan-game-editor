@@ -2,21 +2,53 @@
 
 #include "debug.h"
 
+#include <QStringLiteral>
+
 constexpr std::string_view InfoString = "[INFO] ";
 constexpr std::string_view DebugString = "[DEBUG] ";
 constexpr std::string_view ErrorString = "[ERROR] ";
 
-std::ostream &Logger::info()
+#ifdef QT_CORE_LIB
+QString INFO_STRING = QStringLiteral("[Info] ");
+QString DEBUG_STRING = QStringLiteral("[Debug] ");
+
+void Logger::info(std::ostringstream &s)
 {
-    std::cout << InfoString;
-    return std::cout;
+    qDebug().noquote() << INFO_STRING << QString(s.str().c_str());
 }
 
-std::ostream &Logger::debug()
+void Logger::debug(std::ostringstream &s)
+{
+    qDebug().noquote() << DEBUG_STRING << QString(s.str().c_str());
+}
+
+Logger::MainLogger Logger::info()
+{
+    qDebug() << QString(std::string(DebugString).c_str());
+    return qDebug();
+}
+#else
+void info(std::ostringstream &s)
+{
+    Logger::info() << s.str() << std::endl;
+}
+
+void debug(std::ostringstream &s)
+{
+    Logger::debug() << s.str() << std::endl;
+}
+
+Logger::MainLogger &Logger::info()
+{
+    std::clog << InfoString;
+    return std::clog;
+}
+Logger::MainLogger &Logger::debug()
 {
     std::clog << DebugString;
     return std::clog;
 }
+#endif
 
 std::ostream &Logger::error()
 {

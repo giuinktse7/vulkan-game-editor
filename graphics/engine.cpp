@@ -71,7 +71,7 @@ void Engine::initialize()
 
   TimePoint start;
   createVulkanInstance();
-  Logger::info() << "Created vulkan instance in " << start.elapsedMillis() << " ms." << std::endl;
+  VME_LOG("Created vulkan instance in " << start.elapsedMillis() << " ms.");
 
   VulkanDebug::setupDebugMessenger(instance, debugMessenger);
 
@@ -445,7 +445,7 @@ FrameResult Engine::nextFrame()
 
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized)
   {
-    Logger::info() << "recreate in presentFrame" << std::endl;
+    VME_LOG_D("recreate in presentFrame");
     framebufferResized = false;
     recreateSwapChain();
   }

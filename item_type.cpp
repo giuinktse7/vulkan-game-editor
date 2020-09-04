@@ -3,11 +3,6 @@
 #include "ecs/ecs.h"
 #include "ecs/item_animation.h"
 
-ItemType::~ItemType()
-{
-  // Empty
-}
-
 const uint32_t ItemType::getPatternIndex(const Position &pos) const
 {
   const SpriteInfo &spriteInfo = appearance->getSpriteInfo();
@@ -163,57 +158,57 @@ std::string ItemType::getPluralName() const
 
 bool ItemType::isGroundTile() const
 {
-  return group == ITEM_GROUP_GROUND;
+  return group == itemgroup_t::Ground;
 }
 bool ItemType::isContainer() const
 {
-  return group == ITEM_GROUP_CONTAINER;
+  return group == itemgroup_t::Container;
 }
 bool ItemType::isSplash() const
 {
-  return group == ITEM_GROUP_SPLASH;
+  return group == itemgroup_t::Splash;
 }
 bool ItemType::isFluidContainer() const
 {
-  return group == ITEM_GROUP_FLUID;
+  return group == itemgroup_t::Fluid;
 }
 
 bool ItemType::isDoor() const
 {
-  return (type == ITEM_TYPE_DOOR);
+  return (type == ItemTypes_t::Door);
 }
 bool ItemType::isMagicField() const
 {
-  return (type == ITEM_TYPE_MAGICFIELD);
+  return (type == ItemTypes_t::MagicField);
 }
 bool ItemType::isTeleport() const
 {
-  return (type == ITEM_TYPE_TELEPORT);
+  return (type == ItemTypes_t::Teleport);
 }
 bool ItemType::isKey() const
 {
-  return (type == ITEM_TYPE_KEY);
+  return (type == ItemTypes_t::Key);
 }
 bool ItemType::isDepot() const
 {
-  return (type == ITEM_TYPE_DEPOT);
+  return (type == ItemTypes_t::Depot);
 }
 bool ItemType::isMailbox() const
 {
-  return (type == ITEM_TYPE_MAILBOX);
+  return (type == ItemTypes_t::Mailbox);
 }
 bool ItemType::isTrashHolder() const
 {
-  return (type == ITEM_TYPE_TRASHHOLDER);
+  return (type == ItemTypes_t::TrashHolder);
 }
 bool ItemType::isBed() const
 {
-  return (type == ITEM_TYPE_BED);
+  return (type == ItemTypes_t::Bed);
 }
 
 bool ItemType::isRune() const
 {
-  return (type == ITEM_TYPE_RUNE);
+  return (type == ItemTypes_t::Rune);
 }
 bool ItemType::isPickupable() const
 {

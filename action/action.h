@@ -189,23 +189,31 @@ private:
   MapAction *getLatestAction();
 };
 
-inline std::ostream &operator<<(std::ostream &os, ActionGroupType type)
+inline std::ostringstream stringify(const ActionGroupType &type)
 {
+  std::ostringstream s;
+
   switch (type)
   {
   case ActionGroupType::Selection:
-    os << "ActionGroupType::Selection";
+    s << "ActionGroupType::Selection";
     break;
   case ActionGroupType::AddMapItem:
-    os << "ActionGroupType::AddMapItem";
+    s << "ActionGroupType::AddMapItem";
     break;
   case ActionGroupType::RemoveMapItem:
-    os << "ActionGroupType::RemoveMapItem";
+    s << "ActionGroupType::RemoveMapItem";
     break;
   default:
-    os << "Unknown ActionGroupType: " << to_underlying(type);
+    s << "Unknown ActionGroupType: " << to_underlying(type);
     break;
   }
 
+  return s;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const ActionGroupType &type)
+{
+  os << stringify(type).str();
   return os;
 }

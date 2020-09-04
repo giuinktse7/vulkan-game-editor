@@ -92,7 +92,7 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
 
     Appearances::isLoaded = true;
 
-    Logger::info() << "Loaded appearances.dat in " << start.elapsedMillis() << " ms." << std::endl;
+    VME_LOG("Loaded appearances.dat in " << start.elapsedMillis() << " ms.");
 }
 
 TextureAtlas *Appearances::getTextureAtlas(const uint32_t spriteId)
@@ -185,7 +185,7 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
         Appearances::textureAtlasSpriteRanges.end(),
         [](SpriteRange a, SpriteRange b) { return a.start < b.start; });
 
-    Logger::info() << "Loaded compressed sprites in " << start.elapsedMillis() << " ms." << std::endl;
+    VME_LOG("Loaded compressed sprites in " << start.elapsedMillis() << " ms.");
 }
 
 SpriteInfo SpriteInfo::fromProtobufData(tibia::protobuf::appearances::SpriteInfo spriteInfo)

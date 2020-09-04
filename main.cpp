@@ -24,7 +24,8 @@ void loadGameData()
     Appearances::loadTextureAtlases("data/catalog-content.json");
     Appearances::loadAppearanceData("data/appearances.dat");
 
-    Items::loadFromOtb("data/items.otb");
+    // Items::loadFromOtb("data/items.otb");
+    OtbReader("data/items.otb").parseOTB();
     Items::loadFromXml("data/items.xml");
 }
 
@@ -34,7 +35,8 @@ int main(int argc, char *argv[])
 
     const bool dbg = qEnvironmentVariableIntValue("QT_VK_DEBUG");
 
-    QLoggingCategory::setFilterRules(QStringLiteral("qt.vulkan=true"));
+    // QLoggingCategory::setFilterRules(QStringLiteral("qt.vulkan=true"));
+    QLoggingCategory::setFilterRules(QStringLiteral("'vulkan-map-editor.exe' (Win32)=false"));
 
     loadGameData();
 
