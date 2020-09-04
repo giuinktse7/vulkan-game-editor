@@ -2,6 +2,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,qt,qtcreator,c++
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,qt,qtcreator,c++
 
+debug/
+release/
+
 ### C++ ###
 # Prerequisites
 *.d
