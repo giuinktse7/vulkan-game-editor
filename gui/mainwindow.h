@@ -17,6 +17,9 @@ class MainWindow : public QWidget
 public:
     MainWindow(VulkanWindow *vulkanWindow);
 
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
+
 private slots:
     void closeMapTab(int index);
 

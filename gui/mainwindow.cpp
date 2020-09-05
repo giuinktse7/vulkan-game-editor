@@ -6,18 +6,20 @@
 #include <QTabWidget>
 #include <QMenuBar>
 #include <QtWidgets>
+#include <QContextMenuEvent>
+#include <QMouseEvent>
 
 #include "vulkan_window.h"
 
 MainWindow::MainWindow(VulkanWindow *vulkanWindow)
 {
-    QWidget *wrapper = QWidget::createWindowContainer(vulkanWindow);
-    wrapper->setFocusPolicy(Qt::StrongFocus);
-    wrapper->setFocus();
+    QWidget *wrapper = vulkanWindow->wrapInWidget();
+    // wrapper->setFocusPolicy(Qt::StrongFocus);
+    // wrapper->setFocus();
 
-    this->setWindowTitle("Vulkan editor");
+    setWindowTitle("Vulkan editor");
 
-    this->rootLayout = new QVBoxLayout;
+    rootLayout = new QVBoxLayout;
     createMenuBar();
 
     textEdit = new QPlainTextEdit;
@@ -27,16 +29,23 @@ MainWindow::MainWindow(VulkanWindow *vulkanWindow)
 
     QGridLayout *gridLayout = new QGridLayout;
     gridLayout->addWidget(textEdit, 0, 0);
-    this->mapTabs = new QTabWidget(this);
+
+    mapTabs = new QTabWidget(this);
     mapTabs->setTabsClosable(true);
     QObject::connect(mapTabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeMapTab(int)));
 
     mapTabs->addTab(wrapper, "untitled.otbm");
+
     gridLayout->addWidget(mapTabs, 1, 0, 7, 2);
 
     rootLayout->addItem(gridLayout);
 
     setLayout(rootLayout);
+}
+
+void MainWindow::mousePressEvent(QMouseEvent *event)
+{
+    VME_LOG_D("MainWindow::mousePressEvent");
 }
 
 void MainWindow::createMenuBar()
