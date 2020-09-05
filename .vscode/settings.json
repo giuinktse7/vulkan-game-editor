@@ -98,7 +98,11 @@
     "qvulkaninstance": "cpp",
     "qmenubar": "cpp",
     "qmenu": "cpp",
-    "qplaintextedit": "cpp"
+    "qplaintextedit": "cpp",
+    "qcontextmenuevent": "cpp",
+    "qmouseevent": "cpp",
+    "qdialog": "cpp",
+    "qaction": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

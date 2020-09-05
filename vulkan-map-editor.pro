@@ -73,7 +73,8 @@ SOURCES += \
     town.cpp \
     action/action.cpp \
     selection.cpp \
-    trianglerenderer.cpp
+    trianglerenderer.cpp \
+    qt/logging.cpp
 
 HEADERS += \
     gui/mainwindow.h \
@@ -127,7 +128,8 @@ HEADERS += \
     action/action.h \
     selection.h \
     definitions.h \
-    trianglerenderer.h
+    trianglerenderer.h \
+    qt/logging.h
 
 
 FORMS += \

@@ -1,8 +1,11 @@
-#include "../graphics/appearances.h"
+#pragma once
 
-template <typename T>
-inline QDebug operator<<(QDebug d, const T &action)
-{
-  d << stringify(action).str();
-  return d;
-}
+#include <sstream>
+
+class QPoint;
+class QPointF;
+class QRect;
+
+std::ostream &operator<<(std::ostream &os, QPoint point);
+std::ostream &operator<<(std::ostream &os, QPointF point);
+std::ostream &operator<<(std::ostream &os, QRect rect);
