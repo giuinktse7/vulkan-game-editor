@@ -9,6 +9,8 @@ public:
 	TimePoint(std::chrono::steady_clock::time_point timePoint = std::chrono::steady_clock::now());
 
 	static TimePoint now();
+	static TimePoint sinceStart();
+	static void setApplicationStartTimePoint();
 
 	template <typename T>
 	time_t timeSince(TimePoint other)
