@@ -5,8 +5,10 @@
 
 #include "../logger.h"
 
+#pragma warning(push, 0)
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
+#pragma warning(pop)
 
 #include <algorithm>
 #include <iostream>
@@ -97,7 +99,6 @@ void print_byte(uint8_t b)
 void nextN(std::vector<uint8_t> &buffer, uint32_t offset, uint32_t n)
 {
   //std::cout << "Next " << std::to_string(n) << ":" << std::endl;
-  uint8_t k = 0;
   uint8_t *data = buffer.data();
   for (uint32_t i = 0; i < n; ++i)
   {

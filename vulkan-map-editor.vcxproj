@@ -216,7 +216,6 @@
     <ClCompile Include="qt\logging.cpp" />
     <ClCompile Include="quad_tree.cpp" />
     <ClCompile Include="random.cpp" />
-    <ClCompile Include="gui\renderer.cpp" />
     <ClCompile Include="selection.cpp" />
     <ClCompile Include="graphics\protobuf\shared.pb.cc" />
     <ClCompile Include="graphics\texture.cpp" />
@@ -226,7 +225,6 @@
     <ClCompile Include="time_point.cpp" />
     <ClCompile Include="town.cpp" />
     <ClCompile Include="util.cpp" />
-    <ClCompile Include="graphics\vulkan_debug.cpp" />
     <ClCompile Include="graphics\vulkan_helpers.cpp" />
     <ClCompile Include="gui\vulkan_window.cpp" />
   </ItemGroup>
@@ -263,7 +261,6 @@
     <ClInclude Include="qt\logging.h" />
     <ClInclude Include="quad_tree.h" />
     <ClInclude Include="random.h" />
-    <ClInclude Include="gui\renderer.h" />
     <ClInclude Include="selection.h" />
     <ClInclude Include="graphics\protobuf\shared.pb.h" />
     <ClInclude Include="graphics\texture.h" />
@@ -277,7 +274,6 @@
     <ClInclude Include="graphics\validation.h" />
     <ClInclude Include="version.h" />
     <ClInclude Include="graphics\vertex.h" />
-    <ClInclude Include="graphics\vulkan_debug.h" />
     <ClInclude Include="graphics\vulkan_helpers.h" />
     <ClInclude Include="gui\vulkan_window.h" />
   </ItemGroup>

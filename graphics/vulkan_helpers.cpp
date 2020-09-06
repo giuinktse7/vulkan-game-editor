@@ -5,6 +5,9 @@
 #include <set>
 #include <stdexcept>
 
+#pragma warning(push)
+#pragma warning(disable : 26812) // warning C26812: The enum type 'VkFormat', 'VkImageLayout' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+
 bool VulkanHelpers::checkDeviceExtensionSupport(VkPhysicalDevice device)
 {
   uint32_t extensionCount;
@@ -234,3 +237,5 @@ void VulkanHelpers::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t w
 
   endSingleTimeCommands(commandBuffer);
 }
+
+#pragma warning(pop)

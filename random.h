@@ -25,7 +25,7 @@ public:
 	T nextInt(A from, A to)
 	{
 		double r = nextDouble();
-		int maxValue = std::max(from, to - 1);
+		A maxValue = std::max(from, to - 1);
 
 		return static_cast<T>(std::round(from + r * (maxValue - from)));
 	}

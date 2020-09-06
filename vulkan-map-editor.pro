@@ -33,15 +33,13 @@ SOURCES += \
     main.cpp \
     gui/mainwindow.cpp \
     gui/vulkan_window.cpp \
-    gui/renderer.cpp \
     graphics/appearances.cpp \
     graphics/compression.cpp \ # graphics/resource-descriptor.cpp \
     graphics/texture_atlas.cpp \
     graphics/vulkan_helpers.cpp \
     graphics/batch_item_draw.cpp \ # graphics/device_manager.cpp \ # graphics/swapchain.cpp \
     graphics/buffer.cpp \ # graphics/engine.cpp \
-    graphics/texture.cpp \
-    graphics/vulkan_debug.cpp \
+    graphics/texture.cpp \ # graphics/vulkan_debug.cpp \
     graphics/protobuf/appearances.pb.cc \
     graphics/protobuf/map.pb.cc \
     graphics/protobuf/shared.pb.cc \
@@ -73,9 +71,7 @@ SOURCES += \
 
 HEADERS += \
     gui/mainwindow.h \
-    gui/vulkan_window.h \
-    gui/renderer.h \
-    graphics/vulkan_debug.h \
+    gui/vulkan_window.h \ # graphics/vulkan_debug.h \
     graphics/appearances.h \
     graphics/compression.h \ # graphics/resource-descriptor.h \
     graphics/texture_atlas.h \

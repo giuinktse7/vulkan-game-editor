@@ -6,8 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <algorithm>
-
-class ScreenPosition;
+struct ScreenPosition;
 
 class Camera
 {
@@ -45,7 +44,7 @@ private:
   // Current zoom step
   int zoomStep = 10;
 
-  bool zoomChanged;
+  bool zoomChanged = false;
 
   void setZoomStep(int zoomStep);
 };

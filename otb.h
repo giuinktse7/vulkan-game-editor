@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <iterator>
 
-
 class PropStream;
 
 namespace OTB
@@ -28,7 +27,7 @@ namespace OTB
   {
     uint32_t majorVersion = 0xFFFFFFFF;
     int minorVersion = 0x0;
-    uint32_t buildNumber;
+    uint32_t buildNumber = 0;
     uint8_t CSDVersion[128];
   };
 
@@ -41,7 +40,7 @@ namespace OTB
     std::vector<Node> children;
     ByteIterator propsBegin;
     ByteIterator propsEnd;
-    uint8_t type;
+    uint8_t type = 0;
     enum NodeChar : uint8_t
     {
       ESCAPE = 0xFD,

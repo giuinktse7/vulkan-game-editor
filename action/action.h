@@ -114,7 +114,7 @@ public:
   struct FullSelectionData
   {
     std::unordered_set<Position, PositionHash> positions;
-    bool isDeselect;
+    bool isDeselect = false;
   };
   using TileData = Tile;
   using RemovedTileData = RemovedTile;
@@ -123,7 +123,7 @@ public:
   {
     Position position;
     std::vector<uint16_t> indices;
-    bool includesGround;
+    bool includesGround = false;
     bool select = true;
   };
 
@@ -147,7 +147,7 @@ public:
   {
   }
 
-  Change &operator=(Change &&other)
+  Change &operator=(Change &&other) noexcept
   {
     data = std::move(other.data);
     return *this;

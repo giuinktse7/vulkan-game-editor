@@ -21,7 +21,6 @@ void ItemAnimationComponent::synchronizePhase()
   uint32_t loopTime = std::get<uint32_t>(state.info);
 
   long long timeDiff = elapsedTimeMs % loopTime;
-  long long startTimeDiff = timeDiff;
 
   size_t phaseIndex = 0;
   while (timeDiff >= 0)
@@ -144,7 +143,7 @@ void ItemAnimationSystem::updateInfinite(ItemAnimationComponent &animation, long
 
   if (animation.animationInfo->synchronized)
   {
-    bool outOfSync = elapsedTimeMs >= animation.state.phaseDurationMs + animation.animationInfo->phases.at(nextPhase).maxDuration;
+    bool outOfSync = elapsedTimeMs >= static_cast<long long>(animation.state.phaseDurationMs) + animation.animationInfo->phases.at(nextPhase).maxDuration;
     if (outOfSync)
     {
       animation.synchronizePhase();
@@ -174,7 +173,7 @@ void ItemAnimationSystem::updatePingPong(ItemAnimationComponent &animation)
   }
 
   uint32_t indexChange = direction == Direction::Forward ? 1 : -1;
-  animation.setPhase(animation.state.phaseIndex + indexChange, currentTime);
+  animation.setPhase(static_cast<size_t>(animation.state.phaseIndex) + indexChange, currentTime);
 }
 
 void ItemAnimationSystem::updateCounted(ItemAnimationComponent &animation)

@@ -28,6 +28,28 @@ Batch::Batch()
   mapStagingBuffer();
 }
 
+Batch::Batch(Batch &&other) noexcept
+{
+  this->valid = other.valid;
+  this->isCopiedToDevice = other.isCopiedToDevice;
+  this->buffer = std::move(other.buffer);
+  this->stagingBuffer = std::move(other.stagingBuffer);
+  this->descriptorIndices = other.descriptorIndices;
+  this->descriptorSet = other.descriptorSet;
+  this->vertexCount = other.vertexCount;
+  this->vertices = other.vertices;
+  this->current = other.current;
+
+  other.vertexCount = 0;
+  other.stagingBuffer.buffer = nullptr;
+  other.stagingBuffer.deviceMemory = nullptr;
+  other.buffer.buffer = nullptr;
+  other.buffer.deviceMemory = nullptr;
+  other.descriptorSet = nullptr;
+  other.vertices = nullptr;
+  other.current = nullptr;
+}
+
 void Batch::invalidate()
 {
   this->valid = false;
@@ -115,8 +137,8 @@ void BatchDraw::addRectangle(RectangleDrawInfo &info)
 {
   Batch &batch = getBatch(4);
 
-  TextureWindow window;
-  glm::vec4 fragmentBounds;
+  TextureWindow window{};
+  glm::vec4 fragmentBounds{};
 
   DEBUG_ASSERT(std::holds_alternative<Texture *>(info.texture) || std::holds_alternative<TextureInfo>(info.texture), "Unknown texture in addRectangle.");
 

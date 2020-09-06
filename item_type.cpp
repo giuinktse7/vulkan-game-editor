@@ -26,9 +26,6 @@ const TextureInfo ItemType::getTextureInfo(uint32_t spriteId) const
 {
   TextureAtlas *atlas = getTextureAtlas(spriteId);
 
-  float offsetX = 0.5f / atlas->width;
-  float offsetY = 0.5f / atlas->height;
-
   TextureInfo info;
   info.atlas = atlas;
   info.window = atlas->getTextureWindow(spriteId);

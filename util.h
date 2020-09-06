@@ -19,11 +19,14 @@ void to_upper_str(std::string &source);
 
 std::string as_lower_str(std::string s);
 
+#pragma warning(push)
+#pragma warning(disable : 26812)
 template <typename E>
 constexpr auto to_underlying(E e) noexcept
 {
 	return static_cast<std::underlying_type_t<E>>(e);
 }
+#pragma warning(pop)
 
 namespace util
 {
@@ -79,7 +82,7 @@ namespace util
 	};
 	// explicit deduction guide (not needed as of C++20)
 	template <class... Ts>
-	overloaded(Ts...) -> overloaded<Ts...>;
+	overloaded(Ts...)->overloaded<Ts...>;
 
 	template <typename T>
 	struct Rectangle

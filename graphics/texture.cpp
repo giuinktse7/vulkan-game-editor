@@ -1,7 +1,9 @@
 #include "texture.h"
 
+#pragma warning(push, 0)
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#pragma warning(pop)
 
 #include <cmath>
 #include <algorithm>
@@ -15,8 +17,11 @@
 #include "buffer.h"
 #include "../util.h"
 
+#pragma warning(push)
+#pragma warning(disable : 26812)
 // QVulkanWindow works correctly with UNORM. If not using Vulkan, VK_FORMAT_B8G8R8A8_SRGB works.
 constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
+#pragma warning(pop)
 
 std::unordered_map<SolidColor, std::unique_ptr<Texture>> solidColorTextures;
 
@@ -55,13 +60,13 @@ Texture::Texture(const std::string &filename, Texture::Descriptor descriptor)
 
 void Texture::init(uint32_t width, uint32_t height, uint8_t *pixels, Texture::Descriptor descriptor)
 {
+  uint64_t sizeInBytes = (static_cast<uint64_t>(width) * height) * 4;
   this->layout = VK_NULL_HANDLE;
   this->width = width;
   this->height = height;
-  imageSize = static_cast<uint64_t>(width) * height * 4;
+  imageSize = sizeInBytes;
 
-  VkDevice device = g_window->device();
-  std::vector<uint8_t> vectorBuffer(pixels, pixels + width * height * 4);
+  std::vector<uint8_t> vectorBuffer(pixels, pixels + sizeInBytes);
   this->pixels = vectorBuffer;
 
   initVulkanResources(descriptor);

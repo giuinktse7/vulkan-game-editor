@@ -43,7 +43,7 @@ MainWindow::MainWindow(VulkanWindow *vulkanWindow)
     setLayout(rootLayout);
 }
 
-void MainWindow::mousePressEvent(QMouseEvent *event)
+void MainWindow::mousePressEvent(QMouseEvent *)
 {
     VME_LOG_D("MainWindow::mousePressEvent");
 }
@@ -52,10 +52,17 @@ void MainWindow::createMenuBar()
 {
     QMenuBar *menuBar = new QMenuBar;
     QMenu *fileMenu = menuBar->addMenu(tr("&File"));
+
+    QAction *_new = new QAction(tr("&New"), this);
+    fileMenu->addAction(_new);
+
     QMenu *editMenu = menuBar->addMenu(tr("&Edit"));
 
-    QAction *newAction = new QAction(tr("&New"), this);
-    fileMenu->addAction(newAction);
+    QAction *undo = new QAction(tr("&Undo"), this);
+    editMenu->addAction(undo);
+
+    QAction *redo = new QAction(tr("&Redo"), this);
+    editMenu->addAction(redo);
 
     this->rootLayout->setMenuBar(menuBar);
 }

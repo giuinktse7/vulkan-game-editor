@@ -40,11 +40,11 @@ struct ItemAnimationComponent
 
 	struct
 	{
-		uint32_t phaseIndex;
+		uint32_t phaseIndex = 0;
 		/*
 			Phase duration in milliseconds.
 		*/
-		uint32_t phaseDurationMs;
+		uint32_t phaseDurationMs = 0;
 
 		using loop_t = uint32_t;
 		/*

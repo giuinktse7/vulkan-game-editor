@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include <memory>
 #include <filesystem>
-#include <unordered_map>
 #include <array>
 
 #include <sstream>
@@ -12,26 +11,17 @@
 #ifndef MESSAGES_WRAPPER_H
 #define MESSAGES_WRAPPER_H
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4251 4100 4267)
-#endif
-
+#pragma warning(push, 0)
 #include "protobuf/appearances.pb.h"
+#pragma warning(pop)
+
+#endif // MESSAGES_WRAPPER_H
 
 #include "../debug.h"
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
-#endif
-
 #include "../position.h"
 #include "../const.h"
-#include "texture_atlas.h"
 
-#include <unordered_map>
+#include "texture_atlas.h"
 
 struct SpriteRange
 {
@@ -250,10 +240,10 @@ private:
 
 struct SpriteInfo
 {
-  uint32_t patternWidth;
-  uint32_t patternHeight;
-  uint32_t patternDepth;
-  uint32_t layers;
+  uint32_t patternWidth = 0;
+  uint32_t patternHeight = 0;
+  uint32_t patternDepth = 0;
+  uint32_t layers = 1;
 
   std::vector<uint32_t> spriteIds;
 

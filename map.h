@@ -52,15 +52,21 @@ public:
 		Position from;
 		Position to;
 
-		int x1, x2, y1, y2;
-		int endZ;
+		int x1 = 0;
+		int x2 = 0;
+		int y1 = 0;
+		int y2 = 0;
+		int endZ = 0;
 
 		struct State
 		{
-			int mapX, mapY, mapZ;
+			int mapX = 0;
+			int mapY = 0;
+			int mapZ = 0;
 			struct
 			{
-				int x, y;
+				int x = 0;
+				int y = 0;
 				quadtree::Node *node;
 			} chunk;
 		} state;
@@ -70,17 +76,7 @@ public:
 		bool isEnd;
 
 		// For postfix operator
-		Iterator(Map &map, const Iterator &iterator)
-				: map(map), from(iterator.from), to(iterator.to), isEnd(iterator.isEnd)
-		{
-			x1 = iterator.x1;
-			x2 = iterator.x2;
-
-			y1 = iterator.y1;
-			y2 = iterator.y2;
-
-			state = iterator.state;
-		}
+		Iterator(Map &map, const Iterator &iterator);
 
 		void nextChunk();
 		void updateValue();

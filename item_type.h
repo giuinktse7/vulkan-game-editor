@@ -6,6 +6,9 @@
 #include "graphics/appearances.h"
 #include "const.h"
 
+#pragma warning(push)
+#pragma warning(disable : 26812)
+
 constexpr size_t CACHED_TEXTURE_ATLAS_AMOUNT = 5;
 
 enum FloorChange
@@ -349,3 +352,5 @@ private:
 
   void cacheTextureAtlas(uint32_t spriteId);
 };
+
+#pragma warning(pop)

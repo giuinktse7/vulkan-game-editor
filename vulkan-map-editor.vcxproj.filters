@@ -115,9 +115,6 @@
     <ClCompile Include="random.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gui\renderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="selection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -247,9 +244,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="random.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gui\renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="selection.h">

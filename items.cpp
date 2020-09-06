@@ -325,9 +325,9 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 	return true;
 }
 
-void Items::loadFromOtb(const std::string &file)
+void Items::loadFromOtb(const std::filesystem::path path)
 {
-	OtbReader reader("data/items.otb");
+	OtbReader reader(path.string());
 	reader.parseOTB();
 }
 
@@ -538,6 +538,10 @@ void Items::OtbReader::readNodes()
 				break;
 			}
 			}
+		}
+		if (itemType == nullptr)
+		{
+			ABORT_PROGRAM("Encountered item type without a server ID.");
 		}
 
 		itemType->type = serverItemType(typeValue);

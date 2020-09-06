@@ -23,7 +23,7 @@ struct ObjectDrawInfo
 	Appearance *appearance;
 	TextureInfo textureInfo;
 	Position position;
-	glm::vec4 color;
+	glm::vec4 color{};
 	DrawOffset drawOffset = {0, 0};
 };
 
@@ -31,7 +31,7 @@ struct RectangleDrawInfo
 {
 	WorldPosition from;
 	WorldPosition to;
-	glm::vec4 color;
+	glm::vec4 color{};
 	std::variant<Texture *, TextureInfo> texture;
 };
 
@@ -47,27 +47,7 @@ struct Batch
 	BoundBuffer buffer;
 	BoundBuffer stagingBuffer;
 
-	Batch(Batch &&other)
-	{
-		this->valid = other.valid;
-		this->isCopiedToDevice = other.isCopiedToDevice;
-		this->buffer = std::move(other.buffer);
-		this->stagingBuffer = std::move(other.stagingBuffer);
-		this->descriptorIndices = other.descriptorIndices;
-		this->descriptorSet = other.descriptorSet;
-		this->vertexCount = other.vertexCount;
-		this->vertices = other.vertices;
-		this->current = other.current;
-
-		other.vertexCount = 0;
-		other.stagingBuffer.buffer = nullptr;
-		other.stagingBuffer.deviceMemory = nullptr;
-		other.buffer.buffer = nullptr;
-		other.buffer.deviceMemory = nullptr;
-		other.descriptorSet = nullptr;
-		other.vertices = nullptr;
-		other.current = nullptr;
-	}
+	Batch(Batch &&other) noexcept;
 
 	Vertex *vertices = nullptr;
 	Vertex *current = nullptr;
@@ -100,7 +80,7 @@ struct Batch
 
 	bool canHold(uint32_t vertexCount) const
 	{
-		return (this->vertexCount + vertexCount) * sizeof(Vertex) < BatchDeviceSize;
+		return (static_cast<uint64_t>(this->vertexCount) + vertexCount) * sizeof(Vertex) < BatchDeviceSize;
 	}
 
 	void invalidate();

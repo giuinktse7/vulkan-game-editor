@@ -9,6 +9,9 @@
 #include "definitions.h"
 #include "tile.h"
 
+#pragma warning(push)
+#pragma warning(disable : 26812)
+
 enum NodeType
 {
   NODE_START = 0xFE,
@@ -102,7 +105,7 @@ void SaveBuffer::writeString(const std::string &s)
     ABORT_PROGRAM("OTBM does not support strings larger than 65535 bytes.");
   }
 
-  writeU16(s.size());
+  writeU16(static_cast<uint16_t>(s.size()));
   writeBytes(reinterpret_cast<uint8_t *>(const_cast<char *>(s.data())), s.size());
 }
 
@@ -113,7 +116,12 @@ void SaveBuffer::writeRawString(const std::string &s)
 
 void SaveBuffer::writeLongString(const std::string &s)
 {
-  writeU32(s.size());
+  if (s.size() > UINT32_MAX)
+  {
+    ABORT_PROGRAM("OTBM does not support long strings larger than 2^32 bytes.");
+  }
+
+  writeU32(static_cast<uint32_t>(s.size()));
   writeBytes(reinterpret_cast<uint8_t *>(const_cast<char *>(s.data())), s.size());
 }
 
@@ -313,7 +321,7 @@ void MapIO::Serializer::serializeItemAttributes(const Item &item)
   {
     if (item.hasAttributes())
     {
-      buffer.writeU8(OTBM_ATTR_ATTRIBUTE_MAP);
+      buffer.writeU8(static_cast<uint8_t>(OTBM_ATTR_ATTRIBUTE_MAP));
       serializeItemAttributeMap(item.getAttributes());
     }
   }
@@ -322,7 +330,7 @@ void MapIO::Serializer::serializeItemAttributes(const Item &item)
 void MapIO::Serializer::serializeItemAttributeMap(const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes)
 {
   // Can not have more than UINT16_MAX items
-  buffer.writeU16(std::min((size_t)UINT16_MAX, attributes.size()));
+  buffer.writeU16(static_cast<uint16_t>(std::min((size_t)UINT16_MAX, attributes.size())));
 
   auto entry = attributes.begin();
 
@@ -368,3 +376,5 @@ void MapIO::Serializer::serializeItemAttribute(ItemAttribute &attribute)
     buffer.writeU64(static_cast<uint64_t>(attribute.get<double>().value()));
   }
 }
+
+#pragma warning(pop)

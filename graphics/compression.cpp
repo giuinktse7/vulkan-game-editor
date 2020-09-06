@@ -5,6 +5,9 @@
 
 #include <cassert>
 
+#pragma warning(push)
+#pragma warning(disable : 26812)
+
 std::vector<uint8_t> remove_leading(std::vector<uint8_t> const &buffer, uint8_t c)
 {
     auto end = buffer.end();
@@ -142,3 +145,5 @@ std::vector<uint8_t> LZMA::decompressRaw(const std::vector<uint8_t> &in, lzma_op
         }
     }
 }
+
+#pragma warning(pop)

@@ -93,7 +93,7 @@ void MapAction::commit()
 
                      data.select = !data.select;
                    },
-                   [](auto &arg) {
+                   [](auto &) {
                      ABORT_PROGRAM("Unknown change!");
                    }},
                change.data);
@@ -180,7 +180,7 @@ void MapAction::undo()
 
                      data.select = !data.select;
                    },
-                   [](auto &arg) {
+                   [](auto &) {
                      ABORT_PROGRAM("Unknown change!");
                    }},
                change.data);

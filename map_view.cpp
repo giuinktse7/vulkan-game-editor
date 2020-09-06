@@ -63,7 +63,6 @@ void MapView::addItem(const Position pos, uint16_t id)
   const SpriteInfo &spriteInfo = item.itemType->appearance->getSpriteInfo();
   if (spriteInfo.hasAnimation())
   {
-    auto &anim = *spriteInfo.getAnimation();
     ecs::EntityId entityId = item.assignNewEntityId();
     g_ecs.addComponent(entityId, ItemAnimationComponent(spriteInfo.getAnimation()));
   }
@@ -82,7 +81,6 @@ void MapView::removeItems(const Position position, const std::set<size_t, std::g
   TileLocation *location = map->getTileLocation(position);
 
   DEBUG_ASSERT(location->hasTile(), "The location has no tile.");
-  Tile *tile = location->getTile();
 
   MapAction action(*this, MapActionType::RemoveTile);
 
@@ -348,8 +346,6 @@ void MapView::panEvent(PanEvent event)
 */
 std::unique_ptr<Tile> MapView::setTileInternal(Tile &&tile)
 {
-  Tile *oldTile = map->getTile(tile.position);
-
   TileLocation &location = map->getOrCreateTileLocation(tile.position);
   std::unique_ptr<Tile> oldTilePtr = location.replaceTile(std::move(tile));
 

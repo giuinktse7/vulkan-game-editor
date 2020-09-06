@@ -1,11 +1,11 @@
 #pragma once
 
 #include <stdint.h>
-#include "graphics/texture.h"
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <optional>
 
+#include "graphics/texture.h"
 #include "item_attribute.h"
 
 #include "items.h"

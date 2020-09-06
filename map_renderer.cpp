@@ -28,7 +28,7 @@ namespace colors
 } // namespace colors
 
 MapRenderer::MapRenderer(VulkanWindow &window)
-    : window(window)
+    : window(window), colorFormat(window.colorFormat())
 {
   this->mapView = window.getMapView();
 }

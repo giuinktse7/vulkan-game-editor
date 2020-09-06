@@ -6,20 +6,19 @@
 #include "tile_location.h"
 
 Tile::Tile(TileLocation &tileLocation)
-    : position(tileLocation.position), selectionCount(0)
+    : position(tileLocation.position), selectionCount(0), flags(0)
 {
 }
 
 Tile::Tile(Position position)
-    : position(position), selectionCount(0) {}
+    : position(position), selectionCount(0), flags(0) {}
 
-// TODO BUG? It is possible that entityId from OptionalEntity does not get moved correctly.
-// TODO It should be deleted from "other" and put into the newly constructed Tile.
 Tile::Tile(Tile &&other) noexcept
     : items(std::move(other.items)),
       ground(std::move(other.ground)),
       position(other.position),
-      selectionCount(other.selectionCount)
+      selectionCount(other.selectionCount),
+      flags(other.flags)
 {
 }
 
@@ -29,6 +28,7 @@ Tile &Tile::operator=(Tile &&other) noexcept
   ground = std::move(other.ground);
   position = std::move(other.position);
   selectionCount = other.selectionCount;
+  flags = other.flags;
 
   return *this;
 }
@@ -82,18 +82,20 @@ void Tile::moveSelected(Tile &other)
   }
 
   auto it = items.begin();
-  while (it != items.end()) {
-      Item& item = *it;
-      if (item.selected)
-      {
-          other.addItem(std::move(item));
-          it = items.erase(it);
+  while (it != items.end())
+  {
+    Item &item = *it;
+    if (item.selected)
+    {
+      other.addItem(std::move(item));
+      it = items.erase(it);
 
-          --selectionCount;
-      }
-      else {
-          ++it;
-      }
+      --selectionCount;
+    }
+    else
+    {
+      ++it;
+    }
   }
 }
 

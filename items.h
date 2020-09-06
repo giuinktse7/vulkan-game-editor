@@ -14,7 +14,6 @@
 
 #include "position.h"
 #include "graphics/texture_atlas.h"
-#include "graphics/appearances.h"
 
 #include "time_point.h"
 
@@ -31,8 +30,7 @@ enum class ItemTypes_t;
 class Items
 {
 public:
-  static void loadFromOtb(const std::string &file);
-
+  static void loadFromOtb(const std::filesystem::path path);
   static void loadFromXml(const std::filesystem::path path);
 
   bool reload();
