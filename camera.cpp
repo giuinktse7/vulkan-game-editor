@@ -1,18 +1,21 @@
 #include "camera.h"
 
-#include "graphics/engine.h"
 #include "Logger.h"
+#include "position.h"
 
-void Camera::updateZoom()
+void Camera::updateZoom(ScreenPosition cursorPos)
 {
-	ScreenPosition cursorPos = g_engine->getCursorPos();
+	if (!zoomChanged)
+		return;
+
+	zoomChanged = false;
 	float cursorX = static_cast<float>(cursorPos.x);
 	float cursorY = static_cast<float>(cursorPos.y);
 
 	float n = 0.1f;
 	float zoomFactor = n * exp(log(1 / n) / 10 * zoomStep);
 
-	glm::vec3 newPos{this->position};
+	glm::vec2 newPos{this->position};
 
 	newPos.x += cursorX / this->zoomFactor;
 	newPos.x -= cursorX / zoomFactor;
@@ -25,19 +28,19 @@ void Camera::updateZoom()
 	this->zoomFactor = zoomFactor;
 }
 
-void Camera::setPosition(glm::vec3 position)
+void Camera::setPosition(glm::vec2 position)
 {
-	this->position = glm::vec3(std::max(position.x, 0.0f), std::max(position.y, 0.0f), std::clamp(static_cast<int>(position.z), 0, 15));
+	this->position = glm::vec2(std::max(position.x, 0.0f), std::max(position.y, 0.0f));
 }
 
-void Camera::translate(glm::vec3 delta)
+void Camera::translate(glm::vec2 delta)
 {
 	setPosition(this->position + delta);
 }
 
 void Camera::translateZ(int z)
 {
-	this->position.z = static_cast<float>(std::clamp(static_cast<int>(position.z + z), 0, 15));
+	floor = static_cast<float>(std::clamp(static_cast<int>(floor + z), 0, 15));
 }
 
 void Camera::zoomIn()
@@ -60,6 +63,6 @@ void Camera::setZoomStep(int zoomStep)
 	if (this->zoomStep != zoomStep)
 	{
 		this->zoomStep = std::clamp(zoomStep, 0, zoomSteps);
-		updateZoom();
+		zoomChanged = true;
 	}
 }

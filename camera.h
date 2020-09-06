@@ -7,12 +7,14 @@
 
 #include <algorithm>
 
+class ScreenPosition;
+
 class Camera
 {
 
 public:
-  glm::vec3 position = glm::vec3(0 * 32, 0 * 32, 7);
-
+  glm::vec2 position = glm::vec2(0 * 32, 0 * 32);
+  int floor = 7;
   float zoomFactor = 1.0f;
 
   struct
@@ -23,12 +25,12 @@ public:
     bool down = false;
   } keys;
 
-  void setPosition(glm::vec3 position);
+  void setPosition(glm::vec2 position);
 
-  void translate(glm::vec3 delta);
+  void translate(glm::vec2 delta);
   void translateZ(int z);
 
-  void updateZoom();
+  void updateZoom(ScreenPosition cursorPos);
 
   void zoomIn();
 
@@ -42,6 +44,8 @@ private:
 
   // Current zoom step
   int zoomStep = 10;
+
+  bool zoomChanged;
 
   void setZoomStep(int zoomStep);
 };
