@@ -30,6 +30,10 @@ public:
 		return static_cast<T>(std::round(from + r * (maxValue - from)));
 	}
 
+	void setSeed(uint32_t seed);
+
+	static Random global();
+
 private:
 	std::mt19937 randomEngine;
 

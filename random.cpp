@@ -1,5 +1,7 @@
 #include "random.h"
 
+Random globalRandom;
+
 Random::Random()
 {
   std::random_device device;
@@ -19,7 +21,17 @@ void Random::initialize(uint32_t seed)
   randomEngine = mt;
 }
 
+void Random::setSeed(uint32_t seed)
+{
+  initialize(seed);
+}
+
 double Random::nextDouble()
 {
   return distribution(randomEngine);
+}
+
+Random Random::global()
+{
+  return globalRandom;
 }
