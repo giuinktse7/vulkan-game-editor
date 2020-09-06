@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include "graphics/texture.h"
-#include "graphics/appearances.h"
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <optional>

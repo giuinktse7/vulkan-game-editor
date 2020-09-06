@@ -4,7 +4,6 @@
 #include "ecs/ecs.h"
 #include "ecs/item_animation.h"
 
-#include "graphics/engine.h"
 Item::Item(ItemTypeId itemTypeId)
 		: subtype(1), selected(false)
 {
