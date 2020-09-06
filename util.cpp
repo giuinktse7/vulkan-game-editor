@@ -4,6 +4,8 @@
 
 #include <algorithm>
 
+util::Size::Size(int width, int height) : w(width), h(height) {}
+
 std::vector<const char *> getRequiredExtensions()
 {
   // uint32_t glfwExtensionCount = 0;

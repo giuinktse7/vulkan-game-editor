@@ -27,6 +27,22 @@ constexpr auto to_underlying(E e) noexcept
 
 namespace util
 {
+	class Size
+	{
+	public:
+		Size(int width, int height);
+
+		inline constexpr int width() const noexcept;
+		inline constexpr int height() const noexcept;
+
+		inline constexpr void setWidth(int width) noexcept;
+		inline constexpr void setHeight(int height) noexcept;
+
+	private:
+		int w;
+		int h;
+	};
+
 	template <typename T>
 	inline std::vector<T> sliceLeading(std::vector<T> xs, T x)
 	{
@@ -63,7 +79,7 @@ namespace util
 	};
 	// explicit deduction guide (not needed as of C++20)
 	template <class... Ts>
-	overloaded(Ts...)->overloaded<Ts...>;
+	overloaded(Ts...) -> overloaded<Ts...>;
 
 	template <typename T>
 	struct Rectangle
@@ -86,3 +102,23 @@ namespace util
 		seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 	}
 } // namespace util
+
+inline constexpr int util::Size::width() const noexcept
+{
+	return w;
+}
+
+inline constexpr int util::Size::height() const noexcept
+{
+	return h;
+}
+
+inline constexpr void util::Size::setWidth(int width) noexcept
+{
+	w = width;
+}
+
+inline constexpr void util::Size::setHeight(int height) noexcept
+{
+	h = height;
+}
