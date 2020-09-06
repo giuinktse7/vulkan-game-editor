@@ -91,6 +91,24 @@ const TextureWindow TextureAtlas::getTextureWindow(uint32_t spriteId) const
   return TextureWindow{x, y, x + width, y - height};
 }
 
+const TextureWindow TextureAtlas::getTextureWindowUnNormalized(uint32_t spriteId) const
+{
+  DEBUG_ASSERT(firstSpriteId <= spriteId && spriteId <= lastSpriteId, "The TextureAtlas does not contain that sprite ID.");
+
+  uint32_t offset = spriteId - this->firstSpriteId;
+
+  auto row = offset / columns;
+  auto col = offset % columns;
+
+  const float x = static_cast<float>(col) * 32;
+  const float y = static_cast<float>(rows - row - 1) * 32;
+
+  const float width = static_cast<float>(spriteWidth);
+  const float height = static_cast<float>(spriteHeight);
+
+  return TextureWindow{x, y, width, height};
+}
+
 void print_byte(uint8_t b)
 {
   std::cout << std::hex << std::setw(2) << unsigned(b) << std::endl;
@@ -157,7 +175,7 @@ bool TextureAtlas::isCompressed() const
   return std::holds_alternative<CompressedBytes>(texture);
 }
 
-void TextureAtlas::decompressTexture(const Texture::Descriptor descriptor)
+void TextureAtlas::decompressTexture()
 {
   DEBUG_ASSERT(std::holds_alternative<CompressedBytes>(texture), "Tried to decompress a TextureAtlas that does not contain CompressedBytes.");
 
@@ -173,15 +191,15 @@ void TextureAtlas::decompressTexture(const Texture::Descriptor descriptor)
   // nextN(decompressed, offset, 4);
   // std::cout << unsigned(readU32(decompressed, offset)) << std::endl;
 
-  texture = Texture(this->width, this->height, std::vector<uint8_t>(decompressed.begin() + offset, decompressed.end()), descriptor);
-  Logger::debug("Decompressed " + this->sourceFile.string());
+  texture = Texture(this->width, this->height, std::vector<uint8_t>(decompressed.begin() + offset, decompressed.end()));
+  VME_LOG_D("Decompressed " + this->sourceFile.string());
 }
 
-Texture &TextureAtlas::getOrCreateTexture(Texture::Descriptor descriptor)
+Texture &TextureAtlas::getOrCreateTexture()
 {
   if (std::holds_alternative<CompressedBytes>(texture))
   {
-    decompressTexture(descriptor);
+    decompressTexture();
   }
 
   return std::get<Texture>(this->texture);

@@ -16,6 +16,18 @@ const uint32_t ItemType::getPatternIndex(const Position &pos) const
   return spriteIndex;
 }
 
+const TextureInfo ItemType::getTextureInfoUnNormalized() const
+{
+  uint32_t spriteId = appearance->getFirstSpriteId();
+  TextureAtlas *atlas = getTextureAtlas(spriteId);
+
+  TextureInfo info;
+  info.atlas = atlas;
+  info.window = atlas->getTextureWindowUnNormalized(spriteId);
+
+  return info;
+}
+
 const TextureInfo ItemType::getTextureInfo() const
 {
   uint32_t spriteId = appearance->getFirstSpriteId();

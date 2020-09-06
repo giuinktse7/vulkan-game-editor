@@ -146,9 +146,9 @@ void MapView::removeTile(const Position position)
 
 void MapView::updateViewport()
 {
-  viewport.zoom = 1 / camera.zoomFactor;
-  viewport.offsetX = camera.position.x;
-  viewport.offsetY = camera.position.y;
+  viewport.zoom = 1 / camera.zoomFactor();
+  viewport.offsetX = camera.position().x;
+  viewport.offsetY = camera.position().y;
 }
 
 void MapView::setViewportSize(int width, int height)
@@ -172,10 +172,10 @@ void MapView::resetZoom()
 
 float MapView::getZoomFactor() const
 {
-  return camera.zoomFactor;
+  return camera.zoomFactor();
 }
 
-void MapView::translateCamera(glm::vec2 delta)
+void MapView::translateCamera(WorldPosition delta)
 {
   camera.translate(delta);
 }
@@ -321,9 +321,9 @@ bool MapView::isDragging() const
   return dragState.has_value();
 }
 
-void MapView::panEvent(PanEvent event)
+void MapView::panEvent(MapView::PanEvent event)
 {
-  glm::vec2 delta{};
+  WorldPosition delta{};
   switch (event.type)
   {
   case PanType::Horizontal:

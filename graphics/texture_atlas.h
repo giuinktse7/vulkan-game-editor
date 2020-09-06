@@ -35,7 +35,10 @@ struct DrawOffset
 
 struct TextureAtlas
 {
+private:
 	using CompressedBytes = std::vector<uint8_t>;
+
+public:
 	TextureAtlas(uint32_t id, CompressedBytes &buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile);
 
 	std::filesystem::path sourceFile;
@@ -59,12 +62,13 @@ struct TextureAtlas
 	glm::vec4 getFragmentBounds(const TextureWindow window) const;
 
 	const TextureWindow getTextureWindow(uint32_t spriteId) const;
+	const TextureWindow getTextureWindowUnNormalized(uint32_t spriteId) const;
 
 	bool isCompressed() const;
 
-	void decompressTexture(const Texture::Descriptor descriptor);
+	void decompressTexture();
 	Texture *getTexture();
-	Texture &getOrCreateTexture(Texture::Descriptor descriptor);
+	Texture &getOrCreateTexture();
 
 	VkDescriptorSet getDescriptorSet()
 	{

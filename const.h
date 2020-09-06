@@ -8,6 +8,7 @@ constexpr uint16_t MAP_TREE_CHILDREN_COUNT = 16;
 constexpr uint16_t MAP_LAYERS = 16;
 
 constexpr int MapTileSize = 32;
+constexpr int SpriteSize = 32;
 
 enum class SpriteLayout
 {

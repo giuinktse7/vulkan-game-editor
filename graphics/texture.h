@@ -36,29 +36,35 @@ public:
     VkDescriptorPool pool;
   };
 
-  Texture(const std::string &filename, Texture::Descriptor descriptor);
-  Texture(uint32_t width, uint32_t height, uint8_t *pixels, Texture::Descriptor descriptor);
-  Texture(uint32_t width, uint32_t height, std::vector<uint8_t> pixels, Texture::Descriptor descriptor);
+  Texture(const std::string &filename);
+  Texture(uint32_t width, uint32_t height, uint8_t *pixels);
+  Texture(uint32_t width, uint32_t height, std::vector<uint8_t> pixels);
 
   VkDescriptorSet getDescriptorSet();
   TextureWindow getTextureWindow();
   int getWidth();
   int getHeight();
 
+  std::vector<uint8_t> copyPixels() const;
+  inline const std::vector<uint8_t> &pixels() const
+  {
+    return _pixels;
+  }
+
   VkSampler createSampler();
 
   static Texture *getSolidTexture(SolidColor color);
-  static Texture &getOrCreateSolidTexture(SolidColor color, Texture::Descriptor descriptor);
+  static Texture &getOrCreateSolidTexture(SolidColor color);
 
-  void update(Texture::Descriptor descriptor);
+  void updateVkResources(Texture::Descriptor descriptor);
 
   void releaseVulkanResources();
   static void releaseSolidColorTextures();
 
 private:
-  bool initialized = false;
+  bool hasVkResources = false;
 
-  std::vector<uint8_t> pixels;
+  std::vector<uint8_t> _pixels;
 
   uint32_t width;
   uint32_t height;
@@ -75,7 +81,7 @@ private:
 
   uint32_t mipLevels = 1;
 
-  void init(uint32_t width, uint32_t height, uint8_t *pixels, Texture::Descriptor descriptor);
+  void init(uint32_t width, uint32_t height, uint8_t *pixels);
 
   void createImage(uint32_t width,
                    uint32_t height,
@@ -88,6 +94,5 @@ private:
                    VkDeviceMemory &imageMemory);
 
   VkDescriptorSet createDescriptorSet(Texture::Descriptor descriptor);
-
   void initVulkanResources(Texture::Descriptor descriptor);
 };

@@ -101,7 +101,6 @@ std::string LZMA::compress(const std::string &in, int level)
 
 std::vector<uint8_t> LZMA::decompressRaw(const std::vector<uint8_t> &in, lzma_options_lzma &options)
 {
-    static const size_t kMemLimit = 1 << 30; // 1 GB.
     lzma_stream strm = LZMA_STREAM_INIT;
 
     std::vector<uint8_t> result;

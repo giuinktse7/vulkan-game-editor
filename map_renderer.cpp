@@ -283,8 +283,8 @@ void MapRenderer::drawTestRectangle()
 
   info.from = MapPosition(5, 5).worldPos();
   info.to = MapPosition(12, 12).worldPos();
-  Texture *texture = &Texture::getOrCreateSolidTexture(SolidColor::Blue, descriptor);
-  texture->update(descriptor);
+  Texture *texture = &Texture::getOrCreateSolidTexture(SolidColor::Blue);
+  texture->updateVkResources(descriptor);
   info.texture = texture;
   info.color = colors::SeeThrough;
 
@@ -455,15 +455,15 @@ void MapRenderer::drawItem(ObjectDrawInfo &info)
   descriptor.layout = textureDescriptorSetLayout;
   descriptor.pool = descriptorPool;
 
-  if (info.textureInfo.atlas->isCompressed())
+  TextureAtlas *atlas = info.textureInfo.atlas;
+
+  if (atlas->isCompressed())
   {
-    info.textureInfo.atlas->decompressTexture(descriptor);
-    activeTextures.emplace_back(info.textureInfo.atlas->getTexture());
+    atlas->decompressTexture();
+    activeTextures.emplace_back(atlas->getTexture());
   }
-  else
-  {
-    info.textureInfo.atlas->getTexture()->update(descriptor);
-  }
+
+  atlas->getTexture()->updateVkResources(descriptor);
 
   currentFrame->batchDraw.addItem(info);
 }

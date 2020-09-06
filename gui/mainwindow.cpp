@@ -11,6 +11,25 @@
 
 #include "vulkan_window.h"
 
+#include "items.h"
+
+QLabel *itemImage(uint16_t serverId)
+{
+    ItemType *t = Items::items.getItemType(serverId);
+    const TextureInfo &info = t->getTextureInfoUnNormalized();
+
+    const uint8_t *pixelData = info.atlas->getOrCreateTexture().pixels().data();
+    QImage img(pixelData, 12 * 32, 12 * 32, 384 * 4, QImage::Format::Format_ARGB32);
+
+    QPixmap pixelMap = QPixmap::fromImage(img);
+
+    QRect textureRegion(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
+
+    QLabel *container = new QLabel;
+    container->setPixmap(pixelMap.copy(textureRegion).transformed(QTransform().scale(1, -1)));
+    return container;
+}
+
 MainWindow::MainWindow(VulkanWindow *vulkanWindow)
 {
     QWidget *wrapper = vulkanWindow->wrapInWidget();
@@ -22,13 +41,22 @@ MainWindow::MainWindow(VulkanWindow *vulkanWindow)
     rootLayout = new QVBoxLayout;
     createMenuBar();
 
+    QVBoxLayout *testLayout = new QVBoxLayout;
+
     textEdit = new QPlainTextEdit;
     textEdit->setReadOnly(false);
     textEdit->setPlainText("100");
     textEdit->setMaximumHeight(80);
+    testLayout->addWidget(textEdit);
+
+    testLayout->addWidget(itemImage(100));
+    testLayout->addWidget(itemImage(2554));
+    testLayout->addWidget(itemImage(2148));
+    // testLayout->addWidget(itemImage(103));
 
     QGridLayout *gridLayout = new QGridLayout;
-    gridLayout->addWidget(textEdit, 0, 0);
+
+    gridLayout->addLayout(testLayout, 0, 0);
 
     mapTabs = new QTabWidget(this);
     mapTabs->setTabsClosable(true);

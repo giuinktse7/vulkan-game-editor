@@ -55,17 +55,17 @@ int main(int argc, char *argv[])
     // Memory deleted by QT when application closes because it is a member in VulkanWindow
     auto mapView = new MapView;
 
-    mapView->history.startGroup(ActionGroupType::AddMapItem);
-    mapView->addItem(Position(5, 6, 7), 2148);
-    mapView->addItem(Position(5, 5, 7), 2706);
-    for (int x = 6; x < 10; ++x)
-    {
-        for (int y = 6; y < 10; ++y)
-        {
-            mapView->addItem(Position(x, y, 7), 100);
-        }
-    }
-    mapView->history.endGroup(ActionGroupType::AddMapItem);
+    // mapView->history.startGroup(ActionGroupType::AddMapItem);
+    // mapView->addItem(Position(5, 6, 7), 2148);
+    // mapView->addItem(Position(5, 5, 7), 2706);
+    // for (int x = 6; x < 10; ++x)
+    // {
+    //     for (int y = 6; y < 10; ++y)
+    //     {
+    //         mapView->addItem(Position(x, y, 7), 100);
+    //     }
+    // }
+    // mapView->history.endGroup(ActionGroupType::AddMapItem);
 
     VulkanWindow *vulkanWindow = new VulkanWindow(mapView);
 

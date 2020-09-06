@@ -176,6 +176,11 @@ public:
   const uint32_t getPatternIndex(const Position &pos) const;
 
   const TextureInfo getTextureInfo() const;
+
+  /*
+    Returns TextureInfo with an un-normalized texture window.
+  */
+  const TextureInfo getTextureInfoUnNormalized() const;
   const TextureInfo getTextureInfo(uint32_t spriteId) const;
   const TextureInfo getTextureInfo(const Position &pos) const;
 

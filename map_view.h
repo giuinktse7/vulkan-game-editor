@@ -94,16 +94,17 @@ public:
 		return getZ();
 	}
 
-	uint32_t getX() const
+	inline uint32_t getX() const
 	{
-		return static_cast<uint32_t>(camera.position.x);
-	}
-	uint32_t getY() const
-	{
-		return static_cast<uint32_t>(camera.position.y);
+		return static_cast<uint32_t>(camera.position().x);
 	}
 
-	void translateCamera(glm::vec2 delta);
+	inline uint32_t getY() const
+	{
+		return static_cast<uint32_t>(camera.position().y);
+	}
+
+	void translateCamera(WorldPosition delta);
 	void translateCameraZ(int z);
 	void updateCamera(const ScreenPosition cursorPos);
 

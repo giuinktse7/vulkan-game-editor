@@ -25,17 +25,17 @@ constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
 std::unordered_map<SolidColor, std::unique_ptr<Texture>> solidColorTextures;
 
-Texture::Texture(uint32_t width, uint32_t height, std::vector<uint8_t> pixels, Texture::Descriptor descriptor)
+Texture::Texture(uint32_t width, uint32_t height, std::vector<uint8_t> pixels)
 {
-  init(width, height, pixels.data(), descriptor);
+  init(width, height, pixels.data());
 }
 
-Texture::Texture(uint32_t width, uint32_t height, uint8_t *pixels, Texture::Descriptor descriptor)
+Texture::Texture(uint32_t width, uint32_t height, uint8_t *pixels)
 {
-  init(width, height, pixels, descriptor);
+  init(width, height, pixels);
 }
 
-Texture::Texture(const std::string &filename, Texture::Descriptor descriptor)
+Texture::Texture(const std::string &filename)
 {
 
   int width, height, channels;
@@ -53,12 +53,12 @@ Texture::Texture(const std::string &filename, Texture::Descriptor descriptor)
     throw std::runtime_error("failed to load texture image!");
   }
 
-  init(static_cast<uint32_t>(width), static_cast<uint32_t>(height), pixels, descriptor);
+  init(static_cast<uint32_t>(width), static_cast<uint32_t>(height), pixels);
 
   stbi_image_free(pixels);
 }
 
-void Texture::init(uint32_t width, uint32_t height, uint8_t *pixels, Texture::Descriptor descriptor)
+void Texture::init(uint32_t width, uint32_t height, uint8_t *pixels)
 {
   uint64_t sizeInBytes = (static_cast<uint64_t>(width) * height) * 4;
   this->layout = VK_NULL_HANDLE;
@@ -67,9 +67,7 @@ void Texture::init(uint32_t width, uint32_t height, uint8_t *pixels, Texture::De
   imageSize = sizeInBytes;
 
   std::vector<uint8_t> vectorBuffer(pixels, pixels + sizeInBytes);
-  this->pixels = vectorBuffer;
-
-  initVulkanResources(descriptor);
+  this->_pixels = vectorBuffer;
 }
 
 void Texture::initVulkanResources(Texture::Descriptor descriptor)
@@ -78,7 +76,7 @@ void Texture::initVulkanResources(Texture::Descriptor descriptor)
                                       VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-  Buffer::copyToMemory(stagingBuffer.deviceMemory, pixels.data(), imageSize);
+  Buffer::copyToMemory(stagingBuffer.deviceMemory, _pixels.data(), imageSize);
 
   createImage(width,
               height,
@@ -104,7 +102,7 @@ void Texture::initVulkanResources(Texture::Descriptor descriptor)
                                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
   descriptorSet = createDescriptorSet(descriptor);
-  initialized = true;
+  hasVkResources = true;
 }
 
 void Texture::releaseVulkanResources()
@@ -113,7 +111,7 @@ void Texture::releaseVulkanResources()
   g_vk->vkDestroyImage(device, textureImage, nullptr);
   g_vk->vkFreeMemory(device, textureImageMemory, nullptr);
 
-  initialized = false;
+  hasVkResources = false;
 }
 
 // static
@@ -198,9 +196,9 @@ VkSampler Texture::createSampler()
   return sampler;
 }
 
-void Texture::update(Texture::Descriptor descriptor)
+void Texture::updateVkResources(Texture::Descriptor descriptor)
 {
-  if (!initialized)
+  if (!hasVkResources)
   {
     initVulkanResources(descriptor);
   }
@@ -266,7 +264,7 @@ uint32_t asArgb(SolidColor color)
   return to_underlying(color);
 }
 
-Texture &Texture::getOrCreateSolidTexture(SolidColor color, Texture::Descriptor descriptor)
+Texture &Texture::getOrCreateSolidTexture(SolidColor color)
 {
   Texture *texture = getSolidTexture(color);
   if (texture)
@@ -278,7 +276,7 @@ Texture &Texture::getOrCreateSolidTexture(SolidColor color, Texture::Descriptor 
     std::vector<uint32_t> buffer(32 * 32);
     std::fill(buffer.begin(), buffer.end(), asArgb(color));
 
-    solidColorTextures.emplace(color, std::make_unique<Texture>(32, 32, (uint8_t *)buffer.data(), descriptor));
+    solidColorTextures.emplace(color, std::make_unique<Texture>(32, 32, (uint8_t *)buffer.data()));
 
     return *solidColorTextures.at(color).get();
   }
@@ -288,4 +286,10 @@ Texture *Texture::getSolidTexture(SolidColor color)
 {
   auto found = solidColorTextures.find(color);
   return found != solidColorTextures.end() ? found->second.get() : nullptr;
+}
+
+std::vector<uint8_t> Texture::copyPixels() const
+{
+  std::vector<uint8_t> copy = _pixels;
+  return copy;
 }
