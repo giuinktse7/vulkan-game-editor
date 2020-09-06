@@ -1,7 +1,18 @@
 #include "camera.h"
 
 #include "Logger.h"
-#include "position.h"
+
+constexpr int MinZoomStep = 0;
+constexpr int MaxZoomStep = 20;
+
+Camera::Camera()
+		: _position(0.0, 0.0),
+			floor(7),
+			_zoomFactor(1.0f),
+			zoomStep(10),
+			zoomChanged(false)
+{
+}
 
 void Camera::updateZoom(ScreenPosition cursorPos)
 {
@@ -13,29 +24,29 @@ void Camera::updateZoom(ScreenPosition cursorPos)
 	float cursorY = static_cast<float>(cursorPos.y);
 
 	float n = 0.1f;
-	float zoomFactor = n * exp(log(1 / n) / 10 * zoomStep);
+	float newZoomFactor = n * exp(log(1 / n) / 10 * zoomStep);
 
-	glm::vec2 newPos{this->position};
+	WorldPosition newPos(this->_position);
 
-	newPos.x += cursorX / this->zoomFactor;
-	newPos.x -= cursorX / zoomFactor;
+	newPos.x += cursorX / _zoomFactor;
+	newPos.x -= cursorX / newZoomFactor;
 
-	newPos.y += cursorY / this->zoomFactor;
-	newPos.y -= cursorY / zoomFactor;
+	newPos.y += cursorY / _zoomFactor;
+	newPos.y -= cursorY / newZoomFactor;
 
 	this->setPosition(newPos);
 
-	this->zoomFactor = zoomFactor;
+	_zoomFactor = newZoomFactor;
 }
 
-void Camera::setPosition(glm::vec2 position)
+void Camera::setPosition(WorldPosition position)
 {
-	this->position = glm::vec2(std::max(position.x, 0.0f), std::max(position.y, 0.0f));
+	this->_position = WorldPosition(std::max(position.x, 0.0), std::max(position.y, 0.0));
 }
 
-void Camera::translate(glm::vec2 delta)
+void Camera::translate(WorldPosition delta)
 {
-	setPosition(this->position + delta);
+	setPosition(this->_position + delta);
 }
 
 void Camera::translateZ(int z)
@@ -62,7 +73,7 @@ void Camera::setZoomStep(int zoomStep)
 {
 	if (this->zoomStep != zoomStep)
 	{
-		this->zoomStep = std::clamp(zoomStep, 0, zoomSteps);
+		this->zoomStep = std::clamp(zoomStep, MinZoomStep, MaxZoomStep);
 		zoomChanged = true;
 	}
 }

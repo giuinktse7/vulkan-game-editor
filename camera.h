@@ -6,15 +6,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <algorithm>
-struct ScreenPosition;
+#include "const.h"
+#include "position.h"
 
 class Camera
 {
 
 public:
-  glm::vec2 position = glm::vec2(0 * 32, 0 * 32);
-  int floor = 7;
-  float zoomFactor = 1.0f;
+  Camera();
+  int floor;
 
   struct
   {
@@ -24,9 +24,9 @@ public:
     bool down = false;
   } keys;
 
-  void setPosition(glm::vec2 position);
+  void setPosition(WorldPosition position);
 
-  void translate(glm::vec2 delta);
+  void translate(WorldPosition delta);
   void translateZ(int z);
 
   void updateZoom(ScreenPosition cursorPos);
@@ -37,14 +37,25 @@ public:
 
   void resetZoom();
 
+  inline float zoomFactor() const;
+  inline WorldPosition position() const;
+
 private:
-  // Possible zoom steps, [0, 20]
-  int zoomSteps = 20;
+  int zoomStep;
+  bool zoomChanged;
 
-  // Current zoom step
-  int zoomStep = 10;
-
-  bool zoomChanged = false;
+  float _zoomFactor;
+  WorldPosition _position;
 
   void setZoomStep(int zoomStep);
 };
+
+inline float Camera::zoomFactor() const
+{
+  return _zoomFactor;
+}
+
+inline WorldPosition Camera::position() const
+{
+  return _position;
+}
