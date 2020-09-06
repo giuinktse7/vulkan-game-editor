@@ -58,13 +58,7 @@
     <ClCompile Include="graphics\compression.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="graphics\device_manager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ecs\ecs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="graphics\engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="file.cpp">
@@ -124,16 +118,10 @@
     <ClCompile Include="gui\renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="graphics\resource-descriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="selection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="graphics\protobuf\shared.pb.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="graphics\swapchain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="graphics\texture.cpp">
@@ -152,9 +140,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="town.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="trianglerenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="util.cpp">
@@ -207,13 +192,7 @@
     <ClInclude Include="definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="graphics\device_manager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ecs\ecs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics\engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ecs\entity.h">
@@ -273,16 +252,10 @@
     <ClInclude Include="gui\renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="graphics\resource-descriptor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="selection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="graphics\protobuf\shared.pb.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics\swapchain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="graphics\texture.h">
@@ -301,9 +274,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="town.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="trianglerenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="type_trait.h">

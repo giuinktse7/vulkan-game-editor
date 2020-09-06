@@ -76,9 +76,9 @@ public:
 	const uint32_t windowToMapPos(int windowPos) const;
 	const uint32_t mapToWorldPos(uint32_t mapPos) const;
 
-	uint32_t getZ() const
+	int getZ() const
 	{
-		return static_cast<uint32_t>(camera.position.z);
+		return static_cast<uint32_t>(camera.floor);
 	}
 
 	void undo()
@@ -89,7 +89,7 @@ public:
 	/*
 		Synonym for getZ()
 	*/
-	uint32_t getFloor() const
+	int getFloor() const
 	{
 		return getZ();
 	}
@@ -103,9 +103,9 @@ public:
 		return static_cast<uint32_t>(camera.position.y);
 	}
 
-	void translateCamera(glm::vec3 delta);
-
+	void translateCamera(glm::vec2 delta);
 	void translateCameraZ(int z);
+	void updateCamera(const ScreenPosition cursorPos);
 
 	const Viewport &getViewport() const
 	{
@@ -134,6 +134,20 @@ public:
 	bool isDragging() const;
 
 	bool hasSelection() const;
+
+	enum class PanType
+	{
+		Horizontal,
+		Vertical
+	};
+
+	struct PanEvent
+	{
+		PanType type;
+		double value;
+	};
+
+	void panEvent(PanEvent event);
 
 private:
 	friend class MapAction;

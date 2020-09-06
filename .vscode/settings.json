@@ -102,7 +102,8 @@
     "qcontextmenuevent": "cpp",
     "qmouseevent": "cpp",
     "qdialog": "cpp",
-    "qaction": "cpp"
+    "qaction": "cpp",
+    "qvulkanwindowrenderer": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

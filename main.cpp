@@ -12,7 +12,10 @@
 
 #include "graphics/vulkan_helpers.h"
 #include "graphics/appearances.h"
+
 #include "items.h"
+#include "time_point.h"
+#include "random.h"
 
 void loadGameData()
 {
@@ -30,6 +33,9 @@ void loadGameData()
 
 int main(int argc, char *argv[])
 {
+    Random::global().setSeed(123);
+    TimePoint::setApplicationStartTimePoint();
+
     QApplication app(argc, argv);
 
     const bool dbg = qEnvironmentVariableIntValue("QT_VK_DEBUG");

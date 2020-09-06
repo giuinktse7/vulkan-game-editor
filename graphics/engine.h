@@ -11,6 +11,7 @@
 #include "resource-descriptor.h"
 #include "buffer.h"
 #include "vertex.h"
+#include "swapchain.h"
 
 #include "../camera.h"
 #include "../map_view.h"

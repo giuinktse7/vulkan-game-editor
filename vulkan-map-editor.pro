@@ -35,15 +35,11 @@ SOURCES += \
     gui/vulkan_window.cpp \
     gui/renderer.cpp \
     graphics/appearances.cpp \
-    graphics/compression.cpp \
-    graphics/resource-descriptor.cpp \
+    graphics/compression.cpp \ # graphics/resource-descriptor.cpp \
     graphics/texture_atlas.cpp \
     graphics/vulkan_helpers.cpp \
-    graphics/batch_item_draw.cpp \
-    graphics/device_manager.cpp \
-    graphics/swapchain.cpp \
-    graphics/buffer.cpp \
-    graphics/engine.cpp \
+    graphics/batch_item_draw.cpp \ # graphics/device_manager.cpp \ # graphics/swapchain.cpp \
+    graphics/buffer.cpp \ # graphics/engine.cpp \
     graphics/texture.cpp \
     graphics/vulkan_debug.cpp \
     graphics/protobuf/appearances.pb.cc \
@@ -73,7 +69,6 @@ SOURCES += \
     town.cpp \
     action/action.cpp \
     selection.cpp \
-    trianglerenderer.cpp \
     qt/logging.cpp
 
 HEADERS += \
@@ -82,17 +77,13 @@ HEADERS += \
     gui/renderer.h \
     graphics/vulkan_debug.h \
     graphics/appearances.h \
-    graphics/compression.h \
-    graphics/resource-descriptor.h \
+    graphics/compression.h \ # graphics/resource-descriptor.h \
     graphics/texture_atlas.h \
     graphics/vulkan_helpers.h \
-    graphics/batch_item_draw.h \
-    graphics/device_manager.h \
+    graphics/batch_item_draw.h \ # graphics/device_manager.h \
     graphics/validation.h \
-    graphics/swapchain.h \
-    graphics/vertex.h \
-    graphics/buffer.h \
-    graphics/engine.h \
+    graphics/vertex.h \ # graphics/swapchain.h \
+    graphics/buffer.h \ #graphics/engine.h \
     graphics/texture.h \
     graphics/protobuf/appearances.pb.h \
     graphics/protobuf/map.pb.h \
@@ -128,7 +119,6 @@ HEADERS += \
     action/action.h \
     selection.h \
     definitions.h \
-    trianglerenderer.h \
     qt/logging.h
 
 

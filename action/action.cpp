@@ -32,7 +32,6 @@ void MapAction::commit()
   {
     std::visit(util::overloaded{
                    [this, &change](Change::TileData &newTile) {
-
                      std::unique_ptr<Tile> oldTilePtr = mapView.setTileInternal(std::move(newTile));
 
                      Tile *oldTile = oldTilePtr.release();
@@ -63,7 +62,7 @@ void MapAction::commit()
                        }
                        mapView.selection.merge(data.positions);
                      }
-                       data.isDeselect = !data.isDeselect;
+                     data.isDeselect = !data.isDeselect;
                    },
                    [this](Change::SelectionData &data) {
                      Tile *tile = mapView.getTile(data.position);
@@ -150,7 +149,7 @@ void MapAction::undo()
                        mapView.selection.deselect(data.positions);
                      }
 
-                       data.isDeselect = !data.isDeselect;
+                     data.isDeselect = !data.isDeselect;
                    },
                    [this](Change::SelectionData &data) {
                      Tile *tile = mapView.getTile(data.position);

@@ -4,9 +4,9 @@
 #include <numeric>
 
 #include "../type_trait.h"
-#include "../graphics/engine.h"
 #include "../debug.h"
 #include "../logger.h"
+#include "random.h"
 
 constexpr TypeList<ItemAnimationComponent> requiredComponents;
 
@@ -15,8 +15,9 @@ using Direction = item_animation::AnimationDirection;
 void ItemAnimationComponent::synchronizePhase()
 {
   DEBUG_ASSERT(animationInfo->synchronized, "BUG! synchronizePhase should only be called on an animation that is marked as synchronized.");
+  TimePoint startTime = TimePoint::sinceStart();
 
-  auto elapsedTimeMs = g_engine->startTime.elapsedMillis();
+  auto elapsedTimeMs = startTime.elapsedMillis();
   uint32_t loopTime = std::get<uint32_t>(state.info);
 
   long long timeDiff = elapsedTimeMs % loopTime;
@@ -33,7 +34,7 @@ void ItemAnimationComponent::synchronizePhase()
   this->startPhase = static_cast<uint32_t>(phaseIndex);
 
   long long res = elapsedTimeMs - (animationInfo->phases[phaseIndex].maxDuration + timeDiff);
-  this->state.lastUpdateTime = g_engine->startTime.forwardMs(res);
+  this->state.lastUpdateTime = startTime.forwardMs(res);
 
   // std::cout << "lastUpdateTime: " << res << ", elapsedTimeMs: " << elapsedTimeMs << ", startTimeDiff: " << startTimeDiff << ", timeDiff: " << timeDiff << ", startPhase: " << phaseIndex << std::endl;
 
@@ -42,6 +43,7 @@ void ItemAnimationComponent::synchronizePhase()
 
 void ItemAnimationComponent::initializeStartPhase()
 {
+  TimePoint currentTime = TimePoint::now();
   // This assumes that minDuration == maxDuration (for all phases) if the animation is synchronized.
   // TODO Check whether this assumption is correct.
   if (animationInfo->synchronized)
@@ -52,14 +54,14 @@ void ItemAnimationComponent::initializeStartPhase()
 
   if (animationInfo->randomStartPhase)
   {
-    this->startPhase = g_engine->random.nextInt<uint32_t>(0, static_cast<int>(animationInfo->phases.size()));
-    this->state.lastUpdateTime = g_engine->currentTime;
+    this->startPhase = Random::global().nextInt<uint32_t>(0, static_cast<int>(animationInfo->phases.size()));
+    this->state.lastUpdateTime = currentTime;
 
     return;
   }
 
   this->startPhase = animationInfo->defaultStartPhase;
-  this->state.lastUpdateTime = g_engine->currentTime;
+  this->state.lastUpdateTime = currentTime;
 }
 
 ItemAnimationComponent::ItemAnimationComponent(SpriteAnimation *animationInfo)
@@ -93,7 +95,7 @@ void ItemAnimationComponent::setPhase(size_t phaseIndex, TimePoint updateTime)
   state.phaseIndex = static_cast<uint32_t>(phaseIndex);
   if (phase.minDuration != phase.maxDuration)
   {
-    state.phaseDurationMs = g_engine->random.nextInt<uint32_t>(phase.minDuration, phase.maxDuration + 1);
+    state.phaseDurationMs = Random::global().nextInt<uint32_t>(phase.minDuration, phase.maxDuration + 1);
   }
   else
   {
@@ -110,11 +112,11 @@ std::vector<const char *> ItemAnimationSystem::getRequiredComponents()
 
 void ItemAnimationSystem::update()
 {
-  auto currentTime = g_engine->currentTime;
+  TimePoint currentTime = TimePoint::now();
+
   for (const auto &entity : entities)
   {
     auto &animation = *g_ecs.getComponent<ItemAnimationComponent>(entity);
-    bool debug = g_engine->debug;
 
     auto elapsedTimeMs = currentTime.timeSince<std::chrono::milliseconds>(animation.state.lastUpdateTime);
 
@@ -162,6 +164,8 @@ void ItemAnimationSystem::updateInfinite(ItemAnimationComponent &animation, long
 
 void ItemAnimationSystem::updatePingPong(ItemAnimationComponent &animation)
 {
+  TimePoint currentTime = TimePoint::now();
+
   auto direction = std::get<Direction>(animation.state.info);
   // Last phase, reverse direction
   if (animation.state.phaseIndex == 0 || animation.state.phaseIndex == animation.animationInfo->phases.size() - 1)
@@ -170,11 +174,13 @@ void ItemAnimationSystem::updatePingPong(ItemAnimationComponent &animation)
   }
 
   uint32_t indexChange = direction == Direction::Forward ? 1 : -1;
-  animation.setPhase(animation.state.phaseIndex + indexChange, g_engine->currentTime);
+  animation.setPhase(animation.state.phaseIndex + indexChange, currentTime);
 }
 
 void ItemAnimationSystem::updateCounted(ItemAnimationComponent &animation)
 {
+  TimePoint currentTime = TimePoint::now();
+
   uint32_t currentLoop = std::get<uint32_t>(animation.state.info);
   if (currentLoop != animation.animationInfo->loopCount)
   {
@@ -184,6 +190,6 @@ void ItemAnimationSystem::updateCounted(ItemAnimationComponent &animation)
       DEBUG_ASSERT(std::get<uint32_t>(animation.state.info) <= animation.animationInfo->loopCount, "The current loop for an animation cannot be higher than its loopCount.");
     }
 
-    animation.setPhase(0, g_engine->currentTime);
+    animation.setPhase(0, currentTime);
   }
 }

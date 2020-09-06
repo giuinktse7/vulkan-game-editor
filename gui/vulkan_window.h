@@ -11,6 +11,7 @@
 QT_BEGIN_NAMESPACE
 class QWidget;
 class QPoint;
+class util::Size;
 QT_END_NAMESPACE
 
 class VulkanWindow : public QVulkanWindow
@@ -47,6 +48,9 @@ public:
   void closeContextMenu();
 
   QRect localGeometry() const;
+
+  util::Size vulkanSwapChainImageSize() const;
+  glm::mat4 projectionMatrix();
 
   QWidget *widget;
 

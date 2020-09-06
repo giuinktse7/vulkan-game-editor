@@ -177,13 +177,18 @@ float MapView::getZoomFactor() const
   return camera.zoomFactor;
 }
 
-void MapView::translateCamera(glm::vec3 delta)
+void MapView::translateCamera(glm::vec2 delta)
 {
   camera.translate(delta);
 }
 void MapView::translateCameraZ(int z)
 {
   camera.translateZ(z);
+}
+
+void MapView::updateCamera(const ScreenPosition cursorPos)
+{
+  camera.updateZoom(cursorPos);
 }
 
 void MapView::deleteSelectedItems()
@@ -316,6 +321,21 @@ void MapView::endDragging()
 bool MapView::isDragging() const
 {
   return dragState.has_value();
+}
+
+void MapView::panEvent(PanEvent event)
+{
+  glm::vec2 delta{};
+  switch (event.type)
+  {
+  case PanType::Horizontal:
+    delta.x += event.value;
+    break;
+  case PanType::Vertical:
+    delta.y += event.value;
+  }
+
+  translateCamera(delta);
 }
 
 /*

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-#include <QVulkanWindow>
+#include <QVulkanWindowRenderer>
 
 #include <glm/glm.hpp>
 
@@ -13,23 +13,19 @@
 #include "graphics/buffer.h"
 #include "graphics/vertex.h"
 #include "graphics/texture.h"
-#include "camera.h"
-
-#include "position.h"
+#include "graphics/batch_item_draw.h"
 
 #include "item.h"
 #include "items.h"
 
-#include "graphics/swapchain.h"
-
 #include "graphics/texture_atlas.h"
 
-#include "graphics/batch_item_draw.h"
 #include "map_view.h"
 
 #include "map.h"
 
 class VulkanWindow;
+class BatchDraw;
 
 namespace ItemDrawFlags
 {
@@ -65,7 +61,7 @@ struct FrameData
 	BoundBuffer uniformBuffer{};
 	VkDescriptorSet uboDescriptorSet = nullptr;
 
-	BatchDraw batchDraw{};
+	BatchDraw batchDraw;
 };
 
 class MapRenderer : public QVulkanWindowRenderer

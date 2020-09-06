@@ -2,10 +2,9 @@
 
 #include <stdexcept>
 
-#include <QSize>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include "file.h"
+#include "position.h"
+
 #include "graphics/resource-descriptor.h"
 #include "graphics/appearances.h"
 #include "graphics/vulkan_helpers.h"
@@ -86,7 +85,7 @@ void MapRenderer::initResources()
 
 void MapRenderer::initSwapChainResources()
 {
-  const QSize sz = window.swapChainImageSize();
+  const util::Size sz = window.vulkanSwapChainImageSize();
   mapView->setViewportSize(sz.width(), sz.height());
 }
 
@@ -159,7 +158,7 @@ void MapRenderer::drawBatches()
   if (this->debug)
   {
   }
-  const QSize size = window.swapChainImageSize();
+  const util::Size size = window.vulkanSwapChainImageSize();
 
   VkViewport viewport;
   viewport.x = viewport.y = 0;
@@ -439,28 +438,14 @@ void MapRenderer::drawSelectionRectangle()
 
 void MapRenderer::updateUniformBuffer()
 {
-  QMatrix4x4 projection = g_window->clipCorrectionMatrix(); // adjust for Vulkan-OpenGL clip space differences
-  const QSize sz = g_window->swapChainImageSize();
-  QRectF rect;
-  rect.setX(0);
-  rect.setY(0);
-  rect.setWidth(sz.width());
-  rect.setHeight(sz.height());
-  projection.ortho(rect);
-
-  // projection.perspective(45.0f, sz.width() / (float)sz.height(), 0.01f, 100.0f);
-  // projection.translate(0, 0, -4);
-
-  // projection.translate(0, 0, 0);
-
-  // glm::mat4 projection = glm::translate(
-  //     glm::ortho(0.0f, viewport.width * viewport.zoom, viewport.height * viewport.zoom, 0.0f),
-  //     glm::vec3(-std::floor(viewport.offsetX), -std::floor(viewport.offsetY), 0.0f));
-  // ItemUniformBufferObject uniformBufferObject{projection};
+  ScreenPosition cursorPos(0.0, 0.0);
+  mapView->updateCamera(cursorPos);
+  glm::mat4 projection = window.projectionMatrix();
+  ItemUniformBufferObject uniformBufferObject{projection};
 
   void *data;
   g_vk->vkMapMemory(window.device(), currentFrame->uniformBuffer.deviceMemory, 0, sizeof(ItemUniformBufferObject), 0, &data);
-  memcpy(data, projection.constData(), 16 * sizeof(float));
+  memcpy(data, &uniformBufferObject, sizeof(ItemUniformBufferObject));
   g_vk->vkUnmapMemory(window.device(), currentFrame->uniformBuffer.deviceMemory);
 }
 
@@ -496,7 +481,7 @@ void MapRenderer::drawItem(ObjectDrawInfo &info)
  **/
 void MapRenderer::beginRenderPass()
 {
-  QSize size = window.swapChainImageSize();
+  util::Size size = window.vulkanSwapChainImageSize();
   VkRenderPassBeginInfo renderPassInfo = {};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassInfo.renderPass = renderPass;

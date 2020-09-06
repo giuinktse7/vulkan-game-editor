@@ -6,6 +6,8 @@
 #include <QDialog>
 #include <QAction>
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include "map_renderer.h"
 #include "map_view.h"
 #include "../logger.h"
@@ -15,48 +17,6 @@
 VulkanWindow::VulkanWindow(MapView *mapView)
     : mapView(mapView), contextMenu(nullptr), renderer(nullptr), widget(nullptr)
 {
-}
-
-VulkanWindow::ContextMenu::ContextMenu(VulkanWindow *window, QWidget *widget) : QMenu(widget), window(window)
-{
-}
-
-bool VulkanWindow::ContextMenu::event(QEvent *e)
-{
-  if (e->type() == QEvent::Type::MouseButtonPress)
-  {
-    VME_LOG_D("QEvent::Type::MouseButtonPress");
-    // return window->event(e);
-  }
-  else
-  {
-  }
-  return QWidget::event(e);
-}
-bool VulkanWindow::ContextMenu::selfClicked(QPoint pos) const
-{
-  return localGeometry().contains(pos);
-}
-
-void VulkanWindow::ContextMenu::mousePressEvent(QMouseEvent *event)
-{
-  // Propagate the click event to the map window if appropriate
-  if (!selfClicked(event->pos()))
-  {
-    auto posInWindow = window->mapFromGlobal(event->globalPos());
-    VME_LOG_D("posInWindow: " << posInWindow);
-    VME_LOG_D("Window geometry: " << window->geometry());
-    if (window->localGeometry().contains(posInWindow.x(), posInWindow.y()))
-    {
-      VME_LOG_D("In window");
-      window->mousePressEvent(event);
-    }
-    else
-    {
-      event->ignore();
-      window->lostFocus();
-    }
-  }
 }
 
 void VulkanWindow::lostFocus()
@@ -122,28 +82,9 @@ void VulkanWindow::mousePressEvent(QMouseEvent *e)
   }
 }
 
-QRect VulkanWindow::ContextMenu::localGeometry() const
-{
-  return QRect(QPoint(0, 0), QPoint(width(), height()));
-}
-
 QRect VulkanWindow::localGeometry() const
 {
   return QRect(QPoint(0, 0), QPoint(width(), height()));
-}
-
-QRect VulkanWindow::ContextMenu::relativeGeometry() const
-{
-  VME_LOG_D("relativeGeometry");
-  //  VME_LOG_D(parentWidget()->pos());
-  QPoint p(geometry().left(), geometry().top());
-
-  VME_LOG_D(parentWidget()->mapToGlobal(parentWidget()->pos()));
-
-  VME_LOG_D("Top left: " << p);
-  VME_LOG_D(mapToParent(p));
-
-  return geometry();
 }
 
 void VulkanWindow::closeContextMenu()
@@ -192,9 +133,109 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *e)
 
 void VulkanWindow::keyPressEvent(QKeyEvent *e)
 {
+  switch (e->key())
+  {
+  case Qt::Key_Left:
+  case Qt::Key_Right:
+  case Qt::Key_Up:
+  case Qt::Key_Down:
+    break;
+  default:
+    break;
+  }
 }
 
 MapView *VulkanWindow::getMapView() const
 {
   return mapView;
+}
+
+util::Size VulkanWindow::vulkanSwapChainImageSize() const
+{
+  QSize size = swapChainImageSize();
+  return util::Size(size.width(), size.height());
+}
+
+glm::mat4 VulkanWindow::projectionMatrix()
+{
+  QMatrix4x4 projection = clipCorrectionMatrix(); // adjust for Vulkan-OpenGL clip space differences
+  const QSize sz = swapChainImageSize();
+  QRectF rect;
+  const Viewport &viewport = mapView->getViewport();
+  rect.setX(viewport.offsetX);
+  rect.setY(viewport.offsetY);
+  rect.setWidth(sz.width());
+  rect.setHeight(sz.height());
+  projection.ortho(rect);
+
+  glm::mat4 data;
+  float *ptr = glm::value_ptr(data);
+  projection.transposed().copyDataTo(ptr);
+
+  return data;
+}
+
+/*
+>>>>>>>>>>ContextMenu<<<<<<<<<<<
+*/
+
+VulkanWindow::ContextMenu::ContextMenu(VulkanWindow *window, QWidget *widget) : QMenu(widget), window(window)
+{
+}
+
+bool VulkanWindow::ContextMenu::event(QEvent *e)
+{
+  if (e->type() == QEvent::Type::MouseButtonPress)
+  {
+    VME_LOG_D("QEvent::Type::MouseButtonPress");
+    // return window->event(e);
+  }
+  else
+  {
+  }
+  return QWidget::event(e);
+}
+
+bool VulkanWindow::ContextMenu::selfClicked(QPoint pos) const
+{
+  return localGeometry().contains(pos);
+}
+
+void VulkanWindow::ContextMenu::mousePressEvent(QMouseEvent *event)
+{
+  // Propagate the click event to the map window if appropriate
+  if (!selfClicked(event->pos()))
+  {
+    auto posInWindow = window->mapFromGlobal(event->globalPos());
+    VME_LOG_D("posInWindow: " << posInWindow);
+    VME_LOG_D("Window geometry: " << window->geometry());
+    if (window->localGeometry().contains(posInWindow.x(), posInWindow.y()))
+    {
+      VME_LOG_D("In window");
+      window->mousePressEvent(event);
+    }
+    else
+    {
+      event->ignore();
+      window->lostFocus();
+    }
+  }
+}
+
+QRect VulkanWindow::ContextMenu::localGeometry() const
+{
+  return QRect(QPoint(0, 0), QPoint(width(), height()));
+}
+QRect VulkanWindow::ContextMenu::relativeGeometry() const
+{
+  VME_LOG_D("relativeGeometry");
+  //  VME_LOG_D(parentWidget()->pos());
+  QPoint p(geometry().left(), geometry().top());
+
+  VME_LOG_D(parentWidget()->mapToGlobal(parentWidget()->pos()));
+
+  VME_LOG_D("Top left: " << p);
+  VME_LOG_D(mapToParent(p));
+
+  return geometry();
 }
