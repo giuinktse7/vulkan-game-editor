@@ -13,7 +13,7 @@ struct MapPosition;
 template <typename T>
 struct BasePosition
 {
-    BasePosition(T x, T y)
+	BasePosition(T x, T y)
 			: x(x), y(y) {}
 
 	T x;
@@ -98,6 +98,20 @@ struct WorldPosition : public BasePosition<double>
 	MapPosition mapPos() const;
 	Position toPos(const MapView &mapView) const;
 	Position toPos(int floor) const;
+
+	WorldPosition &operator+=(const WorldPosition &rhs)
+	{
+		this->x += rhs.x;
+		this->y += rhs.y;
+		return *this;
+	}
+
+	friend WorldPosition operator+(const WorldPosition &lhs, const WorldPosition rhs)
+	{
+		WorldPosition pos(lhs);
+		pos += rhs;
+		return pos;
+	}
 };
 
 struct MapPosition : public BasePosition<long>
