@@ -120,19 +120,12 @@ int main(int argc, char *argv[])
     if (!instance.create())
         qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
 
-    auto mapView = QT_MANAGED_POINTER(MapView);
+    auto mapView = std::make_shared<MapView>();
 
     mapView->history.startGroup(ActionGroupType::AddMapItem);
     mapView->addItem(Position(4, 4, 7), 2706);
     mapView->addItem(Position(8, 10, 7), 2708);
     mapView->addItem(Position(2, 2, 7), 2554);
-    // for (int x = 1; x < 6; ++x)
-    // {
-    //     for (int y = 1; y < 6; ++y)
-    //     {
-    //         mapView->addItem(Position(x, y, 7), 100);
-    //     }
-    // }
     mapView->history.endGroup(ActionGroupType::AddMapItem);
 
     VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, mapView);

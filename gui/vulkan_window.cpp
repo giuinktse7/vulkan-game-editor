@@ -17,8 +17,8 @@
 
 #include "qt/logging.h"
 
-VulkanWindow::VulkanWindow(MapView *mapView)
-    : mapView(mapView), contextMenu(nullptr), renderer(nullptr), widget(nullptr), test(std::make_unique<Test>())
+VulkanWindow::VulkanWindow(std::shared_ptr<MapView> mapView)
+    : mapView(mapView), contextMenu(nullptr), renderer(nullptr), widget(nullptr)
 {
 }
 
@@ -168,7 +168,7 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
 
 MapView *VulkanWindow::getMapView() const
 {
-  return mapView;
+  return mapView.get();
 }
 
 util::Size VulkanWindow::vulkanSwapChainImageSize() const

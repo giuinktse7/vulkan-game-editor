@@ -14,11 +14,6 @@ class QPoint;
 class util::Size;
 QT_END_NAMESPACE
 
-class Test
-{
-  int x = 2;
-};
-
 class VulkanWindow : public QVulkanWindow
 {
 public:
@@ -40,7 +35,7 @@ public:
     bool selfClicked(QPoint pos) const;
   };
 
-  VulkanWindow(MapView *mapView);
+  VulkanWindow(std::shared_ptr<MapView> mapView);
 
   /*
     Gives default keyboard focus to the map editor area.
@@ -65,8 +60,6 @@ public:
 
   QWidget *widget;
 
-  std::unique_ptr<Test> test;
-
 protected:
 private:
   void mousePressEvent(QMouseEvent *event) override;
@@ -78,6 +71,6 @@ private:
 
   // std::unique_ptr<TriangleRenderer> renderer;
   MapRenderer *renderer;
-  MapView *mapView;
+  std::shared_ptr<MapView> mapView;
   ContextMenu *contextMenu;
 };
