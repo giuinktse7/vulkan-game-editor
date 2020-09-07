@@ -137,7 +137,6 @@ int main(int argc, char *argv[])
     mainWindow.resize(1024, 768);
     mainWindow.show();
     vulkanWindow->requestActivate();
-    // vulkanWindow->setAsDefaultWindow(app);
 
     return app.exec();
 }

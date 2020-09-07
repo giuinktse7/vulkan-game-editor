@@ -37,12 +37,6 @@ public:
 
   VulkanWindow(std::shared_ptr<MapView> mapView);
 
-  /*
-    Gives default keyboard focus to the map editor area.
-
-  */
-  void setAsDefaultWindow(QApplication &app);
-
   QVulkanWindowRenderer *createRenderer() override;
 
   MapView *getMapView() const;

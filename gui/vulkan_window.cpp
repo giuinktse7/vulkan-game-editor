@@ -22,16 +22,6 @@ VulkanWindow::VulkanWindow(std::shared_ptr<MapView> mapView)
 {
 }
 
-void VulkanWindow::setAsDefaultWindow(QApplication &app)
-{
-  connect(&app, &QApplication::applicationStateChanged, this, [=](Qt::ApplicationState state) {
-    if (state == Qt::ApplicationState::ApplicationActive)
-    {
-      requestActivate();
-    }
-  });
-}
-
 void VulkanWindow::lostFocus()
 {
   if (contextMenu)
@@ -62,22 +52,6 @@ QVulkanWindowRenderer *VulkanWindow::createRenderer()
 
 void VulkanWindow::mousePressEvent(QMouseEvent *e)
 {
-  // VME_LOG_D("");
-  // VME_LOG_D(position());
-  // VME_LOG_D(e->windowPos());
-  // VME_LOG_D(e->pos());
-  // VME_LOG_D(e->localPos());
-  // VME_LOG_D(geometry());
-  // if (!geometry().contains(e->pos()))
-  // {
-  //   if (contextMenu)
-  //   {
-  //     closeContextMenu();
-  //   }
-  //   return;
-  // }
-
-  VME_LOG_D("VulkanWindow::mousePressEvent");
   Qt::MouseButton button = e->button();
   switch (button)
   {
