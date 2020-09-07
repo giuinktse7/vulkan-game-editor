@@ -2,11 +2,14 @@
 
 #include <stdexcept>
 #include "../file.h"
+#include "../logger.h"
 
 #include <cassert>
 
 #pragma warning(push)
 #pragma warning(disable : 26812)
+
+constexpr size_t BytesInTextureAtlas = 12 * 12 * 32 * 32 * 4;
 
 std::vector<uint8_t> remove_leading(std::vector<uint8_t> const &buffer, uint8_t c)
 {
@@ -101,10 +104,10 @@ std::string LZMA::compress(const std::string &in, int level)
 
 std::vector<uint8_t> LZMA::decompressRaw(const std::vector<uint8_t> &in, lzma_options_lzma &options)
 {
-    lzma_stream strm = LZMA_STREAM_INIT;
+    lzma_stream stream = LZMA_STREAM_INIT;
 
     std::vector<uint8_t> result;
-    result.resize(1048576);
+    result.resize(BytesInTextureAtlas);
     size_t cursor = 0;
     lzma_ret lzmaStatus;
 
@@ -112,35 +115,35 @@ std::vector<uint8_t> LZMA::decompressRaw(const std::vector<uint8_t> &in, lzma_op
         lzma_filter{LZMA_FILTER_LZMA1, &options},
         lzma_filter{LZMA_VLI_UNKNOWN, NULL}};
 
-    lzmaStatus = lzma_raw_decoder(&strm, filters);
+    lzmaStatus = lzma_raw_decoder(&stream, filters);
 
     assert(lzmaStatus == LZMA_OK);
 
     size_t avail0 = result.size();
-    strm.next_in = reinterpret_cast<const uint8_t *>(in.data());
-    strm.avail_in = in.size();
-    strm.next_out = reinterpret_cast<uint8_t *>(&result[0]);
-    strm.avail_out = avail0;
+    stream.next_in = reinterpret_cast<const uint8_t *>(in.data());
+    stream.avail_in = in.size();
+    stream.next_out = reinterpret_cast<uint8_t *>(&result[0]);
+    stream.avail_out = avail0;
     while (true)
     {
-        lzmaStatus = lzma_code(&strm, strm.avail_in == 0 ? LZMA_FINISH : LZMA_RUN);
+        lzmaStatus = lzma_code(&stream, stream.avail_in == 0 ? LZMA_FINISH : LZMA_RUN);
         if (lzmaStatus == LZMA_STREAM_END)
         {
-            cursor += avail0 - strm.avail_out;
-            if (0 != strm.avail_in)
+            cursor += avail0 - stream.avail_out;
+            if (0 != stream.avail_in)
                 abort();
             result.resize(cursor);
-            lzma_end(&strm);
+            lzma_end(&stream);
             return result;
         }
         if (lzmaStatus != LZMA_OK)
             abort();
-        if (strm.avail_out == 0)
+        if (stream.avail_out == 0)
         {
-            cursor += avail0 - strm.avail_out;
+            cursor += avail0 - stream.avail_out;
             result.resize(result.size() << 1);
-            strm.next_out = reinterpret_cast<uint8_t *>(&result[0] + cursor);
-            strm.avail_out = avail0 = result.size() - cursor;
+            stream.next_out = reinterpret_cast<uint8_t *>(&result[0] + cursor);
+            stream.avail_out = avail0 = result.size() - cursor;
         }
     }
 }
