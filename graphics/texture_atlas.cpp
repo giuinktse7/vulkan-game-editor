@@ -186,13 +186,13 @@ void TextureAtlas::decompressTexture()
   uint32_t offset;
   std::memcpy(&offset, decompressed.data() + OFFSET_OF_BMP_START_OFFSET, sizeof(uint32_t));
 
-  fixMagenta(decompressed, offset);
+  // fixMagenta(decompressed, offset);
 
   // nextN(decompressed, offset, 4);
   // std::cout << unsigned(readU32(decompressed, offset)) << std::endl;
 
   texture = Texture(this->width, this->height, std::vector<uint8_t>(decompressed.begin() + offset, decompressed.end()));
-  VME_LOG_D("Decompressed " + this->sourceFile.string());
+  // VME_LOG_D("Decompressed " + this->sourceFile.string());
 }
 
 Texture &TextureAtlas::getOrCreateTexture()
