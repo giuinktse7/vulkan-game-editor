@@ -163,7 +163,7 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
 
             Appearances::textureAtlases[lastSpriteId] = std::make_unique<TextureAtlas>(
                 lastSpriteId,
-                buffer,
+                std::move(buffer),
                 TextureAtlasSize.width,
                 TextureAtlasSize.height,
                 firstSpriteId,

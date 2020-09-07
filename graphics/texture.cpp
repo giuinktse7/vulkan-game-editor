@@ -25,9 +25,9 @@ constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
 std::unordered_map<SolidColor, std::unique_ptr<Texture>> solidColorTextures;
 
-Texture::Texture(uint32_t width, uint32_t height, std::vector<uint8_t> pixels)
+Texture::Texture(uint32_t width, uint32_t height, std::vector<uint8_t> &&pixels)
 {
-  init(width, height, pixels.data());
+  init(width, height, std::move(pixels));
 }
 
 Texture::Texture(uint32_t width, uint32_t height, uint8_t *pixels)
@@ -58,6 +58,17 @@ Texture::Texture(const std::string &filename)
   stbi_image_free(pixels);
 }
 
+void Texture::init(uint32_t width, uint32_t height, std::vector<uint8_t> &&pixels)
+{
+  uint64_t sizeInBytes = (static_cast<uint64_t>(width) * height) * 4;
+  this->layout = VK_NULL_HANDLE;
+  this->width = width;
+  this->height = height;
+  imageSize = sizeInBytes;
+
+  this->_pixels = std::move(pixels);
+}
+
 void Texture::init(uint32_t width, uint32_t height, uint8_t *pixels)
 {
   uint64_t sizeInBytes = (static_cast<uint64_t>(width) * height) * 4;
@@ -66,8 +77,7 @@ void Texture::init(uint32_t width, uint32_t height, uint8_t *pixels)
   this->height = height;
   imageSize = sizeInBytes;
 
-  std::vector<uint8_t> vectorBuffer(pixels, pixels + sizeInBytes);
-  this->_pixels = vectorBuffer;
+  this->_pixels = std::vector<uint8_t>(pixels, pixels + sizeInBytes);
 }
 
 void Texture::initVulkanResources(Texture::Descriptor descriptor)

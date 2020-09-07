@@ -137,6 +137,8 @@ void MapRenderer::startNextFrame()
   currentFrame->frameBuffer = g_window->currentFramebuffer();
   currentFrame->batchDraw.commandBuffer = currentFrame->commandBuffer;
 
+  mapView->updateViewport();
+
   updateUniformBuffer();
 
   drawMap();

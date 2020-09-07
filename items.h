@@ -36,11 +36,6 @@ public:
   bool reload();
   void clear();
 
-  const bool hasItemType(size_t id) const
-  {
-    return itemTypes.size() > id;
-  }
-
   ItemType *getItemType(uint16_t id);
   bool validItemType(uint16_t serverId) const;
   ItemType *getItemTypeByClientId(uint16_t clientId);

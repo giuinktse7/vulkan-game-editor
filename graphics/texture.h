@@ -38,7 +38,7 @@ public:
 
   Texture(const std::string &filename);
   Texture(uint32_t width, uint32_t height, uint8_t *pixels);
-  Texture(uint32_t width, uint32_t height, std::vector<uint8_t> pixels);
+  Texture(uint32_t width, uint32_t height, std::vector<uint8_t> &&pixels);
 
   VkDescriptorSet getDescriptorSet();
   TextureWindow getTextureWindow();
@@ -82,6 +82,7 @@ private:
   uint32_t mipLevels = 1;
 
   void init(uint32_t width, uint32_t height, uint8_t *pixels);
+  void init(uint32_t width, uint32_t height, std::vector<uint8_t> &&pixels);
 
   void createImage(uint32_t width,
                    uint32_t height,

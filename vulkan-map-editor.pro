@@ -70,6 +70,7 @@ SOURCES += \
     qt/logging.cpp
 
 HEADERS += \
+    main.h \
     gui/mainwindow.h \
     gui/vulkan_window.h \ # graphics/vulkan_debug.h \
     graphics/appearances.h \

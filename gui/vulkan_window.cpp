@@ -5,6 +5,9 @@
 #include <QMenu>
 #include <QDialog>
 #include <QAction>
+#include <QApplication>
+
+#include <memory>
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -15,8 +18,18 @@
 #include "qt/logging.h"
 
 VulkanWindow::VulkanWindow(MapView *mapView)
-    : mapView(mapView), contextMenu(nullptr), renderer(nullptr), widget(nullptr)
+    : mapView(mapView), contextMenu(nullptr), renderer(nullptr), widget(nullptr), test(std::make_unique<Test>())
 {
+}
+
+void VulkanWindow::setAsDefaultWindow(QApplication &app)
+{
+  connect(&app, &QApplication::applicationStateChanged, this, [=](Qt::ApplicationState state) {
+    if (state == Qt::ApplicationState::ApplicationActive)
+    {
+      requestActivate();
+    }
+  });
 }
 
 void VulkanWindow::lostFocus()
@@ -133,12 +146,20 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *e)
 
 void VulkanWindow::keyPressEvent(QKeyEvent *e)
 {
+  double speed = 32;
   switch (e->key())
   {
   case Qt::Key_Left:
+    mapView->panCameraX(-speed);
+    break;
   case Qt::Key_Right:
+    mapView->panCameraX(speed);
+    break;
   case Qt::Key_Up:
+    mapView->panCameraY(-speed);
+    break;
   case Qt::Key_Down:
+    mapView->panCameraY(speed);
     break;
   default:
     break;

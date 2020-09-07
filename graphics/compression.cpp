@@ -106,8 +106,7 @@ std::vector<uint8_t> LZMA::decompressRaw(const std::vector<uint8_t> &in, lzma_op
 {
     lzma_stream stream = LZMA_STREAM_INIT;
 
-    std::vector<uint8_t> result;
-    result.resize(BytesInTextureAtlas);
+    std::vector<uint8_t> result(BytesInTextureAtlas);
     size_t cursor = 0;
     lzma_ret lzmaStatus;
 
@@ -119,17 +118,19 @@ std::vector<uint8_t> LZMA::decompressRaw(const std::vector<uint8_t> &in, lzma_op
 
     assert(lzmaStatus == LZMA_OK);
 
-    size_t avail0 = result.size();
-    stream.next_in = reinterpret_cast<const uint8_t *>(in.data());
+    size_t remainingOut = BytesInTextureAtlas;
+
+    stream.next_in = in.data();
     stream.avail_in = in.size();
-    stream.next_out = reinterpret_cast<uint8_t *>(&result[0]);
-    stream.avail_out = avail0;
+    stream.next_out = result.data();
+    stream.avail_out = remainingOut;
+
     while (true)
     {
         lzmaStatus = lzma_code(&stream, stream.avail_in == 0 ? LZMA_FINISH : LZMA_RUN);
         if (lzmaStatus == LZMA_STREAM_END)
         {
-            cursor += avail0 - stream.avail_out;
+            cursor += remainingOut - stream.avail_out;
             if (0 != stream.avail_in)
                 abort();
             result.resize(cursor);
@@ -140,10 +141,10 @@ std::vector<uint8_t> LZMA::decompressRaw(const std::vector<uint8_t> &in, lzma_op
             abort();
         if (stream.avail_out == 0)
         {
-            cursor += avail0 - stream.avail_out;
+            cursor += remainingOut - stream.avail_out;
             result.resize(result.size() << 1);
             stream.next_out = reinterpret_cast<uint8_t *>(&result[0] + cursor);
-            stream.avail_out = avail0 = result.size() - cursor;
+            stream.avail_out = remainingOut = result.size() - cursor;
         }
     }
 }

@@ -5,7 +5,7 @@
 Viewport::Viewport()
     : width(0),
       height(0),
-      zoom(1.0f),
+      zoom(0.25f),
       offsetX(0.0f),
       offsetY(0.0f)
 {
@@ -15,7 +15,7 @@ MapView::MapView()
     : map(std::make_shared<Map>()),
       dragState{},
       selection(*this),
-      viewport{}
+      viewport()
 {
 }
 
@@ -334,6 +334,21 @@ void MapView::panEvent(MapView::PanEvent event)
   }
 
   translateCamera(delta);
+}
+
+void MapView::panCamera(WorldPosition delta)
+{
+  camera.translate(delta);
+}
+
+void MapView::panCameraX(double delta)
+{
+  camera.translate(WorldPosition(delta, 0));
+}
+
+void MapView::panCameraY(double delta)
+{
+  camera.translate(WorldPosition(0, delta));
 }
 
 /*

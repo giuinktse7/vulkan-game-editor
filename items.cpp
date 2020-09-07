@@ -116,12 +116,12 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 		return {};
 	}
 
-	if (!Items::items.hasItemType(id))
+	if (!Items::items.validItemType(id))
 	{
 		// Fluids in current version, might change in the future
 		if (id >= 40001 && id <= 40043)
 		{
-			return {};
+			return true;
 		}
 		Logger::error("There is no itemType with server ID " + std::to_string(id));
 		return false;
@@ -150,7 +150,7 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 			}
 
 			std::string typeValue = attribute.as_string();
-			to_lower_str(key);
+			to_lower_str(typeValue);
 			if (typeValue == "depot")
 			{
 				it.type = ItemTypes_t::Depot;

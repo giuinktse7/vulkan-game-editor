@@ -251,6 +251,7 @@
     <ClInclude Include="logger.h" />
     <QtMoc Include="gui\mainwindow.h">
     </QtMoc>
+    <ClInclude Include="main.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="graphics\protobuf\map.pb.h" />
     <ClInclude Include="map_io.h" />

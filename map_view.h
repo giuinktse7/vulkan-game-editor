@@ -51,6 +51,10 @@ public:
 	bool isSelectionMoving() const;
 	bool isEmpty(Position position) const;
 
+	void panCamera(WorldPosition delta);
+	void panCameraX(double delta);
+	void panCameraY(double delta);
+
 	void finishMoveSelection(const Position moveDestination);
 
 	void addItem(const Position position, uint16_t id);

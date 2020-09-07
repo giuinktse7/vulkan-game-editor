@@ -12,6 +12,7 @@
 #include "vulkan_window.h"
 
 #include "items.h"
+#include "time_point.h"
 
 QLabel *itemImage(uint16_t serverId)
 {
@@ -27,6 +28,7 @@ QLabel *itemImage(uint16_t serverId)
 
     QLabel *container = new QLabel;
     container->setPixmap(pixelMap.copy(textureRegion).transformed(QTransform().scale(1, -1)));
+
     return container;
 }
 
@@ -49,10 +51,18 @@ MainWindow::MainWindow(VulkanWindow *vulkanWindow)
     textEdit->setMaximumHeight(80);
     testLayout->addWidget(textEdit);
 
-    testLayout->addWidget(itemImage(100));
-    testLayout->addWidget(itemImage(2554));
-    testLayout->addWidget(itemImage(2148));
-    // testLayout->addWidget(itemImage(103));
+    // for (uint16_t id = 100; id < Items::items.size(); ++id)
+    // {
+    //     ItemType *t = Items::items.getItemType(id);
+
+    //     if (!Items::items.validItemType(id))
+    //         continue;
+    //     itemImage(id);
+    // }
+
+    // testLayout->addWidget(itemImage(100));
+    // testLayout->addWidget(itemImage(2554));
+    // testLayout->addWidget(itemImage(2148));
 
     QGridLayout *gridLayout = new QGridLayout;
 

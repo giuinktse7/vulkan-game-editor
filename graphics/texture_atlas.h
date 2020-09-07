@@ -39,7 +39,7 @@ private:
 	using CompressedBytes = std::vector<uint8_t>;
 
 public:
-	TextureAtlas(uint32_t id, CompressedBytes &buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile);
+	TextureAtlas(uint32_t id, CompressedBytes &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile);
 
 	std::filesystem::path sourceFile;
 
