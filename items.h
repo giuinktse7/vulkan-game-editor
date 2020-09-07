@@ -42,6 +42,7 @@ public:
   }
 
   ItemType *getItemType(uint16_t id);
+  bool validItemType(uint16_t serverId) const;
   ItemType *getItemTypeByClientId(uint16_t clientId);
 
   const ItemType &getItemIdByClientId(uint16_t spriteId) const;
@@ -99,7 +100,7 @@ private:
     std::string nextString(size_t length);
     void skipBytes(size_t bytes);
 
-    ItemTypes_t serverItemType(uint8_t byte);
+    ItemTypes_t serverItemType(itemgroup_t byte);
   };
 
   Items();

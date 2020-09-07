@@ -36,6 +36,14 @@ ItemType *Items::getItemType(uint16_t id)
 	return &itemTypes.at(id);
 }
 
+bool Items::validItemType(uint16_t serverId) const
+{
+	if (serverId >= itemTypes.size())
+		return false;
+
+	return itemTypes.at(serverId).appearance != nullptr;
+}
+
 ItemType *Items::getItemTypeByClientId(uint16_t clientId)
 {
 	uint16_t id = clientIdToServerId.at(clientId);
@@ -410,7 +418,7 @@ void Items::OtbReader::readNodes()
 
 		// ItemType itemType;
 
-		uint8_t typeValue = nextU8();
+		uint8_t groupByte = nextU8();
 		uint32_t flags = nextU32();
 
 		uint16_t serverId = 0;
@@ -544,7 +552,8 @@ void Items::OtbReader::readNodes()
 			ABORT_PROGRAM("Encountered item type without a server ID.");
 		}
 
-		itemType->type = serverItemType(typeValue);
+		itemType->group = static_cast<itemgroup_t>(groupByte);
+		itemType->type = serverItemType(itemType->group);
 
 		itemType->id = serverId;
 		itemType->clientId = clientId;
@@ -615,9 +624,9 @@ bool Items::OtbReader::nodeEnd() const
 	return endCursor;
 }
 
-ItemTypes_t Items::OtbReader::serverItemType(uint8_t byte)
+ItemTypes_t Items::OtbReader::serverItemType(itemgroup_t group)
 {
-	switch (static_cast<itemgroup_t>(byte))
+	switch (group)
 	{
 	case itemgroup_t::Container:
 		return ItemTypes_t::Container;
