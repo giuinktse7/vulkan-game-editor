@@ -164,8 +164,8 @@ glm::mat4 VulkanWindow::projectionMatrix()
   const Viewport &viewport = mapView->getViewport();
   rect.setX(viewport.offsetX);
   rect.setY(viewport.offsetY);
-  rect.setWidth(sz.width());
-  rect.setHeight(sz.height());
+  rect.setWidth(sz.width() * viewport.zoom);
+  rect.setHeight(sz.height() * viewport.zoom);
   projection.ortho(rect);
 
   glm::mat4 data;
