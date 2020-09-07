@@ -2,7 +2,7 @@
 
 ## Rendering
 
-- [ ]
+- [x]
   Color mixes are too dark. Blend issue? Full colors look right (like 0xFFFF0000, 0xFFFF00FF, ...). But non-full colors do not (like 0xFFAA0000).
   Clear value does not seem to affect the blend issue.
 
@@ -28,7 +28,10 @@
 
 ### GUI
 
-- [ ] Replace Dear ImGui with QT
+- [x] Replace Dear ImGui with QT
+- [ ]
+  BUG: Minimize and then returning to the window (maximizing) does not retain
+  the correct window/widget focus.
 
 ## General
 
