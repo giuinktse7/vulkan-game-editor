@@ -413,7 +413,7 @@ void Items::OtbReader::readNodes()
 
 	do
 	{
-		uint8_t startNode = nextU8();
+		[[maybe_unused]] uint8_t startNode = nextU8();
 		DEBUG_ASSERT(startNode == StartNode, "startNode must be OtbReader::StartNode.");
 
 		// ItemType itemType;
@@ -612,7 +612,7 @@ void Items::OtbReader::readNodes()
 			}
 		}
 
-		uint8_t endToken = nextU8();
+		[[maybe_unused]] uint8_t endToken = nextU8();
 		DEBUG_ASSERT(endToken == EndNode, "Expected end token when parsing items.otb.");
 
 	} while (!nodeEnd());
