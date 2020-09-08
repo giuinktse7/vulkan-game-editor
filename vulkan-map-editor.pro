@@ -69,6 +69,30 @@ SOURCES += \
     selection.cpp \
     qt/logging.cpp
 
+# LZMA
+SOURCES += \
+    lzma/Alloc.c \
+    lzma/LzFind.c \
+    lzma/LzFindMt.c \
+    lzma/LzmaDec.c \
+    lzma/LzmaEnc.c \
+    lzma/LzmaLib.c \
+    lzma/Threads.c \
+
+HEADERS += \
+    lzma/7zTypes.h \
+    lzma/Alloc.h \
+    lzma/Compiler.h \
+    lzma/LzFind.h \
+    lzma/LzFindMt.h \
+    lzma/LzHash.h \
+    lzma/LzmaDec.h \
+    lzma/LzmaEnc.h \
+    lzma/LzmaLib.h \
+    lzma/Precomp.h \
+    lzma/Threads.h \
+# End LZMA
+
 HEADERS += \
     main.h \
     gui/mainwindow.h \

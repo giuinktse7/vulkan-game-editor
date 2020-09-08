@@ -204,6 +204,13 @@
     <ClCompile Include="item_type.cpp" />
     <ClCompile Include="items.cpp" />
     <ClCompile Include="logger.cpp" />
+    <ClCompile Include="lzma\Alloc.c" />
+    <ClCompile Include="lzma\LzFind.c" />
+    <ClCompile Include="lzma\LzFindMt.c" />
+    <ClCompile Include="lzma\LzmaDec.c" />
+    <ClCompile Include="lzma\LzmaEnc.c" />
+    <ClCompile Include="lzma\LzmaLib.c" />
+    <ClCompile Include="lzma\Threads.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="gui\mainwindow.cpp" />
     <ClCompile Include="map.cpp" />
@@ -251,6 +258,17 @@
     <ClInclude Include="logger.h" />
     <QtMoc Include="gui\mainwindow.h">
     </QtMoc>
+    <ClInclude Include="lzma\7zTypes.h" />
+    <ClInclude Include="lzma\Alloc.h" />
+    <ClInclude Include="lzma\Compiler.h" />
+    <ClInclude Include="lzma\LzFind.h" />
+    <ClInclude Include="lzma\LzFindMt.h" />
+    <ClInclude Include="lzma\LzHash.h" />
+    <ClInclude Include="lzma\LzmaDec.h" />
+    <ClInclude Include="lzma\LzmaEnc.h" />
+    <ClInclude Include="lzma\LzmaLib.h" />
+    <ClInclude Include="lzma\Precomp.h" />
+    <ClInclude Include="lzma\Threads.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="graphics\protobuf\map.pb.h" />

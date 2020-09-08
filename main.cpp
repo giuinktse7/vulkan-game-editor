@@ -31,6 +31,7 @@ void loadTextures()
         const TextureInfo &info = t->getTextureInfoUnNormalized();
         info.atlas->getOrCreateTexture();
     }
+    VME_LOG_D("loadTextures() ms: " << start.elapsedMillis());
 }
 
 void MainApplication::loadGameData()
@@ -46,7 +47,7 @@ void MainApplication::loadGameData()
     Items::loadFromOtb("data/items.otb");
     Items::loadFromXml("data/items.xml");
 
-    // loadTextures();
+    loadTextures();
 }
 
 MainApplication::MainApplication(int &argc, char **argv) : QApplication(argc, argv)

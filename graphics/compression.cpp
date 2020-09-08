@@ -3,37 +3,80 @@
 #include <stdexcept>
 #include "../file.h"
 #include "../logger.h"
+#include "../util.h"
+
+#include "../lzma/LzmaLib.h"
 
 #include <cassert>
 
 #pragma warning(push)
 #pragma warning(disable : 26812)
 
+constexpr int UncompressedSizeLengthBytes = 8;
+constexpr int LzmaHeaderSize = LZMA_PROPS_SIZE + UncompressedSizeLengthBytes;
+
 constexpr size_t BytesInTextureAtlas = 12 * 12 * 32 * 32 * 4;
 
-std::vector<uint8_t> remove_leading(std::vector<uint8_t> const &buffer, uint8_t c)
+std::vector<uint8_t> LZMA::decompressFile(const std::filesystem::path &filepath)
 {
-    auto end = buffer.end();
-
-    for (auto i = buffer.begin(); i != end; ++i)
-    {
-        if (*i != c)
-        {
-            return std::vector<uint8_t>(i, end);
-        }
-    }
-
-    // All characters were leading or the string is empty.
-    return std::vector<uint8_t>();
+    // std::cout << filepath.filename().string() << std::endl;
+    auto file = File::read(filepath.string());
+    return decompress(std::move(file));
 }
 
-std::vector<uint8_t> LZMA::decompress(const std::vector<uint8_t> &inBuffer)
+std::vector<uint8_t> LZMA::decompressRelease(std::vector<uint8_t> &&srcVector)
 {
+    std::vector<uint8_t> result(BytesInTextureAtlas);
+    auto srcBuffer = srcVector.data();
 
+    // Skip Cipsoft specific headers
+    size_t cursor = 0;
+    while (srcBuffer[cursor++] == 0x00)
+        ;
+    cursor += 4;
+    while ((srcBuffer[cursor++] & 0x80) == 0x80)
+        ;
+
+    /*
+        LZMA data. The header consists of 13 bytes.
+        [0, 4] - 5 bytes: LZMA Props data
+        [5, 12] - 8 bytes: The uncompressed size of the data
+    */
+    uint8_t *lzmaBuffer = &srcBuffer[cursor];
+    uint8_t *compressedBufferStart = lzmaBuffer + LzmaHeaderSize;
+
+    // size_t uncompressedDataSize;
+    // memcpy(&uncompressedDataSize, lzmaBuffer + LZMA_PROPS_SIZE, UncompressedSizeLengthBytes);
+
+    size_t inSize = srcVector.size() - LzmaHeaderSize;
+    size_t outSize = result.size();
+    LzmaUncompress(result.data(), &outSize, compressedBufferStart, &inSize, lzmaBuffer, LZMA_PROPS_SIZE);
+
+    return result;
+}
+
+// std::vector<uint8_t> removeLeading(std::vector<uint8_t> const &buffer, uint8_t c)
+// {
+//     auto end = buffer.end();
+
+//     for (auto i = buffer.begin(); i != end; ++i)
+//     {
+//         if (*i != c)
+//         {
+//             return std::vector<uint8_t>(i, end);
+//         }
+//     }
+
+//     // All characters were leading or the string is empty.
+//     return std::vector<uint8_t>();
+// }
+
+std::vector<uint8_t> LZMA::decompressDebug(std::vector<uint8_t> &&inBuffer)
+{
     /*
         The file can be padded with a number of NULL bytes (depending on LZMA file size)
     */
-    auto buffer = remove_leading(inBuffer, 0x0);
+    auto buffer = util::sliceLeading<uint8_t>(inBuffer, 0);
 
     /*
         CIPSoft header, 32 bytes
@@ -77,32 +120,10 @@ std::vector<uint8_t> LZMA::decompress(const std::vector<uint8_t> &inBuffer)
     */
     buffer = std::vector<uint8_t>(cursor + 8, buffer.end());
 
-    return LZMA::decompressRaw(buffer, options);
+    return LZMA::runDebugDecompression(buffer, options);
 }
 
-std::vector<uint8_t> LZMA::decompressFile(const std::filesystem::path &filepath)
-{
-    // std::cout << filepath.filename().string() << std::endl;
-    auto file = File::read(filepath.string());
-    return decompress(file);
-}
-
-// Level is between 0 (no compression), 9 (slow compression, small output).
-std::string LZMA::compress(const std::string &in, int level)
-{
-    std::string result;
-    result.resize(in.size() + (in.size() >> 2) + 128);
-    size_t out_pos = 0;
-    if (LZMA_OK != lzma_easy_buffer_encode(
-                       level, LZMA_CHECK_CRC32, NULL,
-                       reinterpret_cast<uint8_t *>(const_cast<char *>(in.data())), in.size(),
-                       reinterpret_cast<uint8_t *>(&result[0]), &out_pos, result.size()))
-        abort();
-    result.resize(out_pos);
-    return result;
-}
-
-std::vector<uint8_t> LZMA::decompressRaw(const std::vector<uint8_t> &in, lzma_options_lzma &options)
+std::vector<uint8_t> LZMA::runDebugDecompression(const std::vector<uint8_t> &in, lzma_options_lzma &options)
 {
     lzma_stream stream = LZMA_STREAM_INIT;
 

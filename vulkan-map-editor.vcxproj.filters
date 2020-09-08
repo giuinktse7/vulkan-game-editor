@@ -151,6 +151,27 @@
     <ClCompile Include="qt\logging.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="lzma\Alloc.c">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lzma\LzFind.c">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lzma\LzFindMt.c">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lzma\LzmaDec.c">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lzma\LzmaEnc.c">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lzma\LzmaLib.c">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lzma\Threads.c">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="action\action.h">
@@ -292,6 +313,39 @@
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="main.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\7zTypes.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\Alloc.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\Compiler.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\LzFind.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\LzFindMt.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\LzHash.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\LzmaDec.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\LzmaEnc.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\LzmaLib.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\Precomp.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzma\Threads.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>

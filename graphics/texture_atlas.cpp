@@ -179,7 +179,8 @@ void TextureAtlas::decompressTexture()
 {
   DEBUG_ASSERT(std::holds_alternative<CompressedBytes>(texture), "Tried to decompress a TextureAtlas that does not contain CompressedBytes.");
 
-  std::vector<uint8_t> decompressed = LZMA::decompress(std::get<CompressedBytes>(this->texture));
+  std::vector<uint8_t> decompressed = LZMA::decompress(std::move(std::get<CompressedBytes>(this->texture)));
+  // std::vector<uint8_t> decompressed = LZMA::decompressWithLib(std::move(std::get<CompressedBytes>(this->texture)));
 
   validateBmp(decompressed);
 
@@ -192,7 +193,7 @@ void TextureAtlas::decompressTexture()
   // std::cout << unsigned(readU32(decompressed, offset)) << std::endl;
 
   texture = Texture(this->width, this->height, std::vector<uint8_t>(decompressed.begin() + offset, decompressed.end()));
-  VME_LOG_D("Decompressed " << this->sourceFile.string());
+  // VME_LOG_D("Decompressed " << this->sourceFile.string());
 }
 
 Texture &TextureAtlas::getOrCreateTexture()
