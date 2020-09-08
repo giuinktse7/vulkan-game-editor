@@ -4,6 +4,8 @@
 #include <QMenu>
 #include <memory>
 
+#include "../util.h"
+
 #include "../map_renderer.h"
 #include "../trianglerenderer.h"
 #include "../map_view.h"
@@ -57,6 +59,7 @@ public:
 
 signals:
   void scrollEvent(int degrees);
+  void mousePosEvent(util::Point<float> mousePos);
 
 private:
   void mousePressEvent(QMouseEvent *event) override;

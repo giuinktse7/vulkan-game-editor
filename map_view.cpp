@@ -15,7 +15,8 @@ MapView::MapView()
     : map(std::make_shared<Map>()),
       dragState{},
       selection(*this),
-      viewport()
+      viewport(),
+      mousePos()
 {
 }
 
@@ -157,9 +158,25 @@ void MapView::setViewportSize(int width, int height)
   viewport.height = height;
 }
 
+void MapView::mouseMoveEvent(util::Point<float> mousePos)
+{
+  this->mousePos = mousePos;
+}
+
 void MapView::zoom(int delta)
 {
-  VME_LOG_D("Received zoom: " << delta);
+  // TODO Handle the value of the zoom delta, not just its sign
+  switch (util::sgn(delta))
+  {
+  case -1:
+    camera.zoomOut();
+    break;
+  case 1:
+    camera.zoomIn();
+    break;
+  default:
+    break;
+  }
 }
 
 void MapView::zoomOut()
@@ -189,9 +206,9 @@ void MapView::translateCameraZ(int z)
   camera.translateZ(z);
 }
 
-void MapView::updateCamera(const ScreenPosition cursorPos)
+void MapView::updateCamera()
 {
-  camera.updateZoom(cursorPos);
+  camera.updateZoom(mousePos);
 }
 
 void MapView::deleteSelectedItems()
@@ -230,8 +247,9 @@ util::Rectangle<int> MapView::getGameBoundingRect() const
   util::Rectangle<int> rect;
   rect.x1 = mapPos.x;
   rect.y1 = mapPos.y;
-  rect.x2 = mapPos.x + width;
-  rect.y2 = mapPos.y + height;
+  // Add one to not miss large sprites (64 in width or height) when zoomed in
+  rect.x2 = mapPos.x + width + 1;
+  rect.y2 = mapPos.y + height + 1;
 
   return rect;
 }

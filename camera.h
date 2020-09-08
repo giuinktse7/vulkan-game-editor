@@ -8,6 +8,7 @@
 #include <algorithm>
 #include "const.h"
 #include "position.h"
+#include "util.h"
 
 class Camera
 {
@@ -29,7 +30,7 @@ public:
   void translate(WorldPosition delta);
   void translateZ(int z);
 
-  void updateZoom(ScreenPosition cursorPos);
+  void updateZoom(util::Point<float> cursorPos);
 
   void zoomIn();
 

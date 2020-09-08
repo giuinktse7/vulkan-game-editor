@@ -112,7 +112,7 @@ public:
 
 	void translateCamera(WorldPosition delta);
 	void translateCameraZ(int z);
-	void updateCamera(const ScreenPosition cursorPos);
+	void updateCamera();
 
 	const Viewport &getViewport() const
 	{
@@ -154,6 +154,7 @@ public:
 		double value;
 	};
 
+	void mouseMoveEvent(util::Point<float> mousePos);
 	void panEvent(PanEvent event);
 
 private:
@@ -169,6 +170,8 @@ private:
 	Camera camera;
 
 	std::shared_ptr<Map> map;
+
+	util::Point<float> mousePos;
 
 	Tile deepCopyTile(const Position position) const
 	{

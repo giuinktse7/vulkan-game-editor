@@ -21,6 +21,7 @@ VulkanWindow::VulkanWindow(std::shared_ptr<MapView> mapView)
     : mapView(mapView), contextMenu(nullptr), renderer(nullptr), widget(nullptr), scrollAngleBuffer(0)
 {
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { mapView->zoom(scrollDelta); });
+  connect(this, &VulkanWindow::mousePosEvent, [=](util::Point<float> mousePos) { mapView->mouseMoveEvent(mousePos); });
 }
 
 void VulkanWindow::lostFocus()
@@ -117,7 +118,9 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *)
 
 void VulkanWindow::mouseMoveEvent(QMouseEvent *e)
 {
-  e->delta
+  auto pos = e->windowPos();
+  util::Point<float> mousePos(pos.x(), pos.y());
+  emit mousePosEvent(mousePos);
 }
 
 void VulkanWindow::wheelEvent(QWheelEvent *event)
@@ -141,6 +144,7 @@ void VulkanWindow::wheelEvent(QWheelEvent *event)
 
 void VulkanWindow::keyPressEvent(QKeyEvent *e)
 {
+
   double speed = 32;
   switch (e->key())
   {
@@ -155,6 +159,12 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
     break;
   case Qt::Key_Down:
     mapView->panCameraY(speed);
+    break;
+  case Qt::Key_0:
+    if (e->modifiers().testFlag(Qt::KeyboardModifier::ControlModifier))
+    {
+      mapView->resetZoom();
+    }
     break;
   default:
     break;

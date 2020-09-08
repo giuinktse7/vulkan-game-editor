@@ -95,7 +95,14 @@ namespace util
 	struct Point
 	{
 		static_assert(std::is_arithmetic<T>::value, "T must be numeric.");
-		T x, y;
+		Point() : _x(0), _y(0) {}
+		Point(T x, T y) : _x(x), _y(y) {}
+
+		inline constexpr T x() const noexcept;
+		inline constexpr T y() const noexcept;
+
+	private:
+		T _x, _y;
 	};
 
 	template <class T>
@@ -103,6 +110,12 @@ namespace util
 	{
 		std::hash<T> hasher;
 		seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+
+	template <typename T>
+	int sgn(T val)
+	{
+		return (T(0) < val) - (val < T(0));
 	}
 } // namespace util
 
@@ -114,6 +127,18 @@ inline constexpr int util::Size::width() const noexcept
 inline constexpr int util::Size::height() const noexcept
 {
 	return h;
+}
+
+template <typename T>
+inline constexpr T util::Point<T>::x() const noexcept
+{
+	return _x;
+}
+
+template <typename T>
+inline constexpr T util::Point<T>::y() const noexcept
+{
+	return _y;
 }
 
 inline constexpr void util::Size::setWidth(int width) noexcept
