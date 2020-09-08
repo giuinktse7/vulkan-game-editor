@@ -29,5 +29,8 @@ private:
     QLayout *rootLayout;
     QTabWidget *mapTabs;
 
+    void experimentLayout();
+    void experiment2();
+
     void createMenuBar();
 };

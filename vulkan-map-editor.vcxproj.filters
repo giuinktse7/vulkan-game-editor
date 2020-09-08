@@ -148,6 +148,9 @@
     <ClCompile Include="gui\vulkan_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gui\item_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="qt\logging.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
@@ -170,6 +173,9 @@
       <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="lzma\Threads.c">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\qt_util.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -309,6 +315,9 @@
     <ClInclude Include="gui\vulkan_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gui\item_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="qt\logging.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
@@ -348,6 +357,9 @@
     <ClInclude Include="lzma\Threads.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="gui\qt_util.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="debug\moc_predefs.h.cbt">
@@ -361,5 +373,13 @@
     <QtUic Include="gui\mainwindow.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="gui\vulkan_window.h">
+      <Filter>Generated Files</Filter>
+    </QtMoc>
+    <QtMoc Include="gui\item_list.h">
+      <Filter>Generated Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>

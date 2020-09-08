@@ -34,14 +34,11 @@ void VulkanWindow::lostFocus()
 
 QWidget *VulkanWindow::wrapInWidget()
 {
-  // QWidget *wrapper = QWidget::createWindowContainer(this);
-  // widget = wrapper;
-  // return wrapper;
   QWidget *wrapper = QWidget::createWindowContainer(this);
   wrapper->setFocusPolicy(Qt::FocusPolicy::NoFocus);
 
   widget = wrapper;
-  VME_LOG_D(widget);
+
   return wrapper;
 }
 

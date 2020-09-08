@@ -33,6 +33,7 @@ SOURCES += \
     main.cpp \
     gui/mainwindow.cpp \
     gui/vulkan_window.cpp \
+    gui/item_list.cpp \
     graphics/appearances.cpp \
     graphics/compression.cpp \ # graphics/resource-descriptor.cpp \
     graphics/texture_atlas.cpp \
@@ -67,7 +68,7 @@ SOURCES += \
     town.cpp \
     action/action.cpp \
     selection.cpp \
-    qt/logging.cpp
+    qt/logging.cpp \
 
 # LZMA
 SOURCES += \
@@ -97,6 +98,7 @@ HEADERS += \
     main.h \
     gui/mainwindow.h \
     gui/vulkan_window.h \ # graphics/vulkan_debug.h \
+    gui/item_list.h \
     graphics/appearances.h \
     graphics/compression.h \ # graphics/resource-descriptor.h \
     graphics/texture_atlas.h \
@@ -140,7 +142,8 @@ HEADERS += \
     action/action.h \
     selection.h \
     definitions.h \
-    qt/logging.h
+    qt/logging.h \
+    qt/qt_util.h
 
 
 FORMS += \

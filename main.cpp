@@ -6,8 +6,6 @@
 
 #include <QLoggingCategory>
 
-
-
 #include "graphics/vulkan_helpers.h"
 #include "graphics/appearances.h"
 
@@ -46,7 +44,7 @@ void MainApplication::loadGameData()
     Items::loadFromOtb("data/items.otb");
     Items::loadFromXml("data/items.xml");
 
-    loadTextures();
+    // loadTextures();
 }
 
 MainApplication::MainApplication(int &argc, char **argv) : QApplication(argc, argv)

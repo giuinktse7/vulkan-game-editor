@@ -198,6 +198,7 @@
     <ClCompile Include="graphics\compression.cpp" />
     <ClCompile Include="ecs\ecs.cpp" />
     <ClCompile Include="file.cpp" />
+    <ClCompile Include="gui\qt_util.cpp" />
     <ClCompile Include="item.cpp" />
     <ClCompile Include="ecs\item_animation.cpp" />
     <ClCompile Include="item_attribute.cpp" />
@@ -234,6 +235,7 @@
     <ClCompile Include="util.cpp" />
     <ClCompile Include="graphics\vulkan_helpers.cpp" />
     <ClCompile Include="gui\vulkan_window.cpp" />
+    <ClCompile Include="gui\item_list.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="action\action.h" />
@@ -250,6 +252,7 @@
     <ClInclude Include="ecs\ecs.h" />
     <ClInclude Include="ecs\entity.h" />
     <ClInclude Include="file.h" />
+    <ClInclude Include="gui\qt_util.h" />
     <ClInclude Include="item.h" />
     <ClInclude Include="ecs\item_animation.h" />
     <ClInclude Include="item_attribute.h" />
@@ -258,6 +261,7 @@
     <ClInclude Include="logger.h" />
     <QtMoc Include="gui\mainwindow.h" />
     <QtMoc Include="gui\vulkan_window.h" />
+    <QtMoc Include="gui\item_list.h" />
     <ClInclude Include="lzma\7zTypes.h" />
     <ClInclude Include="lzma\Alloc.h" />
     <ClInclude Include="lzma\Compiler.h" />
@@ -295,6 +299,7 @@
     <ClInclude Include="graphics\vertex.h" />
     <ClInclude Include="graphics\vulkan_helpers.h" />
     <ClInclude Include="gui\vulkan_window.h" />
+    <ClInclude Include="gui\item_list.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="debug\moc_predefs.h.cbt">
