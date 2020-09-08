@@ -4,7 +4,8 @@
 #include <QVulkanInstance>
 #include <stdarg.h>
 
-class VulkanWindow;
+#include "gui/mainwindow.h"
+#include "gui/vulkan_window.h"
 
 class MainApplication : public QApplication
 {
@@ -13,7 +14,6 @@ public:
 
     void setVulkanWindow(VulkanWindow *window);
     void loadGameData();
-    QVulkanInstance createVulkanInstance();
 
 public slots:
     void onApplicationStateChanged(Qt::ApplicationState state);

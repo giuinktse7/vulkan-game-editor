@@ -6,8 +6,7 @@
 
 #include <QLoggingCategory>
 
-#include "gui/mainwindow.h"
-#include "gui/vulkan_window.h"
+
 
 #include "graphics/vulkan_helpers.h"
 #include "graphics/appearances.h"

@@ -145,6 +145,7 @@ HEADERS += \
 
 FORMS += \
     gui/mainwindow.ui
+    gui/vulkan_window.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

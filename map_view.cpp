@@ -157,6 +157,11 @@ void MapView::setViewportSize(int width, int height)
   viewport.height = height;
 }
 
+void MapView::zoom(int delta)
+{
+  VME_LOG_D("Received zoom: " << delta);
+}
+
 void MapView::zoomOut()
 {
   camera.zoomOut();

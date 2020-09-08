@@ -18,8 +18,9 @@
 #include "qt/logging.h"
 
 VulkanWindow::VulkanWindow(std::shared_ptr<MapView> mapView)
-    : mapView(mapView), contextMenu(nullptr), renderer(nullptr), widget(nullptr)
+    : mapView(mapView), contextMenu(nullptr), renderer(nullptr), widget(nullptr), scrollAngleBuffer(0)
 {
+  connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { mapView->zoom(scrollDelta); });
 }
 
 void VulkanWindow::lostFocus()
@@ -116,6 +117,26 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *)
 
 void VulkanWindow::mouseMoveEvent(QMouseEvent *e)
 {
+  e->delta
+}
+
+void VulkanWindow::wheelEvent(QWheelEvent *event)
+{
+  /*
+    The minimum rotation amount for a scroll to be registered, in eighths of a degree.
+    For example, 120 MinRotationAmount = (120 / 8) = 15 degrees of rotation.
+  */
+  const int MinRotationAmount = 120;
+
+  // The relative amount that the wheel was rotated, in eighths of a degree.
+  const int deltaY = event->angleDelta().y();
+
+  scrollAngleBuffer += deltaY;
+  if (std::abs(scrollAngleBuffer) >= MinRotationAmount)
+  {
+    emit scrollEvent(scrollAngleBuffer / 8);
+    scrollAngleBuffer = 0;
+  }
 }
 
 void VulkanWindow::keyPressEvent(QKeyEvent *e)

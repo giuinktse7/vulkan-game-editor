@@ -16,6 +16,7 @@ QT_END_NAMESPACE
 
 class VulkanWindow : public QVulkanWindow
 {
+  Q_OBJECT
 public:
   class ContextMenu : public QMenu
   {
@@ -54,12 +55,15 @@ public:
 
   QWidget *widget;
 
-protected:
+signals:
+  void scrollEvent(int degrees);
+
 private:
   void mousePressEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
   void keyPressEvent(QKeyEvent *event) override;
+  void wheelEvent(QWheelEvent *event) override;
 
   void onVisibilityChanged(QWindow::Visibility visibility);
 
@@ -67,4 +71,7 @@ private:
   MapRenderer *renderer;
   std::shared_ptr<MapView> mapView;
   ContextMenu *contextMenu;
+
+  // Holds the current scroll amount. (see wheelEvent)
+  int scrollAngleBuffer;
 };

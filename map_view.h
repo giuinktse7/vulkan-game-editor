@@ -55,6 +55,8 @@ public:
 	void panCameraX(double delta);
 	void panCameraY(double delta);
 
+	void zoom(int delta);
+
 	void finishMoveSelection(const Position moveDestination);
 
 	void addItem(const Position position, uint16_t id);

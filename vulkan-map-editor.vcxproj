@@ -256,8 +256,8 @@
     <ClInclude Include="item_type.h" />
     <ClInclude Include="items.h" />
     <ClInclude Include="logger.h" />
-    <QtMoc Include="gui\mainwindow.h">
-    </QtMoc>
+    <QtMoc Include="gui\mainwindow.h" />
+    <QtMoc Include="gui\vulkan_window.h" />
     <ClInclude Include="lzma\7zTypes.h" />
     <ClInclude Include="lzma\Alloc.h" />
     <ClInclude Include="lzma\Compiler.h" />
