@@ -44,7 +44,7 @@ public:
 
   MapView *getMapView() const;
 
-  QWidget *wrapInWidget();
+  QWidget *wrapInWidget(QWidget *parent = nullptr);
   void lostFocus();
 
   void showContextMenu(QPoint position);

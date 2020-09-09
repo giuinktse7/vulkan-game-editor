@@ -23,13 +23,12 @@ void QtItemTypeModel::populate(std::vector<QtItemTypeModel::Item> &&items)
 
 int QtItemTypeModel::rowCount(const QModelIndex &parent) const
 {
-  VME_LOG_D("rowCount: " << _data.size());
   return _data.size();
 }
 
 QVariant QtItemTypeModel::data(const QModelIndex &index, int role) const
 {
-  VME_LOG_D("data(" << index.row() << ", " << role << ")");
+  // VME_LOG_D("data(" << index.row() << ", " << role << ")");
   if (index.row() < 0 || index.row() >= _data.size())
     return QVariant();
 
@@ -45,7 +44,7 @@ QVariant QtItemTypeModel::data(const QModelIndex &index, int role) const
 
 QVariant QtItemTypeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-  VME_LOG_D("headerData " << section << ", " << orientation);
+  // VME_LOG_D("headerData " << section << ", " << orientation);
   return QVariant();
 }
 

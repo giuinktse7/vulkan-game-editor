@@ -31,9 +31,9 @@ void VulkanWindow::lostFocus()
   }
 }
 
-QWidget *VulkanWindow::wrapInWidget()
+QWidget *VulkanWindow::wrapInWidget(QWidget *parent)
 {
-  QWidget *wrapper = QWidget::createWindowContainer(this);
+  QWidget *wrapper = QWidget::createWindowContainer(this, parent);
   wrapper->setFocusPolicy(Qt::FocusPolicy::NoFocus);
 
   widget = wrapper;
@@ -225,7 +225,7 @@ bool VulkanWindow::ContextMenu::selfClicked(QPoint pos) const
 
 void VulkanWindow::ContextMenu::mousePressEvent(QMouseEvent *event)
 {
-  // Propagate the click event to the map window if appropriate
+  // // Propagate the click event to the map window if appropriate
   if (!selfClicked(event->pos()))
   {
     auto posInWindow = window->mapFromGlobal(event->globalPos());

@@ -35,8 +35,7 @@ MapRenderer::MapRenderer(VulkanWindow &window)
 
 void MapRenderer::initResources()
 {
-  std::cout << "MapRenderer::initResources" << std::endl;
-  std::cout << window.device() << std::endl;
+  VME_LOG_D("MapRenderer::initResources (device: " << window.device() << ")");
 
   g_vk = window.vulkanInstance()->deviceFunctions(window.device());
   g_vkf = window.vulkanInstance()->functions();
@@ -96,7 +95,7 @@ void MapRenderer::releaseSwapChainResources()
 
 void MapRenderer::releaseResources()
 {
-  std::cout << "MapRenderer::releaseResources" << std::endl;
+  VME_LOG_D("MapRenderer::releaseResources");
   debug = true;
   g_vk->vkDestroyDescriptorSetLayout(window.device(), uboDescriptorSetLayout, nullptr);
   g_vk->vkDestroyDescriptorSetLayout(window.device(), textureDescriptorSetLayout, nullptr);

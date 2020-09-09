@@ -4,7 +4,6 @@
 #include <QVulkanInstance>
 #include <stdarg.h>
 
-#include "gui/mainwindow.h"
 #include "gui/vulkan_window.h"
 
 class MainApplication : public QApplication

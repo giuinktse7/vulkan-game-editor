@@ -105,7 +105,9 @@
     "qaction": "cpp",
     "qvulkanwindowrenderer": "cpp",
     "qpixmap": "cpp",
-    "qapplication": "cpp"
+    "qapplication": "cpp",
+    "qmainwindow": "cpp",
+    "qmimedata": "cpp"
   },
   "files.exclude": {
     "**/.git": true,
