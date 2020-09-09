@@ -181,6 +181,9 @@
     <ClCompile Include="gui\border_layout.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="gui\borderless_window.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="action\action.h">
@@ -385,6 +388,9 @@
       <Filter>Generated Files</Filter>
     </QtMoc>
     <QtMoc Include="gui\item_list.h">
+      <Filter>Generated Files</Filter>
+    </QtMoc>
+    <QtMoc Include="gui\borderless_window.h">
       <Filter>Generated Files</Filter>
     </QtMoc>
   </ItemGroup>

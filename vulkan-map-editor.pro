@@ -18,6 +18,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 win32:INCLUDEPATH += D:\Programs\glm-0.9.9.8\glm
 # win32:INCLUDEPATH += "C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\include"
 
+RC_ICONS = resources/icon.ico
 
 SOURCES += \
     main.cpp \
@@ -25,6 +26,7 @@ SOURCES += \
     gui/vulkan_window.cpp \
     gui/item_list.cpp \
     gui/border_layout.cpp \
+    gui/borderless_window.cpp \
     graphics/appearances.cpp \
     graphics/compression.cpp \ # graphics/resource-descriptor.cpp \
     graphics/texture_atlas.cpp \
@@ -88,6 +90,7 @@ HEADERS += \
 HEADERS += \
     main.h \
     gui/mainwindow.h \
+    gui/borderless_window.h \
     gui/vulkan_window.h \ # graphics/vulkan_debug.h \
     gui/item_list.h \
     gui/border_layout.h \

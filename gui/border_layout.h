@@ -18,7 +18,7 @@ public:
   };
 
   explicit BorderLayout(QWidget *parent, const QMargins &margins = QMargins(), int spacing = -1);
-  BorderLayout(int spacing = -1);
+  BorderLayout(int spacing = 0);
   ~BorderLayout();
 
   void setGeometry(const QRect &rect) override;

@@ -2,6 +2,9 @@
 
 #include <QWidget>
 
+#include "../logger.h"
+#include "../qt/logging.h"
+
 BorderLayout::BorderLayout(QWidget *parent, const QMargins &margins, int spacing)
     : QLayout(parent)
 {
@@ -62,25 +65,32 @@ QSize BorderLayout::minimumSize() const
 void BorderLayout::setGeometry(const QRect &rect)
 {
   ItemWrapper *center = nullptr;
-  QRect menuRect = this->menuBar()->geometry();
 
   int eastWidth = 0;
   int westWidth = 0;
-  int northHeight = menuRect.height();
+  int northHeight = 0;
   int southHeight = 0;
   int centerHeight = 0;
+
+  if (this->menuBar())
+  {
+    int menuHeight = this->menuBar()->geometry().height();
+    northHeight += menuHeight;
+  }
 
   QLayout::setGeometry(rect);
 
   for (auto &wrapper : items)
   {
     const auto [item, position] = wrapper;
+    // VME_LOG_D("margins: " << item->widget()->contentsMargins());
     switch (position)
     {
     case Position::North:
     {
       item->setGeometry(QRect(rect.x(), northHeight, rect.width(),
                               item->sizeHint().height()));
+      auto m = item->geometry();
 
       northHeight += item->geometry().height() + spacing();
       break;
@@ -140,10 +150,6 @@ void BorderLayout::setGeometry(const QRect &rect)
         item->setGeometry(geometry);
       }
     }
-  }
-
-  for (int i = 0; i < items.size(); ++i)
-  {
   }
 
   if (center)

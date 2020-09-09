@@ -27,37 +27,6 @@ QLabel *itemImage(uint16_t serverId)
     return container;
 }
 
-void MainWindow::experimentLayout()
-{
-    // rootLayout = new QVBoxLayout;
-    // setLayout(rootLayout);
-
-    // std::vector<QString> data;
-    // for (int i = 0; i < 50; ++i)
-    // {
-    //     data.push_back("" + QString::number(i));
-    // }
-
-    // QListView *listView = new QListView();
-    // QtItemTypeModel *model = new QtItemTypeModel(listView);
-    // model->populate(std::move(data));
-
-    // listView->setModel(model);
-    // listView->setRootIndex(model->index(0, 0));
-    // listView->setCurrentIndex(listView->rootIndex());
-
-    // QPushButton *button = new QPushButton("&Test", this);
-    // button->connect(button, &QPushButton::clicked, [=](bool checked) {
-    //     VME_LOG_D("Current data: " << listView->currentIndex().data(Qt::DisplayRole).toString().toStdString());
-    //     auto model = listView->currentIndex();
-    //     int x = 2;
-    //     // VME_LOG_D(model->_data.at(0).toStdString());
-    // });
-
-    // rootLayout->addWidget(listView);
-    // rootLayout->addWidget(button);
-}
-
 void MainWindow::addMapTab(VulkanWindow &vulkanWindow)
 {
     QWidget *wrapper = vulkanWindow.wrapInWidget();
@@ -102,10 +71,9 @@ void MainWindow::experiment2()
     setLayout(rootLayout);
 }
 
-MainWindow::MainWindow()
+MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 {
-    // Qt::WindowFlags flags = this->windowFlags();
-    // this->setWindowFlags(flags | Qt::FramelessWindowHint);
+    Qt::WindowFlags flags = this->windowFlags();
 
     experiment2();
 }
@@ -117,30 +85,73 @@ void MainWindow::createMapTabArea()
     QObject::connect(mapTabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeMapTab(int)));
 }
 
-void MainWindow::mousePressEvent(QMouseEvent *)
+void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     VME_LOG_D("MainWindow::mousePressEvent");
 }
 
+MenuAction::MenuActionWidget::MenuActionWidget(QWidget *parent) : QWidget(parent)
+{
+    setMouseTracking(true);
+}
+
+MenuAction::MenuAction(const QString &text, const QKeySequence &shortcut, QObject *parent)
+    : QWidgetAction(parent),
+      text(text)
+{
+    setShortcut(shortcut);
+}
+
+MenuAction::MenuAction(const QString &text, QObject *parent)
+    : QWidgetAction(parent),
+      text(text)
+{
+}
+
+MenuAction::~MenuAction() {}
+
+QWidget *MenuAction::createWidget(QWidget *parent)
+{
+    QWidget *widget = new MenuActionWidget(parent);
+    widget->setProperty("class", "menu-item");
+
+    QHBoxLayout *layout = new QHBoxLayout(parent);
+    layout->setMargin(0);
+
+    QLabel *left = new QLabel(this->text, widget);
+    layout->addWidget(left);
+
+    if (!shortcut().isEmpty())
+    {
+        QLabel *right = new QLabel(this->shortcut().toString(), widget);
+        right->setAlignment(Qt::AlignRight);
+        layout->addWidget(right);
+    }
+
+    widget->setLayout(layout);
+
+    return widget;
+}
+
 QMenuBar *MainWindow::createMenuBar()
 {
-
     QMenuBar *menuBar = new QMenuBar;
-    menuBar->setStyleSheet("QMenu { padding: red }");
-    QMenu *fileMenu = menuBar->addMenu(tr("&File"));
+    QMenu *fileMenu = menuBar->addMenu(tr("File"));
 
-    QAction *_new = new QAction(tr("&New"), this);
-    fileMenu->addAction(_new);
+    MenuAction *newMap = new MenuAction(tr("New Map"), Qt::CTRL + Qt::Key_N, this);
+    newMap->setShortcut(Qt::CTRL + Qt::Key_N);
+    newMap->connect(newMap, &QWidgetAction::triggered, [=] { VME_LOG_D("New Map clicked"); });
+    fileMenu->addAction(newMap);
 
-    QMenu *editMenu = menuBar->addMenu(tr("&Edit"));
+    QMenu *editMenu = menuBar->addMenu(tr("Edit"));
 
-    QAction *undo = new QAction(tr("&Undo"), this);
+    MenuAction *undo = new MenuAction(tr("Undo"), Qt::CTRL + Qt::Key_Z, this);
     editMenu->addAction(undo);
 
-    QAction *redo = new QAction(tr("&Redo"), this);
+    MenuAction *redo = new MenuAction(tr("Redo"), Qt::CTRL + Qt::SHIFT + Qt::Key_Z, this);
     editMenu->addAction(redo);
 
-    QAction *reloadStyles = new QAction(tr("&Reload styles"), this);
+    QAction *reloadStyles = new QAction(tr("Reload styles"), this);
     reloadStyles->connect(reloadStyles, &QAction::triggered, [=] {
         ((MainApplication *)(QApplication::instance()))->loadStyleSheet("default");
     });
