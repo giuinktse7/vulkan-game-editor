@@ -198,6 +198,7 @@
     <ClCompile Include="graphics\compression.cpp" />
     <ClCompile Include="ecs\ecs.cpp" />
     <ClCompile Include="file.cpp" />
+    <ClCompile Include="gui\border_layout.cpp" />
     <ClCompile Include="gui\qt_util.cpp" />
     <ClCompile Include="item.cpp" />
     <ClCompile Include="ecs\item_animation.cpp" />
@@ -252,6 +253,7 @@
     <ClInclude Include="ecs\ecs.h" />
     <ClInclude Include="ecs\entity.h" />
     <ClInclude Include="file.h" />
+    <ClInclude Include="gui\border_layout.h" />
     <ClInclude Include="gui\qt_util.h" />
     <ClInclude Include="item.h" />
     <ClInclude Include="ecs\item_animation.h" />

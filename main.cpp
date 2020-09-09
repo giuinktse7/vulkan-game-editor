@@ -131,7 +131,8 @@ int main(int argc, char *argv[])
 
     vulkanWindow->setVulkanInstance(&instance);
 
-    MainWindow mainWindow(vulkanWindow);
+    MainWindow mainWindow;
+    mainWindow.addMapTab(*vulkanWindow);
     mainWindow.resize(1024, 768);
     mainWindow.show();
     vulkanWindow->requestActivate();

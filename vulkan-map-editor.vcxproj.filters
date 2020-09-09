@@ -178,6 +178,9 @@
     <ClCompile Include="gui\qt_util.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="gui\border_layout.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="action\action.h">
@@ -358,6 +361,9 @@
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="gui\qt_util.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\border_layout.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>

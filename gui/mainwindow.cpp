@@ -16,6 +16,7 @@
 #include "time_point.h"
 #include "item_list.h"
 #include "qt_util.h"
+#include "border_layout.h"
 
 QLabel *itemImage(uint16_t serverId)
 {
@@ -56,10 +57,25 @@ void MainWindow::experimentLayout()
     // rootLayout->addWidget(button);
 }
 
+void MainWindow::addMapTab(VulkanWindow &vulkanWindow)
+{
+    QWidget *wrapper = vulkanWindow.wrapInWidget();
+
+    wrapper->setFocusPolicy(Qt::StrongFocus);
+    wrapper->setFocus();
+
+    mapTabs->addTab(wrapper, "untitled.otbm");
+}
+
 void MainWindow::experiment2()
 {
-    rootLayout = new QVBoxLayout();
-    setLayout(rootLayout);
+    createMapTabArea();
+
+    BorderLayout *borderLayout = new BorderLayout;
+    rootLayout = borderLayout;
+
+    QMenuBar *menu = createMenuBar();
+    rootLayout->setMenuBar(menu);
 
     QListView *listView = new QListView;
     listView->setItemDelegate(new Delegate(this));
@@ -73,65 +89,30 @@ void MainWindow::experiment2()
     model->populate(std::move(data));
 
     listView->setModel(model);
-    rootLayout->addWidget(listView);
-}
-
-MainWindow::MainWindow(VulkanWindow *vulkanWindow)
-{
-    experiment2();
-    return;
-
-    QWidget *wrapper = vulkanWindow->wrapInWidget();
-
-    wrapper->setFocusPolicy(Qt::StrongFocus);
-    wrapper->setFocus();
-
-    setWindowTitle("Vulkan editor");
-
-    rootLayout = new QVBoxLayout;
-    createMenuBar();
-
-    QVBoxLayout *testLayout = new QVBoxLayout;
-
-    // std::vector<QPixmap> pixmaps;
-    // pixmaps.push_back(itemPixmap(2554));
-    // pixmaps.push_back(itemPixmap(2555));
-    // pixmaps.push_back(itemPixmap(2556));
+    borderLayout->addWidget(listView, BorderLayout::Position::West);
 
     textEdit = new QPlainTextEdit;
     textEdit->setReadOnly(false);
     textEdit->setPlainText("100");
     textEdit->setMaximumHeight(80);
-    // testLayout->addWidget(textEdit);
 
-    // for (uint16_t id = 100; id < Items::items.size(); ++id)
-    // {
-    //     ItemType *t = Items::items.getItemType(id);
+    borderLayout->addWidget(mapTabs, BorderLayout::Position::Center);
 
-    //     if (!Items::items.validItemType(id))
-    //         continue;
-    //     itemImage(id);
-    // }
+    setLayout(rootLayout);
+}
 
-    // testLayout->addWidget(itemImage(100));
-    // testLayout->addWidget(itemImage(2554));
-    // testLayout->addWidget(itemImage(2148));
+MainWindow::MainWindow()
+{
+    setWindowTitle("Vulkan editor");
 
-    QGridLayout *gridLayout = new QGridLayout;
+    experiment2();
+}
 
-    gridLayout->addLayout(testLayout, 0, 0);
-
+void MainWindow::createMapTabArea()
+{
     mapTabs = new QTabWidget(this);
     mapTabs->setTabsClosable(true);
     QObject::connect(mapTabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeMapTab(int)));
-
-    mapTabs->addTab(wrapper, "untitled.otbm");
-
-    // gridLayout->addWidget(mapTabs, 1, 0, 7, 2);
-
-    // rootLayout->addItem(gridLayout);
-
-    setLayout(rootLayout);
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *)
@@ -139,9 +120,11 @@ void MainWindow::mousePressEvent(QMouseEvent *)
     VME_LOG_D("MainWindow::mousePressEvent");
 }
 
-void MainWindow::createMenuBar()
+QMenuBar *MainWindow::createMenuBar()
 {
+
     QMenuBar *menuBar = new QMenuBar;
+    menuBar->setStyleSheet("QMenu { padding: red }");
     QMenu *fileMenu = menuBar->addMenu(tr("&File"));
 
     QAction *_new = new QAction(tr("&New"), this);
@@ -155,7 +138,7 @@ void MainWindow::createMenuBar()
     QAction *redo = new QAction(tr("&Redo"), this);
     editMenu->addAction(redo);
 
-    this->rootLayout->setMenuBar(menuBar);
+    return menuBar;
 }
 
 void MainWindow::closeMapTab(int index)

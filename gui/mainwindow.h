@@ -15,7 +15,9 @@ class MainWindow : public QWidget
     Q_OBJECT
 
 public:
-    MainWindow(VulkanWindow *vulkanWindow);
+    MainWindow();
+
+    void addMapTab(VulkanWindow &vulkanWindow);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -32,5 +34,6 @@ private:
     void experimentLayout();
     void experiment2();
 
-    void createMenuBar();
+    QMenuBar *createMenuBar();
+    void createMapTabArea();
 };
