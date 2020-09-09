@@ -5,7 +5,6 @@
 #include <QMenu>
 #include <QDialog>
 #include <QAction>
-#include <QApplication>
 
 #include <memory>
 

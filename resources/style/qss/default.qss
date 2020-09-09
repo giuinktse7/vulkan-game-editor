@@ -1,0 +1,14 @@
+QMenuBar {
+  background: #DDDDDD;
+  padding: 0;
+  margin: 0;
+}
+QMenuBar::item {
+  background: blue;
+  padding: 10px 5px;
+}
+
+QMenuBar::item:selected {
+  background-color: #222;
+  color: rgb(255, 255, 255);
+}

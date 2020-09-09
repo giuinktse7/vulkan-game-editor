@@ -17,6 +17,7 @@
 #include "item_list.h"
 #include "qt_util.h"
 #include "border_layout.h"
+#include "main.h"
 
 QLabel *itemImage(uint16_t serverId)
 {
@@ -103,7 +104,8 @@ void MainWindow::experiment2()
 
 MainWindow::MainWindow()
 {
-    setWindowTitle("Vulkan editor");
+    // Qt::WindowFlags flags = this->windowFlags();
+    // this->setWindowFlags(flags | Qt::FramelessWindowHint);
 
     experiment2();
 }
@@ -137,6 +139,12 @@ QMenuBar *MainWindow::createMenuBar()
 
     QAction *redo = new QAction(tr("&Redo"), this);
     editMenu->addAction(redo);
+
+    QAction *reloadStyles = new QAction(tr("&Reload styles"), this);
+    reloadStyles->connect(reloadStyles, &QAction::triggered, [=] {
+        ((MainApplication *)(QApplication::instance()))->loadStyleSheet("default");
+    });
+    menuBar->addAction(reloadStyles);
 
     return menuBar;
 }

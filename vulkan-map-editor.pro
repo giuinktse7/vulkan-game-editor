@@ -19,16 +19,6 @@ win32:INCLUDEPATH += D:\Programs\glm-0.9.9.8\glm
 # win32:INCLUDEPATH += "C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\include"
 
 
-# CONFIG(debug) {
-#
-#     win32:LIBS += -L"C:/Users/wrose/Documents/development/vcpkg/packages/boost-filesystem_x64-windows/debug/lib"
-#     win32:LIBS += -L"C:/Users/wrose/Documents/development/vcpkg/packages/boost-system_x64-windows/debug/lib"
-#     win32:LIBS += -lboost_filesystem-vc140-mt-gd-1_66 -lboost_system-vc140-mt-gd-1_66
-#     message("Debug Config")
-# } else {
-#     message("Release Config")
-# }
-
 SOURCES += \
     main.cpp \
     gui/mainwindow.cpp \
@@ -151,6 +141,8 @@ HEADERS += \
 FORMS += \
     gui/mainwindow.ui
     gui/vulkan_window.ui
+
+RESOURCES += resources/style/style.qrc
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -5,6 +5,7 @@
 #include <optional>
 
 #include <QLoggingCategory>
+#include <QFile>
 
 #include "graphics/vulkan_helpers.h"
 #include "graphics/appearances.h"
@@ -105,6 +106,7 @@ int main(int argc, char *argv[])
     TimePoint::setApplicationStartTimePoint();
 
     MainApplication app(argc, argv);
+    app.loadStyleSheet("default");
     app.loadGameData();
 
     // const bool dbg = qEnvironmentVariableIntValue("QT_VK_DEBUG");
@@ -138,4 +140,12 @@ int main(int argc, char *argv[])
     vulkanWindow->requestActivate();
 
     return app.exec();
+}
+void MainApplication::loadStyleSheet(const QString &sheetName)
+{
+    QFile file("resources/style/qss/" + sheetName.toLower() + ".qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QString::fromLatin1(file.readAll());
+
+    setStyleSheet(styleSheet);
 }
