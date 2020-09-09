@@ -117,9 +117,12 @@ void Texture::initVulkanResources(Texture::Descriptor descriptor)
 
 void Texture::releaseVulkanResources()
 {
-  VkDevice device = g_window->device();
-  g_vk->vkDestroyImage(device, textureImage, nullptr);
-  g_vk->vkFreeMemory(device, textureImageMemory, nullptr);
+    if (hasVkResources) {
+        VkDevice device = g_window->device();
+        g_vk->vkDestroyImage(device, textureImage, nullptr);
+        g_vk->vkFreeMemory(device, textureImageMemory, nullptr);
+    }
+  
 
   hasVkResources = false;
 }
