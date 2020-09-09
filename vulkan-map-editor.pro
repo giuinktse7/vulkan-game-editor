@@ -27,6 +27,8 @@ SOURCES += \
     gui/item_list.cpp \
     gui/border_layout.cpp \
     gui/borderless_window.cpp \
+    gui/menu.cpp \
+    gui/map_view_widget.cpp \
     graphics/appearances.cpp \
     graphics/compression.cpp \ # graphics/resource-descriptor.cpp \
     graphics/texture_atlas.cpp \
@@ -94,6 +96,8 @@ HEADERS += \
     gui/vulkan_window.h \ # graphics/vulkan_debug.h \
     gui/item_list.h \
     gui/border_layout.h \
+    gui/menu.h \
+    gui/map_view_widget.h \
     graphics/appearances.h \
     graphics/compression.h \ # graphics/resource-descriptor.h \
     graphics/texture_atlas.h \

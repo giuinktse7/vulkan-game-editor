@@ -1,5 +1,7 @@
 #include "qt_util.h"
 
+#include <QApplication>
+
 #include "../items.h"
 
 QPixmap QtUtil::itemPixmap(uint16_t serverId)
@@ -15,4 +17,9 @@ QPixmap QtUtil::itemPixmap(uint16_t serverId)
   QRect textureRegion(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
 
   return pixelMap.copy(textureRegion).transformed(QTransform().scale(1, -1));
+}
+
+MainApplication *QtUtil::qtApp()
+{
+  return (MainApplication *)(QApplication::instance());
 }

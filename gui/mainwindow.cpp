@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 
+#include <QWidget>
 #include <QGridLayout>
 #include <QPlainTextEdit>
 #include <QMenu>
@@ -8,161 +9,167 @@
 #include <QtWidgets>
 #include <QContextMenuEvent>
 #include <QMouseEvent>
+#include <QSlider>
 #include <QListView>
 
 #include "vulkan_window.h"
-
-#include "items.h"
-#include "time_point.h"
 #include "item_list.h"
 #include "qt_util.h"
+#include "menu.h"
 #include "border_layout.h"
+#include "map_view_widget.h"
+
 #include "main.h"
 
 QLabel *itemImage(uint16_t serverId)
 {
-    QLabel *container = new QLabel;
-    container->setPixmap(QtUtil::itemPixmap(serverId));
+  QLabel *container = new QLabel;
+  container->setPixmap(QtUtil::itemPixmap(serverId));
 
-    return container;
+  return container;
 }
 
 void MainWindow::addMapTab(VulkanWindow &vulkanWindow)
 {
-    QWidget *wrapper = vulkanWindow.wrapInWidget();
+  QWidget *widget = new QtMapViewWidget(&vulkanWindow);
 
-    wrapper->setFocusPolicy(Qt::StrongFocus);
-    wrapper->setFocus();
-
-    mapTabs->addTab(wrapper, "untitled.otbm");
+  mapTabs->addTab(widget, "untitled.otbm");
 }
 
-void MainWindow::experiment2()
+void MainWindow::initializeUI()
 {
-    createMapTabArea();
+  createMapTabArea();
 
-    BorderLayout *borderLayout = new BorderLayout;
-    rootLayout = borderLayout;
+  BorderLayout *borderLayout = new BorderLayout;
+  rootLayout = borderLayout;
 
-    QMenuBar *menu = createMenuBar();
-    rootLayout->setMenuBar(menu);
+  QMenuBar *menu = createMenuBar();
+  rootLayout->setMenuBar(menu);
 
-    QListView *listView = new QListView;
-    listView->setItemDelegate(new Delegate(this));
+  QListView *listView = new QListView;
+  listView->setItemDelegate(new Delegate(this));
 
-    std::vector<ItemTypeModelItem> data;
-    data.push_back(ItemTypeModelItem::fromServerId(2554));
-    data.push_back(ItemTypeModelItem::fromServerId(2148));
-    data.push_back(ItemTypeModelItem::fromServerId(2555));
+  std::vector<ItemTypeModelItem> data;
+  data.push_back(ItemTypeModelItem::fromServerId(2554));
+  data.push_back(ItemTypeModelItem::fromServerId(2148));
+  data.push_back(ItemTypeModelItem::fromServerId(2555));
 
-    QtItemTypeModel *model = new QtItemTypeModel(listView);
-    model->populate(std::move(data));
+  QtItemTypeModel *model = new QtItemTypeModel(listView);
+  model->populate(std::move(data));
 
-    listView->setModel(model);
-    borderLayout->addWidget(listView, BorderLayout::Position::West);
+  listView->setModel(model);
+  borderLayout->addWidget(listView, BorderLayout::Position::West);
 
-    textEdit = new QPlainTextEdit;
-    textEdit->setReadOnly(false);
-    textEdit->setPlainText("100");
-    textEdit->setMaximumHeight(80);
+  borderLayout->addWidget(mapTabs, BorderLayout::Position::Center);
 
-    borderLayout->addWidget(mapTabs, BorderLayout::Position::Center);
+  QSlider *slider = new QSlider;
+  slider->setMinimum(0);
+  slider->setMaximum(15);
+  slider->setSingleStep(1);
+  slider->setPageStep(5);
 
-    setLayout(rootLayout);
+  borderLayout->addWidget(slider, BorderLayout::Position::East);
+
+  setLayout(rootLayout);
 }
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 {
-    Qt::WindowFlags flags = this->windowFlags();
-
-    experiment2();
+  initializeUI();
 }
 
 void MainWindow::createMapTabArea()
 {
-    mapTabs = new QTabWidget(this);
-    mapTabs->setTabsClosable(true);
-    QObject::connect(mapTabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeMapTab(int)));
+  mapTabs = new QTabWidget(this);
+  mapTabs->setTabsClosable(true);
+
+  connect(mapTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::closeMapTab);
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
-    VME_LOG_D("MainWindow::mousePressEvent");
-}
-
-MenuAction::MenuActionWidget::MenuActionWidget(QWidget *parent) : QWidget(parent)
-{
-    setMouseTracking(true);
-}
-
-MenuAction::MenuAction(const QString &text, const QKeySequence &shortcut, QObject *parent)
-    : QWidgetAction(parent),
-      text(text)
-{
-    setShortcut(shortcut);
-}
-
-MenuAction::MenuAction(const QString &text, QObject *parent)
-    : QWidgetAction(parent),
-      text(text)
-{
-}
-
-MenuAction::~MenuAction() {}
-
-QWidget *MenuAction::createWidget(QWidget *parent)
-{
-    QWidget *widget = new MenuActionWidget(parent);
-    widget->setProperty("class", "menu-item");
-
-    QHBoxLayout *layout = new QHBoxLayout(parent);
-    layout->setMargin(0);
-
-    QLabel *left = new QLabel(this->text, widget);
-    layout->addWidget(left);
-
-    if (!shortcut().isEmpty())
-    {
-        QLabel *right = new QLabel(this->shortcut().toString(), widget);
-        right->setAlignment(Qt::AlignRight);
-        layout->addWidget(right);
-    }
-
-    widget->setLayout(layout);
-
-    return widget;
+  VME_LOG_D("MainWindow::mousePressEvent");
 }
 
 QMenuBar *MainWindow::createMenuBar()
 {
-    QMenuBar *menuBar = new QMenuBar;
-    QMenu *fileMenu = menuBar->addMenu(tr("File"));
+  QMenuBar *menuBar = new QMenuBar;
 
-    MenuAction *newMap = new MenuAction(tr("New Map"), Qt::CTRL + Qt::Key_N, this);
-    newMap->setShortcut(Qt::CTRL + Qt::Key_N);
-    newMap->connect(newMap, &QWidgetAction::triggered, [=] { VME_LOG_D("New Map clicked"); });
+  // File
+  {
+    auto fileMenu = menuBar->addMenu(tr("File"));
+
+    auto newMap = new MenuAction(tr("New Map"), Qt::CTRL + Qt::Key_N, this);
+    connect(newMap, &QWidgetAction::triggered, [=] { VME_LOG_D("New Map clicked"); });
     fileMenu->addAction(newMap);
+  }
 
-    QMenu *editMenu = menuBar->addMenu(tr("Edit"));
+  // Edit
+  {
+    auto editMenu = menuBar->addMenu(tr("Edit"));
 
-    MenuAction *undo = new MenuAction(tr("Undo"), Qt::CTRL + Qt::Key_Z, this);
+    auto undo = new MenuAction(tr("Undo"), Qt::CTRL + Qt::Key_Z, this);
     editMenu->addAction(undo);
 
-    MenuAction *redo = new MenuAction(tr("Redo"), Qt::CTRL + Qt::SHIFT + Qt::Key_Z, this);
+    auto redo = new MenuAction(tr("Redo"), Qt::CTRL + Qt::SHIFT + Qt::Key_Z, this);
     editMenu->addAction(redo);
 
-    QAction *reloadStyles = new QAction(tr("Reload styles"), this);
-    reloadStyles->connect(reloadStyles, &QAction::triggered, [=] {
-        ((MainApplication *)(QApplication::instance()))->loadStyleSheet("default");
-    });
-    menuBar->addAction(reloadStyles);
+    editMenu->addSeparator();
 
-    return menuBar;
+    auto cut = new MenuAction(tr("Cut"), Qt::CTRL + Qt::Key_X, this);
+    editMenu->addAction(cut);
+
+    auto copy = new MenuAction(tr("Copy"), Qt::CTRL + Qt::Key_C, this);
+    editMenu->addAction(copy);
+
+    auto paste = new MenuAction(tr("Paste"), Qt::CTRL + Qt::Key_V, this);
+    editMenu->addAction(paste);
+  }
+
+  // Map
+  {
+    auto mapMenu = menuBar->addMenu(tr("Map"));
+
+    auto editTowns = new MenuAction(tr("Edit Towns"), Qt::CTRL + Qt::Key_T, this);
+    mapMenu->addAction(editTowns);
+  }
+
+  // View
+  {
+    auto viewMenu = menuBar->addMenu(tr("View"));
+
+    auto zoomIn = new MenuAction(tr("Zoom in"), Qt::CTRL + Qt::Key_Plus, this);
+    viewMenu->addAction(zoomIn);
+
+    auto zoomOut = new MenuAction(tr("Zoom out"), Qt::CTRL + Qt::Key_Minus, this);
+    viewMenu->addAction(zoomOut);
+  }
+
+  // Window
+  {
+    auto windowMenu = menuBar->addMenu(tr("Window"));
+
+    auto minimap = new MenuAction(tr("Minimap"), Qt::Key_M, this);
+    windowMenu->addAction(minimap);
+  }
+
+  // Floor
+  {
+    auto floorMenu = menuBar->addMenu(tr("Floor"));
+  }
+
+  {
+    QAction *reloadStyles = new QAction(tr("Reload styles"), this);
+    connect(reloadStyles, &QAction::triggered, [=] { QtUtil::qtApp()->loadStyleSheet("default"); });
+    menuBar->addAction(reloadStyles);
+  }
+
+  return menuBar;
 }
 
 void MainWindow::closeMapTab(int index)
 {
-    std::cout << "MainWindow::closeMapTab" << std::endl;
-    this->mapTabs->widget(index)->deleteLater();
-    this->mapTabs->removeTab(index);
+  std::cout << "MainWindow::closeMapTab" << std::endl;
+  this->mapTabs->widget(index)->deleteLater();
+  this->mapTabs->removeTab(index);
 }

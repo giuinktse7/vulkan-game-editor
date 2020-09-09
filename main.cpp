@@ -9,6 +9,7 @@
 #include <QHBoxLayout>
 
 #include "gui/borderless_window.h"
+#include "gui/map_view_widget.h"
 
 #include "graphics/vulkan_helpers.h"
 #include "graphics/appearances.h"
@@ -136,8 +137,6 @@ int normalWindow(int argc, char *argv[])
     mainWindow.resize(1024, 768);
     mainWindow.show();
 
-    auto _window = mainWindow.windowHandle();
-
     return app.exec();
 }
 
@@ -186,10 +185,7 @@ int main(int argc, char *argv[])
 
     vulkanWindow->setVulkanInstance(&instance);
 
-    auto wrapped = vulkanWindow->wrapInWidget();
-    wrapped->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    wrapped->resize(500, 500);
-    mainWindow->addWidget(wrapped);
+    mainWindow->addWidget(new QtMapViewWidget(vulkanWindow));
 
     // vulkanWindow->requestActivate();
 

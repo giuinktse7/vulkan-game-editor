@@ -107,7 +107,10 @@
     "qpixmap": "cpp",
     "qapplication": "cpp",
     "qmainwindow": "cpp",
-    "qmimedata": "cpp"
+    "qmimedata": "cpp",
+    "qwidgetaction": "cpp",
+    "qwidget": "cpp",
+    "qscrollbar": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

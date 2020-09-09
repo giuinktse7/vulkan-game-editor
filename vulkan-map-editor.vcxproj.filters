@@ -184,6 +184,12 @@
     <ClCompile Include="gui\borderless_window.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="gui\menu.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\map_view_widget.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="action\action.h">
@@ -369,6 +375,9 @@
     <ClInclude Include="gui\border_layout.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="gui\map_view_widget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="debug\moc_predefs.h.cbt">
@@ -391,6 +400,9 @@
       <Filter>Generated Files</Filter>
     </QtMoc>
     <QtMoc Include="gui\borderless_window.h">
+      <Filter>Generated Files</Filter>
+    </QtMoc>
+    <QtMoc Include="gui\menu.h">
       <Filter>Generated Files</Filter>
     </QtMoc>
   </ItemGroup>

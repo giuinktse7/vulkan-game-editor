@@ -15,47 +15,27 @@ QT_END_NAMESPACE
 
 class MainWindow : public QWidget
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+  MainWindow(QWidget *parent = nullptr);
 
-    void addMapTab(VulkanWindow &vulkanWindow);
+  void addMapTab(VulkanWindow &vulkanWindow);
 
 protected:
-    void mousePressEvent(QMouseEvent *event) override;
+  void mousePressEvent(QMouseEvent *event) override;
 
 public slots:
-    void closeMapTab(int index);
+  void closeMapTab(int index);
 
 private:
-    // UI
-    QPlainTextEdit *textEdit;
-    QLayout *rootLayout;
-    QTabWidget *mapTabs;
+  // UI
+  QLayout *rootLayout;
+  QTabWidget *mapTabs;
 
-    void experimentLayout();
-    void experiment2();
+  void experimentLayout();
+  void initializeUI();
 
-    QMenuBar *createMenuBar();
-    void createMapTabArea();
-};
-
-class MenuAction : public QWidgetAction
-{
-    Q_OBJECT
-public:
-    class MenuActionWidget : public QWidget
-    {
-    public:
-        MenuActionWidget(QWidget *parent = nullptr);
-    };
-
-    MenuAction(const QString &text, QObject *parent = nullptr);
-    MenuAction(const QString &text, const QKeySequence &shortcut, QObject *parent = nullptr);
-    ~MenuAction();
-    QWidget *createWidget(QWidget *parent);
-
-private:
-    QString text;
+  QMenuBar *createMenuBar();
+  void createMapTabArea();
 };
