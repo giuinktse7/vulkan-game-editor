@@ -53,5 +53,5 @@ vec4 textureBilinear(in sampler2D texSampler, in vec2 textureCoordinate)
 void main() {
   vec2 sampleLocation = vec2(clamp(fragTexCoord.x, rect.x, rect.z), clamp(fragTexCoord.y, rect.w, rect.y));
 
-  outColor = textureBilinear(texSampler, sampleLocation);
+  outColor = textureBilinear(texSampler, sampleLocation) * fragColor;
 }
