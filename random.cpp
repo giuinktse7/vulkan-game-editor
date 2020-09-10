@@ -31,7 +31,7 @@ double Random::nextDouble()
   return distribution(randomEngine);
 }
 
-Random Random::global()
+Random &Random::global()
 {
   return globalRandom;
 }

@@ -13,6 +13,9 @@ public:
 	Random(uint32_t seed);
 	Random();
 
+	Random(const Random &other) = delete;
+	Random &operator=(const Random &other) = delete;
+
 	/*
 		Random double in range [0, 1].
 	*/
@@ -32,7 +35,7 @@ public:
 
 	void setSeed(uint32_t seed);
 
-	static Random global();
+	static Random &global();
 
 private:
 	std::mt19937 randomEngine;
