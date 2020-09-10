@@ -11,7 +11,7 @@ BatchDraw::BatchDraw()
 }
 
 Batch::Batch()
-    : vertexCount(0), descriptorSet(nullptr), valid(true)
+    : vertexCount(0), currentDescriptorSet(nullptr), valid(true)
 {
   this->stagingBuffer = Buffer::create(
       BatchDeviceSize,
@@ -28,6 +28,14 @@ Batch::Batch()
   mapStagingBuffer();
 }
 
+Batch::~Batch()
+{
+  if (current != nullptr)
+  {
+    unmapStagingBuffer();
+  }
+}
+
 Batch::Batch(Batch &&other) noexcept
 {
   this->valid = other.valid;
@@ -35,7 +43,7 @@ Batch::Batch(Batch &&other) noexcept
   this->buffer = std::move(other.buffer);
   this->stagingBuffer = std::move(other.stagingBuffer);
   this->descriptorIndices = other.descriptorIndices;
-  this->descriptorSet = other.descriptorSet;
+  this->currentDescriptorSet = other.currentDescriptorSet;
   this->vertexCount = other.vertexCount;
   this->vertices = other.vertices;
   this->current = other.current;
@@ -45,7 +53,7 @@ Batch::Batch(Batch &&other) noexcept
   other.stagingBuffer.deviceMemory = nullptr;
   other.buffer.buffer = nullptr;
   other.buffer.deviceMemory = nullptr;
-  other.descriptorSet = nullptr;
+  other.currentDescriptorSet = nullptr;
   other.vertices = nullptr;
   other.current = nullptr;
 }
@@ -57,12 +65,16 @@ void Batch::invalidate()
 
 void Batch::reset()
 {
+    if (current != nullptr) {
+        unmapStagingBuffer();
+    }
+
   this->vertexCount = 0;
   this->descriptorIndices.clear();
-  this->descriptorSet = nullptr;
-  this->vertices = nullptr;
-  this->current = nullptr;
+  this->currentDescriptorSet = nullptr;
   this->valid = true;
+
+  mapStagingBuffer();
 }
 
 void Batch::mapStagingBuffer()
@@ -210,7 +222,6 @@ Batch &BatchDraw::getBatch(uint32_t requiredVertexCount) const
   if (!batch.valid)
   {
     batch.reset();
-    batch.mapStagingBuffer();
   }
 
   if (!batch.canHold(requiredVertexCount))
@@ -229,15 +240,9 @@ Batch &BatchDraw::getBatch(uint32_t requiredVertexCount) const
   if (!resultBatch.valid)
   {
     resultBatch.reset();
-    resultBatch.mapStagingBuffer();
   }
 
   return resultBatch;
-}
-
-void BatchDraw::reset()
-{
-  this->batchIndex = 0;
 }
 
 void Batch::addVertex(const Vertex &vertex)
@@ -249,19 +254,18 @@ void Batch::addVertex(const Vertex &vertex)
 
 void Batch::setDescriptor(VkDescriptorSet descriptor)
 {
-  if (this->descriptorSet && this->descriptorSet != descriptor)
+  if (this->currentDescriptorSet && this->currentDescriptorSet != descriptor)
   {
-    descriptorIndices.emplace_back<Batch::DescriptorIndex>({this->descriptorSet, vertexCount - 1});
+    descriptorIndices.emplace_back<Batch::DescriptorIndex>({this->currentDescriptorSet, vertexCount - 1});
   }
 
-  this->descriptorSet = descriptor;
+  this->currentDescriptorSet = descriptor;
 }
 
 void BatchDraw::prepareDraw()
 {
-  // std::cout << "prepareDraw() batches: " << batchIndex << std::endl;
   Batch &latestBatch = getBatch();
-  if (latestBatch.descriptorIndices.empty() || latestBatch.descriptorIndices.back().descriptor != latestBatch.descriptorSet)
+  if (latestBatch.descriptorIndices.empty() || latestBatch.descriptorIndices.back().descriptor != latestBatch.currentDescriptorSet)
   {
     latestBatch.setDescriptor(nullptr);
   }

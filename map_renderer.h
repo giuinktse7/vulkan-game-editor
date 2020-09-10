@@ -73,6 +73,8 @@ public:
 	static const int TILE_SIZE = 32;
 	static const uint32_t MAX_VERTICES = 64 * 1024;
 
+	struct MouseActionVisitor;
+
 	// All sprites are drawn using this index buffer
 	BoundBuffer indexBuffer;
 
@@ -134,7 +136,7 @@ private:
 	void beginRenderPass();
 
 	void drawMap();
-	void drawPreviewCursor();
+	void drawPreviewCursor(uint16_t serverId);
 	void drawMovingSelection();
 	void drawSelectionRectangle();
 

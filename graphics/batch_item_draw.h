@@ -44,6 +44,7 @@ struct Batch
 	};
 
 	Batch();
+	~Batch();
 	BoundBuffer buffer;
 	BoundBuffer stagingBuffer;
 
@@ -54,8 +55,8 @@ struct Batch
 
 	uint32_t vertexCount = 0;
 
-	std::vector<Batch::DescriptorIndex> descriptorIndices;
-	VkDescriptorSet descriptorSet;
+	std::vector<DescriptorIndex> descriptorIndices;
+	VkDescriptorSet currentDescriptorSet;
 
 	bool isCopiedToDevice = false;
 
@@ -101,8 +102,6 @@ public:
 
 	void addItem(ObjectDrawInfo &info);
 	void addRectangle(RectangleDrawInfo &info);
-
-	void reset();
 
 	Batch &getBatch() const;
 	std::vector<Batch> &getBatches() const;

@@ -1,6 +1,7 @@
 #include "map_renderer.h"
 
 #include <stdexcept>
+#include <variant>
 
 #include "file.h"
 #include "position.h"
@@ -96,21 +97,24 @@ void MapRenderer::releaseSwapChainResources()
 void MapRenderer::releaseResources()
 {
   VME_LOG_D("MapRenderer::releaseResources");
-  debug = true;
   g_vk->vkDestroyDescriptorSetLayout(window.device(), uboDescriptorSetLayout, nullptr);
+  uboDescriptorSetLayout = VK_NULL_HANDLE;
+
   g_vk->vkDestroyDescriptorSetLayout(window.device(), textureDescriptorSetLayout, nullptr);
+  textureDescriptorSetLayout = VK_NULL_HANDLE;
 
   g_vk->vkDestroyDescriptorPool(window.device(), descriptorPool, nullptr);
+  descriptorPool = VK_NULL_HANDLE;
 
   g_vk->vkDestroyPipeline(window.device(), graphicsPipeline, nullptr);
-  g_vk->vkDestroyPipelineLayout(window.device(), pipelineLayout, nullptr);
-  g_vk->vkDestroyRenderPass(window.device(), renderPass, nullptr);
-  this->renderPass = VK_NULL_HANDLE;
-  this->indexBuffer = {};
+  graphicsPipeline = VK_NULL_HANDLE;
 
-  Texture::Descriptor descriptor;
-  descriptor.layout = textureDescriptorSetLayout;
-  descriptor.pool = descriptorPool;
+  g_vk->vkDestroyPipelineLayout(window.device(), pipelineLayout, nullptr);
+  pipelineLayout = VK_NULL_HANDLE;
+
+  g_vk->vkDestroyRenderPass(window.device(), renderPass, nullptr);
+  renderPass = VK_NULL_HANDLE;
+  this->indexBuffer = {};
 
   for (Texture *texture : activeTextures)
   {
@@ -122,8 +126,13 @@ void MapRenderer::releaseResources()
   for (auto &frame : frames)
   {
     frame.uniformBuffer = {};
+    frame.commandBuffer = VK_NULL_HANDLE;
+    frame.frameBuffer = VK_NULL_HANDLE;
+    frame.uboDescriptorSet = VK_NULL_HANDLE;
     frame.batchDraw = BatchDraw();
   }
+
+  debug = true;
 }
 
 void MapRenderer::startNextFrame()
@@ -156,8 +165,9 @@ void MapRenderer::startNextFrame()
 
 void MapRenderer::drawBatches()
 {
-  if (this->debug)
+  if (debug)
   {
+    VME_LOG_D("Draw batches");
   }
   const util::Size size = window.vulkanSwapChainImageSize();
 
@@ -222,6 +232,12 @@ void MapRenderer::drawBatches()
   }
 }
 
+struct MapRenderer::MouseActionVisitor
+{
+  double operator()(int x) { return sin(x) + cos(x); }
+  double operator()(double x) { return sin(x) + cos(x); }
+};
+
 void MapRenderer::drawMap()
 {
   bool isSelectionMoving = mapView->selection.moving;
@@ -252,14 +268,17 @@ void MapRenderer::drawMap()
     }
   }
 
-  // TODO
-  bool hasBrush = false;
-  // bool hasBrush = g_engine->hasBrush();
-
-  if (hasBrush)
-  {
-    drawPreviewCursor();
-  }
+  // Render current mouse action
+  std::visit(util::overloaded{
+                 [this](const MapView::MouseAction::RawItem &action) {
+                   this->drawPreviewCursor(action.serverId);
+                 },
+                 [](const std::monostate) {},
+                 // Do nothing},
+                 [](const auto &) {
+                   ABORT_PROGRAM("Unknown change!");
+                 }},
+             mapView->mouseAction());
 
   if (mapView->isSelectionMoving())
   {
@@ -291,6 +310,7 @@ void MapRenderer::drawTestRectangle()
 
   currentFrame->batchDraw.addRectangle(info);
 }
+
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags)
 {
   auto position = tileLocation.getPosition();
@@ -301,9 +321,7 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags)
   Position selectionMovePosDelta{};
   if (mapView->selection.moving)
   {
-    // TODO
-    // ScreenPosition cursorPos = g_engine->getCursorPos()
-    ScreenPosition cursorPos = ScreenPosition{};
+    ScreenPosition cursorPos = mapView->mousePos();
     selectionMovePosDelta = cursorPos.toPos(*mapView) - mapView->selection.moveOrigin.value();
   }
 
@@ -355,17 +373,12 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags)
   }
 }
 
-void MapRenderer::drawPreviewCursor()
+void MapRenderer::drawPreviewCursor(uint16_t serverId)
 {
-  // TODO
-  uint16_t selectedServerId = 100;
   // uint16_t selectedServerId = g_engine->getSelectedServerId().value();
-  ItemType &selectedItemType = *Items::items.getItemType(selectedServerId);
+  ItemType &selectedItemType = *Items::items.getItemType(serverId);
 
-  // TODO
-  // ScreenPosition cursorPos = g_engine->getCursorPos()
-  ScreenPosition cursorPos = ScreenPosition{};
-  Position pos = cursorPos.worldPos(*mapView).mapPos().floor(mapView->getFloor());
+  Position pos = mapView->mousePos().worldPos(*mapView).mapPos().floor(mapView->getFloor());
 
   Tile *tile = mapView->getMap()->getTile(pos);
 
@@ -387,9 +400,7 @@ void MapRenderer::drawMovingSelection()
 
   Position moveOrigin = mapView->selection.moveOrigin.value();
 
-  // TODO
-  // ScreenPosition screenCursorPos = g_engine->getCursorPos()
-  ScreenPosition screenCursorPos = ScreenPosition{};
+  ScreenPosition screenCursorPos = mapView->mousePos();
   Position cursorPos = screenCursorPos.toPos(*mapView);
 
   Position deltaPos = cursorPos - moveOrigin;
@@ -439,7 +450,6 @@ void MapRenderer::drawSelectionRectangle()
 
 void MapRenderer::updateUniformBuffer()
 {
-  ScreenPosition cursorPos(0.0, 0.0);
   mapView->updateCamera();
   glm::mat4 projection = window.projectionMatrix();
   ItemUniformBufferObject uniformBufferObject{projection};
