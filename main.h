@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QVulkanInstance>
 #include <stdarg.h>
+#include <string>
 
 #include "gui/vulkan_window.h"
 

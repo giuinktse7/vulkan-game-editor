@@ -10,17 +10,19 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include "map_renderer.h"
-#include "map_view.h"
-#include "../logger.h"
+#include "../map_renderer.h"
+#include "../map_view.h"
 
-#include "qt/logging.h"
+#include "../logger.h"
+#include "../position.h"
+
+#include "../qt/logging.h"
 
 VulkanWindow::VulkanWindow(std::shared_ptr<MapView> mapView)
     : mapView(mapView), contextMenu(nullptr), renderer(nullptr), widget(nullptr), scrollAngleBuffer(0)
 {
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { mapView->zoom(scrollDelta); });
-  connect(this, &VulkanWindow::mousePosEvent, [=](util::Point<float> mousePos) { mapView->mouseMoveEvent(mousePos); });
+  connect(this, &VulkanWindow::mousePosEvent, [=](util::Point<double> mousePos) { mapView->mouseMoveEvent(ScreenPosition(mousePos.x(), mousePos.y())); });
 }
 
 void VulkanWindow::lostFocus()
@@ -115,7 +117,7 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *)
 void VulkanWindow::mouseMoveEvent(QMouseEvent *e)
 {
   auto pos = e->windowPos();
-  util::Point<float> mousePos(pos.x(), pos.y());
+  util::Point<double> mousePos(pos.x(), pos.y());
   emit mousePosEvent(mousePos);
 }
 

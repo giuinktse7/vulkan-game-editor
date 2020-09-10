@@ -59,7 +59,7 @@ public:
 
 signals:
   void scrollEvent(int degrees);
-  void mousePosEvent(util::Point<float> mousePos);
+  void mousePosEvent(util::Point<double> mousePos);
 
 private:
   void mousePressEvent(QMouseEvent *event) override;

@@ -46,6 +46,11 @@ public:
 
 	using MouseAction_t = std::variant<std::monostate, MouseAction::RawItem>;
 
+	void setMouseAction(const MouseAction_t action)
+	{
+		_mouseAction = action;
+	}
+
 	Map *getMap() const
 	{
 		return map.get();
@@ -170,7 +175,7 @@ public:
 
 	void rawItemSelectedEvent(uint16_t serverId);
 
-	inline constexpr MouseAction_t mouseAction() const
+	inline MouseAction_t mouseAction() const
 	{
 		return _mouseAction;
 	}

@@ -17,6 +17,7 @@
 - [ ] BUG: Ground (and bottom stackpos items) should not be affected by tile elevation when rendered (both normally and as item preview)
 - [ ] BUG: ESC should clear selections
 - [ ] Feature?: Maybe clicking on a selected item should deselect it. If whole tile, the whole tile should maybe be deselected?
+- [x] Use mapView's mouseAction() to render the currently selected raw itemType.
 
 ## Editing functionality
 
