@@ -30,7 +30,7 @@ public:
   void translate(WorldPosition delta);
   void translateZ(int z);
 
-  void updateZoom(util::Point<float> cursorPos);
+  void updateZoom(ScreenPosition cursorPos);
 
   void zoomIn();
 

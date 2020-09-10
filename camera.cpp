@@ -14,14 +14,14 @@ Camera::Camera()
 {
 }
 
-void Camera::updateZoom(util::Point<float> cursorPos)
+void Camera::updateZoom(ScreenPosition cursorPos)
 {
 	if (!zoomChanged)
 		return;
 
 	zoomChanged = false;
-	float cursorX = cursorPos.x();
-	float cursorY = cursorPos.y();
+	double cursorX = cursorPos.x;
+	double cursorY = cursorPos.y;
 
 	float n = 0.1f;
 	float newZoomFactor = n * exp(log(1 / n) / 10 * zoomStep);
