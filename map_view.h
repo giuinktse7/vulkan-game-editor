@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <set>
+#include <variant>
 
 #include "map.h"
 #include "camera.h"
@@ -34,6 +35,16 @@ public:
 	EditorHistory history;
 
 	Selection selection;
+
+	struct MouseAction
+	{
+		struct RawItem
+		{
+			uint16_t serverId;
+		};
+	};
+
+	using MouseAction_t = std::variant<std::monostate, MouseAction::RawItem>;
 
 	Map *getMap() const
 	{
@@ -154,12 +165,26 @@ public:
 		double value;
 	};
 
-	void mouseMoveEvent(util::Point<float> mousePos);
+	void mouseMoveEvent(ScreenPosition mousePos);
 	void panEvent(PanEvent event);
+
+	void rawItemSelectedEvent(uint16_t serverId);
+
+	inline constexpr MouseAction_t mouseAction() const
+	{
+		return _mouseAction;
+	}
+
+	inline ScreenPosition mousePos() const
+	{
+		return _mousePos;
+	}
 
 private:
 	friend class MapAction;
 	Viewport viewport;
+
+	MouseAction_t _mouseAction = std::monostate{};
 
 	struct DragData
 	{
@@ -171,7 +196,7 @@ private:
 
 	std::shared_ptr<Map> map;
 
-	util::Point<float> mousePos;
+	ScreenPosition _mousePos;
 
 	Tile deepCopyTile(const Position position) const
 	{

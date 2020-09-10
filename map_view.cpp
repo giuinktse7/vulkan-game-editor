@@ -16,7 +16,7 @@ MapView::MapView()
       dragState{},
       selection(*this),
       viewport(),
-      mousePos()
+      _mousePos()
 {
 }
 
@@ -158,9 +158,17 @@ void MapView::setViewportSize(int width, int height)
   viewport.height = height;
 }
 
-void MapView::mouseMoveEvent(util::Point<float> mousePos)
+void MapView::mouseMoveEvent(ScreenPosition mousePos)
 {
-  this->mousePos = mousePos;
+  this->_mousePos = mousePos;
+}
+
+void MapView::rawItemSelectedEvent(uint16_t serverId)
+{
+  MouseAction::RawItem action;
+  action.serverId = serverId;
+
+  _mouseAction = action;
 }
 
 void MapView::zoom(int delta)
@@ -208,7 +216,7 @@ void MapView::translateCameraZ(int z)
 
 void MapView::updateCamera()
 {
-  camera.updateZoom(mousePos);
+  camera.updateZoom(_mousePos);
 }
 
 void MapView::deleteSelectedItems()
@@ -248,8 +256,8 @@ util::Rectangle<int> MapView::getGameBoundingRect() const
   rect.x1 = mapPos.x;
   rect.y1 = mapPos.y;
   // Add one to not miss large sprites (64 in width or height) when zoomed in
-  rect.x2 = mapPos.x + width + 1;
-  rect.y2 = mapPos.y + height + 1;
+  rect.x2 = mapPos.x + width + 10;
+  rect.y2 = mapPos.y + height + 10;
 
   return rect;
 }
