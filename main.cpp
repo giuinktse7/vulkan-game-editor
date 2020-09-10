@@ -119,9 +119,9 @@ int normalWindow(int argc, char *argv[])
     auto mapView = std::make_shared<MapView>();
 
     mapView->history.startGroup(ActionGroupType::AddMapItem);
-    mapView->addItem(Position(4, 4, 7), 2706);
-    mapView->addItem(Position(8, 10, 7), 2708);
-    mapView->addItem(Position(2, 2, 7), 2554);
+    mapView->addItem(Position(1030, 1030, 7), 2706);
+    mapView->addItem(Position(1035, 1035, 7), 2708);
+    mapView->addItem(Position(1032, 1032, 7), 2554);
     mapView->history.endGroup(ActionGroupType::AddMapItem);
 
     // VME_LOG_D("vulkanWindow: " << vulkanWindow);

@@ -20,4 +20,6 @@ public:
 
 private:
   void updateScrollBars();
+
+  VulkanWindow *vulkanWindow;
 };

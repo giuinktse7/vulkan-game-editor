@@ -12,8 +12,11 @@
 
 #include <stack>
 
+constexpr uint16_t DefaultWidth = 2048;
+constexpr uint16_t DefaultHeight = 2048;
+
 Map::Map()
-    : root(quadtree::Node::NodeType::Root), width(2048), height(2048)
+    : root(quadtree::Node::NodeType::Root), width(DefaultWidth), height(DefaultHeight)
 {
 }
 

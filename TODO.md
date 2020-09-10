@@ -32,6 +32,8 @@
 - [ ]
   BUG: Minimize and then returning to the window (maximizing) does not retain
   the correct window/widget focus.
+- [x] Scroll the map using scroll bars
+- [ ] Handle map keyboard events through the scrollbar widget
 
 ## General
 
