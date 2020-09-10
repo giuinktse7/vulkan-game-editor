@@ -103,7 +103,36 @@ void MainApplication::onFocusWidgetChanged(QWidget *widget)
     currentWidget = widget;
 }
 
-int normalWindow(int argc, char *argv[])
+void makeTestMap(MapView *mapView)
+{
+    auto &rand = Random::global();
+
+    mapView->history.startGroup(ActionGroupType::AddMapItem);
+
+    mapView->addItem(Position(1030, 1030, 7), 2706);
+    mapView->addItem(Position(1035, 1035, 7), 2708);
+    mapView->addItem(Position(1032, 1032, 7), 2554);
+
+    for (int x = 0; x < 30; ++x)
+    {
+        for (int y = 0; y < 30; ++y)
+        {
+            mapView->addItem(Position(1040 + x, 1040 + y, 7), rand.nextInt<uint16_t>(4526, 4542));
+        }
+    }
+    mapView->addItem(Position(1042, 1042, 7), 2700);
+    mapView->addItem(Position(1044, 1043, 7), 2700);
+    mapView->addItem(Position(1046, 1044, 7), 2703);
+
+    for (int i = 0; i < 10; ++i)
+    {
+        mapView->addItem(Position(1040 + rand.nextInt<uint16_t>(0, 10), 1040 + rand.nextInt<uint16_t>(0, 10), 7), 2767 + rand.nextInt<uint16_t>(0, 2));
+    }
+
+    mapView->history.endGroup(ActionGroupType::AddMapItem);
+}
+
+int runApp(int argc, char *argv[])
 {
     MainApplication app(argc, argv);
     app.loadStyleSheet("default");
@@ -117,23 +146,21 @@ int normalWindow(int argc, char *argv[])
         qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
 
     auto mapView = std::make_shared<MapView>();
+    MapView::MouseAction::RawItem action;
+    action.serverId = 100;
+    mapView->setMouseAction(action);
 
-    mapView->history.startGroup(ActionGroupType::AddMapItem);
-    mapView->addItem(Position(1030, 1030, 7), 2706);
-    mapView->addItem(Position(1035, 1035, 7), 2708);
-    mapView->addItem(Position(1032, 1032, 7), 2554);
-    mapView->history.endGroup(ActionGroupType::AddMapItem);
-
-    // VME_LOG_D("vulkanWindow: " << vulkanWindow);
+    makeTestMap(mapView.get());
 
     MainWindow mainWindow;
 
     VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, mapView);
-    app.setVulkanWindow(vulkanWindow);
-
     vulkanWindow->setVulkanInstance(&instance);
 
+    app.setVulkanWindow(vulkanWindow);
+
     mainWindow.addMapTab(*vulkanWindow);
+
     mainWindow.resize(1024, 768);
     mainWindow.show();
 
@@ -142,55 +169,59 @@ int normalWindow(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-    // return 0;
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
 
-    return normalWindow(argc, argv);
-
-    MainApplication app(argc, argv);
-    // app.loadStyleSheet("default");
-    app.loadGameData();
-
-    // const bool dbg = qEnvironmentVariableIntValue("QT_VK_DEBUG");
-
-    // QLoggingCategory::setFilterRules(QStringLiteral("'vulkan-map-editor.exe' (Win32)=false"));
-
-    QVulkanInstance instance;
-
-    instance.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
-
-    if (!instance.create())
-        qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
-
-    auto mapView = std::make_shared<MapView>();
-
-    mapView->history.startGroup(ActionGroupType::AddMapItem);
-    mapView->addItem(Position(4, 4, 7), 2706);
-    mapView->addItem(Position(8, 10, 7), 2708);
-    mapView->addItem(Position(2, 2, 7), 2554);
-    mapView->history.endGroup(ActionGroupType::AddMapItem);
-
-    // VME_LOG_D("vulkanWindow: " << vulkanWindow);
-
-    BorderlessMainWindow *mainWindow = new BorderlessMainWindow(nullptr);
-    mainWindow->app = &app;
-
-    mainWindow->resize(1024, 768);
-    mainWindow->show();
-
-    VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, mapView);
-    vulkanWindow->setParent(app.topLevelWindows().first());
-    app.setVulkanWindow(vulkanWindow);
-
-    vulkanWindow->setVulkanInstance(&instance);
-
-    mainWindow->addWidget(new QtMapViewWidget(vulkanWindow));
-
-    // vulkanWindow->requestActivate();
-
-    return app.exec();
+    return runApp(argc, argv);
 }
+
+int borderlessTest(int argc, char *argv[])
+{
+    // MainApplication app(argc, argv);
+    // // app.loadStyleSheet("default");
+    // app.loadGameData();
+
+    // // const bool dbg = qEnvironmentVariableIntValue("QT_VK_DEBUG");
+
+    // // QLoggingCategory::setFilterRules(QStringLiteral("'vulkan-map-editor.exe' (Win32)=false"));
+
+    // QVulkanInstance instance;
+
+    // instance.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
+
+    // if (!instance.create())
+    //     qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
+
+    // auto mapView = std::make_shared<MapView>();
+
+    // mapView->history.startGroup(ActionGroupType::AddMapItem);
+    // mapView->addItem(Position(4, 4, 7), 2706);
+    // mapView->addItem(Position(8, 10, 7), 2708);
+    // mapView->addItem(Position(2, 2, 7), 2554);
+    // mapView->history.endGroup(ActionGroupType::AddMapItem);
+
+    // // VME_LOG_D("vulkanWindow: " << vulkanWindow);
+
+    // BorderlessMainWindow *mainWindow = new BorderlessMainWindow(nullptr);
+    // mainWindow->app = &app;
+
+    // mainWindow->resize(1024, 768);
+    // mainWindow->show();
+
+    // VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, mapView);
+    // vulkanWindow->setParent(app.topLevelWindows().first());
+    // app.setVulkanWindow(vulkanWindow);
+
+    // vulkanWindow->setVulkanInstance(&instance);
+
+    // mainWindow->addWidget(new QtMapViewWidget(vulkanWindow));
+
+    // // vulkanWindow->requestActivate();
+
+    // return app.exec();
+    return -1;
+}
+
 void MainApplication::loadStyleSheet(const QString &sheetName)
 {
     QFile file("resources/style/qss/" + sheetName.toLower() + ".qss");
