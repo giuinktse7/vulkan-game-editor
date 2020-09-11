@@ -1,7 +1,7 @@
-Vulkan Game Editor - A game editor written in C++17 using Vulkan and the QT framework.
-==================================================
+# Vulkan Game Editor - A game editor written in C++17 using Vulkan and the QT framework
 
 ## Features
+
 TODO
 
 ## Terminology
@@ -16,13 +16,17 @@ An action is an event that can occur and can be undone/redone.
 - The GUI framework [QT5](https://www.qt.io/download-open-source) (`Qt::Core` and `Qt::Widgets`).
 
   **NOTE**: The QT framework requires more than 50 GB of disk space.
+
 - The c++ package manager [vcpkg](https://github.com/microsoft/vcpkg).
 - Libraries from vcpkg:
+
   ```sh
   vcpkg install liblzma protobuf nlohmann-json stb pugixml
   ```
+
   **Note**: This command varies depending on the triplet you want to compile against.
   For instance, for compiling against x64-windows, the command would be
+
   ```sh
   vcpkg install liblzma:x64-windows :x64-windows nlohmann-json:x64-windows stb:x64-windows pugixml:x64-windows
   ```
@@ -44,23 +48,28 @@ To build the project, first install the required [Dependencies](#dependencies).
 1. Download and install [CMake](https://cmake.org/download/).
 2. Empty the `build/` folder.
 3. Set the environment variable `LIB` to the Windows libpath. Its default path is
-    ```sh
-    C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64
-    ```
-    Select the last folder based on the architecture you are building for (for example x86 or x64).
-4. In `./build`, run (for example)
-    ```sh
-    # Use the Visual Studio 16 2019 makefile generator, targeting the x64 platform with the ClangCL compiler.
-    cmake ../ -G "Visual Studio 16 2019" -A x64 [-T ClangCL]
+
+   ```sh
+   C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64
    ```
-  
+
+   Select the last folder based on the architecture you are building for (for example x86 or x64).
+
+4. In `./build`, run (for example)
+
+   ```sh
+   # Use the Visual Studio 16 2019 makefile generator, targeting the x64 platform with the ClangCL compiler.
+   cmake ../ -G "Visual Studio 16 2019" -A x64 [-T ClangCL]
+   ```
+
    **Flags**:
+
    - -G specify a makefile generator.
    - -A specify platform name if supported by generator.
    - -T Toolset specification for the generator, if supported.
-   
+
    to generate the build structure.
-   
+
    **OPTIONAL**: Follow the instructions [here](https://docs.microsoft.com/en-us/cpp/build/clang-support-msbuild?view=vs-2019) to be able to use the `clang` compiler (`-T ClangCL`)
 
 5. In `./build`, run `cmake --build .` to compile a debug build, or `cmake --build . --config release` to compile a release build.
