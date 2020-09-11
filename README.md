@@ -27,7 +27,7 @@ An action is an event that can occur and can be undone/redone.
   vcpkg install liblzma:x64-windows :x64-windows nlohmann-json:x64-windows stb:x64-windows pugixml:x64-windows
   ```
 
-## Building
+## Building (Windows)
 
 To build the project, first install the required [Dependencies](#dependencies).
 
@@ -39,21 +39,22 @@ To build the project, first install the required [Dependencies](#dependencies).
 4. Right clck on the project `main` and select `Properties` Navigate to `Configuration Properties->General` and select a Platform Toolset (probably `Visual Studio 2019 v142` or similar).
 5. Click on `Local Windows Debugger`.
 
-### Compiling with CMake
+### Building with CMake
 
 1. Download and install [CMake](https://cmake.org/download/).
 2. Empty the `build/` folder.
 3. In `./build`, run (for example)
-
-  ```sh
-  # Use the Visual Studio 16 2019 makefile generator, targeting the x64 platform with the ClangCL compiler.
-  cmake ../ -G "Visual Studio 16 2019" -A x64 -T ClangCL
-  ```
-
-  to generate the build structure.
-
-  - -G specify a makefile generator.
-  - -A specify platform name if supported by generator.
-  - -T Toolset specification for the generator, if supported.
-
+    ```sh
+    # Use the Visual Studio 16 2019 makefile generator, targeting the x64 platform with the ClangCL compiler.
+    cmake ../ -G "Visual Studio 16 2019" -A x64 [-T ClangCL]
+   ```
+  
+   **Flags**:
+   - -G specify a makefile generator.
+   - -A specify platform name if supported by generator.
+   - -T Toolset specification for the generator, if supported.
+   
+   to generate the build structure.
+   
+   **OPTIONAL**: Follow the instructions [here](https://docs.microsoft.com/en-us/cpp/build/clang-support-msbuild?view=vs-2019) to be able to use the `clang` compiler (`-T ClangCL`)
 4. In `./build`, run `cmake --build .` to compile a debug build, or `cmake --build . --config release` to compile a release build.
