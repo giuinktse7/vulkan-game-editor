@@ -6,6 +6,9 @@ debug
 release
 build/main_autogen
 
+# Remove build for now. Maybe include it in the future
+build/
+
 ### C++ ###
 # Prerequisites
 *.d
