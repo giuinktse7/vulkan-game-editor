@@ -4,6 +4,7 @@
 
 debug
 release
+build/main_autogen
 
 ### C++ ###
 # Prerequisites

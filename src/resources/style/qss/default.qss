@@ -1,0 +1,33 @@
+QMenuBar {
+  background: #DDDDDD;
+  padding: 0;
+  margin: 0;
+}
+QMenuBar::item {
+  padding: 7px 7px;
+}
+
+QMenuBar::item:selected {
+  background-color: #C6C6C6;
+}
+
+QMenu {
+  padding-top: 7px;
+}
+
+QMenu::item {
+  padding: 7px 14px;
+}
+
+QMenu::item::selected {
+  background-color: #C6C6C6;
+}
+
+.menu-item > QLabel {
+  font: 9pt "Arial";
+  padding: 7px 14px;
+}
+
+.menu-item:hover {
+  background-color: #C6C6C6;
+}
