@@ -1034,16 +1034,15 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_app
   &scc_info_SpritePhase_appearances_2eproto.base,
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_appearances_2eproto_once;
-static bool descriptor_table_appearances_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_appearances_2eproto = {
-  &descriptor_table_appearances_2eproto_initialized, descriptor_table_protodef_appearances_2eproto, "appearances.proto", 4313,
+  false, false, descriptor_table_protodef_appearances_2eproto, "appearances.proto", 4313,
   &descriptor_table_appearances_2eproto_once, descriptor_table_appearances_2eproto_sccs, descriptor_table_appearances_2eproto_deps, 24, 1,
   schemas, file_default_instances, TableStruct_appearances_2eproto::offsets,
   file_level_metadata_appearances_2eproto, 24, file_level_enum_descriptors_appearances_2eproto, file_level_service_descriptors_appearances_2eproto,
 };
 
 // Force running AddDescriptors() at dynamic initialization time.
-static bool dynamic_init_dummy_appearances_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_appearances_2eproto), true);
+static bool dynamic_init_dummy_appearances_2eproto = (static_cast<void>(::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_appearances_2eproto)), true);
 namespace tibia {
 namespace protobuf {
 namespace appearances {
@@ -1082,20 +1081,24 @@ const ::tibia::protobuf::appearances::SpecialMeaningAppearanceIds&
 Appearances::_Internal::special_meaning_appearance_ids(const Appearances* msg) {
   return *msg->special_meaning_appearance_ids_;
 }
-Appearances::Appearances()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+Appearances::Appearances(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  object_(arena),
+  outfit_(arena),
+  effect_(arena),
+  missile_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.Appearances)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.Appearances)
 }
 Appearances::Appearances(const Appearances& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       object_(from.object_),
       outfit_(from.outfit_),
       effect_(from.effect_),
       missile_(from.missile_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_special_meaning_appearance_ids()) {
     special_meaning_appearance_ids_ = new ::tibia::protobuf::appearances::SpecialMeaningAppearanceIds(*from.special_meaning_appearance_ids_);
   } else {
@@ -1112,12 +1115,20 @@ void Appearances::SharedCtor() {
 Appearances::~Appearances() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.Appearances)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void Appearances::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete special_meaning_appearance_ids_;
 }
 
+void Appearances::ArenaDtor(void* object) {
+  Appearances* _this = reinterpret_cast< Appearances* >(object);
+  (void)_this;
+}
+void Appearances::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void Appearances::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -1143,12 +1154,13 @@ void Appearances::Clear() {
     special_meaning_appearance_ids_->Clear();
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* Appearances::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -1215,7 +1227,9 @@ const char* Appearances::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -1279,7 +1293,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.Appearances)
   return target;
@@ -1356,7 +1370,7 @@ void Appearances::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void Appearances::MergeFrom(const Appearances& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.Appearances)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1389,7 +1403,7 @@ bool Appearances::IsInitialized() const {
 
 void Appearances::InternalSwap(Appearances* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   object_.InternalSwap(&other->object_);
   outfit_.InternalSwap(&other->outfit_);
@@ -1418,16 +1432,16 @@ class SpritePhase::_Internal {
   }
 };
 
-SpritePhase::SpritePhase()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+SpritePhase::SpritePhase(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.SpritePhase)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.SpritePhase)
 }
 SpritePhase::SpritePhase(const SpritePhase& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&duration_min_, &from.duration_min_,
     static_cast<size_t>(reinterpret_cast<char*>(&duration_max_) -
     reinterpret_cast<char*>(&duration_min_)) + sizeof(duration_max_));
@@ -1443,11 +1457,19 @@ void SpritePhase::SharedCtor() {
 SpritePhase::~SpritePhase() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.SpritePhase)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void SpritePhase::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void SpritePhase::ArenaDtor(void* object) {
+  SpritePhase* _this = reinterpret_cast< SpritePhase* >(object);
+  (void)_this;
+}
+void SpritePhase::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void SpritePhase::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -1470,12 +1492,13 @@ void SpritePhase::Clear() {
         reinterpret_cast<char*>(&duration_min_)) + sizeof(duration_max_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* SpritePhase::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -1485,7 +1508,7 @@ const char* SpritePhase::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_duration_min(&has_bits);
-          duration_min_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          duration_min_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1493,7 +1516,7 @@ const char* SpritePhase::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_duration_max(&has_bits);
-          duration_max_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          duration_max_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1503,7 +1526,9 @@ const char* SpritePhase::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -1539,7 +1564,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.SpritePhase)
   return target;
@@ -1597,7 +1622,7 @@ void SpritePhase::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void SpritePhase::MergeFrom(const SpritePhase& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.SpritePhase)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1633,10 +1658,14 @@ bool SpritePhase::IsInitialized() const {
 
 void SpritePhase::InternalSwap(SpritePhase* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(duration_min_, other->duration_min_);
-  swap(duration_max_, other->duration_max_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(SpritePhase, duration_max_)
+      + sizeof(SpritePhase::duration_max_)
+      - PROTOBUF_FIELD_OFFSET(SpritePhase, duration_min_)>(
+          reinterpret_cast<char*>(&duration_min_),
+          reinterpret_cast<char*>(&other->duration_min_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata SpritePhase::GetMetadata() const {
@@ -1668,17 +1697,18 @@ class SpriteAnimation::_Internal {
   }
 };
 
-SpriteAnimation::SpriteAnimation()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+SpriteAnimation::SpriteAnimation(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  sprite_phase_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.SpriteAnimation)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.SpriteAnimation)
 }
 SpriteAnimation::SpriteAnimation(const SpriteAnimation& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       sprite_phase_(from.sprite_phase_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&default_start_phase_, &from.default_start_phase_,
     static_cast<size_t>(reinterpret_cast<char*>(&loop_type_) -
     reinterpret_cast<char*>(&default_start_phase_)) + sizeof(loop_type_));
@@ -1696,11 +1726,19 @@ void SpriteAnimation::SharedCtor() {
 SpriteAnimation::~SpriteAnimation() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.SpriteAnimation)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void SpriteAnimation::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void SpriteAnimation::ArenaDtor(void* object) {
+  SpriteAnimation* _this = reinterpret_cast< SpriteAnimation* >(object);
+  (void)_this;
+}
+void SpriteAnimation::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void SpriteAnimation::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -1725,12 +1763,13 @@ void SpriteAnimation::Clear() {
     loop_type_ = -1;
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* SpriteAnimation::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -1740,7 +1779,7 @@ const char* SpriteAnimation::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_default_start_phase(&has_bits);
-          default_start_phase_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          default_start_phase_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1748,7 +1787,7 @@ const char* SpriteAnimation::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_synchronized(&has_bits);
-          synchronized_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          synchronized_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1756,14 +1795,14 @@ const char* SpriteAnimation::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_random_start_phase(&has_bits);
-          random_start_phase_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          random_start_phase_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       // optional .tibia.protobuf.shared.ANIMATION_LOOP_TYPE loop_type = 4;
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::tibia::protobuf::shared::ANIMATION_LOOP_TYPE_IsValid(val))) {
             _internal_set_loop_type(static_cast<::tibia::protobuf::shared::ANIMATION_LOOP_TYPE>(val));
@@ -1776,7 +1815,7 @@ const char* SpriteAnimation::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
           _Internal::set_has_loop_count(&has_bits);
-          loop_count_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          loop_count_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1798,7 +1837,9 @@ const char* SpriteAnimation::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -1861,7 +1902,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.SpriteAnimation)
   return target;
@@ -1942,7 +1983,7 @@ void SpriteAnimation::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void SpriteAnimation::MergeFrom(const SpriteAnimation& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.SpriteAnimation)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1988,13 +2029,15 @@ bool SpriteAnimation::IsInitialized() const {
 
 void SpriteAnimation::InternalSwap(SpriteAnimation* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   sprite_phase_.InternalSwap(&other->sprite_phase_);
-  swap(default_start_phase_, other->default_start_phase_);
-  swap(synchronized_, other->synchronized_);
-  swap(random_start_phase_, other->random_start_phase_);
-  swap(loop_count_, other->loop_count_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(SpriteAnimation, loop_count_)
+      + sizeof(SpriteAnimation::loop_count_)
+      - PROTOBUF_FIELD_OFFSET(SpriteAnimation, default_start_phase_)>(
+          reinterpret_cast<char*>(&default_start_phase_),
+          reinterpret_cast<char*>(&other->default_start_phase_));
   swap(loop_type_, other->loop_type_);
 }
 
@@ -2024,16 +2067,16 @@ class Box::_Internal {
   }
 };
 
-Box::Box()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+Box::Box(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.Box)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.Box)
 }
 Box::Box(const Box& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&x_, &from.x_,
     static_cast<size_t>(reinterpret_cast<char*>(&height_) -
     reinterpret_cast<char*>(&x_)) + sizeof(height_));
@@ -2049,11 +2092,19 @@ void Box::SharedCtor() {
 Box::~Box() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.Box)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void Box::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void Box::ArenaDtor(void* object) {
+  Box* _this = reinterpret_cast< Box* >(object);
+  (void)_this;
+}
+void Box::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void Box::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -2076,12 +2127,13 @@ void Box::Clear() {
         reinterpret_cast<char*>(&x_)) + sizeof(height_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* Box::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -2091,7 +2143,7 @@ const char* Box::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::intern
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_x(&has_bits);
-          x_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          x_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2099,7 +2151,7 @@ const char* Box::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::intern
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_y(&has_bits);
-          y_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          y_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2107,7 +2159,7 @@ const char* Box::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::intern
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_width(&has_bits);
-          width_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          width_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2115,7 +2167,7 @@ const char* Box::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::intern
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_height(&has_bits);
-          height_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          height_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2125,7 +2177,9 @@ const char* Box::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::intern
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -2173,7 +2227,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.Box)
   return target;
@@ -2245,7 +2299,7 @@ void Box::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void Box::MergeFrom(const Box& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.Box)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -2287,12 +2341,14 @@ bool Box::IsInitialized() const {
 
 void Box::InternalSwap(Box* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(x_, other->x_);
-  swap(y_, other->y_);
-  swap(width_, other->width_);
-  swap(height_, other->height_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Box, height_)
+      + sizeof(Box::height_)
+      - PROTOBUF_FIELD_OFFSET(Box, x_)>(
+          reinterpret_cast<char*>(&x_),
+          reinterpret_cast<char*>(&other->x_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata Box::GetMetadata() const {
@@ -2337,18 +2393,20 @@ const ::tibia::protobuf::appearances::SpriteAnimation&
 SpriteInfo::_Internal::animation(const SpriteInfo* msg) {
   return *msg->animation_;
 }
-SpriteInfo::SpriteInfo()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+SpriteInfo::SpriteInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  sprite_id_(arena),
+  bounding_box_per_direction_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.SpriteInfo)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.SpriteInfo)
 }
 SpriteInfo::SpriteInfo(const SpriteInfo& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       sprite_id_(from.sprite_id_),
       bounding_box_per_direction_(from.bounding_box_per_direction_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_animation()) {
     animation_ = new ::tibia::protobuf::appearances::SpriteAnimation(*from.animation_);
   } else {
@@ -2370,12 +2428,20 @@ void SpriteInfo::SharedCtor() {
 SpriteInfo::~SpriteInfo() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.SpriteInfo)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void SpriteInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete animation_;
 }
 
+void SpriteInfo::ArenaDtor(void* object) {
+  SpriteInfo* _this = reinterpret_cast< SpriteInfo* >(object);
+  (void)_this;
+}
+void SpriteInfo::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void SpriteInfo::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -2404,12 +2470,13 @@ void SpriteInfo::Clear() {
         reinterpret_cast<char*>(&pattern_width_)) + sizeof(is_opaque_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* SpriteInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -2419,7 +2486,7 @@ const char* SpriteInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_pattern_width(&has_bits);
-          pattern_width_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          pattern_width_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2427,7 +2494,7 @@ const char* SpriteInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_pattern_height(&has_bits);
-          pattern_height_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          pattern_height_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2435,7 +2502,7 @@ const char* SpriteInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_pattern_depth(&has_bits);
-          pattern_depth_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          pattern_depth_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2443,7 +2510,7 @@ const char* SpriteInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_layers(&has_bits);
-          layers_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          layers_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2453,7 +2520,7 @@ const char* SpriteInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
           ptr -= 1;
           do {
             ptr += 1;
-            _internal_add_sprite_id(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+            _internal_add_sprite_id(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr));
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<40>(ptr));
@@ -2473,7 +2540,7 @@ const char* SpriteInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
       case 7:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
           _Internal::set_has_bounding_square(&has_bits);
-          bounding_square_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          bounding_square_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2481,7 +2548,7 @@ const char* SpriteInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
       case 8:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
           _Internal::set_has_is_opaque(&has_bits);
-          is_opaque_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          is_opaque_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2503,7 +2570,9 @@ const char* SpriteInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -2585,7 +2654,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.SpriteInfo)
   return target;
@@ -2692,7 +2761,7 @@ void SpriteInfo::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void SpriteInfo::MergeFrom(const SpriteInfo& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.SpriteInfo)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -2745,17 +2814,16 @@ bool SpriteInfo::IsInitialized() const {
 
 void SpriteInfo::InternalSwap(SpriteInfo* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   sprite_id_.InternalSwap(&other->sprite_id_);
   bounding_box_per_direction_.InternalSwap(&other->bounding_box_per_direction_);
-  swap(animation_, other->animation_);
-  swap(pattern_width_, other->pattern_width_);
-  swap(pattern_height_, other->pattern_height_);
-  swap(pattern_depth_, other->pattern_depth_);
-  swap(layers_, other->layers_);
-  swap(bounding_square_, other->bounding_square_);
-  swap(is_opaque_, other->is_opaque_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(SpriteInfo, is_opaque_)
+      + sizeof(SpriteInfo::is_opaque_)
+      - PROTOBUF_FIELD_OFFSET(SpriteInfo, animation_)>(
+          reinterpret_cast<char*>(&animation_),
+          reinterpret_cast<char*>(&other->animation_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata SpriteInfo::GetMetadata() const {
@@ -2788,16 +2856,16 @@ const ::tibia::protobuf::appearances::SpriteInfo&
 FrameGroup::_Internal::sprite_info(const FrameGroup* msg) {
   return *msg->sprite_info_;
 }
-FrameGroup::FrameGroup()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+FrameGroup::FrameGroup(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.FrameGroup)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.FrameGroup)
 }
 FrameGroup::FrameGroup(const FrameGroup& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_sprite_info()) {
     sprite_info_ = new ::tibia::protobuf::appearances::SpriteInfo(*from.sprite_info_);
   } else {
@@ -2819,12 +2887,20 @@ void FrameGroup::SharedCtor() {
 FrameGroup::~FrameGroup() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.FrameGroup)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void FrameGroup::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete sprite_info_;
 }
 
+void FrameGroup::ArenaDtor(void* object) {
+  FrameGroup* _this = reinterpret_cast< FrameGroup* >(object);
+  (void)_this;
+}
+void FrameGroup::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void FrameGroup::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -2851,12 +2927,13 @@ void FrameGroup::Clear() {
         reinterpret_cast<char*>(&fixed_frame_group_)) + sizeof(id_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* FrameGroup::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -2865,7 +2942,7 @@ const char* FrameGroup::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
       // optional .tibia.protobuf.appearances.FIXED_FRAME_GROUP fixed_frame_group = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::tibia::protobuf::appearances::FIXED_FRAME_GROUP_IsValid(val))) {
             _internal_set_fixed_frame_group(static_cast<::tibia::protobuf::appearances::FIXED_FRAME_GROUP>(val));
@@ -2878,7 +2955,7 @@ const char* FrameGroup::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_id(&has_bits);
-          id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2895,7 +2972,9 @@ const char* FrameGroup::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -2940,7 +3019,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.FrameGroup)
   return target;
@@ -3004,7 +3083,7 @@ void FrameGroup::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void FrameGroup::MergeFrom(const FrameGroup& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.FrameGroup)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -3043,11 +3122,14 @@ bool FrameGroup::IsInitialized() const {
 
 void FrameGroup::InternalSwap(FrameGroup* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(sprite_info_, other->sprite_info_);
-  swap(fixed_frame_group_, other->fixed_frame_group_);
-  swap(id_, other->id_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FrameGroup, id_)
+      + sizeof(FrameGroup::id_)
+      - PROTOBUF_FIELD_OFFSET(FrameGroup, sprite_info_)>(
+          reinterpret_cast<char*>(&sprite_info_),
+          reinterpret_cast<char*>(&other->sprite_info_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata FrameGroup::GetMetadata() const {
@@ -3080,20 +3162,22 @@ const ::tibia::protobuf::appearances::AppearanceFlags&
 Appearance::_Internal::flags(const Appearance* msg) {
   return *msg->flags_;
 }
-Appearance::Appearance()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+Appearance::Appearance(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  frame_group_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.Appearance)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.Appearance)
 }
 Appearance::Appearance(const Appearance& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       frame_group_(from.frame_group_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_name()) {
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+    name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_name(),
+      GetArena());
   }
   if (from._internal_has_flags()) {
     flags_ = new ::tibia::protobuf::appearances::AppearanceFlags(*from.flags_);
@@ -3115,13 +3199,21 @@ void Appearance::SharedCtor() {
 Appearance::~Appearance() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.Appearance)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void Appearance::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete flags_;
 }
 
+void Appearance::ArenaDtor(void* object) {
+  Appearance* _this = reinterpret_cast< Appearance* >(object);
+  (void)_this;
+}
+void Appearance::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void Appearance::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -3141,7 +3233,7 @@ void Appearance::Clear() {
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      name_.ClearNonDefaultToEmptyNoArena();
+      name_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
       GOOGLE_DCHECK(flags_ != nullptr);
@@ -3150,12 +3242,13 @@ void Appearance::Clear() {
   }
   id_ = 0u;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* Appearance::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -3165,7 +3258,7 @@ const char* Appearance::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_id(&has_bits);
-          id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3205,7 +3298,9 @@ const char* Appearance::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -3261,7 +3356,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.Appearance)
   return target;
@@ -3333,7 +3428,7 @@ void Appearance::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void Appearance::MergeFrom(const Appearance& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.Appearance)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -3341,8 +3436,7 @@ void Appearance::MergeFrom(const Appearance& from) {
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+      _internal_set_name(from._internal_name());
     }
     if (cached_has_bits & 0x00000002u) {
       _internal_mutable_flags()->::tibia::protobuf::appearances::AppearanceFlags::MergeFrom(from._internal_flags());
@@ -3374,13 +3468,16 @@ bool Appearance::IsInitialized() const {
 
 void Appearance::InternalSwap(Appearance* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   frame_group_.InternalSwap(&other->frame_group_);
-  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(flags_, other->flags_);
-  swap(id_, other->id_);
+  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Appearance, id_)
+      + sizeof(Appearance::id_)
+      - PROTOBUF_FIELD_OFFSET(Appearance, flags_)>(
+          reinterpret_cast<char*>(&flags_),
+          reinterpret_cast<char*>(&other->flags_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata Appearance::GetMetadata() const {
@@ -3624,17 +3721,18 @@ const ::tibia::protobuf::appearances::AppearanceFlagCyclopedia&
 AppearanceFlags::_Internal::cyclopediaitem(const AppearanceFlags* msg) {
   return *msg->cyclopediaitem_;
 }
-AppearanceFlags::AppearanceFlags()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlags::AppearanceFlags(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  npcsaledata_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlags)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlags)
 }
 AppearanceFlags::AppearanceFlags(const AppearanceFlags& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       npcsaledata_(from.npcsaledata_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_bank()) {
     bank_ = new ::tibia::protobuf::appearances::AppearanceFlagBank(*from.bank_);
   } else {
@@ -3721,9 +3819,11 @@ void AppearanceFlags::SharedCtor() {
 AppearanceFlags::~AppearanceFlags() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlags)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlags::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete bank_;
   if (this != internal_default_instance()) delete write_;
   if (this != internal_default_instance()) delete write_once_;
@@ -3740,6 +3840,12 @@ void AppearanceFlags::SharedDtor() {
   if (this != internal_default_instance()) delete cyclopediaitem_;
 }
 
+void AppearanceFlags::ArenaDtor(void* object) {
+  AppearanceFlags* _this = reinterpret_cast< AppearanceFlags* >(object);
+  (void)_this;
+}
+void AppearanceFlags::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlags::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -3844,11 +3950,12 @@ void AppearanceFlags::Clear() {
         reinterpret_cast<char*>(&topeffect_)) + sizeof(player_corpse_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -3865,7 +3972,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_clip(&_has_bits_);
-          clip_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          clip_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3873,7 +3980,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_bottom(&_has_bits_);
-          bottom_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          bottom_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3881,7 +3988,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_top(&_has_bits_);
-          top_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          top_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3889,7 +3996,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
           _Internal::set_has_container(&_has_bits_);
-          container_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          container_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3897,7 +4004,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 48)) {
           _Internal::set_has_cumulative(&_has_bits_);
-          cumulative_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          cumulative_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3905,7 +4012,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 7:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
           _Internal::set_has_usable(&_has_bits_);
-          usable_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          usable_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3913,7 +4020,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 8:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
           _Internal::set_has_forceuse(&_has_bits_);
-          forceuse_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          forceuse_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3921,7 +4028,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 9:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 72)) {
           _Internal::set_has_multiuse(&_has_bits_);
-          multiuse_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          multiuse_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3943,7 +4050,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 12:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 96)) {
           _Internal::set_has_liquidpool(&_has_bits_);
-          liquidpool_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          liquidpool_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3951,7 +4058,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 13:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 104)) {
           _Internal::set_has_unpass(&_has_bits_);
-          unpass_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          unpass_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3959,7 +4066,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 14:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 112)) {
           _Internal::set_has_unmove(&_has_bits_);
-          unmove_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          unmove_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3967,7 +4074,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 15:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 120)) {
           _Internal::set_has_unsight(&_has_bits_);
-          unsight_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          unsight_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3975,7 +4082,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 16:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 128)) {
           _Internal::set_has_avoid(&_has_bits_);
-          avoid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          avoid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3983,7 +4090,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 17:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 136)) {
           _Internal::set_has_no_movement_animation(&_has_bits_);
-          no_movement_animation_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          no_movement_animation_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3991,7 +4098,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 18:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 144)) {
           _Internal::set_has_take(&_has_bits_);
-          take_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          take_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3999,7 +4106,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 19:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 152)) {
           _Internal::set_has_liquidcontainer(&_has_bits_);
-          liquidcontainer_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          liquidcontainer_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4007,7 +4114,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 20:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 160)) {
           _Internal::set_has_hang(&_has_bits_);
-          hang_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          hang_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4022,7 +4129,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 22:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 176)) {
           _Internal::set_has_rotate(&_has_bits_);
-          rotate_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          rotate_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4037,7 +4144,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 24:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 192)) {
           _Internal::set_has_dont_hide(&_has_bits_);
-          dont_hide_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          dont_hide_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4045,7 +4152,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 25:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 200)) {
           _Internal::set_has_translucent(&_has_bits_);
-          translucent_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          translucent_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4067,7 +4174,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 28:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 224)) {
           _Internal::set_has_lying_object(&_has_bits_);
-          lying_object_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          lying_object_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4075,7 +4182,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 29:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 232)) {
           _Internal::set_has_animate_always(&_has_bits_);
-          animate_always_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          animate_always_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4097,7 +4204,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 32:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 0)) {
           _Internal::set_has_fullbank(&_has_bits_);
-          fullbank_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          fullbank_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4105,7 +4212,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 33:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_ignore_look(&_has_bits_);
-          ignore_look_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ignore_look_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4134,7 +4241,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 37:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
           _Internal::set_has_wrap(&_has_bits_);
-          wrap_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          wrap_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4142,7 +4249,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 38:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 48)) {
           _Internal::set_has_unwrap(&_has_bits_);
-          unwrap_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          unwrap_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4150,7 +4257,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 39:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
           _Internal::set_has_topeffect(&_has_bits_);
-          topeffect_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          topeffect_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4177,7 +4284,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 42:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 80)) {
           _Internal::set_has_corpse(&_has_bits_);
-          corpse_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          corpse_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4185,7 +4292,7 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 43:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 88)) {
           _Internal::set_has_player_corpse(&_has_bits_);
-          player_corpse_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          player_corpse_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4202,7 +4309,9 @@ const char* AppearanceFlags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -4529,7 +4638,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlags)
   return target;
@@ -4834,7 +4943,7 @@ void AppearanceFlags::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void AppearanceFlags::MergeFrom(const AppearanceFlags& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlags)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -5009,53 +5118,16 @@ bool AppearanceFlags::IsInitialized() const {
 
 void AppearanceFlags::InternalSwap(AppearanceFlags* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(_has_bits_[1], other->_has_bits_[1]);
   npcsaledata_.InternalSwap(&other->npcsaledata_);
-  swap(bank_, other->bank_);
-  swap(write_, other->write_);
-  swap(write_once_, other->write_once_);
-  swap(hook_, other->hook_);
-  swap(light_, other->light_);
-  swap(shift_, other->shift_);
-  swap(height_, other->height_);
-  swap(automap_, other->automap_);
-  swap(lenshelp_, other->lenshelp_);
-  swap(clothes_, other->clothes_);
-  swap(default_action_, other->default_action_);
-  swap(market_, other->market_);
-  swap(changedtoexpire_, other->changedtoexpire_);
-  swap(cyclopediaitem_, other->cyclopediaitem_);
-  swap(clip_, other->clip_);
-  swap(bottom_, other->bottom_);
-  swap(top_, other->top_);
-  swap(container_, other->container_);
-  swap(cumulative_, other->cumulative_);
-  swap(usable_, other->usable_);
-  swap(forceuse_, other->forceuse_);
-  swap(multiuse_, other->multiuse_);
-  swap(liquidpool_, other->liquidpool_);
-  swap(unpass_, other->unpass_);
-  swap(unmove_, other->unmove_);
-  swap(unsight_, other->unsight_);
-  swap(avoid_, other->avoid_);
-  swap(no_movement_animation_, other->no_movement_animation_);
-  swap(take_, other->take_);
-  swap(liquidcontainer_, other->liquidcontainer_);
-  swap(hang_, other->hang_);
-  swap(rotate_, other->rotate_);
-  swap(dont_hide_, other->dont_hide_);
-  swap(translucent_, other->translucent_);
-  swap(lying_object_, other->lying_object_);
-  swap(animate_always_, other->animate_always_);
-  swap(fullbank_, other->fullbank_);
-  swap(ignore_look_, other->ignore_look_);
-  swap(wrap_, other->wrap_);
-  swap(unwrap_, other->unwrap_);
-  swap(topeffect_, other->topeffect_);
-  swap(corpse_, other->corpse_);
-  swap(player_corpse_, other->player_corpse_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(AppearanceFlags, player_corpse_)
+      + sizeof(AppearanceFlags::player_corpse_)
+      - PROTOBUF_FIELD_OFFSET(AppearanceFlags, bank_)>(
+          reinterpret_cast<char*>(&bank_),
+          reinterpret_cast<char*>(&other->bank_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata AppearanceFlags::GetMetadata() const {
@@ -5075,16 +5147,16 @@ class AppearanceFlagBank::_Internal {
   }
 };
 
-AppearanceFlagBank::AppearanceFlagBank()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagBank::AppearanceFlagBank(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagBank)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagBank)
 }
 AppearanceFlagBank::AppearanceFlagBank(const AppearanceFlagBank& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   waypoints_ = from.waypoints_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagBank)
 }
@@ -5096,11 +5168,19 @@ void AppearanceFlagBank::SharedCtor() {
 AppearanceFlagBank::~AppearanceFlagBank() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagBank)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagBank::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagBank::ArenaDtor(void* object) {
+  AppearanceFlagBank* _this = reinterpret_cast< AppearanceFlagBank* >(object);
+  (void)_this;
+}
+void AppearanceFlagBank::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagBank::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -5118,12 +5198,13 @@ void AppearanceFlagBank::Clear() {
 
   waypoints_ = 0u;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagBank::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -5133,7 +5214,7 @@ const char* AppearanceFlagBank::_InternalParse(const char* ptr, ::PROTOBUF_NAMES
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_waypoints(&has_bits);
-          waypoints_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          waypoints_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -5143,7 +5224,9 @@ const char* AppearanceFlagBank::_InternalParse(const char* ptr, ::PROTOBUF_NAMES
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -5173,7 +5256,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagBank)
   return target;
@@ -5222,7 +5305,7 @@ void AppearanceFlagBank::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from)
 void AppearanceFlagBank::MergeFrom(const AppearanceFlagBank& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagBank)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -5251,7 +5334,7 @@ bool AppearanceFlagBank::IsInitialized() const {
 
 void AppearanceFlagBank::InternalSwap(AppearanceFlagBank* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(waypoints_, other->waypoints_);
 }
@@ -5273,16 +5356,16 @@ class AppearanceFlagWrite::_Internal {
   }
 };
 
-AppearanceFlagWrite::AppearanceFlagWrite()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagWrite::AppearanceFlagWrite(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagWrite)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagWrite)
 }
 AppearanceFlagWrite::AppearanceFlagWrite(const AppearanceFlagWrite& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   max_text_length_ = from.max_text_length_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagWrite)
 }
@@ -5294,11 +5377,19 @@ void AppearanceFlagWrite::SharedCtor() {
 AppearanceFlagWrite::~AppearanceFlagWrite() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagWrite)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagWrite::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagWrite::ArenaDtor(void* object) {
+  AppearanceFlagWrite* _this = reinterpret_cast< AppearanceFlagWrite* >(object);
+  (void)_this;
+}
+void AppearanceFlagWrite::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagWrite::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -5316,12 +5407,13 @@ void AppearanceFlagWrite::Clear() {
 
   max_text_length_ = 0u;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagWrite::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -5331,7 +5423,7 @@ const char* AppearanceFlagWrite::_InternalParse(const char* ptr, ::PROTOBUF_NAME
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_max_text_length(&has_bits);
-          max_text_length_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          max_text_length_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -5341,7 +5433,9 @@ const char* AppearanceFlagWrite::_InternalParse(const char* ptr, ::PROTOBUF_NAME
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -5371,7 +5465,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagWrite)
   return target;
@@ -5420,7 +5514,7 @@ void AppearanceFlagWrite::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from
 void AppearanceFlagWrite::MergeFrom(const AppearanceFlagWrite& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagWrite)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -5449,7 +5543,7 @@ bool AppearanceFlagWrite::IsInitialized() const {
 
 void AppearanceFlagWrite::InternalSwap(AppearanceFlagWrite* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(max_text_length_, other->max_text_length_);
 }
@@ -5471,16 +5565,16 @@ class AppearanceFlagWriteOnce::_Internal {
   }
 };
 
-AppearanceFlagWriteOnce::AppearanceFlagWriteOnce()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagWriteOnce::AppearanceFlagWriteOnce(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagWriteOnce)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagWriteOnce)
 }
 AppearanceFlagWriteOnce::AppearanceFlagWriteOnce(const AppearanceFlagWriteOnce& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   max_text_length_once_ = from.max_text_length_once_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagWriteOnce)
 }
@@ -5492,11 +5586,19 @@ void AppearanceFlagWriteOnce::SharedCtor() {
 AppearanceFlagWriteOnce::~AppearanceFlagWriteOnce() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagWriteOnce)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagWriteOnce::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagWriteOnce::ArenaDtor(void* object) {
+  AppearanceFlagWriteOnce* _this = reinterpret_cast< AppearanceFlagWriteOnce* >(object);
+  (void)_this;
+}
+void AppearanceFlagWriteOnce::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagWriteOnce::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -5514,12 +5616,13 @@ void AppearanceFlagWriteOnce::Clear() {
 
   max_text_length_once_ = 0u;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagWriteOnce::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -5529,7 +5632,7 @@ const char* AppearanceFlagWriteOnce::_InternalParse(const char* ptr, ::PROTOBUF_
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_max_text_length_once(&has_bits);
-          max_text_length_once_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          max_text_length_once_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -5539,7 +5642,9 @@ const char* AppearanceFlagWriteOnce::_InternalParse(const char* ptr, ::PROTOBUF_
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -5569,7 +5674,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagWriteOnce)
   return target;
@@ -5618,7 +5723,7 @@ void AppearanceFlagWriteOnce::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& 
 void AppearanceFlagWriteOnce::MergeFrom(const AppearanceFlagWriteOnce& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagWriteOnce)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -5647,7 +5752,7 @@ bool AppearanceFlagWriteOnce::IsInitialized() const {
 
 void AppearanceFlagWriteOnce::InternalSwap(AppearanceFlagWriteOnce* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(max_text_length_once_, other->max_text_length_once_);
 }
@@ -5672,16 +5777,16 @@ class AppearanceFlagLight::_Internal {
   }
 };
 
-AppearanceFlagLight::AppearanceFlagLight()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagLight::AppearanceFlagLight(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagLight)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagLight)
 }
 AppearanceFlagLight::AppearanceFlagLight(const AppearanceFlagLight& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&brightness_, &from.brightness_,
     static_cast<size_t>(reinterpret_cast<char*>(&color_) -
     reinterpret_cast<char*>(&brightness_)) + sizeof(color_));
@@ -5697,11 +5802,19 @@ void AppearanceFlagLight::SharedCtor() {
 AppearanceFlagLight::~AppearanceFlagLight() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagLight)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagLight::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagLight::ArenaDtor(void* object) {
+  AppearanceFlagLight* _this = reinterpret_cast< AppearanceFlagLight* >(object);
+  (void)_this;
+}
+void AppearanceFlagLight::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagLight::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -5724,12 +5837,13 @@ void AppearanceFlagLight::Clear() {
         reinterpret_cast<char*>(&brightness_)) + sizeof(color_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagLight::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -5739,7 +5853,7 @@ const char* AppearanceFlagLight::_InternalParse(const char* ptr, ::PROTOBUF_NAME
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_brightness(&has_bits);
-          brightness_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          brightness_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -5747,7 +5861,7 @@ const char* AppearanceFlagLight::_InternalParse(const char* ptr, ::PROTOBUF_NAME
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_color(&has_bits);
-          color_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          color_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -5757,7 +5871,9 @@ const char* AppearanceFlagLight::_InternalParse(const char* ptr, ::PROTOBUF_NAME
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -5793,7 +5909,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagLight)
   return target;
@@ -5851,7 +5967,7 @@ void AppearanceFlagLight::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from
 void AppearanceFlagLight::MergeFrom(const AppearanceFlagLight& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagLight)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -5887,10 +6003,14 @@ bool AppearanceFlagLight::IsInitialized() const {
 
 void AppearanceFlagLight::InternalSwap(AppearanceFlagLight* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(brightness_, other->brightness_);
-  swap(color_, other->color_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(AppearanceFlagLight, color_)
+      + sizeof(AppearanceFlagLight::color_)
+      - PROTOBUF_FIELD_OFFSET(AppearanceFlagLight, brightness_)>(
+          reinterpret_cast<char*>(&brightness_),
+          reinterpret_cast<char*>(&other->brightness_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata AppearanceFlagLight::GetMetadata() const {
@@ -5910,16 +6030,16 @@ class AppearanceFlagHeight::_Internal {
   }
 };
 
-AppearanceFlagHeight::AppearanceFlagHeight()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagHeight::AppearanceFlagHeight(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagHeight)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagHeight)
 }
 AppearanceFlagHeight::AppearanceFlagHeight(const AppearanceFlagHeight& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   elevation_ = from.elevation_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagHeight)
 }
@@ -5931,11 +6051,19 @@ void AppearanceFlagHeight::SharedCtor() {
 AppearanceFlagHeight::~AppearanceFlagHeight() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagHeight)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagHeight::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagHeight::ArenaDtor(void* object) {
+  AppearanceFlagHeight* _this = reinterpret_cast< AppearanceFlagHeight* >(object);
+  (void)_this;
+}
+void AppearanceFlagHeight::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagHeight::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -5953,12 +6081,13 @@ void AppearanceFlagHeight::Clear() {
 
   elevation_ = 0u;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagHeight::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -5968,7 +6097,7 @@ const char* AppearanceFlagHeight::_InternalParse(const char* ptr, ::PROTOBUF_NAM
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_elevation(&has_bits);
-          elevation_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          elevation_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -5978,7 +6107,9 @@ const char* AppearanceFlagHeight::_InternalParse(const char* ptr, ::PROTOBUF_NAM
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -6008,7 +6139,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagHeight)
   return target;
@@ -6057,7 +6188,7 @@ void AppearanceFlagHeight::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& fro
 void AppearanceFlagHeight::MergeFrom(const AppearanceFlagHeight& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagHeight)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -6086,7 +6217,7 @@ bool AppearanceFlagHeight::IsInitialized() const {
 
 void AppearanceFlagHeight::InternalSwap(AppearanceFlagHeight* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(elevation_, other->elevation_);
 }
@@ -6111,16 +6242,16 @@ class AppearanceFlagShift::_Internal {
   }
 };
 
-AppearanceFlagShift::AppearanceFlagShift()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagShift::AppearanceFlagShift(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagShift)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagShift)
 }
 AppearanceFlagShift::AppearanceFlagShift(const AppearanceFlagShift& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&x_, &from.x_,
     static_cast<size_t>(reinterpret_cast<char*>(&y_) -
     reinterpret_cast<char*>(&x_)) + sizeof(y_));
@@ -6136,11 +6267,19 @@ void AppearanceFlagShift::SharedCtor() {
 AppearanceFlagShift::~AppearanceFlagShift() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagShift)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagShift::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagShift::ArenaDtor(void* object) {
+  AppearanceFlagShift* _this = reinterpret_cast< AppearanceFlagShift* >(object);
+  (void)_this;
+}
+void AppearanceFlagShift::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagShift::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -6163,12 +6302,13 @@ void AppearanceFlagShift::Clear() {
         reinterpret_cast<char*>(&x_)) + sizeof(y_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagShift::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -6178,7 +6318,7 @@ const char* AppearanceFlagShift::_InternalParse(const char* ptr, ::PROTOBUF_NAME
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_x(&has_bits);
-          x_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          x_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -6186,7 +6326,7 @@ const char* AppearanceFlagShift::_InternalParse(const char* ptr, ::PROTOBUF_NAME
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_y(&has_bits);
-          y_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          y_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -6196,7 +6336,9 @@ const char* AppearanceFlagShift::_InternalParse(const char* ptr, ::PROTOBUF_NAME
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -6232,7 +6374,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagShift)
   return target;
@@ -6290,7 +6432,7 @@ void AppearanceFlagShift::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from
 void AppearanceFlagShift::MergeFrom(const AppearanceFlagShift& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagShift)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -6326,10 +6468,14 @@ bool AppearanceFlagShift::IsInitialized() const {
 
 void AppearanceFlagShift::InternalSwap(AppearanceFlagShift* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(x_, other->x_);
-  swap(y_, other->y_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(AppearanceFlagShift, y_)
+      + sizeof(AppearanceFlagShift::y_)
+      - PROTOBUF_FIELD_OFFSET(AppearanceFlagShift, x_)>(
+          reinterpret_cast<char*>(&x_),
+          reinterpret_cast<char*>(&other->x_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata AppearanceFlagShift::GetMetadata() const {
@@ -6349,16 +6495,16 @@ class AppearanceFlagClothes::_Internal {
   }
 };
 
-AppearanceFlagClothes::AppearanceFlagClothes()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagClothes::AppearanceFlagClothes(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagClothes)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagClothes)
 }
 AppearanceFlagClothes::AppearanceFlagClothes(const AppearanceFlagClothes& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   slot_ = from.slot_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagClothes)
 }
@@ -6370,11 +6516,19 @@ void AppearanceFlagClothes::SharedCtor() {
 AppearanceFlagClothes::~AppearanceFlagClothes() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagClothes)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagClothes::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagClothes::ArenaDtor(void* object) {
+  AppearanceFlagClothes* _this = reinterpret_cast< AppearanceFlagClothes* >(object);
+  (void)_this;
+}
+void AppearanceFlagClothes::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagClothes::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -6392,12 +6546,13 @@ void AppearanceFlagClothes::Clear() {
 
   slot_ = 0u;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagClothes::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -6407,7 +6562,7 @@ const char* AppearanceFlagClothes::_InternalParse(const char* ptr, ::PROTOBUF_NA
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_slot(&has_bits);
-          slot_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          slot_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -6417,7 +6572,9 @@ const char* AppearanceFlagClothes::_InternalParse(const char* ptr, ::PROTOBUF_NA
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -6447,7 +6604,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagClothes)
   return target;
@@ -6496,7 +6653,7 @@ void AppearanceFlagClothes::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& fr
 void AppearanceFlagClothes::MergeFrom(const AppearanceFlagClothes& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagClothes)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -6525,7 +6682,7 @@ bool AppearanceFlagClothes::IsInitialized() const {
 
 void AppearanceFlagClothes::InternalSwap(AppearanceFlagClothes* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(slot_, other->slot_);
 }
@@ -6547,16 +6704,16 @@ class AppearanceFlagDefaultAction::_Internal {
   }
 };
 
-AppearanceFlagDefaultAction::AppearanceFlagDefaultAction()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagDefaultAction::AppearanceFlagDefaultAction(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagDefaultAction)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagDefaultAction)
 }
 AppearanceFlagDefaultAction::AppearanceFlagDefaultAction(const AppearanceFlagDefaultAction& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   action_ = from.action_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagDefaultAction)
 }
@@ -6568,11 +6725,19 @@ void AppearanceFlagDefaultAction::SharedCtor() {
 AppearanceFlagDefaultAction::~AppearanceFlagDefaultAction() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagDefaultAction)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagDefaultAction::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagDefaultAction::ArenaDtor(void* object) {
+  AppearanceFlagDefaultAction* _this = reinterpret_cast< AppearanceFlagDefaultAction* >(object);
+  (void)_this;
+}
+void AppearanceFlagDefaultAction::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagDefaultAction::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -6590,12 +6755,13 @@ void AppearanceFlagDefaultAction::Clear() {
 
   action_ = 0;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagDefaultAction::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -6604,7 +6770,7 @@ const char* AppearanceFlagDefaultAction::_InternalParse(const char* ptr, ::PROTO
       // optional .tibia.protobuf.shared.PLAYER_ACTION action = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::tibia::protobuf::shared::PLAYER_ACTION_IsValid(val))) {
             _internal_set_action(static_cast<::tibia::protobuf::shared::PLAYER_ACTION>(val));
@@ -6619,7 +6785,9 @@ const char* AppearanceFlagDefaultAction::_InternalParse(const char* ptr, ::PROTO
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -6650,7 +6818,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagDefaultAction)
   return target;
@@ -6698,7 +6866,7 @@ void AppearanceFlagDefaultAction::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Messa
 void AppearanceFlagDefaultAction::MergeFrom(const AppearanceFlagDefaultAction& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagDefaultAction)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -6727,7 +6895,7 @@ bool AppearanceFlagDefaultAction::IsInitialized() const {
 
 void AppearanceFlagDefaultAction::InternalSwap(AppearanceFlagDefaultAction* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(action_, other->action_);
 }
@@ -6758,17 +6926,18 @@ class AppearanceFlagMarket::_Internal {
   }
 };
 
-AppearanceFlagMarket::AppearanceFlagMarket()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagMarket::AppearanceFlagMarket(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  restrict_to_profession_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagMarket)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagMarket)
 }
 AppearanceFlagMarket::AppearanceFlagMarket(const AppearanceFlagMarket& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       restrict_to_profession_(from.restrict_to_profession_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&trade_as_object_id_, &from.trade_as_object_id_,
     static_cast<size_t>(reinterpret_cast<char*>(&category_) -
     reinterpret_cast<char*>(&trade_as_object_id_)) + sizeof(category_));
@@ -6785,11 +6954,19 @@ void AppearanceFlagMarket::SharedCtor() {
 AppearanceFlagMarket::~AppearanceFlagMarket() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagMarket)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagMarket::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagMarket::ArenaDtor(void* object) {
+  AppearanceFlagMarket* _this = reinterpret_cast< AppearanceFlagMarket* >(object);
+  (void)_this;
+}
+void AppearanceFlagMarket::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagMarket::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -6814,12 +6991,13 @@ void AppearanceFlagMarket::Clear() {
     category_ = 1;
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagMarket::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -6828,7 +7006,7 @@ const char* AppearanceFlagMarket::_InternalParse(const char* ptr, ::PROTOBUF_NAM
       // optional .tibia.protobuf.shared.ITEM_CATEGORY category = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::tibia::protobuf::shared::ITEM_CATEGORY_IsValid(val))) {
             _internal_set_category(static_cast<::tibia::protobuf::shared::ITEM_CATEGORY>(val));
@@ -6841,7 +7019,7 @@ const char* AppearanceFlagMarket::_InternalParse(const char* ptr, ::PROTOBUF_NAM
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_trade_as_object_id(&has_bits);
-          trade_as_object_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          trade_as_object_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -6849,7 +7027,7 @@ const char* AppearanceFlagMarket::_InternalParse(const char* ptr, ::PROTOBUF_NAM
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_show_as_object_id(&has_bits);
-          show_as_object_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          show_as_object_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -6859,7 +7037,7 @@ const char* AppearanceFlagMarket::_InternalParse(const char* ptr, ::PROTOBUF_NAM
           ptr -= 1;
           do {
             ptr += 1;
-            ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+            ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
             CHK_(ptr);
             if (PROTOBUF_PREDICT_TRUE(::tibia::protobuf::shared::PLAYER_PROFESSION_IsValid(val))) {
               _internal_add_restrict_to_profession(static_cast<::tibia::protobuf::shared::PLAYER_PROFESSION>(val));
@@ -6869,7 +7047,7 @@ const char* AppearanceFlagMarket::_InternalParse(const char* ptr, ::PROTOBUF_NAM
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<40>(ptr));
         } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42) {
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser(_internal_mutable_restrict_to_profession(), ptr, ctx, ::tibia::protobuf::shared::PLAYER_PROFESSION_IsValid, &_internal_metadata_, 5);
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(_internal_mutable_restrict_to_profession(), ptr, ctx, ::tibia::protobuf::shared::PLAYER_PROFESSION_IsValid, &_internal_metadata_, 5);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -6877,7 +7055,7 @@ const char* AppearanceFlagMarket::_InternalParse(const char* ptr, ::PROTOBUF_NAM
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 48)) {
           _Internal::set_has_minimum_level(&has_bits);
-          minimum_level_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          minimum_level_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -6887,7 +7065,9 @@ const char* AppearanceFlagMarket::_InternalParse(const char* ptr, ::PROTOBUF_NAM
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -6943,7 +7123,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagMarket)
   return target;
@@ -7024,7 +7204,7 @@ void AppearanceFlagMarket::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& fro
 void AppearanceFlagMarket::MergeFrom(const AppearanceFlagMarket& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagMarket)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -7067,12 +7247,15 @@ bool AppearanceFlagMarket::IsInitialized() const {
 
 void AppearanceFlagMarket::InternalSwap(AppearanceFlagMarket* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   restrict_to_profession_.InternalSwap(&other->restrict_to_profession_);
-  swap(trade_as_object_id_, other->trade_as_object_id_);
-  swap(show_as_object_id_, other->show_as_object_id_);
-  swap(minimum_level_, other->minimum_level_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(AppearanceFlagMarket, minimum_level_)
+      + sizeof(AppearanceFlagMarket::minimum_level_)
+      - PROTOBUF_FIELD_OFFSET(AppearanceFlagMarket, trade_as_object_id_)>(
+          reinterpret_cast<char*>(&trade_as_object_id_),
+          reinterpret_cast<char*>(&other->trade_as_object_id_));
   swap(category_, other->category_);
 }
 
@@ -7105,23 +7288,25 @@ class AppearanceFlagNPC::_Internal {
   }
 };
 
-AppearanceFlagNPC::AppearanceFlagNPC()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagNPC::AppearanceFlagNPC(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagNPC)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagNPC)
 }
 AppearanceFlagNPC::AppearanceFlagNPC(const AppearanceFlagNPC& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_name()) {
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+    name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_name(),
+      GetArena());
   }
   location_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_location()) {
-    location_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.location_);
+    location_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_location(),
+      GetArena());
   }
   ::memcpy(&sale_price_, &from.sale_price_,
     static_cast<size_t>(reinterpret_cast<char*>(&currency_) -
@@ -7141,13 +7326,21 @@ void AppearanceFlagNPC::SharedCtor() {
 AppearanceFlagNPC::~AppearanceFlagNPC() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagNPC)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagNPC::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   location_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
+void AppearanceFlagNPC::ArenaDtor(void* object) {
+  AppearanceFlagNPC* _this = reinterpret_cast< AppearanceFlagNPC* >(object);
+  (void)_this;
+}
+void AppearanceFlagNPC::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagNPC::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -7166,10 +7359,10 @@ void AppearanceFlagNPC::Clear() {
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      name_.ClearNonDefaultToEmptyNoArena();
+      name_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      location_.ClearNonDefaultToEmptyNoArena();
+      location_.ClearNonDefaultToEmpty();
     }
   }
   if (cached_has_bits & 0x0000001cu) {
@@ -7178,12 +7371,13 @@ void AppearanceFlagNPC::Clear() {
         reinterpret_cast<char*>(&sale_price_)) + sizeof(currency_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagNPC::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -7215,7 +7409,7 @@ const char* AppearanceFlagNPC::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_sale_price(&has_bits);
-          sale_price_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          sale_price_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -7223,7 +7417,7 @@ const char* AppearanceFlagNPC::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_buy_price(&has_bits);
-          buy_price_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          buy_price_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -7231,7 +7425,7 @@ const char* AppearanceFlagNPC::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
           _Internal::set_has_currency(&has_bits);
-          currency_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          currency_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -7241,7 +7435,9 @@ const char* AppearanceFlagNPC::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -7303,7 +7499,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagNPC)
   return target;
@@ -7382,19 +7578,17 @@ void AppearanceFlagNPC::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) 
 void AppearanceFlagNPC::MergeFrom(const AppearanceFlagNPC& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagNPC)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 0x0000001fu) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+      _internal_set_name(from._internal_name());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      location_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.location_);
+      _internal_set_location(from._internal_location());
     }
     if (cached_has_bits & 0x00000004u) {
       sale_price_ = from.sale_price_;
@@ -7429,15 +7623,16 @@ bool AppearanceFlagNPC::IsInitialized() const {
 
 void AppearanceFlagNPC::InternalSwap(AppearanceFlagNPC* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  location_.Swap(&other->location_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(sale_price_, other->sale_price_);
-  swap(buy_price_, other->buy_price_);
-  swap(currency_, other->currency_);
+  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  location_.Swap(&other->location_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(AppearanceFlagNPC, currency_)
+      + sizeof(AppearanceFlagNPC::currency_)
+      - PROTOBUF_FIELD_OFFSET(AppearanceFlagNPC, sale_price_)>(
+          reinterpret_cast<char*>(&sale_price_),
+          reinterpret_cast<char*>(&other->sale_price_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata AppearanceFlagNPC::GetMetadata() const {
@@ -7457,16 +7652,16 @@ class AppearanceFlagAutomap::_Internal {
   }
 };
 
-AppearanceFlagAutomap::AppearanceFlagAutomap()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagAutomap::AppearanceFlagAutomap(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagAutomap)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagAutomap)
 }
 AppearanceFlagAutomap::AppearanceFlagAutomap(const AppearanceFlagAutomap& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   color_ = from.color_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagAutomap)
 }
@@ -7478,11 +7673,19 @@ void AppearanceFlagAutomap::SharedCtor() {
 AppearanceFlagAutomap::~AppearanceFlagAutomap() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagAutomap)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagAutomap::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagAutomap::ArenaDtor(void* object) {
+  AppearanceFlagAutomap* _this = reinterpret_cast< AppearanceFlagAutomap* >(object);
+  (void)_this;
+}
+void AppearanceFlagAutomap::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagAutomap::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -7500,12 +7703,13 @@ void AppearanceFlagAutomap::Clear() {
 
   color_ = 0u;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagAutomap::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -7515,7 +7719,7 @@ const char* AppearanceFlagAutomap::_InternalParse(const char* ptr, ::PROTOBUF_NA
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_color(&has_bits);
-          color_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          color_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -7525,7 +7729,9 @@ const char* AppearanceFlagAutomap::_InternalParse(const char* ptr, ::PROTOBUF_NA
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -7555,7 +7761,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagAutomap)
   return target;
@@ -7604,7 +7810,7 @@ void AppearanceFlagAutomap::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& fr
 void AppearanceFlagAutomap::MergeFrom(const AppearanceFlagAutomap& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagAutomap)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -7633,7 +7839,7 @@ bool AppearanceFlagAutomap::IsInitialized() const {
 
 void AppearanceFlagAutomap::InternalSwap(AppearanceFlagAutomap* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(color_, other->color_);
 }
@@ -7655,16 +7861,16 @@ class AppearanceFlagHook::_Internal {
   }
 };
 
-AppearanceFlagHook::AppearanceFlagHook()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagHook::AppearanceFlagHook(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagHook)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagHook)
 }
 AppearanceFlagHook::AppearanceFlagHook(const AppearanceFlagHook& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   direction_ = from.direction_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagHook)
 }
@@ -7676,11 +7882,19 @@ void AppearanceFlagHook::SharedCtor() {
 AppearanceFlagHook::~AppearanceFlagHook() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagHook)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagHook::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagHook::ArenaDtor(void* object) {
+  AppearanceFlagHook* _this = reinterpret_cast< AppearanceFlagHook* >(object);
+  (void)_this;
+}
+void AppearanceFlagHook::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagHook::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -7698,12 +7912,13 @@ void AppearanceFlagHook::Clear() {
 
   direction_ = 1;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagHook::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -7712,7 +7927,7 @@ const char* AppearanceFlagHook::_InternalParse(const char* ptr, ::PROTOBUF_NAMES
       // optional .tibia.protobuf.shared.HOOK_TYPE direction = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::tibia::protobuf::shared::HOOK_TYPE_IsValid(val))) {
             _internal_set_direction(static_cast<::tibia::protobuf::shared::HOOK_TYPE>(val));
@@ -7727,7 +7942,9 @@ const char* AppearanceFlagHook::_InternalParse(const char* ptr, ::PROTOBUF_NAMES
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -7758,7 +7975,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagHook)
   return target;
@@ -7806,7 +8023,7 @@ void AppearanceFlagHook::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from)
 void AppearanceFlagHook::MergeFrom(const AppearanceFlagHook& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagHook)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -7835,7 +8052,7 @@ bool AppearanceFlagHook::IsInitialized() const {
 
 void AppearanceFlagHook::InternalSwap(AppearanceFlagHook* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(direction_, other->direction_);
 }
@@ -7857,16 +8074,16 @@ class AppearanceFlagLenshelp::_Internal {
   }
 };
 
-AppearanceFlagLenshelp::AppearanceFlagLenshelp()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagLenshelp::AppearanceFlagLenshelp(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagLenshelp)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagLenshelp)
 }
 AppearanceFlagLenshelp::AppearanceFlagLenshelp(const AppearanceFlagLenshelp& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   id_ = from.id_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagLenshelp)
 }
@@ -7878,11 +8095,19 @@ void AppearanceFlagLenshelp::SharedCtor() {
 AppearanceFlagLenshelp::~AppearanceFlagLenshelp() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagLenshelp)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagLenshelp::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagLenshelp::ArenaDtor(void* object) {
+  AppearanceFlagLenshelp* _this = reinterpret_cast< AppearanceFlagLenshelp* >(object);
+  (void)_this;
+}
+void AppearanceFlagLenshelp::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagLenshelp::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -7900,12 +8125,13 @@ void AppearanceFlagLenshelp::Clear() {
 
   id_ = 0u;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagLenshelp::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -7915,7 +8141,7 @@ const char* AppearanceFlagLenshelp::_InternalParse(const char* ptr, ::PROTOBUF_N
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_id(&has_bits);
-          id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -7925,7 +8151,9 @@ const char* AppearanceFlagLenshelp::_InternalParse(const char* ptr, ::PROTOBUF_N
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -7955,7 +8183,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagLenshelp)
   return target;
@@ -8004,7 +8232,7 @@ void AppearanceFlagLenshelp::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& f
 void AppearanceFlagLenshelp::MergeFrom(const AppearanceFlagLenshelp& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagLenshelp)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -8033,7 +8261,7 @@ bool AppearanceFlagLenshelp::IsInitialized() const {
 
 void AppearanceFlagLenshelp::InternalSwap(AppearanceFlagLenshelp* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(id_, other->id_);
 }
@@ -8055,16 +8283,16 @@ class AppearanceFlagChangedToExpire::_Internal {
   }
 };
 
-AppearanceFlagChangedToExpire::AppearanceFlagChangedToExpire()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagChangedToExpire::AppearanceFlagChangedToExpire(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagChangedToExpire)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagChangedToExpire)
 }
 AppearanceFlagChangedToExpire::AppearanceFlagChangedToExpire(const AppearanceFlagChangedToExpire& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   former_object_typeid_ = from.former_object_typeid_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagChangedToExpire)
 }
@@ -8076,11 +8304,19 @@ void AppearanceFlagChangedToExpire::SharedCtor() {
 AppearanceFlagChangedToExpire::~AppearanceFlagChangedToExpire() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagChangedToExpire)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagChangedToExpire::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagChangedToExpire::ArenaDtor(void* object) {
+  AppearanceFlagChangedToExpire* _this = reinterpret_cast< AppearanceFlagChangedToExpire* >(object);
+  (void)_this;
+}
+void AppearanceFlagChangedToExpire::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagChangedToExpire::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -8098,12 +8334,13 @@ void AppearanceFlagChangedToExpire::Clear() {
 
   former_object_typeid_ = 0u;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagChangedToExpire::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -8113,7 +8350,7 @@ const char* AppearanceFlagChangedToExpire::_InternalParse(const char* ptr, ::PRO
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_former_object_typeid(&has_bits);
-          former_object_typeid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          former_object_typeid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -8123,7 +8360,9 @@ const char* AppearanceFlagChangedToExpire::_InternalParse(const char* ptr, ::PRO
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -8153,7 +8392,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagChangedToExpire)
   return target;
@@ -8202,7 +8441,7 @@ void AppearanceFlagChangedToExpire::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Mes
 void AppearanceFlagChangedToExpire::MergeFrom(const AppearanceFlagChangedToExpire& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagChangedToExpire)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -8231,7 +8470,7 @@ bool AppearanceFlagChangedToExpire::IsInitialized() const {
 
 void AppearanceFlagChangedToExpire::InternalSwap(AppearanceFlagChangedToExpire* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(former_object_typeid_, other->former_object_typeid_);
 }
@@ -8253,16 +8492,16 @@ class AppearanceFlagCyclopedia::_Internal {
   }
 };
 
-AppearanceFlagCyclopedia::AppearanceFlagCyclopedia()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AppearanceFlagCyclopedia::AppearanceFlagCyclopedia(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.AppearanceFlagCyclopedia)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.AppearanceFlagCyclopedia)
 }
 AppearanceFlagCyclopedia::AppearanceFlagCyclopedia(const AppearanceFlagCyclopedia& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   cyclopedia_type_ = from.cyclopedia_type_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.appearances.AppearanceFlagCyclopedia)
 }
@@ -8274,11 +8513,19 @@ void AppearanceFlagCyclopedia::SharedCtor() {
 AppearanceFlagCyclopedia::~AppearanceFlagCyclopedia() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.AppearanceFlagCyclopedia)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AppearanceFlagCyclopedia::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AppearanceFlagCyclopedia::ArenaDtor(void* object) {
+  AppearanceFlagCyclopedia* _this = reinterpret_cast< AppearanceFlagCyclopedia* >(object);
+  (void)_this;
+}
+void AppearanceFlagCyclopedia::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AppearanceFlagCyclopedia::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -8296,12 +8543,13 @@ void AppearanceFlagCyclopedia::Clear() {
 
   cyclopedia_type_ = 0u;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AppearanceFlagCyclopedia::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -8311,7 +8559,7 @@ const char* AppearanceFlagCyclopedia::_InternalParse(const char* ptr, ::PROTOBUF
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_cyclopedia_type(&has_bits);
-          cyclopedia_type_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          cyclopedia_type_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -8321,7 +8569,9 @@ const char* AppearanceFlagCyclopedia::_InternalParse(const char* ptr, ::PROTOBUF
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -8351,7 +8601,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.AppearanceFlagCyclopedia)
   return target;
@@ -8400,7 +8650,7 @@ void AppearanceFlagCyclopedia::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message&
 void AppearanceFlagCyclopedia::MergeFrom(const AppearanceFlagCyclopedia& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.AppearanceFlagCyclopedia)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -8429,7 +8679,7 @@ bool AppearanceFlagCyclopedia::IsInitialized() const {
 
 void AppearanceFlagCyclopedia::InternalSwap(AppearanceFlagCyclopedia* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(cyclopedia_type_, other->cyclopedia_type_);
 }
@@ -8466,16 +8716,16 @@ class SpecialMeaningAppearanceIds::_Internal {
   }
 };
 
-SpecialMeaningAppearanceIds::SpecialMeaningAppearanceIds()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+SpecialMeaningAppearanceIds::SpecialMeaningAppearanceIds(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:tibia.protobuf.appearances.SpecialMeaningAppearanceIds)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:tibia.protobuf.appearances.SpecialMeaningAppearanceIds)
 }
 SpecialMeaningAppearanceIds::SpecialMeaningAppearanceIds(const SpecialMeaningAppearanceIds& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&gold_coin_id_, &from.gold_coin_id_,
     static_cast<size_t>(reinterpret_cast<char*>(&supply_stash_id_) -
     reinterpret_cast<char*>(&gold_coin_id_)) + sizeof(supply_stash_id_));
@@ -8491,11 +8741,19 @@ void SpecialMeaningAppearanceIds::SharedCtor() {
 SpecialMeaningAppearanceIds::~SpecialMeaningAppearanceIds() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.appearances.SpecialMeaningAppearanceIds)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void SpecialMeaningAppearanceIds::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void SpecialMeaningAppearanceIds::ArenaDtor(void* object) {
+  SpecialMeaningAppearanceIds* _this = reinterpret_cast< SpecialMeaningAppearanceIds* >(object);
+  (void)_this;
+}
+void SpecialMeaningAppearanceIds::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void SpecialMeaningAppearanceIds::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
@@ -8518,12 +8776,13 @@ void SpecialMeaningAppearanceIds::Clear() {
         reinterpret_cast<char*>(&gold_coin_id_)) + sizeof(supply_stash_id_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* SpecialMeaningAppearanceIds::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
@@ -8533,7 +8792,7 @@ const char* SpecialMeaningAppearanceIds::_InternalParse(const char* ptr, ::PROTO
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_gold_coin_id(&has_bits);
-          gold_coin_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          gold_coin_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -8541,7 +8800,7 @@ const char* SpecialMeaningAppearanceIds::_InternalParse(const char* ptr, ::PROTO
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_platinum_coin_id(&has_bits);
-          platinum_coin_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          platinum_coin_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -8549,7 +8808,7 @@ const char* SpecialMeaningAppearanceIds::_InternalParse(const char* ptr, ::PROTO
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_crystal_coin_id(&has_bits);
-          crystal_coin_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          crystal_coin_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -8557,7 +8816,7 @@ const char* SpecialMeaningAppearanceIds::_InternalParse(const char* ptr, ::PROTO
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_tibia_coin_id(&has_bits);
-          tibia_coin_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          tibia_coin_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -8565,7 +8824,7 @@ const char* SpecialMeaningAppearanceIds::_InternalParse(const char* ptr, ::PROTO
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
           _Internal::set_has_stamped_letter_id(&has_bits);
-          stamped_letter_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          stamped_letter_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -8573,7 +8832,7 @@ const char* SpecialMeaningAppearanceIds::_InternalParse(const char* ptr, ::PROTO
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 48)) {
           _Internal::set_has_supply_stash_id(&has_bits);
-          supply_stash_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          supply_stash_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -8583,7 +8842,9 @@ const char* SpecialMeaningAppearanceIds::_InternalParse(const char* ptr, ::PROTO
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -8643,7 +8904,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.appearances.SpecialMeaningAppearanceIds)
   return target;
@@ -8729,7 +8990,7 @@ void SpecialMeaningAppearanceIds::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Messa
 void SpecialMeaningAppearanceIds::MergeFrom(const SpecialMeaningAppearanceIds& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.appearances.SpecialMeaningAppearanceIds)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -8777,14 +9038,14 @@ bool SpecialMeaningAppearanceIds::IsInitialized() const {
 
 void SpecialMeaningAppearanceIds::InternalSwap(SpecialMeaningAppearanceIds* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(gold_coin_id_, other->gold_coin_id_);
-  swap(platinum_coin_id_, other->platinum_coin_id_);
-  swap(crystal_coin_id_, other->crystal_coin_id_);
-  swap(tibia_coin_id_, other->tibia_coin_id_);
-  swap(stamped_letter_id_, other->stamped_letter_id_);
-  swap(supply_stash_id_, other->supply_stash_id_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(SpecialMeaningAppearanceIds, supply_stash_id_)
+      + sizeof(SpecialMeaningAppearanceIds::supply_stash_id_)
+      - PROTOBUF_FIELD_OFFSET(SpecialMeaningAppearanceIds, gold_coin_id_)>(
+          reinterpret_cast<char*>(&gold_coin_id_),
+          reinterpret_cast<char*>(&other->gold_coin_id_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata SpecialMeaningAppearanceIds::GetMetadata() const {
@@ -8798,76 +9059,76 @@ void SpecialMeaningAppearanceIds::InternalSwap(SpecialMeaningAppearanceIds* othe
 }  // namespace tibia
 PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::Appearances* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::Appearances >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::Appearances >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::Appearances >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::SpritePhase* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::SpritePhase >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::SpritePhase >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::SpritePhase >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::SpriteAnimation* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::SpriteAnimation >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::SpriteAnimation >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::SpriteAnimation >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::Box* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::Box >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::Box >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::Box >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::SpriteInfo* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::SpriteInfo >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::SpriteInfo >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::SpriteInfo >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::FrameGroup* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::FrameGroup >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::FrameGroup >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::FrameGroup >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::Appearance* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::Appearance >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::Appearance >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::Appearance >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlags* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlags >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlags >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlags >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagBank* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagBank >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagBank >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagBank >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagWrite* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagWrite >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagWrite >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagWrite >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagWriteOnce* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagWriteOnce >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagWriteOnce >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagWriteOnce >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagLight* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagLight >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagLight >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagLight >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagHeight* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagHeight >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagHeight >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagHeight >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagShift* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagShift >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagShift >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagShift >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagClothes* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagClothes >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagClothes >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagClothes >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagDefaultAction* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagDefaultAction >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagDefaultAction >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagDefaultAction >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagMarket* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagMarket >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagMarket >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagMarket >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagNPC* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagNPC >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagNPC >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagNPC >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagAutomap* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagAutomap >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagAutomap >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagAutomap >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagHook* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagHook >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagHook >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagHook >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagLenshelp* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagLenshelp >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagLenshelp >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagLenshelp >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagChangedToExpire* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagChangedToExpire >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagChangedToExpire >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagChangedToExpire >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::AppearanceFlagCyclopedia* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::AppearanceFlagCyclopedia >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::AppearanceFlagCyclopedia >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::AppearanceFlagCyclopedia >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tibia::protobuf::appearances::SpecialMeaningAppearanceIds* Arena::CreateMaybeMessage< ::tibia::protobuf::appearances::SpecialMeaningAppearanceIds >(Arena* arena) {
-  return Arena::CreateInternal< ::tibia::protobuf::appearances::SpecialMeaningAppearanceIds >(arena);
+  return Arena::CreateMessageInternal< ::tibia::protobuf::appearances::SpecialMeaningAppearanceIds >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

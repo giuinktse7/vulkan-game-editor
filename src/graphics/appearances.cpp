@@ -17,8 +17,6 @@
 #include "texture_atlas.h"
 #include "../time_point.h"
 
-constexpr size_t ReservedTextureAtlasCount = 5000;
-
 std::unordered_map<uint32_t, Appearance> Appearances::objects;
 std::unordered_map<uint32_t, tibia::protobuf::appearances::Appearance> Appearances::outfits;
 
