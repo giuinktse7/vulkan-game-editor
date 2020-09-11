@@ -43,7 +43,12 @@ To build the project, first install the required [Dependencies](#dependencies).
 
 1. Download and install [CMake](https://cmake.org/download/).
 2. Empty the `build/` folder.
-3. In `./build`, run (for example)
+3. Set the environment variable `LIB` to the Windows libpath. Its default path is
+    ```sh
+    C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64
+    ```
+    Select the last folder based on the architecture you are building for (for example x86 or x64).
+4. In `./build`, run (for example)
     ```sh
     # Use the Visual Studio 16 2019 makefile generator, targeting the x64 platform with the ClangCL compiler.
     cmake ../ -G "Visual Studio 16 2019" -A x64 [-T ClangCL]
@@ -57,4 +62,5 @@ To build the project, first install the required [Dependencies](#dependencies).
    to generate the build structure.
    
    **OPTIONAL**: Follow the instructions [here](https://docs.microsoft.com/en-us/cpp/build/clang-support-msbuild?view=vs-2019) to be able to use the `clang` compiler (`-T ClangCL`)
-4. In `./build`, run `cmake --build .` to compile a debug build, or `cmake --build . --config release` to compile a release build.
+
+5. In `./build`, run `cmake --build .` to compile a debug build, or `cmake --build . --config release` to compile a release build.
