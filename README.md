@@ -35,8 +35,8 @@ To build the project, first install the required [Dependencies](#dependencies).
 
 1. Download and install [Visual Studio 2019 (Community)](https://visualstudio.microsoft.com/vs/).
 2. Go to `File->Open->Project/Solution` and open `./build/VulkanGameEditor.sln`.
-3. Right clck on the project `main` and select `Set as Startup Project`.
-4. Right clck on the project `main` and select `Properties` Navigate to `Configuration Properties->General` and select a Platform Toolset (probably `Visual Studio 2019 v142` or similar).
+3. Right click on the project `main` and select `Set as Startup Project`.
+4. Right click on the project `main` and select `Properties` Navigate to `Configuration Properties->General` and select a Platform Toolset (probably `Visual Studio 2019 v142` or similar).
 5. Click on `Local Windows Debugger`.
 
 ### Building with CMake
