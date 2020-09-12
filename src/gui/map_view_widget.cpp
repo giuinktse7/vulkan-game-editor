@@ -31,10 +31,13 @@ QtMapViewWidget::QtMapViewWidget(VulkanWindow *window, QWidget *parent)
   verticalScrollBar()->setMinimum(0);
   verticalScrollBar()->setMaximum(maxY);
 
-  connect(vulkanWindow, &VulkanWindow::panEvent, this, &QtMapViewWidget::pan);
+  connect(vulkanWindow, &VulkanWindow::panEvent, this, [=](int dx, int dy) { this->pan(dx, dy); });
 
-  horizontalScrollBar()->setValue((width / 2) * MapTileSize);
-  verticalScrollBar()->setValue((height / 2) * MapTileSize);
+  connect(horizontalScrollBar(), &QScrollBar::valueChanged, [=](int x) { this->vulkanWindow->getMapView()->setX(x); });
+  connect(verticalScrollBar(), &QScrollBar::valueChanged, [=](int y) { this->vulkanWindow->getMapView()->setY(y); });
+
+  // horizontalScrollBar()->setValue(horizontalScrollBar()->maximum() / 2);
+  // verticalScrollBar()->setValue(verticalScrollBar()->maximum() / 2);
 
   // viewport()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   resize(500, 500);
@@ -60,13 +63,20 @@ QSize QtMapViewWidget::viewportSizeHint() const
 void QtMapViewWidget::pan(int dx, int dy)
 {
   VME_LOG_D("QtMapViewWidget::pan");
-  scrollContentsBy(dx, dy);
+  horizontalScrollBar()->setValue(horizontalScrollBar()->value() + dx);
+  verticalScrollBar()->setValue(verticalScrollBar()->value() + dy);
 }
 
+/*
+  dx and dy are calculated as (from - to).
+  Scrolling downwards or to the right results in negative dx and dy.
+*/
 void QtMapViewWidget::scrollContentsBy(int dx, int dy)
 {
-  VME_LOG_D("dx: " << dx << ", dy: " << dy);
-  vulkanWindow->getMapView()->translateCamera(WorldPosition(-dx, -dy));
+  auto viewportX = horizontalScrollBar()->value();
+  auto viewportY = verticalScrollBar()->value();
+
+  vulkanWindow->getMapView()->setCameraPosition(WorldPosition(viewportX, viewportY));
 }
 
 /**

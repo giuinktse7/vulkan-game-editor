@@ -22,7 +22,12 @@ VulkanWindow::VulkanWindow(std::shared_ptr<MapView> mapView)
     : mapView(mapView), scrollAngleBuffer(0)
 {
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { mapView->zoom(scrollDelta); });
-  connect(this, &VulkanWindow::mousePosEvent, [=](util::Point<double> mousePos) { mapView->mouseMoveEvent(ScreenPosition(mousePos.x(), mousePos.y())); });
+  connect(this, &VulkanWindow::mousePosEvent, [=](util::Point<float> mousePos) {
+    int x = static_cast<int>(std::round(mousePos.x()));
+    int y = static_cast<int>(std::round(mousePos.y()));
+
+    mapView->mouseMoveEvent(ScreenPosition(x, y));
+  });
 }
 
 void VulkanWindow::lostFocus()
@@ -120,7 +125,7 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *)
 void VulkanWindow::mouseMoveEvent(QMouseEvent *e)
 {
   auto pos = e->windowPos();
-  util::Point<double> mousePos(pos.x(), pos.y());
+  util::Point<float> mousePos(pos.x(), pos.y());
   emit mousePosEvent(mousePos);
 }
 
@@ -192,8 +197,8 @@ glm::mat4 VulkanWindow::projectionMatrix()
   const QSize sz = swapChainImageSize();
   QRectF rect;
   const Viewport &viewport = mapView->getViewport();
-  rect.setX(viewport.offsetX);
-  rect.setY(viewport.offsetY);
+  rect.setX(static_cast<qreal>(viewport.offset.x));
+  rect.setY(static_cast<qreal>(viewport.offset.y));
   rect.setWidth(sz.width() * viewport.zoom);
   rect.setHeight(sz.height() * viewport.zoom);
   projection.ortho(rect);

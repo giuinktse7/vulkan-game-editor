@@ -20,8 +20,8 @@ void Camera::updateZoom(ScreenPosition cursorPos)
 		return;
 
 	zoomChanged = false;
-	double cursorX = cursorPos.x;
-	double cursorY = cursorPos.y;
+	int cursorX = cursorPos.x;
+	int cursorY = cursorPos.y;
 
 	float n = 0.1f;
 	float newZoomFactor = n * exp(log(1 / n) / 10 * zoomStep);
@@ -41,7 +41,7 @@ void Camera::updateZoom(ScreenPosition cursorPos)
 
 void Camera::setPosition(WorldPosition position)
 {
-	this->_position = WorldPosition(std::max(position.x, 0.0), std::max(position.y, 0.0));
+	this->_position = WorldPosition(std::max(position.x, 0L), std::max(position.y, 0L));
 }
 
 void Camera::translate(WorldPosition delta)

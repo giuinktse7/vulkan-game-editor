@@ -232,12 +232,6 @@ void MapRenderer::drawBatches()
   }
 }
 
-struct MapRenderer::MouseActionVisitor
-{
-  double operator()(int x) { return sin(x) + cos(x); }
-  double operator()(double x) { return sin(x) + cos(x); }
-};
-
 void MapRenderer::drawMap()
 {
   bool isSelectionMoving = mapView->selection.moving;
@@ -289,26 +283,6 @@ void MapRenderer::drawMap()
   {
     drawSelectionRectangle();
   }
-
-  // drawTestRectangle();
-}
-
-void MapRenderer::drawTestRectangle()
-{
-  Texture::Descriptor descriptor;
-  descriptor.layout = textureDescriptorSetLayout;
-  descriptor.pool = descriptorPool;
-
-  RectangleDrawInfo info;
-
-  info.from = MapPosition(5, 5).worldPos();
-  info.to = MapPosition(12, 12).worldPos();
-  Texture *texture = &Texture::getOrCreateSolidTexture(SolidColor::Blue);
-  texture->updateVkResources(descriptor);
-  info.texture = texture;
-  info.color = colors::SeeThrough;
-
-  currentFrame->batchDraw.addRectangle(info);
 }
 
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags)

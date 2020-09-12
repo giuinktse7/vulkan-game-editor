@@ -6,8 +6,7 @@ Viewport::Viewport()
     : width(0),
       height(0),
       zoom(0.25f),
-      offsetX(0.0f),
-      offsetY(0.0f)
+      offset(0L, 0L)
 {
 }
 
@@ -148,8 +147,8 @@ void MapView::removeTile(const Position position)
 void MapView::updateViewport()
 {
   viewport.zoom = 1 / camera.zoomFactor();
-  viewport.offsetX = camera.position().x;
-  viewport.offsetY = camera.position().y;
+  viewport.offset.x = camera.position().x;
+  viewport.offset.y = camera.position().y;
 }
 
 void MapView::setViewportSize(int width, int height)
@@ -169,54 +168,6 @@ void MapView::rawItemSelectedEvent(uint16_t serverId)
   action.serverId = serverId;
 
   _mouseAction = action;
-}
-
-void MapView::zoom(int delta)
-{
-  // TODO Handle the value of the zoom delta, not just its sign
-  switch (util::sgn(delta))
-  {
-  case -1:
-    camera.zoomOut();
-    break;
-  case 1:
-    camera.zoomIn();
-    break;
-  default:
-    break;
-  }
-}
-
-void MapView::zoomOut()
-{
-  camera.zoomOut();
-}
-void MapView::zoomIn()
-{
-  camera.zoomIn();
-}
-void MapView::resetZoom()
-{
-  camera.resetZoom();
-}
-
-float MapView::getZoomFactor() const
-{
-  return camera.zoomFactor();
-}
-
-void MapView::translateCamera(WorldPosition delta)
-{
-  camera.translate(delta);
-}
-void MapView::translateCameraZ(int z)
-{
-  camera.translateZ(z);
-}
-
-void MapView::updateCamera()
-{
-  camera.updateZoom(_mousePos);
 }
 
 void MapView::deleteSelectedItems()
@@ -248,10 +199,9 @@ void MapView::deleteSelectedItems()
 
 util::Rectangle<int> MapView::getGameBoundingRect() const
 {
-  WorldPosition worldPos{static_cast<double>(viewport.offsetX), static_cast<double>(viewport.offsetY)};
-  MapPosition mapPos = worldPos.mapPos();
+  MapPosition mapPos = viewport.offset.mapPos();
 
-  auto [width, height] = ScreenPosition{static_cast<double>(viewport.width), static_cast<double>(viewport.height)}.mapPos(*this);
+  auto [width, height] = ScreenPosition(viewport.width, viewport.height).mapPos(*this);
   util::Rectangle<int> rect;
   rect.x1 = mapPos.x;
   rect.y1 = mapPos.y;
@@ -367,19 +317,90 @@ void MapView::panEvent(MapView::PanEvent event)
   translateCamera(delta);
 }
 
+/*
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>Camera related>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+*/
 void MapView::panCamera(WorldPosition delta)
 {
   camera.translate(delta);
 }
 
-void MapView::panCameraX(double delta)
+void MapView::panCameraX(long delta)
 {
   camera.translate(WorldPosition(delta, 0));
 }
 
-void MapView::panCameraY(double delta)
+void MapView::panCameraY(long delta)
 {
   camera.translate(WorldPosition(0, delta));
+}
+
+void MapView::setCameraPosition(WorldPosition position)
+{
+  camera.setPosition(position);
+}
+
+void MapView::setX(long x)
+{
+  camera.setX(x);
+}
+
+void MapView::setY(long y)
+{
+  camera.setY(y);
+}
+
+void MapView::zoom(int delta)
+{
+  // TODO Handle the value of the zoom delta, not just its sign
+  switch (util::sgn(delta))
+  {
+  case -1:
+    camera.zoomOut();
+    break;
+  case 1:
+    camera.zoomIn();
+    break;
+  default:
+    break;
+  }
+}
+
+void MapView::zoomOut()
+{
+  camera.zoomOut();
+}
+void MapView::zoomIn()
+{
+  camera.zoomIn();
+}
+void MapView::resetZoom()
+{
+  camera.resetZoom();
+}
+
+float MapView::getZoomFactor() const
+{
+  return camera.zoomFactor();
+}
+
+void MapView::translateCamera(WorldPosition delta)
+{
+  camera.translate(delta);
+}
+void MapView::translateCameraZ(int z)
+{
+  camera.translateZ(z);
+}
+
+void MapView::updateCamera()
+{
+  camera.updateZoom(_mousePos);
 }
 
 /*

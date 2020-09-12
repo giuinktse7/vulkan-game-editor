@@ -45,6 +45,7 @@ public:
 	}
 
 	time_t elapsedMillis();
+	time_t elapsedMicros();
 	time_t elapsedMillis(TimePoint start);
 
 private:

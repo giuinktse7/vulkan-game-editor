@@ -81,19 +81,19 @@ struct PositionHash
 	}
 };
 
-struct ScreenPosition : public BasePosition<double>
+struct ScreenPosition : public BasePosition<int>
 {
 	ScreenPosition();
-	ScreenPosition(double x, double y);
+	ScreenPosition(int x, int y);
 	WorldPosition worldPos(const MapView &mapView) const;
 	MapPosition mapPos(const MapView &mapView) const;
 	Position toPos(const MapView &mapView) const;
 };
 
-struct WorldPosition : public BasePosition<double>
+struct WorldPosition : public BasePosition<long>
 {
 	WorldPosition();
-	WorldPosition(double x, double y);
+	WorldPosition(long x, long y);
 
 	MapPosition mapPos() const;
 	Position toPos(const MapView &mapView) const;

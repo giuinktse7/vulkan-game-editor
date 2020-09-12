@@ -58,7 +58,7 @@ public:
 
 signals:
   void scrollEvent(int degrees);
-  void mousePosEvent(util::Point<double> mousePos);
+  void mousePosEvent(util::Point<float> mousePos);
   void panEvent(int dx, int dy);
 
 private:

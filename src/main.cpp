@@ -117,7 +117,7 @@ void makeTestMap(MapView *mapView)
     {
         for (int y = 0; y < 30; ++y)
         {
-            mapView->addItem(Position(1040 + x, 1040 + y, 7), rand.nextInt<uint16_t>(4526, 4542));
+            mapView->addItem(Position(1 + x, 1 + y, 7), rand.nextInt<uint16_t>(4526, 4542));
         }
     }
     mapView->addItem(Position(1042, 1042, 7), 2700);

@@ -183,7 +183,7 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
         Appearances::textureAtlasSpriteRanges.end(),
         [](SpriteRange a, SpriteRange b) { return a.start < b.start; });
 
-    VME_LOG("Loaded compressed sprites in " << start.elapsedMillis() << " ms.");
+    VME_LOG("Loaded compressed texture atlases in " << start.elapsedMillis() << " ms.");
 }
 
 SpriteInfo SpriteInfo::fromProtobufData(tibia::protobuf::appearances::SpriteInfo spriteInfo)

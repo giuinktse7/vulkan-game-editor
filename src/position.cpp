@@ -5,10 +5,10 @@
 Position::Position() : BasePosition(0, 0), z(0) {}
 Position::Position(long x, long y, int z) : BasePosition(x, y), z(z) {}
 
-ScreenPosition::ScreenPosition(double x, double y) : BasePosition(x, y) {}
+ScreenPosition::ScreenPosition(int x, int y) : BasePosition(x, y) {}
 ScreenPosition::ScreenPosition() : BasePosition(0, 0) {}
 
-WorldPosition::WorldPosition(double x, double y) : BasePosition(x, y) {}
+WorldPosition::WorldPosition(long x, long y) : BasePosition(x, y) {}
 WorldPosition::WorldPosition() : BasePosition(0, 0) {}
 
 MapPosition::MapPosition(long x, long y) : BasePosition(x, y) {}
@@ -16,21 +16,18 @@ MapPosition::MapPosition() : BasePosition(0, 0) {}
 
 WorldPosition ScreenPosition::worldPos(const MapView &mapView) const
 {
-  double newX = mapView.getX() + this->x / mapView.getZoomFactor();
-  double newY = mapView.getY() + this->y / mapView.getZoomFactor();
+  long newX = std::lroundf(mapView.getX() + this->x / mapView.getZoomFactor());
+  long newY = std::lroundf(mapView.getY() + this->y / mapView.getZoomFactor());
 
   return WorldPosition(newX, newY);
 }
 
 MapPosition ScreenPosition::mapPos(const MapView &mapView) const
 {
-  double newX = this->x / mapView.getZoomFactor();
-  double newY = this->y / mapView.getZoomFactor();
+  long newX = std::lroundf((this->x / mapView.getZoomFactor()) / MapTileSize);
+  long newY = std::lroundf((this->y / mapView.getZoomFactor()) / MapTileSize);
 
-  newX = std::floor(newX / MapTileSize);
-  newY = std::floor(newY / MapTileSize);
-
-  return MapPosition{static_cast<long>(newX), static_cast<long>(newY)};
+  return MapPosition(newX, newY);
 }
 
 MapPosition WorldPosition::mapPos() const
@@ -42,7 +39,7 @@ MapPosition WorldPosition::mapPos() const
 
 WorldPosition MapPosition::worldPos() const
 {
-  return WorldPosition{static_cast<double>(this->x * MapTileSize), static_cast<double>(this->y * MapTileSize)};
+  return WorldPosition(this->x * MapTileSize, this->y * MapTileSize);
 }
 
 Position MapPosition::floor(int floor) const

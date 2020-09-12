@@ -23,8 +23,7 @@ struct Viewport
 	int height;
 	float zoom;
 
-	float offsetX;
-	float offsetY;
+	WorldPosition offset;
 };
 
 class MapView
@@ -68,8 +67,16 @@ public:
 	bool isEmpty(Position position) const;
 
 	void panCamera(WorldPosition delta);
-	void panCameraX(double delta);
-	void panCameraY(double delta);
+	void panCameraX(long delta);
+	void panCameraY(long delta);
+
+	void setCameraPosition(WorldPosition position);
+	void setX(long x);
+	void setY(long y);
+
+	void translateCamera(WorldPosition delta);
+	void translateCameraZ(int z);
+	void updateCamera();
 
 	void zoom(int delta);
 
@@ -126,10 +133,6 @@ public:
 		return static_cast<uint32_t>(camera.position().y);
 	}
 
-	void translateCamera(WorldPosition delta);
-	void translateCameraZ(int z);
-	void updateCamera();
-
 	const Viewport &getViewport() const
 	{
 		return viewport;
@@ -167,7 +170,7 @@ public:
 	struct PanEvent
 	{
 		PanType type;
-		double value;
+		long value;
 	};
 
 	void mouseMoveEvent(ScreenPosition mousePos);

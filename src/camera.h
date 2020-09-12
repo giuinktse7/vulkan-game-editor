@@ -26,6 +26,8 @@ public:
   } keys;
 
   void setPosition(WorldPosition position);
+  inline void setX(long x);
+  inline void setY(long y);
 
   void translate(WorldPosition delta);
   void translateZ(int z);
@@ -37,6 +39,16 @@ public:
   void zoomOut();
 
   void resetZoom();
+
+  inline constexpr long x() const
+  {
+    return _position.x;
+  }
+
+  inline constexpr long y() const
+  {
+    return _position.y;
+  }
 
   inline float zoomFactor() const;
   inline WorldPosition position() const;
@@ -50,6 +62,15 @@ private:
 
   void setZoomStep(int zoomStep);
 };
+
+inline void Camera::setX(long x)
+{
+  _position.x = x;
+}
+inline void Camera::setY(long y)
+{
+  _position.y = y;
+}
 
 inline float Camera::zoomFactor() const
 {
