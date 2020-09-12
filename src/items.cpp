@@ -22,8 +22,6 @@ constexpr uint32_t RESERVED_ITEM_COUNT = 40000;
 
 using std::string;
 
-constexpr auto OTBI = OTB::Identifier{{'O', 'T', 'B', 'I'}};
-
 Items::Items()
 {
 }
@@ -396,7 +394,7 @@ void Items::OtbReader::readRoot()
 }
 
 Items::OtbReader::OtbReader(const std::string &file)
-		: buffer(File::read(file)), lastEscaped(false)
+		: buffer(File::read(file))
 {
 	cursor = buffer.begin();
 	path = file;

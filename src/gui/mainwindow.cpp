@@ -156,6 +156,13 @@ QMenuBar *MainWindow::createMenuBar()
   // Floor
   {
     auto floorMenu = menuBar->addMenu(tr("Floor"));
+
+    QString floor = tr("Floor") + " ";
+    for (int i = 0; i < 16; ++i)
+    {
+      auto floorI = new MenuAction(floor + QString::number(i), Qt::Key_M, this);
+      floorMenu->addAction(floorI);
+    }
   }
 
   {

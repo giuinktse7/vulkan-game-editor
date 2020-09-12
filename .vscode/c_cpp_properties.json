@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "name": "cl",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${vcpkgRoot}/x64-windows/include",
+        "${vcpkgRoot}/x86-windows/include",
+        "D:/Programs/glm-0.9.9.8/glm",
+        "D:/Programs/VulkanSDK/1.2.141.0/Include",
+        "D:/Programs/stb/include",
+        "D:/Programs/cpp/libraries/qt/5.15.0/msvc2019_64/include/**"
+      ],
+      "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "msvc-x64"
+    }
+  ],
+  "version": 4
+}

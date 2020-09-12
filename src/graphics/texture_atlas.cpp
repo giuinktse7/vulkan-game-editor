@@ -24,7 +24,7 @@ constexpr uint8_t BI_BITFIELDS = 0x03;
 constexpr uint32_t OFFSET_OF_BMP_START_OFFSET = 10;
 
 TextureAtlas::TextureAtlas(uint32_t id, CompressedBytes &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile)
-    : texture(std::move(buffer)), id(id), width(width), height(height), firstSpriteId(firstSpriteId), lastSpriteId(id), sourceFile(sourceFile)
+    : id(id), sourceFile(sourceFile), texture(std::move(buffer)), width(width), height(height), firstSpriteId(firstSpriteId), lastSpriteId(id)
 {
   switch (spriteLayout)
   {

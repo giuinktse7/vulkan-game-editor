@@ -187,6 +187,8 @@ public:
 
 private:
 	friend class MapAction;
+
+	std::shared_ptr<Map> map;
 	Viewport viewport;
 
 	MouseAction_t _mouseAction = std::monostate{};
@@ -198,8 +200,6 @@ private:
 	std::optional<DragData> dragState;
 
 	Camera camera;
-
-	std::shared_ptr<Map> map;
 
 	ScreenPosition _mousePos;
 

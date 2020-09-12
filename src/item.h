@@ -21,7 +21,7 @@ class Item : public ecs::OptionalEntity
 
 public:
 	ItemType *itemType;
-	bool selected;
+	bool selected = false;
 
 	Item(ItemTypeId serverId);
 	~Item();

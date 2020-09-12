@@ -12,9 +12,9 @@ Viewport::Viewport()
 }
 
 MapView::MapView()
-    : map(std::make_shared<Map>()),
+    : selection(*this),
+      map(std::make_shared<Map>()),
       dragState{},
-      selection(*this),
       viewport(),
       _mousePos()
 {

@@ -5,9 +5,8 @@
 #include "ecs/item_animation.h"
 
 Item::Item(ItemTypeId itemTypeId)
-		: subtype(1), selected(false)
+		: itemType(Items::items.getItemType(itemTypeId))
 {
-	this->itemType = Items::items.getItemType(itemTypeId);
 }
 
 // std::optional<Entity> entity;

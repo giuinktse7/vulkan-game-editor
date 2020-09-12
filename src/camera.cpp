@@ -1,16 +1,16 @@
 #include "camera.h"
 
-#include "Logger.h"
+#include "logger.h"
 
 constexpr int MinZoomStep = 0;
 constexpr int MaxZoomStep = 20;
 
 Camera::Camera()
-		: _position(0.0, 0.0),
-			floor(7),
-			_zoomFactor(1.0f),
+		: floor(7),
 			zoomStep(10),
-			zoomChanged(false)
+			zoomChanged(false),
+			_zoomFactor(1.0f),
+			_position(0.0, 0.0)
 {
 }
 

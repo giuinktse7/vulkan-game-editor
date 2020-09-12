@@ -12,7 +12,7 @@ using namespace std;
 
 // uint32_t has 32 bits: +- get 16 bits each. 4 least sig.
 // is used within a chunk. This gives (16 - 4) / 2 levels in the tree.
-constexpr uint32_t LEVELS_IN_QUAD_TREE = (16 - 4) / 2;
+constexpr uint32_t QuadTreeDepth = (16 - 4) / 2;
 
 // The implementation assumes a map in the range [-65535, 65535]
 
@@ -23,7 +23,7 @@ Node::Node(Node::NodeType nodeType)
 }
 
 Node::Node(Node::NodeType nodeType, int level)
-    : nodeType(nodeType), level(level)
+    : level(level), nodeType(nodeType)
 {
   // cout << "Construct node" << endl;
 }
@@ -192,7 +192,7 @@ Node &Node::getLeafWithCreate(int x, int y)
   uint32_t currentX = x;
   uint32_t currentY = y;
 
-  uint8_t level = 6;
+  uint8_t level = QuadTreeDepth;
 
   Node *leaf = nullptr;
 

@@ -14,9 +14,9 @@ Tile::Tile(Position position)
     : position(position), selectionCount(0), flags(0) {}
 
 Tile::Tile(Tile &&other) noexcept
-    : items(std::move(other.items)),
+    : position(other.position),
       ground(std::move(other.ground)),
-      position(other.position),
+      items(std::move(other.items)),
       selectionCount(other.selectionCount),
       flags(other.flags)
 {

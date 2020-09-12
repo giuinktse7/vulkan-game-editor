@@ -22,7 +22,7 @@ enum NodeType
 constexpr uint32_t DEFAULT_BUFFER_SIZE = 0xFFFF;
 
 SaveBuffer::SaveBuffer(std::ofstream &stream)
-    : maxBufferSize(DEFAULT_BUFFER_SIZE), stream(stream)
+    : stream(stream), maxBufferSize(DEFAULT_BUFFER_SIZE)
 {
   buffer.reserve(DEFAULT_BUFFER_SIZE);
 }

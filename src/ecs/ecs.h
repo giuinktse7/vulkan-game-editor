@@ -27,6 +27,11 @@ namespace ecs
 	class Entity
 	{
 	public:
+		virtual ~Entity()
+		{
+			// Empty
+		}
+
 		template <typename T>
 		bool hasComponent() const;
 		template <typename T>
@@ -66,8 +71,13 @@ namespace ecs
 			entities.clear();
 		}
 
+		virtual ~System()
+		{
+			//Empty
+		}
+
 	protected:
-		friend class ECS;
+		friend class ::ECS;
 
 		virtual std::vector<const char *> getRequiredComponents() = 0;
 

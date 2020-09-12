@@ -74,7 +74,6 @@ private:
   VkDeviceMemory textureImageMemory;
 
   VkDescriptorSet descriptorSet;
-  VkDevice device;
 
   // Used to check whether the descriptorSet needs to be recreated
   VkDescriptorSetLayout layout;

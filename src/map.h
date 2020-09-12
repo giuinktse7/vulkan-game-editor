@@ -63,9 +63,9 @@ private:
 	MapVersion mapVersion;
 	std::string description;
 
-	uint16_t width, height;
-
 	quadtree::Node root;
+
+	uint16_t width, height;
 
 	/*
 		Replace the tile at the given tile's location. Returns the old tile if one

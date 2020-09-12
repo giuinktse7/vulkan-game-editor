@@ -19,7 +19,7 @@
 #include "../qt/logging.h"
 
 VulkanWindow::VulkanWindow(std::shared_ptr<MapView> mapView)
-    : mapView(mapView), contextMenu(nullptr), renderer(nullptr), widget(nullptr), scrollAngleBuffer(0)
+    : mapView(mapView), scrollAngleBuffer(0)
 {
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { mapView->zoom(scrollDelta); });
   connect(this, &VulkanWindow::mousePosEvent, [=](util::Point<double> mousePos) { mapView->mouseMoveEvent(ScreenPosition(mousePos.x(), mousePos.y())); });

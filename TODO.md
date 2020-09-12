@@ -8,7 +8,6 @@
 
 ## Map Rendering
 
-- [x] Use object sprite id to get sprite texture
 - [x] Implement animation
 - [ ] Handle stackable appearances
 - [x] Handle appearances with elevation

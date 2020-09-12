@@ -66,8 +66,8 @@ namespace quadtree
 		bool isLeaf() const;
 		bool isRoot() const;
 
-		friend class Map;
-		friend class MapIterator;
+		friend class ::Map;
+		friend class ::MapIterator;
 
 	protected:
 		NodeType nodeType = NodeType::Root;

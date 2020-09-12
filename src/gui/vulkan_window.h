@@ -54,7 +54,7 @@ public:
   util::Size vulkanSwapChainImageSize() const;
   glm::mat4 projectionMatrix();
 
-  QWidget *widget;
+  QWidget *widget = nullptr;
 
 signals:
   void scrollEvent(int degrees);
@@ -70,11 +70,12 @@ private:
 
   void onVisibilityChanged(QWindow::Visibility visibility);
 
-  // std::unique_ptr<TriangleRenderer> renderer;
-  MapRenderer *renderer;
   std::shared_ptr<MapView> mapView;
-  ContextMenu *contextMenu;
+
+  // std::unique_ptr<TriangleRenderer> renderer;
+  MapRenderer *renderer = nullptr;
+  ContextMenu *contextMenu = nullptr;
 
   // Holds the current scroll amount. (see wheelEvent)
-  int scrollAngleBuffer;
+  int scrollAngleBuffer = 0;
 };

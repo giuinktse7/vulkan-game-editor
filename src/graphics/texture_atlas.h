@@ -41,15 +41,15 @@ private:
 public:
 	TextureAtlas(uint32_t id, CompressedBytes &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile);
 
-	std::filesystem::path sourceFile;
+	uint32_t id;
 
-	uint32_t firstSpriteId;
-	uint32_t lastSpriteId;
+	std::filesystem::path sourceFile;
 
 	uint32_t width;
 	uint32_t height;
 
-	uint32_t id;
+	uint32_t firstSpriteId;
+	uint32_t lastSpriteId;
 
 	uint32_t rows;
 	uint32_t columns;

@@ -90,7 +90,6 @@ void BorderLayout::setGeometry(const QRect &rect)
     {
       item->setGeometry(QRect(rect.x(), northHeight, rect.width(),
                               item->sizeHint().height()));
-      auto m = item->geometry();
 
       northHeight += item->geometry().height() + spacing();
       break;
@@ -109,6 +108,8 @@ void BorderLayout::setGeometry(const QRect &rect)
       break;
     case Position::Center:
       center = &wrapper;
+      break;
+    default:
       break;
     }
   }

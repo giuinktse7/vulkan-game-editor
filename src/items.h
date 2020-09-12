@@ -75,7 +75,6 @@ private:
     std::vector<uint8_t> buffer;
     OTB::ByteIterator cursor;
     std::string path;
-    bool lastEscaped;
 
     OTB::VersionInfo info;
     /*

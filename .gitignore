@@ -142,6 +142,7 @@ CMakeLists.txt.user*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/c_cpp_properties.json
 *.code-workspace
 
 ### VisualStudioCode Patch ###

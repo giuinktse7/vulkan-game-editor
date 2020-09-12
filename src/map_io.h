@@ -145,14 +145,14 @@ namespace MapIO
 	{
 	public:
 		Serializer(SaveBuffer &buffer, MapVersion mapVersion)
-				: buffer(buffer), mapVersion(mapVersion) {}
+				: mapVersion(mapVersion), buffer(buffer) {}
 		void serializeItem(const Item &item);
 		void serializeItemAttributes(const Item &item);
 		void serializeItemAttributeMap(const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes);
 		void serializeItemAttribute(ItemAttribute &attribute);
 
 	private:
-		MapVersion &mapVersion;
+		MapVersion mapVersion;
 		SaveBuffer &buffer;
 	};
 
