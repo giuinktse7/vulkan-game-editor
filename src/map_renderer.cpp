@@ -424,7 +424,6 @@ void MapRenderer::drawSelectionRectangle()
 
 void MapRenderer::updateUniformBuffer()
 {
-  mapView->updateCamera();
   glm::mat4 projection = window.projectionMatrix();
   ItemUniformBufferObject uniformBufferObject{projection};
 

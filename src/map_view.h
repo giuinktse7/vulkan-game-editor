@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-
+#include <vector>
 #include <optional>
 #include <set>
 #include <variant>
@@ -29,6 +29,26 @@ struct Viewport
 class MapView
 {
 public:
+	class Observer
+	{
+	public:
+		Observer(MapView *target = nullptr);
+		~Observer();
+		virtual void viewportChanged(const Viewport &viewport)
+		{
+			// Empty
+		}
+
+		MapView *target;
+
+	private:
+		friend class ::MapView;
+		enum class ChangeType
+		{
+			Viewport,
+		};
+	};
+
 	MapView();
 
 	EditorHistory history;
@@ -66,17 +86,14 @@ public:
 	bool isSelectionMoving() const;
 	bool isEmpty(Position position) const;
 
-	void panCamera(WorldPosition delta);
-	void panCameraX(long delta);
-	void panCameraY(long delta);
-
 	void setCameraPosition(WorldPosition position);
 	void setX(long x);
 	void setY(long y);
 
+	void translateX(long x);
+	void translateY(long y);
 	void translateCamera(WorldPosition delta);
-	void translateCameraZ(int z);
-	void updateCamera();
+	void translateZ(int z);
 
 	void zoom(int delta);
 
@@ -188,6 +205,10 @@ public:
 		return _mousePos;
 	}
 
+	void addObserver(MapView::Observer *observer);
+	void removeObserver(MapView::Observer *observer);
+	void notifyObservers(MapView::Observer::ChangeType changeType) const;
+
 private:
 	friend class MapAction;
 
@@ -205,6 +226,8 @@ private:
 	Camera camera;
 
 	ScreenPosition _mousePos;
+
+	std::vector<MapView::Observer *> observers;
 
 	Tile deepCopyTile(const Position position) const
 	{

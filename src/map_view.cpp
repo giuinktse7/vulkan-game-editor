@@ -146,9 +146,17 @@ void MapView::removeTile(const Position position)
 
 void MapView::updateViewport()
 {
-  viewport.zoom = 1 / camera.zoomFactor();
-  viewport.offset.x = camera.position().x;
-  viewport.offset.y = camera.position().y;
+  const float zoom = 1 / camera.zoomFactor();
+  const auto [x, y] = camera.position();
+
+  bool changed = viewport.offset != camera.position() || viewport.zoom != zoom;
+
+  if (changed)
+  {
+    viewport.zoom = zoom;
+    viewport.offset = camera.position();
+    notifyObservers(MapView::Observer::ChangeType::Viewport);
+  }
 }
 
 void MapView::setViewportSize(int width, int height)
@@ -325,21 +333,6 @@ void MapView::panEvent(MapView::PanEvent event)
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 */
-void MapView::panCamera(WorldPosition delta)
-{
-  camera.translate(delta);
-}
-
-void MapView::panCameraX(long delta)
-{
-  camera.translate(WorldPosition(delta, 0));
-}
-
-void MapView::panCameraY(long delta)
-{
-  camera.translate(WorldPosition(0, delta));
-}
-
 void MapView::setCameraPosition(WorldPosition position)
 {
   camera.setPosition(position);
@@ -361,10 +354,10 @@ void MapView::zoom(int delta)
   switch (util::sgn(delta))
   {
   case -1:
-    camera.zoomOut();
+    camera.zoomOut(_mousePos);
     break;
   case 1:
-    camera.zoomIn();
+    camera.zoomIn(_mousePos);
     break;
   default:
     break;
@@ -373,15 +366,15 @@ void MapView::zoom(int delta)
 
 void MapView::zoomOut()
 {
-  camera.zoomOut();
+  camera.zoomOut(_mousePos);
 }
 void MapView::zoomIn()
 {
-  camera.zoomIn();
+  camera.zoomIn(_mousePos);
 }
 void MapView::resetZoom()
 {
-  camera.resetZoom();
+  camera.resetZoom(_mousePos);
 }
 
 float MapView::getZoomFactor() const
@@ -393,14 +386,70 @@ void MapView::translateCamera(WorldPosition delta)
 {
   camera.translate(delta);
 }
-void MapView::translateCameraZ(int z)
+
+void MapView::translateX(long x)
+{
+  camera.setX(camera.x() + x);
+}
+
+void MapView::translateY(long y)
+{
+  camera.setY(camera.y() + y);
+}
+
+void MapView::translateZ(int z)
 {
   camera.translateZ(z);
 }
 
-void MapView::updateCamera()
+MapView::Observer::Observer(MapView *target)
+    : target(target)
 {
-  camera.updateZoom(_mousePos);
+  if (target != nullptr)
+  {
+    target->addObserver(this);
+  }
+}
+
+MapView::Observer::~Observer()
+{
+  if (target)
+  {
+    target->removeObserver(this);
+  }
+}
+
+void MapView::addObserver(MapView::Observer *o)
+{
+  auto found = std::find(observers.begin(), observers.end(), o);
+  if (found == observers.end())
+  {
+    observers.push_back(o);
+    o->target = this;
+  }
+}
+
+void MapView::removeObserver(MapView::Observer *o)
+{
+  auto found = std::find(observers.begin(), observers.end(), o);
+  if (found != observers.end())
+  {
+    (*found)->target = nullptr;
+    observers.erase(found);
+  }
+}
+
+void MapView::notifyObservers(MapView::Observer::ChangeType changeType) const
+{
+  switch (changeType)
+  {
+  case Observer::ChangeType::Viewport:
+    for (auto observer : observers)
+    {
+      observer->viewportChanged(viewport);
+    }
+    break;
+  }
 }
 
 /*
