@@ -32,13 +32,9 @@ public:
   void translate(WorldPosition delta);
   void translateZ(int z);
 
-  void updateZoom(ScreenPosition cursorPos);
-
-  void zoomIn();
-
-  void zoomOut();
-
-  void resetZoom();
+  void zoomIn(ScreenPosition zoomOrigin);
+  void zoomOut(ScreenPosition zoomOrigin);
+  void resetZoom(ScreenPosition zoomOrigin);
 
   inline constexpr long x() const
   {
@@ -55,21 +51,21 @@ public:
 
 private:
   int zoomStep;
-  bool zoomChanged;
 
   float _zoomFactor;
   WorldPosition _position;
 
-  void setZoomStep(int zoomStep);
+  void updateZoom(ScreenPosition cursorPos);
+  void setZoomStep(int zoomStep, ScreenPosition zoomOrigin);
 };
 
 inline void Camera::setX(long x)
 {
-  _position.x = x;
+  _position.x = std::max(x, 0L);
 }
 inline void Camera::setY(long y)
 {
-  _position.y = y;
+  _position.y = std::max(y, 0L);
 }
 
 inline float Camera::zoomFactor() const

@@ -138,6 +138,8 @@ int runApp(int argc, char *argv[])
     app.loadStyleSheet("default");
     app.loadGameData();
 
+    MainWindow mainWindow;
+
     QVulkanInstance instance;
 
     instance.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
@@ -145,17 +147,15 @@ int runApp(int argc, char *argv[])
     if (!instance.create())
         qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
 
-    auto mapView = std::make_shared<MapView>();
+    VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
+    vulkanWindow->setVulkanInstance(&instance);
+
+    MapView *mapView = vulkanWindow->getMapView();
     MapView::MouseAction::RawItem action;
     action.serverId = 6217;
     mapView->setMouseAction(action);
 
-    makeTestMap(mapView.get());
-
-    MainWindow mainWindow;
-
-    VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, mapView);
-    vulkanWindow->setVulkanInstance(&instance);
+    makeTestMap(mapView);
 
     app.setVulkanWindow(vulkanWindow);
 

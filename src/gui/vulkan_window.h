@@ -24,7 +24,6 @@ public:
   public:
     ContextMenu(VulkanWindow *window, QWidget *widget);
 
-    bool event(QEvent *e) override;
     QRect relativeGeometry() const;
     QRect localGeometry() const;
 
@@ -37,7 +36,7 @@ public:
     bool selfClicked(QPoint pos) const;
   };
 
-  VulkanWindow(std::shared_ptr<MapView> mapView);
+  VulkanWindow(std::unique_ptr<MapView> mapView);
 
   QVulkanWindowRenderer *createRenderer() override;
 
@@ -70,7 +69,7 @@ private:
 
   void onVisibilityChanged(QWindow::Visibility visibility);
 
-  std::shared_ptr<MapView> mapView;
+  std::unique_ptr<MapView> mapView;
 
   // std::unique_ptr<TriangleRenderer> renderer;
   MapRenderer *renderer = nullptr;

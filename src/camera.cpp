@@ -4,35 +4,30 @@
 
 constexpr int MinZoomStep = 0;
 constexpr int MaxZoomStep = 20;
+constexpr int DefaultZoomStep = (MaxZoomStep - MinZoomStep) / 2;
 
 Camera::Camera()
 		: floor(7),
-			zoomStep(10),
-			zoomChanged(false),
+			zoomStep(DefaultZoomStep),
 			_zoomFactor(1.0f),
 			_position(0.0, 0.0)
 {
 }
 
-void Camera::updateZoom(ScreenPosition cursorPos)
+void Camera::updateZoom(ScreenPosition zoomOrigin)
 {
-	if (!zoomChanged)
-		return;
-
-	zoomChanged = false;
-	int cursorX = cursorPos.x;
-	int cursorY = cursorPos.y;
+	auto [originX, originY] = zoomOrigin;
 
 	float n = 0.1f;
 	float newZoomFactor = n * exp(log(1 / n) / 10 * zoomStep);
 
 	WorldPosition newPos(this->_position);
 
-	newPos.x += cursorX / _zoomFactor;
-	newPos.x -= cursorX / newZoomFactor;
+	newPos.x += originX / _zoomFactor;
+	newPos.x -= originX / newZoomFactor;
 
-	newPos.y += cursorY / _zoomFactor;
-	newPos.y -= cursorY / newZoomFactor;
+	newPos.y += originY / _zoomFactor;
+	newPos.y -= originY / newZoomFactor;
 
 	this->setPosition(newPos);
 
@@ -51,29 +46,30 @@ void Camera::translate(WorldPosition delta)
 
 void Camera::translateZ(int z)
 {
-	floor = static_cast<float>(std::clamp(static_cast<int>(floor + z), 0, 15));
+	floor = static_cast<float>(std::clamp(static_cast<int>(floor + z), 0, MAP_LAYERS - 1));
 }
 
-void Camera::zoomIn()
+void Camera::zoomIn(ScreenPosition zoomOrigin)
 {
-	setZoomStep(this->zoomStep + 1);
+	setZoomStep(this->zoomStep + 1, zoomOrigin);
 }
 
-void Camera::zoomOut()
+void Camera::zoomOut(ScreenPosition zoomOrigin)
 {
-	setZoomStep(this->zoomStep - 1);
+	setZoomStep(this->zoomStep - 1, zoomOrigin);
 }
 
-void Camera::resetZoom()
+void Camera::resetZoom(ScreenPosition zoomOrigin)
 {
-	setZoomStep(10);
+	setZoomStep(DefaultZoomStep, zoomOrigin);
 }
 
-void Camera::setZoomStep(int zoomStep)
+void Camera::setZoomStep(int zoomStep, ScreenPosition zoomOrigin)
 {
-	if (this->zoomStep != zoomStep)
+	int inZoomStep = std::clamp(zoomStep, MinZoomStep, MaxZoomStep);
+	if (this->zoomStep != inZoomStep)
 	{
-		this->zoomStep = std::clamp(zoomStep, MinZoomStep, MaxZoomStep);
-		zoomChanged = true;
+		this->zoomStep = inZoomStep;
+		updateZoom(zoomOrigin);
 	}
 }

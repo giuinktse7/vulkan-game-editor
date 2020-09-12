@@ -111,7 +111,8 @@
     "qmimedata": "cpp",
     "qwidgetaction": "cpp",
     "qwidget": "cpp",
-    "qscrollbar": "cpp"
+    "qscrollbar": "cpp",
+    "qstyleoptionslider": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

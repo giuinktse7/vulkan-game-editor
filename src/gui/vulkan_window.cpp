@@ -18,15 +18,15 @@
 
 #include "../qt/logging.h"
 
-VulkanWindow::VulkanWindow(std::shared_ptr<MapView> mapView)
-    : mapView(mapView), scrollAngleBuffer(0)
+VulkanWindow::VulkanWindow(std::unique_ptr<MapView> mapView)
+    : mapView(std::move(mapView)), scrollAngleBuffer(0)
 {
-  connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { mapView->zoom(scrollDelta); });
+  connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
   connect(this, &VulkanWindow::mousePosEvent, [=](util::Point<float> mousePos) {
     int x = static_cast<int>(std::round(mousePos.x()));
     int y = static_cast<int>(std::round(mousePos.y()));
 
-    mapView->mouseMoveEvent(ScreenPosition(x, y));
+    this->mapView->mouseMoveEvent(ScreenPosition(x, y));
   });
 }
 
@@ -154,20 +154,16 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
   switch (e->key())
   {
   case Qt::Key_Left:
-    // mapView->panCameraX(-speed);
-    emit panEvent(-speed, 0);
+    mapView->translateX(-speed);
     break;
   case Qt::Key_Right:
-    // mapView->panCameraX(speed);
-    emit panEvent(speed, 0);
+    mapView->translateX(speed);
     break;
   case Qt::Key_Up:
-    // mapView->panCameraY(-speed);
-    emit panEvent(0, -speed);
+    mapView->translateY(-speed);
     break;
   case Qt::Key_Down:
-    // mapView->panCameraY(speed);
-    emit panEvent(0, speed);
+    mapView->translateY(speed);
     break;
   case Qt::Key_0:
     if (e->modifiers().testFlag(Qt::KeyboardModifier::ControlModifier))
@@ -216,19 +212,6 @@ glm::mat4 VulkanWindow::projectionMatrix()
 
 VulkanWindow::ContextMenu::ContextMenu(VulkanWindow *window, QWidget *widget) : QMenu(widget), window(window)
 {
-}
-
-bool VulkanWindow::ContextMenu::event(QEvent *e)
-{
-  if (e->type() == QEvent::Type::MouseButtonPress)
-  {
-    VME_LOG_D("QEvent::Type::MouseButtonPress");
-    // return window->event(e);
-  }
-  else
-  {
-  }
-  return QWidget::event(e);
 }
 
 bool VulkanWindow::ContextMenu::selfClicked(QPoint pos) const

@@ -32,6 +32,7 @@
   the correct window/widget focus.
 - [x] Scroll the map using scroll bars
 - [ ] Handle map keyboard events through the scrollbar widget
+- [x] Update scroll bar position when zoom changes
 
 ## General
 
