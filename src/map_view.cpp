@@ -167,7 +167,12 @@ void MapView::setViewportSize(int width, int height)
 
 void MapView::mouseMoveEvent(ScreenPosition mousePos)
 {
-  this->_mousePos = mousePos;
+  setMousePos(mousePos);
+}
+
+void MapView::setMousePos(const ScreenPosition pos)
+{
+  this->_mousePos = pos;
 }
 
 void MapView::rawItemSelectedEvent(uint16_t serverId)

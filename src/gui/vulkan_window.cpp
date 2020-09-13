@@ -260,6 +260,11 @@ bool VulkanWindow::event(QEvent *ev)
     break;
   case QEvent::Enter:
     mapView->showPreviewCursor = true;
+    {
+      auto pos = mapFromGlobal(QCursor::pos());
+      mapView->setMousePos(ScreenPosition(pos.x(), pos.y()));
+    }
+
     break;
   default:
     break;

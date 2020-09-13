@@ -51,7 +51,7 @@ public:
 
 	MapView();
 
-	bool showPreviewCursor = true;
+	bool showPreviewCursor = false;
 
 	EditorHistory history;
 
@@ -216,6 +216,8 @@ public:
 	{
 		return _mousePos;
 	}
+
+	void setMousePos(const ScreenPosition pos);
 
 	void addObserver(MapView::Observer *observer);
 	void removeObserver(MapView::Observer *observer);
