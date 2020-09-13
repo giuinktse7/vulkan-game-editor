@@ -82,7 +82,7 @@ namespace util
 	};
 	// explicit deduction guide (not needed as of C++20)
 	template <class... Ts>
-	overloaded(Ts...)->overloaded<Ts...>;
+	overloaded(Ts...) -> overloaded<Ts...>;
 
 	template <typename T>
 	struct Rectangle
@@ -149,4 +149,11 @@ inline constexpr void util::Size::setWidth(int width) noexcept
 inline constexpr void util::Size::setHeight(int height) noexcept
 {
 	h = height;
+}
+
+template <typename T>
+inline std::ostream &operator<<(std::ostream &os, const util::Point<T> &pos)
+{
+	os << "{ x=" << pos.x() << ', y=' << pos.y() << ' }';
+	return os;
 }
