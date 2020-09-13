@@ -51,6 +51,8 @@ public:
 
 	MapView();
 
+	bool showPreviewCursor = true;
+
 	EditorHistory history;
 
 	Selection selection;
@@ -100,6 +102,16 @@ public:
 	void finishMoveSelection(const Position moveDestination);
 
 	void addItem(const Position position, uint16_t id);
+
+	/*
+		Return the position on the map for the 'point'.
+		A point (0, 0) corresponds to the map position (0, 0, mapViewZ).
+	*/
+	template <typename T>
+	Position toPosition(util::Point<T> point) const
+	{
+		return ScreenPosition(point.x(), point.y()).toPos(*this);
+	}
 
 	/* Note: The indices must be in descending order (std::greater), because
 		otherwise the wrong items could be removed.

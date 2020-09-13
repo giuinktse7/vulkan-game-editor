@@ -265,10 +265,12 @@ void MapRenderer::drawMap()
   // Render current mouse action
   std::visit(util::overloaded{
                  [this](const MapView::MouseAction::RawItem &action) {
-                   this->drawPreviewCursor(action.serverId);
+                   if (this->mapView->showPreviewCursor)
+                   {
+                     this->drawPreviewCursor(action.serverId);
+                   }
                  },
-                 [](const std::monostate) {},
-                 // Do nothing},
+                 [](const std::monostate) { /* Empty */ },
                  [](const auto &) {
                    ABORT_PROGRAM("Unknown change!");
                  }},
