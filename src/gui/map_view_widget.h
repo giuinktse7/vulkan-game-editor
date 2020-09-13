@@ -36,6 +36,9 @@ public:
   // From MapView::Observer
   void viewportChanged(const Viewport &viewport) override;
 
+signals:
+  void viewportChangedEvent(const Viewport &viewport);
+
 protected:
   void mousePressEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;

@@ -7,8 +7,10 @@
 QT_BEGIN_NAMESPACE
 class QPlainTextEdit;
 class QLayout;
+class QLabel;
 class QTabWidget;
 class QPushButton;
+class BorderLayout;
 QT_END_NAMESPACE
 
 #include "vulkan_window.h"
@@ -30,12 +32,16 @@ public slots:
 
 private:
   // UI
-  QLayout *rootLayout;
+  BorderLayout *rootLayout;
   QTabWidget *mapTabs;
+
+  QLabel *positionStatus;
 
   void experimentLayout();
   void initializeUI();
 
   QMenuBar *createMenuBar();
   void createMapTabArea();
+
+  // void updatePositionText();
 };

@@ -127,6 +127,9 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *e)
   auto pos = e->windowPos();
   util::Point<float> mousePos(pos.x(), pos.y());
   emit mousePosEvent(mousePos);
+
+  e->ignore();
+  QVulkanWindow::mouseMoveEvent(e);
 }
 
 void VulkanWindow::wheelEvent(QWheelEvent *event)
@@ -150,28 +153,18 @@ void VulkanWindow::wheelEvent(QWheelEvent *event)
 
 void VulkanWindow::keyPressEvent(QKeyEvent *e)
 {
-  int speed = 32;
   switch (e->key())
   {
   case Qt::Key_Left:
-    mapView->translateX(-speed);
-    break;
   case Qt::Key_Right:
-    mapView->translateX(speed);
-    break;
   case Qt::Key_Up:
-    mapView->translateY(-speed);
-    break;
   case Qt::Key_Down:
-    mapView->translateY(speed);
-    break;
-  case Qt::Key_0:
-    if (e->modifiers().testFlag(Qt::KeyboardModifier::ControlModifier))
-    {
-      mapView->resetZoom();
-    }
+    e->ignore();
+    emit keyPressedEvent(e);
     break;
   default:
+    e->ignore();
+    QVulkanWindow::keyPressEvent(e);
     break;
   }
 }
@@ -256,4 +249,22 @@ QRect VulkanWindow::ContextMenu::relativeGeometry() const
   VME_LOG_D(mapToParent(p));
 
   return geometry();
+}
+
+bool VulkanWindow::event(QEvent *ev)
+{
+  switch (ev->type())
+  {
+  case QEvent::Leave:
+    mapView->showPreviewCursor = false;
+    break;
+  case QEvent::Enter:
+    mapView->showPreviewCursor = true;
+    break;
+  default:
+    break;
+  }
+
+  ev->ignore();
+  return QVulkanWindow::event(ev);
 }

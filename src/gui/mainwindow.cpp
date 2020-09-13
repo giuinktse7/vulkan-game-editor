@@ -31,7 +31,27 @@ QLabel *itemImage(uint16_t serverId)
 
 void MainWindow::addMapTab(VulkanWindow &vulkanWindow)
 {
-  QWidget *widget = new QtMapViewWidget(&vulkanWindow);
+  QtMapViewWidget *widget = new QtMapViewWidget(&vulkanWindow);
+  connect(&vulkanWindow, &VulkanWindow::mousePosEvent, [this, &vulkanWindow](util::Point<float> mousePos) {
+    Position pos = vulkanWindow.getMapView()->toPosition(mousePos);
+
+    std::ostringstream s;
+    s << pos;
+
+    QString text = QString::fromStdString(s.str());
+    this->positionStatus->setText(text);
+  });
+
+  connect(widget, &QtMapViewWidget::viewportChangedEvent, [this, &vulkanWindow](const Viewport &viewport) {
+    MapView *mapView = vulkanWindow.getMapView();
+    Position pos = mapView->mousePos().toPos(*mapView);
+
+    std::ostringstream s;
+    s << pos;
+
+    QString text = QString::fromStdString(s.str());
+    this->positionStatus->setText(text);
+  });
 
   mapTabs->addTab(widget, "untitled.otbm");
 }
@@ -39,9 +59,6 @@ void MainWindow::addMapTab(VulkanWindow &vulkanWindow)
 void MainWindow::initializeUI()
 {
   createMapTabArea();
-
-  BorderLayout *borderLayout = new BorderLayout;
-  rootLayout = borderLayout;
 
   QMenuBar *menu = createMenuBar();
   rootLayout->setMenuBar(menu);
@@ -58,9 +75,9 @@ void MainWindow::initializeUI()
   model->populate(std::move(data));
 
   listView->setModel(model);
-  borderLayout->addWidget(listView, BorderLayout::Position::West);
+  rootLayout->addWidget(listView, BorderLayout::Position::West);
 
-  borderLayout->addWidget(mapTabs, BorderLayout::Position::Center);
+  rootLayout->addWidget(mapTabs, BorderLayout::Position::Center);
 
   QSlider *slider = new QSlider;
   slider->setMinimum(0);
@@ -68,12 +85,24 @@ void MainWindow::initializeUI()
   slider->setSingleStep(1);
   slider->setPageStep(5);
 
-  borderLayout->addWidget(slider, BorderLayout::Position::East);
+  rootLayout->addWidget(slider, BorderLayout::Position::East);
+
+  QWidget *bottomStatusBar = new QWidget;
+  QHBoxLayout *bottomLayout = new QHBoxLayout;
+  bottomStatusBar->setLayout(bottomLayout);
+
+  positionStatus->setText("Test");
+  bottomLayout->addWidget(positionStatus);
+
+  rootLayout->addWidget(bottomStatusBar, BorderLayout::Position::South);
 
   setLayout(rootLayout);
 }
 
-MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
+MainWindow::MainWindow(QWidget *parent)
+    : QWidget(parent),
+      rootLayout(new BorderLayout),
+      positionStatus(new QLabel)
 {
   initializeUI();
 }

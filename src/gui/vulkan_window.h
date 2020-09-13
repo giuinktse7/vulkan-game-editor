@@ -13,6 +13,7 @@
 QT_BEGIN_NAMESPACE
 class QWidget;
 class QPoint;
+class QEvent;
 QT_END_NAMESPACE
 
 class VulkanWindow : public QVulkanWindow
@@ -58,7 +59,10 @@ public:
 signals:
   void scrollEvent(int degrees);
   void mousePosEvent(util::Point<float> mousePos);
-  void panEvent(int dx, int dy);
+  void keyPressedEvent(QKeyEvent *event);
+
+protected:
+  bool event(QEvent *ev) override;
 
 private:
   void mousePressEvent(QMouseEvent *event) override;

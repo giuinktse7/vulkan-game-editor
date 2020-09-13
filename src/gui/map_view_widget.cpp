@@ -109,6 +109,7 @@ QtMapViewWidget::QtMapViewWidget(VulkanWindow *window, QWidget *parent)
   vbar->setSingleStep(MapTileSize);
 
   connect(window, &VulkanWindow::keyPressedEvent, this, &QtMapViewWidget::onWindowKeyPress);
+
   // viewport()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   resize(500, 500);
 }
@@ -134,6 +135,7 @@ void QtMapViewWidget::onWindowKeyPress(QKeyEvent *event)
     break;
   }
 }
+
 // QSize QtMapViewWidget::sizeHint() const
 // {
 //   QSize s = viewport()->sizeHint();
@@ -162,19 +164,6 @@ void QtMapViewWidget::scrollContentsBy(int dx, int dy)
   vulkanWindow->getMapView()->setCameraPosition(WorldPosition(viewportX, viewportY));
 }
 
-/**
- * ************************
- * Events
- * ************************
- * ************************
- */
-// void QtMapViewWidget::resizeEvent(QResizeEvent *event)
-// {
-// horizontalScrollBar()->update();
-// verticalScrollBar()->update();
-// viewport()->update();
-// }
-
 void QtMapViewWidget::mousePressEvent(QMouseEvent *event)
 {
   VME_LOG_D("QtMapViewWidget::mousePressEvent");
@@ -190,12 +179,12 @@ void QtMapViewWidget::mouseMoveEvent(QMouseEvent *event)
   VME_LOG_D("QtMapViewWidget::mouseMoveEvent");
 }
 
-// void QtMapViewWidget::keyPressEvent(QKeyEvent *event)
-// {
-//   event->ignore();
-//   QAbstractScrollArea::keyPressEvent(event);
-//   VME_LOG_D("QtMapViewWidget::keyPressEvent");
-// }
+void QtMapViewWidget::keyPressEvent(QKeyEvent *event)
+{
+  // event->ignore();
+  // QAbstractScrollArea::keyPressEvent(event);
+  VME_LOG_D("QtMapViewWidget::keyPressEvent");
+}
 
 void QtMapViewWidget::wheelEvent(QWheelEvent *event)
 {
