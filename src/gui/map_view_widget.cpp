@@ -19,6 +19,46 @@
 #include "../qt/logging.h"
 
 constexpr int MinimumStepSizeInPixels = MapTileSize / 3;
+constexpr int DefaultSingleStepSize = MapTileSize;
+
+constexpr float MinCameraZoom = 0.1f;
+
+constexpr std::pair<float, float> singleStepKM()
+{
+  int t = DefaultSingleStepSize;
+  int a = MinCameraZoom;
+  int s = MinimumStepSizeInPixels;
+
+  float m = (a * t - s) / (a - 1);
+  float k = t - m;
+
+  return {k, m};
+}
+constexpr std::pair<float, float> km = singleStepKM();
+
+int computeSingleStep(float zoom)
+{
+  const auto [k, m] = km;
+  double step = k * zoom + m;
+  // VME_LOG_D("\n\nNext:");
+
+  // VME_LOG_D("zoom: " << zoom);
+  // VME_LOG_D("step: " << step);
+
+  // Scale zoomed out step
+  if (zoom > 1)
+  {
+    const double k = 0.2;
+    double scaledStep = step * (3 * (zoom - 1) + (std::exp(k * zoom) - std::exp(k) + 1));
+
+    // VME_LOG_D("scaledStep: " << scaledStep);
+    return static_cast<int>(std::round(scaledStep));
+  }
+  else
+  {
+    return static_cast<int>(std::round(step));
+  }
+}
 
 void QtMapViewWidget::viewportChanged(const Viewport &viewport)
 {
@@ -27,6 +67,13 @@ void QtMapViewWidget::viewportChanged(const Viewport &viewport)
 
   hbar->setPageStep(viewport.width);
   vbar->setPageStep(viewport.height);
+
+  int singleStep = computeSingleStep(viewport.zoom);
+  // VME_LOG_D("singleStep: " << singleStep);
+  hbar->setSingleStep(singleStep);
+  vbar->setSingleStep(singleStep);
+
+  emit viewportChangedEvent(viewport);
 }
 
 QtMapViewWidget::QtMapViewWidget(VulkanWindow *window, QWidget *parent)
@@ -37,11 +84,13 @@ QtMapViewWidget::QtMapViewWidget(VulkanWindow *window, QWidget *parent)
       hbar(new QtScrollBar(Qt::Horizontal, this)),
       vbar(new QtScrollBar(Qt::Vertical, this))
 {
+
   setHorizontalScrollBar(hbar);
   setVerticalScrollBar(vbar);
 
   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+
   setViewport(window->wrapInWidget());
 
   Map *map = mapView->getMap();
@@ -59,10 +108,32 @@ QtMapViewWidget::QtMapViewWidget(VulkanWindow *window, QWidget *parent)
   vbar->setMaximum(maxY);
   vbar->setSingleStep(MapTileSize);
 
+  connect(window, &VulkanWindow::keyPressedEvent, this, &QtMapViewWidget::onWindowKeyPress);
   // viewport()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   resize(500, 500);
 }
 
+void QtMapViewWidget::onWindowKeyPress(QKeyEvent *event)
+{
+  switch (event->key())
+  {
+  case Qt::Key_Left:
+    hbar->setValue(hbar->value() - hbar->singleStep());
+    break;
+  case Qt::Key_Right:
+    hbar->setValue(hbar->value() + hbar->singleStep());
+    break;
+  case Qt::Key_Up:
+    vbar->setValue(vbar->value() - vbar->singleStep());
+    break;
+  case Qt::Key_Down:
+    vbar->setValue(vbar->value() + vbar->singleStep());
+    break;
+  default:
+    event->ignore();
+    break;
+  }
+}
 // QSize QtMapViewWidget::sizeHint() const
 // {
 //   QSize s = viewport()->sizeHint();
@@ -189,6 +260,11 @@ void QtScrollBar::mousePressEvent(QMouseEvent *e)
                                                 sliderMax - sliderMin, opt.upsideDown);
     setValue(value);
   }
+
+  /*
+    After changing the scroll bar position, process the event again. Now, the scroll bar is below the mouse.
+    This lets the user drag the scroll bar directly without having to press again.
+  */
   e->ignore();
   mousePressEvent(e);
 }
