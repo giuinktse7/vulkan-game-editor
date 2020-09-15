@@ -22,6 +22,7 @@ constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
 constexpr VkClearColorValue ClearColor = {{0.0f, 0.0f, 0.0f, 1.0f}};
 
+// A rectangle is drawn using two triangles, each with 3 vertex indices.
 uint32_t IndexBufferSize = 6 * sizeof(uint16_t);
 
 namespace colors
@@ -38,10 +39,12 @@ MapRenderer::MapRenderer(VulkanWindow &window)
 {
   this->mapView = window.getMapView();
 
-  TimePoint start;
-  textureAtlasResources.resize(Appearances::textureAtlasCount());
-  usedTextureAtlasIds.reserve(Appearances::textureAtlasCount());
-  VME_LOG_D("Time to resize & reserve for texture resources: " << start.elapsedMicros());
+  size_t atlasCount = Appearances::textureAtlasCount();
+  vulkanTexturesForAppearances.resize(atlasCount);
+  activeTextureAtlasIds.reserve(atlasCount);
+
+  size_t ArbitraryGeneralReserveAmount = 8;
+  vulkanTextures.reserve(ArbitraryGeneralReserveAmount);
 }
 
 void MapRenderer::initResources()
@@ -109,14 +112,13 @@ void MapRenderer::releaseResources()
 
   indexBuffer.releaseResources();
 
-  for (const auto id : usedTextureAtlasIds)
+  for (const auto id : activeTextureAtlasIds)
   {
-    textureAtlasResources.at(id).releaseResources();
+    vulkanTexturesForAppearances.at(id).releaseResources();
   }
-  usedTextureAtlasIds.clear();
+  activeTextureAtlasIds.clear();
 
-  // TODO Handle solid color textures
-  // Texture::releaseSolidColorTextures();
+  vulkanTextures.clear();
 
   for (auto &frame : frames)
   {
@@ -403,19 +405,29 @@ void MapRenderer::drawMovingSelection()
 
 void MapRenderer::drawSelectionRectangle()
 {
-  RectangleDrawInfo info;
+  VulkanTexture::Descriptor descriptor;
+  descriptor.layout = textureDescriptorSetLayout;
+  descriptor.pool = descriptorPool;
 
   const auto [from, to] = mapView->getDragPoints().value();
+  Texture *texture = Texture::getSolidTexture(SolidColor::Blue);
+
+  auto result = vulkanTextures.find(texture);
+  if (result == vulkanTextures.end())
+  {
+    auto [res, success] = vulkanTextures.try_emplace(texture);
+    DEBUG_ASSERT(success, "Emplace failed (was the element somehow already present?)");
+    result = res;
+  }
+  VulkanTexture vulkanTexture = result->second;
+  vulkanTexture.initResources(*texture, window.vulkanInfo, descriptor);
+
+  RectangleDrawInfo info;
   info.from = from;
   info.to = to;
-  // info.texture = Items::items.getItemType(2554)->getTextureInfo();
-  info.texture = Texture::getSolidTexture(SolidColor::Blue);
+  info.texture = texture;
   info.color = colors::SeeThrough;
-
-  // TODO! This will crash right now. VkDescriptorSet (and Vulkan resources) for solid color textures must be implemented.
-  info.descriptorSet = VK_NULL_HANDLE;
-
-  ABORT_PROGRAM("Not implemented yet.");
+  info.descriptorSet = vulkanTexture.descriptorSet();
 
   currentFrame->batchDraw.addRectangle(info);
 }
@@ -433,25 +445,24 @@ void MapRenderer::updateUniformBuffer()
 
 void MapRenderer::drawItem(ObjectDrawInfo &info)
 {
-  TextureResource::Descriptor descriptor;
+  VulkanTexture::Descriptor descriptor;
   descriptor.layout = textureDescriptorSetLayout;
   descriptor.pool = descriptorPool;
 
   TextureAtlas *atlas = info.textureInfo.atlas;
+  VulkanTexture &vulkanTexture = vulkanTexturesForAppearances.at(atlas->id());
 
-  TextureResource &resource = textureAtlasResources.at(atlas->id());
-
-  if (!resource.hasResources())
+  if (!vulkanTexture.hasResources())
   {
-    if (resource.unused)
+    if (vulkanTexture.unused)
     {
-      usedTextureAtlasIds.emplace_back(atlas->id());
+      activeTextureAtlasIds.emplace_back(atlas->id());
     }
 
-    resource.initResources(*atlas, window.vulkanInfo, descriptor);
+    vulkanTexture.initResources(*atlas, window.vulkanInfo, descriptor);
   }
 
-  info.descriptorSet = resource.descriptorSet();
+  info.descriptorSet = vulkanTexture.descriptorSet();
 
   currentFrame->batchDraw.addItem(info);
 }
@@ -834,23 +845,35 @@ VkShaderModule MapRenderer::createShaderModule(const std::vector<uint8_t> &code)
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
- * TextureResource
+ * VulkanTexture
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  **/
-TextureResource::TextureResource()
+VulkanTexture::VulkanTexture()
 {
 }
 
-void TextureResource::initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, TextureResource::Descriptor descriptor)
+VulkanTexture::~VulkanTexture()
+{
+  if (hasResources())
+  {
+    releaseResources();
+  }
+}
+
+void VulkanTexture::initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, VulkanTexture::Descriptor descriptor)
+{
+  initResources(atlas.getOrCreateTexture(), vulkanInfo, descriptor);
+}
+
+void VulkanTexture::initResources(Texture &texture, VulkanInfo &vulkanInfo, VulkanTexture::Descriptor descriptor)
 {
   unused = false;
 
-  width = atlas.width;
-  height = atlas.height;
-  Texture &texture = atlas.getOrCreateTexture();
-  uint32_t sizeInBytes = atlas.sizeInBytes();
+  width = texture.width();
+  height = texture.height();
+  uint32_t sizeInBytes = texture.sizeInBytes();
 
   this->vulkanInfo = &vulkanInfo;
   auto stagingBuffer = Buffer::create(&vulkanInfo, sizeInBytes,
@@ -878,7 +901,7 @@ void TextureResource::initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo,
   _descriptorSet = createDescriptorSet(descriptor);
 }
 
-void TextureResource::releaseResources()
+void VulkanTexture::releaseResources()
 {
   DEBUG_ASSERT(hasResources(), "Tried to release resources, but there are no resources in the Texture Resource.");
   VkDevice device = vulkanInfo->device();
@@ -895,7 +918,7 @@ void TextureResource::releaseResources()
   unused = true;
 }
 
-void TextureResource::createImage(
+void VulkanTexture::createImage(
     VkFormat format,
     VkImageTiling tiling,
     VkImageUsageFlags usage,
@@ -938,7 +961,7 @@ void TextureResource::createImage(
   vulkanInfo->df->vkBindImageMemory(device, textureImage, textureImageMemory, 0);
 }
 
-void TextureResource::copyStagingBufferToImage(VkBuffer stagingBuffer)
+void VulkanTexture::copyStagingBufferToImage(VkBuffer stagingBuffer)
 {
   VkCommandBuffer commandBuffer = VulkanHelpers::beginSingleTimeCommands(vulkanInfo);
 
@@ -966,7 +989,7 @@ void TextureResource::copyStagingBufferToImage(VkBuffer stagingBuffer)
   VulkanHelpers::endSingleTimeCommands(vulkanInfo, commandBuffer);
 }
 
-VkSampler TextureResource::createSampler()
+VkSampler VulkanTexture::createSampler()
 {
   VkSamplerCreateInfo samplerInfo{};
   samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -989,7 +1012,7 @@ VkSampler TextureResource::createSampler()
   return sampler;
 }
 
-VkDescriptorSet TextureResource::createDescriptorSet(TextureResource::Descriptor descriptor)
+VkDescriptorSet VulkanTexture::createDescriptorSet(VulkanTexture::Descriptor descriptor)
 {
   VkImageView imageView = createImageView(textureImage, ColorFormat);
   VkSampler sampler = createSampler();
@@ -1024,7 +1047,7 @@ VkDescriptorSet TextureResource::createDescriptorSet(TextureResource::Descriptor
   return _descriptorSet;
 }
 
-VkImageView TextureResource::createImageView(VkImage image, VkFormat format)
+VkImageView VulkanTexture::createImageView(VkImage image, VkFormat format)
 {
   VkImageViewCreateInfo viewInfo{};
   viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

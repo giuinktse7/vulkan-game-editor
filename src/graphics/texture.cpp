@@ -25,13 +25,13 @@ constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 std::unordered_map<SolidColor, std::unique_ptr<Texture>> solidColorTextures;
 
 Texture::Texture(uint32_t width, uint32_t height, std::vector<uint8_t> &&pixels)
-    : width(width), height(height)
+    : _width(width), _height(height)
 {
   init(std::move(pixels));
 }
 
 Texture::Texture(uint32_t width, uint32_t height, uint8_t *pixels)
-    : width(width), height(height)
+    : _width(width), _height(height)
 {
   init(pixels);
 }
@@ -53,8 +53,8 @@ Texture::Texture(const std::string &filename)
     throw std::runtime_error("failed to load texture image!");
   }
 
-  this->width = static_cast<uint32_t>(width);
-  this->height = static_cast<uint32_t>(height);
+  _width = static_cast<uint32_t>(width);
+  _height = static_cast<uint32_t>(height);
 
   init(pixels);
 
@@ -63,14 +63,14 @@ Texture::Texture(const std::string &filename)
 
 void Texture::init(std::vector<uint8_t> &&pixels)
 {
-  uint64_t sizeInBytes = (static_cast<uint64_t>(width) * height) * 4;
+  uint64_t sizeInBytes = (static_cast<uint64_t>(_width) * _height) * 4;
 
   this->_pixels = std::move(pixels);
 }
 
 void Texture::init(uint8_t *pixels)
 {
-  uint64_t sizeInBytes = (static_cast<uint64_t>(width) * height) * 4;
+  uint64_t sizeInBytes = (static_cast<uint64_t>(_width) * _height) * 4;
 
   this->_pixels = std::vector<uint8_t>(pixels, pixels + sizeInBytes);
 }

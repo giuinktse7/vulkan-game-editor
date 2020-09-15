@@ -64,7 +64,11 @@ struct FrameData
 	BatchDraw batchDraw;
 };
 
-class TextureResource
+/*
+	A VulkanTexture contains Vulkan resources that are used to draw a Texture
+	to the screen.
+*/
+class VulkanTexture
 {
 public:
 	struct Descriptor
@@ -73,11 +77,13 @@ public:
 		VkDescriptorPool pool;
 	};
 
-	TextureResource();
+	VulkanTexture();
+	~VulkanTexture();
 
 	bool unused = true;
 
-	void initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, TextureResource::Descriptor descriptor);
+	void initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, VulkanTexture::Descriptor descriptor);
+	void initResources(Texture &texture, VulkanInfo &vulkanInfo, VulkanTexture::Descriptor descriptor);
 	void releaseResources();
 
 	inline bool hasResources() const
@@ -99,7 +105,7 @@ private:
 	VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
 	VkDescriptorSet _descriptorSet = VK_NULL_HANDLE;
 
-	VkDescriptorSet createDescriptorSet(TextureResource::Descriptor descriptor);
+	VkDescriptorSet createDescriptorSet(VulkanTexture::Descriptor descriptor);
 	void copyStagingBufferToImage(VkBuffer stagingBuffer);
 	VkImageView createImageView(VkImage image, VkFormat format);
 	void createImage(VkFormat format,
@@ -152,7 +158,7 @@ private:
 
 	VkFormat colorFormat;
 
-	FrameData *currentFrame;
+	FrameData *currentFrame = nullptr;
 
 	VkRenderPass renderPass;
 
@@ -164,8 +170,15 @@ private:
 	VkDescriptorSetLayout uboDescriptorSetLayout = 0;
 	VkDescriptorSetLayout textureDescriptorSetLayout;
 
-	std::vector<uint32_t> usedTextureAtlasIds;
-	std::vector<TextureResource> textureAtlasResources;
+	// Vulkan texture resources
+	std::vector<uint32_t> activeTextureAtlasIds;
+	std::vector<VulkanTexture> vulkanTexturesForAppearances;
+	/*
+		Resources for general textures such as solid color textures (non-sprites)
+
+		NOTE: Textures from TextureAtlas class should be stored in 'vulkanTexturesForAppearances'.
+	*/
+	std::unordered_map<Texture *, VulkanTexture> vulkanTextures;
 
 	QVulkanDeviceFunctions *devFuncs = nullptr;
 

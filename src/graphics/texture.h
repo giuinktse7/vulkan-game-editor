@@ -34,8 +34,8 @@ public:
   Texture(uint32_t width, uint32_t height, std::vector<uint8_t> &&pixels);
 
   TextureWindow getTextureWindow();
-  inline int getWidth() const;
-  inline int getHeight() const;
+  inline int width() const;
+  inline int height() const;
 
   std::vector<uint8_t> copyPixels() const;
   inline const std::vector<uint8_t> &pixels() const
@@ -43,14 +43,16 @@ public:
     return _pixels;
   }
 
+  inline uint32_t sizeInBytes() const;
+
   static Texture *getSolidTexture(SolidColor color);
   static Texture &getOrCreateSolidTexture(SolidColor color);
 
 private:
   std::vector<uint8_t> _pixels;
 
-  uint32_t width;
-  uint32_t height;
+  uint32_t _width;
+  uint32_t _height;
 
   uint32_t mipLevels = 1;
 
@@ -58,11 +60,17 @@ private:
   void init(std::vector<uint8_t> &&pixels);
 };
 
-inline int Texture::getWidth() const
+inline int Texture::width() const
 {
-  return width;
+  return _width;
 }
-inline int Texture::getHeight() const
+
+inline int Texture::height() const
 {
-  return height;
+  return _height;
+}
+
+inline uint32_t Texture::sizeInBytes() const
+{
+  return _width * _height * 4;
 }
