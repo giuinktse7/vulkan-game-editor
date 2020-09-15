@@ -2,26 +2,45 @@
 
 #include <vulkan/vulkan.h>
 
+#include "vulkan_helpers.h"
+
 struct BoundBuffer
 {
 	BoundBuffer();
-	BoundBuffer(VkBuffer buffer, VkDeviceMemory deviceMemory);
+	BoundBuffer(VulkanInfo *vulkanInfo, VkDeviceSize size, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags propertyFlags);
+
 	BoundBuffer(const BoundBuffer &other) = delete;
 	BoundBuffer &operator=(const BoundBuffer &other) = delete;
 
 	BoundBuffer(BoundBuffer &&other) noexcept;
 	BoundBuffer &operator=(BoundBuffer &&other) noexcept;
 
+	~BoundBuffer();
+
+	VulkanInfo *vulkanInfo = nullptr;
+
 	VkBuffer buffer = nullptr;
 	VkDeviceMemory deviceMemory = nullptr;
 
-	~BoundBuffer();
+	VkDeviceSize size = 0;
+	VkBufferUsageFlags usageFlags = 0;
+	VkMemoryPropertyFlags propertyFlags = 0;
+
+	void initResources(VulkanInfo *vulkanInfo);
+	void releaseResources();
+
+	bool hasResources() const;
+
+	inline QVulkanDeviceFunctions *devFuncs() const
+	{
+		return vulkanInfo->df;
+	}
 };
 
 namespace Buffer
 {
-	BoundBuffer create(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
-	void copy(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+	BoundBuffer create(VulkanInfo *vulkanInfo, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+	void copy(VulkanInfo *vulkanInfo, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
-	void copyToMemory(VkDeviceMemory bufferMemory, uint8_t *data, VkDeviceSize size);
+	void copyToMemory(VulkanInfo *vulkanInfo, VkDeviceMemory bufferMemory, const uint8_t *data, VkDeviceSize size);
 } // namespace Buffer

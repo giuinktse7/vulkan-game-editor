@@ -3,106 +3,149 @@
 #include <stdexcept>
 #include "vulkan_helpers.h"
 
+#include "../debug.h"
+
 BoundBuffer::BoundBuffer()
-    : buffer(VK_NULL_HANDLE), deviceMemory(VK_NULL_HANDLE)
+    : vulkanInfo(nullptr), buffer(VK_NULL_HANDLE), deviceMemory(VK_NULL_HANDLE)
 {
 }
-BoundBuffer::BoundBuffer(VkBuffer buffer, VkDeviceMemory deviceMemory)
-    : buffer(buffer), deviceMemory(deviceMemory)
+
+BoundBuffer::BoundBuffer(VulkanInfo *vulkanInfo, VkDeviceSize size, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags propertyFlags)
+    : vulkanInfo(vulkanInfo), size(size), usageFlags(usageFlags), propertyFlags(propertyFlags)
 {
 }
 
 BoundBuffer::BoundBuffer(BoundBuffer &&other) noexcept
-    : buffer(other.buffer), deviceMemory(other.deviceMemory)
+    : vulkanInfo(other.vulkanInfo),
+      buffer(other.buffer),
+      deviceMemory(other.deviceMemory),
+      size(other.size),
+      usageFlags(other.usageFlags),
+      propertyFlags(other.propertyFlags)
 {
+  other.vulkanInfo = nullptr;
+
   other.buffer = VK_NULL_HANDLE;
   other.deviceMemory = VK_NULL_HANDLE;
+
+  other.size = 0;
+  other.usageFlags = 0;
+  other.propertyFlags = 0;
 }
 
 BoundBuffer &BoundBuffer::operator=(BoundBuffer &&other) noexcept
 {
   buffer = other.buffer;
   deviceMemory = other.deviceMemory;
+  vulkanInfo = other.vulkanInfo;
+  size = other.size;
+  usageFlags = other.usageFlags;
+  propertyFlags = other.propertyFlags;
 
   other.buffer = VK_NULL_HANDLE;
   other.deviceMemory = VK_NULL_HANDLE;
+  other.vulkanInfo = nullptr;
+
+  other.size = 0;
+  other.usageFlags = 0;
+  other.propertyFlags = 0;
 
   return *this;
 }
 
 BoundBuffer::~BoundBuffer()
 {
-  if (buffer != VK_NULL_HANDLE)
-  {
-    g_vk->vkDestroyBuffer(g_window->device(), buffer, nullptr);
-    buffer = VK_NULL_HANDLE;
-  }
-  if (deviceMemory != VK_NULL_HANDLE)
-  {
-    g_vk->vkFreeMemory(g_window->device(), deviceMemory, nullptr);
-    deviceMemory = VK_NULL_HANDLE;
-  }
+  releaseResources();
 }
 
-BoundBuffer Buffer::create(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+void BoundBuffer::initResources(VulkanInfo *vulkanInfo)
 {
-  VkDevice device = g_window->device();
-
-  VkBuffer buffer;
-  VkDeviceMemory bufferMemory;
+  DEBUG_ASSERT(size != 0 && usageFlags != 0 && propertyFlags != 0, "Invalid BoundBuffer state. Cannot initialize resources.");
+  this->vulkanInfo = vulkanInfo;
+  VkDevice device = vulkanInfo->device();
 
   VkBufferCreateInfo bufferInfo{};
   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferInfo.size = size;
-  bufferInfo.usage = usage;
+  bufferInfo.usage = usageFlags;
   bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  if (g_vk->vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+  if (devFuncs()->vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
   {
     throw std::runtime_error("Failed to create buffer!");
   }
 
   VkMemoryRequirements memRequirements;
-  g_vk->vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+  devFuncs()->vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
 
   VkMemoryAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memRequirements.size;
-  allocInfo.memoryTypeIndex = VulkanHelpers::findMemoryType(g_window->physicalDevice(), memRequirements.memoryTypeBits, properties);
+  allocInfo.memoryTypeIndex = VulkanHelpers::findMemoryType(vulkanInfo->physicalDevice(), memRequirements.memoryTypeBits, propertyFlags);
 
-  if (g_vk->vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+  if (devFuncs()->vkAllocateMemory(device, &allocInfo, nullptr, &deviceMemory) != VK_SUCCESS)
   {
     throw std::runtime_error("Failed to allocate buffer memory!");
   }
 
-  g_vk->vkBindBufferMemory(device, buffer, bufferMemory, 0);
-
-  return BoundBuffer(buffer, bufferMemory);
+  devFuncs()->vkBindBufferMemory(device, buffer, deviceMemory, 0);
 }
 
-void Buffer::copy(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+void BoundBuffer::releaseResources()
 {
-  VkCommandBuffer commandBuffer = VulkanHelpers::beginSingleTimeCommands();
+  if (vulkanInfo != nullptr)
+  {
+    if (buffer != VK_NULL_HANDLE)
+    {
+      devFuncs()->vkDestroyBuffer(vulkanInfo->device(), buffer, nullptr);
+      buffer = VK_NULL_HANDLE;
+    }
+    if (deviceMemory != VK_NULL_HANDLE)
+    {
+      devFuncs()->vkFreeMemory(vulkanInfo->device(), deviceMemory, nullptr);
+      deviceMemory = VK_NULL_HANDLE;
+    }
+
+    vulkanInfo = nullptr;
+  }
+}
+
+bool BoundBuffer::hasResources() const
+{
+  return vulkanInfo != nullptr;
+}
+
+BoundBuffer Buffer::create(VulkanInfo *vulkanInfo, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+{
+  BoundBuffer boundBuffer(vulkanInfo, size, usage, properties);
+  boundBuffer.initResources(vulkanInfo);
+
+  return boundBuffer;
+}
+
+void Buffer::copy(VulkanInfo *vulkanInfo, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+{
+  VkCommandBuffer commandBuffer = VulkanHelpers::beginSingleTimeCommands(vulkanInfo);
 
   VkBufferCopy copyRegion{};
   copyRegion.size = size;
-  g_vk->vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+  vulkanInfo->df->vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-  VulkanHelpers::endSingleTimeCommands(commandBuffer);
+  VulkanHelpers::endSingleTimeCommands(vulkanInfo, commandBuffer);
 }
 
 /*
   Copies the data to GPU memory.
 */
-void Buffer::copyToMemory(VkDeviceMemory bufferMemory, uint8_t *data, VkDeviceSize size)
+void Buffer::copyToMemory(VulkanInfo *vulkanInfo, VkDeviceMemory bufferMemory, const uint8_t *data, VkDeviceSize size)
 {
-  VkDevice device = g_window->device();
+  VkDevice device = vulkanInfo->device();
   void *mapped = nullptr;
   // vkMapMemory allows us to access the memory at the VkDeviceMemory.
-  g_vk->vkMapMemory(device, bufferMemory, 0, size, 0, &mapped);
+  vulkanInfo->df->vkMapMemory(device, bufferMemory, 0, size, 0, &mapped);
 
   memcpy(mapped, data, size);
 
   // After copying the data to the mapped memory, we unmap it again.
-  g_vk->vkUnmapMemory(device, bufferMemory);
+  vulkanInfo->df->vkUnmapMemory(device, bufferMemory);
 }

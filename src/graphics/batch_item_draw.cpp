@@ -5,15 +5,16 @@
 
 constexpr int MaxDrawOffsetPixels = 24;
 
-BatchDraw::BatchDraw()
-    : commandBuffer(nullptr), batchIndex(0)
+BatchDraw::BatchDraw(VulkanInfo *vulkanInfo)
+    : vulkanInfo(vulkanInfo), commandBuffer(nullptr), batchIndex(0)
 {
 }
 
-Batch::Batch()
+Batch::Batch(VulkanInfo *vulkanInfo)
     : vertexCount(0), currentDescriptorSet(nullptr), valid(true)
 {
   this->stagingBuffer = Buffer::create(
+      vulkanInfo,
       BatchDeviceSize,
       VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -21,6 +22,7 @@ Batch::Batch()
   // std::cout << "Creating buffer at 0x" << std::hex << this->stagingBuffer.deviceMemory << std::endl;
 
   this->buffer = Buffer::create(
+      vulkanInfo,
       BatchDeviceSize,
       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -65,9 +67,10 @@ void Batch::invalidate()
 
 void Batch::reset()
 {
-    if (current != nullptr) {
-        unmapStagingBuffer();
-    }
+  if (current != nullptr)
+  {
+    unmapStagingBuffer();
+  }
 
   this->vertexCount = 0;
   this->descriptorIndices.clear();
@@ -80,7 +83,8 @@ void Batch::reset()
 void Batch::mapStagingBuffer()
 {
   void *data;
-  g_vk->vkMapMemory(g_window->device(), this->stagingBuffer.deviceMemory, 0, BatchDeviceSize, 0, &data);
+
+  devFuncs()->vkMapMemory(stagingBuffer.vulkanInfo->device(), stagingBuffer.deviceMemory, 0, BatchDeviceSize, 0, &data);
   this->vertices = reinterpret_cast<Vertex *>(data);
   this->current = vertices;
 
@@ -91,7 +95,7 @@ void Batch::unmapStagingBuffer()
 {
   DEBUG_ASSERT(current != nullptr, "Tried to unmap an item batch that has not been mapped.");
 
-  g_vk->vkUnmapMemory(g_window->device(), this->stagingBuffer.deviceMemory);
+  devFuncs()->vkUnmapMemory(stagingBuffer.vulkanInfo->device(), stagingBuffer.deviceMemory);
   this->vertices = nullptr;
   this->current = nullptr;
 }
@@ -106,12 +110,12 @@ void Batch::copyStagingToDevice(VkCommandBuffer commandBuffer)
 
   VkBufferCopy copyRegion = {};
   copyRegion.size = this->vertexCount * sizeof(Vertex);
-  g_vk->vkCmdCopyBuffer(commandBuffer, stagingBuffer.buffer, buffer.buffer, 1, &copyRegion);
+  devFuncs()->vkCmdCopyBuffer(commandBuffer, stagingBuffer.buffer, buffer.buffer, 1, &copyRegion);
 }
 
 void BatchDraw::addItem(ObjectDrawInfo &info)
 {
-  auto [appearance, textureInfo, position, color, drawOffset] = info;
+  auto [appearance, textureInfo, position, color, drawOffset, descriptorSet] = info;
   auto [atlas, window] = textureInfo;
 
   WorldPosition worldPos = MapPosition{position.x + atlas->drawOffset.x, position.y + atlas->drawOffset.y}.worldPos();
@@ -132,7 +136,6 @@ void BatchDraw::addItem(ObjectDrawInfo &info)
   const glm::vec4 fragmentBounds = atlas->getFragmentBounds(window);
 
   Batch &batch = getBatch(4);
-  VkDescriptorSet descriptorSet = atlas->getDescriptorSet();
   batch.setDescriptor(descriptorSet);
 
   std::array<Vertex, 4> vertices{{
@@ -158,16 +161,15 @@ void BatchDraw::addRectangle(RectangleDrawInfo &info)
   {
     window = {0, 0, 1, 1};
     fragmentBounds = {0, 0, 1, 1};
-    batch.setDescriptor(std::get<Texture *>(info.texture)->getDescriptorSet());
   }
   else if (std::holds_alternative<TextureInfo>(info.texture))
   {
     const TextureInfo textureInfo = std::get<TextureInfo>(info.texture);
     window = textureInfo.window;
     fragmentBounds = textureInfo.atlas->getFragmentBounds(window);
-
-    batch.setDescriptor(textureInfo.atlas->getDescriptorSet());
   }
+
+  batch.setDescriptor(info.descriptorSet);
 
   auto [x1, y1] = info.from;
   auto [x2, y2] = info.to;
@@ -196,12 +198,13 @@ void BatchDraw::addRectangle(RectangleDrawInfo &info)
   batch.addVertices(vertices);
 }
 
-template <std::size_t SIZE>
-void Batch::addVertices(std::array<Vertex, SIZE> &vertexArray)
+void BatchDraw::reset()
 {
-  memcpy(this->current, &vertexArray, sizeof(vertexArray));
-  current += vertexArray.size();
-  vertexCount += static_cast<uint32_t>(vertexArray.size());
+  vulkanInfo = nullptr;
+  commandBuffer = VK_NULL_HANDLE;
+
+  batchIndex = 0;
+  batches.clear();
 }
 
 Batch &BatchDraw::getBatch() const
@@ -214,7 +217,7 @@ Batch &BatchDraw::getBatch(uint32_t requiredVertexCount) const
 {
   if (batches.empty())
   {
-    batches.emplace_back();
+    batches.emplace_back(vulkanInfo);
   }
 
   Batch &batch = batches.at(batchIndex);
@@ -232,7 +235,7 @@ Batch &BatchDraw::getBatch(uint32_t requiredVertexCount) const
 
     ++batchIndex;
     if (batchIndex == batches.size())
-      batches.emplace_back();
+      batches.emplace_back(vulkanInfo);
   }
 
   Batch &resultBatch = batches.at(batchIndex);
@@ -282,4 +285,12 @@ void BatchDraw::prepareDraw()
 std::vector<Batch> &BatchDraw::getBatches() const
 {
   return batches;
+}
+
+template <std::size_t SIZE>
+void Batch::addVertices(std::array<Vertex, SIZE> &vertexArray)
+{
+  memcpy(this->current, &vertexArray, sizeof(vertexArray));
+  current += vertexArray.size();
+  vertexCount += static_cast<uint32_t>(vertexArray.size());
 }

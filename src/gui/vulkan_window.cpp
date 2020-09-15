@@ -273,3 +273,19 @@ bool VulkanWindow::event(QEvent *ev)
   ev->ignore();
   return QVulkanWindow::event(ev);
 }
+
+void VulkanWindow::updateVulkanInfo()
+{
+  vulkanInfo.window = this;
+  vulkanInfo.df = vulkanInstance()->deviceFunctions(device());
+}
+
+VulkanInfoFromWindow::VulkanInfoFromWindow() : window(nullptr)
+{
+}
+
+VulkanInfoFromWindow::VulkanInfoFromWindow(VulkanWindow *window)
+    : window(window)
+{
+  df = window->vulkanInstance()->deviceFunctions(window->device());
+}

@@ -9,12 +9,28 @@
 #include "../map_renderer.h"
 #include "../trianglerenderer.h"
 #include "../map_view.h"
+#include "../graphics/vulkan_helpers.h"
 
 QT_BEGIN_NAMESPACE
 class QWidget;
 class QPoint;
 class QEvent;
 QT_END_NAMESPACE
+
+class VulkanInfoFromWindow : public VulkanInfo
+{
+public:
+  VulkanInfoFromWindow();
+  VulkanInfoFromWindow(VulkanWindow *window);
+
+  inline VkDevice device() const override;
+  inline VkPhysicalDevice physicalDevice() const override;
+  inline VkCommandPool graphicsCommandPool() const override;
+  inline VkQueue graphicsQueue() const override;
+  inline uint32_t graphicsQueueFamilyIndex() const override;
+
+  VulkanWindow *window;
+};
 
 class VulkanWindow : public QVulkanWindow
 {
@@ -39,7 +55,14 @@ public:
 
   VulkanWindow(std::unique_ptr<MapView> mapView);
 
+  VulkanInfoFromWindow vulkanInfo;
+  QWidget *widget = nullptr;
+
+  std::string debugName;
+
   QVulkanWindowRenderer *createRenderer() override;
+
+  void updateVulkanInfo();
 
   MapView *getMapView() const;
 
@@ -53,8 +76,6 @@ public:
 
   util::Size vulkanSwapChainImageSize() const;
   glm::mat4 projectionMatrix();
-
-  QWidget *widget = nullptr;
 
 signals:
   void scrollEvent(int degrees);
@@ -82,3 +103,28 @@ private:
   // Holds the current scroll amount. (see wheelEvent)
   int scrollAngleBuffer = 0;
 };
+
+inline VkDevice VulkanInfoFromWindow::device() const
+{
+  return window->device();
+}
+
+inline VkPhysicalDevice VulkanInfoFromWindow::physicalDevice() const
+{
+  return window->physicalDevice();
+}
+
+inline VkCommandPool VulkanInfoFromWindow::graphicsCommandPool() const
+{
+  return window->graphicsCommandPool();
+}
+
+inline VkQueue VulkanInfoFromWindow::graphicsQueue() const
+{
+  return window->graphicsQueue();
+}
+
+inline uint32_t VulkanInfoFromWindow::graphicsQueueFamilyIndex() const
+{
+  return window->graphicsQueueFamilyIndex();
+}

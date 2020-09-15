@@ -58,10 +58,55 @@ struct FrameData
 {
 	VkFramebuffer frameBuffer = nullptr;
 	VkCommandBuffer commandBuffer = nullptr;
-	BoundBuffer uniformBuffer{};
+	BoundBuffer uniformBuffer;
 	VkDescriptorSet uboDescriptorSet = nullptr;
 
 	BatchDraw batchDraw;
+};
+
+class TextureResource
+{
+public:
+	struct Descriptor
+	{
+		VkDescriptorSetLayout layout;
+		VkDescriptorPool pool;
+	};
+
+	TextureResource();
+
+	bool unused = true;
+
+	void initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, TextureResource::Descriptor descriptor);
+	void releaseResources();
+
+	inline bool hasResources() const
+	{
+		return !(textureImage == VK_NULL_HANDLE && textureImageMemory == VK_NULL_HANDLE && _descriptorSet == VK_NULL_HANDLE);
+	}
+
+	inline VkDescriptorSet descriptorSet() const
+	{
+		return _descriptorSet;
+	}
+
+private:
+	uint32_t width;
+	uint32_t height;
+
+	VulkanInfo *vulkanInfo;
+	VkImage textureImage = VK_NULL_HANDLE;
+	VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
+	VkDescriptorSet _descriptorSet = VK_NULL_HANDLE;
+
+	VkDescriptorSet createDescriptorSet(TextureResource::Descriptor descriptor);
+	void copyStagingBufferToImage(VkBuffer stagingBuffer);
+	VkImageView createImageView(VkImage image, VkFormat format);
+	void createImage(VkFormat format,
+									 VkImageTiling tiling,
+									 VkImageUsageFlags usage,
+									 VkMemoryPropertyFlags properties);
+	VkSampler createSampler();
 };
 
 class MapRenderer : public QVulkanWindowRenderer
@@ -72,9 +117,6 @@ public:
 
 	static const int TILE_SIZE = 32;
 	static const uint32_t MAX_VERTICES = 64 * 1024;
-
-	// All sprites are drawn using this index buffer
-	BoundBuffer indexBuffer;
 
 	void initResources() override;
 	void initSwapChainResources() override;
@@ -105,6 +147,9 @@ private:
 	VulkanWindow &window;
 	std::array<FrameData, 3> frames;
 
+	// All sprites are drawn using this index buffer
+	BoundBuffer indexBuffer;
+
 	VkFormat colorFormat;
 
 	FrameData *currentFrame;
@@ -119,15 +164,19 @@ private:
 	VkDescriptorSetLayout uboDescriptorSetLayout = 0;
 	VkDescriptorSetLayout textureDescriptorSetLayout;
 
-	std::vector<Texture *> activeTextures;
+	std::vector<uint32_t> usedTextureAtlasIds;
+	std::vector<TextureResource> textureAtlasResources;
+
+	QVulkanDeviceFunctions *devFuncs = nullptr;
 
 	void createRenderPass();
 	void createGraphicsPipeline();
+	VkShaderModule createShaderModule(const std::vector<uint8_t> &code);
 	void createUniformBuffers();
 	void createDescriptorPool();
 	void createDescriptorSetLayouts();
 	void createDescriptorSets();
-	void createFrameBuffers();
+	void createIndexBuffer();
 
 	void updateUniformBuffer();
 

@@ -25,6 +25,7 @@ struct ObjectDrawInfo
 	Position position;
 	glm::vec4 color{};
 	DrawOffset drawOffset = {0, 0};
+	VkDescriptorSet descriptorSet;
 };
 
 struct RectangleDrawInfo
@@ -33,6 +34,7 @@ struct RectangleDrawInfo
 	WorldPosition to;
 	glm::vec4 color{};
 	std::variant<Texture *, TextureInfo> texture;
+	VkDescriptorSet descriptorSet;
 };
 
 struct Batch
@@ -43,7 +45,7 @@ struct Batch
 		uint32_t end;
 	};
 
-	Batch();
+	Batch(VulkanInfo *vulkanInfo);
 	~Batch();
 	BoundBuffer buffer;
 	BoundBuffer stagingBuffer;
@@ -66,6 +68,11 @@ struct Batch
 
 	template <std::size_t SIZE>
 	void addVertices(std::array<Vertex, SIZE> &vertices);
+
+	inline QVulkanDeviceFunctions *devFuncs() const
+	{
+		return stagingBuffer.vulkanInfo->df;
+	}
 
 	void reset();
 
@@ -96,9 +103,10 @@ private:
 class BatchDraw
 {
 public:
+	VulkanInfo *vulkanInfo;
 	VkCommandBuffer commandBuffer;
 
-	BatchDraw();
+	BatchDraw(VulkanInfo *vulkanInfo = nullptr);
 
 	void addItem(ObjectDrawInfo &info);
 	void addRectangle(RectangleDrawInfo &info);
@@ -107,8 +115,10 @@ public:
 	std::vector<Batch> &getBatches() const;
 	void prepareDraw();
 
+	void reset();
+
 private:
-	mutable uint32_t batchIndex;
+	mutable uint32_t batchIndex = 0;
 	mutable std::vector<Batch> batches;
 
 	Batch &getBatch(uint32_t requiredVertexCount) const;

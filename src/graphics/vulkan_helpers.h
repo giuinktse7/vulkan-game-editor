@@ -10,9 +10,22 @@
 
 #include <glm/glm.hpp>
 
+class VulkanInfo
+{
+public:
+  virtual VkDevice device() const = 0;
+  virtual VkPhysicalDevice physicalDevice() const = 0;
+  virtual VkCommandPool graphicsCommandPool() const = 0;
+  virtual VkQueue graphicsQueue() const = 0;
+  virtual uint32_t graphicsQueueFamilyIndex() const = 0;
+
+  virtual ~VulkanInfo() = default;
+
+  QVulkanDeviceFunctions *df = nullptr;
+};
+
 inline QVulkanDeviceFunctions *g_vk;
 inline QVulkanFunctions *g_vkf;
-inline QVulkanWindow *g_window;
 
 struct SwapChainSupportDetails
 {
@@ -40,15 +53,11 @@ namespace VulkanHelpers
 
   uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-  void createCommandPool(VkCommandPool *commandPool, VkCommandPoolCreateFlags flags);
-  void createCommandBuffers(VkCommandBuffer *commandBuffer, uint32_t commandBufferCount, VkCommandPool &commandPool);
+  void createCommandPool(VulkanInfo *info, VkCommandPool *commandPool, VkCommandPoolCreateFlags flags);
 
-  VkCommandBuffer beginSingleTimeCommands();
-  void endSingleTimeCommands(VkCommandBuffer buffer);
+  VkCommandBuffer beginSingleTimeCommands(VulkanInfo *info);
+  void endSingleTimeCommands(VulkanInfo *info, VkCommandBuffer buffer);
   VkShaderModule createShaderModule(VkDevice device, const std::vector<uint8_t> &code);
 
-  void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
-
-  void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-
+  void transitionImageLayout(VulkanInfo *info, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 } // namespace VulkanHelpers

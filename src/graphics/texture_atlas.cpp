@@ -1,10 +1,5 @@
 #include "texture_atlas.h"
 
-#include "../file.h"
-#include "compression.h"
-
-#include "../logger.h"
-
 #pragma warning(push, 0)
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
@@ -13,7 +8,12 @@
 #include <algorithm>
 #include <iostream>
 
+#include "compression.h"
+#include "vulkan_helpers.h"
+
 #include "../debug.h"
+#include "../file.h"
+#include "../logger.h"
 
 constexpr uint32_t SPRITE_SIZE = 32;
 
@@ -23,8 +23,8 @@ constexpr uint8_t BI_BITFIELDS = 0x03;
 // See https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
 constexpr uint32_t OFFSET_OF_BMP_START_OFFSET = 10;
 
-TextureAtlas::TextureAtlas(uint32_t id, CompressedBytes &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile)
-    : id(id), sourceFile(sourceFile), texture(std::move(buffer)), width(width), height(height), firstSpriteId(firstSpriteId), lastSpriteId(id)
+TextureAtlas::TextureAtlas(uint32_t id, CompressedBytes &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, uint32_t lastSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile)
+    : _id(id), sourceFile(sourceFile), texture(std::move(buffer)), width(width), height(height), firstSpriteId(firstSpriteId), lastSpriteId(lastSpriteId)
 {
   switch (spriteLayout)
   {
@@ -69,8 +69,6 @@ TextureAtlas::TextureAtlas(uint32_t id, CompressedBytes &&buffer, uint32_t width
     drawOffset.y = 0;
     break;
   }
-
-  assert(id == lastSpriteId);
 }
 
 const TextureWindow TextureAtlas::getTextureWindow(uint32_t spriteId) const
@@ -180,17 +178,10 @@ void TextureAtlas::decompressTexture()
   DEBUG_ASSERT(std::holds_alternative<CompressedBytes>(texture), "Tried to decompress a TextureAtlas that does not contain CompressedBytes.");
 
   std::vector<uint8_t> decompressed = LZMA::decompress(std::move(std::get<CompressedBytes>(this->texture)));
-  // std::vector<uint8_t> decompressed = LZMA::decompressWithLib(std::move(std::get<CompressedBytes>(this->texture)));
-
   validateBmp(decompressed);
 
   uint32_t offset;
   std::memcpy(&offset, decompressed.data() + OFFSET_OF_BMP_START_OFFSET, sizeof(uint32_t));
-
-  // fixMagenta(decompressed, offset);
-
-  // nextN(decompressed, offset, 4);
-  // std::cout << unsigned(readU32(decompressed, offset)) << std::endl;
 
   texture = Texture(this->width, this->height, std::vector<uint8_t>(decompressed.begin() + offset, decompressed.end()));
   // VME_LOG_D("Decompressed " << this->sourceFile.string());
