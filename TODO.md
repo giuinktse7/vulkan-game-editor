@@ -2,10 +2,6 @@
 
 ## Rendering
 
-- [x]
-  Color mixes are too dark. Blend issue? Full colors look right (like 0xFFFF0000, 0xFFFF00FF, ...). But non-full colors do not (like 0xFFAA0000).
-  Clear value does not seem to affect the blend issue.
-
 ## Map Rendering
 
 - [x] Implement animation
@@ -14,27 +10,28 @@
 - [ ] BUG: Ground (and bottom stackpos items) should not be affected by tile elevation when rendered (both normally and as item preview)
 - [ ] BUG: ESC should clear selections
 - [ ] Feature?: Maybe clicking on a selected item should deselect it. If whole tile, the whole tile should maybe be deselected?
-- [x] Use mapView's mouseAction() to render the currently selected raw itemType.
 
 ## Editing functionality
 
-- [x] Implement multi-select
-- [x] Delete selected items
 - [ ] Move selected items
 - [ ] topItem **not** selected: PRESS selects.
 - [ ] topItem selected: RELEASE deselects, but ONLY if mouse has been outside of this tile since the PRESS event.
 
 ### GUI
 
-- [x] Replace Dear ImGui with QT
 - [ ]
   BUG: Minimize and then returning to the window (maximizing) does not retain
   the correct window/widget focus.
-- [x] Scroll the map using scroll bars
 - [ ] Handle map keyboard events through the scrollbar widget
-- [x] Update scroll bar position when zoom changes
+- [ ] Draggable split views. [QSplitter](https://doc.qt.io/qt-5/qsplitter.html#details).
+      Subclass [QTabBar](https://doc.qt.io/qt-5/qtabbar.html) to implement dragging of tabs. [Drag and drop](https://doc.qt.io/qt-5/dnd.html).
+
+      **Note**: Might possibly have to enable drag events on source and/or target widget. See [this](https://forum.qt.io/topic/67542/drag-tabs-between-qtabwidgets/4).
 
 ## General
 
-- [x] Refactor the TimeMeasure class into TimePoint or similar
 - [ ] System for custom keybindings
+
+## Map
+
+- [ ] Investigate whether the map can be stored more efficiently. Place to start: [quadtree](https://en.wikipedia.org/wiki/Quadtree).
