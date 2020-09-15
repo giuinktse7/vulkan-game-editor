@@ -412,6 +412,11 @@ void MapRenderer::drawSelectionRectangle()
   info.texture = Texture::getSolidTexture(SolidColor::Blue);
   info.color = colors::SeeThrough;
 
+  // TODO! This will crash right now. VkDescriptorSet (and Vulkan resources) for solid color textures must be implemented.
+  info.descriptorSet = VK_NULL_HANDLE;
+
+  ABORT_PROGRAM("Not implemented yet.");
+
   currentFrame->batchDraw.addRectangle(info);
 }
 

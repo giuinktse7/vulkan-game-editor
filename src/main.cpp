@@ -66,27 +66,27 @@ void MainApplication::setVulkanWindow(VulkanWindow *window)
 
 void MainApplication::onApplicationStateChanged(Qt::ApplicationState state)
 {
-    if (state == Qt::ApplicationState::ApplicationActive)
-    {
-        if (focusedWindow == vulkanWindow)
-        {
-            if (!vulkanWindow->isActive())
-            {
-                vulkanWindow->requestActivate();
-            }
-        }
-        else
-        {
-            bool hasFocusedWidget = focusedWindow != nullptr && focusedWindow->focusObject() == nullptr;
-            if (hasFocusedWidget)
-            {
-                if (!focusedWindow->isActive())
-                {
-                    focusedWindow->requestActivate();
-                }
-            }
-        }
-    }
+    // if (state == Qt::ApplicationState::ApplicationActive)
+    // {
+    //     if (focusedWindow == vulkanWindow)
+    //     {
+    //         if (!vulkanWindow->isActive())
+    //         {
+    //             vulkanWindow->requestActivate();
+    //         }
+    //     }
+    //     else
+    //     {
+    //         bool hasFocusedWidget = focusedWindow != nullptr && focusedWindow->focusObject() == nullptr;
+    //         if (hasFocusedWidget)
+    //         {
+    //             if (!focusedWindow->isActive())
+    //             {
+    //                 focusedWindow->requestActivate();
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 void MainApplication::onFocusWindowChanged(QWindow *window)
@@ -147,19 +147,46 @@ int runApp(int argc, char *argv[])
     if (!instance.create())
         qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
 
-    VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
-    vulkanWindow->setVulkanInstance(&instance);
+    {
+        VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
+        vulkanWindow->setVulkanInstance(&instance);
+        vulkanWindow->debugName = "Window1";
 
-    MapView *mapView = vulkanWindow->getMapView();
-    MapView::MouseAction::RawItem action;
-    action.serverId = 6217;
-    mapView->setMouseAction(action);
+        MapView *mapView = vulkanWindow->getMapView();
+        MapView::MouseAction::RawItem action;
+        action.serverId = 6217;
+        mapView->setMouseAction(action);
 
-    makeTestMap(mapView);
+        makeTestMap(mapView);
 
-    app.setVulkanWindow(vulkanWindow);
+        app.setVulkanWindow(vulkanWindow);
 
-    mainWindow.addMapTab(*vulkanWindow);
+        mainWindow.addMapTab(*vulkanWindow);
+    }
+
+    /* 
+        Another window
+    */
+    {
+        VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
+        vulkanWindow->setVulkanInstance(&instance);
+        vulkanWindow->debugName = "Window2";
+
+        MapView *mapView = vulkanWindow->getMapView();
+        MapView::MouseAction::RawItem action;
+        action.serverId = 6217;
+        mapView->setMouseAction(action);
+
+        makeTestMap(mapView);
+
+        app.setVulkanWindow(vulkanWindow);
+
+        mainWindow.addMapTab(*vulkanWindow);
+    }
+
+    /*
+        End another window
+    */
 
     mainWindow.resize(1024, 768);
     mainWindow.show();
