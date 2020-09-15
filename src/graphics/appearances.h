@@ -357,6 +357,8 @@ public:
 
   static bool isLoaded;
 
+  static size_t textureAtlasCount();
+
 private:
   static std::unordered_map<AppearanceId, Appearance> objects;
   static std::unordered_map<AppearanceId, tibia::protobuf::appearances::Appearance> outfits;

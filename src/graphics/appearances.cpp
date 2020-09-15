@@ -25,6 +25,11 @@ std::unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> Appearances::texture
 
 bool Appearances::isLoaded;
 
+size_t Appearances::textureAtlasCount()
+{
+    return textureAtlases.size();
+}
+
 void Appearances::loadAppearanceData(const std::filesystem::path path)
 {
     TimePoint start;
@@ -144,6 +149,11 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
 
     textureAtlasSpriteRanges.reserve(5000);
 
+    /* 
+      NOTE: This id (Texture atlas ID) is used to index texture resources (see MapRenderer::textureResources).
+      Because it is used to index a vector in the renderer, it has to stay within [0, amountOfTextureAtlases)
+  */
+    uint32_t id = 0;
     for (const auto &entry : catalogJson)
     {
         if (entry.at("type") == "sprite")
@@ -160,15 +170,18 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
             std::vector<uint8_t> buffer = File::read(absolutePath.string());
 
             Appearances::textureAtlases[lastSpriteId] = std::make_unique<TextureAtlas>(
-                lastSpriteId,
+                id,
                 std::move(buffer),
                 TextureAtlasSize.width,
                 TextureAtlasSize.height,
                 firstSpriteId,
+                lastSpriteId,
                 spriteType,
                 filename);
 
             Appearances::textureAtlasSpriteRanges.emplace_back<SpriteRange>({firstSpriteId, lastSpriteId});
+
+            ++id;
         }
     }
 
