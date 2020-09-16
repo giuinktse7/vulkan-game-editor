@@ -31,3 +31,34 @@ QMenu::item::selected {
 .menu-item:hover {
   background-color: #C6C6C6;
 }
+
+/* QTabBar */
+QTabWidget::pane { /* The tab widget frame */
+    border-top: 2px solid #C2C7CB;
+}
+
+QTabWidget::tab-bar {
+}
+
+/* Style the tab using the tab sub-control. Note that
+    it reads QTabBar _not_ QTabWidget */
+QTabBar::tab {
+    background: #ececec;
+    border-radius: 0px;
+    border-right: 1px solid #fff;
+    min-width: 8ex;
+    padding-top: 11px;
+    padding-bottom: 11px;
+    padding-left: 17px;
+    padding-right: 5px;
+}
+
+QTabBar::tab:selected, QTabBar::tab:hover {
+}
+
+QTabBar::tab:selected {
+  background: #fff;
+}
+
+QTabBar::tab:!selected {
+}

@@ -116,7 +116,10 @@
     "qlistview": "cpp",
     "qtabbar": "cpp",
     "qscreen": "cpp",
-    "qstyle": "cpp"
+    "qstyle": "cpp",
+    "qpushbutton": "cpp",
+    "qsvgwidget": "cpp",
+    "qstyleoptiontab": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

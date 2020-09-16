@@ -19,6 +19,7 @@
 #include "menu.h"
 #include "border_layout.h"
 #include "map_view_widget.h"
+#include "map_tab_widget.h"
 
 #include "../main.h"
 
@@ -79,15 +80,18 @@ void MainWindow::initializeUI()
   rootLayout->addWidget(listView, BorderLayout::Position::West);
 
   // rootLayout->addWidget(mapTabs, BorderLayout::Position::Center);
-  QSplitter *splitter = new QSplitter;
 
-  QListView *listview = new QListView;
-  splitter->addWidget(listview);
+  auto tabs = new MapTabWidget;
+  {
+    auto label = new QLabel("First");
+    tabs->addTabWithButton(label, "Label 1");
+  }
+  {
+    auto label = new QLabel("Second");
+    tabs->addTabWithButton(label, "Label 2");
+  }
 
-  QTreeView *treeview = new QTreeView;
-  splitter->addWidget(treeview);
-
-  rootLayout->addWidget(splitter, BorderLayout::Position::Center);
+  rootLayout->addWidget(tabs, BorderLayout::Position::Center);
 
   QSlider *slider = new QSlider;
   slider->setMinimum(0);
