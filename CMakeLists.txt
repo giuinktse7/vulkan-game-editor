@@ -42,16 +42,10 @@ find_package(glm CONFIG REQUIRED)
 find_package(pugixml CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 
-# QT
 find_package(
   Qt5
-  COMPONENTS Core
+  COMPONENTS Core Widgets Svg
   REQUIRED)
-find_package(
-  Qt5
-  COMPONENTS Widgets
-  REQUIRED)
-# End QT
 
 add_executable(
   main
@@ -162,7 +156,7 @@ add_executable(
   src/gui/menu.cpp
   src/gui/qt_util.cpp
   src/gui/vulkan_window.cpp
-  src/gui/map_view_widget.cpp
+  src/gui/map_tab_widget.cpp
   src/item.cpp
   src/items.cpp
   src/item_attribute.cpp
@@ -199,6 +193,7 @@ target_link_libraries(main PRIVATE pugixml)
 # QT
 target_link_libraries(main PUBLIC Qt::Core)
 target_link_libraries(main PUBLIC Qt::Widgets)
+target_link_libraries(main PUBLIC Qt::Svg)
 # End QT
 
 # Move required files post-build
