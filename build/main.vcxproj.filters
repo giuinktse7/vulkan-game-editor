@@ -282,6 +282,9 @@
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\vulkan_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_tab_widget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\item.h">
       <Filter>Header Files</Filter>
     </ClInclude>

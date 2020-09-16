@@ -147,42 +147,39 @@ int runApp(int argc, char *argv[])
     if (!instance.create())
         qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
 
-    {
-        VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
-        vulkanWindow->setVulkanInstance(&instance);
-        vulkanWindow->debugName = "Window1";
+    // {
+    //     VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
+    //     vulkanWindow->setVulkanInstance(&instance);
+    //     vulkanWindow->debugName = "Window1";
 
-        MapView *mapView = vulkanWindow->getMapView();
-        MapView::MouseAction::RawItem action;
-        action.serverId = 6217;
-        mapView->setMouseAction(action);
+    //     MapView *mapView = vulkanWindow->getMapView();
+    //     MapView::MouseAction::RawItem action;
+    //     action.serverId = 6217;
+    //     mapView->setMouseAction(action);
 
-        makeTestMap(mapView);
+    //     makeTestMap(mapView);
 
-        app.setVulkanWindow(vulkanWindow);
+    //     app.setVulkanWindow(vulkanWindow);
 
-        mainWindow.addMapTab(*vulkanWindow);
-    }
+    //     mainWindow.addMapTab(*vulkanWindow);
+    // }
 
-    /* 
-        Another window
-    */
-    {
-        VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
-        vulkanWindow->setVulkanInstance(&instance);
-        vulkanWindow->debugName = "Window2";
+    // {
+    //     VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
+    //     vulkanWindow->setVulkanInstance(&instance);
+    //     vulkanWindow->debugName = "Window2";
 
-        MapView *mapView = vulkanWindow->getMapView();
-        MapView::MouseAction::RawItem action;
-        action.serverId = 6217;
-        mapView->setMouseAction(action);
+    //     MapView *mapView = vulkanWindow->getMapView();
+    //     MapView::MouseAction::RawItem action;
+    //     action.serverId = 6217;
+    //     mapView->setMouseAction(action);
 
-        makeTestMap(mapView);
+    //     makeTestMap(mapView);
 
-        app.setVulkanWindow(vulkanWindow);
+    //     app.setVulkanWindow(vulkanWindow);
 
-        mainWindow.addMapTab(*vulkanWindow);
-    }
+    //     mainWindow.addMapTab(*vulkanWindow);
+    // }
 
     /*
         End another window

@@ -112,7 +112,11 @@
     "qwidgetaction": "cpp",
     "qwidget": "cpp",
     "qscrollbar": "cpp",
-    "qstyleoptionslider": "cpp"
+    "qstyleoptionslider": "cpp",
+    "qlistview": "cpp",
+    "qtabbar": "cpp",
+    "qscreen": "cpp",
+    "qstyle": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

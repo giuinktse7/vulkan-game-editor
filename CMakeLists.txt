@@ -20,10 +20,8 @@ endif()
 
 set(CMAKE_PREFIX_PATH ${QT_CMAKE_FOLDER})
 
-# set(ARCH "-target x86_64-w64-mingw32")
-# set(CMAKE_ASM_FLAGS "${ARCH}")
-# set(CMAKE_C_FLAGS "${ARCH}")
-# set(CMAKE_CXX_FLAGS "${ARCH}")
+# set(ARCH "-target x86_64-w64-mingw32") set(CMAKE_ASM_FLAGS "${ARCH}")
+# set(CMAKE_C_FLAGS "${ARCH}") set(CMAKE_CXX_FLAGS "${ARCH}")
 
 project(
   VulkanGameEditor
@@ -92,6 +90,7 @@ add_executable(
   src/gui/menu.h
   src/gui/qt_util.h
   src/gui/vulkan_window.h
+  src/gui/map_tab_widget.h
   src/item.h
   src/items.h
   src/item_attribute.h
@@ -163,6 +162,7 @@ add_executable(
   src/gui/menu.cpp
   src/gui/qt_util.cpp
   src/gui/vulkan_window.cpp
+  src/gui/map_view_widget.cpp
   src/item.cpp
   src/items.cpp
   src/item_attribute.cpp
@@ -200,7 +200,6 @@ target_link_libraries(main PRIVATE pugixml)
 target_link_libraries(main PUBLIC Qt::Core)
 target_link_libraries(main PUBLIC Qt::Widgets)
 # End QT
-
 
 # Move required files post-build
 add_custom_command(

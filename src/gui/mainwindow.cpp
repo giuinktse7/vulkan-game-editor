@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 #include <QSlider>
 #include <QListView>
+#include <QSplitter>
 
 #include "vulkan_window.h"
 #include "item_list.h"
@@ -77,7 +78,16 @@ void MainWindow::initializeUI()
   listView->setModel(model);
   rootLayout->addWidget(listView, BorderLayout::Position::West);
 
-  rootLayout->addWidget(mapTabs, BorderLayout::Position::Center);
+  // rootLayout->addWidget(mapTabs, BorderLayout::Position::Center);
+  QSplitter *splitter = new QSplitter;
+
+  QListView *listview = new QListView;
+  splitter->addWidget(listview);
+
+  QTreeView *treeview = new QTreeView;
+  splitter->addWidget(treeview);
+
+  rootLayout->addWidget(splitter, BorderLayout::Position::Center);
 
   QSlider *slider = new QSlider;
   slider->setMinimum(0);
