@@ -134,6 +134,8 @@ void MapRenderer::releaseResources()
 
 void MapRenderer::startNextFrame()
 {
+  g_ecs.getSystem<ItemAnimationSystem>().update();
+
   // Update current frame data
   this->currentFrame = &frames[window.currentFrame()];
   currentFrame->commandBuffer = window.currentCommandBuffer();
