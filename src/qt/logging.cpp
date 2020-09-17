@@ -5,6 +5,7 @@
 #include <QPoint>
 #include <QPointF>
 #include <QRect>
+#include <QString>
 
 std::ostream &operator<<(std::ostream &os, QPoint point)
 {
@@ -33,5 +34,11 @@ std::ostream &operator<<(std::ostream &os, QRect rect)
 std::ostream &operator<<(std::ostream &os, QMargins margins)
 {
   os << "{ top: " << margins.top() << ", right: " << margins.right() << ", bottom: " << margins.bottom() << ", left: " << margins.left() << " }";
+  return os;
+}
+
+std::ostream &operator<<(std::ostream &os, QString s)
+{
+  os << s.toStdString();
   return os;
 }

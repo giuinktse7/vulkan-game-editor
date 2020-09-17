@@ -13,3 +13,4 @@ std::ostream &operator<<(std::ostream &os, QSize point);
 std::ostream &operator<<(std::ostream &os, QPointF point);
 std::ostream &operator<<(std::ostream &os, QRect rect);
 std::ostream &operator<<(std::ostream &os, QMargins margins);
+std::ostream &operator<<(std::ostream &os, QString s);
