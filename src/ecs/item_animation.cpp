@@ -171,15 +171,21 @@ void ItemAnimationSystem::updatePingPong(ItemAnimationComponent &animation)
 {
   TimePoint currentTime = TimePoint::now();
 
-  auto direction = std::get<Direction>(animation.state.info);
   // Last phase, reverse direction
-  if (animation.state.phaseIndex == 0 || animation.state.phaseIndex == animation.animationInfo->phases.size() - 1)
+  if (animation.state.phaseIndex == 0)
   {
-    direction = direction == Direction::Forward ? Direction::Backward : Direction::Forward;
+    animation.state.info = Direction::Forward;
+  }
+  else if (animation.state.phaseIndex == animation.animationInfo->phases.size() - 1)
+  {
+    animation.state.info = Direction::Backward;
   }
 
-  uint32_t indexChange = direction == Direction::Forward ? 1 : -1;
-  animation.setPhase(static_cast<size_t>(animation.state.phaseIndex) + indexChange, currentTime);
+  Direction direction = std::get<Direction>(animation.state.info);
+
+  int indexChange = direction == Direction::Forward ? 1 : -1;
+  size_t newPhase = static_cast<size_t>(animation.state.phaseIndex) + indexChange;
+  animation.setPhase(newPhase, currentTime);
 }
 
 void ItemAnimationSystem::updateCounted(ItemAnimationComponent &animation)
