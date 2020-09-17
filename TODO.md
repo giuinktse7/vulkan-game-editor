@@ -2,6 +2,8 @@
 
 ## Rendering
 
+<!-- When switching to a map tab that has not been shown yet,  -->
+
 ## Map Rendering
 
 - [x] Implement animation

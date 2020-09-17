@@ -58,6 +58,9 @@ bool MapView::isSelectionMoving() const
 
 void MapView::addItem(const Position pos, uint16_t id)
 {
+  if (!Items::items.validItemType(id))
+    return;
+
   Item item(id);
 
   const SpriteInfo &spriteInfo = item.itemType->appearance->getSpriteInfo();

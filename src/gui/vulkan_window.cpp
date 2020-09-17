@@ -50,8 +50,12 @@ QWidget *VulkanWindow::wrapInWidget(QWidget *parent)
 
 QVulkanWindowRenderer *VulkanWindow::createRenderer()
 {
-  // Memory deleted by QT when QT closes
-  renderer = new MapRenderer(*this);
+  if (!renderer)
+  {
+    // Memory deleted by QT when QT closes
+    renderer = new MapRenderer(*this);
+  }
+
   return renderer;
 }
 

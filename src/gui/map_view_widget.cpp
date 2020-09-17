@@ -136,6 +136,23 @@ void QtMapViewWidget::onWindowKeyPress(QKeyEvent *event)
   }
 }
 
+// bool QtMapViewWidget::event(QEvent *event)
+// {
+//   qDebug() << this << ": " << event;
+//   if (event->type() == QEvent::Hide)
+//   {
+//     if (this->windowHandle()->isVisible())
+//     {
+//       this->windowHandle()->hide();
+//     }
+//     // TODO Maybe remove
+//     setUpdatesEnabled(false);
+//   }
+
+//   event->ignore();
+//   return QAbstractScrollArea::event(event);
+// }
+
 // QSize QtMapViewWidget::sizeHint() const
 // {
 //   QSize s = viewport()->sizeHint();

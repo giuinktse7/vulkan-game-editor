@@ -13,6 +13,8 @@ class QPushButton;
 class BorderLayout;
 QT_END_NAMESPACE
 
+class MapTabWidget;
+
 #include "vulkan_window.h"
 
 class MainWindow : public QWidget
@@ -27,13 +29,10 @@ public:
 protected:
   void mousePressEvent(QMouseEvent *event) override;
 
-public slots:
-  void closeMapTab(int index);
-
 private:
   // UI
   BorderLayout *rootLayout;
-  QTabWidget *mapTabs;
+  MapTabWidget *mapTabs;
 
   QLabel *positionStatus;
 

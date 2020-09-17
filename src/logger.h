@@ -44,11 +44,11 @@ namespace Logger
     Logger::info(s);      \
   } while (false)
 
-#define VME_LOG_D(expr)   \
-  do                      \
-  {                       \
-                          \
-    std::ostringstream s; \
-    s << expr;            \
-    Logger::debug(s);     \
+#define VME_LOG_D(expr)       \
+  do                          \
+  {                           \
+                              \
+    std::ostringstream __s__; \
+    __s__ << expr;            \
+    Logger::debug(__s__);     \
   } while (false)

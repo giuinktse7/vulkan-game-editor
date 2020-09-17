@@ -119,7 +119,17 @@
     "qstyle": "cpp",
     "qpushbutton": "cpp",
     "qsvgwidget": "cpp",
-    "qstyleoptiontab": "cpp"
+    "qstyleoptiontab": "cpp",
+    "qhboxlayout": "cpp",
+    "qpainter": "cpp",
+    "qframe": "cpp",
+    "qrect": "cpp",
+    "qsvgrenderer": "cpp",
+    "qstring": "cpp",
+    "qscopedpointer": "cpp",
+    "qlabel": "cpp",
+    "qevent": "cpp",
+    "qdesktopwidget": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

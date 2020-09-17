@@ -34,6 +34,7 @@ QLabel *itemImage(uint16_t serverId)
 void MainWindow::addMapTab(VulkanWindow &vulkanWindow)
 {
   QtMapViewWidget *widget = new QtMapViewWidget(&vulkanWindow);
+
   connect(&vulkanWindow, &VulkanWindow::mousePosEvent, [this, &vulkanWindow](util::Point<float> mousePos) {
     Position pos = vulkanWindow.getMapView()->toPosition(mousePos);
 
@@ -55,12 +56,17 @@ void MainWindow::addMapTab(VulkanWindow &vulkanWindow)
     this->positionStatus->setText(text);
   });
 
-  mapTabs->addTab(widget, "untitled.otbm");
+  mapTabs->addTabWithButton(widget, "untitled.otbm");
 }
 
 void MainWindow::initializeUI()
 {
-  createMapTabArea();
+  mapTabs = new MapTabWidget(this);
+  {
+    auto l = new QLabel("Hey");
+
+    mapTabs->addTabWithButton(l, "First");
+  }
 
   QMenuBar *menu = createMenuBar();
   rootLayout->setMenuBar(menu);
@@ -79,19 +85,7 @@ void MainWindow::initializeUI()
   listView->setModel(model);
   rootLayout->addWidget(listView, BorderLayout::Position::West);
 
-  // rootLayout->addWidget(mapTabs, BorderLayout::Position::Center);
-
-  auto tabs = new MapTabWidget;
-  {
-    auto label = new QLabel("First");
-    tabs->addTabWithButton(label, "Label 1");
-  }
-  {
-    auto label = new QLabel("Second");
-    tabs->addTabWithButton(label, "Label 2");
-  }
-
-  rootLayout->addWidget(tabs, BorderLayout::Position::Center);
+  rootLayout->addWidget(mapTabs, BorderLayout::Position::Center);
 
   QSlider *slider = new QSlider;
   slider->setMinimum(0);
@@ -119,14 +113,6 @@ MainWindow::MainWindow(QWidget *parent)
       positionStatus(new QLabel)
 {
   initializeUI();
-}
-
-void MainWindow::createMapTabArea()
-{
-  mapTabs = new QTabWidget(this);
-  mapTabs->setTabsClosable(true);
-
-  connect(mapTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::closeMapTab);
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
@@ -215,11 +201,4 @@ QMenuBar *MainWindow::createMenuBar()
   }
 
   return menuBar;
-}
-
-void MainWindow::closeMapTab(int index)
-{
-  std::cout << "MainWindow::closeMapTab" << std::endl;
-  this->mapTabs->widget(index)->deleteLater();
-  this->mapTabs->removeTab(index);
 }

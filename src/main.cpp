@@ -8,6 +8,8 @@
 #include <QFile>
 #include <QHBoxLayout>
 
+#include <QFontDatabase>
+
 #include "gui/borderless_window.h"
 #include "gui/map_view_widget.h"
 
@@ -17,6 +19,10 @@
 #include "items.h"
 #include "time_point.h"
 #include "random.h"
+
+#include "qt/logging.h"
+
+#include "ecs/ecs.h"
 
 #define QT_MANAGED_POINTER(cls, ...) new cls(__VA_ARGS__);
 
@@ -103,15 +109,35 @@ void MainApplication::onFocusWidgetChanged(QWidget *widget)
     currentWidget = widget;
 }
 
-void makeTestMap(MapView *mapView)
+void makeTestMap1(MapView *mapView)
 {
     auto &rand = Random::global();
 
     mapView->history.startGroup(ActionGroupType::AddMapItem);
 
-    mapView->addItem(Position(1030, 1030, 7), 2706);
-    mapView->addItem(Position(1035, 1035, 7), 2708);
-    mapView->addItem(Position(1032, 1032, 7), 2554);
+    int i = 0;
+    for (int x = 0; x < 30; ++x)
+    {
+        for (int y = 0; y < 30; ++y)
+        {
+            mapView->addItem(Position(1 + x, 1 + y, 7), 4526 + i);
+            ++i;
+        }
+    }
+
+    for (int i = 0; i < 10; ++i)
+    {
+        mapView->addItem(Position(rand.nextInt<uint16_t>(1, 10), rand.nextInt<uint16_t>(1, 10), 7), 2767 + rand.nextInt<uint16_t>(0, 2));
+    }
+
+    mapView->history.endGroup(ActionGroupType::AddMapItem);
+}
+
+void makeTestMap2(MapView *mapView)
+{
+    auto &rand = Random::global();
+
+    mapView->history.startGroup(ActionGroupType::AddMapItem);
 
     for (int x = 0; x < 30; ++x)
     {
@@ -120,13 +146,10 @@ void makeTestMap(MapView *mapView)
             mapView->addItem(Position(1 + x, 1 + y, 7), rand.nextInt<uint16_t>(4526, 4542));
         }
     }
-    mapView->addItem(Position(1042, 1042, 7), 2700);
-    mapView->addItem(Position(1044, 1043, 7), 2700);
-    mapView->addItem(Position(1046, 1044, 7), 2703);
 
     for (int i = 0; i < 10; ++i)
     {
-        mapView->addItem(Position(1040 + rand.nextInt<uint16_t>(0, 10), 1040 + rand.nextInt<uint16_t>(0, 10), 7), 2767 + rand.nextInt<uint16_t>(0, 2));
+        mapView->addItem(Position(rand.nextInt<uint16_t>(1, 10), rand.nextInt<uint16_t>(1, 10), 7), 2767 + rand.nextInt<uint16_t>(0, 2));
     }
 
     mapView->history.endGroup(ActionGroupType::AddMapItem);
@@ -147,46 +170,51 @@ int runApp(int argc, char *argv[])
     if (!instance.create())
         qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
 
-    // {
-    //     VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
-    //     vulkanWindow->setVulkanInstance(&instance);
-    //     vulkanWindow->debugName = "Window1";
+    {
+        VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
+        vulkanWindow->setVulkanInstance(&instance);
+        vulkanWindow->debugName = "Window1";
 
-    //     MapView *mapView = vulkanWindow->getMapView();
-    //     MapView::MouseAction::RawItem action;
-    //     action.serverId = 6217;
-    //     mapView->setMouseAction(action);
+        MapView *mapView = vulkanWindow->getMapView();
+        MapView::MouseAction::RawItem action;
+        action.serverId = 6217;
+        mapView->setMouseAction(action);
 
-    //     makeTestMap(mapView);
+        makeTestMap1(mapView);
 
-    //     app.setVulkanWindow(vulkanWindow);
+        app.setVulkanWindow(vulkanWindow);
 
-    //     mainWindow.addMapTab(*vulkanWindow);
-    // }
+        mainWindow.addMapTab(*vulkanWindow);
+    }
+    {
+        VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
+        vulkanWindow->setVulkanInstance(&instance);
+        vulkanWindow->debugName = "Window2";
 
-    // {
-    //     VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
-    //     vulkanWindow->setVulkanInstance(&instance);
-    //     vulkanWindow->debugName = "Window2";
+        MapView *mapView = vulkanWindow->getMapView();
+        MapView::MouseAction::RawItem action;
+        action.serverId = 6217;
+        mapView->setMouseAction(action);
 
-    //     MapView *mapView = vulkanWindow->getMapView();
-    //     MapView::MouseAction::RawItem action;
-    //     action.serverId = 6217;
-    //     mapView->setMouseAction(action);
+        makeTestMap2(mapView);
 
-    //     makeTestMap(mapView);
+        app.setVulkanWindow(vulkanWindow);
 
-    //     app.setVulkanWindow(vulkanWindow);
-
-    //     mainWindow.addMapTab(*vulkanWindow);
-    // }
-
-    /*
-        End another window
-    */
+        mainWindow.addMapTab(*vulkanWindow);
+    }
 
     mainWindow.resize(1024, 768);
     mainWindow.show();
+
+    QFontDatabase database;
+
+    // const QStringList fontFamilies = database.families();
+    // for (auto family : fontFamilies)
+    // {
+    //     VME_LOG_D(family);
+    // }
+
+    VME_LOG_D("???: " << database.hasFamily("Consolas"));
 
     return app.exec();
 }
@@ -248,6 +276,7 @@ int borderlessTest(int argc, char *argv[])
 
 void MainApplication::loadStyleSheet(const QString &sheetName)
 {
+    VME_LOG_D("loadStyleSheet");
     QFile file("resources/style/qss/" + sheetName.toLower() + ".qss");
     file.open(QFile::ReadOnly);
     QString styleSheet = QString::fromLatin1(file.readAll());
