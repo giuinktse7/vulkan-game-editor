@@ -38,6 +38,8 @@ struct ItemAnimationComponent
 	// Should not be changed after construction
 	uint32_t startPhase;
 
+	uint32_t loopTime = 0;
+
 	struct
 	{
 		uint32_t phaseIndex = 0;
@@ -46,15 +48,14 @@ struct ItemAnimationComponent
 		*/
 		uint32_t phaseDurationMs = 0;
 
-		using loop_t = uint32_t;
 		/*
 			Holds necessary information about the animation state based on the
 			animation type.
-			AnimationLoopType::Infinte -> total time for one loop
+			AnimationLoopType::Infinte -> Nothing
 			AnimationLoopType::PingPong -> ItemAnimator::Direction
 			AnimationLoopType::Counted -> current loop
 		*/
-		std::variant<uint32_t, item_animation::AnimationDirection> info;
+		std::variant<std::monostate, item_animation::AnimationDirection, uint32_t> info;
 		/*
 			The time that the latest phase change occurred.
 		*/

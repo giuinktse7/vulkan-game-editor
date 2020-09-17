@@ -18,7 +18,6 @@ void ItemAnimationComponent::synchronizePhase()
   TimePoint startTime = TimePoint::sinceStart();
 
   auto elapsedTimeMs = startTime.elapsedMillis();
-  uint32_t loopTime = std::get<uint32_t>(state.info);
 
   long long timeDiff = elapsedTimeMs % loopTime;
 
@@ -66,20 +65,27 @@ void ItemAnimationComponent::initializeStartPhase()
 ItemAnimationComponent::ItemAnimationComponent(SpriteAnimation *animationInfo)
     : animationInfo(animationInfo)
 {
-  switch (animationInfo->loopType)
+  if (animationInfo->synchronized)
   {
-  case AnimationLoopType::Infinite:
-    state.info = std::accumulate(
+    loopTime = std::accumulate(
         animationInfo->phases.begin(),
         animationInfo->phases.end(),
         0,
         [](uint32_t acc, SpritePhase next) { return acc + next.maxDuration; });
+  }
+  switch (animationInfo->loopType)
+  {
+  case AnimationLoopType::Infinite:
     break;
   case AnimationLoopType::PingPong:
     state.info = Direction::Forward;
     break;
   case AnimationLoopType::Counted:
     state.info = 0;
+    break;
+  default:
+    VME_LOG_D("Hmm");
+    break;
   }
 
   initializeStartPhase();
