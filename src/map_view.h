@@ -50,6 +50,7 @@ public:
 	};
 
 	MapView();
+	MapView(std::shared_ptr<Map> map);
 
 	bool showPreviewCursor = false;
 
