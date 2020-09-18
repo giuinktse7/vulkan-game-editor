@@ -157,3 +157,11 @@ inline std::ostream &operator<<(std::ostream &os, const util::Point<T> &pos)
 	os << "{ x=" << pos.x() << ', y=' << pos.y() << ' }';
 	return os;
 }
+
+template <typename T>
+inline std::string toString(T value)
+{
+	std::ostringstream s;
+	s << value;
+	return s.str();
+}
