@@ -16,10 +16,12 @@ class QMouseEvent;
 
 class MapTabWidget : public QTabWidget
 {
+  Q_OBJECT
+
   class MapTabBar : public QTabBar
   {
   public:
-    MapTabBar(QWidget *parent = nullptr);
+    MapTabBar(MapTabWidget *parent);
 
     void setCloseButtonVisible(int tabIndex, bool visible);
 
@@ -39,6 +41,10 @@ class MapTabWidget : public QTabWidget
     */
     int hoveredIndex = -1;
     int prevActiveIndex = -1;
+
+    void removedTabEvent(int removedIndex);
+
+    void setHoveredIndex(int index);
 
     QWidget *getActiveWidget();
 

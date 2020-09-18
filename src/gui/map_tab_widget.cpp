@@ -30,7 +30,7 @@ constexpr int CloseIconSize = 8;
 MapTabWidget::MapTabWidget(QWidget *parent)
     : QTabWidget(parent)
 {
-    MapTabBar *tabBar = new MapTabBar;
+    MapTabBar *tabBar = new MapTabBar(this);
     setTabBar(tabBar);
 
     setTabsClosable(true);
@@ -55,12 +55,54 @@ int MapTabWidget::addTabWithButton(QWidget *widget, const QString &text, QVarian
 
 void MapTabWidget::closeTab(int index)
 {
-    QVariant &data = tabBar()->tabData(index);
+    QVariant &&data = tabBar()->tabData(index);
 
     widget(index)->deleteLater();
     removeTab(index);
 
     emit mapTabClosed(index, std::move(data));
+}
+
+/*
+********************************************************
+********************************************************
+* MapTabBar
+********************************************************
+********************************************************
+*/
+MapTabWidget::MapTabBar::MapTabBar(MapTabWidget *parent) : QTabBar(parent)
+{
+    setCursor(Qt::PointingHandCursor);
+    new QHBoxLayout(this);
+    setMouseTracking(true);
+
+    // Does nothing?
+    layout()->setSpacing(0);
+    setContentsMargins(0, 0, 0, 0);
+    updateGeometry();
+
+    connect(parent, &MapTabWidget::mapTabClosed, [=](int removedTabIndex) { removedTabEvent(removedTabIndex); });
+
+    connect(this, &QTabBar::currentChanged, [this](int index) {
+        VME_LOG_D("Active tab changed from " << this->prevActiveIndex << " to " << index);
+        if (this->prevActiveIndex != -1)
+        {
+            this->setCloseButtonVisible(prevActiveIndex, false);
+        }
+        this->prevActiveIndex = index;
+        if (index != -1)
+        {
+            this->setCloseButtonVisible(index, true);
+        }
+    });
+}
+
+void MapTabWidget::MapTabBar::removedTabEvent(int removedIndex)
+{
+    QPoint localPos = mapFromGlobal(QCursor::pos());
+
+    int hoveredTabIndex = tabAt(localPos);
+    setHoveredIndex(hoveredTabIndex);
 }
 
 bool MapTabWidget::MapTabBar::intersectsCloseButton(QPoint point, int index) const
@@ -88,31 +130,6 @@ bool MapTabWidget::MapTabBar::intersectsCloseButton(QPoint point) const
 bool MapTabWidget::MapTabBar::withinWidget(QPoint relativePoint) const
 {
     return rect().contains(relativePoint);
-}
-
-MapTabWidget::MapTabBar::MapTabBar(QWidget *parent) : QTabBar(parent)
-{
-    setCursor(Qt::PointingHandCursor);
-    new QHBoxLayout(this);
-    setMouseTracking(true);
-
-    // Does nothing?
-    layout()->setSpacing(0);
-    setContentsMargins(0, 0, 0, 0);
-    updateGeometry();
-
-    connect(this, &QTabBar::currentChanged, [this](int index) {
-        VME_LOG_D("Active tab changed from " << this->prevActiveIndex << " to " << index);
-        if (this->prevActiveIndex != -1)
-        {
-            this->setCloseButtonVisible(prevActiveIndex, false);
-        }
-        this->prevActiveIndex = index;
-        if (index != -1)
-        {
-            this->setCloseButtonVisible(index, true);
-        }
-    });
 }
 
 void MapTabWidget::MapTabBar::mousePressEvent(QMouseEvent *event)
@@ -179,28 +196,12 @@ void MapTabWidget::MapTabBar::mouseMoveEvent(QMouseEvent *event)
         QPoint localPos = mapFromGlobal(QCursor::pos());
         if (!withinWidget(localPos))
         {
-            setCloseButtonVisible(hoveredIndex, false);
-            hoveredIndex = -1;
+            setHoveredIndex(-1);
         }
         else
         {
             int hoveredTabIndex = tabAt(localPos);
-            if (hoveredTabIndex != -1)
-            {
-                if (hoveredTabIndex != hoveredIndex && hoveredIndex != -1 && hoveredIndex != currentIndex())
-                {
-                    setCloseButtonVisible(hoveredIndex, false);
-                }
-                if (hoveredIndex != hoveredTabIndex)
-                {
-                    setCloseButtonVisible(hoveredTabIndex, true);
-                }
-                hoveredIndex = hoveredTabIndex;
-            }
-            else
-            {
-                hoveredIndex = -1;
-            }
+            setHoveredIndex(hoveredTabIndex);
         }
     }
 }
@@ -210,7 +211,7 @@ void MapTabWidget::MapTabBar::mouseReleaseEvent(QMouseEvent *event)
     // VME_LOG_D("MapTabWidget::MapTabBar::mouseReleaseEvent");
     if (closePendingIndex != -1 && intersectsCloseButton(event->pos(), closePendingIndex))
     {
-        parentWidget()->removeTab(hoveredIndex);
+        emit tabCloseRequested(hoveredIndex);
     }
     closePendingIndex = -1;
 
@@ -243,6 +244,51 @@ QWidget *MapTabWidget::MapTabBar::getActiveWidget()
     return parentWidget()->widget(this->currentIndex());
 }
 
+void MapTabWidget::MapTabBar::setHoveredIndex(int index)
+{
+    if (hoveredIndex != index)
+    {
+        setCloseButtonVisible(hoveredIndex, false);
+    }
+
+    if (index != -1)
+    {
+        setCloseButtonVisible(index, true);
+    }
+
+    hoveredIndex = index;
+}
+
+bool MapTabWidget::MapTabBar::event(QEvent *event)
+{
+    switch (event->type())
+    {
+    case QEvent::HoverLeave:
+    {
+        VME_LOG_D("HoverLeave. hoveredIndex: " << hoveredIndex << ", currentIndex: " << currentIndex());
+        if (hoveredIndex != currentIndex())
+        {
+            setCloseButtonVisible(hoveredIndex, false);
+        }
+
+        setHoveredIndex(-1);
+    }
+
+    break;
+    default:
+        break;
+    }
+
+    return QTabBar::event(event);
+}
+
+/*
+********************************************************
+********************************************************
+* SvgWidget
+********************************************************
+********************************************************
+*/
 SvgWidget::SvgWidget(const QString &file, QWidget *parent) : QFrame(parent)
 {
     setFrameStyle(QFrame::NoFrame);
@@ -271,27 +317,4 @@ bool SvgWidget::event(QEvent *event)
     }
 
     return QFrame::event(event);
-}
-
-bool MapTabWidget::MapTabBar::event(QEvent *event)
-{
-    switch (event->type())
-    {
-    case QEvent::HoverLeave:
-    {
-        VME_LOG_D("HoverLeave. hoveredIndex: " << hoveredIndex << ", currentIndex: " << currentIndex());
-        if (hoveredIndex != currentIndex())
-        {
-            setCloseButtonVisible(hoveredIndex, false);
-        }
-
-        hoveredIndex = -1;
-    }
-
-    break;
-    default:
-        break;
-    }
-
-    return QTabBar::event(event);
 }
