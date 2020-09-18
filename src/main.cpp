@@ -170,6 +170,7 @@ int runApp(int argc, char *argv[])
     if (!instance.create())
         qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
 
+    mainWindow.setVulkanInstance(&instance);
     {
         VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
         vulkanWindow->setVulkanInstance(&instance);

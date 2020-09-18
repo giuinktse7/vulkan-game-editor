@@ -202,3 +202,7 @@ QMenuBar *MainWindow::createMenuBar()
 
   return menuBar;
 }
+void MainWindow::setVulkanInstance(QVulkanInstance *instance)
+{
+  vulkanInstance = instance;
+}

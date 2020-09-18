@@ -18,6 +18,7 @@ class MapTabWidget;
 #include "vulkan_window.h"
 
 #define QT_MANAGED_POINTER(cls, ...) new cls(__VA_ARGS__);
+
 class MainWindow : public QWidget
 {
   Q_OBJECT
@@ -25,7 +26,7 @@ class MainWindow : public QWidget
 public:
   MainWindow(QWidget *parent = nullptr);
 
-  void addMapTab(VulkanWindow &vulkanWindow);
+  void setVulkanInstance(QVulkanInstance *instance);
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;
@@ -42,6 +43,9 @@ private:
 
   QMenuBar *createMenuBar();
   void createMapTabArea();
+
+
+  QVulkanInstance *vulkanInstance;
 
   // void updatePositionText();
 };
