@@ -37,9 +37,10 @@ MapTabWidget::MapTabWidget(QWidget *parent)
     connect(tabBar, &MapTabBar::tabCloseRequested, this, &MapTabWidget::closeTab);
 }
 
-int MapTabWidget::addTabWithButton(QWidget *widget, const QString &text)
+int MapTabWidget::addTabWithButton(QWidget *widget, const QString &text, QVariant data)
 {
     int index = addTab(widget, text);
+    tabBar()->setTabData(index, data);
 
     SvgWidget *svg = new SvgWidget("resources/svg/close.svg");
 
@@ -54,8 +55,12 @@ int MapTabWidget::addTabWithButton(QWidget *widget, const QString &text)
 
 void MapTabWidget::closeTab(int index)
 {
+    QVariant &data = tabBar()->tabData(index);
+
     widget(index)->deleteLater();
     removeTab(index);
+
+    emit mapTabClosed(index, std::move(data));
 }
 
 bool MapTabWidget::MapTabBar::intersectsCloseButton(QPoint point, int index) const
@@ -97,7 +102,7 @@ MapTabWidget::MapTabBar::MapTabBar(QWidget *parent) : QTabBar(parent)
     updateGeometry();
 
     connect(this, &QTabBar::currentChanged, [this](int index) {
-        // VME_LOG_D("[currentChanged] prev: " << this->prevActiveIndex << ", current: " << index);
+        VME_LOG_D("Active tab changed from " << this->prevActiveIndex << " to " << index);
         if (this->prevActiveIndex != -1)
         {
             this->setCloseButtonVisible(prevActiveIndex, false);

@@ -5,6 +5,7 @@
 #include <QSvgWidget>
 #include <QFrame>
 #include <QString>
+#include <QVariant>
 
 #include <memory>
 
@@ -63,7 +64,10 @@ class MapTabWidget : public QTabWidget
 public:
   MapTabWidget(QWidget *parent = nullptr);
 
-  int addTabWithButton(QWidget *widget, const QString &text);
+  int addTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
+
+signals:
+  void mapTabClosed(int index, QVariant data);
 
 private:
   void closeTab(int index);
