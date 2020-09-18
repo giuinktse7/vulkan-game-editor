@@ -50,6 +50,16 @@ public:
 		return towns;
 	}
 
+	inline const std::string &name() const
+	{
+		return _name;
+	}
+
+	void setName(std::string name)
+	{
+		_name = name;
+	}
+
 	/*
 		Clear the map.
 	*/
@@ -58,6 +68,7 @@ public:
 	quadtree::Node *getLeafUnsafe(int x, int y);
 
 private:
+	std::string _name;
 	friend class MapView;
 	Towns towns;
 	MapVersion mapVersion;
