@@ -12,6 +12,8 @@
 #include <QSlider>
 #include <QListView>
 #include <QSplitter>
+#include <QVariant>
+#include <QVulkanInstance>
 
 #include "vulkan_window.h"
 #include "item_list.h"
@@ -20,6 +22,8 @@
 #include "border_layout.h"
 #include "map_view_widget.h"
 #include "map_tab_widget.h"
+#include "../util.h"
+#include "qt_util.h"
 
 #include "../main.h"
 
@@ -31,42 +35,77 @@ QLabel *itemImage(uint16_t serverId)
   return container;
 }
 
-void MainWindow::addMapTab(VulkanWindow &vulkanWindow)
+uint32_t MainWindow::nextUntitledId()
 {
-  QtMapViewWidget *widget = new QtMapViewWidget(&vulkanWindow);
+  uint32_t id;
+  if (untitledIds.empty())
+  {
+    ++highestUntitledId;
 
-  connect(&vulkanWindow, &VulkanWindow::mousePosEvent, [this, &vulkanWindow](util::Point<float> mousePos) {
-    Position pos = vulkanWindow.getMapView()->toPosition(mousePos);
+    id = highestUntitledId;
+  }
+  else
+  {
+    id = untitledIds.top();
+    untitledIds.pop();
+  }
 
-    std::ostringstream s;
-    s << pos;
+  return id;
+}
 
-    QString text = QString::fromStdString(s.str());
-    this->positionStatus->setText(text);
+void MainWindow::addMapTab()
+{
+  addMapTab(std::make_shared<Map>());
+}
+
+void MainWindow::addMapTab(std::shared_ptr<Map> map)
+{
+  VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>(map));
+
+  // Window setup
+  vulkanWindow->setVulkanInstance(vulkanInstance);
+  vulkanWindow->debugName = map->name().empty() ? toString(vulkanWindow) : map->name();
+
+  // Add a selected item for testing
+  MapView *mapView = vulkanWindow->getMapView();
+  MapView::MouseAction::RawItem action;
+  action.serverId = 6217;
+  mapView->setMouseAction(action);
+
+  // Create the widget
+  MapViewWidget *widget = new MapViewWidget(vulkanWindow);
+
+  connect(vulkanWindow, &VulkanWindow::mousePosChanged, [this, vulkanWindow](util::Point<float> mousePos) {
+    mapViewMousePosEvent(*vulkanWindow->getMapView(), mousePos);
   });
 
-  connect(widget, &QtMapViewWidget::viewportChangedEvent, [this, &vulkanWindow](const Viewport &viewport) {
-    MapView *mapView = vulkanWindow.getMapView();
-    Position pos = mapView->mousePos().toPos(*mapView);
-
-    std::ostringstream s;
-    s << pos;
-
-    QString text = QString::fromStdString(s.str());
-    this->positionStatus->setText(text);
+  connect(widget, &MapViewWidget::viewportChangedEvent, [this, vulkanWindow](const Viewport &viewport) {
+    mapViewViewportEvent(*vulkanWindow->getMapView(), viewport);
   });
 
-  mapTabs->addTabWithButton(widget, "untitled.otbm");
+  if (map->name().empty())
+  {
+    uint32_t untitledNameId = nextUntitledId();
+    QString tabTitle = QString("Untitled-%1").arg(untitledNameId);
+
+    mapTabs->addTabWithButton(widget, tabTitle, untitledNameId);
+  }
+  else
+  {
+    mapTabs->addTabWithButton(widget, QString::fromStdString(map->name()));
+  }
 }
 
 void MainWindow::initializeUI()
 {
   mapTabs = new MapTabWidget(this);
-  {
-    auto l = new QLabel("Hey");
-
-    mapTabs->addTabWithButton(l, "First");
-  }
+  connect(mapTabs, &MapTabWidget::mapTabClosed, [=](int index, QVariant data) {
+    if (data.canConvert<uint32_t>())
+    {
+      uint32_t id = data.toInt();
+      this->untitledIds.emplace(id);
+    }
+  });
 
   QMenuBar *menu = createMenuBar();
   rootLayout->setMenuBar(menu);
@@ -129,7 +168,7 @@ QMenuBar *MainWindow::createMenuBar()
     auto fileMenu = menuBar->addMenu(tr("File"));
 
     auto newMap = new MenuAction(tr("New Map"), Qt::CTRL + Qt::Key_N, this);
-    connect(newMap, &QWidgetAction::triggered, [=] { VME_LOG_D("New Map clicked"); });
+    connect(newMap, &QWidgetAction::triggered, [this] { this->addMapTab(); });
     fileMenu->addAction(newMap);
   }
 
@@ -202,7 +241,20 @@ QMenuBar *MainWindow::createMenuBar()
 
   return menuBar;
 }
+
 void MainWindow::setVulkanInstance(QVulkanInstance *instance)
 {
   vulkanInstance = instance;
+}
+
+void MainWindow::mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos)
+{
+  Position pos = mapView.toPosition(mousePos);
+  this->positionStatus->setText(toQString(pos));
+}
+
+void MainWindow::mapViewViewportEvent(MapView &mapView, const Viewport &viewport)
+{
+  Position pos = mapView.mousePos().toPos(mapView);
+  this->positionStatus->setText(toQString(pos));
 }
