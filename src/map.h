@@ -38,6 +38,7 @@ public:
 	Tile *getTile(const Position pos) const;
 
 	bool isTileEmpty(const Position pos) const;
+	void addItem(const Position position, uint16_t serverId);
 
 	MapVersion getMapVersion();
 	std::string &getDescription();

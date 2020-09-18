@@ -51,6 +51,15 @@ void Map::moveSelectedItems(const Position source, const Position destination)
   }
 }
 
+void Map::addItem(const Position position, uint16_t serverId)
+{
+  if (!Items::items.validItemType(serverId))
+    return;
+
+  auto &tile = getOrCreateTile(position);
+  tile.addItem(Item(serverId));
+}
+
 MapRegion Map::getRegion(Position from, Position to)
 {
   return MapRegion(*this, from, to);
