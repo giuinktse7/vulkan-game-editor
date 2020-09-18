@@ -17,6 +17,7 @@ class MapTabWidget;
 
 #include "vulkan_window.h"
 
+#define QT_MANAGED_POINTER(cls, ...) new cls(__VA_ARGS__);
 class MainWindow : public QWidget
 {
   Q_OBJECT
