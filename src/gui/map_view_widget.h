@@ -2,6 +2,7 @@
 
 #include <QAbstractScrollArea>
 #include <QScrollBar>
+#include <QWidget>
 
 #include "vulkan_window.h"
 
@@ -22,30 +23,17 @@ public:
   void mouseMoveEvent(QMouseEvent *e) override;
 };
 
-class QtMapViewWidget : public QAbstractScrollArea, public MapView::Observer
+class MapViewWidget : public QWidget, public MapView::Observer
 {
   Q_OBJECT
 public:
-  QtMapViewWidget(VulkanWindow *window, QWidget *parent = nullptr);
-
-  void scrollContentsBy(int dx, int dy) override;
-  // QSize viewportSizeHint() const override;
-  // QSize sizeHint() const override;
-  // void resizeEvent(QResizeEvent *event) override;
+  MapViewWidget(VulkanWindow *window, QWidget *parent = nullptr);
 
   // From MapView::Observer
   void viewportChanged(const Viewport &viewport) override;
 
 signals:
   void viewportChangedEvent(const Viewport &viewport);
-
-protected:
-  void mousePressEvent(QMouseEvent *event) override;
-  void mouseReleaseEvent(QMouseEvent *event) override;
-  void mouseMoveEvent(QMouseEvent *event) override;
-  void keyPressEvent(QKeyEvent *event) override;
-  void wheelEvent(QWheelEvent *event) override;
-  // bool event(QEvent *event) override;
 
 private:
   VulkanWindow *vulkanWindow;
@@ -55,4 +43,5 @@ private:
   QtScrollBar *vbar;
 
   void onWindowKeyPress(QKeyEvent *event);
+  void updateMapViewport();
 };

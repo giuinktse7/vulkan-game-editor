@@ -2,9 +2,6 @@
 
 ## Rendering
 
-- [ ] BUG: When switching to a map tab that has not been shown yet, the current map tab gets rendered an extra time in an offset position.
-      Investigate draw events for QtMapViewWidget / VulkanWindow?
-
 ## Map Rendering
 
 - [x] Implement animation

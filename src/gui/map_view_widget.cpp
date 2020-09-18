@@ -12,18 +12,28 @@
 #include <QDesktopWidget>
 #include <QScreen>
 
+#include <QLabel>
+#include <QPushButton>
+#include <QHBoxLayout>
+
 #include "../const.h"
 #include "../map.h"
 #include "../logger.h"
 
 #include "../qt/logging.h"
+#include "border_layout.h"
 
 constexpr int MinimumStepSizeInPixels = MapTileSize / 3;
 constexpr int DefaultSingleStepSize = MapTileSize;
 
 constexpr float MinCameraZoom = 0.1f;
 
-constexpr std::pair<float, float> singleStepKM()
+/*
+  Calculates the k and m parameters for the linear function used to compute
+  the single step length for scrolling.
+  @return A pair [k, m] representing a function y(x) = k * x + m
+*/
+constexpr std::pair<float, float> computeSingleStepParameters()
 {
   int t = DefaultSingleStepSize;
   int a = MinCameraZoom;
@@ -34,16 +44,13 @@ constexpr std::pair<float, float> singleStepKM()
 
   return {k, m};
 }
-constexpr std::pair<float, float> km = singleStepKM();
+
+constexpr std::pair<float, float> singleStepParams = computeSingleStepParameters();
 
 int computeSingleStep(float zoom)
 {
-  const auto [k, m] = km;
+  const auto [k, m] = singleStepParams;
   double step = k * zoom + m;
-  // VME_LOG_D("\n\nNext:");
-
-  // VME_LOG_D("zoom: " << zoom);
-  // VME_LOG_D("step: " << step);
 
   // Scale zoomed out step
   if (zoom > 1)
@@ -51,7 +58,6 @@ int computeSingleStep(float zoom)
     const double k = 0.2;
     double scaledStep = step * (3 * (zoom - 1) + (std::exp(k * zoom) - std::exp(k) + 1));
 
-    // VME_LOG_D("scaledStep: " << scaledStep);
     return static_cast<int>(std::round(scaledStep));
   }
   else
@@ -60,38 +66,25 @@ int computeSingleStep(float zoom)
   }
 }
 
-void QtMapViewWidget::viewportChanged(const Viewport &viewport)
-{
-  hbar->setValue(viewport.offset.x);
-  vbar->setValue(viewport.offset.y);
-
-  hbar->setPageStep(viewport.width);
-  vbar->setPageStep(viewport.height);
-
-  int singleStep = computeSingleStep(viewport.zoom);
-  // VME_LOG_D("singleStep: " << singleStep);
-  hbar->setSingleStep(singleStep);
-  vbar->setSingleStep(singleStep);
-
-  emit viewportChangedEvent(viewport);
-}
-
-QtMapViewWidget::QtMapViewWidget(VulkanWindow *window, QWidget *parent)
-    : MapView::Observer(window->getMapView()),
-      QAbstractScrollArea(parent),
+MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
+    : QWidget(parent),
+      MapView::Observer(window->getMapView()),
       vulkanWindow(window),
       mapView(window->getMapView()),
-      hbar(new QtScrollBar(Qt::Horizontal, this)),
-      vbar(new QtScrollBar(Qt::Vertical, this))
+      hbar(new QtScrollBar(Qt::Horizontal)),
+      vbar(new QtScrollBar(Qt::Vertical))
 {
+  {
+    auto l = new BorderLayout;
+    l->addWidget(hbar, BorderLayout::Position::South);
+    l->addWidget(vbar, BorderLayout::Position::East);
 
-  setHorizontalScrollBar(hbar);
-  setVerticalScrollBar(vbar);
+    auto wrappedMapWindow = window->wrapInWidget();
 
-  setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-  setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    l->addWidget(wrappedMapWindow, BorderLayout::Position::Center);
 
-  setViewport(window->wrapInWidget());
+    setLayout(l);
+  }
 
   Map *map = mapView->getMap();
   uint16_t width = map->getWidth();
@@ -108,13 +101,21 @@ QtMapViewWidget::QtMapViewWidget(VulkanWindow *window, QWidget *parent)
   vbar->setMaximum(maxY);
   vbar->setSingleStep(MapTileSize);
 
-  connect(window, &VulkanWindow::keyPressedEvent, this, &QtMapViewWidget::onWindowKeyPress);
+  connect(vulkanWindow, &VulkanWindow::keyPressedEvent, this, &MapViewWidget::onWindowKeyPress);
 
-  // viewport()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-  resize(500, 500);
+  connect(hbar, &QScrollBar::valueChanged, this, &MapViewWidget::updateMapViewport);
+  connect(vbar, &QScrollBar::valueChanged, this, &MapViewWidget::updateMapViewport);
 }
 
-void QtMapViewWidget::onWindowKeyPress(QKeyEvent *event)
+void MapViewWidget::updateMapViewport()
+{
+  auto viewportX = hbar->value();
+  auto viewportY = vbar->value();
+
+  vulkanWindow->getMapView()->setCameraPosition(WorldPosition(viewportX, viewportY));
+}
+
+void MapViewWidget::onWindowKeyPress(QKeyEvent *event)
 {
   switch (event->key())
   {
@@ -136,82 +137,32 @@ void QtMapViewWidget::onWindowKeyPress(QKeyEvent *event)
   }
 }
 
-// bool QtMapViewWidget::event(QEvent *event)
-// {
-//   qDebug() << this << ": " << event;
-//   if (event->type() == QEvent::Hide)
-//   {
-//     if (this->windowHandle()->isVisible())
-//     {
-//       this->windowHandle()->hide();
-//     }
-//     // TODO Maybe remove
-//     setUpdatesEnabled(false);
-//   }
+void MapViewWidget::viewportChanged(const Viewport &viewport)
+{
+  hbar->setValue(viewport.offset.x);
+  vbar->setValue(viewport.offset.y);
 
-//   event->ignore();
-//   return QAbstractScrollArea::event(event);
-// }
+  hbar->setPageStep(viewport.width);
+  vbar->setPageStep(viewport.height);
 
-// QSize QtMapViewWidget::sizeHint() const
-// {
-//   QSize s = viewport()->sizeHint();
+  int singleStep = computeSingleStep(viewport.zoom);
 
-//   s.setWidth(s.width() + vbar->sizeHint().width());
-//   s.setHeight(s.height() + hbar->sizeHint().height());
+  hbar->setSingleStep(singleStep);
+  vbar->setSingleStep(singleStep);
 
-//   return s;
-// }
-
-// QSize QtMapViewWidget::viewportSizeHint() const
-// {
-//   return viewport()->sizeHint();
-// }
+  emit viewportChangedEvent(viewport);
+}
 
 /*
-  dx and dy are calculated as (from - to).
-  Scrolling downwards or to the right results in negative dx and dy.
+********************************
+********************************
+*QTScrollBar
+********************************
+********************************
 */
-void QtMapViewWidget::scrollContentsBy(int dx, int dy)
-{
-  // VME_LOG_D("Scroll by" << dx << ", " << dy);
-  auto viewportX = hbar->value();
-  auto viewportY = vbar->value();
-
-  vulkanWindow->getMapView()->setCameraPosition(WorldPosition(viewportX, viewportY));
-}
-
-void QtMapViewWidget::mousePressEvent(QMouseEvent *event)
-{
-  VME_LOG_D("QtMapViewWidget::mousePressEvent");
-}
-
-void QtMapViewWidget::mouseReleaseEvent(QMouseEvent *event)
-{
-  VME_LOG_D("QtMapViewWidget::mouseReleaseEvent");
-}
-
-void QtMapViewWidget::mouseMoveEvent(QMouseEvent *event)
-{
-  VME_LOG_D("QtMapViewWidget::mouseMoveEvent");
-}
-
-void QtMapViewWidget::keyPressEvent(QKeyEvent *event)
-{
-  // event->ignore();
-  // QAbstractScrollArea::keyPressEvent(event);
-  VME_LOG_D("QtMapViewWidget::keyPressEvent");
-}
-
-void QtMapViewWidget::wheelEvent(QWheelEvent *event)
-{
-  VME_LOG_D("QtMapViewWidget::wheelEvent");
-}
 
 QtScrollBar::QtScrollBar(Qt::Orientation orientation, QWidget *parent)
-    : QScrollBar(orientation, parent)
-{
-}
+    : QScrollBar(orientation, parent) {}
 
 void QtScrollBar::mousePressEvent(QMouseEvent *e)
 {
