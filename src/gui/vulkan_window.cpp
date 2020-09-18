@@ -24,7 +24,7 @@ VulkanWindow::VulkanWindow(std::unique_ptr<MapView> mapView, QWindow *parent)
       scrollAngleBuffer(0)
 {
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
-  connect(this, &VulkanWindow::mousePosEvent, [=](util::Point<float> mousePos) {
+  connect(this, &VulkanWindow::mousePosChanged, [=](util::Point<float> mousePos) {
     int x = static_cast<int>(std::round(mousePos.x()));
     int y = static_cast<int>(std::round(mousePos.y()));
 
@@ -132,7 +132,7 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *e)
 {
   auto pos = e->windowPos();
   util::Point<float> mousePos(pos.x(), pos.y());
-  emit mousePosEvent(mousePos);
+  emit mousePosChanged(mousePos);
 
   e->ignore();
   QVulkanWindow::mouseMoveEvent(e);

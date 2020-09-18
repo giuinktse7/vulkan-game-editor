@@ -79,7 +79,7 @@ public:
 
 signals:
   void scrollEvent(int degrees);
-  void mousePosEvent(util::Point<float> mousePos);
+  void mousePosChanged(util::Point<float> mousePos);
   void keyPressedEvent(QKeyEvent *event);
 
 protected:
