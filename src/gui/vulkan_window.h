@@ -53,7 +53,7 @@ public:
     bool selfClicked(QPoint pos) const;
   };
 
-  VulkanWindow(std::unique_ptr<MapView> mapView);
+  VulkanWindow(std::unique_ptr<MapView> mapView, QWindow *parent = nullptr);
 
   VulkanInfoFromWindow vulkanInfo;
   QWidget *widget = nullptr;

@@ -18,8 +18,10 @@
 
 #include "../qt/logging.h"
 
-VulkanWindow::VulkanWindow(std::unique_ptr<MapView> mapView)
-    : mapView(std::move(mapView)), scrollAngleBuffer(0)
+VulkanWindow::VulkanWindow(std::unique_ptr<MapView> mapView, QWindow *parent)
+    : QVulkanWindow(parent),
+      mapView(std::move(mapView)),
+      scrollAngleBuffer(0)
 {
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
   connect(this, &VulkanWindow::mousePosEvent, [=](util::Point<float> mousePos) {
