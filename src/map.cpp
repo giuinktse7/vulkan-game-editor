@@ -56,8 +56,17 @@ void Map::addItem(const Position position, uint16_t serverId)
   if (!Items::items.validItemType(serverId))
     return;
 
+  Item item(serverId);
+
+  const SpriteInfo &spriteInfo = item.itemType->appearance->getSpriteInfo();
+  if (spriteInfo.hasAnimation())
+  {
+    ecs::EntityId entityId = item.assignNewEntityId();
+    g_ecs.addComponent(entityId, ItemAnimationComponent(spriteInfo.getAnimation()));
+  }
+
   auto &tile = getOrCreateTile(position);
-  tile.addItem(Item(serverId));
+  tile.addItem(std::move(item));
 }
 
 MapRegion Map::getRegion(Position from, Position to)
