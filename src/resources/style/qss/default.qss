@@ -32,12 +32,12 @@ QMenu::item::selected {
   background-color: #C6C6C6;
 }
 
-/* QTabBar */
 QTabWidget::pane { /* The tab widget frame */
 border: none;
 }
 
 QTabWidget::tab-bar {
+  min-width: 1000;
 }
 
 SvgWidget {
