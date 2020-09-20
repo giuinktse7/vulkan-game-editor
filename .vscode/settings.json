@@ -129,7 +129,9 @@
     "qscopedpointer": "cpp",
     "qlabel": "cpp",
     "qevent": "cpp",
-    "qdesktopwidget": "cpp"
+    "qdesktopwidget": "cpp",
+    "qfontdatabase": "cpp",
+    "qsplitter": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

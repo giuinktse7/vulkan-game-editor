@@ -16,6 +16,7 @@
 #include <QLabel>
 #include <QRect>
 #include <QEvent>
+#include <QApplication>
 
 #include <QDesktopWidget>
 #include <QApplication>
@@ -23,18 +24,19 @@
 #include "../logger.h"
 #include "../qt/logging.h"
 
-constexpr int DragTriggerDistancePixels = 5;
+#include "../debug.h"
 
 constexpr int CloseIconSize = 8;
 
 MapTabWidget::MapTabWidget(QWidget *parent)
     : QTabWidget(parent)
 {
-    MapTabBar *tabBar = new MapTabBar(this);
-    setTabBar(tabBar);
+    MapTabBar *mapTabBar = new MapTabBar(this);
+    setTabBar(mapTabBar);
+    mapTabBar->setExpanding(false);
 
     setTabsClosable(true);
-    connect(tabBar, &MapTabBar::tabCloseRequested, this, &MapTabWidget::closeTab);
+    connect(mapTabBar, &MapTabBar::tabCloseRequested, this, &MapTabWidget::closeTab);
 }
 
 int MapTabWidget::addTabWithButton(QWidget *widget, const QString &text, QVariant data)
@@ -72,14 +74,15 @@ void MapTabWidget::closeTab(int index)
 */
 MapTabWidget::MapTabBar::MapTabBar(MapTabWidget *parent) : QTabBar(parent)
 {
-    setCursor(Qt::PointingHandCursor);
-    new QHBoxLayout(this);
+    auto l = new QHBoxLayout;
+    setLayout(l);
     setMouseTracking(true);
+    setAcceptDrops(true);
 
     // Does nothing?
-    layout()->setSpacing(0);
-    setContentsMargins(0, 0, 0, 0);
-    updateGeometry();
+    // layout()->setSpacing(0);
+    // setContentsMargins(0, 0, 0, 0);
+    // updateGeometry();
 
     connect(parent, &MapTabWidget::mapTabClosed, [=](int removedTabIndex) { removedTabEvent(removedTabIndex); });
 
@@ -136,17 +139,23 @@ void MapTabWidget::MapTabBar::mousePressEvent(QMouseEvent *event)
 {
     // VME_LOG_D("MapTabWidget::MapTabBar::mousePressEvent");
 
-    if (intersectsCloseButton(event->pos()))
-    {
-        closePendingIndex = tabAt(event->pos());
-    }
-    else
-    {
-        event->ignore();
-        QTabBar::mousePressEvent(event);
+    auto pos = event->pos();
 
-        activePressPos = event->pos();
+    if (event->button() == Qt::LeftButton)
+    {
+        if (intersectsCloseButton(event->pos()))
+        {
+            closePendingIndex = tabAt(event->pos());
+        }
+        else
+        {
+
+            dragStartPosition = pos;
+        }
     }
+
+    event->ignore();
+    QTabBar::mousePressEvent(event);
 }
 
 void MapTabWidget::MapTabBar::setCloseButtonVisible(int index, bool visible)
@@ -175,20 +184,35 @@ void MapTabWidget::MapTabBar::mouseMoveEvent(QMouseEvent *event)
     event->ignore();
     QTabBar::mouseMoveEvent(event);
 
+    if (tabAt(event->pos()) != -1)
+    {
+        setCursor(Qt::PointingHandCursor);
+    }
+    else
+    {
+        setCursor(Qt::ArrowCursor);
+    }
+
     if (pressed())
     {
-        QPoint diff = event->pos() - activePressPos.value();
-        if (diff.manhattanLength() > DragTriggerDistancePixels)
-        {
-            closePendingIndex = -1;
-            activePressPos.reset();
+        if ((event->pos() - dragStartPosition.value())
+                .manhattanLength() < QApplication::startDragDistance())
+            return;
 
-            auto *drag = new QDrag(getActiveWidget());
+        closePendingIndex = -1;
+        dragStartPosition.reset();
 
-            auto data = new QMimeData;
-            drag->setMimeData(data);
-            drag->exec();
-        }
+        int currentTab = tabAt(event->pos());
+
+        QObject *dragSource = this;
+        auto *drag = new QDrag(dragSource);
+
+        auto data = new MapTabMimeData;
+        data->setInt(currentTab);
+
+        drag->setMimeData(data);
+
+        Qt::DropAction drop = drag->exec(Qt::MoveAction);
     }
     else
     {
@@ -218,7 +242,7 @@ void MapTabWidget::MapTabBar::mouseReleaseEvent(QMouseEvent *event)
     event->ignore();
     QTabBar::mouseReleaseEvent(event);
 
-    activePressPos.reset();
+    dragStartPosition.reset();
 }
 
 void MapTabWidget::MapTabBar::enterEvent(QEvent *event)
@@ -231,6 +255,43 @@ void MapTabWidget::MapTabBar::leaveEvent(QEvent *event)
     if (hoveredIndex != -1 && hoveredIndex != currentIndex())
     {
         setCloseButtonVisible(hoveredIndex, false);
+    }
+}
+
+void MapTabWidget::MapTabBar::dragEnterEvent(QDragEnterEvent *event)
+{
+    event->acceptProposedAction();
+}
+
+void MapTabWidget::MapTabBar::dropEvent(QDropEvent *event)
+{
+    // Only accept drops from MapTabWidget::MapTabBar*
+    if (!dynamic_cast<MapTabWidget::MapTabBar *>(event->source()))
+        return;
+
+    auto mimeData = static_cast<const MapTabMimeData *>(event->mimeData());
+
+    int srcIndex = mimeData->getInt();
+    int cursorTabIndex = tabAt(event->pos());
+
+    // Moved internally
+    if (this == event->source())
+    {
+        int destIndex = cursorTabIndex;
+        if (destIndex == -1)
+            destIndex = count() - 1;
+
+        moveTab(srcIndex, destIndex);
+    }
+    else
+    {
+        if (cursorTabIndex == -1)
+        {
+            MapTabWidget *p = parentWidget();
+
+            p->addTabWithButton(p->widget(srcIndex), p->tabText(srcIndex));
+            // p->removeTab(droppedTabIndex);
+        }
     }
 }
 
@@ -265,7 +326,7 @@ bool MapTabWidget::MapTabBar::event(QEvent *event)
     {
     case QEvent::HoverLeave:
     {
-        VME_LOG_D("HoverLeave. hoveredIndex: " << hoveredIndex << ", currentIndex: " << currentIndex());
+        // VME_LOG_D("HoverLeave. hoveredIndex: " << hoveredIndex << ", currentIndex: " << currentIndex());
         if (hoveredIndex != currentIndex())
         {
             setCloseButtonVisible(hoveredIndex, false);
@@ -317,4 +378,59 @@ bool SvgWidget::event(QEvent *event)
     }
 
     return QFrame::event(event);
+}
+
+MapTabMimeData::MapTabMimeData() : QMimeData()
+{
+}
+
+void MapTabMimeData::setInt(int value)
+{
+    QByteArray byteArray;
+    QDataStream dataStream(&byteArray, QIODevice::WriteOnly);
+    dataStream << value;
+
+    setData(MapTabMimeData::integerMimeType(), byteArray);
+}
+
+int MapTabMimeData::getInt() const
+{
+    QByteArray byteArray = data(integerMimeType());
+    QDataStream dataStream(&byteArray, QIODevice::ReadOnly);
+    int value;
+    dataStream >> value;
+
+    return value;
+}
+
+bool MapTabMimeData::hasFormat(const QString &mimeType) const
+{
+    return QMimeData::hasFormat(mimeType) || mimeType == integerMimeType();
+}
+QStringList MapTabMimeData::formats() const
+{
+    QStringList formats = QMimeData::formats();
+    formats.append(integerMimeType());
+    return formats;
+}
+
+QVariant MapTabMimeData::retrieveData(const QString &mimeType, QVariant::Type type) const
+{
+    if (QMimeData::hasFormat(mimeType))
+    {
+        return QMimeData::retrieveData(mimeType, type);
+    }
+
+    if (mimeType == integerMimeType())
+    {
+        QDataStream buffer(data(mimeType));
+        int x;
+        buffer >> x;
+        return x;
+    }
+    else
+    {
+        VME_LOG("Unknown mimeType in retrieveData: " << mimeType);
+        ABORT_PROGRAM("Unknown mimeType in retrieveData.");
+    }
 }

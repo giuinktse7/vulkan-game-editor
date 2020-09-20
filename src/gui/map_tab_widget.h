@@ -6,6 +6,7 @@
 #include <QFrame>
 #include <QString>
 #include <QVariant>
+#include <QMimeData>
 
 #include <memory>
 
@@ -33,8 +34,11 @@ class MapTabWidget : public QTabWidget
     void leaveEvent(QEvent *event) override;
     bool event(QEvent *event) override;
 
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+
   private:
-    std::optional<QPoint> activePressPos;
+    std::optional<QPoint> dragStartPosition;
     int closePendingIndex = -1;
     /*
       A value of -1 means no tab is hovered.
@@ -50,7 +54,7 @@ class MapTabWidget : public QTabWidget
 
     inline bool pressed() const
     {
-      return activePressPos.has_value();
+      return dragStartPosition.has_value();
     }
 
     /*
@@ -95,4 +99,29 @@ protected:
 
 private:
   QSvgWidget *svg;
+};
+
+/*
+  Defines the available MimeData for a drag & drop operation on a map tab.
+*/
+class MapTabMimeData : public QMimeData
+{
+public:
+  MapTabMimeData();
+
+  static QString TabIndexMimeType;
+
+  static const QString integerMimeType()
+  {
+    static const QString mimeType = "vulkan-game-editor-mimetype:int";
+    return mimeType;
+  }
+
+  void setInt(int value);
+  int getInt() const;
+
+  bool hasFormat(const QString &mimeType) const override;
+  QStringList formats() const override;
+
+  QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
 };

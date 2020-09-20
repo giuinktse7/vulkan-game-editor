@@ -23,6 +23,7 @@ VulkanWindow::VulkanWindow(std::unique_ptr<MapView> mapView, QWindow *parent)
       mapView(std::move(mapView)),
       scrollAngleBuffer(0)
 {
+  // QVulkanWindow::setFlags(QVulkanWindow::PersistentResources);
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
   connect(this, &VulkanWindow::mousePosChanged, [=](util::Point<float> mousePos) {
     int x = static_cast<int>(std::round(mousePos.x()));
@@ -43,7 +44,7 @@ void VulkanWindow::lostFocus()
 QWidget *VulkanWindow::wrapInWidget(QWidget *parent)
 {
   QWidget *wrapper = QWidget::createWindowContainer(this, parent);
-  wrapper->setFocusPolicy(Qt::FocusPolicy::NoFocus);
+  // wrapper->setFocusPolicy(Qt::FocusPolicy::NoFocus);
 
   widget = wrapper;
 
@@ -259,6 +260,9 @@ QRect VulkanWindow::ContextMenu::relativeGeometry() const
 
 bool VulkanWindow::event(QEvent *ev)
 {
+
+  // qDebug() << "[" << QString(debugName.c_str()) << "] " << ev->type() << " { " << mapToGlobal(position()) << " }";
+
   switch (ev->type())
   {
   case QEvent::Leave:
@@ -270,7 +274,6 @@ bool VulkanWindow::event(QEvent *ev)
       auto pos = mapFromGlobal(QCursor::pos());
       mapView->setMousePos(ScreenPosition(pos.x(), pos.y()));
     }
-
     break;
   default:
     break;

@@ -9,6 +9,7 @@
 #include <QHBoxLayout>
 
 #include <QFontDatabase>
+#include <QLabel>
 
 #include "gui/borderless_window.h"
 #include "gui/map_view_widget.h"
@@ -24,7 +25,7 @@
 
 #include "ecs/ecs.h"
 
-#define QT_MANAGED_POINTER(cls, ...) new cls(__VA_ARGS__);
+#include "gui/map_tab_widget.h"
 
 void loadTextures()
 {
@@ -109,50 +110,49 @@ void MainApplication::onFocusWidgetChanged(QWidget *widget)
     currentWidget = widget;
 }
 
-void makeTestMap1(MapView *mapView)
+std::shared_ptr<Map> makeTestMap1()
 {
+    std::shared_ptr<Map> map = std::make_shared<Map>();
     auto &rand = Random::global();
 
-    mapView->history.startGroup(ActionGroupType::AddMapItem);
+    for (int x = 0; x < 30; ++x)
+    {
+        for (int y = 0; y < 30; ++y)
+        {
+            map->addItem(Position(1 + x, 1 + y, 7), rand.nextInt<uint16_t>(4526, 4542));
+        }
+    }
+
+    for (int i = 0; i < 10; ++i)
+    {
+        map->addItem(Position(rand.nextInt<uint16_t>(1, 10), rand.nextInt<uint16_t>(1, 10), 7), 2767 + rand.nextInt<uint16_t>(0, 2));
+    }
+
+    return map;
+}
+
+std::shared_ptr<Map> makeTestMap2()
+{
+
+    std::shared_ptr<Map> map = std::make_shared<Map>();
+    auto &rand = Random::global();
 
     int i = 0;
     for (int x = 0; x < 30; ++x)
     {
         for (int y = 0; y < 30; ++y)
         {
-            mapView->addItem(Position(1 + x, 1 + y, 7), 4526 + i);
+            map->addItem(Position(1 + x, 1 + y, 7), 4526 + i);
             ++i;
         }
     }
 
     for (int i = 0; i < 10; ++i)
     {
-        mapView->addItem(Position(rand.nextInt<uint16_t>(1, 10), rand.nextInt<uint16_t>(1, 10), 7), 2767 + rand.nextInt<uint16_t>(0, 2));
+        map->addItem(Position(rand.nextInt<uint16_t>(1, 10), rand.nextInt<uint16_t>(1, 10), 7), 2767 + rand.nextInt<uint16_t>(0, 2));
     }
 
-    mapView->history.endGroup(ActionGroupType::AddMapItem);
-}
-
-void makeTestMap2(MapView *mapView)
-{
-    auto &rand = Random::global();
-
-    mapView->history.startGroup(ActionGroupType::AddMapItem);
-
-    for (int x = 0; x < 30; ++x)
-    {
-        for (int y = 0; y < 30; ++y)
-        {
-            mapView->addItem(Position(1 + x, 1 + y, 7), rand.nextInt<uint16_t>(4526, 4542));
-        }
-    }
-
-    for (int i = 0; i < 10; ++i)
-    {
-        mapView->addItem(Position(rand.nextInt<uint16_t>(1, 10), rand.nextInt<uint16_t>(1, 10), 7), 2767 + rand.nextInt<uint16_t>(0, 2));
-    }
-
-    mapView->history.endGroup(ActionGroupType::AddMapItem);
+    return map;
 }
 
 int runApp(int argc, char *argv[])
@@ -171,37 +171,15 @@ int runApp(int argc, char *argv[])
         qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
 
     mainWindow.setVulkanInstance(&instance);
+
     {
-        VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
-        vulkanWindow->setVulkanInstance(&instance);
-        vulkanWindow->debugName = "Window1";
-
-        MapView *mapView = vulkanWindow->getMapView();
-        MapView::MouseAction::RawItem action;
-        action.serverId = 6217;
-        mapView->setMouseAction(action);
-
-        makeTestMap1(mapView);
-
-        app.setVulkanWindow(vulkanWindow);
-
-        mainWindow.addMapTab(*vulkanWindow);
+        std::shared_ptr<Map> map = makeTestMap1();
+        mainWindow.addMapTab(map);
     }
+
     {
-        VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>());
-        vulkanWindow->setVulkanInstance(&instance);
-        vulkanWindow->debugName = "Window2";
-
-        MapView *mapView = vulkanWindow->getMapView();
-        MapView::MouseAction::RawItem action;
-        action.serverId = 6217;
-        mapView->setMouseAction(action);
-
-        makeTestMap2(mapView);
-
-        app.setVulkanWindow(vulkanWindow);
-
-        mainWindow.addMapTab(*vulkanWindow);
+        std::shared_ptr<Map> map = makeTestMap2();
+        mainWindow.addMapTab(map);
     }
 
     mainWindow.resize(1024, 768);
