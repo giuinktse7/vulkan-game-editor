@@ -49,6 +49,10 @@ SvgWidget {
 #my-svg {
 }
 
+QTabBar {
+    qproperty-drawBase: 0;
+}
+
 QTabBar::tab {
     background: #ececec;
     border-radius: 0px;
