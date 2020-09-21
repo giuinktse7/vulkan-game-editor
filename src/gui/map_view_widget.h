@@ -21,6 +21,8 @@ public:
   QtScrollBar(Qt::Orientation orientation, QWidget *parent = nullptr);
   void mousePressEvent(QMouseEvent *e) override;
   void mouseMoveEvent(QMouseEvent *e) override;
+
+  void initStyleOption(QStyleOptionSlider *option) const;
 };
 
 class MapViewWidget : public QWidget, public MapView::Observer

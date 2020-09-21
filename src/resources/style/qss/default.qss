@@ -32,12 +32,15 @@ QMenu::item::selected {
   background-color: #C6C6C6;
 }
 
+#mapTabWidget {
+}
+
 QTabWidget::pane { /* The tab widget frame */
 border: none;
 }
 
 QTabWidget::tab-bar {
-  min-width: 1000;
+  min-width: 100ex;
 }
 
 SvgWidget {
@@ -45,6 +48,8 @@ SvgWidget {
   padding: 4px;
   padding-left: 8px;
 }
+
+
 
 #my-svg {
 }
@@ -54,7 +59,7 @@ QTabBar {
 }
 
 QTabBar::tab {
-    background: #ececec;
+    /* background: #ececec; */
     border-radius: 0px;
     border-right: 1px solid #fff;
     min-width: 8ex;
@@ -81,8 +86,13 @@ QTabBar::tab:selected, QTabBar::tab:hover {
 }
 
 QTabBar::tab:selected {
-  background: #fff;
+  /* background: #fff; */
 }
 
 QTabBar::tab:!selected {
+}
+
+QTabBar::tear {
+    width: 0px; 
+    border: none;
 }

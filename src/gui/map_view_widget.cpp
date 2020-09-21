@@ -230,3 +230,8 @@ void QtScrollBar::mouseMoveEvent(QMouseEvent *e)
 {
   QScrollBar::mouseMoveEvent(e);
 }
+
+void QtScrollBar::initStyleOption(QStyleOptionSlider *option) const
+{
+  QScrollBar::initStyleOption(option);
+}

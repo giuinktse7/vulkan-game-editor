@@ -8,9 +8,13 @@
 #include <QVariant>
 #include <QMimeData>
 
+#include <QProxyStyle>
+
 #include <memory>
 
 #include <optional>
+
+#include "map_view_widget.h"
 
 class QWidget;
 class QMouseEvent;
@@ -35,7 +39,12 @@ class MapTabWidget : public QTabWidget
     bool event(QEvent *event) override;
 
     void dragEnterEvent(QDragEnterEvent *event) override;
+    void dragMoveEvent(QDragMoveEvent *event) override;
+    void dragLeaveEvent(QDragLeaveEvent *event) override;
+
     void dropEvent(QDropEvent *event) override;
+
+    void paintEvent(QPaintEvent *event) override;
 
   private:
     std::optional<QPoint> dragStartPosition;
@@ -46,9 +55,14 @@ class MapTabWidget : public QTabWidget
     int hoveredIndex = -1;
     int prevActiveIndex = -1;
 
+    std::optional<int> dragHoverIndex;
+
+    QtScrollBar *scrollBar;
+
     void removedTabEvent(int removedIndex);
 
     void setHoveredIndex(int index);
+    void setDragHoveredIndex(int index);
 
     QWidget *getActiveWidget();
 
@@ -76,6 +90,7 @@ public:
 
   int addTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
 
+protected:
 signals:
   void mapTabClosed(int index, QVariant data);
 
@@ -124,4 +139,13 @@ public:
   QStringList formats() const override;
 
   QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
+};
+
+class TestProxyStyle : public QProxyStyle
+{
+public:
+  void drawControl(ControlElement element,
+                   const QStyleOption *option,
+                   QPainter *painter,
+                   const QWidget *widget) const override;
 };

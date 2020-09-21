@@ -16,7 +16,9 @@
 #include <QLabel>
 #include <QRect>
 #include <QEvent>
-#include <QApplication>
+
+#include <QPaintEvent>
+#include <QStylePainter>
 
 #include <QDesktopWidget>
 #include <QApplication>
@@ -25,6 +27,7 @@
 #include "../qt/logging.h"
 
 #include "../debug.h"
+#include "../util.h"
 
 constexpr int CloseIconSize = 8;
 
@@ -74,20 +77,29 @@ void MapTabWidget::closeTab(int index)
 */
 MapTabWidget::MapTabBar::MapTabBar(MapTabWidget *parent) : QTabBar(parent)
 {
-    auto l = new QHBoxLayout;
-    setLayout(l);
+    // auto vlayout = new QVBoxLayout;
+
+    // setLayout(vlayout);
+
+    scrollBar = new QtScrollBar(Qt::Orientation::Horizontal);
+    // scrollBar->setStyle(style());
+    // scrollBar->setStyleSheet(styleSheet());
+    scrollBar->setObjectName("map-tabbar-scrollbar");
+    scrollBar->setFixedWidth(500);
+    scrollBar->setProperty("mapTabBar", true);
+    // vlayout->addWidget(bar);
+
+    // auto l = new QHBoxLayout;
+    // setLayout(l);
     setMouseTracking(true);
     setAcceptDrops(true);
-
-    // Does nothing?
-    // layout()->setSpacing(0);
-    // setContentsMargins(0, 0, 0, 0);
-    // updateGeometry();
+    setUsesScrollButtons(false);
+    // setStyle(new TestProxyStyle);
 
     connect(parent, &MapTabWidget::mapTabClosed, [=](int removedTabIndex) { removedTabEvent(removedTabIndex); });
 
     connect(this, &QTabBar::currentChanged, [this](int index) {
-        VME_LOG_D("Active tab changed from " << this->prevActiveIndex << " to " << index);
+        // VME_LOG_D("Active tab changed from " << this->prevActiveIndex << " to " << index);
         if (this->prevActiveIndex != -1)
         {
             this->setCloseButtonVisible(prevActiveIndex, false);
@@ -232,7 +244,6 @@ void MapTabWidget::MapTabBar::mouseMoveEvent(QMouseEvent *event)
 
 void MapTabWidget::MapTabBar::mouseReleaseEvent(QMouseEvent *event)
 {
-    // VME_LOG_D("MapTabWidget::MapTabBar::mouseReleaseEvent");
     if (closePendingIndex != -1 && intersectsCloseButton(event->pos(), closePendingIndex))
     {
         emit tabCloseRequested(hoveredIndex);
@@ -260,7 +271,30 @@ void MapTabWidget::MapTabBar::leaveEvent(QEvent *event)
 
 void MapTabWidget::MapTabBar::dragEnterEvent(QDragEnterEvent *event)
 {
-    event->acceptProposedAction();
+    if (event->mimeData()->hasFormat(MapTabMimeData::integerMimeType()))
+    {
+        setDragHoveredIndex(tabAt(event->pos()));
+        event->acceptProposedAction();
+    }
+}
+
+void MapTabWidget::MapTabBar::dragMoveEvent(QDragMoveEvent *event)
+{
+    if (event->mimeData()->hasFormat(MapTabMimeData::integerMimeType()))
+    {
+        event->acceptProposedAction();
+
+        auto pos = event->pos();
+        int tabIndex = tabAt(pos);
+
+        setDragHoveredIndex(tabIndex);
+    }
+}
+
+void MapTabWidget::MapTabBar::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    dragHoverIndex.reset();
+    update();
 }
 
 void MapTabWidget::MapTabBar::dropEvent(QDropEvent *event)
@@ -269,6 +303,7 @@ void MapTabWidget::MapTabBar::dropEvent(QDropEvent *event)
     if (!dynamic_cast<MapTabWidget::MapTabBar *>(event->source()))
         return;
 
+    dragHoverIndex.reset();
     auto mimeData = static_cast<const MapTabMimeData *>(event->mimeData());
 
     int srcIndex = mimeData->getInt();
@@ -281,7 +316,15 @@ void MapTabWidget::MapTabBar::dropEvent(QDropEvent *event)
         if (destIndex == -1)
             destIndex = count() - 1;
 
-        moveTab(srcIndex, destIndex);
+        if (srcIndex != destIndex)
+        {
+            moveTab(srcIndex, destIndex);
+        }
+        else
+        {
+            // Required to update the drag hover rectangle
+            update();
+        }
     }
     else
     {
@@ -318,6 +361,15 @@ void MapTabWidget::MapTabBar::setHoveredIndex(int index)
     }
 
     hoveredIndex = index;
+}
+
+void MapTabWidget::MapTabBar::setDragHoveredIndex(int index)
+{
+    if (util::contains(dragHoverIndex, index))
+        return;
+
+    dragHoverIndex = index;
+    update();
 }
 
 bool MapTabWidget::MapTabBar::event(QEvent *event)
@@ -432,5 +484,78 @@ QVariant MapTabMimeData::retrieveData(const QString &mimeType, QVariant::Type ty
     {
         VME_LOG("Unknown mimeType in retrieveData: " << mimeType);
         ABORT_PROGRAM("Unknown mimeType in retrieveData.");
+    }
+}
+
+void MapTabWidget::MapTabBar::paintEvent(QPaintEvent *event)
+{
+    QStyleOptionTabBarBase optTabBase;
+    QStylePainter painter(this);
+
+    QColor dragHoverColor("#CEDCEC");
+
+    for (int i = 0; i < count(); ++i)
+    {
+        QStyleOptionTab tab;
+        initStyleOption(&tab, i);
+        if (!(tab.state & QStyle::State_Enabled))
+        {
+            tab.palette.setCurrentColorGroup(QPalette::Disabled);
+        }
+        // If this tab is partially obscured, make a note of it so that we can pass the information
+        // along when we draw the tear.
+        QRect rect = tabRect(i);
+        // Don't bother drawing a tab if the entire tab is outside of the visible tab bar.
+        if ((tab.rect.right() < 0 || tab.rect.left() > width()))
+            continue;
+
+        // tab.palette.setColor(backgroundRole(), QColor(255, 0, 0));
+        // tab.palette.setColor(QPalette::Base, QColor(255, 0, 0));
+        // tab.palette.setColor(QPalette::Button, QColor(255, 0, 0));
+        // painter.drawControl(QStyle::CE_TabBarTab, tab);
+        if (dragHoverIndex.has_value() && i == dragHoverIndex.value())
+        {
+            painter.fillRect(rect, dragHoverColor);
+        }
+        if (tab.state & QStyle::State_Selected)
+        {
+            painter.fillRect(rect, QColor("#FFFFFF"));
+        }
+        painter.drawControl(QStyle::CE_TabBarTabShape, tab);
+        painter.drawControl(QStyle::CE_TabBarTabLabel, tab);
+    }
+
+    if (dragHoverIndex.has_value() && dragHoverIndex.value() == -1 && currentIndex() != count() - 1)
+    {
+        QRect last = tabRect(count() - 1);
+        QRect highlightRect = QRect(last.right(), last.top(), rect().right() - last.right(), height());
+
+        painter.fillRect(highlightRect, dragHoverColor);
+    }
+
+    painter.translate(0, height() - 8);
+    QStyleOptionSlider opt;
+    scrollBar->initStyleOption(&opt);
+    opt.subControls = QStyle::SC_ScrollBarSlider | QStyle::SC_ScrollBarGroove;
+    style()->drawComplexControl(QStyle::CC_ScrollBar, &opt, &painter, scrollBar);
+}
+
+void TestProxyStyle::drawControl(ControlElement element,
+                                 const QStyleOption *option,
+                                 QPainter *painter,
+                                 const QWidget *widget) const
+{
+    switch (element)
+    {
+    case CE_TabBarTab:
+    {
+        QStyleOptionButton myButtonOption;
+
+        const QStyleOptionButton *buttonOption = qstyleoption_cast<const QStyleOptionButton *>(option);
+        QProxyStyle::drawControl(element, &myButtonOption, painter, widget);
+    }
+    break;
+    default:
+        QProxyStyle::drawControl(element, option, painter, widget);
     }
 }

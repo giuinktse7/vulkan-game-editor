@@ -7,6 +7,7 @@
 #include <QLoggingCategory>
 #include <QFile>
 #include <QHBoxLayout>
+#include <QStyleFactory>
 
 #include <QFontDatabase>
 #include <QLabel>
@@ -160,6 +161,8 @@ int runApp(int argc, char *argv[])
     MainApplication app(argc, argv);
     app.loadStyleSheet("default");
     app.loadGameData();
+
+    // app.setStyle("fusion");
 
     MainWindow mainWindow;
 

@@ -131,7 +131,8 @@
     "qevent": "cpp",
     "qdesktopwidget": "cpp",
     "qfontdatabase": "cpp",
-    "qsplitter": "cpp"
+    "qsplitter": "cpp",
+    "qpaintevent": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

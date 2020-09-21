@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <optional>
 
 constexpr bool hasBitSet(uint32_t flag, uint32_t flags)
 {
@@ -45,6 +46,12 @@ namespace util
 		int w;
 		int h;
 	};
+
+	template <typename T>
+	inline bool contains(std::optional<T> opt, T value)
+	{
+		return opt.has_value() && opt.value() == value;
+	}
 
 	template <typename T>
 	inline std::vector<T> sliceLeading(std::vector<T> xs, T x)
