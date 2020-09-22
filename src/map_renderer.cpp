@@ -49,7 +49,7 @@ MapRenderer::MapRenderer(VulkanWindow &window)
 
 void MapRenderer::initResources()
 {
-  VME_LOG_D("[window: " << window.debugName << "] MapRenderer::initResources (device: " << window.device() << ")");
+  // VME_LOG_D("[window: " << window.debugName << "] MapRenderer::initResources (device: " << window.device() << ")");
 
   window.updateVulkanInfo();
 
@@ -90,7 +90,7 @@ void MapRenderer::releaseSwapChainResources()
 void MapRenderer::releaseResources()
 {
   auto device = window.device();
-  VME_LOG_D("[window: " << window.debugName << "] MapRenderer::releaseResources (device: " << device << ")");
+  // VME_LOG_D("[window: " << window.debugName << "] MapRenderer::releaseResources (device: " << device << ")");
 
   devFuncs->vkDestroyDescriptorSetLayout(window.device(), uboDescriptorSetLayout, nullptr);
   uboDescriptorSetLayout = VK_NULL_HANDLE;

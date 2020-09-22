@@ -132,7 +132,10 @@
     "qdesktopwidget": "cpp",
     "qfontdatabase": "cpp",
     "qsplitter": "cpp",
-    "qpaintevent": "cpp"
+    "qpaintevent": "cpp",
+    "qwheelevent": "cpp",
+    "qgraphicsopacityeffect": "cpp",
+    "qproxystyle": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

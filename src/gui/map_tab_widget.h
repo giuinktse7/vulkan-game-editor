@@ -5,6 +5,7 @@
 #include <QSvgWidget>
 #include <QFrame>
 #include <QString>
+#include <QObject>
 #include <QVariant>
 #include <QMimeData>
 
@@ -13,11 +14,58 @@
 #include <memory>
 
 #include <optional>
+#include "qt_util.h"
 
 #include "map_view_widget.h"
+#include "../time_point.h"
 
 class QWidget;
 class QMouseEvent;
+class QSize;
+class QPropertyAnimation;
+
+class OpacityAnimation : public QObject
+{
+  Q_OBJECT
+public:
+  struct AnimationData
+  {
+    int duration = 3000;
+    double startValue = 0.0;
+    double endValue = 1.0;
+
+    // AnimationData(const AnimationData &other) = default;
+    // AnimationData &operator=(const AnimationData &other) = default;
+  };
+
+  OpacityAnimation();
+  OpacityAnimation(QWidget *widget);
+
+  AnimationData forward;
+  AnimationData backward;
+
+  void showWidget();
+  void hideWidget();
+
+signals:
+  void preShow();
+  void postShow();
+
+private:
+  enum class AnimationState
+  {
+    Showing,
+    Hiding,
+    None
+  };
+
+  bool internalStop = false;
+
+  AnimationState animationState = AnimationState::None;
+
+  QWidget *widget;
+  QPropertyAnimation *animation;
+};
 
 class MapTabWidget : public QTabWidget
 {
@@ -29,6 +77,10 @@ class MapTabWidget : public QTabWidget
     MapTabBar(MapTabWidget *parent);
 
     void setCloseButtonVisible(int tabIndex, bool visible);
+
+    int tabAt(const QPoint &pos) const;
+
+    QSize minimumSizeHint() const override;
 
   protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -42,13 +94,32 @@ class MapTabWidget : public QTabWidget
     void dragMoveEvent(QDragMoveEvent *event) override;
     void dragLeaveEvent(QDragLeaveEvent *event) override;
 
+    void wheelEvent(QWheelEvent *event) override;
+
     void dropEvent(QDropEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+
+    void showEvent(QShowEvent *event) override;
 
     void paintEvent(QPaintEvent *event) override;
 
   private:
     std::optional<QPoint> dragStartPosition;
     int closePendingIndex = -1;
+
+    QtScrollBar *scrollBar;
+    QtUtil::ScrollState tabBarScrollState;
+    OpacityAnimation scrollBarAnimation;
+    struct ScrollVisibilityState
+    {
+      bool hasTimer = false;
+      TimePoint newTimerStart;
+    } scrollVisibilityState;
+
+    int scrollOffset = 0;
+
+    QImage *closeButtonImage;
+
     /*
       A value of -1 means no tab is hovered.
     */
@@ -57,12 +128,19 @@ class MapTabWidget : public QTabWidget
 
     std::optional<int> dragHoverIndex;
 
-    QtScrollBar *scrollBar;
+    /*
+      True if this widget has been shown at least once.
+    */
+    bool hasBeenShown = false;
 
     void removedTabEvent(int removedIndex);
 
     void setHoveredIndex(int index);
     void setDragHoveredIndex(int index);
+
+    void updateScrollBarVisibility();
+
+    QPoint mapToScrolled(const QPoint pos) const;
 
     QWidget *getActiveWidget();
 
@@ -83,12 +161,19 @@ class MapTabWidget : public QTabWidget
     bool withinWidget(QPoint relativePoint) const;
 
     MapTabWidget *parentWidget() const;
+
+    void createScrollVisibilityTimer(time_t millis);
   };
 
 public:
   MapTabWidget(QWidget *parent = nullptr);
 
+  QSize minimumSizeHint() const override;
+
   int addTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
+
+signals:
+  void mapTabAdded(int index);
 
 protected:
 signals:
@@ -123,8 +208,6 @@ class MapTabMimeData : public QMimeData
 {
 public:
   MapTabMimeData();
-
-  static QString TabIndexMimeType;
 
   static const QString integerMimeType()
   {

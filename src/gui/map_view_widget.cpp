@@ -174,6 +174,8 @@ void QtScrollBar::mousePressEvent(QMouseEvent *e)
   if (!scrollbarJump)
   {
     QScrollBar::mousePressEvent(e);
+    e->accept();
+    VME_LOG_D("Accepted");
     return;
   }
 
