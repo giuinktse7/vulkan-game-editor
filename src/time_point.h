@@ -15,7 +15,7 @@ public:
 	template <typename T>
 	time_t timeSince(TimePoint other)
 	{
-		return std::chrono::duration_cast<std::chrono::milliseconds>(this->timePoint - other.timePoint).count();
+		return std::chrono::duration_cast<T>(this->timePoint - other.timePoint).count();
 	}
 
 	template <typename T>
