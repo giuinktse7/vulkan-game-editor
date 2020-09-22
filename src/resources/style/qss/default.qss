@@ -40,18 +40,62 @@ border: none;
 }
 
 QTabWidget::tab-bar {
-  min-width: 100ex;
+  min-width: 10000ex; /* Arbitrary value, represents width: 100% */
 }
 
 SvgWidget {
   margin: 0px;
   padding: 4px;
   padding-left: 8px;
+  background: none;
+  background-color: none;
+}
+
+/* QScrollBar[mapTabBar=true]:horizontal {
+    max-height: 8px;
+}
+
+QScrollBar[mapTabBar=true]::handle:horizontal {
+    max-width: 5px;
+}
+
+QScrollBar[mapTabBar=true]::add-line:horizontal {
+      border: none;
+      background: none;
+      color: red;
+}
+
+QScrollBar[mapTabBar=true]::sub-line:horizontal {
+      border: none;
+      background: none;
+} */
+
+QScrollBar[mapTabBar=true]:horizontal {
+    background: #ffffff;
+    height: 4px;
+}
+QScrollBar[mapTabBar=true]::handle:horizontal {
+    background: #7c7c7c;
+    min-width: 20px;
+}
+QScrollBar[mapTabBar=true]::add-line:horizontal {
+    border: none;
+    background: none;
+}
+
+QScrollBar[mapTabBar=true]::sub-line:horizontal {
+    border: none;
+    background: none;
+}
+
+QSvgWidget {
+  background: none;
 }
 
 
-
 #my-svg {
+  background: none;
+  background-color: none;
 }
 
 QTabBar {
