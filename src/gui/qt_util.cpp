@@ -1,6 +1,9 @@
 #include "qt_util.h"
 
+#include <optional>
+
 #include <QApplication>
+#include <QWheelEvent>
 
 #include "../items.h"
 
@@ -22,4 +25,19 @@ QPixmap QtUtil::itemPixmap(uint16_t serverId)
 MainApplication *QtUtil::qtApp()
 {
   return (MainApplication *)(QApplication::instance());
+}
+
+std::optional<int> QtUtil::ScrollState::scroll(QWheelEvent *event)
+{
+  // The relative amount that the wheel was rotated, in eighths of a degree.
+  const int deltaY = event->angleDelta().y();
+  amountBuffer += deltaY;
+
+  if (std::abs(amountBuffer) < minRotationDelta)
+    return {};
+
+  int result = amountBuffer / QtMinimumWheelDelta;
+  amountBuffer = amountBuffer % QtMinimumWheelDelta;
+
+  return result;
 }
