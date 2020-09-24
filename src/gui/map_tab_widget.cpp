@@ -10,6 +10,7 @@
 #include <QStyleOptionTab>
 #include <QHBoxLayout>
 #include <QPainter>
+#include <QAbstractAnimation>
 #include <QPropertyAnimation>
 #include <QGraphicsOpacityEffect>
 #include <QLayout>
@@ -37,6 +38,9 @@ namespace
 {
     constexpr int CloseIconSize = 8;
     constexpr QSize MinSizeHint = ([]() { return QSize(400, 300); }());
+
+    constexpr int DragScrollThresholdPx = 30;
+    constexpr int DragScrollRefreshRateMs = 1000 / 60;
 } // namespace
 
 MapTabWidget::MapTabWidget(QWidget *parent)
@@ -52,16 +56,13 @@ MapTabWidget::MapTabWidget(QWidget *parent)
 
 int MapTabWidget::addTabWithButton(QWidget *widget, const QString &text, QVariant data)
 {
-    int index = addTab(widget, text);
+    int index = insertTab(currentIndex() + 1, widget, text);
     tabBar()->setTabData(index, data);
+    setCurrentIndex(index);
+
+    reinterpret_cast<MapTabBar *>(tabBar())->initCloseButton(index);
+
     emit mapTabAdded(index);
-
-    SvgWidget *svg = new SvgWidget("resources/svg/close.svg");
-
-    tabBar()->setTabButton(index, QTabBar::ButtonPosition::RightSide, svg);
-    // Close button rendering is handled in MapTabBar
-    reinterpret_cast<MapTabBar *>(tabBar())->setCloseButtonVisible(index, false);
-
     return index;
 }
 
@@ -73,6 +74,11 @@ void MapTabWidget::closeTab(int index)
     removeTab(index);
 
     emit mapTabClosed(index, std::move(data));
+}
+
+void MapTabWidget::removeCurrentTab()
+{
+    closeTab(currentIndex());
 }
 
 QSize MapTabWidget::minimumSizeHint() const
@@ -90,10 +96,9 @@ QSize MapTabWidget::minimumSizeHint() const
 MapTabWidget::MapTabBar::MapTabBar(MapTabWidget *parent)
     : QTabBar(parent),
       scrollBar(new QtScrollBar(Qt::Orientation::Horizontal)),
-      scrollBarAnimation(scrollBar)
+      scrollBarAnimation(scrollBar),
+      dragPanTimer(this)
 {
-    // setMinimumSize(250, 150);
-
     scrollBar->setProperty("mapTabBar", true);
     scrollBar->setSingleStep(1);
     scrollBar->setMinimum(0);
@@ -114,18 +119,19 @@ MapTabWidget::MapTabBar::MapTabBar(MapTabWidget *parent)
         scrollBarAnimation.backward = backward;
     }
 
+    dragPanTimer.setInterval(DragScrollRefreshRateMs);
+    connect(&dragPanTimer, &QTimer::timeout, this, &MapTabWidget::MapTabBar::dragPanEvent);
+
     connect(&scrollBarAnimation, &OpacityAnimation::preShow, [=] {
-        this->scrollBar->setValue(0);
     });
     connect(&scrollBarAnimation, &OpacityAnimation::postShow, [=] {
         QPoint localPos = mapFromGlobal(QCursor::pos());
-        if (!(withinWidget(localPos) || scrollVisibilityState.hasTimer))
+        if (!(withinWidget(localPos) || scrollVisibilityState.hasTimer || drag))
         {
+            VME_LOG_D("postShow hideWidget");
             this->scrollBarAnimation.hideWidget();
         }
     });
-
-    // vlayout->addWidget(bar);
 
     // Render close button image
     QSvgWidget *closeButtonSvg = new QSvgWidget("resources/svg/close.svg");
@@ -172,6 +178,30 @@ MapTabWidget::MapTabBar::MapTabBar(MapTabWidget *parent)
     connect(parent, &MapTabWidget::mapTabAdded, this, &MapTabWidget::MapTabBar::updateScrollBarVisibility);
 }
 
+void MapTabWidget::MapTabBar::dragPanEvent()
+{
+    if (!tabOverflow())
+        return;
+
+    auto pos = mapFromGlobal(QCursor::pos());
+
+    if (pos.x() < 0 || pos.x() > width())
+        return;
+
+    // Right side
+    if (pos.x() > width() - DragScrollThresholdPx)
+    {
+        int threshold = width() - pos.x();
+        scrollBar->addValue(1);
+    }
+    // Left side
+    else if (pos.x() < DragScrollThresholdPx)
+    {
+        int threshold = pos.x();
+        scrollBar->addValue(-1);
+    }
+}
+
 void MapTabWidget::MapTabBar::updateScrollBarVisibility()
 {
     if (!hasBeenShown || count() == 0)
@@ -183,12 +213,16 @@ void MapTabWidget::MapTabBar::updateScrollBarVisibility()
     {
         scrollBar->setFixedWidth(width());
         scrollBar->setMaximum(lastRectRight - width());
+
+        // dragEdgePanAnimation.setEndValue(scrollBar->maximum());
+
         scrollBar->setPageStep(width());
 
         scrollBarAnimation.showWidget();
     }
     else
     {
+        VME_LOG_D("updateScrollBarVisibility hideWidget");
         scrollBarAnimation.hideWidget();
     }
 }
@@ -201,6 +235,7 @@ void MapTabWidget::MapTabBar::createScrollVisibilityTimer(time_t millis)
         time_t millis = TimePoint::now().elapsedMillis(scrollVisibilityState.newTimerStart);
         if (millis >= 400)
         {
+            VME_LOG_D("resize hideWidget");
             scrollBarAnimation.hideWidget();
         }
         else
@@ -299,13 +334,23 @@ void MapTabWidget::MapTabBar::mousePressEvent(QMouseEvent *event)
         }
         else
         {
-            parentWidget()->setCurrentIndex(tabAt(pos));
+            int tabIndex = tabAt(pos);
+            if (tabIndex == -1)
+                return;
+
+            setCurrentIndex(tabIndex);
+
+            if (tabDragPixmaps.size() < tabIndex)
+                tabDragPixmaps.resize(tabIndex + 1);
+
+            QRect tabRectangle = tabRect(tabIndex);
+            tabRectangle.moveLeft(tabRectangle.x() - scrollOffset);
+
+            // tabDragPixmaps.emplace(tabDragPixmaps.begin() + tabIndex, grab(tabRectangle));
+
             dragStartPosition = pos;
         }
     }
-
-    // event->ignore();
-    // QTabBar::mousePressEvent(event);
 }
 
 QSize MapTabWidget::MapTabBar::minimumSizeHint() const
@@ -332,8 +377,6 @@ void MapTabWidget::MapTabBar::setCloseButtonVisible(int index, bool visible)
 
 void MapTabWidget::MapTabBar::mouseMoveEvent(QMouseEvent *event)
 {
-    event->ignore();
-    QTabBar::mouseMoveEvent(event);
 
     // if (scrollBar->isHidden() || scrollAnimation)
     // {
@@ -348,26 +391,36 @@ void MapTabWidget::MapTabBar::mouseMoveEvent(QMouseEvent *event)
         setCursor(Qt::ArrowCursor);
     }
 
-    if (pressed())
+    if (dragPending())
     {
+        closePendingIndex = -1;
+
         if ((event->pos() - dragStartPosition.value())
                 .manhattanLength() < QApplication::startDragDistance())
             return;
 
-        closePendingIndex = -1;
+        QPoint dragStartPos = dragStartPosition.value();
+
+        int draggedTabIndex = tabAt(dragStartPos);
+        auto tabRectangle = tabRect(draggedTabIndex);
+
         dragStartPosition.reset();
 
-        int currentTab = tabAt(event->pos());
+        drag = new QDrag(this);
 
-        QObject *dragSource = this;
-        auto *drag = new QDrag(dragSource);
+        drag->setPixmap(QPixmap());
 
         auto data = new MapTabMimeData;
-        data->setInt(currentTab);
+        data->setInt(draggedTabIndex);
 
         drag->setMimeData(data);
 
-        Qt::DropAction drop = drag->exec(Qt::MoveAction);
+        drag->setHotSpot(QPoint(
+            dragStartPos.x() - tabRectangle.x() + scrollOffset,
+            dragStartPos.y() - tabRectangle.y()));
+
+        drag->exec(Qt::MoveAction, Qt::MoveAction);
+        drag = nullptr;
     }
     else
     {
@@ -382,6 +435,8 @@ void MapTabWidget::MapTabBar::mouseMoveEvent(QMouseEvent *event)
             int hoveredTabIndex = tabAt(localPos);
             setHoveredIndex(hoveredTabIndex);
         }
+
+        update();
     }
 }
 
@@ -406,7 +461,11 @@ void MapTabWidget::MapTabBar::enterEvent(QEvent *event)
 
 void MapTabWidget::MapTabBar::leaveEvent(QEvent *event)
 {
-    scrollBarAnimation.hideWidget();
+    if (!drag)
+    {
+        scrollBarAnimation.hideWidget();
+    }
+
     if (hoveredIndex != -1 && hoveredIndex != currentIndex())
     {
         setCloseButtonVisible(hoveredIndex, false);
@@ -417,8 +476,8 @@ void MapTabWidget::MapTabBar::dragEnterEvent(QDragEnterEvent *event)
 {
     if (event->mimeData()->hasFormat(MapTabMimeData::integerMimeType()))
     {
-        setDragHoveredIndex(tabAt(event->pos()));
         event->acceptProposedAction();
+        setDragHoveredIndex(tabAt(event->pos()));
     }
 }
 
@@ -428,17 +487,64 @@ void MapTabWidget::MapTabBar::dragMoveEvent(QDragMoveEvent *event)
     {
         event->acceptProposedAction();
 
-        auto pos = event->pos();
-        int tabIndex = tabAt(pos);
+        if (!drag)
+            return;
 
+        auto pos = event->pos();
+
+        if (tabOverflow())
+        {
+            bool panLeft = width() - pos.x() < DragScrollThresholdPx;
+            bool panRight = pos.x() < DragScrollThresholdPx;
+            if (panLeft || panRight)
+            {
+                if (!dragPanTimer.isActive())
+                    dragPanTimer.start();
+            }
+            else
+            {
+                if (dragPanTimer.isActive())
+                    dragPanTimer.stop();
+            }
+        }
+
+        int tabIndex = tabAt(pos);
         setDragHoveredIndex(tabIndex);
     }
 }
 
 void MapTabWidget::MapTabBar::dragLeaveEvent(QDragLeaveEvent *event)
 {
+    VME_LOG_D("Stopping timer.");
+    dragPanTimer.stop();
+
     dragHoverIndex.reset();
     update();
+}
+
+bool MapTabWidget::MapTabBar::insertMoveTab(int srcIndex, int destIndex)
+{
+    if (destIndex == -1)
+        destIndex = count() - 1;
+
+    if (srcIndex == destIndex)
+        return false;
+
+    QWidget *srcWidget = parentWidget()->widget(srcIndex);
+    QString srcText = tabText(srcIndex);
+    // QWidget *closeButton = tabButton(srcIndex, QTabBar::ButtonPosition::RightSide);
+
+    {
+        // To reduce flicker. https://doc.qt.io/qt-5/qtabwidget.html#insertTab
+        parentWidget()->setUpdatesEnabled(false);
+
+        int i = parentWidget()->insertTab(destIndex, srcWidget, srcText);
+        initCloseButton(i);
+        parentWidget()->setCurrentIndex(i);
+        parentWidget()->setUpdatesEnabled(true);
+    }
+
+    return true;
 }
 
 void MapTabWidget::MapTabBar::dropEvent(QDropEvent *event)
@@ -460,11 +566,8 @@ void MapTabWidget::MapTabBar::dropEvent(QDropEvent *event)
         if (destIndex == -1)
             destIndex = count() - 1;
 
-        if (srcIndex != destIndex)
-        {
-            moveTab(srcIndex, destIndex);
-        }
-        else
+        bool tabMoved = insertMoveTab(srcIndex, destIndex);
+        if (!tabMoved)
         {
             // Required to update the drag hover rectangle
             update();
@@ -480,6 +583,8 @@ void MapTabWidget::MapTabBar::dropEvent(QDropEvent *event)
             // p->removeTab(droppedTabIndex);
         }
     }
+
+    drag = nullptr;
 }
 
 MapTabWidget *MapTabWidget::MapTabBar::parentWidget() const
@@ -633,6 +738,15 @@ void MapTabWidget::MapTabBar::showEvent(QShowEvent *event)
     QTabBar::showEvent(event);
 }
 
+void MapTabWidget::MapTabBar::initCloseButton(int index)
+{
+    SvgWidget *svg = new SvgWidget("resources/svg/close.svg");
+
+    setTabButton(index, QTabBar::ButtonPosition::RightSide, svg);
+
+    // Close button rendering is handled in MapTabBar
+    setCloseButtonVisible(index, false);
+}
 
 bool MapTabWidget::MapTabBar::tabOverflow() const
 {
@@ -649,12 +763,8 @@ void MapTabWidget::MapTabBar::paintEvent(QPaintEvent *event)
     {
         QStyleOptionTab tab;
         initStyleOption(&tab, i);
-        if (!(tab.state & QStyle::State_Enabled))
-        {
-            tab.palette.setCurrentColorGroup(QPalette::Disabled);
-        }
 
-        if (scrollBar->isVisible() && this->scrollOffset > 0)
+        if (this->scrollOffset > 0)
         {
             tab.rect.moveLeft(tab.rect.x() - scrollOffset);
         }
@@ -663,21 +773,25 @@ void MapTabWidget::MapTabBar::paintEvent(QPaintEvent *event)
         if ((tab.rect.right() < 0 || tab.rect.left() > width()))
             continue;
 
-        // tab.palette.setColor(backgroundRole(), QColor(255, 0, 0));
-        // tab.palette.setColor(QPalette::Base, QColor(255, 0, 0));
-        // tab.palette.setColor(QPalette::Button, QColor(255, 0, 0));
-        // painter.drawControl(QStyle::CE_TabBarTab, tab);
-        if (dragHoverIndex.has_value() && i == dragHoverIndex.value())
+        if (i == currentIndex())
+        {
+            // painter.fillRect(tab.rect, "blue");
+            // painter.fillRect(tab.rect, QColor("white"));
+            // painter.fillRect(tab.rect, QColor("red"));
+            painter.fillRect(tab.rect, QColor(255, 255, 255, 255));
+        }
+        else if (dragHoverIndex.has_value() && i == dragHoverIndex.value())
         {
             painter.fillRect(tab.rect, dragHoverColor);
         }
-        if (tab.state & QStyle::State_Selected)
+        else
         {
-            painter.fillRect(tab.rect, QColor("#FFFFFF"));
+            // painter.fillRect(tab.rect, QColor("red"));
+            painter.fillRect(tab.rect, QColor("#FFECECEC"));
         }
-        // painter.drawControl(QStyle::CE_TabBarTabShape, tab);
-        // painter.drawControl(QStyle::CE_TabBarTabLabel, tab);
-        painter.drawControl(QStyle::CE_TabBarTab, tab);
+
+        painter.drawControl(QStyle::CE_TabBarTabShape, tab);
+        painter.drawControl(QStyle::CE_TabBarTabLabel, tab);
         if (i == hoveredIndex || i == currentIndex())
         {
             int rightMargin = 5;
@@ -686,7 +800,7 @@ void MapTabWidget::MapTabBar::paintEvent(QPaintEvent *event)
         }
     }
 
-    if (!scrollBar->isVisible() && dragHoverIndex.has_value() && dragHoverIndex.value() == -1 && currentIndex() != count() - 1)
+    if (dragHoverIndex.has_value() && dragHoverIndex.value() == -1 && currentIndex() != count() - 1)
     {
         QRect last = tabRect(count() - 1);
         QRect highlightRect = QRect(last.right(), last.top(), rect().right() - last.right(), height());

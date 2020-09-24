@@ -51,31 +51,12 @@ SvgWidget {
   background-color: none;
 }
 
-/* QScrollBar[mapTabBar=true]:horizontal {
-    max-height: 8px;
-}
-
-QScrollBar[mapTabBar=true]::handle:horizontal {
-    max-width: 5px;
-}
-
-QScrollBar[mapTabBar=true]::add-line:horizontal {
-      border: none;
-      background: none;
-      color: red;
-}
-
-QScrollBar[mapTabBar=true]::sub-line:horizontal {
-      border: none;
-      background: none;
-} */
-
 QScrollBar[mapTabBar=true]:horizontal {
     background: #ffffff;
     height: 4px;
 }
 QScrollBar[mapTabBar=true]::handle:horizontal {
-    background: #7c7c7c;
+    background: #333333;
     min-width: 20px;
 }
 QScrollBar[mapTabBar=true]::add-line:horizontal {
@@ -103,7 +84,6 @@ QTabBar {
 }
 
 QTabBar::tab {
-    /* background: #ececec; */
     border-radius: 0px;
     border-right: 1px solid #fff;
     min-width: 8ex;
@@ -130,7 +110,6 @@ QTabBar::tab:selected, QTabBar::tab:hover {
 }
 
 QTabBar::tab:selected {
-  /* background: #fff; */
 }
 
 QTabBar::tab:!selected {

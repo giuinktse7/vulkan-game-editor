@@ -120,7 +120,7 @@ std::shared_ptr<Map> makeTestMap1()
     {
         for (int y = 0; y < 30; ++y)
         {
-            map->addItem(Position(1 + x, 1 + y, 7), rand.nextInt<uint16_t>(4526, 4542));
+            map->addItem(Position(x, y, 7), rand.nextInt<uint16_t>(4526, 4542));
         }
     }
 
@@ -139,18 +139,13 @@ std::shared_ptr<Map> makeTestMap2()
     auto &rand = Random::global();
 
     int i = 0;
-    for (int x = 0; x < 30; ++x)
+    for (int x = 0; x < 10; ++x)
     {
-        for (int y = 0; y < 30; ++y)
+        for (int y = 0; y < 10; ++y)
         {
-            map->addItem(Position(1 + x, 1 + y, 7), 4526 + i);
+            map->addItem(Position(1 + x, 1 + y, 7), 35950 + i);
             ++i;
         }
-    }
-
-    for (int i = 0; i < 10; ++i)
-    {
-        map->addItem(Position(rand.nextInt<uint16_t>(1, 10), rand.nextInt<uint16_t>(1, 10), 7), 2767 + rand.nextInt<uint16_t>(0, 2));
     }
 
     return map;

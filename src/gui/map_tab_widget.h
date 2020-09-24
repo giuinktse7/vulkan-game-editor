@@ -5,9 +5,11 @@
 #include <QSvgWidget>
 #include <QFrame>
 #include <QString>
+#include <QTimer>
 #include <QObject>
 #include <QVariant>
 #include <QMimeData>
+#include <QPixmap>
 
 #include <QProxyStyle>
 
@@ -22,6 +24,7 @@
 class QWidget;
 class QMouseEvent;
 class QSize;
+class QDrag;
 class QPropertyAnimation;
 
 class OpacityAnimation : public QObject
@@ -76,6 +79,8 @@ class MapTabWidget : public QTabWidget
   public:
     MapTabBar(MapTabWidget *parent);
 
+    void initCloseButton(int index);
+
     void setCloseButtonVisible(int tabIndex, bool visible);
 
     int tabAt(const QPoint &pos) const;
@@ -110,6 +115,7 @@ class MapTabWidget : public QTabWidget
     QtScrollBar *scrollBar;
     QtUtil::ScrollState tabBarScrollState;
     OpacityAnimation scrollBarAnimation;
+    QTimer dragPanTimer;
     struct ScrollVisibilityState
     {
       bool hasTimer = false;
@@ -119,6 +125,8 @@ class MapTabWidget : public QTabWidget
     int scrollOffset = 0;
 
     QImage *closeButtonImage;
+
+    std::vector<QPixmap> tabDragPixmaps;
 
     /*
       A value of -1 means no tab is hovered.
@@ -133,6 +141,8 @@ class MapTabWidget : public QTabWidget
     */
     bool hasBeenShown = false;
 
+    bool debug = false;
+
     void removedTabEvent(int removedIndex);
 
     void setHoveredIndex(int index);
@@ -144,7 +154,9 @@ class MapTabWidget : public QTabWidget
 
     QWidget *getActiveWidget();
 
-    inline bool pressed() const
+    QDrag *drag;
+
+    inline bool dragPending() const
     {
       return dragStartPosition.has_value();
     }
@@ -162,7 +174,17 @@ class MapTabWidget : public QTabWidget
 
     MapTabWidget *parentWidget() const;
 
+    /*
+      Moves the tab at srcIndex to the tab at destIndex. Differs from moveTab
+      in that moveTab move srcIndex->destIndex AND destIndex->srcIndex, whereas
+      insertMoveTab only moves srcIndex->destIndex.
+    */
+    bool insertMoveTab(int srcIndex, int destIndex);
+
     void createScrollVisibilityTimer(time_t millis);
+
+    void dragPanEvent();
+
     bool tabOverflow() const;
   };
 
@@ -172,6 +194,9 @@ public:
   QSize minimumSizeHint() const override;
 
   int addTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
+  int insertTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
+
+  void removeCurrentTab();
 
 signals:
   void mapTabAdded(int index);
