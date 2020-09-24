@@ -23,6 +23,8 @@ public:
   void mouseMoveEvent(QMouseEvent *e) override;
 
   void initStyleOption(QStyleOptionSlider *option) const;
+
+  void addValue(int value);
 };
 
 class MapViewWidget : public QWidget, public MapView::Observer

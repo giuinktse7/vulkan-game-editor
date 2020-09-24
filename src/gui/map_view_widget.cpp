@@ -237,3 +237,8 @@ void QtScrollBar::initStyleOption(QStyleOptionSlider *option) const
 {
   QScrollBar::initStyleOption(option);
 }
+
+void QtScrollBar::addValue(int value)
+{
+  setValue(this->value() + value);
+}
