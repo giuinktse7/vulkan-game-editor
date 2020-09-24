@@ -170,6 +170,10 @@ QMenuBar *MainWindow::createMenuBar()
     auto newMap = new MenuAction(tr("New Map"), Qt::CTRL + Qt::Key_N, this);
     connect(newMap, &QWidgetAction::triggered, [this] { this->addMapTab(); });
     fileMenu->addAction(newMap);
+
+    auto closeMap = new MenuAction(tr("Close"), Qt::CTRL + Qt::Key_W, this);
+    connect(closeMap, &QWidgetAction::triggered, mapTabs, &MapTabWidget::removeCurrentTab);
+    fileMenu->addAction(closeMap);
   }
 
   // Edit
