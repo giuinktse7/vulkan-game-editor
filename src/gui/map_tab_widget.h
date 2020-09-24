@@ -163,6 +163,7 @@ class MapTabWidget : public QTabWidget
     MapTabWidget *parentWidget() const;
 
     void createScrollVisibilityTimer(time_t millis);
+    bool tabOverflow() const;
   };
 
 public:

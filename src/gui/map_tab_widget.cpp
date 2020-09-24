@@ -633,6 +633,12 @@ void MapTabWidget::MapTabBar::showEvent(QShowEvent *event)
     QTabBar::showEvent(event);
 }
 
+
+bool MapTabWidget::MapTabBar::tabOverflow() const
+{
+    return !(count() == 0 || tabRect(count() - 1).right() <= rect().right());
+}
+
 void MapTabWidget::MapTabBar::paintEvent(QPaintEvent *event)
 {
     QStylePainter painter(this);
