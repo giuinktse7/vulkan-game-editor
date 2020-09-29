@@ -337,6 +337,61 @@ void MapView::panEvent(MapView::PanEvent event)
   translateCamera(delta);
 }
 
+void MapView::mousePressEvent(VME::MouseButtons buttons)
+{
+  if (buttons & VME::MouseButtons::LeftButton)
+  {
+    std::visit(util::overloaded{
+                   [this](const MapView::MouseAction::RawItem &action) {
+                     Position pos = _mousePos.toPos(*this);
+                     history.startGroup(ActionGroupType::AddMapItem);
+                     addItem(pos, action.serverId);
+                     history.endGroup(ActionGroupType::AddMapItem);
+
+                     leftMouseDragPos = pos;
+                   },
+                   [](const std::monostate) { /* Empty */ },
+                   [](const auto &) {
+                     ABORT_PROGRAM("Unknown change!");
+                   }},
+               _mouseAction);
+  }
+}
+
+void MapView::mouseMoveEvent(VME::MouseButtons buttons)
+{
+  Position pos = _mousePos.toPos(*this);
+  if (buttons & VME::MouseButtons::LeftButton)
+  {
+    if (!util::contains(leftMouseDragPos, pos))
+    {
+      std::visit(util::overloaded{
+                     [this, &pos](const MapView::MouseAction::RawItem &action) {
+                       history.startGroup(ActionGroupType::AddMapItem);
+                       addItem(pos, action.serverId);
+                       history.endGroup(ActionGroupType::AddMapItem);
+
+                       leftMouseDragPos = pos;
+                     },
+                     [](const std::monostate) { /* Empty */ },
+                     [](const auto &) {
+                       ABORT_PROGRAM("Unknown change!");
+                     }},
+                 _mouseAction);
+
+      leftMouseDragPos = pos;
+    }
+  }
+}
+
+void MapView::mouseReleaseEvent(VME::MouseButtons buttons)
+{
+  if (buttons & VME::MouseButtons::LeftButton)
+  {
+    leftMouseDragPos.reset();
+  }
+}
+
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -414,23 +469,6 @@ void MapView::translateZ(int z)
   camera.translateZ(z);
 }
 
-MapView::Observer::Observer(MapView *target)
-    : target(target)
-{
-  if (target != nullptr)
-  {
-    target->addObserver(this);
-  }
-}
-
-MapView::Observer::~Observer()
-{
-  if (target)
-  {
-    target->removeObserver(this);
-  }
-}
-
 void MapView::addObserver(MapView::Observer *o)
 {
   auto found = std::find(observers.begin(), observers.end(), o);
@@ -461,6 +499,23 @@ void MapView::notifyObservers(MapView::Observer::ChangeType changeType) const
       observer->viewportChanged(viewport);
     }
     break;
+  }
+}
+
+MapView::Observer::Observer(MapView *target)
+    : target(target)
+{
+  if (target != nullptr)
+  {
+    target->addObserver(this);
+  }
+}
+
+MapView::Observer::~Observer()
+{
+  if (target)
+  {
+    target->removeObserver(this);
   }
 }
 

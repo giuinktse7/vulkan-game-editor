@@ -14,6 +14,8 @@
 
 #include "action/action.h"
 
+#include "gui/gui.h"
+
 class MapAction;
 
 struct Viewport
@@ -54,6 +56,8 @@ public:
 
 	bool showPreviewCursor = false;
 
+	std::optional<Position> leftMouseDragPos;
+
 	EditorHistory history;
 
 	Selection selection;
@@ -77,6 +81,10 @@ public:
 	{
 		return map.get();
 	}
+
+	void mousePressEvent(VME::MouseButtons pressedButtons);
+	void mouseMoveEvent(VME::MouseButtons pressedButtons);
+	void mouseReleaseEvent(VME::MouseButtons pressedButtons);
 
 	Tile *getTile(const Position pos) const;
 	void insertTile(Tile &&tile);

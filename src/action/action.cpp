@@ -371,7 +371,7 @@ void EditorHistory::endGroup(ActionGroupType groupType)
   std::ostringstream s;
   s << "Tried to end group type " << groupType << ", but the current group type is " << currentGroup.value().groupType;
   DEBUG_ASSERT(currentGroup.value().groupType == groupType, s.str());
-  VME_LOG_D("endGroup " << groupType);
+  // VME_LOG_D("endGroup " << groupType);
 
   actionGroups.emplace(std::move(currentGroup.value()));
   currentGroup.reset();

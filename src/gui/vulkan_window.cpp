@@ -17,6 +17,9 @@
 #include "../position.h"
 
 #include "../qt/logging.h"
+#include "qt_util.h"
+
+#include "gui.h"
 
 VulkanWindow::VulkanWindow(std::unique_ptr<MapView> mapView, QWindow *parent)
     : QVulkanWindow(parent),
@@ -76,6 +79,8 @@ void VulkanWindow::mousePressEvent(QMouseEvent *e)
     {
       closeContextMenu();
     }
+
+    mapView->mousePressEvent(QtUtil::vmeMouseEvent(e));
     break;
   default:
     break;
@@ -125,18 +130,21 @@ void VulkanWindow::showContextMenu(QPoint position)
   menu->popup(position);
 }
 
-void VulkanWindow::mouseReleaseEvent(QMouseEvent *)
+void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
 {
+  mapView->mouseReleaseEvent(QtUtil::vmeMouseEvent(event));
 }
 
-void VulkanWindow::mouseMoveEvent(QMouseEvent *e)
+void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
-  auto pos = e->windowPos();
+  auto pos = event->windowPos();
   util::Point<float> mousePos(pos.x(), pos.y());
   emit mousePosChanged(mousePos);
 
-  e->ignore();
-  QVulkanWindow::mouseMoveEvent(e);
+  mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
+
+  event->ignore();
+  QVulkanWindow::mouseMoveEvent(event);
 }
 
 void VulkanWindow::wheelEvent(QWheelEvent *event)
