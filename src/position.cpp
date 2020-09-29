@@ -5,6 +5,13 @@
 Position::Position() : BasePosition(0, 0), z(0) {}
 Position::Position(long x, long y, int z) : BasePosition(x, y), z(z) {}
 
+void Position::move(long x, long y, int z)
+{
+  this->x += x;
+  this->y += y;
+  this->z += z;
+}
+
 ScreenPosition::ScreenPosition(int x, int y) : BasePosition(x, y) {}
 ScreenPosition::ScreenPosition() : BasePosition(0, 0) {}
 

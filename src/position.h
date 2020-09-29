@@ -26,6 +26,8 @@ struct Position : public BasePosition<long>
 	Position(long x, long y, int z);
 	int z;
 
+	void move(long x, long y, int z);
+
 	Position &operator+=(const Position &rhs)
 	{
 		this->x += rhs.x;
