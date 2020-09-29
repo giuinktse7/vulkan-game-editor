@@ -570,6 +570,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\vertex.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\vulkan_debug.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\vulkan_helpers.h" />
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\gui.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\borderless_window.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\border_layout.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_list.h" />
