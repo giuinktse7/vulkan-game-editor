@@ -222,7 +222,7 @@ void MapTabWidget::MapTabBar::updateScrollBarVisibility()
     }
     else
     {
-        VME_LOG_D("updateScrollBarVisibility hideWidget");
+        scrollBar->setValue(0);
         scrollBarAnimation.hideWidget();
     }
 }
@@ -235,7 +235,7 @@ void MapTabWidget::MapTabBar::createScrollVisibilityTimer(time_t millis)
         time_t millis = TimePoint::now().elapsedMillis(scrollVisibilityState.newTimerStart);
         if (millis >= 400)
         {
-            VME_LOG_D("resize hideWidget");
+            // VME_LOG_D("resize hideWidget");
             scrollBarAnimation.hideWidget();
         }
         else
@@ -281,6 +281,7 @@ void MapTabWidget::MapTabBar::wheelEvent(QWheelEvent *event)
 
 void MapTabWidget::MapTabBar::removedTabEvent(int removedIndex)
 {
+    updateScrollBarVisibility();
     QPoint localPos = mapFromGlobal(QCursor::pos());
 
     int hoveredTabIndex = tabAt(localPos);

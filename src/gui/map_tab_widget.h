@@ -154,7 +154,7 @@ class MapTabWidget : public QTabWidget
 
     QWidget *getActiveWidget();
 
-    QDrag *drag;
+    QDrag *drag = nullptr;
 
     inline bool dragPending() const
     {
