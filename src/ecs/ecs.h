@@ -65,7 +65,6 @@ namespace ecs
 	class System
 	{
 	public:
-		virtual void update() = 0;
 		void clear()
 		{
 			entities.clear();
@@ -79,7 +78,7 @@ namespace ecs
 	protected:
 		friend class ::ECS;
 
-		virtual std::vector<const char *> getRequiredComponents() = 0;
+		virtual std::vector<const char *> getRequiredComponents() const = 0;
 
 		ecs::ComponentBitset componentBitset;
 		std::unordered_set<EntityId> entities;
