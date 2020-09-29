@@ -2,6 +2,9 @@
 
 #include <QPixmap>
 #include <QString>
+#include <QMouseEvent>
+
+#include "gui.h"
 
 class MainApplication;
 
@@ -37,6 +40,22 @@ namespace QtUtil
     */
     int minRotationDelta = DefaultMinimumAngleDelta * QtMinimumWheelDelta;
   };
+
+  inline VME::MouseButtons vmeMouseEvent(QMouseEvent *event)
+  {
+    VME::MouseButtons buttons = VME::MouseButtons::NoButton;
+
+    if (event->buttons() & Qt::LeftButton)
+    {
+      buttons |= VME::MouseButtons::LeftButton;
+    }
+    if (event->buttons() & Qt::RightButton)
+    {
+      buttons |= VME::MouseButtons::RightButton;
+    }
+
+    return buttons;
+  }
 
   QPixmap itemPixmap(uint16_t serverId);
   MainApplication *qtApp();
