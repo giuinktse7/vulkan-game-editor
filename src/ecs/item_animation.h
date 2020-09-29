@@ -18,12 +18,12 @@ struct ItemAnimationComponent;
 class ItemAnimationSystem : public ecs::System
 {
 public:
-	void update() override;
+	void update();
 
 private:
-	std::vector<const char *> getRequiredComponents() override;
+	std::vector<const char *> getRequiredComponents() const override;
 
-	void updateInfinite(ItemAnimationComponent &animation, long long elapsedTimeMs);
+	void updateInfinite(ItemAnimationComponent &animation, TimePoint updateTime);
 	void updatePingPong(ItemAnimationComponent &animation);
 	void updateCounted(ItemAnimationComponent &animation);
 };
@@ -32,13 +32,7 @@ struct ItemAnimationComponent
 {
 	ItemAnimationComponent(SpriteAnimation *animationInfo);
 
-	void setPhase(size_t phaseIndex, TimePoint updateTime);
-
 	SpriteAnimation *animationInfo;
-	// Should not be changed after construction
-	uint32_t startPhase;
-
-	uint32_t loopTime = 0;
 
 	struct
 	{
@@ -62,6 +56,18 @@ struct ItemAnimationComponent
 		TimePoint lastUpdateTime;
 	} state;
 
-	void initializeStartPhase();
 	void synchronizePhase();
+	void setPhase(size_t phaseIndex, TimePoint updateTime);
+
+	uint32_t getNextPhaseMaxDuration() const;
+
+	inline size_t nextPhase() const
+	{
+		return (static_cast<size_t>(state.phaseIndex) + 1) % animationInfo->phases.size();
+	}
+
+private:
+	uint32_t loopTime = 0;
+
+	void initializeStartPhase();
 };

@@ -29,12 +29,11 @@ void ItemAnimationComponent::synchronizePhase()
       break;
     ++phaseIndex;
   }
-  this->startPhase = static_cast<uint32_t>(phaseIndex);
+
+  state.phaseIndex = static_cast<uint32_t>(phaseIndex);
 
   long long res = elapsedTimeMs - (animationInfo->phases[phaseIndex].maxDuration + timeDiff);
   this->state.lastUpdateTime = startTime.forwardMs(res);
-
-  // std::cout << "lastUpdateTime: " << res << ", elapsedTimeMs: " << elapsedTimeMs << ", startTimeDiff: " << startTimeDiff << ", timeDiff: " << timeDiff << ", startPhase: " << phaseIndex << std::endl;
 
   return;
 }
@@ -47,19 +46,17 @@ void ItemAnimationComponent::initializeStartPhase()
   if (animationInfo->synchronized)
   {
     synchronizePhase();
-    return;
   }
-
-  if (animationInfo->randomStartPhase)
+  else if (animationInfo->randomStartPhase)
   {
-    this->startPhase = Random::global().nextInt<uint32_t>(0, static_cast<int>(animationInfo->phases.size()));
+    state.phaseIndex = Random::global().nextInt<uint32_t>(0, static_cast<int>(animationInfo->phases.size()));
     this->state.lastUpdateTime = currentTime;
-
-    return;
   }
-
-  this->startPhase = animationInfo->defaultStartPhase;
-  this->state.lastUpdateTime = currentTime;
+  else
+  {
+    state.phaseIndex = animationInfo->defaultStartPhase;
+    this->state.lastUpdateTime = currentTime;
+  }
 }
 
 ItemAnimationComponent::ItemAnimationComponent(SpriteAnimation *animationInfo)
@@ -89,8 +86,13 @@ ItemAnimationComponent::ItemAnimationComponent(SpriteAnimation *animationInfo)
   }
 
   initializeStartPhase();
-  state.phaseIndex = this->startPhase;
   setPhase(state.phaseIndex, state.lastUpdateTime);
+}
+
+uint32_t ItemAnimationComponent::getNextPhaseMaxDuration() const
+{
+  SpritePhase phase = animationInfo->phases.at(state.phaseIndex);
+  return phase.maxDuration;
 }
 
 void ItemAnimationComponent::setPhase(size_t phaseIndex, TimePoint updateTime)
@@ -98,6 +100,7 @@ void ItemAnimationComponent::setPhase(size_t phaseIndex, TimePoint updateTime)
   SpritePhase phase = animationInfo->phases.at(phaseIndex);
 
   state.phaseIndex = static_cast<uint32_t>(phaseIndex);
+
   if (phase.minDuration != phase.maxDuration)
   {
     state.phaseDurationMs = Random::global().nextInt<uint32_t>(phase.minDuration, phase.maxDuration + 1);
@@ -110,7 +113,7 @@ void ItemAnimationComponent::setPhase(size_t phaseIndex, TimePoint updateTime)
   state.lastUpdateTime = updateTime;
 }
 
-std::vector<const char *> ItemAnimationSystem::getRequiredComponents()
+std::vector<const char *> ItemAnimationSystem::getRequiredComponents() const
 {
   return requiredComponents.typeNames();
 }
@@ -124,47 +127,50 @@ void ItemAnimationSystem::update()
     auto &animation = *g_ecs.getComponent<ItemAnimationComponent>(entity);
 
     auto elapsedTimeMs = currentTime.timeSince<std::chrono::milliseconds>(animation.state.lastUpdateTime);
-
-    if (elapsedTimeMs >= animation.state.phaseDurationMs)
+    if (elapsedTimeMs <= animation.state.phaseDurationMs)
     {
-      switch (animation.animationInfo->loopType)
+      continue;
+    }
+
+    if (animation.animationInfo->synchronized)
+    {
+      auto phaseDuration = static_cast<long long>(animation.state.phaseDurationMs);
+      auto nextPhaseDuration = animation.animationInfo->phases.at(animation.nextPhase()).maxDuration;
+
+      bool outOfSync = elapsedTimeMs >= phaseDuration + nextPhaseDuration;
+      if (outOfSync)
       {
-      case AnimationLoopType::Infinite:
-        updateInfinite(animation, elapsedTimeMs);
-        break;
-      case AnimationLoopType::PingPong:
-        updatePingPong(animation);
-        break;
-      case AnimationLoopType::Counted:
-        updateCounted(animation);
-        break;
+        animation.synchronizePhase();
+        continue;
       }
+    }
+
+    switch (animation.animationInfo->loopType)
+    {
+    case AnimationLoopType::Infinite:
+      if (animation.animationInfo->synchronized)
+      {
+        auto updateTime = animation.state.lastUpdateTime.forwardMs(animation.state.phaseDurationMs);
+        updateInfinite(animation, updateTime);
+      }
+      else
+      {
+        updateInfinite(animation, currentTime);
+      }
+      break;
+    case AnimationLoopType::PingPong:
+      updatePingPong(animation);
+      break;
+    case AnimationLoopType::Counted:
+      updateCounted(animation);
+      break;
     }
   }
 }
 
-void ItemAnimationSystem::updateInfinite(ItemAnimationComponent &animation, long long elapsedTimeMs)
+void ItemAnimationSystem::updateInfinite(ItemAnimationComponent &animation, TimePoint updateTime)
 {
-  size_t nextPhase = (static_cast<size_t>(animation.state.phaseIndex) + 1) % animation.animationInfo->phases.size();
-
-  if (animation.animationInfo->synchronized)
-  {
-    bool outOfSync = elapsedTimeMs >= static_cast<long long>(animation.state.phaseDurationMs) + animation.animationInfo->phases.at(nextPhase).maxDuration;
-    if (outOfSync)
-    {
-      animation.synchronizePhase();
-    }
-    else
-    {
-      auto updateTime = animation.state.lastUpdateTime.forwardMs(animation.state.phaseDurationMs);
-      animation.setPhase(nextPhase, updateTime);
-    }
-  }
-  else
-  {
-    auto updateTime = animation.state.lastUpdateTime.forwardMs(animation.state.phaseDurationMs);
-    animation.setPhase(nextPhase, updateTime);
-  }
+  animation.setPhase(animation.nextPhase(), updateTime);
 }
 
 void ItemAnimationSystem::updatePingPong(ItemAnimationComponent &animation)
