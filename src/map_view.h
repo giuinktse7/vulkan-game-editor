@@ -98,6 +98,11 @@ public:
 
 	void addItem(const Position position, uint16_t id);
 
+	inline Position mouseGamePos() const
+	{
+		return mousePos().worldPos(*this).mapPos().floor(getFloor());
+	}
+
 	/*
 		Return the position on the map for the 'point'.
 		A point (0, 0) corresponds to the map position (0, 0, mapViewZ).
