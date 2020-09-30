@@ -75,6 +75,7 @@ public:
 	void insertTile(Tile &&tile);
 	void removeTile(const Position pos);
 	void selectTopItem(Tile &tile);
+	void selectTopItem(const Position pos);
 	void deselectTopItem(Tile &tile);
 	void selectAll(Tile &tile);
 	void clearSelection();

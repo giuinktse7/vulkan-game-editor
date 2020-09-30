@@ -19,6 +19,13 @@ MapView::MapView(MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> ma
       viewport(),
       _mousePos() {}
 
+void MapView::selectTopItem(const Position pos)
+{
+  Tile *tile = getTile(pos);
+  DEBUG_ASSERT(tile != nullptr, "nullptr tile");
+  selectTopItem(*tile);
+}
+
 void MapView::selectTopItem(Tile &tile)
 {
   MapAction action = newAction(MapActionType::Selection);
