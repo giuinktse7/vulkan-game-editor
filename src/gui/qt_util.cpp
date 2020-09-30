@@ -1,25 +1,71 @@
 #include "qt_util.h"
 
 #include <optional>
+#include <memory>
+#include <algorithm>
 
 #include <QApplication>
 #include <QWheelEvent>
+#include <QSize>
+#include <QLabel>
+#include <QPainter>
 
 #include "../items.h"
 
+#include "../logger.h"
+#include "../qt/logging.h"
+
+namespace
+{
+  std::unique_ptr<QPixmap> blackSquare;
+
+  QPixmap blackSquarePixmap()
+  {
+    if (!blackSquare)
+    {
+      QImage image(32, 32, QImage::Format::Format_ARGB32);
+      image.fill(QColor(0, 0, 0, 255));
+
+      QPixmap pixmap = QPixmap::fromImage(image);
+
+      blackSquare = std::make_unique<QPixmap>(std::move(pixmap));
+    }
+
+    return *blackSquare;
+  }
+
+} // namespace
+
 QPixmap QtUtil::itemPixmap(uint16_t serverId)
 {
+  if (!Items::items.validItemType(serverId))
+  {
+    return blackSquarePixmap();
+  }
+
   ItemType *t = Items::items.getItemType(serverId);
   auto &info = t->getTextureInfoUnNormalized();
 
-  const uint8_t *pixelData = info.atlas->getOrCreateTexture().pixels().data();
-  QImage img(pixelData, 12 * 32, 12 * 32, 384 * 4, QImage::Format::Format_ARGB32);
+  TextureAtlas *atlas = info.atlas;
 
-  QPixmap pixelMap = QPixmap::fromImage(img);
+  const uint8_t *pixelData = atlas->getOrCreateTexture().pixels().data();
 
   QRect textureRegion(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
 
-  return pixelMap.copy(textureRegion).transformed(QTransform().scale(1, -1));
+  QImage sprite = QImage(pixelData, 12 * 32, 12 * 32, 384 * 4, QImage::Format::Format_ARGB32)
+                      .copy(textureRegion)
+                      .mirrored();
+
+  if (atlas->spriteWidth == 32 && atlas->spriteHeight == 32)
+  {
+    return QPixmap::fromImage(sprite);
+  }
+  else
+  {
+    return QPixmap::fromImage(sprite.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+  }
+
+  return QPixmap::fromImage(sprite);
 }
 
 MainApplication *QtUtil::qtApp()
