@@ -26,6 +26,7 @@ class QMouseEvent;
 class QSize;
 class QDrag;
 class QPropertyAnimation;
+class MapView;
 
 class OpacityAnimation : public QObject
 {
@@ -192,6 +193,7 @@ public:
   MapTabWidget(QWidget *parent = nullptr);
 
   QSize minimumSizeHint() const override;
+  MapView *getMapView(size_t index) const;
 
   int addTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
   int insertTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
