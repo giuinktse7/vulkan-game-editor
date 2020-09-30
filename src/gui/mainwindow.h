@@ -46,6 +46,8 @@ protected:
   void mousePressEvent(QMouseEvent *event) override;
 
 private:
+  void keyPressEvent(QKeyEvent *event) override;
+
   // UI
   BorderLayout *rootLayout;
 
