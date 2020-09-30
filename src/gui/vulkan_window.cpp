@@ -21,12 +21,12 @@
 
 #include "gui.h"
 
-VulkanWindow::VulkanWindow(std::unique_ptr<MapView> mapView, QWindow *parent)
-    : QVulkanWindow(parent),
+VulkanWindow::VulkanWindow(std::unique_ptr<MapView> mapView, MapViewMouseAction &mapViewMouseAction)
+    : QVulkanWindow(nullptr),
+      mapViewMouseAction(mapViewMouseAction),
       mapView(std::move(mapView)),
       scrollAngleBuffer(0)
 {
-  // QVulkanWindow::setFlags(QVulkanWindow::PersistentResources);
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
   connect(this, &VulkanWindow::mousePosChanged, [=](util::Point<float> mousePos) {
     int x = static_cast<int>(std::round(mousePos.x()));
@@ -274,10 +274,10 @@ bool VulkanWindow::event(QEvent *ev)
   switch (ev->type())
   {
   case QEvent::Leave:
-    mapView->showPreviewCursor = false;
+    showPreviewCursor = false;
     break;
   case QEvent::Enter:
-    mapView->showPreviewCursor = true;
+    showPreviewCursor = true;
     {
       auto pos = mapFromGlobal(QCursor::pos());
       mapView->setMousePos(ScreenPosition(pos.x(), pos.y()));

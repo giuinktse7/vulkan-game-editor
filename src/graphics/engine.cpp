@@ -67,7 +67,7 @@ void Engine::initialize()
   }
 
   // this->window = window;
-  this->mapView = std::make_unique<MapView>();
+  // this->mapView = std::make_unique<MapView>();
 
   TimePoint start;
   createVulkanInstance();

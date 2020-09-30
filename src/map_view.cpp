@@ -6,22 +6,18 @@ Viewport::Viewport()
     : width(0),
       height(0),
       zoom(0.25f),
-      offset(0L, 0L)
-{
-}
+      offset(0L, 0L) {}
 
-MapView::MapView() : MapView(std::make_shared<Map>())
-{
-}
+MapView::MapView(MapViewMouseAction &mapViewMouseAction)
+    : MapView(mapViewMouseAction, std::make_shared<Map>()) {}
 
-MapView::MapView(std::shared_ptr<Map> map)
-    : selection(*this),
+MapView::MapView(MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> map)
+    : mapViewMouseAction(mapViewMouseAction),
+      selection(*this),
       map(map),
       dragState{},
       viewport(),
-      _mousePos()
-{
-}
+      _mousePos() {}
 
 void MapView::selectTopItem(Tile &tile)
 {
@@ -182,14 +178,6 @@ void MapView::setMousePos(const ScreenPosition pos)
   this->_mousePos = pos;
 }
 
-void MapView::rawItemSelectedEvent(uint16_t serverId)
-{
-  MouseAction::RawItem action;
-  action.serverId = serverId;
-
-  _mouseAction = action;
-}
-
 void MapView::deleteSelectedItems()
 {
   if (selection.getPositions().empty())
@@ -342,7 +330,7 @@ void MapView::mousePressEvent(VME::MouseButtons buttons)
   if (buttons & VME::MouseButtons::LeftButton)
   {
     std::visit(util::overloaded{
-                   [this](const MapView::MouseAction::RawItem &action) {
+                   [this](const MouseAction::RawItem &action) {
                      Position pos = _mousePos.toPos(*this);
                      history.startGroup(ActionGroupType::AddMapItem);
                      addItem(pos, action.serverId);
@@ -354,7 +342,7 @@ void MapView::mousePressEvent(VME::MouseButtons buttons)
                    [](const auto &) {
                      ABORT_PROGRAM("Unknown change!");
                    }},
-               _mouseAction);
+               mapViewMouseAction.action());
   }
 }
 
@@ -365,8 +353,9 @@ void MapView::mouseMoveEvent(VME::MouseButtons buttons)
   {
     if (!util::contains(leftMouseDragPos, pos))
     {
+
       std::visit(util::overloaded{
-                     [this, &pos](const MapView::MouseAction::RawItem &action) {
+                     [this, &pos](const MouseAction::RawItem &action) {
                        history.startGroup(ActionGroupType::AddMapItem);
                        addItem(pos, action.serverId);
                        history.endGroup(ActionGroupType::AddMapItem);
@@ -377,7 +366,7 @@ void MapView::mouseMoveEvent(VME::MouseButtons buttons)
                      [](const auto &) {
                        ABORT_PROGRAM("Unknown change!");
                      }},
-                 _mouseAction);
+                 mapViewMouseAction.action());
 
       leftMouseDragPos = pos;
     }

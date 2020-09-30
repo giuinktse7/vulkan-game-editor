@@ -36,12 +36,13 @@ public:
   // From MapView::Observer
   void viewportChanged(const Viewport &viewport) override;
 
+  MapView *mapView;
+
 signals:
   void viewportChangedEvent(const Viewport &viewport);
 
 private:
   VulkanWindow *vulkanWindow;
-  MapView *mapView;
 
   QtScrollBar *hbar;
   QtScrollBar *vbar;

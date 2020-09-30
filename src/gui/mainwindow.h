@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <queue>
+#include <optional>
 #include <vector>
 #include <functional>
 
@@ -21,6 +22,7 @@ QT_END_NAMESPACE
 class MapTabWidget;
 
 #include "vulkan_window.h"
+#include "gui.h"
 
 #define QT_MANAGED_POINTER(cls, ...) new cls(__VA_ARGS__);
 
@@ -37,6 +39,8 @@ public:
   void addMapTab(std::shared_ptr<Map> map);
 
   MapTabWidget *mapTabs;
+
+  MapViewMouseAction mapViewMouseAction;
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;

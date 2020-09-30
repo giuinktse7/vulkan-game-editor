@@ -98,8 +98,8 @@ const TextureWindow TextureAtlas::getTextureWindowUnNormalized(uint32_t spriteId
   auto row = offset / columns;
   auto col = offset % columns;
 
-  const float x = static_cast<float>(col) * 32;
-  const float y = static_cast<float>(rows - row - 1) * 32;
+  const float x = static_cast<float>(col) * spriteWidth;
+  const float y = static_cast<float>(rows - row - 1) * spriteHeight;
 
   const float width = static_cast<float>(spriteWidth);
   const float height = static_cast<float>(spriteHeight);

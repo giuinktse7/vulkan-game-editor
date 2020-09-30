@@ -13,6 +13,7 @@
 #include <QListView>
 #include <QSplitter>
 #include <QVariant>
+#include <QModelIndex>
 #include <QVulkanInstance>
 
 #include "vulkan_window.h"
@@ -60,7 +61,7 @@ void MainWindow::addMapTab()
 
 void MainWindow::addMapTab(std::shared_ptr<Map> map)
 {
-  VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>(map));
+  VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>(mapViewMouseAction, map), mapViewMouseAction);
 
   // Window setup
   vulkanWindow->setVulkanInstance(vulkanInstance);
@@ -70,7 +71,7 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
   MapView *mapView = vulkanWindow->getMapView();
   MouseAction::RawItem action;
   action.serverId = 6217;
-  mapView->setMouseAction(action);
+  mapViewMouseAction.set(action);
 
   // Create the widget
   MapViewWidget *widget = new MapViewWidget(vulkanWindow);
@@ -114,14 +115,24 @@ void MainWindow::initializeUI()
   listView->setItemDelegate(new Delegate(this));
 
   std::vector<ItemTypeModelItem> data;
-  data.push_back(ItemTypeModelItem::fromServerId(2554));
-  data.push_back(ItemTypeModelItem::fromServerId(2148));
-  data.push_back(ItemTypeModelItem::fromServerId(2555));
+  for (int i = 100; i < 15000; ++i)
+  {
+    data.push_back(ItemTypeModelItem::fromServerId(i));
+  }
 
   QtItemTypeModel *model = new QtItemTypeModel(listView);
   model->populate(std::move(data));
 
   listView->setModel(model);
+  listView->setAlternatingRowColors(true);
+  connect(listView, &QListView::clicked, [=](QModelIndex clickedIndex) {
+    QVariant variant = listView->model()->data(clickedIndex);
+    auto value = variant.value<ItemTypeModelItem>();
+
+    MouseAction::RawItem action;
+    action.serverId = value.itemType->id;
+    mapViewMouseAction.set(action);
+  });
   rootLayout->addWidget(listView, BorderLayout::Position::West);
 
   rootLayout->addWidget(mapTabs, BorderLayout::Position::Center);

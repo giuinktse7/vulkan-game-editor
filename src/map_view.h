@@ -51,10 +51,10 @@ public:
 		};
 	};
 
-	MapView();
-	MapView(std::shared_ptr<Map> map);
+	MapView(MapViewMouseAction &mouseAction);
+	MapView(MapViewMouseAction &mouseAction, std::shared_ptr<Map> map);
 
-	bool showPreviewCursor = false;
+	MapViewMouseAction &mapViewMouseAction;
 
 	std::optional<Position> leftMouseDragPos;
 

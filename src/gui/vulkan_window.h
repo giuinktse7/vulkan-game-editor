@@ -11,6 +11,8 @@
 #include "../map_view.h"
 #include "../graphics/vulkan_helpers.h"
 
+class MainWindow;
+
 QT_BEGIN_NAMESPACE
 class QWidget;
 class QPoint;
@@ -53,10 +55,12 @@ public:
     bool selfClicked(QPoint pos) const;
   };
 
-  VulkanWindow(std::unique_ptr<MapView> mapView, QWindow *parent = nullptr);
+  VulkanWindow(std::unique_ptr<MapView> mapView, MapViewMouseAction &mapViewMouseAction);
 
   VulkanInfoFromWindow vulkanInfo;
   QWidget *widget = nullptr;
+  MapViewMouseAction &mapViewMouseAction;
+  bool showPreviewCursor = false;
 
   std::string debugName;
 

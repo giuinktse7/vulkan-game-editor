@@ -260,6 +260,7 @@ void MapRenderer::drawMap()
   // Render current mouse action
   std::visit(util::overloaded{
                  [this](const MouseAction::RawItem &action) {
+                   if (window.showPreviewCursor)
                    {
                      this->drawPreviewCursor(action.serverId);
                    }
@@ -268,7 +269,7 @@ void MapRenderer::drawMap()
                  [](const auto &) {
                    ABORT_PROGRAM("Unknown change!");
                  }},
-             mapView->mouseAction());
+             window.mapViewMouseAction.action());
 
   if (mapView->isSelectionMoving())
   {
