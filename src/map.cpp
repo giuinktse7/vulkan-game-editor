@@ -148,6 +148,16 @@ Tile *Map::getTile(const Position pos) const
   return floor->getTileLocation(pos.x, pos.y).getTile();
 }
 
+const Item *Map::getTopItem(const Position pos) const
+{
+  Tile *tile = getTile(pos);
+
+  if (!tile)
+    return nullptr;
+
+  return tile->getTopItem();
+}
+
 Tile &Map::getOrCreateTile(int x, int y, int z)
 {
   DEBUG_ASSERT(root.isRoot(), "Only root nodes can create a tile.");

@@ -36,6 +36,7 @@ public:
 	TileLocation *getTileLocation(int x, int y, int z) const;
 	TileLocation *getTileLocation(const Position &pos) const;
 	Tile *getTile(const Position pos) const;
+	const Item *getTopItem(const Position pos) const;
 
 	bool isTileEmpty(const Position pos) const;
 	void addItem(const Position position, uint16_t serverId);
