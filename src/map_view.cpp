@@ -396,7 +396,7 @@ void MapView::mouseMoveEvent(VME::MouseButtons buttons)
 
 void MapView::mouseReleaseEvent(VME::MouseButtons buttons)
 {
-  if (buttons & VME::MouseButtons::LeftButton)
+  if (!(buttons & VME::MouseButtons::LeftButton))
   {
     leftMouseDragPos.reset();
   }
