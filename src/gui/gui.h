@@ -38,3 +38,33 @@ namespace VME
   }
 
 } // namespace VME
+
+struct MouseAction
+{
+  struct RawItem
+  {
+    uint16_t serverId;
+  };
+};
+
+using MouseAction_t = std::variant<std::monostate, MouseAction::RawItem>;
+
+/*
+  Contains mouse actions that can occur on a MapView.
+*/
+class MapViewMouseAction
+{
+public:
+  inline MouseAction_t action() const
+  {
+    return _mouseAction;
+  };
+
+  void set(const MouseAction_t action)
+  {
+    _mouseAction = action;
+  }
+
+private:
+  MouseAction_t _mouseAction = std::monostate{};
+};

@@ -62,21 +62,6 @@ public:
 
 	Selection selection;
 
-	struct MouseAction
-	{
-		struct RawItem
-		{
-			uint16_t serverId;
-		};
-	};
-
-	using MouseAction_t = std::variant<std::monostate, MouseAction::RawItem>;
-
-	void setMouseAction(const MouseAction_t action)
-	{
-		_mouseAction = action;
-	}
-
 	Map *getMap() const
 	{
 		return map.get();
@@ -214,13 +199,6 @@ public:
 	void mouseMoveEvent(ScreenPosition mousePos);
 	void panEvent(PanEvent event);
 
-	void rawItemSelectedEvent(uint16_t serverId);
-
-	inline MouseAction_t mouseAction() const
-	{
-		return _mouseAction;
-	}
-
 	inline ScreenPosition mousePos() const
 	{
 		return _mousePos;
@@ -237,8 +215,6 @@ private:
 
 	std::shared_ptr<Map> map;
 	Viewport viewport;
-
-	MouseAction_t _mouseAction = std::monostate{};
 
 	struct DragData
 	{
