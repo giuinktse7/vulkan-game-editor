@@ -348,12 +348,15 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags)
 
 void MapRenderer::drawPreviewCursor(uint16_t serverId)
 {
-  // uint16_t selectedServerId = g_engine->getSelectedServerId().value();
+  auto map = mapView->getMap();
+  Position pos = mapView->mouseGamePos();
+
+  if (pos.x < 0 || pos.x > map->getWidth() || pos.y < 0 || pos.y > map->getHeight())
+    return;
+
   ItemType &selectedItemType = *Items::items.getItemType(serverId);
 
-  Position pos = mapView->mousePos().worldPos(*mapView).mapPos().floor(mapView->getFloor());
-
-  Tile *tile = mapView->getMap()->getTile(pos);
+  Tile *tile = map->getTile(pos);
 
   int elevation = tile ? tile->getTopElevation() : 0;
 
