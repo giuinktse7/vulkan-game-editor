@@ -79,8 +79,11 @@ void VulkanWindow::mousePressEvent(QMouseEvent *e)
     {
       closeContextMenu();
     }
+    else
+    {
+      mapView->mousePressEvent(QtUtil::vmeMouseEvent(e));
+    }
 
-    mapView->mousePressEvent(QtUtil::vmeMouseEvent(e));
     break;
   default:
     break;
@@ -96,6 +99,7 @@ QRect VulkanWindow::localGeometry() const
 
 void VulkanWindow::closeContextMenu()
 {
+  VME_LOG_D("VulkanWindow::closeContextMenu");
   contextMenu->close();
   contextMenu = nullptr;
 }
@@ -127,6 +131,10 @@ void VulkanWindow::showContextMenu(QPoint position)
   menu->addAction(del);
 
   this->contextMenu = menu;
+
+  menu->connect(menu, &QMenu::aboutToHide, [this] {
+    this->contextMenu = nullptr;
+  });
   menu->popup(position);
 }
 
@@ -176,6 +184,9 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
   case Qt::Key_Down:
     e->ignore();
     emit keyPressedEvent(e);
+    break;
+  case Qt::Key_Escape:
+    mapViewMouseAction.reset();
     break;
   default:
     e->ignore();
@@ -229,23 +240,26 @@ bool VulkanWindow::ContextMenu::selfClicked(QPoint pos) const
 
 void VulkanWindow::ContextMenu::mousePressEvent(QMouseEvent *event)
 {
+  event->ignore();
+  QMenu::mousePressEvent(event);
+
   // // Propagate the click event to the map window if appropriate
-  if (!selfClicked(event->pos()))
-  {
-    auto posInWindow = window->mapFromGlobal(event->globalPos());
-    VME_LOG_D("posInWindow: " << posInWindow);
-    VME_LOG_D("Window geometry: " << window->geometry());
-    if (window->localGeometry().contains(posInWindow.x(), posInWindow.y()))
-    {
-      VME_LOG_D("In window");
-      window->mousePressEvent(event);
-    }
-    else
-    {
-      event->ignore();
-      window->lostFocus();
-    }
-  }
+  // if (!selfClicked(event->pos()))
+  // {
+  //   auto posInWindow = window->mapFromGlobal(event->globalPos());
+  //   VME_LOG_D("posInWindow: " << posInWindow);
+  //   VME_LOG_D("Window geometry: " << window->geometry());
+  //   if (window->localGeometry().contains(posInWindow.x(), posInWindow.y()))
+  //   {
+  //     VME_LOG_D("In window");
+  //     window->mousePressEvent(event);
+  //   }
+  //   else
+  //   {
+  //     event->ignore();
+  //     window->lostFocus();
+  //   }
+  // }
 }
 
 QRect VulkanWindow::ContextMenu::localGeometry() const

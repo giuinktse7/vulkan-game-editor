@@ -167,7 +167,21 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
-  VME_LOG_D("MainWindow::mousePressEvent");
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+  qDebug() << "MainWindow::keyPressEvent: " << event->type();
+  switch (event->key())
+  {
+  case Qt::Key_Escape:
+    mapViewMouseAction.reset();
+    break;
+  default:
+    event->ignore();
+    QWidget::keyPressEvent(event);
+    break;
+  }
 }
 
 QMenuBar *MainWindow::createMenuBar()

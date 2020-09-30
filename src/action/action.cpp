@@ -360,7 +360,7 @@ bool EditorHistory::currentGroupType(ActionGroupType groupType) const
 void EditorHistory::startGroup(ActionGroupType groupType)
 {
   DEBUG_ASSERT(currentGroup.has_value() == false, "The previous group was not ended.");
-  VME_LOG_D("startGroup " << groupType);
+  // VME_LOG_D("EditorHistory::startGroup: " << groupType);
 
   currentGroup.emplace(groupType);
 }
