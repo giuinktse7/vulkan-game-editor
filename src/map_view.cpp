@@ -327,18 +327,29 @@ void MapView::panEvent(MapView::PanEvent event)
 
 void MapView::mousePressEvent(VME::MouseButtons buttons)
 {
+  VME_LOG_D("MapView::mousePressEvent");
   if (buttons & VME::MouseButtons::LeftButton)
   {
+    Position pos = _mousePos.toPos(*this);
+
     std::visit(util::overloaded{
-                   [this](const MouseAction::RawItem &action) {
-                     Position pos = _mousePos.toPos(*this);
+                   [this, pos](const MouseAction::None) {
+                     const Item *topItem = map->getTopItem(pos);
+                     if (topItem)
+                     {
+                       history.startGroup(ActionGroupType::Selection);
+                       selectTopItem(pos);
+                       history.endGroup(ActionGroupType::Selection);
+                     }
+                   },
+                   [this, pos](const MouseAction::RawItem &action) {
                      history.startGroup(ActionGroupType::AddMapItem);
                      addItem(pos, action.serverId);
                      history.endGroup(ActionGroupType::AddMapItem);
 
                      leftMouseDragPos = pos;
                    },
-                   [](const std::monostate) { /* Empty */ },
+
                    [](const auto &) {
                      ABORT_PROGRAM("Unknown change!");
                    }},
@@ -351,10 +362,13 @@ void MapView::mouseMoveEvent(VME::MouseButtons buttons)
   Position pos = _mousePos.toPos(*this);
   if (buttons & VME::MouseButtons::LeftButton)
   {
-    if (!util::contains(leftMouseDragPos, pos))
+    if (leftMouseDragPos.has_value() && !util::contains(leftMouseDragPos, pos))
     {
 
       std::visit(util::overloaded{
+                     [](const MouseAction::None) {
+                     },
+
                      [this, &pos](const MouseAction::RawItem &action) {
                        history.startGroup(ActionGroupType::AddMapItem);
                        addItem(pos, action.serverId);
@@ -362,7 +376,7 @@ void MapView::mouseMoveEvent(VME::MouseButtons buttons)
 
                        leftMouseDragPos = pos;
                      },
-                     [](const std::monostate) { /* Empty */ },
+
                      [](const auto &) {
                        ABORT_PROGRAM("Unknown change!");
                      }},

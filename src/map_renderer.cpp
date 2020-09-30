@@ -259,13 +259,15 @@ void MapRenderer::drawMap()
 
   // Render current mouse action
   std::visit(util::overloaded{
+                 [](const MouseAction::None) { /* Empty */ },
+
                  [this](const MouseAction::RawItem &action) {
                    if (window.showPreviewCursor)
                    {
                      this->drawPreviewCursor(action.serverId);
                    }
                  },
-                 [](const std::monostate) { /* Empty */ },
+
                  [](const auto &) {
                    ABORT_PROGRAM("Unknown change!");
                  }},

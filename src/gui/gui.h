@@ -45,9 +45,13 @@ struct MouseAction
   {
     uint16_t serverId;
   };
+
+  struct None
+  {
+  };
 };
 
-using MouseAction_t = std::variant<std::monostate, MouseAction::RawItem>;
+using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem>;
 
 /*
   Contains mouse actions that can occur on a MapView.
@@ -65,6 +69,11 @@ public:
     _mouseAction = action;
   }
 
+  void reset()
+  {
+    _mouseAction = MouseAction::None{};
+  }
+
 private:
-  MouseAction_t _mouseAction = std::monostate{};
+  MouseAction_t _mouseAction = MouseAction::None{};
 };
