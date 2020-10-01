@@ -344,23 +344,31 @@ void MapView::mousePressEvent(VME::MouseButtons buttons)
                      const Item *topItem = map->getTopItem(pos);
                      if (topItem)
                      {
-                       history.startGroup(ActionGroupType::Selection);
-                       selectTopItem(pos);
-                       history.endGroup(ActionGroupType::Selection);
+                       if (topItem->selected)
+                       {
+                         selection.moveOrigin = pos;
+                       }
+                       else
+                       {
+                         clearSelection();
+                         history.startGroup(ActionGroupType::Selection);
+                         selectTopItem(pos);
+                         history.endGroup(ActionGroupType::Selection);
+                       }
                      }
                    },
                    [this, pos](const MouseAction::RawItem &action) {
                      history.startGroup(ActionGroupType::AddMapItem);
                      addItem(pos, action.serverId);
                      history.endGroup(ActionGroupType::AddMapItem);
-
-                     leftMouseDragPos = pos;
                    },
 
                    [](const auto &) {
                      ABORT_PROGRAM("Unknown change!");
                    }},
                mapViewMouseAction.action());
+
+    leftMouseDragPos = pos;
   }
 }
 
@@ -373,7 +381,8 @@ void MapView::mouseMoveEvent(VME::MouseButtons buttons)
     {
 
       std::visit(util::overloaded{
-                     [](const MouseAction::None) {
+                     [this, pos](const MouseAction::None) {
+                       selection.moving = pos != selection.moveOrigin;
                      },
 
                      [this, &pos](const MouseAction::RawItem &action) {
