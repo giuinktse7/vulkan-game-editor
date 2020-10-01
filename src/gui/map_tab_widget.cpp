@@ -197,13 +197,13 @@ void MapTabWidget::MapTabBar::dragPanEvent()
     // Right side
     if (pos.x() > width() - DragScrollThresholdPx)
     {
-        int threshold = width() - pos.x();
+        // int threshold = width() - pos.x();
         scrollBar->addValue(1);
     }
     // Left side
     else if (pos.x() < DragScrollThresholdPx)
     {
-        int threshold = pos.x();
+        // int threshold = pos.x();
         scrollBar->addValue(-1);
     }
 }
@@ -431,7 +431,6 @@ void MapTabWidget::MapTabBar::mouseMoveEvent(QMouseEvent *event)
     }
     else
     {
-        QWidget *hoveredButton = tabButton(hoveredIndex, QTabBar::ButtonPosition::RightSide);
         QPoint localPos = mapFromGlobal(QCursor::pos());
         if (!withinWidget(localPos))
         {
