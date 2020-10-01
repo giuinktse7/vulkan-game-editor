@@ -216,6 +216,14 @@ public:
 	void removeObserver(MapView::Observer *observer);
 	void notifyObservers(MapView::Observer::ChangeType changeType) const;
 
+	/*
+	TODO: These should probably be private, but they are needed by MapChange
+		Returns the old tile at the location of the tile.
+	*/
+	std::unique_ptr<Tile> setTileInternal(Tile &&tile);
+	std::unique_ptr<Tile> removeTileInternal(const Position position);
+	void removeSelectionInternal(Tile *tile);
+
 private:
 	friend class MapAction;
 
@@ -238,13 +246,6 @@ private:
 	{
 		return map->getTile(position)->deepCopy();
 	}
-
-	/*
-		Returns the old tile at the location of the tile.
-	*/
-	std::unique_ptr<Tile> setTileInternal(Tile &&tile);
-	std::unique_ptr<Tile> removeTileInternal(const Position position);
-	void removeSelectionInternal(Tile *tile);
 
 	MapAction newAction(MapActionType actionType) const;
 };
