@@ -232,7 +232,7 @@ void MapRenderer::drawMap()
   bool isSelectionMoving = mapView->selection.moving;
 
   const auto mapRect = mapView->getGameBoundingRect();
-  int floor = mapView->getZ();
+  int floor = mapView->z();
 
   bool aboveGround = floor <= 7;
 
@@ -286,7 +286,7 @@ void MapRenderer::drawMap()
 
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags)
 {
-  auto position = tileLocation.getPosition();
+  auto position = tileLocation.position();
   auto tile = tileLocation.getTile();
 
   bool drawSelected = drawFlags & ItemDrawFlags::DrawSelected;

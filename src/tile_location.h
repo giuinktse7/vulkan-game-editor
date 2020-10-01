@@ -32,12 +32,27 @@ public:
 
 	void setTile(std::unique_ptr<Tile> tile);
 
-	const Position getPosition() const;
-	long getX() const;
-	long getY() const;
-	long getZ() const;
+	inline Position position() const
+	{
+		return _position;
+	}
+
+	inline long x() const
+	{
+		return _position.x;
+	}
+
+	inline long y() const
+	{
+		return _position.y;
+	}
+
+	inline long z() const
+	{
+		return _position.z;
+	}
 
 protected:
 	std::unique_ptr<Tile> tile{};
-	Position position;
+	Position _position;
 };

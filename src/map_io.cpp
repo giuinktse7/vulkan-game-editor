@@ -194,7 +194,7 @@ void MapIO::saveMap(Map &map)
           continue;
         }
 
-        const Position &pos = location->getPosition();
+        const Position &pos = location->position();
 
         // Need new node?
         if (pos.x < x || pos.x > x + 0xFF || pos.y < y || pos.y > y + 0xFF || pos.z != z)
@@ -220,8 +220,8 @@ void MapIO::saveMap(Map &map)
         bool isHouseTile = false;
         buffer.startNode(isHouseTile ? OTBM_HOUSETILE : OTBM_TILE);
 
-        buffer.writeU8(location->getX() & 0xFF);
-        buffer.writeU8(location->getY() & 0xFF);
+        buffer.writeU8(location->x() & 0xFF);
+        buffer.writeU8(location->y() & 0xFF);
 
         if (isHouseTile)
         {

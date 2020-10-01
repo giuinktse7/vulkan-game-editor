@@ -81,14 +81,14 @@ Tile &Map::getOrCreateTile(const Position &pos)
 
 std::unique_ptr<Tile> Map::replaceTile(Tile &&tile)
 {
-  TileLocation &location = getOrCreateTileLocation(tile.getPosition());
+  TileLocation &location = getOrCreateTileLocation(tile.position());
 
   return location.replaceTile(std::move(tile));
 }
 
 void Map::insertTile(Tile &&tile)
 {
-  TileLocation &location = getOrCreateTileLocation(tile.getPosition());
+  TileLocation &location = getOrCreateTileLocation(tile.position());
 
   location.setTile(std::make_unique<Tile>(std::move(tile)));
 }

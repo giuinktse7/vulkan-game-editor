@@ -23,8 +23,8 @@ MapPosition::MapPosition() : BasePosition(0, 0) {}
 
 WorldPosition ScreenPosition::worldPos(const MapView &mapView) const
 {
-  long newX = std::lroundf(mapView.getX() + this->x / mapView.getZoomFactor());
-  long newY = std::lroundf(mapView.getY() + this->y / mapView.getZoomFactor());
+  long newX = std::lroundf(mapView.x() + this->x / mapView.getZoomFactor());
+  long newY = std::lroundf(mapView.y() + this->y / mapView.getZoomFactor());
 
   return WorldPosition(newX, newY);
 }

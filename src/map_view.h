@@ -134,7 +134,7 @@ public:
 	const uint32_t windowToMapPos(int windowPos) const;
 	const uint32_t mapToWorldPos(uint32_t mapPos) const;
 
-	int getZ() const
+	inline int z() const
 	{
 		return static_cast<uint32_t>(camera.floor);
 	}
@@ -145,19 +145,19 @@ public:
 	}
 
 	/*
-		Synonym for getZ()
+		Synonym for z()
 	*/
-	int getFloor() const
+	inline int getFloor() const
 	{
-		return getZ();
+		return z();
 	}
 
-	inline uint32_t getX() const
+	inline uint32_t x() const
 	{
 		return static_cast<uint32_t>(camera.position().x);
 	}
 
-	inline uint32_t getY() const
+	inline uint32_t y() const
 	{
 		return static_cast<uint32_t>(camera.position().y);
 	}

@@ -70,27 +70,9 @@ std::unique_ptr<Tile> TileLocation::dropTile()
 
 std::unique_ptr<Tile> TileLocation::replaceTile(Tile &&newTile)
 {
-  DEBUG_ASSERT(!this->tile || (newTile.getPosition() == this->tile->getPosition()), "The new tile must have the same position as the old tile.");
+  DEBUG_ASSERT(!this->tile || (newTile.position() == this->tile->position()), "The new tile must have the same position as the old tile.");
 
   std::unique_ptr<Tile> old = std::move(this->tile);
   this->tile = std::make_unique<Tile>(std::move(newTile));
   return old;
-}
-
-const Position TileLocation::getPosition() const
-{
-  return position;
-}
-
-long TileLocation::getX() const
-{
-  return position.x;
-}
-long TileLocation::getY() const
-{
-  return position.y;
-}
-long TileLocation::getZ() const
-{
-  return position.z;
 }

@@ -120,9 +120,9 @@ Floor::Floor(int x, int y, int z)
   */
   for (int i = 0; i < MAP_TREE_CHILDREN_COUNT; ++i)
   {
-    locations[i].position.x = x + (i >> 2);
-    locations[i].position.y = y + (i & 3);
-    locations[i].position.z = z;
+    locations[i]._position.x = x + (i >> 2);
+    locations[i]._position.y = y + (i & 3);
+    locations[i]._position.z = z;
   }
 }
 

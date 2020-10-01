@@ -25,6 +25,10 @@ public:
 
 	Tile deepCopy() const;
 
+	inline bool itemSelected(uint16_t itemIndex) const
+	{
+		return items.at(itemIndex).selected;
+	}
 	bool hasSelection() const;
 	bool topItemSelected() const;
 	bool allSelected() const;
@@ -32,6 +36,10 @@ public:
 	Item *getTopItem() const;
 	bool hasTopItem() const;
 	Item *getGround() const;
+	inline bool hasGround() const
+	{
+		return static_cast<bool>(ground);
+	}
 
 	void addItem(Item &&item);
 	void removeItem(size_t index);
@@ -40,6 +48,20 @@ public:
 	void setGround(std::unique_ptr<Item> ground);
 	void moveItems(Tile &other);
 	void moveSelected(Tile &other);
+
+	/*
+		Deselect entire tile
+	*/
+	void deselectAll();
+	void deselectTopItem();
+	void selectTopItem();
+	void selectItemAtIndex(size_t index);
+	void deselectItemAtIndex(size_t index);
+	void setItemSelected(size_t itemIndex, bool selected);
+	void selectGround();
+	void deselectGround();
+	void setGroundSelected(bool selected);
+	void selectAll();
 
 	bool isEmpty() const;
 
@@ -65,17 +87,31 @@ public:
 
 	void setLocation(TileLocation &location);
 
-	const Position getPosition() const;
+	inline Position position() const
+	{
+		return _position;
+	}
 
-	long getX() const;
-	long getY() const;
-	long getZ() const;
+	inline long x() const
+	{
+		return _position.x;
+	}
+
+	inline long y() const
+	{
+		return _position.y;
+	}
+
+	inline long z() const
+	{
+		return _position.z;
+	}
 
 private:
 	friend class MapView;
 	friend class MapAction;
 
-	Position position;
+	Position _position;
 	std::unique_ptr<Item> ground;
 	std::vector<Item> items;
 
@@ -91,18 +127,6 @@ private:
 		};
 		uint32_t flags;
 	};
-
-	/*
-		Deselect entire tile
-	*/
-	void deselectAll();
-	void deselectTopItem();
-	void selectTopItem();
-	void selectItemAtIndex(size_t index);
-	void deselectItemAtIndex(size_t index);
-	void selectGround();
-	void deselectGround();
-	void selectAll();
 };
 
 inline uint16_t Tile::getMapFlags() const

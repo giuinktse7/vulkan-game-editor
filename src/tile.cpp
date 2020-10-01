@@ -6,15 +6,15 @@
 #include "tile_location.h"
 
 Tile::Tile(TileLocation &tileLocation)
-    : position(tileLocation.position), selectionCount(0), flags(0)
+    : _position(tileLocation.position()), selectionCount(0), flags(0)
 {
 }
 
 Tile::Tile(Position position)
-    : position(position), selectionCount(0), flags(0) {}
+    : _position(position), selectionCount(0), flags(0) {}
 
 Tile::Tile(Tile &&other) noexcept
-    : position(other.position),
+    : _position(other._position),
       ground(std::move(other.ground)),
       items(std::move(other.items)),
       selectionCount(other.selectionCount),
@@ -26,7 +26,7 @@ Tile &Tile::operator=(Tile &&other) noexcept
 {
   items = std::move(other.items);
   ground = std::move(other.ground);
-  position = std::move(other.position);
+  _position = std::move(other._position);
   selectionCount = other.selectionCount;
   flags = other.flags;
 
@@ -39,7 +39,7 @@ Tile::~Tile()
 
 void Tile::setLocation(TileLocation &location)
 {
-  this->position = location.position;
+  _position = location.position();
 }
 
 void Tile::removeItem(size_t index)
@@ -191,6 +191,14 @@ void Tile::removeGround()
   ground.reset();
 }
 
+void Tile::setItemSelected(size_t itemIndex, bool selected)
+{
+  if (selected)
+    selectItemAtIndex(itemIndex);
+  else
+    deselectItemAtIndex(itemIndex);
+}
+
 void Tile::selectItemAtIndex(size_t index)
 {
   if (!items.at(index).selected)
@@ -225,6 +233,14 @@ void Tile::selectAll()
   }
 
   selectionCount = count;
+}
+
+void Tile::setGroundSelected(bool selected)
+{
+  if (selected)
+    selectGround();
+  else
+    deselectGround();
 }
 
 void Tile::selectGround()
@@ -336,7 +352,7 @@ int Tile::getTopElevation() const
 
 Tile Tile::deepCopy() const
 {
-  Tile tile(this->position);
+  Tile tile(_position);
   for (const auto &item : this->items)
   {
     tile.addItem(item.deepCopy());
@@ -350,24 +366,6 @@ Tile Tile::deepCopy() const
   tile.selectionCount = this->selectionCount;
 
   return tile;
-}
-
-const Position Tile::getPosition() const
-{
-  return position;
-}
-
-long Tile::getX() const
-{
-  return position.x;
-}
-long Tile::getY() const
-{
-  return position.y;
-}
-long Tile::getZ() const
-{
-  return position.z;
 }
 
 bool Tile::isEmpty() const
