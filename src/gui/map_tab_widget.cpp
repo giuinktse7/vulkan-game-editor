@@ -60,6 +60,14 @@ MapView *MapTabWidget::getMapView(size_t index) const
     return static_cast<MapViewWidget *>(widget(index))->mapView;
 }
 
+MapView *MapTabWidget::currentMapView() const
+{
+    if (count() == 0)
+        return nullptr;
+
+    return getMapView(currentIndex());
+}
+
 int MapTabWidget::addTabWithButton(QWidget *widget, const QString &text, QVariant data)
 {
     int index = insertTab(currentIndex() + 1, widget, text);
