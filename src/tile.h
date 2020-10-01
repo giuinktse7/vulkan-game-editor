@@ -13,6 +13,8 @@ class TileLocation;
 class Tile
 {
 public:
+	Tile(Position position);
+
 	Tile(TileLocation &location);
 	~Tile();
 
@@ -72,8 +74,6 @@ public:
 private:
 	friend class MapView;
 	friend class MapAction;
-
-	Tile(Position position);
 
 	Position position;
 	std::unique_ptr<Item> ground;
