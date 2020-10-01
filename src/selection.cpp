@@ -41,6 +41,14 @@ void Selection::deselect(const Position pos)
   positionsWithSelection.erase(pos);
 }
 
+void Selection::setSelected(const Position pos, bool selected)
+{
+  if (selected)
+    select(pos);
+  else
+    deselect(pos);
+}
+
 std::unordered_set<Position, PositionHash> Selection::getPositions() const
 {
   return positionsWithSelection;
