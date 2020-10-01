@@ -177,6 +177,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
   case Qt::Key_Escape:
     mapViewMouseAction.reset();
     break;
+  case Qt::Key_0:
+    if (event->modifiers() & Qt::CTRL)
+    {
+      mapTabs->currentMapView()->resetZoom();
+    }
   default:
     event->ignore();
     QWidget::keyPressEvent(event);

@@ -188,6 +188,12 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
   case Qt::Key_Escape:
     mapViewMouseAction.reset();
     break;
+  case Qt::Key_0:
+    if (e->modifiers() & Qt::CTRL)
+    {
+      mapView->resetZoom();
+    }
+    break;
   default:
     e->ignore();
     QVulkanWindow::keyPressEvent(e);

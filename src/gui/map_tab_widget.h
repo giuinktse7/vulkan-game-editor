@@ -193,7 +193,9 @@ public:
   MapTabWidget(QWidget *parent = nullptr);
 
   QSize minimumSizeHint() const override;
+
   MapView *getMapView(size_t index) const;
+  MapView *currentMapView() const;
 
   int addTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
   int insertTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
