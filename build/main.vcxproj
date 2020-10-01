@@ -543,7 +543,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main_autogen\mocs_compilation.cpp" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\action\action.h" />
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history.h" />
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_action.h" />
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_change.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\camera.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\const.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\debug.h" />
@@ -623,7 +625,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzmaEnc.c" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzmaLib.c" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\Threads.c" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\action\action.cpp" />
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history.cpp" />
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_action.cpp" />
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_change.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\camera.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\ecs\ecs.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\ecs\item_animation.cpp" />
@@ -632,13 +636,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\batch_item_draw.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\buffer.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\compression.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\device_manager.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\engine.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\appearances.pb.cc" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\map.pb.cc" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\shared.pb.cc" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\resource-descriptor.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\swapchain.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\texture.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\texture_atlas.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\vulkan_debug.cpp" />

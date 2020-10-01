@@ -13,7 +13,6 @@
 #include "file.h"
 
 #include "graphics/appearances.h"
-#include "graphics/engine.h"
 #include "item_type.h"
 
 Items Items::items;

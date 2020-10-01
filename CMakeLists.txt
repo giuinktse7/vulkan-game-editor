@@ -49,7 +49,9 @@ find_package(
 
 add_executable(
   main
-  src/action/action.h
+  src/history/history.h
+  src/history/history_action.h
+  src/history/history_change.h
   src/camera.h
   src/const.h
   src/debug.h
@@ -129,7 +131,9 @@ add_executable(
   src/lzma/LzmaEnc.c
   src/lzma/LzmaLib.c
   src/lzma/Threads.c
-  src/action/action.cpp
+  src/history/history.cpp
+  src/history/history_action.cpp
+  src/history/history_change.cpp
   src/camera.cpp
   src/ecs/ecs.cpp
   src/ecs/item_animation.cpp

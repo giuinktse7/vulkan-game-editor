@@ -1,7 +1,5 @@
 #include "map.h"
 
-#include "graphics/engine.h"
-
 #include <iostream>
 
 #include "tile_location.h"

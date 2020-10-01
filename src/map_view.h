@@ -12,7 +12,7 @@
 #include "util.h"
 #include "selection.h"
 
-#include "action/action.h"
+#include "history/history.h"
 
 #include "gui/gui.h"
 
@@ -58,7 +58,7 @@ public:
 
 	std::optional<Position> leftMouseDragPos;
 
-	EditorHistory history;
+	MapHistory::History history;
 
 	Selection selection;
 
@@ -217,7 +217,7 @@ public:
 	void notifyObservers(MapView::Observer::ChangeType changeType) const;
 
 	/*
-	TODO: These should probably be private, but they are needed by MapChange
+	TODO: These should probably be private, but they are needed by MapHistory
 		Returns the old tile at the location of the tile.
 	*/
 	std::unique_ptr<Tile> setTileInternal(Tile &&tile);
@@ -247,7 +247,7 @@ private:
 		return map->getTile(position)->deepCopy();
 	}
 
-	MapAction newAction(MapActionType actionType) const;
+	MapHistory::Action newAction(MapHistory::ActionType actionType) const;
 };
 
 inline std::ostream &operator<<(std::ostream &os, const util::Rectangle<int> &rect)

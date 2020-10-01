@@ -25,7 +25,13 @@
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\Threads.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\action\action.cpp">
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_action.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_change.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\camera.cpp">
@@ -52,12 +58,6 @@
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\compression.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\device_manager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\engine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\appearances.pb.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -65,12 +65,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\shared.pb.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\resource-descriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\swapchain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\texture.cpp">
@@ -180,7 +174,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\action\action.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_action.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_change.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\camera.h">

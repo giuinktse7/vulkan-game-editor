@@ -17,7 +17,8 @@ MapView::MapView(MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> ma
       map(map),
       dragState{},
       viewport(),
-      _mousePos() {}
+      _mousePos(),
+      history(*this) {}
 
 void MapView::selectTopItem(const Position pos)
 {
@@ -28,16 +29,24 @@ void MapView::selectTopItem(const Position pos)
 
 void MapView::selectTopItem(Tile &tile)
 {
-  MapAction action = newAction(MapActionType::Selection);
-  action.addChange(Change::selectTopItem(tile));
+  auto selection = MapHistory::Select::topItem(tile);
+  if (!selection.has_value())
+    return;
+
+  auto action = newAction(MapHistory::ActionType::Selection);
+  action.addChange(std::move(selection.value()));
 
   history.commit(std::move(action));
 }
 
 void MapView::deselectTopItem(Tile &tile)
 {
-  MapAction action = newAction(MapActionType::Selection);
-  action.addChange(Change::deselectTopItem(tile));
+  auto deselection = MapHistory::Deselect::topItem(tile);
+  if (!deselection.has_value())
+    return;
+
+  auto action = newAction(MapHistory::ActionType::Selection);
+  action.addChange(std::move(deselection.value()));
 
   history.commit(std::move(action));
 }
@@ -45,7 +54,7 @@ void MapView::deselectTopItem(Tile &tile)
 void MapView::selectAll(Tile &tile)
 {
   tile.selectAll();
-  selection.select(tile.position);
+  selection.select(tile.position());
 }
 
 void MapView::clearSelection()
@@ -81,8 +90,9 @@ void MapView::addItem(const Position pos, uint16_t id)
   Tile newTile = currentTile.deepCopy();
   newTile.addItem(std::move(item));
 
-  MapAction action(*this, MapActionType::SetTile);
-  action.addChange(std::move(newTile));
+  MapHistory::Action action(MapHistory::ActionType::SetTile);
+  action.addChange(MapHistory::SetTile(std::move(newTile)));
+
   history.commit(std::move(action));
 }
 
@@ -92,7 +102,7 @@ void MapView::removeItems(const Position position, const std::set<size_t, std::g
 
   DEBUG_ASSERT(location->hasTile(), "The location has no tile.");
 
-  MapAction action(*this, MapActionType::RemoveTile);
+  MapHistory::Action action(MapHistory::ActionType::RemoveTile);
 
   Tile newTile = deepCopyTile(position);
 
@@ -101,23 +111,21 @@ void MapView::removeItems(const Position position, const std::set<size_t, std::g
     newTile.removeItem(index);
   }
 
-  action.addChange(std::move(newTile));
+  action.addChange(MapHistory::SetTile(std::move(newTile)));
 
   history.commit(std::move(action));
 }
 
 void MapView::removeSelectedItems(const Tile &tile)
 {
-  MapAction action(*this, MapActionType::ModifyTile);
+  MapHistory::Action action(MapHistory::ActionType::ModifyTile);
 
   Tile newTile = tile.deepCopy();
 
   for (size_t i = 0; i < tile.items.size(); ++i)
   {
     if (tile.items.at(i).selected)
-    {
       newTile.removeItem(i);
-    }
   }
 
   Item *ground = newTile.getGround();
@@ -126,7 +134,7 @@ void MapView::removeSelectedItems(const Tile &tile)
     newTile.ground.reset();
   }
 
-  action.addChange(Change::setTile(std::move(newTile)));
+  action.addChange(MapHistory::SetTile(std::move(newTile)));
 
   history.commit(std::move(action));
 }
@@ -138,18 +146,18 @@ Tile *MapView::getTile(const Position pos) const
 
 void MapView::insertTile(Tile &&tile)
 {
-  MapAction action(*this, MapActionType::SetTile);
+  MapHistory::Action action(MapHistory::ActionType::SetTile);
 
-  action.addChange(std::move(tile));
+  action.addChange(MapHistory::SetTile(std::move(tile)));
 
   history.commit(std::move(action));
 }
 
 void MapView::removeTile(const Position position)
 {
-  MapAction action(*this, MapActionType::RemoveTile);
+  MapHistory::Action action(MapHistory::ActionType::RemoveTile);
 
-  action.addChange(Change::removeTile(position));
+  action.addChange(MapHistory::RemoveTile(position));
 
   history.commit(std::move(action));
 }
@@ -175,11 +183,6 @@ void MapView::setViewportSize(int width, int height)
   viewport.height = height;
 }
 
-void MapView::mouseMoveEvent(ScreenPosition mousePos)
-{
-  setMousePos(mousePos);
-}
-
 void MapView::setMousePos(const ScreenPosition pos)
 {
   this->_mousePos = pos;
@@ -198,7 +201,7 @@ void MapView::deleteSelectedItems()
     Tile &tile = *getTile(pos);
     if (tile.allSelected())
     {
-      removeTile(tile.getPosition());
+      removeTile(tile.position());
     }
     else
     {
@@ -290,7 +293,7 @@ void MapView::endDragging()
     Tile *tile = location.getTile();
     if (tile && !tile->isEmpty())
     {
-      positions.emplace(location.getPosition());
+      positions.emplace(location.position());
     }
   }
 
@@ -299,9 +302,9 @@ void MapView::endDragging()
   {
     history.startGroup(ActionGroupType::Selection);
 
-    MapAction action(*this, MapActionType::Selection);
+    MapHistory::Action action(MapHistory::ActionType::Selection);
 
-    action.addChange(Change::selection(positions));
+    action.addChange(MapHistory::SelectMultiple(positions));
 
     history.commit(std::move(action));
     history.endGroup(ActionGroupType::Selection);
@@ -372,6 +375,11 @@ void MapView::mousePressEvent(VME::MouseButtons buttons)
   }
 }
 
+void MapView::mouseMoveEvent(ScreenPosition mousePos)
+{
+  setMousePos(mousePos);
+}
+
 void MapView::mouseMoveEvent(VME::MouseButtons buttons)
 {
   Position pos = _mousePos.toPos(*this);
@@ -379,7 +387,6 @@ void MapView::mouseMoveEvent(VME::MouseButtons buttons)
   {
     if (leftMouseDragPos.has_value() && !util::contains(leftMouseDragPos, pos))
     {
-
       std::visit(util::overloaded{
                      [this, pos](const MouseAction::None) {
                        selection.moving = pos != selection.moveOrigin;
@@ -548,16 +555,16 @@ MapView::Observer::~Observer()
 */
 std::unique_ptr<Tile> MapView::setTileInternal(Tile &&tile)
 {
-  TileLocation &location = map->getOrCreateTileLocation(tile.position);
+  TileLocation &location = map->getOrCreateTileLocation(tile.position());
   std::unique_ptr<Tile> oldTilePtr = location.replaceTile(std::move(tile));
 
   if (tile.hasSelection())
   {
-    selection.select(tile.position);
+    selection.select(tile.position());
   }
   else
   {
-    selection.deselect(tile.position);
+    selection.deselect(tile.position());
   }
 
   return oldTilePtr;
@@ -574,11 +581,11 @@ std::unique_ptr<Tile> MapView::removeTileInternal(const Position position)
 void MapView::removeSelectionInternal(Tile *tile)
 {
   if (tile && tile->hasSelection())
-    selection.deselect(tile->position);
+    selection.deselect(tile->position());
 }
 
-MapAction MapView::newAction(MapActionType actionType) const
+MapHistory::Action MapView::newAction(MapHistory::ActionType actionType) const
 {
-  MapAction action(const_cast<MapView &>(*this), actionType);
+  MapHistory::Action action(actionType);
   return action;
 }

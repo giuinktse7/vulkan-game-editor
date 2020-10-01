@@ -2,7 +2,7 @@
 
 #include "map_view.h"
 #include "debug.h"
-#include "action/action.h"
+#include "history/history_action.h"
 
 Selection::Selection(MapView &mapView) : mapView(mapView)
 {
@@ -12,6 +12,7 @@ void Selection::merge(std::unordered_set<Position, PositionHash> &positions)
 {
   for (const auto &pos : positions)
   {
+    mapView.getTile(pos)->selectAll();
     positionsWithSelection.emplace(pos);
   }
 }
@@ -20,6 +21,7 @@ void Selection::deselect(std::unordered_set<Position, PositionHash> &positions)
 {
   for (const auto &pos : positions)
   {
+    mapView.getTile(pos)->deselectAll();
     positionsWithSelection.erase(pos);
   }
 }
@@ -68,9 +70,9 @@ void Selection::deselectAll()
   }
 
   mapView.history.startGroup(ActionGroupType::Selection);
-  MapAction action(mapView, MapActionType::Selection);
+  MapHistory::Action action(MapHistory::ActionType::Selection);
 
-  action.addChange(Change::deselection(positionsWithSelection));
+  action.addChange(MapHistory::SelectMultiple(positionsWithSelection, false));
   positionsWithSelection.clear();
 
   mapView.history.commit(std::move(action));
