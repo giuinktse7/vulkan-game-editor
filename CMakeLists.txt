@@ -138,13 +138,13 @@ add_executable(
   src/graphics/batch_item_draw.cpp
   src/graphics/buffer.cpp
   src/graphics/compression.cpp
-  src/graphics/device_manager.cpp
-  src/graphics/engine.cpp
+  # src/graphics/device_manager.cpp
+  # src/graphics/engine.cpp
   src/graphics/protobuf/appearances.pb.cc
   src/graphics/protobuf/map.pb.cc
   src/graphics/protobuf/shared.pb.cc
-  src/graphics/resource-descriptor.cpp
-  src/graphics/swapchain.cpp
+  # src/graphics/resource-descriptor.cpp
+  # src/graphics/swapchain.cpp
   src/graphics/texture.cpp
   src/graphics/texture_atlas.cpp
   src/graphics/vulkan_debug.cpp
