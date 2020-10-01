@@ -81,7 +81,7 @@ ItemAnimationComponent::ItemAnimationComponent(SpriteAnimation *animationInfo)
     state.info = 0;
     break;
   default:
-    VME_LOG_D("Hmm");
+    VME_LOG_D("Unknown AnimationLoopType");
     break;
   }
 
