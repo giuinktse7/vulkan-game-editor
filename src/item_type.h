@@ -228,6 +228,16 @@ public:
     return clientId != 0;
   }
 
+  inline bool hasAnimation() const
+  {
+    return appearance->getSpriteInfo().hasAnimation();
+  }
+
+  inline SpriteAnimation *animation() const
+  {
+    return appearance->getSpriteInfo().animation();
+  }
+
   // Abilities &getAbilities()
   // {
   //   if (!abilities)
