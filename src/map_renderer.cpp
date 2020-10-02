@@ -204,14 +204,15 @@ void MapRenderer::drawBatches()
     {
       descriptorSets[1] = descriptorInfo.descriptor;
 
-      devFuncs->vkCmdBindDescriptorSets(currentFrame->commandBuffer,
-                                        VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                        pipelineLayout,
-                                        0,
-                                        static_cast<uint32_t>(descriptorSets.size()),
-                                        descriptorSets.data(),
-                                        0,
-                                        nullptr);
+      devFuncs->vkCmdBindDescriptorSets(
+          currentFrame->commandBuffer,
+          VK_PIPELINE_BIND_POINT_GRAPHICS,
+          pipelineLayout,
+          0,
+          static_cast<uint32_t>(descriptorSets.size()),
+          descriptorSets.data(),
+          0,
+          nullptr);
 
       // 4 is vertices for one sprite.
       uint32_t sprites = (descriptorInfo.end - offset + 1) / 4;
@@ -256,20 +257,21 @@ void MapRenderer::drawMap()
   }
 
   // Render current mouse action
-  std::visit(util::overloaded{
-                 [](const MouseAction::None) { /* Empty */ },
+  std::visit(
+      util::overloaded{
+          [](const MouseAction::None) { /* Empty */ },
 
-                 [this](const MouseAction::RawItem &action) {
-                   if (window.showPreviewCursor)
-                   {
-                     this->drawPreviewCursor(action.serverId);
-                   }
-                 },
+          [this](const MouseAction::RawItem &action) {
+            if (window.showPreviewCursor)
+            {
+              this->drawPreviewCursor(action.serverId);
+            }
+          },
 
-                 [](const auto &) {
-                   ABORT_PROGRAM("Unknown change!");
-                 }},
-             window.mapViewMouseAction.action());
+          [](const auto &) {
+            ABORT_PROGRAM("Unknown MouseAction!");
+          }},
+      window.mapViewMouseAction.action());
 
   if (mapView->selection.moving())
   {
