@@ -60,7 +60,7 @@ void Map::addItem(const Position position, uint16_t serverId)
   if (spriteInfo.hasAnimation())
   {
     ecs::EntityId entityId = item.assignNewEntityId();
-    g_ecs.addComponent(entityId, ItemAnimationComponent(spriteInfo.getAnimation()));
+    g_ecs.addComponent(entityId, ItemAnimationComponent(spriteInfo.animation()));
   }
 
   auto &tile = getOrCreateTile(position);
@@ -369,7 +369,7 @@ void Map::createItemAt(Position pos, uint16_t id)
   if (spriteInfo.hasAnimation())
   {
     ecs::EntityId entityId = item.assignNewEntityId();
-    g_ecs.addComponent(entityId, ItemAnimationComponent(spriteInfo.getAnimation()));
+    g_ecs.addComponent(entityId, ItemAnimationComponent(spriteInfo.animation()));
   }
 
   getOrCreateTile(pos).addItem(std::move(item));

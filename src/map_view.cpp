@@ -77,18 +77,10 @@ void MapView::addItem(const Position pos, uint16_t id)
   if (!Items::items.validItemType(id))
     return;
 
-  Item item(id);
-
-  const SpriteInfo &spriteInfo = item.itemType->appearance->getSpriteInfo();
-  if (spriteInfo.hasAnimation())
-  {
-    ecs::EntityId entityId = item.assignNewEntityId();
-    g_ecs.addComponent(entityId, ItemAnimationComponent(spriteInfo.getAnimation()));
-  }
-
   Tile &currentTile = map->getOrCreateTile(pos);
   Tile newTile = currentTile.deepCopy();
-  newTile.addItem(std::move(item));
+
+  newTile.addItem(Item(id));
 
   MapHistory::Action action(MapHistory::ActionType::SetTile);
   action.addChange(MapHistory::SetTile(std::move(newTile)));
@@ -555,25 +547,23 @@ MapView::Observer::~Observer()
 */
 std::unique_ptr<Tile> MapView::setTileInternal(Tile &&tile)
 {
+  selection.setSelected(tile.position(), tile.hasSelection());
+
   TileLocation &location = map->getOrCreateTileLocation(tile.position());
-  std::unique_ptr<Tile> oldTilePtr = location.replaceTile(std::move(tile));
+  std::unique_ptr<Tile> currentTilePointer = location.replaceTile(std::move(tile));
 
-  if (tile.hasSelection())
-  {
-    selection.select(tile.position());
-  }
-  else
-  {
-    selection.deselect(tile.position());
-  }
+  // Destroy the ECS entities of the old tile
+  currentTilePointer->destroyEntities();
 
-  return oldTilePtr;
+  return currentTilePointer;
 }
 
 std::unique_ptr<Tile> MapView::removeTileInternal(const Position position)
 {
   Tile *oldTile = map->getTile(position);
   removeSelectionInternal(oldTile);
+
+  oldTile->destroyEntities();
 
   return map->dropTile(position);
 }
