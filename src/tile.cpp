@@ -49,6 +49,17 @@ void Tile::removeItem(size_t index)
   items.erase(items.begin() + index);
 }
 
+Item Tile::dropItem(size_t index)
+{
+  Item item = std::move(items.at(index));
+  items.erase(items.begin() + index);
+
+  if (item.selected)
+    selectionCount -= 1;
+
+  return item;
+}
+
 void Tile::deselectAll()
 {
   if (_ground)

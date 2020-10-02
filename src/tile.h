@@ -43,6 +43,7 @@ public:
 
 	void addItem(Item &&item);
 	void removeItem(size_t index);
+	Item dropItem(size_t index);
 	void removeGround();
 	std::unique_ptr<Item> dropGround();
 	void setGround(std::unique_ptr<Item> ground);
