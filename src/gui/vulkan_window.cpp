@@ -186,7 +186,8 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
     emit keyPressedEvent(e);
     break;
   case Qt::Key_Escape:
-    mapViewMouseAction.reset();
+    mapView->escapeEvent();
+    break;
     break;
   case Qt::Key_0:
     if (e->modifiers() & Qt::CTRL)

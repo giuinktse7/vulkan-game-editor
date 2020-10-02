@@ -488,6 +488,20 @@ void MapView::translateZ(int z)
   camera.translateZ(z);
 }
 
+void MapView::escapeEvent()
+{
+  std::visit(
+      util::overloaded{
+          [this](const MouseAction::None) {
+            clearSelection();
+          },
+
+          [this](const auto &&arg) {
+            mapViewMouseAction.reset();
+          }},
+      mapViewMouseAction.action());
+}
+
 void MapView::addObserver(MapView::Observer *o)
 {
   auto found = std::find(observers.begin(), observers.end(), o);

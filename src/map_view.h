@@ -70,6 +70,10 @@ public:
 	void mousePressEvent(VME::MouseButtons pressedButtons);
 	void mouseMoveEvent(VME::MouseButtons pressedButtons);
 	void mouseReleaseEvent(VME::MouseButtons pressedButtons);
+	/*
+		Escape the current action (for example when pressing the ESC key)
+	*/
+	void escapeEvent();
 
 	Tile *getTile(const Position pos) const;
 	Tile &getOrCreateTile(const Position pos);
