@@ -21,6 +21,13 @@ void TileLocation::setTile(std::unique_ptr<Tile> tile)
   _tile = std::move(tile);
   _tile->setLocation(*this);
 }
+
+void TileLocation::setTile(Tile &&tile)
+{
+  _tile = std::make_unique<Tile>(std::move(tile));
+  _tile->setLocation(*this);
+}
+
 Tile *TileLocation::tile() const
 {
   return _tile ? _tile.get() : nullptr;
