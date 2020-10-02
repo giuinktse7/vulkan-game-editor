@@ -34,6 +34,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 # End QT
 
+set(CMAKE_CXX_STANDARD 17)
+
+
 find_package(Vulkan REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
 find_package(liblzma CONFIG REQUIRED)
