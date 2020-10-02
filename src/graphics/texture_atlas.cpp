@@ -15,16 +15,19 @@
 #include "../file.h"
 #include "../logger.h"
 
-constexpr uint32_t SPRITE_SIZE = 32;
+namespace
+{
+  constexpr uint32_t SPRITE_SIZE = 32;
 
-// Signifies that the BMP is uncompressed.
-constexpr uint8_t BI_BITFIELDS = 0x03;
+  // Signifies that the BMP is uncompressed.
+  constexpr uint8_t BI_BITFIELDS = 0x03;
 
-// See https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
-constexpr uint32_t OFFSET_OF_BMP_START_OFFSET = 10;
+  // See https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
+  constexpr uint32_t OFFSET_OF_BMP_START_OFFSET = 10;
+} // namespace
 
 TextureAtlas::TextureAtlas(uint32_t id, CompressedBytes &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, uint32_t lastSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile)
-    : _id(id), sourceFile(sourceFile), texture(std::move(buffer)), width(width), height(height), firstSpriteId(firstSpriteId), lastSpriteId(lastSpriteId)
+    : sourceFile(sourceFile), width(width), height(height), firstSpriteId(firstSpriteId), lastSpriteId(lastSpriteId), _id(id), texture(std::move(buffer))
 {
   switch (spriteLayout)
   {

@@ -13,9 +13,9 @@ MapView::MapView(MapViewMouseAction &mapViewMouseAction)
 
 MapView::MapView(MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> map)
     : mapViewMouseAction(mapViewMouseAction),
+      history(*this),
       selection(*this),
       _map(map),
-      history(*this),
       viewport(),
       dragState{},
       _mousePos() {}

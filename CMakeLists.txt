@@ -36,7 +36,6 @@ set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_CXX_STANDARD 17)
 
-
 find_package(Vulkan REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
 find_package(liblzma CONFIG REQUIRED)
@@ -96,17 +95,17 @@ add_executable(
   src/item_attribute.h
   src/item_type.h
   src/logger.h
-  src/lzma/7zTypes.h
-  src/lzma/Alloc.h
-  src/lzma/Compiler.h
-  src/lzma/LzFind.h
-  src/lzma/LzFindMt.h
-  src/lzma/LzHash.h
-  src/lzma/LzmaDec.h
-  src/lzma/LzmaEnc.h
-  src/lzma/LzmaLib.h
-  src/lzma/Precomp.h
-  src/lzma/Threads.h
+  ../vendor/lzma/7zTypes.h
+  ../vendor/lzma/Alloc.h
+  ../vendor/lzma/Compiler.h
+  ../vendor/lzma/LzFind.h
+  ../vendor/lzma/LzFindMt.h
+  ../vendor/lzma/LzHash.h
+  ../vendor/lzma/LzmaDec.h
+  ../vendor/lzma/LzmaEnc.h
+  ../vendor/lzma/LzmaLib.h
+  ../vendor/lzma/Precomp.h
+  ../vendor/lzma/Threads.h
   src/main.h
   src/map.h
   src/map_io.h
@@ -127,13 +126,13 @@ add_executable(
   src/ui_mainwindow.h
   src/util.h
   src/version.h
-  src/lzma/Alloc.c
-  src/lzma/LzFind.c
-  src/lzma/LzFindMt.c
-  src/lzma/LzmaDec.c
-  src/lzma/LzmaEnc.c
-  src/lzma/LzmaLib.c
-  src/lzma/Threads.c
+  ../vendor/lzma/Alloc.c
+  ../vendor/lzma/LzFind.c
+  ../vendor/lzma/LzFindMt.c
+  ../vendor/lzma/LzmaDec.c
+  ../vendor/lzma/LzmaEnc.c
+  ../vendor/lzma/LzmaLib.c
+  ../vendor/lzma/Threads.c
   src/history/history.cpp
   src/history/history_action.cpp
   src/history/history_change.cpp

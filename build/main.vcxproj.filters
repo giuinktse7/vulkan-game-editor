@@ -4,25 +4,25 @@
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main_autogen\mocs_compilation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\Alloc.c">
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Alloc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzFind.c">
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzFind.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzFindMt.c">
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzFindMt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzmaDec.c">
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaDec.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzmaEnc.c">
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaEnc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzmaLib.c">
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaLib.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\Threads.c">
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Threads.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history.cpp">
@@ -306,37 +306,37 @@
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\7zTypes.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\7zTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\Alloc.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Alloc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\Compiler.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Compiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzFind.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzFind.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzFindMt.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzFindMt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzHash.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzHash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzmaDec.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaDec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzmaEnc.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaEnc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\LzmaLib.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaLib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\Precomp.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Precomp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\lzma\Threads.h">
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Threads.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\main.h">

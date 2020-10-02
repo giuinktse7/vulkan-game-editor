@@ -7,7 +7,7 @@
 #include "lzma.h"
 #include "../debug.h"
 
-#include "../lzma/LzmaLib.h"
+#include "../../vendor/lzma/LzmaLib.h"
 
 struct LZMA
 {
