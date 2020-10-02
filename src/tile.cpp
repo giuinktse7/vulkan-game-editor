@@ -112,30 +112,34 @@ void Tile::addItem(Item &&item)
     return;
   }
 
-  std::vector<Item>::iterator cursor;
+  std::vector<Item>::iterator currentItem;
 
-  if (item.itemType->alwaysOnTop)
+  ItemType &itemType = *item.itemType;
+  if (itemType.alwaysOnTop)
   {
-    cursor = items.begin();
-    while (cursor != items.end())
+    currentItem = items.begin();
+
+    while (currentItem != items.end())
     {
-      if (cursor->itemType->alwaysOnTop)
+      ItemType &currentType = *currentItem->itemType;
+
+      if (currentType.alwaysOnTop)
       {
-        if (item.itemType->isGroundBorder())
+        if (itemType.isGroundBorder())
         {
-          if (!cursor->itemType->isGroundBorder())
+          if (!currentType.isGroundBorder())
           {
             break;
           }
         }
         else // New item is not a border
         {
-          if (cursor->itemType->alwaysOnTop)
+          if (currentType.alwaysOnTop)
           {
-            if (!cursor->itemType->isGroundBorder())
+            if (!currentType.isGroundBorder())
             {
               // Replace the current item at cursor with the new item
-              *(cursor) = std::move(item);
+              *(currentItem) = std::move(item);
               return;
             }
           }
@@ -149,12 +153,12 @@ void Tile::addItem(Item &&item)
       {
         break;
       }
-      ++cursor;
+      ++currentItem;
     }
   }
   else
   {
-    cursor = items.end();
+    currentItem = items.end();
   }
 
   if (item.selected)
@@ -162,7 +166,7 @@ void Tile::addItem(Item &&item)
     ++selectionCount;
   }
 
-  items.insert(cursor, std::move(item));
+  items.insert(currentItem, std::move(item));
 }
 
 void Tile::setGround(std::unique_ptr<Item> ground)
