@@ -17,7 +17,33 @@
 
 Items Items::items;
 
-constexpr uint32_t RESERVED_ITEM_COUNT = 40000;
+namespace
+{
+	constexpr uint32_t ReservedItemCount = 40000;
+
+	constexpr ClientVersion DefaultVersion = ClientVersion::CLIENT_VERSION_1098;
+
+	bool reservedForFluid(uint16_t id, ClientVersion clientVersion) noexcept
+	{
+		auto version = to_underlying(clientVersion);
+
+		if (version < to_underlying(ClientVersion::CLIENT_VERSION_980) && 20000 < id && id < 20100)
+		{
+			return true;
+		}
+		// TODO What is the version range for fluids in [30000, 30100]?
+		// else if (id > 30000 && id < 30100) {}
+		// Fluids in current version, might change in the future
+		else if (40000 < id && id < 40100)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+} // namespace
 
 using std::string;
 
@@ -99,30 +125,8 @@ void Items::loadFromXml(const std::filesystem::path path)
 
 bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 {
-	// TODO Fix versioning
-	// TODO Why do we skip these in these cases?
-	int clientVersion = 52;
-	if (clientVersion < to_underlying(ClientVersion::CLIENT_VERSION_980) && id > 20000 && id < 20100)
-	{
-		itemNode = itemNode.next_sibling();
-		return {};
-	}
-	else if (id > 30000 && id < 30100)
-	{
-		itemNode = itemNode.next_sibling();
-		return {};
-	}
-
-	if (!Items::items.validItemType(id))
-	{
-		// Fluids in current version, might change in the future
-		if (id >= 40001 && id <= 40043)
-		{
-			return true;
-		}
-		VME_LOG_D("[items.xml] There is no itemType with server ID " << std::to_string(id) << ".");
+	if (!Items::items.validItemType(id) || reservedForFluid(id, DefaultVersion))
 		return false;
-	}
 
 	ItemType &it = *Items::items.getItemType(id);
 
@@ -402,11 +406,9 @@ Items::OtbReader::OtbReader(const std::string &file)
 void Items::OtbReader::readNodes()
 {
 	Items &items = Items::items;
-	items.itemTypes.resize(RESERVED_ITEM_COUNT);
-	// items.itemTypes.reserve(RESERVED_ITEM_COUNT);
-	items.clientIdToServerId.reserve(RESERVED_ITEM_COUNT);
-	// items.serverIdToMapId.reserve(RESERVED_ITEM_COUNT);
-	items.nameToItems.reserve(RESERVED_ITEM_COUNT);
+	items.itemTypes.resize(ReservedItemCount);
+	items.clientIdToServerId.reserve(ReservedItemCount);
+	items.nameToItems.reserve(ReservedItemCount);
 
 	do
 	{
