@@ -15,7 +15,7 @@ namespace MapHistory
     bool includesGround = tile.hasGround() && !tile.ground()->selected;
 
     std::vector<uint16_t> indices;
-    for (int i = 0; i < tile.getItemCount(); ++i)
+    for (int i = 0; i < tile.itemCount(); ++i)
     {
       if (!tile.itemSelected(i))
       {
@@ -34,7 +34,7 @@ namespace MapHistory
     bool includesGround = tile.hasGround() && tile.ground()->selected;
 
     std::vector<uint16_t> indices;
-    for (int i = 0; i < tile.getItemCount(); ++i)
+    for (int i = 0; i < tile.itemCount(); ++i)
     {
       if (tile.itemSelected(i))
       {
@@ -70,7 +70,7 @@ namespace MapHistory
     bool isTopGround = tile.getTopItem() == tile.ground();
     if (!isTopGround)
     {
-      indices.emplace_back(static_cast<uint16_t>(tile.getItemCount() - 1));
+      indices.emplace_back(static_cast<uint16_t>(tile.itemCount() - 1));
     }
     return Deselect(tile.position(), indices, isTopGround);
   }

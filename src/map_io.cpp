@@ -248,7 +248,7 @@ void MapIO::saveMap(Map &map)
           }
         }
 
-        for (const Item &item : tile->getItems())
+        for (const Item &item : tile->items())
         {
           serializer.serializeItem(item);
         }

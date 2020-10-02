@@ -17,7 +17,7 @@ Tile::Tile(Position position)
 Tile::Tile(Tile &&other) noexcept
     : _position(other._position),
       _ground(std::move(other._ground)),
-      items(std::move(other.items)),
+      _items(std::move(other._items)),
       selectionCount(other.selectionCount),
       flags(other.flags)
 {
@@ -25,7 +25,7 @@ Tile::Tile(Tile &&other) noexcept
 
 Tile &Tile::operator=(Tile &&other) noexcept
 {
-  items = std::move(other.items);
+  _items = std::move(other._items);
   _ground = std::move(other._ground);
   _position = std::move(other._position);
   selectionCount = other.selectionCount;
@@ -46,13 +46,13 @@ void Tile::setLocation(TileLocation &location)
 void Tile::removeItem(size_t index)
 {
   deselectItemAtIndex(index);
-  items.erase(items.begin() + index);
+  _items.erase(_items.begin() + index);
 }
 
 Item Tile::dropItem(size_t index)
 {
-  Item item = std::move(items.at(index));
-  items.erase(items.begin() + index);
+  Item item = std::move(_items.at(index));
+  _items.erase(_items.begin() + index);
 
   if (item.selected)
     selectionCount -= 1;
@@ -65,7 +65,7 @@ void Tile::deselectAll()
   if (_ground)
     _ground->selected = false;
 
-  for (Item &item : items)
+  for (Item &item : _items)
   {
     item.selected = false;
   }
@@ -83,18 +83,18 @@ void Tile::moveSelected(Tile &other)
 {
   if (_ground && _ground->selected)
   {
-    other.items.clear();
+    other._items.clear();
     other._ground = dropGround();
   }
 
-  auto it = items.begin();
-  while (it != items.end())
+  auto it = _items.begin();
+  while (it != _items.end())
   {
     Item &item = *it;
     if (item.selected)
     {
       other.addItem(std::move(item));
-      it = items.erase(it);
+      it = _items.erase(it);
 
       --selectionCount;
     }
@@ -128,9 +128,9 @@ void Tile::addItem(Item &&item)
   ItemType &itemType = *item.itemType;
   if (itemType.alwaysOnTop)
   {
-    currentItem = items.begin();
+    currentItem = _items.begin();
 
-    while (currentItem != items.end())
+    while (currentItem != _items.end())
     {
       ItemType &currentType = *currentItem->itemType;
 
@@ -169,7 +169,7 @@ void Tile::addItem(Item &&item)
   }
   else
   {
-    currentItem = items.end();
+    currentItem = _items.end();
   }
 
   if (item.selected)
@@ -177,7 +177,7 @@ void Tile::addItem(Item &&item)
     ++selectionCount;
   }
 
-  items.insert(currentItem, std::move(item));
+  _items.insert(currentItem, std::move(item));
 }
 
 void Tile::setGround(std::unique_ptr<Item> ground)
@@ -212,18 +212,18 @@ void Tile::setItemSelected(size_t itemIndex, bool selected)
 
 void Tile::selectItemAtIndex(size_t index)
 {
-  if (!items.at(index).selected)
+  if (!_items.at(index).selected)
   {
-    items.at(index).selected = true;
+    _items.at(index).selected = true;
     ++selectionCount;
   }
 }
 
 void Tile::deselectItemAtIndex(size_t index)
 {
-  if (items.at(index).selected)
+  if (_items.at(index).selected)
   {
-    items.at(index).selected = false;
+    _items.at(index).selected = false;
     --selectionCount;
   }
 }
@@ -237,8 +237,8 @@ void Tile::selectAll()
     _ground->selected = true;
   }
 
-  count += items.size();
-  for (Item &item : items)
+  count += _items.size();
+  for (Item &item : _items)
   {
     item.selected = true;
   }
@@ -288,25 +288,25 @@ std::unique_ptr<Item> Tile::dropGround()
 
 void Tile::selectTopItem()
 {
-  if (items.empty())
+  if (_items.empty())
   {
     selectGround();
   }
   else
   {
-    selectItemAtIndex(items.size() - 1);
+    selectItemAtIndex(_items.size() - 1);
   }
 }
 
 void Tile::deselectTopItem()
 {
-  if (items.empty())
+  if (_items.empty())
   {
     deselectGround();
   }
   else
   {
-    deselectItemAtIndex(items.size() - 1);
+    deselectItemAtIndex(_items.size() - 1);
   }
 }
 
@@ -322,9 +322,9 @@ bool Tile::hasTopItem() const
 
 Item *Tile::getTopItem() const
 {
-  if (items.size() > 0)
+  if (_items.size() > 0)
   {
-    return const_cast<Item *>(&items.back());
+    return const_cast<Item *>(&_items.back());
   }
   if (_ground)
   {
@@ -345,7 +345,7 @@ bool Tile::topItemSelected() const
 
 size_t Tile::getEntityCount()
 {
-  size_t result = items.size();
+  size_t result = _items.size();
   if (_ground)
     ++result;
 
@@ -355,8 +355,8 @@ size_t Tile::getEntityCount()
 int Tile::getTopElevation() const
 {
   return std::accumulate(
-      items.begin(),
-      items.end(),
+      _items.begin(),
+      _items.end(),
       0,
       [](int elevation, const Item &next) { return elevation + next.itemType->getElevation(); });
 }
@@ -364,7 +364,7 @@ int Tile::getTopElevation() const
 Tile Tile::deepCopy() const
 {
   Tile tile(_position);
-  for (const auto &item : this->items)
+  for (const auto &item : _items)
   {
     tile.addItem(item.deepCopy());
   }
@@ -381,12 +381,12 @@ Tile Tile::deepCopy() const
 
 bool Tile::isEmpty() const
 {
-  return !_ground && items.empty();
+  return !_ground && _items.empty();
 }
 
 bool Tile::allSelected() const
 {
-  size_t size = items.size();
+  size_t size = _items.size();
   if (_ground)
     ++size;
 
@@ -403,7 +403,7 @@ void Tile::initEntities()
   if (_ground)
     _ground->registerEntity();
 
-  for (auto &item : items)
+  for (auto &item : _items)
     item.registerEntity();
 }
 
@@ -412,6 +412,6 @@ void Tile::destroyEntities()
   if (_ground)
     _ground->destroyEntity();
 
-  for (auto &item : items)
+  for (auto &item : _items)
     item.destroyEntity();
 }

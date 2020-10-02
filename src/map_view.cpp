@@ -109,9 +109,9 @@ void MapView::removeSelectedItems(const Tile &tile)
 
   Tile newTile = tile.deepCopy();
 
-  for (size_t i = 0; i < tile.items.size(); ++i)
+  for (size_t i = 0; i < tile.items().size(); ++i)
   {
-    if (tile.items.at(i).selected)
+    if (tile.items().at(i).selected)
       newTile.removeItem(i);
   }
 

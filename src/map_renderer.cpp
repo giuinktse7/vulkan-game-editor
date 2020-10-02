@@ -354,9 +354,7 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags,
   }
 
   DrawOffset drawOffset{0, 0};
-  auto &items = tile->getItems();
-
-  for (const Item &item : items)
+  for (const Item &item : tile->items())
   {
     if (item.selected && !(drawFlags & ItemDrawFlags::DrawSelected))
       continue;

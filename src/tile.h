@@ -27,7 +27,7 @@ public:
 
 	inline bool itemSelected(uint16_t itemIndex) const
 	{
-		return items.at(itemIndex).selected;
+		return _items.at(itemIndex).selected;
 	}
 	bool hasSelection() const;
 	bool topItemSelected() const;
@@ -68,14 +68,14 @@ public:
 
 	int getTopElevation() const;
 
-	const std::vector<Item> &getItems() const
+	const std::vector<Item> &items() const
 	{
-		return items;
+		return _items;
 	}
 
-	const size_t getItemCount() const
+	const size_t itemCount() const
 	{
-		return items.size();
+		return _items.size();
 	}
 
 	/*
@@ -117,7 +117,7 @@ private:
 
 	Position _position;
 	std::unique_ptr<Item> _ground;
-	std::vector<Item> items;
+	std::vector<Item> _items;
 
 	size_t selectionCount;
 
