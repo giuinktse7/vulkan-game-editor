@@ -84,8 +84,6 @@ namespace MapHistory
     std::unique_ptr<Tile> currentTilePtr = mapView.setTileInternal(std::move(tile));
     Tile *currentTile = currentTilePtr.release();
 
-    // TODO Destroy ECS components for the items of the Tile
-
     tile = std::move(*currentTile);
 
     committed = true;
@@ -95,10 +93,9 @@ namespace MapHistory
   {
     DEBUG_ASSERT(committed, "Attempted to undo an action that is not marked as committed.");
 
-    std::unique_ptr<Tile> currentTilePtr = mapView.setTileInternal(std::move(tile));
-    Tile *currentTile = currentTilePtr.release();
-
-    // TODO Destroy ECS components for the items of the Tile
+    tile.initEntities();
+    std::unique_ptr<Tile> currentTilePointer = mapView.setTileInternal(std::move(tile));
+    Tile *currentTile = currentTilePointer.release();
 
     tile = std::move(*currentTile);
 
@@ -110,8 +107,10 @@ namespace MapHistory
   void RemoveTile::commit(MapView &mapView)
   {
     Position &position = std::get<Position>(data);
-    std::unique_ptr<Tile> tilePtr = mapView.removeTileInternal(position);
-    data = std::move(*tilePtr.release());
+    std::unique_ptr<Tile> currentTilePointer = mapView.removeTileInternal(position);
+    Tile *currentTile = currentTilePointer.release();
+
+    data = std::move(*currentTile);
   }
 
   void RemoveTile::undo(MapView &mapView)
@@ -119,6 +118,7 @@ namespace MapHistory
     Tile &tile = std::get<Tile>(data);
     Position pos = tile.position();
 
+    tile.initEntities();
     mapView.setTileInternal(std::move(tile));
 
     data = pos;
