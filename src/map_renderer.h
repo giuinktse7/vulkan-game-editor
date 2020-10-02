@@ -26,13 +26,14 @@
 
 class VulkanWindow;
 class BatchDraw;
-class ObjectDrawInfo;
+struct ObjectDrawInfo;
 
 namespace ItemDrawFlags
 {
 	constexpr uint32_t None = 0;
-	constexpr uint32_t DrawSelected = 1 << 0;
-	constexpr uint32_t Ghost = 1 << 1;
+	constexpr uint32_t DrawNonSelected = 1 << 0;
+	constexpr uint32_t DrawSelected = 1 << 1;
+	constexpr uint32_t Ghost = 1 << 2;
 } // namespace ItemDrawFlags
 
 struct TextureOffset
@@ -204,8 +205,10 @@ private:
 	ObjectDrawInfo itemDrawInfo(const Item &item, Position position, uint32_t drawFlags);
 	ObjectDrawInfo itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags);
 
-	void drawTile(const TileLocation &tileLocation, uint32_t drawFlags = ItemDrawFlags::None, Position offset = {});
+	void drawTile(const TileLocation &tileLocation, uint32_t drawFlags = ItemDrawFlags::DrawNonSelected, Position offset = {});
 	void drawItem(ObjectDrawInfo &info);
 
 	void drawBatches();
+
+	bool shouldDrawItem(const Item &item, uint32_t flags) const noexcept;
 };

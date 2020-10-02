@@ -60,8 +60,6 @@ void MapRenderer::initResources()
   devFuncs = window.vulkanInstance()->deviceFunctions(window.device());
   colorFormat = window.colorFormat();
 
-  VulkanInfo *vulkanInfo = &window.vulkanInfo;
-
   createRenderPass();
 
   currentFrame = &frames.front();
@@ -240,20 +238,20 @@ void MapRenderer::drawMap()
 
   Position from{mapRect.x1, mapRect.y1, startZ};
   Position to{mapRect.x2, mapRect.y2, endZ};
+
+  bool moving = mapView->selection.moving();
   for (auto &tileLocation : mapView->map()->getRegion(from, to))
   {
-    if (!tileLocation.hasTile())
-    {
+    if (!tileLocation.hasTile() || (moving && tileLocation.tile()->allSelected()))
       continue;
-    }
-    /*
-      Avoid drawing the tile only if the whole tile is selected and the
-      selection is moving
-    */
-    if (!(tileLocation.tile()->allSelected() && mapView->selection.moving()))
+
+    uint32_t flags = ItemDrawFlags::DrawNonSelected;
+    if (!moving)
     {
-      drawTile(tileLocation, ItemDrawFlags::DrawSelected);
+      flags |= ItemDrawFlags::DrawSelected;
     }
+
+    drawTile(tileLocation, flags);
   }
 
   // Render current mouse action
@@ -335,20 +333,25 @@ void MapRenderer::drawMovingSelection()
   }
 }
 
-void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags, Position offset)
+bool MapRenderer::shouldDrawItem(const Item &item, uint32_t flags) const noexcept
+{
+  return (item.selected && (flags & ItemDrawFlags::DrawSelected)) ||
+         (flags & ItemDrawFlags::DrawNonSelected);
+}
+
+void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, Position offset)
 {
   auto position = tileLocation.position();
   position += offset;
   auto tile = tileLocation.tile();
 
-  bool drawSelected = drawFlags & ItemDrawFlags::DrawSelected;
-
-  Item *ground = tile->ground();
-  if (ground)
+  Item *groundPtr = tile->ground();
+  if (groundPtr)
   {
-    if (!ground->selected || (drawFlags & ItemDrawFlags::DrawSelected))
+    const Item &ground = *tile->ground();
+    if (shouldDrawItem(ground, flags))
     {
-      auto info = itemDrawInfo(*ground, position, drawFlags);
+      auto info = itemDrawInfo(ground, position, flags);
       drawItem(info);
     }
   }
@@ -356,10 +359,10 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags,
   DrawOffset drawOffset{0, 0};
   for (const Item &item : tile->items())
   {
-    if (item.selected && !(drawFlags & ItemDrawFlags::DrawSelected))
+    if (!shouldDrawItem(item, flags))
       continue;
 
-    auto info = itemDrawInfo(item, position, drawFlags);
+    auto info = itemDrawInfo(item, position, flags);
     info.drawOffset = drawOffset;
     drawItem(info);
 
