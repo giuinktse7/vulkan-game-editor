@@ -45,14 +45,8 @@ void Tile::setLocation(TileLocation &location)
 
 void Tile::removeItem(size_t index)
 {
-  if (index == items.size() - 1)
-  {
-    items.pop_back();
-  }
-  else
-  {
-    items.erase(items.begin() + index);
-  }
+  deselectItemAtIndex(index);
+  items.erase(items.begin() + index);
 }
 
 void Tile::deselectAll()
