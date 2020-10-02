@@ -23,6 +23,21 @@
 
 #include "texture_atlas.h"
 
+namespace proto
+{
+  using namespace tibia::protobuf;
+  using Appearance = appearances::Appearance;
+  using Appearances = appearances::Appearances;
+  using AppearanceFlags = appearances::AppearanceFlags;
+  using SpriteInfo = appearances::SpriteInfo;
+  using SpriteAnimation = appearances::SpriteAnimation;
+
+  using ANIMATION_LOOP_TYPE = shared::ANIMATION_LOOP_TYPE;
+  using HOOK_TYPE = shared::HOOK_TYPE;
+  using PLAYER_ACTION = shared::PLAYER_ACTION;
+  using ITEM_CATEGORY = shared::ITEM_CATEGORY;
+} // namespace proto
+
 struct SpriteRange
 {
   uint32_t start;
@@ -235,7 +250,7 @@ struct SpriteAnimation
   friend struct SpriteInfo;
 
 private:
-  static SpriteAnimation fromProtobufData(tibia::protobuf::appearances::SpriteAnimation animation);
+  static SpriteAnimation fromProtobufData(proto::SpriteAnimation animation);
 };
 
 struct SpriteInfo
@@ -252,18 +267,18 @@ struct SpriteInfo
 
   bool hasAnimation() const
   {
-    return animation != nullptr;
+    return _animation != nullptr;
   }
 
-  SpriteAnimation *getAnimation() const;
+  SpriteAnimation *animation() const;
 
   friend class Appearance;
 
   // repeated Box bounding_box_per_direction = 9;
 private:
-  static SpriteInfo fromProtobufData(tibia::protobuf::appearances::SpriteInfo info);
+  static SpriteInfo fromProtobufData(proto::SpriteInfo info);
 
-  std::unique_ptr<SpriteAnimation> animation;
+  std::unique_ptr<SpriteAnimation> _animation;
 };
 
 struct FrameGroup
@@ -279,7 +294,7 @@ struct FrameGroup
 class Appearance
 {
 public:
-  Appearance(tibia::protobuf::appearances::Appearance protobufAppearance);
+  Appearance(proto::Appearance protobufAppearance);
   Appearance(const Appearance &) = delete;
 
   const uint32_t getSpriteId(uint32_t frameGroup, int index) const;
@@ -361,7 +376,7 @@ public:
 
 private:
   static std::unordered_map<AppearanceId, Appearance> objects;
-  static std::unordered_map<AppearanceId, tibia::protobuf::appearances::Appearance> outfits;
+  static std::unordered_map<AppearanceId, proto::Appearance> outfits;
 
   /* 
 		Used for quick retrieval of the correct spritesheet given a sprite ID.
@@ -498,7 +513,7 @@ inline std::ostream &operator<<(std::ostream &os, const Appearance &appearance)
   return os;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const tibia::protobuf::appearances::SpriteInfo &info)
+inline std::ostream &operator<<(std::ostream &os, const proto::SpriteInfo &info)
 {
   std::ostringstream s;
 
@@ -539,7 +554,7 @@ inline std::ostream &operator<<(std::ostream &os, const tibia::protobuf::appeara
   return os;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const tibia::protobuf::appearances::AppearanceFlags &flags)
+inline std::ostream &operator<<(std::ostream &os, const proto::AppearanceFlags &flags)
 {
   std::ostringstream s;
   s << std::endl;
@@ -639,7 +654,7 @@ inline std::ostream &operator<<(std::ostream &os, const tibia::protobuf::appeara
   return os;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const tibia::protobuf::appearances::SpriteAnimation &animation)
+inline std::ostream &operator<<(std::ostream &os, const proto::SpriteAnimation &animation)
 {
   std::ostringstream s;
 
@@ -651,13 +666,13 @@ inline std::ostream &operator<<(std::ostream &os, const tibia::protobuf::appeara
 
   switch (animation.loop_type())
   {
-  case tibia::protobuf::shared::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_PINGPONG:
+  case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_PINGPONG:
     s << "ANIMATION_LOOP_TYPE_PINGPONG";
     break;
-  case tibia::protobuf::shared::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_INFINITE:
+  case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_INFINITE:
     s << "ANIMATION_LOOP_TYPE_INFINITE";
     break;
-  case tibia::protobuf::shared::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_COUNTED:
+  case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_COUNTED:
   default:
     s << "ANIMATION_LOOP_TYPE_COUNTED";
     break;

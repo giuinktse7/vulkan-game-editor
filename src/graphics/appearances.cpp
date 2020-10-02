@@ -18,7 +18,7 @@
 #include "../time_point.h"
 
 std::unordered_map<uint32_t, Appearance> Appearances::objects;
-std::unordered_map<uint32_t, tibia::protobuf::appearances::Appearance> Appearances::outfits;
+std::unordered_map<uint32_t, proto::Appearance> Appearances::outfits;
 
 std::vector<SpriteRange> Appearances::textureAtlasSpriteRanges;
 std::unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> Appearances::textureAtlases;
@@ -34,7 +34,7 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
 {
     TimePoint start;
 
-    tibia::protobuf::appearances::Appearances parsed;
+    proto::Appearances parsed;
 
     {
         std::fstream input(path.c_str(), std::ios::in | std::ios::binary);
@@ -52,7 +52,7 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
 
     for (int i = 0; i < parsed.object_size(); ++i)
     {
-        const tibia::protobuf::appearances::Appearance &object = parsed.object(i);
+        const proto::Appearance &object = parsed.object(i);
         auto info = object.frame_group().at(0).sprite_info();
 
         // if (object.id() == 3031 || object.id() == 103)
@@ -89,7 +89,7 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
 
     for (int i = 0; i < parsed.outfit_size(); ++i)
     {
-        const tibia::protobuf::appearances::Appearance &outfit = parsed.outfit(i);
+        const proto::Appearance &outfit = parsed.outfit(i);
         Appearances::outfits[outfit.id()] = outfit;
     }
 
@@ -199,12 +199,12 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
     VME_LOG("Loaded compressed texture atlases in " << start.elapsedMillis() << " ms.");
 }
 
-SpriteInfo SpriteInfo::fromProtobufData(tibia::protobuf::appearances::SpriteInfo spriteInfo)
+SpriteInfo SpriteInfo::fromProtobufData(proto::SpriteInfo spriteInfo)
 {
     SpriteInfo info{};
     if (spriteInfo.has_animation())
     {
-        info.animation = std::make_unique<SpriteAnimation>(SpriteAnimation::fromProtobufData(spriteInfo.animation()));
+        info._animation = std::make_unique<SpriteAnimation>(SpriteAnimation::fromProtobufData(spriteInfo.animation()));
     }
     info.boundingSquare = spriteInfo.bounding_square();
     info.isOpaque = spriteInfo.bounding_square();
@@ -221,12 +221,12 @@ SpriteInfo SpriteInfo::fromProtobufData(tibia::protobuf::appearances::SpriteInfo
     return info;
 }
 
-SpriteAnimation *SpriteInfo::getAnimation() const
+SpriteAnimation *SpriteInfo::animation() const
 {
-    return animation.get();
+    return _animation.get();
 }
 
-SpriteAnimation SpriteAnimation::fromProtobufData(tibia::protobuf::appearances::SpriteAnimation animation)
+SpriteAnimation SpriteAnimation::fromProtobufData(proto::SpriteAnimation animation)
 {
     SpriteAnimation anim{};
     anim.defaultStartPhase = animation.default_start_phase();
@@ -234,13 +234,13 @@ SpriteAnimation SpriteAnimation::fromProtobufData(tibia::protobuf::appearances::
 
     switch (animation.loop_type())
     {
-    case tibia::protobuf::shared::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_PINGPONG:
+    case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_PINGPONG:
         anim.loopType = AnimationLoopType::PingPong;
         break;
-    case tibia::protobuf::shared::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_COUNTED:
+    case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_COUNTED:
         anim.loopType = AnimationLoopType::Counted;
         break;
-    case tibia::protobuf::shared::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_INFINITE:
+    case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_INFINITE:
     default:
         anim.loopType = AnimationLoopType::Infinite;
         break;
@@ -270,7 +270,7 @@ SpriteAnimation SpriteAnimation::fromProtobufData(tibia::protobuf::appearances::
 /*
     Constructs an Appearance from protobuf Appearance data.
 */
-Appearance::Appearance(tibia::protobuf::appearances::Appearance protobufAppearance)
+Appearance::Appearance(proto::Appearance protobufAppearance)
 {
     this->clientId = protobufAppearance.id();
     this->name = protobufAppearance.name();
@@ -356,7 +356,7 @@ Appearance::Appearance(tibia::protobuf::appearances::Appearance protobufAppearan
         if (hasFlag(AppearanceFlag::Hook))
         {
             auto direction = flags.hook().direction();
-            if (direction == tibia::protobuf::shared::HOOK_TYPE::HOOK_TYPE_SOUTH)
+            if (direction == proto::HOOK_TYPE::HOOK_TYPE_SOUTH)
                 flagData.hookDirection = HookType::South;
             else
                 flagData.hookDirection = HookType::East;
@@ -387,19 +387,19 @@ Appearance::Appearance(tibia::protobuf::appearances::Appearance protobufAppearan
             switch (flags.default_action().action())
             {
 
-            case tibia::protobuf::shared::PLAYER_ACTION::PLAYER_ACTION_LOOK:
+            case proto::PLAYER_ACTION::PLAYER_ACTION_LOOK:
                 flagData.defaultAction = AppearancePlayerDefaultAction::Look;
                 break;
-            case tibia::protobuf::shared::PLAYER_ACTION::PLAYER_ACTION_USE:
+            case proto::PLAYER_ACTION::PLAYER_ACTION_USE:
                 flagData.defaultAction = AppearancePlayerDefaultAction::Use;
                 break;
-            case tibia::protobuf::shared::PLAYER_ACTION::PLAYER_ACTION_OPEN:
+            case proto::PLAYER_ACTION::PLAYER_ACTION_OPEN:
                 flagData.defaultAction = AppearancePlayerDefaultAction::Open;
                 break;
-            case tibia::protobuf::shared::PLAYER_ACTION::PLAYER_ACTION_AUTOWALK_HIGHLIGHT:
+            case proto::PLAYER_ACTION::PLAYER_ACTION_AUTOWALK_HIGHLIGHT:
                 flagData.defaultAction = AppearancePlayerDefaultAction::AutowalkHighlight;
                 break;
-            case tibia::protobuf::shared::PLAYER_ACTION::PLAYER_ACTION_NONE:
+            case proto::PLAYER_ACTION::PLAYER_ACTION_NONE:
             default:
                 flagData.defaultAction = AppearancePlayerDefaultAction::None;
                 break;
@@ -407,13 +407,13 @@ Appearance::Appearance(tibia::protobuf::appearances::Appearance protobufAppearan
         }
         if (hasFlag(AppearanceFlag::Market))
         {
-#define MAP_MARKET_FLAG(src, dst)                                     \
-    if (1)                                                            \
-    {                                                                 \
-    case tibia::protobuf::shared::ITEM_CATEGORY::ITEM_CATEGORY_##src: \
-        flagData.market.category = dst;                               \
-        break;                                                        \
-    }                                                                 \
+#define MAP_MARKET_FLAG(src, dst)                   \
+    if (1)                                          \
+    {                                               \
+    case proto::ITEM_CATEGORY::ITEM_CATEGORY_##src: \
+        flagData.market.category = dst;             \
+        break;                                      \
+    }                                               \
     else
 
             switch (flags.market().category())
