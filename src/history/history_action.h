@@ -33,9 +33,9 @@ namespace MapHistory
     Action &operator=(const Action &other) = delete;
 
     Action(Action &&other) noexcept
-        : committed(other.committed),
-          changes(std::move(other.changes)),
-          actionType(other.actionType) {}
+        : changes(std::move(other.changes)),
+          actionType(other.actionType),
+          committed(other.committed) {}
 
     std::vector<Change> changes;
 
