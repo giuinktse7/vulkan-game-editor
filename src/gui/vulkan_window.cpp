@@ -188,6 +188,8 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
   case Qt::Key_Escape:
     mapView->escapeEvent();
     break;
+  case Qt::Key_Delete:
+    mapView->deleteSelectedItems();
     break;
   case Qt::Key_0:
     if (e->modifiers() & Qt::CTRL)
