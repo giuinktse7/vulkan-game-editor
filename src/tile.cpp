@@ -2,8 +2,9 @@
 
 #include <numeric>
 
-#include "ecs/ecs.h"
 #include "tile_location.h"
+#include "ecs/ecs.h"
+#include "ecs/item_animation.h"
 
 Tile::Tile(TileLocation &tileLocation)
     : _position(tileLocation.position()), selectionCount(0), flags(0)
@@ -385,4 +386,22 @@ bool Tile::allSelected() const
 bool Tile::hasSelection() const
 {
   return selectionCount != 0;
+}
+
+void Tile::initEntities()
+{
+  if (ground)
+    ground->registerEntity();
+
+  for (auto &item : items)
+    item.registerEntity();
+}
+
+void Tile::destroyEntities()
+{
+  if (ground)
+    ground->destroyEntity();
+
+  for (auto &item : items)
+    item.destroyEntity();
 }

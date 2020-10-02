@@ -87,6 +87,9 @@ public:
 
 	void setLocation(TileLocation &location);
 
+	void initEntities();
+	void destroyEntities();
+
 	inline Position position() const
 	{
 		return _position;
