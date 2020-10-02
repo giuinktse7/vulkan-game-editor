@@ -172,7 +172,6 @@ MapTabWidget::MapTabBar::MapTabBar(MapTabWidget *parent)
     setMouseTracking(true);
     setAcceptDrops(true);
     setUsesScrollButtons(false);
-    // setStyle(new TestProxyStyle);
 
     connect(parent, &MapTabWidget::mapTabClosed, [=](int removedTabIndex) { removedTabEvent(removedTabIndex); });
 
@@ -823,26 +822,6 @@ void MapTabWidget::MapTabBar::paintEvent(QPaintEvent *event)
     }
 }
 
-void TestProxyStyle::drawControl(ControlElement element,
-                                 const QStyleOption *option,
-                                 QPainter *painter,
-                                 const QWidget *widget) const
-{
-    switch (element)
-    {
-    case CE_TabBarTab:
-    {
-        QStyleOptionButton myButtonOption;
-
-        const QStyleOptionButton *buttonOption = qstyleoption_cast<const QStyleOptionButton *>(option);
-        QProxyStyle::drawControl(element, &myButtonOption, painter, widget);
-    }
-    break;
-    default:
-        QProxyStyle::drawControl(element, option, painter, widget);
-    }
-}
-
 OpacityAnimation::OpacityAnimation() : widget(nullptr) {}
 
 OpacityAnimation::OpacityAnimation(QWidget *widget)
@@ -931,7 +910,6 @@ void OpacityAnimation::hideWidget()
     case AnimationState::Showing:
     {
         animationState = AnimationState::Hiding;
-        int value = animation->currentValue().toInt();
         animation->pause();
 
         animation->setDuration(backward.duration);

@@ -253,12 +253,3 @@ public:
 
   QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
 };
-
-class TestProxyStyle : public QProxyStyle
-{
-public:
-  void drawControl(ControlElement element,
-                   const QStyleOption *option,
-                   QPainter *painter,
-                   const QWidget *widget) const override;
-};
