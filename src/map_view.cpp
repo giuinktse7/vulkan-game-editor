@@ -260,18 +260,34 @@ void MapView::finishMoveSelection(const Position moveDestination)
 {
   if (selection.moving())
   {
-    Position deltaPos = moveDestination - selection.moveOrigin.value();
-
-    for (const Position pos : selection.getPositions())
+    history.startGroup(ActionGroupType::MoveItems);
     {
-      Position newPos = pos + deltaPos;
-      DEBUG_ASSERT(getTile(pos)->hasSelection(), "The tile at each position of a selection should have a selection.");
+      MapHistory::Action action(MapHistory::ActionType::Selection);
 
-      selection.deselect(pos);
-      _map->moveSelectedItems(pos, newPos);
-      selection.select(newPos);
+      Position deltaPos = moveDestination - selection.moveOrigin.value();
+      for (const Position fromPos : selection.getPositions())
+      {
+        const Tile &fromTile = *getTile(fromPos);
+        Position toPos = fromPos + deltaPos;
+        DEBUG_ASSERT(fromTile.hasSelection(), "The tile at each position of a selection should have a selection.");
+
+        if (fromTile.allSelected())
+        {
+          auto move = std::make_unique<MapHistory::Move>(MapHistory::Move::entire(fromPos, toPos));
+          action.addChange(std::move(move));
+        }
+        else
+        {
+          auto move = std::make_unique<MapHistory::Move>(MapHistory::Move::selected(fromTile, toPos));
+          action.addChange(std::move(move));
+        }
+      }
+
+      history.commit(std::move(action));
     }
+    history.endGroup(ActionGroupType::MoveItems);
   }
+
   selection.moveOrigin.reset();
 }
 
