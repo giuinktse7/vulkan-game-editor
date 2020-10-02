@@ -67,8 +67,6 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
   vulkanWindow->setVulkanInstance(vulkanInstance);
   vulkanWindow->debugName = map->name().empty() ? toString(vulkanWindow) : map->name();
 
-  // Add a selected item for testing
-  MapView *mapView = vulkanWindow->getMapView();
   MouseAction::RawItem action;
   action.serverId = 6217;
   mapViewMouseAction.set(action);

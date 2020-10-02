@@ -87,7 +87,7 @@ void MapRenderer::releaseSwapChainResources()
 
 void MapRenderer::releaseResources()
 {
-  auto device = window.device();
+  // auto device = window.device();
   // VME_LOG_D("[window: " << window.debugName << "] MapRenderer::releaseResources (device: " << device << ")");
 
   devFuncs->vkDestroyDescriptorSetLayout(window.device(), uboDescriptorSetLayout, nullptr);

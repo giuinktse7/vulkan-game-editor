@@ -238,7 +238,7 @@ glm::mat4 VulkanWindow::projectionMatrix()
 >>>>>>>>>>ContextMenu<<<<<<<<<<<
 */
 
-VulkanWindow::ContextMenu::ContextMenu(VulkanWindow *window, QWidget *widget) : QMenu(widget), window(window)
+VulkanWindow::ContextMenu::ContextMenu(VulkanWindow *window, QWidget *widget) : QMenu(widget)
 {
 }
 

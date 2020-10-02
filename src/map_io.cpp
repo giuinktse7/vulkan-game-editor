@@ -263,9 +263,9 @@ void MapIO::saveMap(Map &map)
       }
 
       buffer.startNode(OTBM_TOWNS);
-      for (auto &townEntry : map.getTowns())
+      for (auto &townEntry : map.towns())
       {
-        Town &town = townEntry.second;
+        const Town &town = townEntry.second;
         const Position &townPos = town.getTemplePosition();
         buffer.startNode(OTBM_TOWN);
 

@@ -50,8 +50,6 @@ public:
     void mousePressEvent(QMouseEvent *event) override;
 
   private:
-    VulkanWindow *window;
-
     bool selfClicked(QPoint pos) const;
   };
 

@@ -15,9 +15,9 @@ MapView::MapView(MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> ma
     : mapViewMouseAction(mapViewMouseAction),
       selection(*this),
       _map(map),
+      history(*this),
       viewport(),
       dragState{},
-      history(*this),
       _mousePos() {}
 
 void MapView::selectTopItem(const Position pos)
@@ -349,10 +349,10 @@ void MapView::panEvent(MapView::PanEvent event)
 
 void MapView::mousePressEvent(VME::MouseButtons buttons)
 {
-  VME_LOG_D("MapView::mousePressEvent");
+  // VME_LOG_D("MapView::mousePressEvent");
   if (buttons & VME::MouseButtons::LeftButton)
   {
-    Position pos = _mousePos.toPos(*this);
+    Position pos = mouseGamePos();
 
     std::visit(
         util::overloaded{

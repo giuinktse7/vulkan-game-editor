@@ -182,7 +182,7 @@ namespace MapHistory
               }
             },
 
-            [this, &mapView, &from, &to](const Partial &partial) {
+            [&from, &to](const Partial &partial) {
               for (const auto i : partial.indices)
               {
                 DEBUG_ASSERT(i < from.itemCount(), "Index out of bounds.");
