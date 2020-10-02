@@ -376,6 +376,8 @@ void MapView::mousePressEvent(VME::MouseButtons buttons)
             },
 
             [this, pos](const MouseAction::RawItem &action) {
+              clearSelection();
+
               history.startGroup(ActionGroupType::AddMapItem);
               addItem(pos, action.serverId);
               history.endGroup(ActionGroupType::AddMapItem);
@@ -404,7 +406,8 @@ void MapView::mouseMoveEvent(VME::MouseButtons buttons)
     {
       std::visit(
           util::overloaded{
-              [this, pos](const MouseAction::None) {
+              [](const MouseAction::None) {
+                // Empty
               },
 
               [this, &pos](const MouseAction::RawItem &action) {
