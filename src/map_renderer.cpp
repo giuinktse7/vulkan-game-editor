@@ -271,7 +271,7 @@ void MapRenderer::drawMap()
                  }},
              window.mapViewMouseAction.action());
 
-  if (mapView->isSelectionMoving())
+  if (mapView->selection.moving())
   {
     drawMovingSelection();
   }
@@ -373,20 +373,9 @@ void MapRenderer::drawMovingSelection()
   auto mapRect = mapView->getGameBoundingRect();
 
   Position moveOrigin = mapView->selection.moveOrigin.value();
+  Position moveDelta = mapView->mouseGamePos() - moveOrigin;
 
-  ScreenPosition screenCursorPos = mapView->mousePos();
-  Position cursorPos = screenCursorPos.toPos(*mapView);
-
-  Position deltaPos = cursorPos - moveOrigin;
-
-  mapRect.x1 -= deltaPos.x;
-  mapRect.x1 = std::max(0, mapRect.x1);
-  mapRect.x2 -= deltaPos.x;
-
-  mapRect.y1 -= deltaPos.y;
-  mapRect.y1 = std::max(0, mapRect.y1);
-
-  mapRect.y2 -= deltaPos.y;
+  mapRect = mapRect.translate(-moveDelta.x, -moveDelta.y, {0, 0});
 
   // TODO: Use selection Z bounds instead of all floors
   int startZ = MAP_LAYERS - 1;

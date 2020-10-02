@@ -96,6 +96,38 @@ namespace util
 	{
 		static_assert(std::is_arithmetic<T>::value, "T must be numeric.");
 		T x1, y1, x2, y2;
+
+		inline Rectangle translate(T dx, T dy) const
+		{
+			Rectangle rect(*this);
+			rect.x1 += dx;
+			rect.x2 += dx;
+
+			rect.y1 += dy;
+			rect.y2 += dy;
+
+			return rect;
+		}
+
+		inline Rectangle translate(T dx, T dy, Point<T> min) const
+		{
+			Rectangle rect = translate(dx, dy);
+
+			if (rect.x1 < min.x1)
+			{
+				T diff = min.x1 - rect.x1;
+				rect.x1 += diff;
+				rect.x2 += diff;
+			}
+			if (rect.y1 < min.y1)
+			{
+				T diff = min.y1 - rect.y1;
+				rect.y1 += diff;
+				rect.y2 += diff;
+			}
+
+			return rect;
+		}
 	};
 
 	template <typename T>
