@@ -82,6 +82,18 @@ void Map::insertTile(Tile &&tile)
   location.setTile(std::make_unique<Tile>(std::move(tile)));
 }
 
+void Map::moveTile(Position from, Position to)
+{
+  if (from == to)
+  {
+    VME_LOG("Warning: Attempted to move a tile to the same position it currently has.");
+    return;
+  }
+
+  std::unique_ptr<Tile> tile = getTileLocation(from)->dropTile();
+  getTileLocation(to)->setTile(std::move(tile));
+}
+
 void Map::removeTile(const Position pos)
 {
   auto leaf = root.getLeafUnsafe(pos.x, pos.y);

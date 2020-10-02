@@ -39,7 +39,14 @@ public:
 	const Item *getTopItem(const Position pos) const;
 
 	bool isTileEmpty(const Position pos) const;
+
 	void addItem(const Position position, uint16_t serverId);
+
+	void insertTile(Tile &&tile);
+	/*
+		Moves the tile to pos. If pos already contained a tile, that tile is destroyed.
+	*/
+	void moveTile(Position from, Position to);
 
 	MapVersion getMapVersion();
 	std::string &getDescription();
@@ -85,7 +92,7 @@ private:
 		was present.
 	*/
 	std::unique_ptr<Tile> replaceTile(Tile &&tile);
-	void insertTile(Tile &&tile);
+
 	Tile &getOrCreateTile(int x, int y, int z);
 	Tile &getOrCreateTile(const Position &pos);
 	TileLocation &getOrCreateTileLocation(const Position &pos);
