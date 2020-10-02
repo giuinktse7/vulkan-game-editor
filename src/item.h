@@ -13,7 +13,7 @@
 #include "position.h"
 #include "ecs/ecs.h"
 
-class Appearances;
+class Tile;
 
 class Item : public ecs::OptionalEntity
 {
@@ -76,6 +76,11 @@ public:
 	{
 		return attributes;
 	}
+
+protected:
+	friend class Tile;
+
+	void registerEntity();
 
 private:
 	std::unordered_map<ItemAttribute_t, ItemAttribute> attributes;

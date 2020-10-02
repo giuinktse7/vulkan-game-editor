@@ -7,6 +7,7 @@
 Item::Item(ItemTypeId itemTypeId)
 		: itemType(Items::items.getItemType(itemTypeId))
 {
+	registerEntity();
 }
 
 // std::optional<Entity> entity;
@@ -92,4 +93,17 @@ uint16_t Item::getSubtype() const
 	}
 
 	return 0;
+}
+
+void Item::registerEntity()
+{
+	DEBUG_ASSERT(!entityId.has_value(), "Attempted to register an entity that already has an entity id.");
+
+	if (itemType->hasAnimation())
+	{
+		ecs::EntityId entityId = assignNewEntityId();
+
+		auto animation = itemType->appearance->getSpriteInfo().animation();
+		g_ecs.addComponent(entityId, ItemAnimationComponent(animation));
+	}
 }
