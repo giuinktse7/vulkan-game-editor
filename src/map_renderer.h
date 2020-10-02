@@ -26,11 +26,13 @@
 
 class VulkanWindow;
 class BatchDraw;
+class ObjectDrawInfo;
 
 namespace ItemDrawFlags
 {
 	constexpr uint32_t None = 0;
 	constexpr uint32_t DrawSelected = 1 << 0;
+	constexpr uint32_t Ghost = 1 << 1;
 } // namespace ItemDrawFlags
 
 struct TextureOffset
@@ -148,7 +150,6 @@ public:
 
 private:
 	bool debug = false;
-	bool initialized = false;
 	MapView *mapView;
 	VulkanWindow &window;
 	std::array<FrameData, 3> frames;
@@ -200,7 +201,10 @@ private:
 	void drawMovingSelection();
 	void drawSelectionRectangle();
 
-	void drawTile(const TileLocation &tileLocation, uint32_t drawFlags = ItemDrawFlags::None);
+	ObjectDrawInfo itemDrawInfo(const Item &item, Position position, uint32_t drawFlags);
+	ObjectDrawInfo itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags);
+
+	void drawTile(const TileLocation &tileLocation, uint32_t drawFlags = ItemDrawFlags::None, Position offset = {});
 	void drawItem(ObjectDrawInfo &info);
 
 	void drawBatches();

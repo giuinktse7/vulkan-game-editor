@@ -284,71 +284,9 @@ void MapRenderer::drawMap()
   }
 }
 
-void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags)
-{
-  auto position = tileLocation.position();
-  auto tile = tileLocation.tile();
-
-  bool drawSelected = drawFlags & ItemDrawFlags::DrawSelected;
-
-  Position selectionMovePosDelta{};
-  if (mapView->selection.moving())
-  {
-    ScreenPosition cursorPos = mapView->mousePos();
-    selectionMovePosDelta = cursorPos.toPos(*mapView) - mapView->selection.moveOrigin.value();
-  }
-
-  if (tile->getGround())
-  {
-    Item *ground = tile->getGround();
-    if (drawSelected || !ground->selected)
-    {
-      ObjectDrawInfo info;
-      info.appearance = ground->itemType->appearance;
-      info.position = position;
-      if (ground->selected)
-        info.position += selectionMovePosDelta;
-
-      info.color = ground->selected ? colors::Selected : colors::Default;
-      info.textureInfo = ground->getTextureInfo(info.position);
-
-      drawItem(info);
-    }
-  }
-
-  DrawOffset drawOffset{0, 0};
-  auto &items = tile->getItems();
-
-  for (const Item &item : items)
-  {
-    if (item.selected && !drawSelected)
-    {
-      continue;
-    }
-
-    ObjectDrawInfo info;
-    info.appearance = item.itemType->appearance;
-    info.color = item.selected ? colors::Selected : colors::Default;
-    info.drawOffset = drawOffset;
-    info.position = position;
-    if (item.selected)
-      info.position += selectionMovePosDelta;
-    info.textureInfo = item.getTextureInfo(position);
-
-    drawItem(info);
-
-    if (item.itemType->hasElevation())
-    {
-      uint32_t elevation = item.itemType->getElevation();
-      drawOffset.x -= elevation;
-      drawOffset.y -= elevation;
-    }
-  }
-}
-
 void MapRenderer::drawPreviewCursor(uint16_t serverId)
 {
-  auto map = mapView->getMap();
+  auto map = mapView->map();
   Position pos = mapView->mouseGamePos();
 
   if (pos.x < 0 || pos.x > map->getWidth() || pos.y < 0 || pos.y > map->getHeight())
@@ -356,18 +294,16 @@ void MapRenderer::drawPreviewCursor(uint16_t serverId)
 
   ItemType &selectedItemType = *Items::items.getItemType(serverId);
 
-  Tile *tile = map->getTile(pos);
+  auto info = itemTypeDrawInfo(selectedItemType, pos, ItemDrawFlags::Ghost);
 
-  int elevation = tile ? tile->getTopElevation() : 0;
+  if (!selectedItemType.isGroundTile())
+  {
+    Tile *tile = map->getTile(pos);
+    int elevation = tile ? tile->getTopElevation() : 0;
+    info.drawOffset = {-elevation, -elevation};
+  }
 
-  ObjectDrawInfo drawInfo;
-  drawInfo.appearance = selectedItemType.appearance;
-  drawInfo.color = colors::ItemPreview;
-  drawInfo.drawOffset = {-elevation, -elevation};
-  drawInfo.position = pos;
-  drawInfo.textureInfo = selectedItemType.getTextureInfo(pos);
-
-  drawItem(drawInfo);
+  drawItem(info);
 }
 
 void MapRenderer::drawMovingSelection()
@@ -386,17 +322,80 @@ void MapRenderer::drawMovingSelection()
   Position from(mapRect.x1, mapRect.y1, startZ);
   Position to(mapRect.x2, mapRect.y2, endZ);
 
-  for (auto &tileLocation : mapView->getMap()->getRegion(from, to))
+  for (auto &tileLocation : mapView->map()->getRegion(from, to))
   {
     if (tileLocation.hasTile())
     {
       // Draw only if the tile has a selection.
       if (tileLocation.tile()->hasSelection())
       {
-        drawTile(tileLocation, ItemDrawFlags::DrawSelected);
+        drawTile(tileLocation, ItemDrawFlags::DrawSelected, moveDelta);
       }
     }
   }
+}
+
+void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags, Position offset)
+{
+  auto position = tileLocation.position();
+  position += offset;
+  auto tile = tileLocation.tile();
+
+  bool drawSelected = drawFlags & ItemDrawFlags::DrawSelected;
+
+  Item *ground = tile->ground();
+  if (ground)
+  {
+    if (!ground->selected || (drawFlags & ItemDrawFlags::DrawSelected))
+    {
+      auto info = itemDrawInfo(*ground, position, drawFlags);
+      drawItem(info);
+    }
+  }
+
+  DrawOffset drawOffset{0, 0};
+  auto &items = tile->getItems();
+
+  for (const Item &item : items)
+  {
+    if (item.selected && !(drawFlags & ItemDrawFlags::DrawSelected))
+      continue;
+
+    auto info = itemDrawInfo(item, position, drawFlags);
+    info.drawOffset = drawOffset;
+    drawItem(info);
+
+    if (item.itemType->hasElevation())
+    {
+      uint32_t elevation = item.itemType->getElevation();
+      drawOffset.x -= elevation;
+      drawOffset.y -= elevation;
+    }
+  }
+}
+
+void MapRenderer::drawItem(ObjectDrawInfo &info)
+{
+  VulkanTexture::Descriptor descriptor;
+  descriptor.layout = textureDescriptorSetLayout;
+  descriptor.pool = descriptorPool;
+
+  TextureAtlas *atlas = info.textureInfo.atlas;
+  VulkanTexture &vulkanTexture = vulkanTexturesForAppearances.at(atlas->id());
+
+  if (!vulkanTexture.hasResources())
+  {
+    if (vulkanTexture.unused)
+    {
+      activeTextureAtlasIds.emplace_back(atlas->id());
+    }
+
+    vulkanTexture.initResources(*atlas, window.vulkanInfo, descriptor);
+  }
+
+  info.descriptorSet = vulkanTexture.descriptorSet();
+
+  currentFrame->batchDraw.addItem(info);
 }
 
 void MapRenderer::drawSelectionRectangle()
@@ -428,6 +427,28 @@ void MapRenderer::drawSelectionRectangle()
   currentFrame->batchDraw.addRectangle(info);
 }
 
+ObjectDrawInfo MapRenderer::itemDrawInfo(const Item &item, Position position, uint32_t drawFlags)
+{
+  ObjectDrawInfo info;
+  info.appearance = item.itemType->appearance;
+  info.position = position;
+  info.color = item.selected ? colors::Selected : colors::Default;
+  info.textureInfo = item.getTextureInfo(position);
+
+  return info;
+}
+
+ObjectDrawInfo MapRenderer::itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags)
+{
+  ObjectDrawInfo info;
+  info.appearance = itemType.appearance;
+  info.position = position;
+  info.color = drawFlags & ItemDrawFlags::Ghost ? colors::ItemPreview : colors::Default;
+  info.textureInfo = itemType.getTextureInfo(position);
+
+  return info;
+}
+
 void MapRenderer::updateUniformBuffer()
 {
   glm::mat4 projection = window.projectionMatrix();
@@ -439,36 +460,12 @@ void MapRenderer::updateUniformBuffer()
   devFuncs->vkUnmapMemory(window.device(), currentFrame->uniformBuffer.deviceMemory);
 }
 
-void MapRenderer::drawItem(ObjectDrawInfo &info)
-{
-  VulkanTexture::Descriptor descriptor;
-  descriptor.layout = textureDescriptorSetLayout;
-  descriptor.pool = descriptorPool;
-
-  TextureAtlas *atlas = info.textureInfo.atlas;
-  VulkanTexture &vulkanTexture = vulkanTexturesForAppearances.at(atlas->id());
-
-  if (!vulkanTexture.hasResources())
-  {
-    if (vulkanTexture.unused)
-    {
-      activeTextureAtlasIds.emplace_back(atlas->id());
-    }
-
-    vulkanTexture.initResources(*atlas, window.vulkanInfo, descriptor);
-  }
-
-  info.descriptorSet = vulkanTexture.descriptorSet();
-
-  currentFrame->batchDraw.addItem(info);
-}
-
 /**
  * 
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
- * Start of Vulkan rendering setup/teardown
+ * Vulkan rendering setup/teardown
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
