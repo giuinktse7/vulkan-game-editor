@@ -328,34 +328,37 @@ void MapView::mousePressEvent(VME::MouseButtons buttons)
   {
     Position pos = _mousePos.toPos(*this);
 
-    std::visit(util::overloaded{
-                   [this, pos](const MouseAction::None) {
-                     const Item *topItem = map->getTopItem(pos);
-                     if (topItem)
-                     {
-                       if (topItem->selected)
-                       {
-                         selection.moveOrigin = pos;
-                       }
-                       else
-                       {
-                         clearSelection();
-                         history.startGroup(ActionGroupType::Selection);
-                         selectTopItem(pos);
-                         history.endGroup(ActionGroupType::Selection);
-                       }
-                     }
-                   },
-                   [this, pos](const MouseAction::RawItem &action) {
-                     history.startGroup(ActionGroupType::AddMapItem);
-                     addItem(pos, action.serverId);
-                     history.endGroup(ActionGroupType::AddMapItem);
-                   },
+    std::visit(
+        util::overloaded{
+            [this, pos](const MouseAction::None) {
+              const Item *topItem = map->getTopItem(pos);
+              if (!topItem)
+              {
+                clearSelection();
+                return;
+              }
 
-                   [](const auto &) {
-                     ABORT_PROGRAM("Unknown change!");
-                   }},
-               mapViewMouseAction.action());
+              if (!topItem->selected)
+              {
+                clearSelection();
+                history.startGroup(ActionGroupType::Selection);
+                selectTopItem(pos);
+                history.endGroup(ActionGroupType::Selection);
+              }
+
+              selection.moveOrigin = pos;
+            },
+
+            [this, pos](const MouseAction::RawItem &action) {
+              history.startGroup(ActionGroupType::AddMapItem);
+              addItem(pos, action.serverId);
+              history.endGroup(ActionGroupType::AddMapItem);
+            },
+
+            [](const auto &) {
+              ABORT_PROGRAM("Unknown change!");
+            }},
+        mapViewMouseAction.action());
 
     leftMouseDragPos = pos;
   }
@@ -373,23 +376,23 @@ void MapView::mouseMoveEvent(VME::MouseButtons buttons)
   {
     if (leftMouseDragPos.has_value() && !util::contains(leftMouseDragPos, pos))
     {
-      std::visit(util::overloaded{
-                     [this, pos](const MouseAction::None) {
-                       selection.moving = pos != selection.moveOrigin;
-                     },
+      std::visit(
+          util::overloaded{
+              [this, pos](const MouseAction::None) {
+              },
 
-                     [this, &pos](const MouseAction::RawItem &action) {
-                       history.startGroup(ActionGroupType::AddMapItem);
-                       addItem(pos, action.serverId);
-                       history.endGroup(ActionGroupType::AddMapItem);
+              [this, &pos](const MouseAction::RawItem &action) {
+                history.startGroup(ActionGroupType::AddMapItem);
+                addItem(pos, action.serverId);
+                history.endGroup(ActionGroupType::AddMapItem);
 
-                       leftMouseDragPos = pos;
-                     },
+                leftMouseDragPos = pos;
+              },
 
-                     [](const auto &) {
-                       ABORT_PROGRAM("Unknown change!");
-                     }},
-                 mapViewMouseAction.action());
+              [](const auto &) {
+                ABORT_PROGRAM("Unknown change!");
+              }},
+          mapViewMouseAction.action());
 
       leftMouseDragPos = pos;
     }
@@ -401,6 +404,7 @@ void MapView::mouseReleaseEvent(VME::MouseButtons buttons)
   if (!(buttons & VME::MouseButtons::LeftButton))
   {
     leftMouseDragPos.reset();
+    finishMoveSelection(mouseGamePos());
   }
 }
 

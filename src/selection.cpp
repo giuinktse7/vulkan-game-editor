@@ -83,3 +83,8 @@ bool Selection::empty() const
 {
   return positionsWithSelection.empty();
 }
+
+bool Selection::moving() const
+{
+  return moveOrigin.has_value() && mapView.mouseGamePos() != moveOrigin;
+}

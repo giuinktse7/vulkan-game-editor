@@ -14,7 +14,8 @@ public:
   Selection(MapView &mapView);
   bool blockDeselect = false;
   std::optional<Position> moveOrigin = {};
-  bool moving = false;
+
+  bool moving() const;
 
   bool contains(const Position pos) const;
   void select(const Position pos);
