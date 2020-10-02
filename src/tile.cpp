@@ -16,7 +16,7 @@ Tile::Tile(Position position)
 
 Tile::Tile(Tile &&other) noexcept
     : _position(other._position),
-      ground(std::move(other.ground)),
+      _ground(std::move(other._ground)),
       items(std::move(other.items)),
       selectionCount(other.selectionCount),
       flags(other.flags)
@@ -26,7 +26,7 @@ Tile::Tile(Tile &&other) noexcept
 Tile &Tile::operator=(Tile &&other) noexcept
 {
   items = std::move(other.items);
-  ground = std::move(other.ground);
+  _ground = std::move(other._ground);
   _position = std::move(other._position);
   selectionCount = other.selectionCount;
   flags = other.flags;
@@ -57,8 +57,8 @@ void Tile::removeItem(size_t index)
 
 void Tile::deselectAll()
 {
-  if (ground)
-    ground->selected = false;
+  if (_ground)
+    _ground->selected = false;
 
   for (Item &item : items)
   {
@@ -76,10 +76,10 @@ void Tile::moveItems(Tile &other)
 
 void Tile::moveSelected(Tile &other)
 {
-  if (ground && ground->selected)
+  if (_ground && _ground->selected)
   {
     other.items.clear();
-    other.ground = dropGround();
+    other._ground = dropGround();
   }
 
   auto it = items.begin();
@@ -104,9 +104,9 @@ void Tile::addItem(Item &&item)
 {
   if (item.isGround())
   {
-    bool oldSelected = ground && ground->selected;
+    bool oldSelected = _ground && _ground->selected;
     bool newSelected = item.selected;
-    this->ground = std::make_unique<Item>(std::move(item));
+    _ground = std::make_unique<Item>(std::move(item));
     if (oldSelected && !newSelected)
     {
       --selectionCount;
@@ -175,7 +175,7 @@ void Tile::setGround(std::unique_ptr<Item> ground)
 {
   if (!ground)
   {
-    this->ground = std::move(ground);
+    _ground = std::move(ground);
   }
   else
   {
@@ -185,11 +185,11 @@ void Tile::setGround(std::unique_ptr<Item> ground)
 
 void Tile::removeGround()
 {
-  if (ground->selected)
+  if (_ground->selected)
   {
     --selectionCount;
   }
-  ground.reset();
+  _ground.reset();
 }
 
 void Tile::setItemSelected(size_t itemIndex, bool selected)
@@ -221,10 +221,10 @@ void Tile::deselectItemAtIndex(size_t index)
 void Tile::selectAll()
 {
   size_t count = 0;
-  if (ground)
+  if (_ground)
   {
     ++count;
-    ground->selected = true;
+    _ground->selected = true;
   }
 
   count += items.size();
@@ -246,27 +246,27 @@ void Tile::setGroundSelected(bool selected)
 
 void Tile::selectGround()
 {
-  if (ground && !ground->selected)
+  if (_ground && !_ground->selected)
   {
     ++selectionCount;
-    ground->selected = true;
+    _ground->selected = true;
   }
 }
 void Tile::deselectGround()
 {
-  if (ground && ground->selected)
+  if (_ground && _ground->selected)
   {
     --selectionCount;
-    ground->selected = false;
+    _ground->selected = false;
   }
 }
 
 std::unique_ptr<Item> Tile::dropGround()
 {
-  if (ground)
+  if (_ground)
   {
-    std::unique_ptr<Item> ground = std::move(this->ground);
-    this->ground.reset();
+    std::unique_ptr<Item> ground = std::move(_ground);
+    _ground.reset();
 
     return ground;
   }
@@ -300,9 +300,9 @@ void Tile::deselectTopItem()
   }
 }
 
-Item *Tile::getGround() const
+Item *Tile::ground() const
 {
-  return ground.get();
+  return _ground.get();
 }
 
 bool Tile::hasTopItem() const
@@ -316,9 +316,9 @@ Item *Tile::getTopItem() const
   {
     return const_cast<Item *>(&items.back());
   }
-  if (ground)
+  if (_ground)
   {
-    return ground.get();
+    return _ground.get();
   }
 
   return nullptr;
@@ -336,7 +336,7 @@ bool Tile::topItemSelected() const
 size_t Tile::getEntityCount()
 {
   size_t result = items.size();
-  if (ground)
+  if (_ground)
     ++result;
 
   return result;
@@ -359,9 +359,9 @@ Tile Tile::deepCopy() const
     tile.addItem(item.deepCopy());
   }
   tile.flags = this->flags;
-  if (this->getGround())
+  if (_ground)
   {
-    tile.ground = std::make_unique<Item>(this->getGround()->deepCopy());
+    tile._ground = std::make_unique<Item>(_ground->deepCopy());
   }
 
   tile.selectionCount = this->selectionCount;
@@ -391,7 +391,7 @@ bool Tile::hasSelection() const
 void Tile::initEntities()
 {
   if (ground)
-    ground->registerEntity();
+    _ground->registerEntity();
 
   for (auto &item : items)
     item.registerEntity();
@@ -400,7 +400,7 @@ void Tile::initEntities()
 void Tile::destroyEntities()
 {
   if (ground)
-    ground->destroyEntity();
+    _ground->destroyEntity();
 
   for (auto &item : items)
     item.destroyEntity();

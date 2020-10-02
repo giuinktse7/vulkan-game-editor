@@ -35,10 +35,10 @@ public:
 
 	Item *getTopItem() const;
 	bool hasTopItem() const;
-	Item *getGround() const;
+	Item *ground() const;
 	inline bool hasGround() const
 	{
-		return static_cast<bool>(ground);
+		return static_cast<bool>(_ground);
 	}
 
 	void addItem(Item &&item);
@@ -115,7 +115,7 @@ private:
 	friend class MapAction;
 
 	Position _position;
-	std::unique_ptr<Item> ground;
+	std::unique_ptr<Item> _ground;
 	std::vector<Item> items;
 
 	size_t selectionCount;
