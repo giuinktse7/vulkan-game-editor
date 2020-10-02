@@ -172,6 +172,7 @@ public:
 	}
 
 	void deleteSelectedItems();
+	void updateSelection(const Position pos);
 
 	util::Rectangle<int> getGameBoundingRect() const;
 

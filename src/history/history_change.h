@@ -70,6 +70,47 @@ namespace MapHistory
     std::variant<Tile, Position> data;
   };
 
+  class Move : public ChangeItem
+  {
+  public:
+    Move(Position from, Position to, bool ground, std::vector<uint16_t> &indices);
+    Move(Position from, Position to);
+
+    static Move entire(Position from, Position to);
+    static Move entire(const Tile &tile, Position to);
+
+    static Move selected(const Tile &tile, Position to);
+
+    virtual void commit(MapView &mapView) override;
+    virtual void undo(MapView &mapView) override;
+
+  private:
+    Position fromPosition;
+    Position toPosition;
+
+    struct Entire
+    {
+    };
+
+    struct Partial
+    {
+      Partial(bool ground, std::vector<uint16_t> indices);
+      bool ground;
+      std::vector<uint16_t> indices;
+    };
+
+    std::variant<Entire, Partial> moveData;
+
+    struct UndoData
+    {
+      UndoData(Tile &&fromTile, Tile &&toTile);
+      Tile fromTile;
+      Tile toTile;
+    };
+
+    std::optional<UndoData> undoData;
+  };
+
   class SelectMultiple : public ChangeItem
   {
   public:
@@ -121,6 +162,12 @@ namespace MapHistory
     bool includesGround = false;
   };
 
+  /**
+      NOTE: Each change variant requires space equal to the space required
+            for the largest variant type. Therefore, if a data type is
+            larger than ~100 bytes, it is stored as a pointer in the form
+            std::unique_ptr<ChangeItem> instead.
+    */
   class Change
   {
   public:

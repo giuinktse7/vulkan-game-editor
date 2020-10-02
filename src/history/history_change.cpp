@@ -55,7 +55,7 @@ namespace MapHistory
     bool isTopGround = tile.getTopItem() == tile.ground();
     if (!isTopGround)
     {
-      indices.emplace_back(static_cast<uint16_t>(tile.getItemCount() - 1));
+      indices.emplace_back(static_cast<uint16_t>(tile.itemCount() - 1));
     }
 
     return Select(tile.position(), indices, isTopGround);
@@ -124,9 +124,91 @@ namespace MapHistory
     data = pos;
   }
 
+  Move::Move(Position from, Position to, bool ground, std::vector<uint16_t> &indices)
+      : fromPosition(from), toPosition(to), moveData(Move::Partial(ground, std::move(indices))) {}
+
+  Move::Move(Position from, Position to)
+      : fromPosition(from), toPosition(to), moveData(Move::Entire{}) {}
+
+  Move::Partial::Partial(bool ground, std::vector<uint16_t> indices)
+      : ground(ground), indices(indices) {}
+
+  Move::UndoData::UndoData(Tile &&fromTile, Tile &&toTile)
+      : fromTile(std::move(fromTile)), toTile(std::move(toTile)) {}
+
+  Move Move::entire(Position from, Position to)
+  {
+    return Move(from, to);
+  }
+
+  Move Move::entire(const Tile &tile, Position to)
+  {
+    return Move(tile.position(), to);
+  }
+
+  Move Move::selected(const Tile &tile, Position to)
+  {
+    std::vector<uint16_t> indices;
+    auto &items = tile.items();
+    for (int i = 0; i < tile.itemCount(); ++i)
+    {
+      if (items.at(i).selected)
+        indices.emplace_back(i);
+    }
+
+    bool moveGround = tile.hasGround() && tile.ground()->selected;
+
+    return Move(tile.position(), to, moveGround, indices);
+  }
+
+  void Move::commit(MapView &mapView)
+  {
+    Tile &from = mapView.getOrCreateTile(fromPosition);
+    Tile &to = mapView.getOrCreateTile(toPosition);
+
+    undoData = std::make_optional(Move::UndoData(from.deepCopy(), to.deepCopy()));
+
+    std::visit(
+        util::overloaded{
+            [this, &mapView, &from, &to](const Entire) {
+              if (from.hasGround())
+              {
+                mapView.map()->moveTile(fromPosition, toPosition);
+              }
+              else
+              {
+                for (size_t i = 0; i < from.itemCount(); ++i)
+                  to.addItem(from.dropItem(i));
+              }
+            },
+
+            [this, &mapView, &from, &to](const Partial &partial) {
+              for (const auto i : partial.indices)
+              {
+                DEBUG_ASSERT(i < from.itemCount(), "Index out of bounds.");
+                to.addItem(from.dropItem(i));
+              }
+
+              if (partial.ground && from.hasGround())
+                to.setGround(from.dropGround());
+            }},
+        moveData);
+
+    mapView.updateSelection(fromPosition);
+    mapView.updateSelection(toPosition);
+  }
+
+  void Move::undo(MapView &mapView)
+  {
+    mapView.map()->insertTile(std::move(undoData.value().fromTile));
+    mapView.map()->insertTile(std::move(undoData.value().toTile));
+  }
+
   SelectMultiple::SelectMultiple(std::unordered_set<Position, PositionHash> positions, bool select)
       : positions(positions),
-        select(select) {}
+        select(select)
+  {
+  }
 
   void SelectMultiple::commit(MapView &mapView)
   {

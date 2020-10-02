@@ -62,6 +62,12 @@ void MapView::clearSelection()
   selection.deselectAll();
 }
 
+void MapView::updateSelection(const Position pos)
+{
+  Tile *tile = getTile(pos);
+  selection.setSelected(pos, tile && tile->hasSelection());
+}
+
 bool MapView::hasSelectionMoveOrigin() const
 {
   return selection.moveOrigin.has_value();

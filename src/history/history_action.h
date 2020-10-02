@@ -19,7 +19,8 @@ enum class ActionGroupType
 {
   Selection,
   AddMapItem,
-  RemoveMapItem
+  RemoveMapItem,
+  MoveItems
 };
 
 namespace MapHistory
@@ -120,6 +121,9 @@ inline std::ostringstream stringify(const ActionGroupType &type)
     break;
   case ActionGroupType::RemoveMapItem:
     s << "ActionGroupType::RemoveMapItem";
+    break;
+  case ActionGroupType::MoveItems:
+    s << "ActionGroupType::MoveItems";
     break;
   default:
     s << "Unknown ActionGroupType: " << to_underlying(type);
