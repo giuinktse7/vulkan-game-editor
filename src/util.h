@@ -92,6 +92,20 @@ namespace util
 	overloaded(Ts...) -> overloaded<Ts...>;
 
 	template <typename T>
+	struct Point
+	{
+		static_assert(std::is_arithmetic<T>::value, "T must be numeric.");
+		Point() : _x(0), _y(0) {}
+		Point(T x, T y) : _x(x), _y(y) {}
+
+		inline constexpr T x() const noexcept;
+		inline constexpr T y() const noexcept;
+
+	private:
+		T _x, _y;
+	};
+
+	template <typename T>
 	struct Rectangle
 	{
 		static_assert(std::is_arithmetic<T>::value, "T must be numeric.");
@@ -113,35 +127,21 @@ namespace util
 		{
 			Rectangle rect = translate(dx, dy);
 
-			if (rect.x1 < min.x1)
+			if (rect.x1 < min.x())
 			{
-				T diff = min.x1 - rect.x1;
+				T diff = min.x() - rect.x1;
 				rect.x1 += diff;
 				rect.x2 += diff;
 			}
-			if (rect.y1 < min.y1)
+			if (rect.y1 < min.y())
 			{
-				T diff = min.y1 - rect.y1;
+				T diff = min.y() - rect.y1;
 				rect.y1 += diff;
 				rect.y2 += diff;
 			}
 
 			return rect;
 		}
-	};
-
-	template <typename T>
-	struct Point
-	{
-		static_assert(std::is_arithmetic<T>::value, "T must be numeric.");
-		Point() : _x(0), _y(0) {}
-		Point(T x, T y) : _x(x), _y(y) {}
-
-		inline constexpr T x() const noexcept;
-		inline constexpr T y() const noexcept;
-
-	private:
-		T _x, _y;
 	};
 
 	template <class T>
