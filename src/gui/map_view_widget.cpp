@@ -65,12 +65,11 @@ int computeSingleStep(float zoom)
     return static_cast<int>(std::round(step));
   }
 }
-
 MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
     : QWidget(parent),
       MapView::Observer(window->getMapView()),
-      vulkanWindow(window),
       mapView(window->getMapView()),
+      vulkanWindow(window),
       hbar(new QtScrollBar(Qt::Horizontal)),
       vbar(new QtScrollBar(Qt::Vertical))
 {
