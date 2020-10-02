@@ -141,11 +141,6 @@ TextureAtlas *ItemType::getTextureAtlas(uint32_t spriteId) const
   return Appearances::getTextureAtlas(spriteId);
 }
 
-TextureAtlas *ItemType::getFirstTextureAtlas() const
-{
-  return atlases.front();
-}
-
 std::string ItemType::getPluralName() const
 {
   if (!pluralName.empty())
@@ -165,76 +160,76 @@ std::string ItemType::getPluralName() const
   return str;
 }
 
-bool ItemType::isGroundTile() const
+bool ItemType::isGroundTile() const noexcept
 {
   return group == itemgroup_t::Ground;
 }
-bool ItemType::isContainer() const
+bool ItemType::isContainer() const noexcept
 {
   return group == itemgroup_t::Container;
 }
-bool ItemType::isSplash() const
+bool ItemType::isSplash() const noexcept
 {
   return group == itemgroup_t::Splash;
 }
-bool ItemType::isFluidContainer() const
+bool ItemType::isFluidContainer() const noexcept
 {
   return group == itemgroup_t::Fluid;
 }
 
-bool ItemType::isDoor() const
+bool ItemType::isDoor() const noexcept
 {
   return (type == ItemTypes_t::Door);
 }
-bool ItemType::isMagicField() const
+bool ItemType::isMagicField() const noexcept
 {
   return (type == ItemTypes_t::MagicField);
 }
-bool ItemType::isTeleport() const
+bool ItemType::isTeleport() const noexcept
 {
   return (type == ItemTypes_t::Teleport);
 }
-bool ItemType::isKey() const
+bool ItemType::isKey() const noexcept
 {
   return (type == ItemTypes_t::Key);
 }
-bool ItemType::isDepot() const
+bool ItemType::isDepot() const noexcept
 {
   return (type == ItemTypes_t::Depot);
 }
-bool ItemType::isMailbox() const
+bool ItemType::isMailbox() const noexcept
 {
   return (type == ItemTypes_t::Mailbox);
 }
-bool ItemType::isTrashHolder() const
+bool ItemType::isTrashHolder() const noexcept
 {
   return (type == ItemTypes_t::TrashHolder);
 }
-bool ItemType::isBed() const
+bool ItemType::isBed() const noexcept
 {
   return (type == ItemTypes_t::Bed);
 }
 
-bool ItemType::isRune() const
+bool ItemType::isRune() const noexcept
 {
   return (type == ItemTypes_t::Rune);
 }
-bool ItemType::isPickupable() const
+bool ItemType::isPickupable() const noexcept
 {
   return (allowPickupable || pickupable);
 }
-bool ItemType::isUseable() const
+bool ItemType::isUseable() const noexcept
 {
   return (useable);
 }
-bool ItemType::hasSubType() const
+bool ItemType::hasSubType() const noexcept
 {
   return (isFluidContainer() || isSplash() || stackable || charges != 0);
 }
 
-bool ItemType::usesSubType() const
+bool ItemType::usesSubType() const noexcept
 {
   return isStackable() || isSplash() || isFluidContainer();
 }
 
-bool ItemType::isStackable() const { return stackable; }
+bool ItemType::isStackable() const noexcept { return stackable; }

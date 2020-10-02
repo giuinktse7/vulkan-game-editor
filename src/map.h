@@ -31,7 +31,7 @@ public:
 	MapIterator begin();
 	MapIterator end();
 
-	MapRegion getRegion(Position from, Position to);
+	MapRegion getRegion(Position from, Position to) noexcept;
 
 	TileLocation *getTileLocation(int x, int y, int z) const;
 	TileLocation *getTileLocation(const Position &pos) const;
@@ -51,15 +51,15 @@ public:
 	MapVersion getMapVersion();
 	std::string &getDescription();
 
-	uint16_t getWidth() const;
-	uint16_t getHeight() const;
+	uint16_t getWidth() const noexcept;
+	uint16_t getHeight() const noexcept;
 
-	Towns &getTowns()
+	inline const Towns &towns() const noexcept
 	{
-		return towns;
+		return _towns;
 	}
 
-	inline const std::string &name() const
+	inline const std::string &name() const noexcept
 	{
 		return _name;
 	}
@@ -79,7 +79,7 @@ public:
 private:
 	friend class MapView;
 	std::string _name;
-	Towns towns;
+	Towns _towns;
 	MapVersion mapVersion;
 	std::string description;
 
@@ -106,11 +106,12 @@ private:
 	void createItemAt(Position pos, uint16_t id);
 };
 
-inline uint16_t Map::getWidth() const
+inline uint16_t Map::getWidth() const noexcept
 {
 	return width;
 }
-inline uint16_t Map::getHeight() const
+
+inline uint16_t Map::getHeight() const noexcept
 {
 	return height;
 }
@@ -119,7 +120,7 @@ inline uint16_t Map::getHeight() const
 class MapRegion
 {
 public:
-	MapRegion(Map &map, Position from, Position to)
+	MapRegion(Map &map, Position from, Position to) noexcept
 			: map(map), from(from), to(to) {}
 
 	class Iterator
@@ -223,14 +224,14 @@ public:
 	TileLocation *operator->();
 	MapIterator &operator++();
 
-	bool operator==(const MapIterator &other) const
+	bool operator==(const MapIterator &other) const noexcept
 	{
 		return other.floorIndex == floorIndex &&
 					 other.tileIndex == tileIndex &&
 					 other.value == value;
 	}
 
-	bool operator!=(const MapIterator &other) const
+	bool operator!=(const MapIterator &other) const noexcept
 	{
 		return !(other == *this);
 	}

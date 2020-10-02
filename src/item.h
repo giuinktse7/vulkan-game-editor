@@ -36,43 +36,43 @@ public:
 
 	// Item(Item &&item) = default;
 
-	uint32_t getId() const
+	uint32_t getId() const noexcept
 	{
 		return itemType->id;
 	}
 
-	uint32_t getClientId() const
+	uint32_t getClientId() const noexcept
 	{
 		return itemType->clientId;
 	}
 
-	const std::string getName() const
+	const std::string getName() const noexcept
 	{
 		return itemType->name;
 	}
 
-	const uint32_t getWeight() const
+	const uint32_t getWeight() const noexcept
 	{
 		return itemType->weight;
 	}
 
 	const TextureInfo getTextureInfo(const Position &pos) const;
 
-	const bool isGround() const;
+	bool isGround() const noexcept;
 
-	uint16_t getSubtype() const;
+	uint16_t getSubtype() const noexcept;
 
-	bool hasAttributes() const
+	inline bool hasAttributes() const noexcept
 	{
 		return attributes.size() > 0;
 	}
 
-	const inline int getTopOrder() const
+	inline const int getTopOrder() const noexcept
 	{
 		return itemType->alwaysOnTopOrder;
 	}
 
-	const std::unordered_map<ItemAttribute_t, ItemAttribute> &getAttributes() const
+	const std::unordered_map<ItemAttribute_t, ItemAttribute> &getAttributes() const noexcept
 	{
 		return attributes;
 	}

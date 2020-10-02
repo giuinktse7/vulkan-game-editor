@@ -142,13 +142,12 @@ enum GameDirection : uint8_t
 	DIRECTION_LAST = DIRECTION_NORTHEAST,
 	DIRECTION_NONE = 8,
 };
-inline bool operator==(const Position &pos1, const Position &pos2)
+inline bool operator==(const Position &pos1, const Position &pos2) noexcept
 {
 	return pos1.x == pos2.x && pos1.y == pos2.y && pos1.z == pos2.z;
 }
 
-inline bool
-operator!=(const Position &pos1, const Position &pos2)
+inline bool operator!=(const Position &pos1, const Position &pos2) noexcept
 {
 	return !(pos1 == pos2);
 }
@@ -160,13 +159,13 @@ inline std::ostream &operator<<(std::ostream &os, const Position &pos)
 }
 
 template <typename T>
-inline bool operator==(const BasePosition<T> &pos1, const BasePosition<T> &pos2)
+inline bool operator==(const BasePosition<T> &pos1, const BasePosition<T> &pos2) noexcept
 {
 	return pos1.x == pos2.x && pos1.y == pos2.y;
 }
 
 template <typename T>
-inline bool operator!=(const BasePosition<T> &pos1, const BasePosition<T> &pos2)
+inline bool operator!=(const BasePosition<T> &pos1, const BasePosition<T> &pos2) noexcept
 {
 	return !(pos1 == pos2);
 }

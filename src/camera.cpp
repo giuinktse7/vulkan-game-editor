@@ -34,7 +34,7 @@ void Camera::updateZoom(ScreenPosition zoomOrigin)
 	_zoomFactor = newZoomFactor;
 }
 
-void Camera::setPosition(WorldPosition position)
+void Camera::setPosition(WorldPosition position) noexcept
 {
 	this->_position = WorldPosition(std::max(position.x, 0L), std::max(position.y, 0L));
 }

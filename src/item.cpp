@@ -18,9 +18,9 @@ Item::Item(ItemTypeId itemTypeId)
 Item::Item(Item &&other) noexcept
 		: ecs::OptionalEntity(std::move(other)),
 			itemType(other.itemType),
+			selected(other.selected),
 			attributes(std::move(other.attributes)),
-			subtype(other.subtype),
-			selected(other.selected)
+			subtype(other.subtype)
 {
 	other.entityId.reset();
 }
@@ -80,12 +80,12 @@ const TextureInfo Item::getTextureInfo(const Position &pos) const
 	return itemType->getTextureInfo(pos);
 }
 
-const bool Item::isGround() const
+bool Item::isGround() const noexcept
 {
 	return itemType->isGroundTile();
 }
 
-uint16_t Item::getSubtype() const
+uint16_t Item::getSubtype() const noexcept
 {
 	if (itemType->hasSubType())
 	{

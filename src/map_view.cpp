@@ -489,7 +489,7 @@ void MapView::resetZoom()
   camera.resetZoom(_mousePos);
 }
 
-float MapView::getZoomFactor() const
+float MapView::getZoomFactor() const noexcept
 {
   return camera.zoomFactor();
 }

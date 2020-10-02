@@ -58,7 +58,7 @@ void Map::addItem(const Position position, uint16_t serverId)
   tile.addItem(Item(serverId));
 }
 
-MapRegion Map::getRegion(Position from, Position to)
+MapRegion Map::getRegion(Position from, Position to) noexcept
 {
   return MapRegion(*this, from, to);
 }

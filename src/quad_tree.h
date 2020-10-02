@@ -15,7 +15,7 @@ class Floor
 {
 public:
 	Floor(int x, int y, int z);
-	~Floor();
+	~Floor() noexcept;
 
 	Floor(const Floor &) = delete;
 	Floor &operator=(const Floor &) = delete;
@@ -53,7 +53,6 @@ namespace quadtree
 
 		// Get a leaf node. Creates the leaf node if it does not already exist.
 		Node &getLeafWithCreate(int x, int y);
-		Node &getLeaf(int x, int y);
 		Node *getLeafUnsafe(int x, int y) const;
 		TileLocation *getTile(int x, int y, int z) const;
 
@@ -63,8 +62,14 @@ namespace quadtree
 
 		TileLocation &getOrCreateTileLocation(Position pos);
 
-		bool isLeaf() const;
-		bool isRoot() const;
+		inline bool isLeaf() const noexcept
+		{
+			return nodeType == Node::NodeType::Leaf;
+		}
+		inline bool isRoot() const noexcept
+		{
+			return nodeType == Node::NodeType::Root;
+		}
 
 		friend class ::Map;
 		friend class ::MapIterator;

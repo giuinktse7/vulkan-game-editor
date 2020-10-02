@@ -30,7 +30,7 @@ public:
 	friend class Floor;
 	friend class Tile;
 
-	void TileLocation::setTile(Tile &&tile);
+	void setTile(Tile &&tile);
 	void setTile(std::unique_ptr<Tile> tile);
 
 	inline Position position() const

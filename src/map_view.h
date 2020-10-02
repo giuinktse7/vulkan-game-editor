@@ -130,7 +130,7 @@ public:
 	void updateViewport();
 	void setViewportSize(int width, int height);
 
-	float getZoomFactor() const;
+	float getZoomFactor() const noexcept;
 
 	const MapPosition worldToMapPos(WorldPosition worldPos) const;
 	const Position screenToMapPos(ScreenPosition screenPos) const;
@@ -138,7 +138,7 @@ public:
 	const uint32_t windowToMapPos(int windowPos) const;
 	const uint32_t mapToWorldPos(uint32_t mapPos) const;
 
-	inline int z() const
+	inline int z() const noexcept
 	{
 		return static_cast<uint32_t>(camera.floor);
 	}
@@ -151,22 +151,22 @@ public:
 	/*
 		Synonym for z()
 	*/
-	inline int getFloor() const
+	inline int getFloor() const noexcept
 	{
 		return z();
 	}
 
-	inline uint32_t x() const
+	inline uint32_t x() const noexcept
 	{
 		return static_cast<uint32_t>(camera.position().x);
 	}
 
-	inline uint32_t y() const
+	inline uint32_t y() const noexcept
 	{
 		return static_cast<uint32_t>(camera.position().y);
 	}
 
-	const Viewport &getViewport() const
+	const Viewport &getViewport() const noexcept
 	{
 		return viewport;
 	}

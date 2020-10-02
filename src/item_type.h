@@ -188,29 +188,32 @@ public:
   std::vector<TextureAtlas *> getTextureAtlases() const;
 
   TextureAtlas *getTextureAtlas(uint32_t spriteId) const;
-  TextureAtlas *getFirstTextureAtlas() const;
+  TextureAtlas *getFirstTextureAtlas() const noexcept
+  {
+    return atlases.front();
+  }
 
-  bool isGroundTile() const;
-  bool isContainer() const;
-  bool isSplash() const;
-  bool isFluidContainer() const;
+  bool isGroundTile() const noexcept;
+  bool isContainer() const noexcept;
+  bool isSplash() const noexcept;
+  bool isFluidContainer() const noexcept;
 
-  bool isDoor() const;
-  bool isMagicField() const;
-  bool isTeleport() const;
-  bool isKey() const;
-  bool isDepot() const;
-  bool isMailbox() const;
-  bool isTrashHolder() const;
-  bool isBed() const;
+  bool isDoor() const noexcept;
+  bool isMagicField() const noexcept;
+  bool isTeleport() const noexcept;
+  bool isKey() const noexcept;
+  bool isDepot() const noexcept;
+  bool isMailbox() const noexcept;
+  bool isTrashHolder() const noexcept;
+  bool isBed() const noexcept;
 
-  bool isRune() const;
-  bool isPickupable() const;
-  bool isUseable() const;
-  bool hasSubType() const;
+  bool isRune() const noexcept;
+  bool isPickupable() const noexcept;
+  bool isUseable() const noexcept;
+  bool hasSubType() const noexcept;
 
-  bool usesSubType() const;
-  bool isStackable() const;
+  bool usesSubType() const noexcept;
+  bool isStackable() const noexcept;
 
   bool hasFlag(AppearanceFlag flag) const
   {

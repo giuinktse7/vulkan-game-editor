@@ -69,7 +69,7 @@ struct Batch
 	template <std::size_t SIZE>
 	void addVertices(std::array<Vertex, SIZE> &vertices);
 
-	inline QVulkanDeviceFunctions *devFuncs() const
+	inline QVulkanDeviceFunctions *devFuncs() const noexcept
 	{
 		return stagingBuffer.vulkanInfo->df;
 	}
@@ -79,9 +79,9 @@ struct Batch
 	void mapStagingBuffer();
 	void unmapStagingBuffer();
 
-	bool isValid() const
+	inline bool isValid() const noexcept
 	{
-		return this->valid;
+		return valid;
 	}
 
 	void copyStagingToDevice(VkCommandBuffer commandBuffer);

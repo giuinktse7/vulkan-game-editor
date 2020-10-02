@@ -53,16 +53,6 @@ Node::~Node()
   }
 }
 
-bool Node::isLeaf() const
-{
-  return nodeType == Node::NodeType::Leaf;
-}
-
-bool Node::isRoot() const
-{
-  return nodeType == Node::NodeType::Root;
-}
-
 TileLocation &Floor::getTileLocation(int x, int y)
 {
   return locations[(x & 3) * 4 + (y & 3)];
@@ -126,7 +116,7 @@ Floor::Floor(int x, int y, int z)
   }
 }
 
-Floor::~Floor()
+Floor::~Floor() noexcept
 {
   // cout << "~Floor()" << endl;
 }
@@ -171,19 +161,6 @@ Node *Node::getLeafUnsafe(int x, int y) const
   }
 
   return node;
-}
-
-Node &Node::getLeaf(int x, int y)
-{
-  Node *node = getLeafUnsafe(x, y);
-  if (!node)
-  {
-    std::stringstream s;
-    s << "There is no leaf for position { x=" << x << ", y=" << y << " }.";
-    ABORT_PROGRAM(s.str());
-  }
-
-  return *node;
 }
 
 Node &Node::getLeafWithCreate(int x, int y)

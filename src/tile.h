@@ -68,12 +68,12 @@ public:
 
 	int getTopElevation() const;
 
-	const std::vector<Item> &items() const
+	const std::vector<Item> &items() const noexcept
 	{
 		return _items;
 	}
 
-	const size_t itemCount() const
+	const size_t itemCount() const noexcept
 	{
 		return _items.size();
 	}
@@ -83,30 +83,30 @@ public:
 	*/
 	size_t getEntityCount();
 
-	uint16_t getMapFlags() const;
-	uint16_t getStatFlags() const;
+	uint16_t getMapFlags() const noexcept;
+	uint16_t getStatFlags() const noexcept;
 
 	void setLocation(TileLocation &location);
 
 	void initEntities();
 	void destroyEntities();
 
-	inline Position position() const
+	inline Position position() const noexcept
 	{
 		return _position;
 	}
 
-	inline long x() const
+	inline long x() const noexcept
 	{
 		return _position.x;
 	}
 
-	inline long y() const
+	inline long y() const noexcept
 	{
 		return _position.y;
 	}
 
-	inline long z() const
+	inline long z() const noexcept
 	{
 		return _position.z;
 	}
@@ -131,13 +131,16 @@ private:
 		};
 		uint32_t flags;
 	};
+
+	void replaceGround(Item &&ground);
+	void replaceItem(uint16_t index, Item &&item);
 };
 
-inline uint16_t Tile::getMapFlags() const
+inline uint16_t Tile::getMapFlags() const noexcept
 {
 	return mapflags;
 }
-inline uint16_t Tile::getStatFlags() const
+inline uint16_t Tile::getStatFlags() const noexcept
 {
 	return statflags;
 }
