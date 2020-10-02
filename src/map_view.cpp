@@ -67,11 +67,6 @@ bool MapView::hasSelectionMoveOrigin() const
   return selection.moveOrigin.has_value();
 }
 
-bool MapView::isSelectionMoving() const
-{
-  return selection.moving;
-}
-
 void MapView::addItem(const Position pos, uint16_t id)
 {
   if (!Items::items.validItemType(id))
@@ -253,7 +248,7 @@ void MapView::setDragEnd(WorldPosition position)
 
 void MapView::finishMoveSelection(const Position moveDestination)
 {
-  if (selection.moving)
+  if (selection.moving())
   {
     Position deltaPos = moveDestination - selection.moveOrigin.value();
 
@@ -267,7 +262,6 @@ void MapView::finishMoveSelection(const Position moveDestination)
       selection.select(newPos);
     }
   }
-  selection.moving = false;
   selection.moveOrigin.reset();
 }
 

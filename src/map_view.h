@@ -80,7 +80,6 @@ public:
 	void selectAll(Tile &tile);
 	void clearSelection();
 	bool hasSelectionMoveOrigin() const;
-	bool isSelectionMoving() const;
 	bool isEmpty(Position position) const;
 
 	void setCameraPosition(WorldPosition position);
