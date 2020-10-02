@@ -115,7 +115,7 @@ void MainWindow::initializeUI()
   listView->setItemDelegate(new Delegate(this));
 
   std::vector<ItemTypeModelItem> data;
-  for (int i = 100; i < 15000; ++i)
+  for (int i = 4500; i < 4700; ++i)
   {
     data.push_back(ItemTypeModelItem::fromServerId(i));
   }
@@ -175,13 +175,16 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
   switch (event->key())
   {
   case Qt::Key_Escape:
-    mapViewMouseAction.reset();
+    mapTabs->currentMapView()->escapeEvent();
     break;
   case Qt::Key_0:
     if (event->modifiers() & Qt::CTRL)
     {
       mapTabs->currentMapView()->resetZoom();
     }
+  case Qt::Key_Delete:
+    mapTabs->currentMapView()->deleteSelectedItems();
+    break;
   default:
     event->ignore();
     QWidget::keyPressEvent(event);

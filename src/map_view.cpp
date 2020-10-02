@@ -16,8 +16,9 @@ MapView::MapView(MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> ma
       selection(*this),
       _map(map),
       viewport(),
-      _mousePos(),
-      history(*this) {}
+      dragState{},
+      history(*this),
+      _mousePos() {}
 
 void MapView::selectTopItem(const Position pos)
 {

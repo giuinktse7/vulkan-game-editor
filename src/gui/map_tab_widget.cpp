@@ -900,7 +900,6 @@ void OpacityAnimation::showWidget()
     case AnimationState::Hiding:
     {
         animationState = AnimationState::Showing;
-        int value = animation->currentValue().toInt();
         animation->pause();
 
         animation->setDuration(forward.duration);
