@@ -171,14 +171,15 @@ void Tile::addItem(Item &&item)
 
 void Tile::setGround(std::unique_ptr<Item> ground)
 {
-  if (!ground)
-  {
-    _ground = std::move(ground);
-  }
-  else
-  {
-    DEBUG_ASSERT(ground->itemType->isGroundTile(), "Tried to add a ground that is not a ground item.");
-  }
+  DEBUG_ASSERT(ground->isGround(), "Tried to add a ground that is not a ground item.");
+
+  if (_ground)
+    removeGround();
+
+  if (ground->selected)
+    ++selectionCount;
+
+  _ground = std::move(ground);
 }
 
 void Tile::removeGround()
