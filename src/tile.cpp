@@ -109,30 +109,19 @@ void Tile::addItem(Item &&item)
 {
   if (item.isGround())
   {
-    bool oldSelected = _ground && _ground->selected;
-    bool newSelected = item.selected;
-    _ground = std::make_unique<Item>(std::move(item));
-    if (oldSelected && !newSelected)
-    {
-      --selectionCount;
-    }
-    else if (newSelected && !oldSelected)
-    {
-      ++selectionCount;
-    }
+    replaceGround(std::move(item));
     return;
   }
 
-  std::vector<Item>::iterator currentItem;
+  std::vector<Item>::iterator it;
 
+  bool replace = false;
   ItemType &itemType = *item.itemType;
   if (itemType.alwaysOnTop)
   {
-    currentItem = _items.begin();
-
-    while (currentItem != _items.end())
+    for (it = _items.begin(); it != _items.end(); ++it)
     {
-      ItemType &currentType = *currentItem->itemType;
+      ItemType &currentType = *it->itemType;
 
       if (currentType.alwaysOnTop)
       {
@@ -150,8 +139,8 @@ void Tile::addItem(Item &&item)
             if (!currentType.isGroundBorder())
             {
               // Replace the current item at cursor with the new item
-              *(currentItem) = std::move(item);
-              return;
+              replace = true;
+              break;
             }
           }
         }
@@ -164,20 +153,48 @@ void Tile::addItem(Item &&item)
       {
         break;
       }
-      ++currentItem;
     }
   }
   else
   {
-    currentItem = _items.end();
+    it = _items.end();
   }
 
-  if (item.selected)
+  if (replace)
   {
-    ++selectionCount;
+    replaceItem(it - _items.begin(), std::move(item));
   }
+  else
+  {
+    if (item.selected)
+      ++selectionCount;
 
-  _items.insert(currentItem, std::move(item));
+    _items.emplace(it, std::move(item));
+  }
+}
+
+void Tile::replaceGround(Item &&ground)
+{
+  bool s1 = _ground && _ground->selected;
+  bool s2 = ground.selected;
+  _ground = std::make_unique<Item>(std::move(ground));
+
+  if (s1 && !s2)
+    --selectionCount;
+  else if (!s1 && s2)
+    ++selectionCount;
+}
+
+void Tile::replaceItem(uint16_t index, Item &&item)
+{
+  bool s1 = _items.at(index).selected;
+  bool s2 = item.selected;
+  _items.at(index) = std::move(item);
+
+  if (s1 && !s2)
+    --selectionCount;
+  else if (!s1 && s2)
+    ++selectionCount;
 }
 
 void Tile::setGround(std::unique_ptr<Item> ground)
