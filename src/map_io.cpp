@@ -186,7 +186,7 @@ void MapIO::saveMap(Map &map)
       {
         ++savedTiles;
 
-        Tile *tile = location->getTile();
+        Tile *tile = location->tile();
 
         // We can skip the tile if it has no entities
         if (!tile || tile->getEntityCount() == 0)

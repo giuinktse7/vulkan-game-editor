@@ -18,7 +18,7 @@ public:
 
 	std::unique_ptr<Tile> replaceTile(Tile &&tile);
 
-	Tile *getTile() const;
+	Tile *tile() const;
 	Item *getGround() const;
 	bool hasTile() const;
 	bool hasGround() const;
@@ -53,6 +53,6 @@ public:
 	}
 
 protected:
-	std::unique_ptr<Tile> tile{};
+	std::unique_ptr<Tile> _tile{};
 	Position _position;
 };

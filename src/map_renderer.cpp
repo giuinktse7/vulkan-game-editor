@@ -229,8 +229,6 @@ void MapRenderer::drawBatches()
 
 void MapRenderer::drawMap()
 {
-  bool isSelectionMoving = mapView->selection.moving;
-
   const auto mapRect = mapView->getGameBoundingRect();
   int floor = mapView->z();
 
@@ -251,7 +249,7 @@ void MapRenderer::drawMap()
       Avoid drawing the tile only if the whole tile is selected and the
       selection is moving
     */
-    if (!(tileLocation.getTile()->allSelected() && isSelectionMoving))
+    if (!(tileLocation.tile()->allSelected() && mapView->selection.moving()))
     {
       drawTile(tileLocation, ItemDrawFlags::DrawSelected);
     }
@@ -287,12 +285,12 @@ void MapRenderer::drawMap()
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t drawFlags)
 {
   auto position = tileLocation.position();
-  auto tile = tileLocation.getTile();
+  auto tile = tileLocation.tile();
 
   bool drawSelected = drawFlags & ItemDrawFlags::DrawSelected;
 
   Position selectionMovePosDelta{};
-  if (mapView->selection.moving)
+  if (mapView->selection.moving())
   {
     ScreenPosition cursorPos = mapView->mousePos();
     selectionMovePosDelta = cursorPos.toPos(*mapView) - mapView->selection.moveOrigin.value();
@@ -402,7 +400,7 @@ void MapRenderer::drawMovingSelection()
     if (tileLocation.hasTile())
     {
       // Draw only if the tile has a selection.
-      if ((tileLocation.getTile()->hasSelection() && mapView->selection.moving))
+      if (tileLocation.tile()->hasSelection())
       {
         drawTile(tileLocation, ItemDrawFlags::DrawSelected);
       }

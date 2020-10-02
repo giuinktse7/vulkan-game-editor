@@ -18,12 +18,12 @@ TileLocation::~TileLocation()
 
 void TileLocation::setTile(std::unique_ptr<Tile> tile)
 {
-  this->tile = std::move(tile);
-  this->tile->setLocation(*this);
+  _tile = std::move(tile);
+  _tile->setLocation(*this);
 }
-Tile *TileLocation::getTile() const
+Tile *TileLocation::tile() const
 {
-  return tile ? tile.get() : nullptr;
+  return _tile ? _tile.get() : nullptr;
 }
 
 bool TileLocation::hasTile() const
@@ -40,7 +40,7 @@ bool TileLocation::hasTile() const
 
 bool TileLocation::hasGround() const
 {
-  return tile && tile->getGround();
+  return _tile && _tile->getGround();
 }
 
 void TileLocation::setEmptyTile()
@@ -50,29 +50,29 @@ void TileLocation::setEmptyTile()
 
 Item *TileLocation::getGround() const
 {
-  if (!tile)
+  if (!_tile)
     return nullptr;
 
-  return tile->getGround();
+  return _tile->getGround();
 }
 
 void TileLocation::removeTile()
 {
-  this->tile.reset();
+  _tile.reset();
 }
 
 std::unique_ptr<Tile> TileLocation::dropTile()
 {
-  std::unique_ptr<Tile> result = std::move(this->tile);
-  this->tile.reset();
+  std::unique_ptr<Tile> result = std::move(_tile);
+  _tile.reset();
   return result;
 }
 
 std::unique_ptr<Tile> TileLocation::replaceTile(Tile &&newTile)
 {
-  DEBUG_ASSERT(!this->tile || (newTile.position() == this->tile->position()), "The new tile must have the same position as the old tile.");
+  DEBUG_ASSERT(!_tile || (newTile.position() == _tile->position()), "The new tile must have the same position as the old tile.");
 
-  std::unique_ptr<Tile> old = std::move(this->tile);
-  this->tile = std::make_unique<Tile>(std::move(newTile));
+  std::unique_ptr<Tile> old = std::move(_tile);
+  _tile = std::make_unique<Tile>(std::move(newTile));
   return old;
 }

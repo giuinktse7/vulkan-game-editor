@@ -282,7 +282,7 @@ void MapView::endDragging()
 
   for (auto &location : map->getRegion(from, to))
   {
-    Tile *tile = location.getTile();
+    Tile *tile = location.tile();
     if (tile && !tile->isEmpty())
     {
       positions.emplace(location.position());

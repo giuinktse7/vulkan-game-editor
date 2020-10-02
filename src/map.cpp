@@ -33,7 +33,7 @@ void Map::moveSelectedItems(const Position source, const Position destination)
 
   TileLocation &to = getOrCreateTileLocation(destination);
 
-  if (from->getTile()->allSelected())
+  if (from->tile()->allSelected())
   {
     std::unique_ptr<Tile> fromTile = from->dropTile();
     to.setTile(std::move(fromTile));
@@ -45,7 +45,7 @@ void Map::moveSelectedItems(const Position source, const Position destination)
       to.setEmptyTile();
     }
 
-    from->getTile()->moveSelected(*to.getTile());
+    from->tile()->moveSelected(*to.tile());
   }
 }
 
@@ -54,17 +54,8 @@ void Map::addItem(const Position position, uint16_t serverId)
   if (!Items::items.validItemType(serverId))
     return;
 
-  Item item(serverId);
-
-  const SpriteInfo &spriteInfo = item.itemType->appearance->getSpriteInfo();
-  if (spriteInfo.hasAnimation())
-  {
-    ecs::EntityId entityId = item.assignNewEntityId();
-    g_ecs.addComponent(entityId, ItemAnimationComponent(spriteInfo.animation()));
-  }
-
   auto &tile = getOrCreateTile(position);
-  tile.addItem(std::move(item));
+  tile.addItem(Item(serverId));
 }
 
 MapRegion Map::getRegion(Position from, Position to)
@@ -143,7 +134,7 @@ Tile *Map::getTile(const Position pos) const
   if (!floor)
     return nullptr;
 
-  return floor->getTileLocation(pos.x, pos.y).getTile();
+  return floor->getTileLocation(pos.x, pos.y).tile();
 }
 
 const Item *Map::getTopItem(const Position pos) const
@@ -166,12 +157,12 @@ Tile &Map::getOrCreateTile(int x, int y, int z)
   Floor &floor = leaf.getOrCreateFloor(x, y, z);
   TileLocation &location = floor.getTileLocation(x, y);
 
-  if (!location.getTile())
+  if (!location.tile())
   {
     location.setTile(std::make_unique<Tile>(location));
   }
 
-  return *location.getTile();
+  return *location.tile();
 }
 
 TileLocation *Map::getTileLocation(const Position &pos) const
@@ -217,7 +208,7 @@ MapIterator *MapIterator::nextFromLeaf()
       for (uint32_t i = this->tileIndex; i < MAP_LAYERS; ++i)
       {
         TileLocation &location = floor->getTileLocation(i);
-        if (location.hasTile() && (location.getTile()->getItems().size() > 0 || location.getTile()->getGround()))
+        if (location.hasTile() && (location.tile()->getItems().size() > 0 || location.tile()->getGround()))
         {
           this->value = &location;
           this->floorIndex = z;
