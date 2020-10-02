@@ -62,9 +62,9 @@ public:
 
 	Selection selection;
 
-	Map *getMap() const
+	inline Map *map() const
 	{
-		return map.get();
+		return _map.get();
 	}
 
 	void mousePressEvent(VME::MouseButtons pressedButtons);
@@ -72,6 +72,7 @@ public:
 	void mouseReleaseEvent(VME::MouseButtons pressedButtons);
 
 	Tile *getTile(const Position pos) const;
+	Tile &getOrCreateTile(const Position pos);
 	void insertTile(Tile &&tile);
 	void removeTile(const Position pos);
 	void selectTopItem(Tile &tile);
@@ -226,7 +227,7 @@ public:
 private:
 	friend class MapAction;
 
-	std::shared_ptr<Map> map;
+	std::shared_ptr<Map> _map;
 	Viewport viewport;
 
 	struct DragData
@@ -243,7 +244,7 @@ private:
 
 	Tile deepCopyTile(const Position position) const
 	{
-		return map->getTile(position)->deepCopy();
+		return _map->getTile(position)->deepCopy();
 	}
 
 	MapHistory::Action newAction(MapHistory::ActionType actionType) const;

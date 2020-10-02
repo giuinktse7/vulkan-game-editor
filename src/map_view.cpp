@@ -14,8 +14,7 @@ MapView::MapView(MapViewMouseAction &mapViewMouseAction)
 MapView::MapView(MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> map)
     : mapViewMouseAction(mapViewMouseAction),
       selection(*this),
-      map(map),
-      dragState{},
+      _map(map),
       viewport(),
       _mousePos(),
       history(*this) {}
@@ -72,7 +71,7 @@ void MapView::addItem(const Position pos, uint16_t id)
   if (!Items::items.validItemType(id))
     return;
 
-  Tile &currentTile = map->getOrCreateTile(pos);
+  Tile &currentTile = _map->getOrCreateTile(pos);
   Tile newTile = currentTile.deepCopy();
 
   newTile.addItem(Item(id));
@@ -85,7 +84,7 @@ void MapView::addItem(const Position pos, uint16_t id)
 
 void MapView::removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices)
 {
-  TileLocation *location = map->getTileLocation(position);
+  TileLocation *location = _map->getTileLocation(position);
 
   DEBUG_ASSERT(location->hasTile(), "The location has no tile.");
 
@@ -115,10 +114,10 @@ void MapView::removeSelectedItems(const Tile &tile)
       newTile.removeItem(i);
   }
 
-  Item *ground = newTile.getGround();
+  Item *ground = newTile.ground();
   if (ground && ground->selected)
   {
-    newTile.ground.reset();
+    newTile._ground.reset();
   }
 
   action.addChange(MapHistory::SetTile(std::move(newTile)));
@@ -128,7 +127,12 @@ void MapView::removeSelectedItems(const Tile &tile)
 
 Tile *MapView::getTile(const Position pos) const
 {
-  return map->getTile(pos);
+  return _map->getTile(pos);
+}
+
+Tile &MapView::getOrCreateTile(const Position pos)
+{
+  return _map->getOrCreateTile(pos);
 }
 
 void MapView::insertTile(Tile &&tile)
@@ -152,7 +156,6 @@ void MapView::removeTile(const Position position)
 void MapView::updateViewport()
 {
   const float zoom = 1 / camera.zoomFactor();
-  const auto [x, y] = camera.position();
 
   bool changed = viewport.offset != camera.position() || viewport.zoom != zoom;
 
@@ -236,7 +239,7 @@ bool MapView::hasSelection() const
 
 bool MapView::isEmpty(Position position) const
 {
-  return map->isTileEmpty(position);
+  return _map->isTileEmpty(position);
 }
 
 void MapView::setDragEnd(WorldPosition position)
@@ -258,7 +261,7 @@ void MapView::finishMoveSelection(const Position moveDestination)
       DEBUG_ASSERT(getTile(pos)->hasSelection(), "The tile at each position of a selection should have a selection.");
 
       selection.deselect(pos);
-      map->moveSelectedItems(pos, newPos);
+      _map->moveSelectedItems(pos, newPos);
       selection.select(newPos);
     }
   }
@@ -274,7 +277,7 @@ void MapView::endDragging()
 
   std::unordered_set<Position, PositionHash> positions;
 
-  for (auto &location : map->getRegion(from, to))
+  for (auto &location : _map->getRegion(from, to))
   {
     Tile *tile = location.tile();
     if (tile && !tile->isEmpty())
@@ -331,7 +334,7 @@ void MapView::mousePressEvent(VME::MouseButtons buttons)
     std::visit(
         util::overloaded{
             [this, pos](const MouseAction::None) {
-              const Item *topItem = map->getTopItem(pos);
+              const Item *topItem = _map->getTopItem(pos);
               if (!topItem)
               {
                 clearSelection();
@@ -547,7 +550,7 @@ std::unique_ptr<Tile> MapView::setTileInternal(Tile &&tile)
 {
   selection.setSelected(tile.position(), tile.hasSelection());
 
-  TileLocation &location = map->getOrCreateTileLocation(tile.position());
+  TileLocation &location = _map->getOrCreateTileLocation(tile.position());
   std::unique_ptr<Tile> currentTilePointer = location.replaceTile(std::move(tile));
 
   // Destroy the ECS entities of the old tile
@@ -558,12 +561,12 @@ std::unique_ptr<Tile> MapView::setTileInternal(Tile &&tile)
 
 std::unique_ptr<Tile> MapView::removeTileInternal(const Position position)
 {
-  Tile *oldTile = map->getTile(position);
+  Tile *oldTile = _map->getTile(position);
   removeSelectionInternal(oldTile);
 
   oldTile->destroyEntities();
 
-  return map->dropTile(position);
+  return _map->dropTile(position);
 }
 
 void MapView::removeSelectionInternal(Tile *tile)

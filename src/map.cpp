@@ -208,7 +208,7 @@ MapIterator *MapIterator::nextFromLeaf()
       for (uint32_t i = this->tileIndex; i < MAP_LAYERS; ++i)
       {
         TileLocation &location = floor->getTileLocation(i);
-        if (location.hasTile() && (location.tile()->getItems().size() > 0 || location.tile()->getGround()))
+        if (location.hasTile() && !location.tile()->isEmpty())
         {
           this->value = &location;
           this->floorIndex = z;

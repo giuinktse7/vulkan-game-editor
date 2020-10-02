@@ -70,8 +70,8 @@ public:
 	quadtree::Node *getLeafUnsafe(int x, int y);
 
 private:
-	std::string _name;
 	friend class MapView;
+	std::string _name;
 	Towns towns;
 	MapVersion mapVersion;
 	std::string description;

@@ -28,19 +28,12 @@ Tile *TileLocation::tile() const
 
 bool TileLocation::hasTile() const
 {
-  if (tile)
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+  return static_cast<bool>(_tile);
 }
 
 bool TileLocation::hasGround() const
 {
-  return _tile && _tile->getGround();
+  return _tile && _tile->ground();
 }
 
 void TileLocation::setEmptyTile()
@@ -48,12 +41,12 @@ void TileLocation::setEmptyTile()
   setTile(std::make_unique<Tile>(*this));
 }
 
-Item *TileLocation::getGround() const
+Item *TileLocation::ground() const
 {
   if (!_tile)
     return nullptr;
 
-  return _tile->getGround();
+  return _tile->ground();
 }
 
 void TileLocation::removeTile()

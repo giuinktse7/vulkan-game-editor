@@ -235,9 +235,9 @@ void MapIO::saveMap(Map &map)
           buffer.writeU32(tile->getMapFlags());
         }
 
-        if (tile->getGround())
+        Item *ground = tile->ground();
+        if (ground)
         {
-          Item *ground = tile->getGround();
           if (ground->hasAttributes())
           {
             serializer.serializeItem(*ground);

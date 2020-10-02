@@ -19,7 +19,7 @@ public:
 	std::unique_ptr<Tile> replaceTile(Tile &&tile);
 
 	Tile *tile() const;
-	Item *getGround() const;
+	Item *ground() const;
 	bool hasTile() const;
 	bool hasGround() const;
 

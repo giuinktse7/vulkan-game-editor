@@ -365,13 +365,13 @@ Tile Tile::deepCopy() const
 
 bool Tile::isEmpty() const
 {
-  return !ground && items.empty();
+  return !_ground && items.empty();
 }
 
 bool Tile::allSelected() const
 {
   size_t size = items.size();
-  if (ground)
+  if (_ground)
     ++size;
 
   return selectionCount == size;
@@ -384,7 +384,7 @@ bool Tile::hasSelection() const
 
 void Tile::initEntities()
 {
-  if (ground)
+  if (_ground)
     _ground->registerEntity();
 
   for (auto &item : items)
@@ -393,7 +393,7 @@ void Tile::initEntities()
 
 void Tile::destroyEntities()
 {
-  if (ground)
+  if (_ground)
     _ground->destroyEntity();
 
   for (auto &item : items)

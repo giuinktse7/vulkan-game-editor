@@ -239,7 +239,7 @@ void MapRenderer::drawMap()
 
   Position from{mapRect.x1, mapRect.y1, startZ};
   Position to{mapRect.x2, mapRect.y2, endZ};
-  for (auto &tileLocation : mapView->getMap()->getRegion(from, to))
+  for (auto &tileLocation : mapView->map()->getRegion(from, to))
   {
     if (!tileLocation.hasTile())
     {

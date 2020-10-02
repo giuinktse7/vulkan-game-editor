@@ -86,7 +86,7 @@ MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
     setLayout(l);
   }
 
-  Map *map = mapView->getMap();
+  Map *map = mapView->map();
   uint16_t width = map->getWidth();
   uint16_t height = map->getHeight();
 
