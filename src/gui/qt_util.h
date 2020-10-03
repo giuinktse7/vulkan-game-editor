@@ -41,20 +41,30 @@ namespace QtUtil
     int minRotationDelta = DefaultMinimumAngleDelta * QtMinimumWheelDelta;
   };
 
-  inline VME::MouseButtons vmeMouseEvent(QMouseEvent *event)
+  inline VME::MouseEvent vmeMouseEvent(QMouseEvent *event)
   {
+    auto qtButtons = event->buttons();
+    auto qtModifiers = event->modifiers();
+
     VME::MouseButtons buttons = VME::MouseButtons::NoButton;
+    VME::ModifierKeys modifiers = VME::ModifierKeys::None;
 
-    if (event->buttons() & Qt::LeftButton)
-    {
+    if (qtButtons & Qt::LeftButton)
       buttons |= VME::MouseButtons::LeftButton;
-    }
-    if (event->buttons() & Qt::RightButton)
-    {
-      buttons |= VME::MouseButtons::RightButton;
-    }
 
-    return buttons;
+    if (qtButtons & Qt::RightButton)
+      buttons |= VME::MouseButtons::RightButton;
+
+    if (qtModifiers & Qt::CTRL)
+      modifiers |= VME::ModifierKeys::Ctrl;
+
+    if (qtModifiers & Qt::SHIFT)
+      modifiers |= VME::ModifierKeys::Shift;
+
+    if (qtModifiers & Qt::ALT)
+      modifiers |= VME::ModifierKeys::Alt;
+
+    return VME::MouseEvent(buttons, modifiers);
   }
 
   QPixmap itemPixmap(uint16_t serverId);

@@ -17,25 +17,23 @@ namespace VME
     return static_cast<MouseButtons>(static_cast<ut>(l) & static_cast<ut>(r));
   }
 
-  inline constexpr MouseButtons operator|(MouseButtons l, MouseButtons r)
+  struct MouseEvent
   {
-    typedef std::underlying_type<MouseButtons>::type ut;
-    return static_cast<MouseButtons>(static_cast<ut>(l) | static_cast<ut>(r));
-  }
+    MouseEvent(MouseButtons buttons, ModifierKeys modifiers) : _buttons(buttons), _modifiers(modifiers) {}
+    inline MouseButtons buttons() const noexcept
+    {
+      return _buttons;
+    }
 
-  inline constexpr MouseButtons &operator&=(MouseButtons &lhs, const MouseButtons rhs)
-  {
-    typedef std::underlying_type<MouseButtons>::type ut;
-    lhs = static_cast<MouseButtons>(static_cast<ut>(lhs) & static_cast<ut>(rhs));
-    return lhs;
-  }
+    inline ModifierKeys modifiers() const noexcept
+    {
+      return _modifiers;
+    }
 
-  inline constexpr MouseButtons &operator|=(MouseButtons &lhs, const MouseButtons rhs)
-  {
-    typedef std::underlying_type<MouseButtons>::type ut;
-    lhs = static_cast<MouseButtons>(static_cast<ut>(lhs) | static_cast<ut>(rhs));
-    return lhs;
-  }
+  private:
+    MouseButtons _buttons;
+    ModifierKeys _modifiers;
+  };
 
 } // namespace VME
 
