@@ -99,6 +99,11 @@ namespace MapHistory
     void commit(MapView &mapView);
     void undo(MapView &mapView);
 
+    inline bool empty() const noexcept
+    {
+      return actions.empty();
+    }
+
     ActionGroupType groupType;
 
   private:
