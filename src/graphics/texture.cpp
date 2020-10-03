@@ -18,8 +18,6 @@
 
 #pragma warning(push)
 #pragma warning(disable : 26812)
-// QVulkanWindow works correctly with UNORM. If not using Vulkan, VK_FORMAT_B8G8R8A8_SRGB works.
-constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 #pragma warning(pop)
 
 std::unordered_map<SolidColor, std::unique_ptr<Texture>> solidColorTextures;
@@ -61,8 +59,6 @@ Texture::Texture(const std::string &filename)
 
 void Texture::init(std::vector<uint8_t> &&pixels)
 {
-  uint64_t sizeInBytes = (static_cast<uint64_t>(_width) * _height) * 4;
-
   this->_pixels = std::move(pixels);
 }
 

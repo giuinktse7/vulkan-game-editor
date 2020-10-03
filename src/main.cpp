@@ -136,7 +136,7 @@ std::shared_ptr<Map> makeTestMap2()
 {
 
     std::shared_ptr<Map> map = std::make_shared<Map>();
-    auto &rand = Random::global();
+    // auto &rand = Random::global();
 
     int i = 0;
     for (int x = 0; x < 10; ++x)
