@@ -88,17 +88,22 @@ using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem>;
 class MapViewMouseAction
 {
 public:
-  inline MouseAction_t action() const
+  inline MouseAction_t action() const noexcept
   {
     return _mouseAction;
   };
 
-  void set(const MouseAction_t action)
+  void set(const MouseAction_t action) noexcept
   {
     _mouseAction = action;
   }
 
-  void reset()
+  void setRawItem(uint16_t serverId) noexcept
+  {
+    _mouseAction = MouseAction::RawItem{serverId};
+  }
+
+  void reset() noexcept
   {
     _mouseAction = MouseAction::None{};
   }
