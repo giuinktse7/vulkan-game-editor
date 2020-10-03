@@ -60,7 +60,11 @@ namespace MapHistory
     DEBUG_ASSERT(currentGroup.value().groupType == groupType, s.str());
     // VME_LOG_D("endGroup " << groupType);
 
-    actionGroups.emplace(std::move(currentGroup.value()));
+    if (!currentGroup.value().empty())
+    {
+      actionGroups.emplace(std::move(currentGroup.value()));
+    }
+
     currentGroup.reset();
   }
 
