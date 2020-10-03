@@ -6,6 +6,9 @@
 #include <iostream>
 #include <sstream>
 #include <exception>
+
+#include "logger.h"
+
 #if defined(_DEBUG) || !defined(QT_NO_DEBUG)
 #define __DEBUG__VME
 #endif
@@ -31,6 +34,7 @@ namespace debug
   {                                                                                                     \
     std::ostringstream s;                                                                               \
     s << "[ERROR] " << __FILE__ << ", line " << (unsigned)(__LINE__) << ": " << (message) << std::endl; \
+    VME_LOG_D(s.str());                                                                                 \
     throw GeneralDebugException(s.str().c_str());                                                       \
   } while (false)
 
