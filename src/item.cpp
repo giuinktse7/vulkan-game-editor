@@ -44,7 +44,7 @@ Item::~Item()
 	if (entityId.has_value())
 	{
 		g_ecs.destroy(entityId.value());
-		// Logger::debug() << "Destroying item " << std::to_string(this->getId()) << "(" << this->getName() << "), entity id: " << entityId.value() << std::endl;
+		// Logger::debug() << "Destroying item " << std::to_string(this->getId()) << "(" << this->name() << "), entity id: " << entityId.value() << std::endl;
 	}
 }
 

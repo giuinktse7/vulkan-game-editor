@@ -244,7 +244,7 @@ void MapIO::saveMap(Map &map)
           }
           else
           {
-            buffer.writeU16(ground->getId());
+            buffer.writeU16(ground->serverId());
           }
         }
 
@@ -298,7 +298,7 @@ void MapIO::saveMap(Map &map)
 void MapIO::Serializer::serializeItem(const Item &item)
 {
   buffer.startNode(OTBM_ITEM);
-  buffer.writeU16(item.getId());
+  buffer.writeU16(item.serverId());
 
   serializeItemAttributes(item);
 

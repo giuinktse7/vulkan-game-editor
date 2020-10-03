@@ -36,22 +36,22 @@ public:
 
 	// Item(Item &&item) = default;
 
-	uint32_t getId() const noexcept
+	uint32_t serverId() const noexcept
 	{
 		return itemType->id;
 	}
 
-	uint32_t getClientId() const noexcept
+	uint32_t clientId() const noexcept
 	{
 		return itemType->clientId;
 	}
 
-	const std::string getName() const noexcept
+	const std::string name() const noexcept
 	{
 		return itemType->name;
 	}
 
-	const uint32_t getWeight() const noexcept
+	const uint32_t weight() const noexcept
 	{
 		return itemType->weight;
 	}
