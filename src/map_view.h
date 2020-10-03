@@ -67,9 +67,9 @@ public:
 		return _map.get();
 	}
 
-	void mousePressEvent(VME::MouseButtons pressedButtons);
-	void mouseMoveEvent(VME::MouseButtons pressedButtons);
-	void mouseReleaseEvent(VME::MouseButtons pressedButtons);
+	void mousePressEvent(VME::MouseEvent event);
+	void mouseMoveEvent(VME::MouseEvent event);
+	void mouseReleaseEvent(VME::MouseEvent event);
 	/*
 		Escape the current action (for example when pressing the ESC key)
 	*/
@@ -122,6 +122,8 @@ public:
 	*/
 	void removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices);
 	void removeSelectedItems(const Tile &tile);
+	template <class UnaryPredicate>
+	inline void removeItems(const Tile &tile, UnaryPredicate p);
 
 	void zoomOut();
 	void zoomIn();
@@ -259,4 +261,18 @@ inline std::ostream &operator<<(std::ostream &os, const util::Rectangle<int> &re
 {
 	os << "{ x1=" << rect.x1 << ", y1=" << rect.y1 << ", x2=" << rect.x2 << ", y2=" << rect.y2 << "}";
 	return os;
+}
+
+template <class UnaryPredicate>
+inline void MapView::removeItems(const Tile &tile, UnaryPredicate predicate)
+{
+
+	Tile newTile = tile.deepCopy();
+	if (newTile.removeItemsIf(predicate) > 0)
+	{
+		MapHistory::Action action(MapHistory::ActionType::ModifyTile);
+		action.addChange(MapHistory::SetTile(std::move(newTile)));
+
+		history.commit(std::move(action));
+	}
 }
