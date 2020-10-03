@@ -4,18 +4,49 @@
 
 namespace VME
 {
+#define VME_ENUM_OPERATORS(EnumType)                                          \
+  inline constexpr EnumType operator&(EnumType l, EnumType r)                 \
+  {                                                                           \
+    typedef std::underlying_type<EnumType>::type ut;                          \
+    return static_cast<EnumType>(static_cast<ut>(l) & static_cast<ut>(r));    \
+  }                                                                           \
+                                                                              \
+  inline constexpr EnumType operator|(EnumType l, EnumType r)                 \
+  {                                                                           \
+    typedef std::underlying_type<EnumType>::type ut;                          \
+    return static_cast<EnumType>(static_cast<ut>(l) | static_cast<ut>(r));    \
+  }                                                                           \
+                                                                              \
+  inline constexpr EnumType &operator&=(EnumType &lhs, const EnumType rhs)    \
+  {                                                                           \
+    typedef std::underlying_type<EnumType>::type ut;                          \
+    lhs = static_cast<EnumType>(static_cast<ut>(lhs) & static_cast<ut>(rhs)); \
+    return lhs;                                                               \
+  }                                                                           \
+                                                                              \
+  inline constexpr EnumType &operator|=(EnumType &lhs, const EnumType rhs)    \
+  {                                                                           \
+    typedef std::underlying_type<EnumType>::type ut;                          \
+    lhs = static_cast<EnumType>(static_cast<ut>(lhs) | static_cast<ut>(rhs)); \
+    return lhs;                                                               \
+  }
+
   enum MouseButtons
   {
     NoButton = 0,
     LeftButton = 1 << 0,
     RightButton = 1 << 1
   };
+  VME_ENUM_OPERATORS(MouseButtons)
 
-  inline constexpr MouseButtons operator&(MouseButtons l, MouseButtons r)
+  enum ModifierKeys
   {
-    typedef std::underlying_type<MouseButtons>::type ut;
-    return static_cast<MouseButtons>(static_cast<ut>(l) & static_cast<ut>(r));
-  }
+    None = 0,
+    Shift = 1 << 0,
+    Ctrl = 1 << 1,
+    Alt = 1 << 2,
+  };
+  VME_ENUM_OPERATORS(ModifierKeys)
 
   struct MouseEvent
   {
