@@ -180,6 +180,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     {
       mapTabs->currentMapView()->resetZoom();
     }
+    break;
   case Qt::Key_Delete:
     mapTabs->currentMapView()->deleteSelectedItems();
     break;
