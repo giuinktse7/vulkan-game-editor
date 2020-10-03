@@ -197,6 +197,15 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
       mapView->resetZoom();
     }
     break;
+  case Qt::Key_I:
+  {
+    const Item *topItem = mapView->map()->getTopItem(mapView->mouseGamePos());
+    if (topItem)
+    {
+      mapView->mapViewMouseAction.setRawItem(topItem->serverId());
+    }
+    break;
+  }
   default:
     e->ignore();
     QVulkanWindow::keyPressEvent(e);
