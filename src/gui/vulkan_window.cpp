@@ -47,7 +47,7 @@ void VulkanWindow::lostFocus()
 QWidget *VulkanWindow::wrapInWidget(QWidget *parent)
 {
   QWidget *wrapper = QWidget::createWindowContainer(this, parent);
-  // wrapper->setFocusPolicy(Qt::FocusPolicy::NoFocus);
+  QtUtil::associateWithMapView(*wrapper, mapView.get());
 
   widget = wrapper;
 

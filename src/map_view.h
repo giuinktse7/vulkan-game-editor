@@ -53,6 +53,7 @@ public:
 
 	MapView(MapViewMouseAction &mouseAction);
 	MapView(MapViewMouseAction &mouseAction, std::shared_ptr<Map> map);
+	~MapView();
 
 	MapViewMouseAction &mapViewMouseAction;
 
@@ -231,7 +232,21 @@ public:
 	std::unique_ptr<Tile> removeTileInternal(const Position position);
 	void removeSelectionInternal(Tile *tile);
 
+	inline static bool isInstance(MapView *pointer)
+	{
+		return instances.find(pointer) != instances.end();
+	}
+
 private:
+	/**
+ 		*	Keeps track of all MapView instances. This is necessary for QT to
+		* validate MapView pointers in a QVariant.
+		*
+		* See:
+		* QtUtil::associatedMapView
+	*/
+	static std::unordered_set<MapView *> instances;
+
 	friend class MapAction;
 
 	std::shared_ptr<Map> _map;

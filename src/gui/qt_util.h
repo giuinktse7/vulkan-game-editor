@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QWidget>
 #include <QPixmap>
 #include <QString>
 #include <QMouseEvent>
@@ -9,6 +10,7 @@
 class MainApplication;
 
 class QWheelEvent;
+class MapView;
 
 namespace std
 {
@@ -24,6 +26,24 @@ namespace
 
 namespace QtUtil
 {
+  namespace PropertyName
+  {
+    constexpr const char *MapView = "vme-mapview";
+  }
+
+  template <typename T>
+  inline QVariant wrapPointerInQVariant(T *pointer)
+  {
+    return QVariant::fromValue(static_cast<void *>(pointer));
+  }
+
+  inline void associateWithMapView(QWidget &widget, MapView *mapView)
+  {
+    widget.setProperty(PropertyName::MapView, wrapPointerInQVariant(mapView));
+  }
+
+  MapView *associatedMapView(QWidget *widget);
+
   struct ScrollState
   {
     ScrollState() {}

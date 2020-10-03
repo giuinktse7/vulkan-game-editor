@@ -2,6 +2,8 @@
 
 #include "const.h"
 
+std::unordered_set<MapView *> MapView::instances;
+
 Viewport::Viewport()
     : width(0),
       height(0),
@@ -9,7 +11,10 @@ Viewport::Viewport()
       offset(0L, 0L) {}
 
 MapView::MapView(MapViewMouseAction &mapViewMouseAction)
-    : MapView(mapViewMouseAction, std::make_shared<Map>()) {}
+    : MapView(mapViewMouseAction, std::make_shared<Map>())
+{
+  instances.emplace(this);
+}
 
 MapView::MapView(MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> map)
     : mapViewMouseAction(mapViewMouseAction),
@@ -18,7 +23,15 @@ MapView::MapView(MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> ma
       _map(map),
       viewport(),
       dragState{},
-      _mousePos() {}
+      _mousePos()
+{
+  instances.emplace(this);
+}
+
+MapView::~MapView()
+{
+  instances.erase(this);
+}
 
 void MapView::selectTopItem(const Position pos)
 {

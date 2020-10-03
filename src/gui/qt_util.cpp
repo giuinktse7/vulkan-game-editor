@@ -11,6 +11,7 @@
 #include <QPainter>
 
 #include "../items.h"
+#include "../map_view.h"
 
 #include "../logger.h"
 #include "../qt/logging.h"
@@ -86,4 +87,24 @@ std::optional<int> QtUtil::ScrollState::scroll(QWheelEvent *event)
   amountBuffer = amountBuffer % QtMinimumWheelDelta;
 
   return result;
+}
+
+MapView *QtUtil::associatedMapView(QWidget *widget)
+{
+  QVariant prop = widget->property(QtUtil::PropertyName::MapView);
+  if (prop.isNull())
+    return nullptr;
+
+  MapView *mapView = static_cast<MapView *>(prop.value<void *>());
+#ifdef __DEBUG__VME
+  bool isInstance = MapView::isInstance(mapView);
+
+  std::ostringstream msg;
+  msg << "The property QtUtil::PropertyName::MapView for widget " << widget << " must contain a MapView pointer.";
+  DEBUG_ASSERT(isInstance, msg.str());
+
+  return mapView;
+#else
+  return MapView::isInstance(mapView) ? mapView : nullptr;
+#endif
 }
