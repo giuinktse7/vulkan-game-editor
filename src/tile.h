@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <algorithm>
 
 #include "tile_location.h"
 #include "item.h"
@@ -49,6 +50,12 @@ public:
 	void setGround(std::unique_ptr<Item> ground);
 	void moveItems(Tile &other);
 	void moveSelected(Tile &other);
+
+	/**
+	 * @return The amount of removed items
+	 * */
+	template <typename UnaryPredicate>
+	inline uint16_t removeItemsIf(UnaryPredicate &&predicate);
 
 	/*
 		Deselect entire tile
@@ -143,4 +150,37 @@ inline uint16_t Tile::getMapFlags() const noexcept
 inline uint16_t Tile::getStatFlags() const noexcept
 {
 	return statflags;
+}
+
+template <typename UnaryPredicate>
+inline uint16_t Tile::removeItemsIf(UnaryPredicate &&predicate)
+{
+	uint16_t removedItems = 0;
+	if (_ground && std::forward<UnaryPredicate>(predicate)(*(_ground.get())))
+	{
+		removeGround();
+		++removedItems;
+	}
+
+	if (!_items.empty())
+	{
+		auto removed = std::remove_if(
+				_items.begin(),
+				_items.end(),
+				[this, &predicate, &removedItems](const Item &item) {
+					bool remove = std::forward<UnaryPredicate>(predicate)(item);
+
+					if (remove)
+					{
+						++removedItems;
+						if (item.selected)
+							--this->selectionCount;
+					}
+
+					return remove;
+				});
+		_items.erase(removed, _items.end());
+	}
+
+	return removedItems;
 }
