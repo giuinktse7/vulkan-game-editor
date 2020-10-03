@@ -42,11 +42,14 @@ public:
 
   MapViewMouseAction mapViewMouseAction;
 
+  bool eventFilter(QObject *object, QEvent *event) override;
+
 protected:
   void mousePressEvent(QMouseEvent *event) override;
 
 private:
   void keyPressEvent(QKeyEvent *event) override;
+  bool globalKeyPressEvent(QKeyEvent *event);
 
   // UI
   BorderLayout *rootLayout;

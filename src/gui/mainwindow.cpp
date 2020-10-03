@@ -294,3 +294,17 @@ void MainWindow::mapViewViewportEvent(MapView &mapView, const Viewport &viewport
   Position pos = mapView.mousePos().toPos(mapView);
   this->positionStatus->setText(toQString(pos));
 }
+
+{
+bool MainWindow::globalKeyPressEvent(QKeyEvent *event)
+{
+  return false;
+}
+/*
+ * This function receives ALL events in the application. This should mostly (if not only) be used
+ * to hook events that should happen globally, regardless of focus.
+ */
+bool MainWindow::eventFilter(QObject *object, QEvent *event)
+{
+  return QWidget::eventFilter(object, event);
+}

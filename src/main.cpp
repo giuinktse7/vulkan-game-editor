@@ -189,6 +189,7 @@ int runApp(int argc, char *argv[])
     // app.setStyle("fusion");
 
     MainWindow mainWindow;
+    app.installEventFilter(&mainWindow);
 
     QVulkanInstance instance;
 
