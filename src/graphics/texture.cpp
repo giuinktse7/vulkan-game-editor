@@ -46,8 +46,6 @@ Texture::Texture(const std::string &filename)
                               &channels,
                               STBI_rgb_alpha);
 
-  // mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
-
   if (!pixels)
   {
     throw std::runtime_error("failed to load texture image!");
@@ -75,12 +73,12 @@ void Texture::init(uint8_t *pixels)
   this->_pixels = std::vector<uint8_t>(pixels, pixels + sizeInBytes);
 }
 
-TextureWindow Texture::getTextureWindow()
+TextureWindow Texture::getTextureWindow() const noexcept
 {
   return TextureWindow{0.0f, 0.0f, 1.0f, 1.0f};
 }
 
-uint32_t asArgb(SolidColor color)
+uint32_t asArgb(SolidColor color) noexcept
 {
   return to_underlying(color);
 }

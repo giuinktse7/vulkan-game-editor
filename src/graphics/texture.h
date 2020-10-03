@@ -33,12 +33,12 @@ public:
   Texture(uint32_t width, uint32_t height, uint8_t *pixels);
   Texture(uint32_t width, uint32_t height, std::vector<uint8_t> &&pixels);
 
-  TextureWindow getTextureWindow();
-  inline int width() const;
-  inline int height() const;
+  TextureWindow getTextureWindow() const noexcept;
+  inline int width() const noexcept;
+  inline int height() const noexcept;
 
   std::vector<uint8_t> copyPixels() const;
-  inline const std::vector<uint8_t> &pixels() const
+  inline const std::vector<uint8_t> &pixels() const noexcept
   {
     return _pixels;
   }
@@ -54,18 +54,16 @@ private:
   uint32_t _width;
   uint32_t _height;
 
-  uint32_t mipLevels = 1;
-
   void init(uint8_t *pixels);
   void init(std::vector<uint8_t> &&pixels);
 };
 
-inline int Texture::width() const
+inline int Texture::width() const noexcept
 {
   return _width;
 }
 
-inline int Texture::height() const
+inline int Texture::height() const noexcept
 {
   return _height;
 }

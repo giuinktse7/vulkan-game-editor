@@ -29,9 +29,9 @@ struct BoundBuffer
 	void initResources(VulkanInfo *vulkanInfo);
 	void releaseResources();
 
-	bool hasResources() const;
+	bool hasResources() const noexcept;
 
-	inline QVulkanDeviceFunctions *devFuncs() const
+	inline QVulkanDeviceFunctions *devFuncs() const noexcept
 	{
 		return vulkanInfo->df;
 	}

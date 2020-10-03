@@ -110,7 +110,7 @@ void BoundBuffer::releaseResources()
   }
 }
 
-bool BoundBuffer::hasResources() const
+bool BoundBuffer::hasResources() const noexcept
 {
   return vulkanInfo != nullptr;
 }
