@@ -15,7 +15,7 @@ An action is an event that can occur and can be undone/redone.
 - [Vulkan SDK](https://vulkan.lunarg.com/) which is a low-level 3D graphics and computing API.
 - The GUI framework [QT5](https://www.qt.io/download-open-source) (`Qt::Core` and `Qt::Widgets`).
 
-  **NOTE**: The QT framework requires more than 50 GB of disk space.
+  **NOTE**: The QT framework requires around 8 GB of disk space per target architecture (For example `msvc2019` or `msvc2019_64`).
 
 - The c++ package manager [vcpkg](https://github.com/microsoft/vcpkg).
 - Libraries from vcpkg:
