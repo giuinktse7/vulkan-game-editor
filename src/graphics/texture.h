@@ -53,9 +53,6 @@ private:
 
   uint32_t _width;
   uint32_t _height;
-
-  void init(uint8_t *pixels);
-  void init(std::vector<uint8_t> &&pixels);
 };
 
 inline int Texture::width() const noexcept

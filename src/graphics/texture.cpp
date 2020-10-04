@@ -25,13 +25,14 @@ std::unordered_map<SolidColor, std::unique_ptr<Texture>> solidColorTextures;
 Texture::Texture(uint32_t width, uint32_t height, std::vector<uint8_t> &&pixels)
     : _width(width), _height(height)
 {
-  init(std::move(pixels));
+  this->_pixels = std::move(pixels);
 }
 
 Texture::Texture(uint32_t width, uint32_t height, uint8_t *pixels)
     : _width(width), _height(height)
 {
-  init(pixels);
+  uint64_t sizeInBytes = (static_cast<uint64_t>(_width) * _height) * 4;
+  this->_pixels = std::vector<uint8_t>(pixels, pixels + sizeInBytes);
 }
 
 Texture::Texture(const std::string &filename)
@@ -52,21 +53,10 @@ Texture::Texture(const std::string &filename)
   _width = static_cast<uint32_t>(width);
   _height = static_cast<uint32_t>(height);
 
-  init(pixels);
+  uint64_t sizeInBytes = (static_cast<uint64_t>(_width) * _height) * 4;
+  this->_pixels = std::vector<uint8_t>(pixels, pixels + sizeInBytes);
 
   stbi_image_free(pixels);
-}
-
-void Texture::init(std::vector<uint8_t> &&pixels)
-{
-  this->_pixels = std::move(pixels);
-}
-
-void Texture::init(uint8_t *pixels)
-{
-  uint64_t sizeInBytes = (static_cast<uint64_t>(_width) * _height) * 4;
-
-  this->_pixels = std::vector<uint8_t>(pixels, pixels + sizeInBytes);
 }
 
 TextureWindow Texture::getTextureWindow() const noexcept
