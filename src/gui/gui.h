@@ -72,7 +72,17 @@ struct MouseAction
 {
   struct RawItem
   {
-    uint16_t serverId;
+    uint16_t serverId = 100;
+    /*
+      If true, the raw item is currently being drag in an area. Once released,
+      each position of the area has an item of serverId added.
+    */
+    bool area = false;
+  };
+
+  struct Select
+  {
+    bool area = false;
   };
 
   struct None
@@ -80,7 +90,7 @@ struct MouseAction
   };
 };
 
-using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem>;
+using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select>;
 
 /*
   Contains mouse actions that can occur on a MapView.
@@ -105,9 +115,9 @@ public:
 
   void reset() noexcept
   {
-    _mouseAction = MouseAction::None{};
+    _mouseAction = MouseAction::Select{};
   }
 
 private:
-  MouseAction_t _mouseAction = MouseAction::None{};
+  MouseAction_t _mouseAction = MouseAction::Select{};
 };

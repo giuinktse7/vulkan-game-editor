@@ -201,7 +201,8 @@ private:
 	void beginRenderPass();
 
 	void drawMap();
-	void drawPreviewCursor(uint16_t serverId);
+	void drawCurrentAction();
+	void drawPreviewItem(uint16_t serverId, Position pos);
 	void drawMovingSelection();
 	void drawSelectionRectangle();
 

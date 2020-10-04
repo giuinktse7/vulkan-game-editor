@@ -226,8 +226,9 @@ void MapRenderer::drawBatches()
 
 void MapRenderer::drawMap()
 {
-  const auto mapRect = mapView->getGameBoundingRect();
-  int floor = mapView->z();
+  MapView &view = *mapView;
+  const auto mapRect = view.getGameBoundingRect();
+  int floor = view.z();
 
   bool aboveGround = floor <= 7;
 
@@ -237,8 +238,8 @@ void MapRenderer::drawMap()
   Position from{mapRect.x1, mapRect.y1, startZ};
   Position to{mapRect.x2, mapRect.y2, endZ};
 
-  bool moving = mapView->selection.moving();
-  for (auto &tileLocation : mapView->map()->getRegion(from, to))
+  bool moving = view.selection.moving();
+  for (auto &tileLocation : view.map()->getRegion(from, to))
   {
     if (!tileLocation.hasTile() || (moving && tileLocation.tile()->allSelected()))
       continue;
@@ -252,39 +253,12 @@ void MapRenderer::drawMap()
     drawTile(tileLocation, flags);
   }
 
-  // Render current mouse action
-  std::visit(
-      util::overloaded{
-          [](const MouseAction::None) { /* Empty */ },
-
-          [this](const MouseAction::RawItem &action) {
-            if (window.showPreviewCursor)
-            {
-              this->drawPreviewCursor(action.serverId);
-            }
-          },
-
-          [](const auto &) {
-            ABORT_PROGRAM("Unknown MouseAction!");
-          }},
-      window.mapViewMouseAction.action());
-
-  if (mapView->selection.moving())
-  {
-    drawMovingSelection();
-  }
-
-  if (mapView->isDragging())
-  {
-    drawSelectionRectangle();
-  }
+  drawCurrentAction();
 }
 
-void MapRenderer::drawPreviewCursor(uint16_t serverId)
+void MapRenderer::drawPreviewItem(uint16_t serverId, Position pos)
 {
   auto map = mapView->map();
-  Position pos = mapView->mouseGamePos();
-
   if (pos.x < 0 || pos.x > map->getWidth() || pos.y < 0 || pos.y > map->getHeight())
     return;
 
@@ -300,6 +274,48 @@ void MapRenderer::drawPreviewCursor(uint16_t serverId)
   }
 
   drawItem(info);
+}
+
+void MapRenderer::drawCurrentAction()
+{
+  // Render current mouse action
+  std::visit(
+      util::overloaded{
+          [this](const MouseAction::Select select) {
+            if (select.area)
+            {
+              DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
+              drawSelectionRectangle();
+            }
+            else if (mapView->selection.moving())
+            {
+              drawMovingSelection();
+            }
+          },
+
+          [this](const MouseAction::RawItem &action) {
+            if (window.showPreviewCursor)
+            {
+              Position pos = mapView->mouseGamePos();
+
+              if (action.area)
+              {
+                DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
+                auto [from, to] = mapView->getDragPoints().value();
+                int floor = mapView->getFloor();
+                auto area = MapArea(from.toPos(floor), to.toPos(floor));
+                for (auto &pos : area)
+                  drawPreviewItem(action.serverId, pos);
+              }
+              else
+              {
+                drawPreviewItem(action.serverId, pos);
+              }
+            }
+          },
+
+          [](const auto &arg) {}},
+      window.mapViewMouseAction.action());
 }
 
 void MapRenderer::drawMovingSelection()

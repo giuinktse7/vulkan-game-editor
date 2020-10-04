@@ -57,8 +57,6 @@ public:
 
 	MapViewMouseAction &mapViewMouseAction;
 
-	std::optional<Position> leftMouseDragPos;
-
 	MapHistory::History history;
 
 	Selection selection;
@@ -106,6 +104,11 @@ public:
 	inline Position mouseGamePos() const
 	{
 		return mousePos().worldPos(*this).mapPos().floor(getFloor());
+	}
+
+	inline WorldPosition mouseWorldPos() const
+	{
+		return mousePos().worldPos(*this);
 	}
 
 	/*
@@ -183,17 +186,15 @@ public:
 	void setDragEnd(WorldPosition position);
 	std::optional<std::pair<WorldPosition, WorldPosition>> getDragPoints() const
 	{
-		if (dragState.has_value())
-		{
-			std::pair<WorldPosition, WorldPosition> result;
-			result.first = dragState.value().from;
-			result.second = dragState.value().to;
-			return result;
-		}
+		if (!dragState.has_value())
+			return {};
 
-		return {};
+		std::pair<WorldPosition, WorldPosition> result;
+		result.first = dragState.value().from;
+		result.second = dragState.value().to;
+		return result;
 	}
-	void endDragging();
+	void endDragging(VME::ModifierKeys modifiers);
 	bool isDragging() const;
 
 	bool hasSelection() const;
@@ -213,7 +214,7 @@ public:
 	void mouseMoveEvent(ScreenPosition mousePos);
 	void panEvent(PanEvent event);
 
-	inline ScreenPosition mousePos() const
+	inline ScreenPosition mousePos() const noexcept
 	{
 		return _mousePos;
 	}

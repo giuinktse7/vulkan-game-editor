@@ -271,73 +271,115 @@ void MapView::setDragEnd(WorldPosition position)
 
 void MapView::finishMoveSelection(const Position moveDestination)
 {
-  if (selection.moving())
+  history.startGroup(ActionGroupType::MoveItems);
   {
-    history.startGroup(ActionGroupType::MoveItems);
+    MapHistory::Action action(MapHistory::ActionType::Selection);
+
+    Position deltaPos = moveDestination - selection.moveOrigin.value();
+    for (const Position fromPos : selection.getPositions())
     {
-      MapHistory::Action action(MapHistory::ActionType::Selection);
+      const Tile &fromTile = *getTile(fromPos);
+      Position toPos = fromPos + deltaPos;
+      DEBUG_ASSERT(fromTile.hasSelection(), "The tile at each position of a selection should have a selection.");
 
-      Position deltaPos = moveDestination - selection.moveOrigin.value();
-      for (const Position fromPos : selection.getPositions())
+      if (fromTile.allSelected())
       {
-        const Tile &fromTile = *getTile(fromPos);
-        Position toPos = fromPos + deltaPos;
-        DEBUG_ASSERT(fromTile.hasSelection(), "The tile at each position of a selection should have a selection.");
-
-        if (fromTile.allSelected())
-        {
-          auto move = std::make_unique<MapHistory::Move>(MapHistory::Move::entire(fromPos, toPos));
-          action.addChange(std::move(move));
-        }
-        else
-        {
-          auto move = std::make_unique<MapHistory::Move>(MapHistory::Move::selected(fromTile, toPos));
-          action.addChange(std::move(move));
-        }
+        auto move = std::make_unique<MapHistory::Move>(MapHistory::Move::entire(fromPos, toPos));
+        action.addChange(std::move(move));
       }
-
-      history.commit(std::move(action));
+      else
+      {
+        auto move = std::make_unique<MapHistory::Move>(MapHistory::Move::selected(fromTile, toPos));
+        action.addChange(std::move(move));
+      }
     }
-    history.endGroup(ActionGroupType::MoveItems);
+
+    history.commit(std::move(action));
   }
+  history.endGroup(ActionGroupType::MoveItems);
 
   selection.moveOrigin.reset();
 }
 
-void MapView::endDragging()
+void MapView::endDragging(VME::ModifierKeys modifiers)
 {
   auto [fromWorldPos, toWorldPos] = dragState.value();
 
   Position from = fromWorldPos.toPos(*this);
   Position to = toWorldPos.toPos(*this);
 
-  std::unordered_set<Position, PositionHash> positions;
+  std::visit(
+      util::overloaded{
+          [this, from, to](const MouseAction::Select select) {
+            if (select.area)
+            {
+              std::unordered_set<Position, PositionHash> positions;
 
-  for (auto &location : _map->getRegion(from, to))
-  {
-    Tile *tile = location.tile();
-    if (tile && !tile->isEmpty())
-    {
-      positions.emplace(location.position());
-    }
-  }
+              for (auto &location : _map->getRegion(from, to))
+              {
+                Tile *tile = location.tile();
+                if (tile && !tile->isEmpty())
+                {
+                  positions.emplace(location.position());
+                }
+              }
 
-  // Only commit a change if anything was dragged over
-  if (!positions.empty())
-  {
-    history.startGroup(ActionGroupType::Selection);
+              // Only commit a change if anything was dragged over
+              if (!positions.empty())
+              {
+                history.startGroup(ActionGroupType::Selection);
 
-    MapHistory::Action action(MapHistory::ActionType::Selection);
+                MapHistory::Action action(MapHistory::ActionType::Selection);
 
-    action.addChange(MapHistory::SelectMultiple(positions));
+                action.addChange(MapHistory::SelectMultiple(positions));
 
-    history.commit(std::move(action));
-    history.endGroup(ActionGroupType::Selection);
-  }
+                history.commit(std::move(action));
+                history.endGroup(ActionGroupType::Selection);
+              }
+
+              // This prevents having the mouse release trigger a deselect of the tile being hovered
+              selection.blockDeselect = true;
+
+              MouseAction::Select newAction = select;
+              newAction.area = false;
+              mapViewMouseAction.set(newAction);
+            }
+          },
+
+          [this, modifiers, from, to](const MouseAction::RawItem action) {
+            if (action.area)
+            {
+              if (modifiers & VME::ModifierKeys::Ctrl)
+              {
+                history.startGroup(ActionGroupType::RemoveMapItem);
+                for (auto &tileLocation : this->_map->getRegion(from, to))
+                {
+                  if (tileLocation.hasTile())
+                    removeItems(*tileLocation.tile(), [action](const Item &item) { return item.serverId() == action.serverId; });
+                }
+
+                history.endGroup(ActionGroupType::RemoveMapItem);
+              }
+              else
+              {
+                history.startGroup(ActionGroupType::AddMapItem);
+                for (auto pos : MapArea(from, to))
+                {
+                  addItem(pos, action.serverId);
+                }
+                history.endGroup(ActionGroupType::AddMapItem);
+              }
+
+              MouseAction::RawItem newAction = action;
+              newAction.area = false;
+              mapViewMouseAction.set(newAction);
+            }
+          },
+
+          [](const auto &arg) {}},
+      mapViewMouseAction.action());
 
   dragState.reset();
-  // This prevents having the mouse release trigger a deselect of the tile being hovered
-  selection.blockDeselect = true;
 }
 
 bool MapView::isDragging() const
@@ -369,26 +411,98 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
     std::visit(
         util::overloaded{
-            [this, pos](const MouseAction::None) {
-              const Item *topItem = _map->getTopItem(pos);
-              if (!topItem)
+            [this, pos, event](const MouseAction::Select action) {
+              if (event.modifiers() & VME::ModifierKeys::Shift)
               {
-                clearSelection();
-                return;
+                MouseAction::Select newAction = action;
+                newAction.area = true;
+                mapViewMouseAction.set(newAction);
               }
-
-              if (!topItem->selected)
+              else
               {
-                clearSelection();
-                history.startGroup(ActionGroupType::Selection);
-                selectTopItem(pos);
-                history.endGroup(ActionGroupType::Selection);
-              }
+                const Item *topItem = _map->getTopItem(pos);
+                if (!topItem)
+                {
+                  clearSelection();
+                  return;
+                }
 
-              selection.moveOrigin = pos;
+                if (!topItem->selected)
+                {
+                  clearSelection();
+                  history.startGroup(ActionGroupType::Selection);
+                  selectTopItem(pos);
+                  history.endGroup(ActionGroupType::Selection);
+                }
+
+                selection.moveOrigin = pos;
+              }
             },
 
-            [this, &event, pos](const MouseAction::RawItem &action) {
+            [this, pos, event](const MouseAction::RawItem &action) {
+              clearSelection();
+
+              bool remove = event.modifiers() & VME::ModifierKeys::Ctrl;
+
+              if (event.modifiers() & VME::ModifierKeys::Shift)
+              {
+                MouseAction::RawItem newAction = action;
+                newAction.area = true;
+                mapViewMouseAction.set(newAction);
+              }
+              else
+              {
+                if (remove)
+                {
+                  Tile *tile = getTile(pos);
+                  if (tile)
+                  {
+                    history.startGroup(ActionGroupType::RemoveMapItem);
+                    removeItems(*tile, [action](const Item &item) { return item.serverId() == action.serverId; });
+                    history.endGroup(ActionGroupType::RemoveMapItem);
+                  }
+                }
+                else
+                {
+                  history.startGroup(ActionGroupType::AddMapItem);
+                  addItem(pos, action.serverId);
+                  history.endGroup(ActionGroupType::AddMapItem);
+                }
+              }
+            },
+            [](const auto &arg) {}},
+        mapViewMouseAction.action());
+
+    setDragStart(mouseWorldPos());
+  }
+}
+
+void MapView::mouseMoveEvent(ScreenPosition mousePos)
+{
+  setMousePos(mousePos);
+}
+
+void MapView::mouseMoveEvent(VME::MouseEvent event)
+{
+  if (!isDragging())
+    return;
+
+  auto dragPositions = getDragPoints().value();
+  Position pos = _mousePos.toPos(*this);
+
+  if (event.buttons() & VME::MouseButtons::LeftButton)
+  {
+    std::visit(
+        util::overloaded{
+            [](const MouseAction::Select) {
+              // Empty
+            },
+
+            [this, pos, event, dragPositions](const MouseAction::RawItem &action) {
+              const auto [from, to] = dragPositions;
+              if (pos == to.toPos(getFloor()) || action.area)
+                return;
+
               if (event.modifiers() & VME::ModifierKeys::Ctrl)
               {
                 Tile *tile = getTile(pos);
@@ -402,79 +516,33 @@ void MapView::mousePressEvent(VME::MouseEvent event)
               }
               else
               {
-                clearSelection();
-
                 history.startGroup(ActionGroupType::AddMapItem);
                 addItem(pos, action.serverId);
                 history.endGroup(ActionGroupType::AddMapItem);
               }
             },
 
-            [](const auto &) {
-              ABORT_PROGRAM("Unknown change!");
-            }},
+            [](const auto &arg) {}},
         mapViewMouseAction.action());
-
-    leftMouseDragPos = pos;
   }
-}
 
-void MapView::mouseMoveEvent(ScreenPosition mousePos)
-{
-  setMousePos(mousePos);
-}
-
-void MapView::mouseMoveEvent(VME::MouseEvent event)
-{
-  Position pos = _mousePos.toPos(*this);
-  if (event.buttons() & VME::MouseButtons::LeftButton)
-  {
-    if (leftMouseDragPos.has_value() && !util::contains(leftMouseDragPos, pos))
-    {
-      std::visit(
-          util::overloaded{
-              [](const MouseAction::None) {
-                // Empty
-              },
-
-              [this, &pos, event](const MouseAction::RawItem &action) {
-                if (event.modifiers() & VME::ModifierKeys::Ctrl)
-                {
-                  Tile *tile = getTile(pos);
-                  if (tile)
-                  {
-                    history.startGroup(ActionGroupType::RemoveMapItem);
-
-                    removeItems(*tile, [action](const Item &item) { return item.serverId() == action.serverId; });
-                    history.endGroup(ActionGroupType::RemoveMapItem);
-                  }
-                }
-                else
-                {
-                  history.startGroup(ActionGroupType::AddMapItem);
-                  addItem(pos, action.serverId);
-                  history.endGroup(ActionGroupType::AddMapItem);
-                }
-
-                leftMouseDragPos = pos;
-              },
-
-              [](const auto &) {
-                ABORT_PROGRAM("Unknown change!");
-              }},
-          mapViewMouseAction.action());
-    }
-
-    leftMouseDragPos = pos;
-  }
+  setDragEnd(mouseWorldPos());
 }
 
 void MapView::mouseReleaseEvent(VME::MouseEvent event)
 {
   if (!(event.buttons() & VME::MouseButtons::LeftButton))
   {
-    leftMouseDragPos.reset();
-    finishMoveSelection(mouseGamePos());
+    if (dragState.has_value())
+    {
+      endDragging(event.modifiers());
+    }
+    if (selection.moving())
+    {
+      finishMoveSelection(mouseGamePos());
+    }
+
+    selection.moveOrigin.reset();
   }
 }
 
@@ -559,7 +627,7 @@ void MapView::escapeEvent()
 {
   std::visit(
       util::overloaded{
-          [this](const MouseAction::None) {
+          [this](const MouseAction::Select) {
             clearSelection();
           },
 
