@@ -83,6 +83,9 @@ public:
 	VulkanTexture();
 	~VulkanTexture();
 
+	VulkanTexture(const VulkanTexture &other) = delete;
+	VulkanTexture &operator=(const ItemType &other) = delete;
+
 	bool unused = true;
 
 	void initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, VulkanTexture::Descriptor descriptor);

@@ -35,13 +35,11 @@ namespace colors
 } // namespace colors
 
 MapRenderer::MapRenderer(VulkanWindow &window)
-    : window(window), colorFormat(window.colorFormat())
+    : window(window), colorFormat(window.colorFormat()), vulkanTexturesForAppearances(Appearances::textureAtlasCount())
 {
   this->mapView = window.getMapView();
 
-  size_t atlasCount = Appearances::textureAtlasCount();
-  vulkanTexturesForAppearances.resize(atlasCount);
-  activeTextureAtlasIds.reserve(atlasCount);
+  activeTextureAtlasIds.reserve(Appearances::textureAtlasCount());
 
   size_t ArbitraryGeneralReserveAmount = 8;
   vulkanTextures.reserve(ArbitraryGeneralReserveAmount);
@@ -406,22 +404,25 @@ void MapRenderer::drawSelectionRectangle()
   descriptor.pool = descriptorPool;
 
   const auto [from, to] = mapView->getDragPoints().value();
-  Texture *texture = Texture::getSolidTexture(SolidColor::Blue);
+  Texture &texture = Texture::getOrCreateSolidTexture(SolidColor::Blue);
 
-  auto result = vulkanTextures.find(texture);
+  auto result = vulkanTextures.find(&texture);
   if (result == vulkanTextures.end())
   {
-    auto [res, success] = vulkanTextures.try_emplace(texture);
+    auto [res, success] = vulkanTextures.try_emplace(&texture);
     DEBUG_ASSERT(success, "Emplace failed (was the element somehow already present?)");
-    result = res;
   }
-  VulkanTexture vulkanTexture = result->second;
-  vulkanTexture.initResources(*texture, window.vulkanInfo, descriptor);
+
+  VulkanTexture &vulkanTexture = vulkanTextures.at(&texture);
+  if (!vulkanTexture.hasResources())
+  {
+    vulkanTexture.initResources(texture, window.vulkanInfo, descriptor);
+  }
 
   RectangleDrawInfo info;
   info.from = from;
   info.to = to;
-  info.texture = texture;
+  info.texture = &texture;
   info.color = colors::SeeThrough;
   info.descriptorSet = vulkanTexture.descriptorSet();
 
