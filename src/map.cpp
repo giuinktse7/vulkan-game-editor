@@ -506,3 +506,62 @@ void MapRegion::Iterator::updateValue()
   nextChunk();
   updateValue();
 }
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>MapArea>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+MapArea::MapArea(Position from, Position to) : from(from), to(to) {}
+
+MapArea::iterator::iterator(Position from, Position to) : from(from), to(to), value(from)
+{
+  increasing.x = from.x <= to.x;
+  increasing.y = from.y <= to.y;
+  increasing.z = from.z <= to.z;
+}
+
+MapArea::iterator::iterator() {}
+
+MapArea::iterator MapArea::iterator::end()
+{
+  auto it = MapArea::iterator();
+  it.isEnd = true;
+
+  return it;
+}
+
+MapArea::iterator MapArea::iterator::operator++()
+{
+  value.x += increasing.x ? 1 : -1;
+  if (!inBoundsX())
+  {
+    value.x = from.x;
+    value.y += increasing.y ? 1 : -1;
+    if (!inBoundsY())
+    {
+      value.y = from.y;
+      value.z += increasing.z ? 1 : -1;
+      if (!inBoundsZ())
+      {
+        isEnd = true;
+      }
+    }
+  }
+
+  return *this;
+}
+
+MapArea::iterator MapArea::iterator::operator++(int)
+{
+  MapArea::iterator it = *this;
+  ++(*this);
+
+  return it;
+}
+
+bool MapArea::iterator::operator==(const MapArea::iterator &rhs) const
+{
+  return (isEnd && rhs.isEnd) ||
+         (value == rhs.value && from == rhs.from && to == rhs.to);
+}

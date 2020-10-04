@@ -261,3 +261,77 @@ private:
 	uint32_t floorIndex = 0;
 	TileLocation *value = nullptr;
 };
+
+class MapArea
+{
+public:
+	MapArea(Position from, Position to);
+
+	Position from;
+	Position to;
+
+	class iterator
+	{
+	public:
+		using ValueType = Position;
+		using Reference = Position &;
+		using Pointer = Position *;
+		using IteratorCategory = std::forward_iterator_tag;
+
+		iterator(Position from, Position to);
+		static iterator end();
+
+		iterator operator++();
+		iterator operator++(int junk);
+
+		Reference operator*() { return value; }
+		Pointer operator->() { return &value; }
+
+		bool operator==(const iterator &rhs) const;
+		bool operator!=(const iterator &rhs) const { return !(*this == rhs); }
+
+	private:
+		Position from;
+		Position to;
+
+		Position value;
+
+		inline bool inBoundsX() const noexcept
+		{
+			return increasing.x ? value.x <= to.x : value.x >= to.x;
+		}
+
+		inline bool inBoundsY() const noexcept
+		{
+			return increasing.y ? value.y <= to.y : value.y >= to.y;
+		}
+
+		inline bool inBoundsZ() const noexcept
+		{
+			return increasing.z ? value.z <= to.z : value.z >= to.z;
+		}
+
+		/* Information about whether x, y, and z are increasing from the start position to the end position */
+		struct
+		{
+			bool x;
+			bool y;
+			bool z;
+		} increasing;
+
+		bool isEnd = false;
+
+	private:
+		iterator();
+	};
+
+	iterator begin()
+	{
+		return iterator(from, to);
+	}
+
+	iterator end()
+	{
+		return iterator::end();
+	}
+};
