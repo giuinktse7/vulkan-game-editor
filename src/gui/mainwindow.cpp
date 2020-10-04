@@ -16,6 +16,10 @@
 #include <QModelIndex>
 #include <QVulkanInstance>
 
+#include <QListWidgetItem>
+
+#include <QFileInfo>
+
 #include "vulkan_window.h"
 #include "item_list.h"
 #include "qt_util.h"
@@ -27,6 +31,8 @@
 #include "qt_util.h"
 
 #include "../main.h"
+
+#include "resources.h"
 
 QLabel *itemImage(uint16_t serverId)
 {
@@ -212,6 +218,29 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
   }
 }
 
+void addImagesToList(QDir dir, QListWidget *list)
+{
+  list->addItem(new QListWidgetItem("<" + dir.dirName().toUpper() + ">"));
+  for (auto &entry : dir.entryList())
+  {
+    QString relative = dir.filePath(entry);
+    qDebug() << relative;
+    if (QFileInfo(relative).isDir())
+    {
+      addImagesToList(QDir(relative), list);
+    }
+    else
+    {
+      auto item = new QListWidgetItem("");
+      auto icon = QIcon(QPixmap(dir.filePath(entry)));
+      item->setIcon(icon);
+      list->addItem(item);
+    }
+    // qDebug() << entry;
+  }
+  list->addItem(new QListWidgetItem("</" + dir.dirName().toUpper() + ">"));
+}
+
 QMenuBar *MainWindow::createMenuBar()
 {
   QMenuBar *menuBar = new QMenuBar;
@@ -256,6 +285,7 @@ QMenuBar *MainWindow::createMenuBar()
     auto mapMenu = menuBar->addMenu(tr("Map"));
 
     auto editTowns = new MenuAction(tr("Edit Towns"), Qt::CTRL + Qt::Key_T, this);
+
     mapMenu->addAction(editTowns);
   }
 
@@ -294,6 +324,37 @@ QMenuBar *MainWindow::createMenuBar()
     QAction *reloadStyles = new QAction(tr("Reload styles"), this);
     connect(reloadStyles, &QAction::triggered, [=] { QtUtil::qtApp()->loadStyleSheet("default"); });
     menuBar->addAction(reloadStyles);
+  }
+
+  {
+    QAction *test = new QAction(tr("Test"), this);
+    connect(test, &QAction::triggered, [=] {
+      auto list = new QListWidget();
+      list->setFlow(QListView::Flow::LeftToRight);
+
+      list->setMinimumSize(1200, 400);
+      list->setViewMode(QListWidget::IconMode);
+      list->setIconSize(QSize(200, 200));
+      list->setResizeMode(QListWidget::Adjust);
+
+      addImagesToList(QDir(":/ui/images"), list);
+      list->show();
+
+      auto label = new QLabel();
+      label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+      label->setScaledContents(true);
+
+      // label->setPixmap(QPixmap(":/ui/images/spells/spell-icons-32x32.png"));
+      // label->setPixmap(QPixmap(":/ui/images/spells/spellgroup-icons-20x20.png"));
+      label->setPixmap(QPixmap(":/ui/images/ditherpattern.png"));
+
+      auto area = new QScrollArea;
+      area->setBackgroundRole(QPalette::Dark);
+      area->setWidget(label);
+
+      area->show();
+    });
+    menuBar->addAction(test);
   }
 
   return menuBar;

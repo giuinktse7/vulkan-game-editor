@@ -80,6 +80,7 @@ add_executable(
   src/graphics/vertex.h
   src/graphics/vulkan_debug.h
   src/graphics/vulkan_helpers.h
+  src/gui/resources.h
   src/gui/gui.h
   src/gui/borderless_window.h
   src/gui/border_layout.h

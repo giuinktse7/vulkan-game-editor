@@ -137,7 +137,8 @@
     "qgraphicsopacityeffect": "cpp",
     "qproxystyle": "cpp",
     "qabstractanimation": "cpp",
-    "qslider": "cpp"
+    "qslider": "cpp",
+    "qstylefactory": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

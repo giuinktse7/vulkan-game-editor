@@ -11,6 +11,9 @@
 
 #include <QFontDatabase>
 #include <QLabel>
+#include <QDir>
+
+#include <QResource>
 
 #include "gui/borderless_window.h"
 #include "gui/map_view_widget.h"
@@ -27,6 +30,8 @@
 #include "ecs/ecs.h"
 
 #include "gui/map_tab_widget.h"
+
+void testResources();
 
 void loadTextures()
 {
@@ -186,6 +191,8 @@ int runApp(int argc, char *argv[])
     app.loadStyleSheet("default");
     app.loadGameData();
 
+    testResources();
+
     // app.setStyle("fusion");
 
     MainWindow mainWindow;
@@ -289,4 +296,22 @@ void MainApplication::loadStyleSheet(const QString &sheetName)
     QString styleSheet = QString::fromLatin1(file.readAll());
 
     setStyleSheet(styleSheet);
+}
+
+void testResources()
+{
+    bool result = QResource::registerResource("data/gui.rcc", "/ui");
+
+    // ("animations", "css", "cursors", "data", "fonts", "images", "shaders", "tutorial")
+    QString path = ":/ui/animations";
+    for (auto &entry : QDir(path).entryList())
+    {
+        qDebug() << entry;
+        // QFile file(entry.prepend(path));
+        // if (file.open(QFile::ReadOnly | QFile::Text))
+        // {
+        //     QTextStream in(&file);
+        //     qDebug() << "Here: " << file.size() << in.readAll();
+        // }
+    }
 }
