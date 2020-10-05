@@ -74,11 +74,16 @@ To build the project, first install the required [Dependencies](#dependencies).
 
 5. In `./build`, run `cmake --build .` to compile a debug build, or `cmake --build . --config release` to compile a release build.
 
+#### Run tests using CMake
+
+To run the test suite `common_tests`, run `./runtest` in the project root.
+
 #### CMake Targets
 
-There are two targets:
+There are three targets:
 
+- **main** (Executable): The `main` target is the executable of the application. This target links the `common` library as a static dependency.
 - **common** (Library): The `common` target contains all code that is not related to GUI (i.e. everything except QT5-reliant code).
-- **main** (Executable): The `main` target is the executable of the application. This target links the common library as a static dependency.
+- **common_tests** (Executable): Contains the tests for the `common` library (See [Run tests using CMake](#run-tests-using-cmake)).
 
 The main purpose of having the `common` library separate from the `main` target was to enable running unit tests against it. It also ensures that there is no coupling introduced between core editor functionality and QT5 (Only `main` has QT5 as a dependency).
