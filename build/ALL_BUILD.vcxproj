@@ -170,6 +170,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
+    <ProjectReference Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\common.vcxproj">
+      <Project>{CAEB89CF-912C-363F-8773-98A43A1DEA28}</Project>
+      <Name>common</Name>
+    </ProjectReference>
     <ProjectReference Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main.vcxproj">
       <Project>{39B954A3-68F4-3D78-A1F9-22C3B208855E}</Project>
       <Name>main</Name>

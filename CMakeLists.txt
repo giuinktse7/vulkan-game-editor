@@ -39,7 +39,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(Vulkan REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
 find_package(liblzma CONFIG REQUIRED)
-find_package(stb REQUIRED)
+find_package(Stb REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(pugixml CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
@@ -49,8 +49,8 @@ find_package(
   COMPONENTS Core Widgets Svg
   REQUIRED)
 
-add_executable(
-  main
+add_library(
+  common STATIC
   src/history/history.h
   src/history/history_action.h
   src/history/history_change.h
@@ -63,6 +63,7 @@ add_executable(
   src/ecs/entity.h
   src/ecs/item_animation.h
   src/file.h
+  src/input.h
   src/graphics/appearances.h
   src/graphics/batch_item_draw.h
   src/graphics/buffer.h
@@ -80,16 +81,6 @@ add_executable(
   src/graphics/vertex.h
   src/graphics/vulkan_debug.h
   src/graphics/vulkan_helpers.h
-  src/gui/gui.h
-  src/gui/borderless_window.h
-  src/gui/border_layout.h
-  src/gui/item_list.h
-  src/gui/mainwindow.h
-  src/gui/map_view_widget.h
-  src/gui/menu.h
-  src/gui/qt_util.h
-  src/gui/vulkan_window.h
-  src/gui/map_tab_widget.h
   src/item.h
   src/items.h
   src/item_attribute.h
@@ -106,14 +97,13 @@ add_executable(
   ../vendor/lzma/LzmaLib.h
   ../vendor/lzma/Precomp.h
   ../vendor/lzma/Threads.h
+  ../vendor/rollbear-visit/visit.hpp
   src/main.h
   src/map.h
   src/map_io.h
-  src/map_renderer.h
   src/map_view.h
   src/otb.h
   src/position.h
-  src/qt/logging.h
   src/quad_tree.h
   src/random.h
   src/selection.h
@@ -121,7 +111,6 @@ add_executable(
   src/tile_location.h
   src/time_point.h
   src/town.h
-  src/trianglerenderer.h
   src/type_trait.h
   src/ui_mainwindow.h
   src/util.h
@@ -154,7 +143,55 @@ add_executable(
   src/graphics/texture.cpp
   src/graphics/texture_atlas.cpp
   src/graphics/vulkan_debug.cpp
-  src/graphics/vulkan_helpers.cpp
+  src/item.cpp
+  src/items.cpp
+  src/item_attribute.cpp
+  src/item_type.cpp
+  src/logger.cpp
+  src/map.cpp
+  src/map_io.cpp
+  src/map_view.cpp
+  src/otb.cpp
+  src/position.cpp
+  src/quad_tree.cpp
+  src/random.cpp
+  src/selection.cpp
+  src/tile.cpp
+  src/tile_location.cpp
+  src/time_point.cpp
+  src/town.cpp
+  src/util.cpp)
+
+# target_include_directories(common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_compile_features(common PUBLIC cxx_std_17)
+
+target_link_libraries(common PUBLIC Vulkan::Vulkan)
+target_include_directories(common PUBLIC ${Vulkan_INCLUDE_DIRS})
+
+target_link_libraries(common PRIVATE protobuf::libprotobuf)
+target_link_libraries(common PRIVATE ${LIBLZMA_LIBRARIES})
+
+target_link_libraries(common PRIVATE pugixml)
+target_link_libraries(common PRIVATE glm)
+
+add_executable(
+  main
+  src/qt/logging.h
+  src/gui/gui.h
+  src/gui/borderless_window.h
+  src/gui/border_layout.h
+  src/gui/item_list.h
+  src/gui/mainwindow.h
+  src/gui/map_view_widget.h
+  src/gui/menu.h
+  src/gui/qt_util.h
+  src/gui/vulkan_window.h
+  src/gui/map_tab_widget.h
+  src/map_renderer.h
+  src/qt/qt_vulkan_info.h
+  src/main.cpp
+  src/qt/logging.cpp
   src/gui/borderless_window.cpp
   src/gui/border_layout.cpp
   src/gui/item_list.cpp
@@ -164,38 +201,12 @@ add_executable(
   src/gui/qt_util.cpp
   src/gui/vulkan_window.cpp
   src/gui/map_tab_widget.cpp
-  src/item.cpp
-  src/items.cpp
-  src/item_attribute.cpp
-  src/item_type.cpp
-  src/logger.cpp
-  src/main.cpp
-  src/map.cpp
-  src/map_io.cpp
-  src/map_renderer.cpp
-  src/map_view.cpp
-  src/otb.cpp
-  src/position.cpp
-  src/qt/logging.cpp
-  src/quad_tree.cpp
-  src/random.cpp
-  src/selection.cpp
-  src/tile.cpp
-  src/tile_location.cpp
-  src/time_point.cpp
-  src/town.cpp
-  src/trianglerenderer.cpp
-  src/util.cpp)
+  src/map_renderer.cpp)
 
+target_link_libraries(main PRIVATE common)
 target_compile_features(main PRIVATE cxx_std_17)
 
-target_link_libraries(main PRIVATE Vulkan::Vulkan)
-target_include_directories(main PRIVATE ${Vulkan_INCLUDE_DIRS})
-
-target_link_libraries(main PRIVATE protobuf::libprotobuf)
-target_link_libraries(main PRIVATE ${LIBLZMA_LIBRARIES})
-
-target_link_libraries(main PRIVATE pugixml)
+target_link_libraries(main PRIVATE glm)
 
 # QT
 target_link_libraries(main PUBLIC Qt::Core)

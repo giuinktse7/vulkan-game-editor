@@ -73,3 +73,12 @@ To build the project, first install the required [Dependencies](#dependencies).
    **OPTIONAL**: Follow the instructions [here](https://docs.microsoft.com/en-us/cpp/build/clang-support-msbuild?view=vs-2019) to be able to use the `clang` compiler (`-T ClangCL`)
 
 5. In `./build`, run `cmake --build .` to compile a debug build, or `cmake --build . --config release` to compile a release build.
+
+#### CMake Targets
+
+There are two targets:
+
+- **common** (Library): The `common` target contains all code that is not related to GUI (i.e. everything except QT5-reliant code).
+- **main** (Executable): The `main` target is the executable of the application. This target links the common library as a static dependency.
+
+The main purpose of having the `common` library separate from the `main` target was to enable running unit tests against it. It also ensures that there is no coupling introduced between core editor functionality and QT5 (Only `main` has QT5 as a dependency).

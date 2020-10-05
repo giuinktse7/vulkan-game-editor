@@ -100,11 +100,11 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;PROTOBUF_USE_DLLS;QT_CORE_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;QT_CORE_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;PROTOBUF_USE_DLLS;QT_CORE_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;QT_CORE_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main_autogen\include_Debug;D:\Programs\VulkanSDK\1.2.141.0\Include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\include;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtCore;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\.\mkspecs\win32-msvc;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtWidgets;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtGui;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtANGLE;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtSvg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -172,7 +172,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>D:\Programs\VulkanSDK\1.2.141.0\Lib\vulkan-1.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\debug\lib\libprotobufd.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\debug\lib\lzmad.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\debug\lib\pugixml_d.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Svgd.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Widgetsd.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Guid.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Cored.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>Debug\common.lib;D:\Programs\VulkanSDK\1.2.141.0\Lib\vulkan-1.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\debug\lib\libprotobufd.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\debug\lib\lzmad.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\debug\lib\pugixml_d.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Svgd.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Widgetsd.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Guid.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Cored.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -198,13 +198,13 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PROTOBUF_USE_DLLS;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PROTOBUF_USE_DLLS;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main_autogen\include_Release;D:\Programs\VulkanSDK\1.2.141.0\Include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\include;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtCore;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\.\mkspecs\win32-msvc;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtWidgets;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtGui;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtANGLE;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtSvg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -272,7 +272,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>D:\Programs\VulkanSDK\1.2.141.0\Lib\vulkan-1.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\libprotobuf.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\lzma.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\pugixml.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Svg.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Widgets.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Gui.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Core.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>Release\common.lib;D:\Programs\VulkanSDK\1.2.141.0\Lib\vulkan-1.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\libprotobuf.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\lzma.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\pugixml.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Svg.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Widgets.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Gui.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Core.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -298,13 +298,13 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PROTOBUF_USE_DLLS;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PROTOBUF_USE_DLLS;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main_autogen\include_MinSizeRel;D:\Programs\VulkanSDK\1.2.141.0\Include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\include;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtCore;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\.\mkspecs\win32-msvc;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtWidgets;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtGui;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtANGLE;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtSvg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -372,7 +372,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>D:\Programs\VulkanSDK\1.2.141.0\Lib\vulkan-1.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\libprotobuf.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\lzma.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\pugixml.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Svg.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Widgets.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Gui.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Core.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>MinSizeRel\common.lib;D:\Programs\VulkanSDK\1.2.141.0\Lib\vulkan-1.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\libprotobuf.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\lzma.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\pugixml.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Svg.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Widgets.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Gui.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Core.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -399,11 +399,11 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PROTOBUF_USE_DLLS;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PROTOBUF_USE_DLLS;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_SVG_LIB;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main_autogen\include_RelWithDebInfo;D:\Programs\VulkanSDK\1.2.141.0\Include;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\include;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtCore;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\.\mkspecs\win32-msvc;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtWidgets;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtGui;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtANGLE;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\include\QtSvg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -471,7 +471,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>D:\Programs\VulkanSDK\1.2.141.0\Lib\vulkan-1.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\libprotobuf.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\lzma.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\pugixml.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Svg.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Widgets.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Gui.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Core.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>RelWithDebInfo\common.lib;D:\Programs\VulkanSDK\1.2.141.0\Lib\vulkan-1.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\libprotobuf.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\lzma.lib;C:\Users\giuin\AppData\Local\vcpkg\vcpkg\installed\x64-windows\lib\pugixml.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Svg.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Widgets.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Gui.lib;D:\Programs\cpp\libraries\qt\5.15.0\msvc2019_64\lib\Qt5Core.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -543,35 +543,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main_autogen\mocs_compilation.cpp" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_action.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_change.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\camera.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\const.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\debug.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\definitions.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\ecs\component_array.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\ecs\ecs.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\ecs\entity.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\ecs\item_animation.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\file.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\appearances.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\batch_item_draw.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\buffer.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\compression.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\device_manager.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\engine.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\appearances.pb.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\map.pb.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\shared.pb.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\resource-descriptor.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\swapchain.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\texture.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\texture_atlas.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\validation.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\vertex.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\vulkan_debug.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\vulkan_helpers.h" />
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\logging.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\gui.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\borderless_window.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\border_layout.h" />
@@ -582,67 +554,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\qt_util.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\vulkan_window.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_tab_widget.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\item.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\items.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\item_attribute.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\item_type.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\logger.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\7zTypes.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Alloc.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Compiler.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzFind.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzFindMt.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzHash.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaDec.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaEnc.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaLib.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Precomp.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Threads.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\main.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_io.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_renderer.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_view.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\otb.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\position.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\logging.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\quad_tree.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\random.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\selection.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\tile.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\tile_location.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\time_point.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\town.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\trianglerenderer.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\type_trait.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\ui_mainwindow.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\util.h" />
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\version.h" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Alloc.c" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzFind.c" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzFindMt.c" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaDec.c" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaEnc.c" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\LzmaLib.c" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\vendor\lzma\Threads.c" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_action.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\history\history_change.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\camera.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\ecs\ecs.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\ecs\item_animation.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\file.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\appearances.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\batch_item_draw.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\buffer.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\compression.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\appearances.pb.cc" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\map.pb.cc" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\protobuf\shared.pb.cc" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\texture.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\texture_atlas.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\vulkan_debug.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\graphics\vulkan_helpers.cpp" />
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\qt_vulkan_info.h" />
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\main.cpp" />
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\logging.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\borderless_window.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\border_layout.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_list.cpp" />
@@ -652,28 +567,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\qt_util.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\vulkan_window.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_tab_widget.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\item.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\items.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\item_attribute.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\item_type.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\logger.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\main.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_io.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_renderer.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_view.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\otb.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\position.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\logging.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\quad_tree.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\random.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\selection.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\tile.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\tile_location.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\time_point.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\town.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\trianglerenderer.cpp" />
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\ZERO_CHECK.vcxproj">
@@ -681,6 +575,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\common.vcxproj">
+      <Project>{CAEB89CF-912C-363F-8773-98A43A1DEA28}</Project>
+      <Name>common</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
