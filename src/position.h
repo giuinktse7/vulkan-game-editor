@@ -22,6 +22,8 @@ struct BasePosition
 
 struct Position : public BasePosition<long>
 {
+	static std::vector<Position> bresenHams(Position from, Position to);
+
 	Position();
 	Position(long x, long y, int z);
 	int z;

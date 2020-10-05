@@ -68,3 +68,43 @@ Position WorldPosition::toPos(int floor) const
 {
   return mapPos().floor(floor);
 }
+
+/**
+ * Returns a list of positions on a line starting at 'from' and ending at 'to'
+ * The positions will never include 'from', but always include 'to'.
+ */
+std::vector<Position> Position::bresenHams(Position from, Position to)
+{
+  std::vector<Position> result;
+  int x0 = from.x;
+  int y0 = from.y;
+  int x1 = to.x;
+  int y1 = to.y;
+
+  int dx = std::abs(x1 - x0);
+  int sx = x0 < x1 ? 1 : -1;
+
+  int dy = -std::abs(y1 - y0);
+  int sy = y0 < y1 ? 1 : -1;
+
+  int err = dx + dy;
+  while (true)
+  {
+    if (!(x0 == from.x && y0 == from.y))
+      result.emplace_back(x0, y0, 7);
+    if (x0 == x1 && y0 == y1)
+      return result;
+
+    int e2 = 2 * err;
+    if (e2 >= dy)
+    {
+      err += dy;
+      x0 += sx;
+    }
+    if (e2 <= dx)
+    {
+      err += dx;
+      y0 += sy;
+    }
+  }
+}
