@@ -15,7 +15,6 @@
 #include "gui/borderless_window.h"
 #include "gui/map_view_widget.h"
 
-#include "graphics/vulkan_helpers.h"
 #include "graphics/appearances.h"
 
 #include "items.h"
@@ -230,8 +229,6 @@ int main(int argc, char *argv[])
 {
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
-
-    return 0;
 
     return runApp(argc, argv);
 }
