@@ -55,10 +55,7 @@ namespace MapHistory
   void History::endGroup(ActionGroupType groupType)
   {
     DEBUG_ASSERT(currentGroup.has_value(), "There is no current group to end.");
-    std::ostringstream s;
-    s << "Tried to end group type " << groupType << ", but the current group type is " << currentGroup.value().groupType;
-    DEBUG_ASSERT(currentGroup.value().groupType == groupType, s.str());
-    // VME_LOG_D("endGroup " << groupType);
+    DEBUG_ASSERT(currentGroup.value().groupType == groupType, "The current group type differs from the passed in groupType.");
 
     if (!currentGroup.value().empty())
     {
