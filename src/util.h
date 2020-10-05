@@ -204,3 +204,38 @@ inline std::string toString(T value)
 	s << value;
 	return s.str();
 }
+
+/*
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>Macros>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+*/
+
+#define VME_ENUM_OPERATORS(EnumType)                                          \
+	inline constexpr EnumType operator&(EnumType l, EnumType r)                 \
+	{                                                                           \
+		typedef std::underlying_type<EnumType>::type ut;                          \
+		return static_cast<EnumType>(static_cast<ut>(l) & static_cast<ut>(r));    \
+	}                                                                           \
+                                                                              \
+	inline constexpr EnumType operator|(EnumType l, EnumType r)                 \
+	{                                                                           \
+		typedef std::underlying_type<EnumType>::type ut;                          \
+		return static_cast<EnumType>(static_cast<ut>(l) | static_cast<ut>(r));    \
+	}                                                                           \
+                                                                              \
+	inline constexpr EnumType &operator&=(EnumType &lhs, const EnumType rhs)    \
+	{                                                                           \
+		typedef std::underlying_type<EnumType>::type ut;                          \
+		lhs = static_cast<EnumType>(static_cast<ut>(lhs) & static_cast<ut>(rhs)); \
+		return lhs;                                                               \
+	}                                                                           \
+                                                                              \
+	inline constexpr EnumType &operator|=(EnumType &lhs, const EnumType rhs)    \
+	{                                                                           \
+		typedef std::underlying_type<EnumType>::type ut;                          \
+		lhs = static_cast<EnumType>(static_cast<ut>(lhs) | static_cast<ut>(rhs)); \
+		return lhs;                                                               \
+	}
