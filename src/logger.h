@@ -5,8 +5,10 @@
 #include <string>
 #include <sstream>
 
+#ifdef QT_CORE_LIB
 #include <QDebug>
 #include <QString>
+#endif
 
 namespace Logger
 {
@@ -35,13 +37,13 @@ namespace Logger
 
 } // namespace Logger
 
-#define VME_LOG(expr)     \
-  do                      \
-  {                       \
-                          \
-    std::ostringstream s; \
-    s << expr;            \
-    Logger::info(s);      \
+#define VME_LOG(expr)         \
+  do                          \
+  {                           \
+                              \
+    std::ostringstream __s__; \
+    __s__ << expr;            \
+    Logger::info(__s__);      \
   } while (false)
 
 #define VME_LOG_D(expr)       \
