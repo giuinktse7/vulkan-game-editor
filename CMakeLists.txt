@@ -28,6 +28,9 @@ project(
   VERSION 0.0.1
   LANGUAGES C CXX)
 
+enable_testing()
+add_subdirectory("test")
+
 # QT Specific
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
