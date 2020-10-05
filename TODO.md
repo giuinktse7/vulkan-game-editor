@@ -7,9 +7,9 @@
 - [x] Implement animation
 - [ ] Handle stackable appearances
 - [x] Handle appearances with elevation
-- [ ] BUG: Ground (and bottom stackpos items) should not be affected by tile elevation when rendered (both normally and as item preview)
-- [ ] BUG: ESC should clear selections
 - [ ] Feature?: Maybe clicking on a selected item should deselect it. If whole tile, the whole tile should maybe be deselected?
+- [ ] Feature?: When removing in area (Drag while Ctrl+Shift), show selection rectangle (red tinted?) with the selected item at mouse cursor ONLY.
+- [ ] Feature: Instant feedback for what items will be removed when removing in area (Drag while Ctrl+Shift).
 
 ## Editing functionality
 
