@@ -20,8 +20,8 @@ BorderLayout::BorderLayout(int spacing)
 BorderLayout::~BorderLayout()
 {
   QLayoutItem *l;
-  while ((l = takeAt(0)))
-    delete l;
+  for (auto &wrapper : items)
+    delete wrapper.item;
 }
 
 void BorderLayout::addItem(QLayoutItem *item)

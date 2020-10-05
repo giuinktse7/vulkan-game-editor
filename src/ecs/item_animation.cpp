@@ -15,10 +15,10 @@ using Direction = item_animation::AnimationDirection;
 void ItemAnimationComponent::synchronizePhase()
 {
   DEBUG_ASSERT(animationInfo->synchronized, "BUG! synchronizePhase should only be called on an animation that is marked as synchronized.");
+  DEBUG_ASSERT(loopTime != 0, "Looptime must be greater than 0");
   TimePoint startTime = TimePoint::sinceStart();
 
   auto elapsedTimeMs = startTime.elapsedMillis();
-
   long long timeDiff = elapsedTimeMs % loopTime;
 
   size_t phaseIndex = 0;

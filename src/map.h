@@ -170,12 +170,8 @@ public:
 
 		bool isEnd;
 
-		// For postfix operator
-		Iterator(Map &map, const Iterator &iterator);
-
 		void nextChunk();
 		void updateValue();
-		void reachedEnd();
 	};
 
 	Iterator begin()

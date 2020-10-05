@@ -400,20 +400,6 @@ MapRegion::Iterator::Iterator(Map &map, Position from, Position to, bool isEnd)
   }
 }
 
-MapRegion::Iterator::Iterator(Map &map, const Iterator &iterator)
-    : map(map), from(iterator.from), to(iterator.to), isEnd(iterator.isEnd)
-{
-  x1 = iterator.x1;
-  x2 = iterator.x2;
-
-  y1 = iterator.y1;
-  y2 = iterator.y2;
-
-  endZ = iterator.endZ;
-
-  state = iterator.state;
-}
-
 MapRegion::Iterator MapRegion::Iterator::operator++()
 {
   ++state.chunk.y;
@@ -424,7 +410,7 @@ MapRegion::Iterator MapRegion::Iterator::operator++()
 
 MapRegion::Iterator MapRegion::Iterator::operator++(int)
 {
-  Iterator previous(map, *this);
+  Iterator previous(*this);
 
   ++state.chunk.y;
   updateValue();
@@ -463,11 +449,6 @@ void MapRegion::Iterator::nextChunk()
   }
 
   state.chunk.node = nullptr;
-  isEnd = true;
-}
-
-void MapRegion::Iterator::reachedEnd()
-{
   isEnd = true;
 }
 
