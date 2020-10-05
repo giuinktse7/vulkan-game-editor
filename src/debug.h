@@ -27,8 +27,6 @@ public:
   const char *message;
 };
 
-namespace debug
-{
 #define ABORT_PROGRAM(message)                                                                          \
   do                                                                                                    \
   {                                                                                                     \
@@ -55,4 +53,3 @@ namespace debug
   {                            \
   } while (0)
 #endif
-} // namespace debug
