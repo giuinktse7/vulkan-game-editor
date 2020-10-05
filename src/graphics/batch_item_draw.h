@@ -10,8 +10,9 @@
 
 #include "texture.h"
 #include "texture_atlas.h"
-
 #include "buffer.h"
+
+#include "vulkan_helpers.h"
 
 #include "../item.h"
 #include "../position.h"
@@ -68,11 +69,6 @@ struct Batch
 
 	template <std::size_t SIZE>
 	void addVertices(std::array<Vertex, SIZE> &vertices);
-
-	inline QVulkanDeviceFunctions *devFuncs() const noexcept
-	{
-		return stagingBuffer.vulkanInfo->df;
-	}
 
 	void reset();
 

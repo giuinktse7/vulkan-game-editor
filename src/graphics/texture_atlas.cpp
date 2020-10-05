@@ -9,7 +9,6 @@
 #include <iostream>
 
 #include "compression.h"
-#include "vulkan_helpers.h"
 
 #include "../debug.h"
 #include "../file.h"

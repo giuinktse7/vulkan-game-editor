@@ -6,15 +6,12 @@
 #include "file.h"
 #include "position.h"
 
-#include "graphics/resource-descriptor.h"
 #include "graphics/appearances.h"
-#include "graphics/vulkan_helpers.h"
 
 #include "ecs/ecs.h"
 #include "debug.h"
 #include "util.h"
 #include "logger.h"
-#include "gui/vulkan_window.h"
 
 constexpr int GROUND_FLOOR = 7;
 
@@ -34,33 +31,28 @@ namespace colors
 
 } // namespace colors
 
-MapRenderer::MapRenderer(VulkanWindow &window)
-    : window(window), colorFormat(window.colorFormat()), vulkanTexturesForAppearances(Appearances::textureAtlasCount())
+MapRenderer::MapRenderer(VulkanInfo &vulkanInfo, MapView *mapView)
+    : mapView(mapView),
+      vulkanInfo(vulkanInfo),
+      vulkanTexturesForAppearances(Appearances::textureAtlasCount()),
+      vulkanSwapChainImageSize(0, 0)
 {
-  this->mapView = window.getMapView();
-
   activeTextureAtlasIds.reserve(Appearances::textureAtlasCount());
 
   size_t ArbitraryGeneralReserveAmount = 8;
   vulkanTextures.reserve(ArbitraryGeneralReserveAmount);
 }
 
-void MapRenderer::initResources()
+void MapRenderer::initResources(VkFormat colorFormat)
 {
   // VME_LOG_D("[window: " << window.debugName << "] MapRenderer::initResources (device: " << window.device() << ")");
 
-  window.updateVulkanInfo();
-
-  // Todo Remove g_vk, nothing should use it.
-  g_vk = window.vulkanInstance()->deviceFunctions(window.device());
-  g_vkf = window.vulkanInstance()->functions();
-
-  devFuncs = window.vulkanInstance()->deviceFunctions(window.device());
-  colorFormat = window.colorFormat();
+  vulkanInfo.update();
+  this->colorFormat = colorFormat;
 
   createRenderPass();
 
-  currentFrame = &frames.front();
+  _currentFrame = &frames.front();
 
   createDescriptorSetLayouts();
   createGraphicsPipeline();
@@ -72,10 +64,9 @@ void MapRenderer::initResources()
   // VME_LOG_D("End MapRenderer::initResources");
 }
 
-void MapRenderer::initSwapChainResources()
+void MapRenderer::initSwapChainResources(util::Size vulkanSwapChainImageSize)
 {
-  const util::Size sz = window.vulkanSwapChainImageSize();
-  mapView->setViewportSize(sz.width(), sz.height());
+  mapView->setViewportSize(vulkanSwapChainImageSize.width(), vulkanSwapChainImageSize.height());
 }
 
 void MapRenderer::releaseSwapChainResources()
@@ -88,22 +79,22 @@ void MapRenderer::releaseResources()
   // auto device = window.device();
   // VME_LOG_D("[window: " << window.debugName << "] MapRenderer::releaseResources (device: " << device << ")");
 
-  devFuncs->vkDestroyDescriptorSetLayout(window.device(), uboDescriptorSetLayout, nullptr);
+  vulkanInfo.vkDestroyDescriptorSetLayout(uboDescriptorSetLayout, nullptr);
   uboDescriptorSetLayout = VK_NULL_HANDLE;
 
-  devFuncs->vkDestroyDescriptorSetLayout(window.device(), textureDescriptorSetLayout, nullptr);
+  vulkanInfo.vkDestroyDescriptorSetLayout(textureDescriptorSetLayout, nullptr);
   textureDescriptorSetLayout = VK_NULL_HANDLE;
 
-  devFuncs->vkDestroyDescriptorPool(window.device(), descriptorPool, nullptr);
+  vulkanInfo.vkDestroyDescriptorPool(descriptorPool, nullptr);
   descriptorPool = VK_NULL_HANDLE;
 
-  devFuncs->vkDestroyPipeline(window.device(), graphicsPipeline, nullptr);
+  vulkanInfo.vkDestroyPipeline(graphicsPipeline, nullptr);
   graphicsPipeline = VK_NULL_HANDLE;
 
-  devFuncs->vkDestroyPipelineLayout(window.device(), pipelineLayout, nullptr);
+  vulkanInfo.vkDestroyPipelineLayout(pipelineLayout, nullptr);
   pipelineLayout = VK_NULL_HANDLE;
 
-  devFuncs->vkDestroyRenderPass(window.device(), renderPass, nullptr);
+  vulkanInfo.vkDestroyRenderPass(renderPass, nullptr);
   renderPass = VK_NULL_HANDLE;
 
   indexBuffer.releaseResources();
@@ -133,11 +124,9 @@ void MapRenderer::startNextFrame()
   g_ecs.getSystem<ItemAnimationSystem>().update();
 
   // Update current frame data
-  this->currentFrame = &frames[window.currentFrame()];
-  currentFrame->commandBuffer = window.currentCommandBuffer();
-  currentFrame->frameBuffer = window.currentFramebuffer();
-  currentFrame->batchDraw.vulkanInfo = &window.vulkanInfo;
-  currentFrame->batchDraw.commandBuffer = currentFrame->commandBuffer;
+  // this->_currentFrame = &frames[frameData.currentFrameIndex];
+  _currentFrame->batchDraw.vulkanInfo = &vulkanInfo;
+  _currentFrame->batchDraw.commandBuffer = _currentFrame->commandBuffer;
 
   mapView->updateViewport();
 
@@ -145,22 +134,20 @@ void MapRenderer::startNextFrame()
 
   drawMap();
 
-  currentFrame->batchDraw.prepareDraw();
+  _currentFrame->batchDraw.prepareDraw();
 
   beginRenderPass();
-  devFuncs->vkCmdBindPipeline(currentFrame->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+  vulkanInfo.vkCmdBindPipeline(_currentFrame->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
   drawBatches();
-  devFuncs->vkCmdEndRenderPass(currentFrame->commandBuffer);
+  vulkanInfo.vkCmdEndRenderPass(_currentFrame->commandBuffer);
 
-  window.frameReady();
-  window.requestUpdate();
+  vulkanInfo.frameReady();
 }
 
 void MapRenderer::drawBatches()
 {
-  // VME_LOG_D("[window: " << window.debugName << "] drawBatches");
-  const util::Size size = window.vulkanSwapChainImageSize();
+  const util::Size size = vulkanInfo.vulkanSwapChainImageSize();
 
   VkViewport viewport;
   viewport.x = viewport.y = 0;
@@ -168,40 +155,40 @@ void MapRenderer::drawBatches()
   viewport.height = size.height();
   viewport.minDepth = 0;
   viewport.maxDepth = 1;
-  devFuncs->vkCmdSetViewport(currentFrame->commandBuffer, 0, 1, &viewport);
+  vulkanInfo.vkCmdSetViewport(_currentFrame->commandBuffer, 0, 1, &viewport);
 
   VkRect2D scissor;
   scissor.offset.x = scissor.offset.y = 0;
   scissor.extent.width = viewport.width;
   scissor.extent.height = viewport.height;
-  devFuncs->vkCmdSetScissor(currentFrame->commandBuffer, 0, 1, &scissor);
+  vulkanInfo.vkCmdSetScissor(_currentFrame->commandBuffer, 0, 1, &scissor);
 
   VkDeviceSize offsets[] = {0};
   VkBuffer buffers[] = {nullptr};
 
-  VkDescriptorSet currentDescriptorSet = currentFrame->uboDescriptorSet;
+  VkDescriptorSet currentDescriptorSet = _currentFrame->uboDescriptorSet;
 
   std::array<VkDescriptorSet, 2> descriptorSets = {
       currentDescriptorSet,
       nullptr};
 
-  devFuncs->vkCmdBindIndexBuffer(currentFrame->commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+  vulkanInfo.vkCmdBindIndexBuffer(_currentFrame->commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 
-  for (auto &batch : currentFrame->batchDraw.getBatches())
+  for (auto &batch : _currentFrame->batchDraw.getBatches())
   {
     if (!batch.isValid())
       break;
 
     buffers[0] = batch.buffer.buffer;
-    devFuncs->vkCmdBindVertexBuffers(currentFrame->commandBuffer, 0, 1, buffers, offsets);
+    vulkanInfo.vkCmdBindVertexBuffers(_currentFrame->commandBuffer, 0, 1, buffers, offsets);
 
     uint32_t offset = 0;
     for (const auto &descriptorInfo : batch.descriptorIndices)
     {
       descriptorSets[1] = descriptorInfo.descriptor;
 
-      devFuncs->vkCmdBindDescriptorSets(
-          currentFrame->commandBuffer,
+      vulkanInfo.vkCmdBindDescriptorSets(
+          _currentFrame->commandBuffer,
           VK_PIPELINE_BIND_POINT_GRAPHICS,
           pipelineLayout,
           0,
@@ -214,7 +201,7 @@ void MapRenderer::drawBatches()
       uint32_t sprites = (descriptorInfo.end - offset + 1) / 4;
       for (uint32_t spriteIndex = 0; spriteIndex < sprites; ++spriteIndex)
       {
-        devFuncs->vkCmdDrawIndexed(currentFrame->commandBuffer, 6, 1, 0, offset + spriteIndex * 4, 0);
+        vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, offset + spriteIndex * 4, 0);
       }
 
       offset = descriptorInfo.end + 1;
@@ -294,7 +281,7 @@ void MapRenderer::drawCurrentAction()
           },
 
           [this](const MouseAction::RawItem &action) {
-            if (window.showPreviewCursor)
+            if (_currentFrame->mouseHover)
             {
               Position pos = mapView->mouseGamePos();
 
@@ -315,7 +302,7 @@ void MapRenderer::drawCurrentAction()
           },
 
           [](const auto &arg) {}},
-      window.mapViewMouseAction.action());
+      _currentFrame->mouseAction);
 }
 
 void MapRenderer::drawMovingSelection()
@@ -405,12 +392,12 @@ void MapRenderer::drawItem(ObjectDrawInfo &info)
       activeTextureAtlasIds.emplace_back(atlas->id());
     }
 
-    vulkanTexture.initResources(*atlas, window.vulkanInfo, descriptor);
+    vulkanTexture.initResources(*atlas, vulkanInfo, descriptor);
   }
 
   info.descriptorSet = vulkanTexture.descriptorSet();
 
-  currentFrame->batchDraw.addItem(info);
+  _currentFrame->batchDraw.addItem(info);
 }
 
 void MapRenderer::drawSelectionRectangle()
@@ -432,7 +419,7 @@ void MapRenderer::drawSelectionRectangle()
   VulkanTexture &vulkanTexture = vulkanTextures.at(&texture);
   if (!vulkanTexture.hasResources())
   {
-    vulkanTexture.initResources(texture, window.vulkanInfo, descriptor);
+    vulkanTexture.initResources(texture, vulkanInfo, descriptor);
   }
 
   RectangleDrawInfo info;
@@ -442,7 +429,7 @@ void MapRenderer::drawSelectionRectangle()
   info.color = colors::SeeThrough;
   info.descriptorSet = vulkanTexture.descriptorSet();
 
-  currentFrame->batchDraw.addRectangle(info);
+  _currentFrame->batchDraw.addRectangle(info);
 }
 
 ObjectDrawInfo MapRenderer::itemDrawInfo(const Item &item, Position position, uint32_t drawFlags)
@@ -469,13 +456,13 @@ ObjectDrawInfo MapRenderer::itemTypeDrawInfo(const ItemType &itemType, Position 
 
 void MapRenderer::updateUniformBuffer()
 {
-  glm::mat4 projection = window.projectionMatrix();
+  glm::mat4 projection = _currentFrame->projectionMatrix;
   ItemUniformBufferObject uniformBufferObject{projection};
 
   void *data;
-  devFuncs->vkMapMemory(window.device(), currentFrame->uniformBuffer.deviceMemory, 0, sizeof(ItemUniformBufferObject), 0, &data);
+  vulkanInfo.vkMapMemory(_currentFrame->uniformBuffer.deviceMemory, 0, sizeof(ItemUniformBufferObject), 0, &data);
   memcpy(data, &uniformBufferObject, sizeof(ItemUniformBufferObject));
-  devFuncs->vkUnmapMemory(window.device(), currentFrame->uniformBuffer.deviceMemory);
+  vulkanInfo.vkUnmapMemory(_currentFrame->uniformBuffer.deviceMemory);
 }
 
 /**
@@ -491,11 +478,11 @@ void MapRenderer::updateUniformBuffer()
  **/
 void MapRenderer::beginRenderPass()
 {
-  util::Size size = window.vulkanSwapChainImageSize();
+  util::Size size = vulkanInfo.vulkanSwapChainImageSize();
   VkRenderPassBeginInfo renderPassInfo = {};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassInfo.renderPass = renderPass;
-  renderPassInfo.framebuffer = currentFrame->frameBuffer;
+  renderPassInfo.framebuffer = _currentFrame->frameBuffer;
   renderPassInfo.renderArea.extent.width = size.width();
   renderPassInfo.renderArea.extent.width = size.height();
 
@@ -509,7 +496,7 @@ void MapRenderer::beginRenderPass()
   clearValue.color = ClearColor;
   renderPassInfo.pClearValues = &clearValue;
 
-  devFuncs->vkCmdBeginRenderPass(currentFrame->commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+  vulkanInfo.vkCmdBeginRenderPass(_currentFrame->commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
 void MapRenderer::createRenderPass()
@@ -554,7 +541,7 @@ void MapRenderer::createRenderPass()
   renderPassInfo.dependencyCount = 1;
   renderPassInfo.pDependencies = &dependency;
 
-  if (devFuncs->vkCreateRenderPass(window.device(), &renderPassInfo, nullptr, &this->renderPass) != VK_SUCCESS)
+  if (vulkanInfo.vkCreateRenderPass(&renderPassInfo, nullptr, &this->renderPass) != VK_SUCCESS)
   {
     throw std::runtime_error("failed to create render pass!");
   }
@@ -661,7 +648,7 @@ void MapRenderer::createGraphicsPipeline()
   pipelineLayoutInfo.pushConstantRangeCount = 1;
   pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
-  if (devFuncs->vkCreatePipelineLayout(window.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+  if (vulkanInfo.vkCreatePipelineLayout(&pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
   {
     qDebug() << "failed to create pipeline layout!";
     throw std::runtime_error("failed to create pipeline layout!");
@@ -683,14 +670,14 @@ void MapRenderer::createGraphicsPipeline()
   pipelineInfo.subpass = 0;
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-  if (devFuncs->vkCreateGraphicsPipelines(window.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) !=
+  if (vulkanInfo.vkCreateGraphicsPipelines(VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) !=
       VK_SUCCESS)
   {
     throw std::runtime_error("failed to create graphics pipeline!");
   }
 
-  devFuncs->vkDestroyShaderModule(window.device(), fragShaderModule, nullptr);
-  devFuncs->vkDestroyShaderModule(window.device(), vertShaderModule, nullptr);
+  vulkanInfo.vkDestroyShaderModule(fragShaderModule, nullptr);
+  vulkanInfo.vkDestroyShaderModule(vertShaderModule, nullptr);
 }
 
 void MapRenderer::createDescriptorSetLayouts()
@@ -707,7 +694,7 @@ void MapRenderer::createDescriptorSetLayouts()
 
   layoutInfo.pBindings = &uboLayoutBinding;
 
-  if (devFuncs->vkCreateDescriptorSetLayout(window.device(), &layoutInfo, nullptr, &uboDescriptorSetLayout) != VK_SUCCESS)
+  if (vulkanInfo.vkCreateDescriptorSetLayout(&layoutInfo, nullptr, &uboDescriptorSetLayout) != VK_SUCCESS)
   {
     throw std::runtime_error("Failed to create descriptor set layout for the uniform buffer object.");
   }
@@ -721,7 +708,7 @@ void MapRenderer::createDescriptorSetLayouts()
 
   layoutInfo.pBindings = &textureLayoutBinding;
 
-  if (devFuncs->vkCreateDescriptorSetLayout(window.device(), &layoutInfo, nullptr, &textureDescriptorSetLayout) != VK_SUCCESS)
+  if (vulkanInfo.vkCreateDescriptorSetLayout(&layoutInfo, nullptr, &textureDescriptorSetLayout) != VK_SUCCESS)
   {
     throw std::runtime_error("Failed to create descriptor set layout for the textures.");
   }
@@ -731,9 +718,9 @@ void MapRenderer::createUniformBuffers()
 {
   VkDeviceSize bufferSize = sizeof(ItemUniformBufferObject);
 
-  for (size_t i = 0; i < window.MAX_CONCURRENT_FRAME_COUNT; i++)
+  for (size_t i = 0; i < vulkanInfo.maxConcurrentFrameCount(); i++)
   {
-    frames[i].uniformBuffer = Buffer::create(&window.vulkanInfo, bufferSize,
+    frames[i].uniformBuffer = Buffer::create(&vulkanInfo, bufferSize,
                                              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   }
@@ -742,7 +729,7 @@ void MapRenderer::createUniformBuffers()
 void MapRenderer::createDescriptorPool()
 {
   std::array<VkDescriptorPoolSize, 2> poolSizes{};
-  uint32_t descriptorCount = window.MAX_CONCURRENT_FRAME_COUNT * 2;
+  uint32_t descriptorCount = vulkanInfo.maxConcurrentFrameCount() * 2;
 
   poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   poolSizes[0].descriptorCount = descriptorCount;
@@ -756,7 +743,7 @@ void MapRenderer::createDescriptorPool()
   poolInfo.pPoolSizes = poolSizes.data();
   poolInfo.maxSets = descriptorCount + MAX_NUM_TEXTURES;
 
-  if (devFuncs->vkCreateDescriptorPool(window.device(), &poolInfo, nullptr, &this->descriptorPool) != VK_SUCCESS)
+  if (vulkanInfo.vkCreateDescriptorPool(&poolInfo, nullptr, &this->descriptorPool) != VK_SUCCESS)
   {
     throw std::runtime_error("failed to create descriptor pool!");
   }
@@ -764,7 +751,7 @@ void MapRenderer::createDescriptorPool()
 
 void MapRenderer::createDescriptorSets()
 {
-  const uint32_t maxFrames = window.MAX_CONCURRENT_FRAME_COUNT;
+  const uint32_t maxFrames = 3;
   std::vector<VkDescriptorSetLayout> layouts(maxFrames, uboDescriptorSetLayout);
   VkDescriptorSetAllocateInfo allocInfo = {};
   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -774,7 +761,7 @@ void MapRenderer::createDescriptorSets()
 
   std::array<VkDescriptorSet, maxFrames> descriptorSets;
 
-  if (devFuncs->vkAllocateDescriptorSets(window.device(), &allocInfo, &descriptorSets[0]) != VK_SUCCESS)
+  if (vulkanInfo.vkAllocateDescriptorSets(&allocInfo, &descriptorSets[0]) != VK_SUCCESS)
   {
     ABORT_PROGRAM("failed to allocate descriptor sets");
   }
@@ -784,7 +771,7 @@ void MapRenderer::createDescriptorSets()
     frames[i].uboDescriptorSet = descriptorSets[i];
   }
 
-  for (size_t i = 0; i < window.MAX_CONCURRENT_FRAME_COUNT; ++i)
+  for (size_t i = 0; i < vulkanInfo.maxConcurrentFrameCount(); ++i)
   {
     VkDescriptorBufferInfo bufferInfo = {};
     bufferInfo.buffer = frames[i].uniformBuffer.buffer;
@@ -800,40 +787,38 @@ void MapRenderer::createDescriptorSets()
     descriptorWrites.descriptorCount = 1;
     descriptorWrites.pBufferInfo = &bufferInfo;
 
-    devFuncs->vkUpdateDescriptorSets(window.device(), 1, &descriptorWrites, 0, nullptr);
+    vulkanInfo.vkUpdateDescriptorSets(1, &descriptorWrites, 0, nullptr);
   }
 }
 
 void MapRenderer::createIndexBuffer()
 {
-  auto vulkanInfo = &window.vulkanInfo;
-
   BoundBuffer indexStagingBuffer = Buffer::create(
-      vulkanInfo,
+      &vulkanInfo,
       IndexBufferSize,
       VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
   void *data;
-  devFuncs->vkMapMemory(window.device(), indexStagingBuffer.deviceMemory, 0, IndexBufferSize, 0, &data);
+  vulkanInfo.vkMapMemory(indexStagingBuffer.deviceMemory, 0, IndexBufferSize, 0, &data);
   uint16_t *indices = reinterpret_cast<uint16_t *>(data);
   std::array<uint16_t, 6> indexArray{0, 1, 3, 3, 1, 2};
 
   memcpy(indices, &indexArray, sizeof(indexArray));
 
   indexBuffer = Buffer::create(
-      vulkanInfo,
+      &vulkanInfo,
       IndexBufferSize,
       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-  VkCommandBuffer commandBuffer = VulkanHelpers::beginSingleTimeCommands(vulkanInfo);
+  VkCommandBuffer commandBuffer = vulkanInfo.beginSingleTimeCommands();
   VkBufferCopy copyRegion = {};
   copyRegion.size = IndexBufferSize;
-  devFuncs->vkCmdCopyBuffer(commandBuffer, indexStagingBuffer.buffer, indexBuffer.buffer, 1, &copyRegion);
-  VulkanHelpers::endSingleTimeCommands(vulkanInfo, commandBuffer);
+  vulkanInfo.vkCmdCopyBuffer(commandBuffer, indexStagingBuffer.buffer, indexBuffer.buffer, 1, &copyRegion);
+  vulkanInfo.endSingleTimeCommands(commandBuffer);
 
-  devFuncs->vkUnmapMemory(window.device(), indexStagingBuffer.deviceMemory);
+  vulkanInfo.vkUnmapMemory(indexStagingBuffer.deviceMemory);
 }
 
 VkShaderModule MapRenderer::createShaderModule(const std::vector<uint8_t> &code)
@@ -844,7 +829,7 @@ VkShaderModule MapRenderer::createShaderModule(const std::vector<uint8_t> &code)
   createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
 
   VkShaderModule shaderModule;
-  if (devFuncs->vkCreateShaderModule(window.device(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+  if (vulkanInfo.vkCreateShaderModule(&createInfo, nullptr, &shaderModule) != VK_SUCCESS)
   {
     throw std::runtime_error("failed to create shader module!");
   }
@@ -899,15 +884,15 @@ void VulkanTexture::initResources(Texture &texture, VulkanInfo &vulkanInfo, Vulk
       VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-  VulkanHelpers::transitionImageLayout(&vulkanInfo, textureImage,
-                                       VK_IMAGE_LAYOUT_UNDEFINED,
-                                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+  vulkanInfo.transitionImageLayout(textureImage,
+                                   VK_IMAGE_LAYOUT_UNDEFINED,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
   copyStagingBufferToImage(stagingBuffer.buffer);
 
-  VulkanHelpers::transitionImageLayout(&vulkanInfo, textureImage,
-                                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+  vulkanInfo.transitionImageLayout(textureImage,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
   _descriptorSet = createDescriptorSet(descriptor);
 }
@@ -915,10 +900,9 @@ void VulkanTexture::initResources(Texture &texture, VulkanInfo &vulkanInfo, Vulk
 void VulkanTexture::releaseResources()
 {
   DEBUG_ASSERT(hasResources(), "Tried to release resources, but there are no resources in the Texture Resource.");
-  VkDevice device = vulkanInfo->device();
 
-  vulkanInfo->df->vkDestroyImage(device, textureImage, nullptr);
-  vulkanInfo->df->vkFreeMemory(device, textureImageMemory, nullptr);
+  vulkanInfo->vkDestroyImage(textureImage, nullptr);
+  vulkanInfo->vkFreeMemory(textureImageMemory, nullptr);
 
   textureImage = VK_NULL_HANDLE;
   _descriptorSet = VK_NULL_HANDLE;
@@ -935,7 +919,6 @@ void VulkanTexture::createImage(
     VkImageUsageFlags usage,
     VkMemoryPropertyFlags properties)
 {
-  VkDevice device = vulkanInfo->device();
   VkImageCreateInfo imageInfo{};
   imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -951,30 +934,30 @@ void VulkanTexture::createImage(
   imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
   imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  if (vulkanInfo->df->vkCreateImage(device, &imageInfo, nullptr, &textureImage) != VK_SUCCESS)
+  if (vulkanInfo->vkCreateImage(&imageInfo, nullptr, &textureImage) != VK_SUCCESS)
   {
     throw std::runtime_error("failed to create image!");
   }
 
   VkMemoryRequirements memRequirements;
-  vulkanInfo->df->vkGetImageMemoryRequirements(device, textureImage, &memRequirements);
+  vulkanInfo->vkGetImageMemoryRequirements(textureImage, &memRequirements);
 
   VkMemoryAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memRequirements.size;
-  allocInfo.memoryTypeIndex = VulkanHelpers::findMemoryType(vulkanInfo->physicalDevice(), memRequirements.memoryTypeBits, properties);
+  allocInfo.memoryTypeIndex = vulkanInfo->findMemoryType(vulkanInfo->physicalDevice(), memRequirements.memoryTypeBits, properties);
 
-  if (vulkanInfo->df->vkAllocateMemory(device, &allocInfo, nullptr, &textureImageMemory) != VK_SUCCESS)
+  if (vulkanInfo->vkAllocateMemory(&allocInfo, nullptr, &textureImageMemory) != VK_SUCCESS)
   {
     throw std::runtime_error("failed to allocate image memory!");
   }
 
-  vulkanInfo->df->vkBindImageMemory(device, textureImage, textureImageMemory, 0);
+  vulkanInfo->vkBindImageMemory(textureImage, textureImageMemory, 0);
 }
 
 void VulkanTexture::copyStagingBufferToImage(VkBuffer stagingBuffer)
 {
-  VkCommandBuffer commandBuffer = VulkanHelpers::beginSingleTimeCommands(vulkanInfo);
+  VkCommandBuffer commandBuffer = vulkanInfo->beginSingleTimeCommands();
 
   VkBufferImageCopy region{};
   region.bufferOffset = 0;
@@ -989,7 +972,7 @@ void VulkanTexture::copyStagingBufferToImage(VkBuffer stagingBuffer)
   region.imageOffset = {0, 0, 0};
   region.imageExtent = {width, height, 1};
 
-  vulkanInfo->df->vkCmdCopyBufferToImage(
+  vulkanInfo->vkCmdCopyBufferToImage(
       commandBuffer,
       stagingBuffer,
       textureImage,
@@ -997,7 +980,7 @@ void VulkanTexture::copyStagingBufferToImage(VkBuffer stagingBuffer)
       1,
       &region);
 
-  VulkanHelpers::endSingleTimeCommands(vulkanInfo, commandBuffer);
+  vulkanInfo->endSingleTimeCommands(commandBuffer);
 }
 
 VkSampler VulkanTexture::createSampler()
@@ -1015,7 +998,7 @@ VkSampler VulkanTexture::createSampler()
   samplerInfo.compareEnable = VK_FALSE;
 
   VkSampler sampler;
-  if (vulkanInfo->df->vkCreateSampler(vulkanInfo->device(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
+  if (vulkanInfo->vkCreateSampler(&samplerInfo, nullptr, &sampler) != VK_SUCCESS)
   {
     throw std::runtime_error("Failed to create texture sampler!");
   }
@@ -1034,7 +1017,7 @@ VkDescriptorSet VulkanTexture::createDescriptorSet(VulkanTexture::Descriptor des
   allocInfo.descriptorSetCount = 1;
   allocInfo.pSetLayouts = &descriptor.layout;
 
-  if (vulkanInfo->df->vkAllocateDescriptorSets(vulkanInfo->device(), &allocInfo, &_descriptorSet) != VK_SUCCESS)
+  if (vulkanInfo->vkAllocateDescriptorSets(&allocInfo, &_descriptorSet) != VK_SUCCESS)
   {
     throw std::runtime_error("failed to allocate texture descriptor set");
   }
@@ -1053,7 +1036,7 @@ VkDescriptorSet VulkanTexture::createDescriptorSet(VulkanTexture::Descriptor des
   descriptorWrites.descriptorCount = 1;
   descriptorWrites.pImageInfo = &imageInfo;
 
-  vulkanInfo->df->vkUpdateDescriptorSets(vulkanInfo->device(), 1, &descriptorWrites, 0, nullptr);
+  vulkanInfo->vkUpdateDescriptorSets(1, &descriptorWrites, 0, nullptr);
 
   return _descriptorSet;
 }
@@ -1072,10 +1055,46 @@ VkImageView VulkanTexture::createImageView(VkImage image, VkFormat format)
   viewInfo.subresourceRange.layerCount = 1;
 
   VkImageView imageView;
-  if (vulkanInfo->df->vkCreateImageView(vulkanInfo->device(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
+  if (vulkanInfo->vkCreateImageView(&viewInfo, nullptr, &imageView) != VK_SUCCESS)
   {
     throw std::runtime_error("failed to create texture image view!");
   }
 
   return imageView;
+}
+
+VkCommandBuffer MapRenderer::beginSingleTimeCommands(VulkanInfo *info)
+{
+  VkCommandBufferAllocateInfo allocInfo{};
+  allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  allocInfo.commandPool = info->graphicsCommandPool();
+  allocInfo.commandBufferCount = 1;
+
+  VkCommandBuffer commandBuffer;
+  info->vkAllocateCommandBuffers(&allocInfo, &commandBuffer);
+
+  VkCommandBufferBeginInfo beginInfo{};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  info->vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+  return commandBuffer;
+}
+
+uint32_t MapRenderer::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+{
+  VkPhysicalDeviceMemoryProperties memProperties;
+  vulkanInfo.vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+  for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+  {
+    if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+    {
+      return i;
+    }
+  }
+
+  throw std::runtime_error("Failed to find suitable memory type!");
 }

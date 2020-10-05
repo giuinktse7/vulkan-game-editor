@@ -7,7 +7,6 @@
 #include "swapchain.h"
 
 #include "validation.h"
-#include "vulkan_helpers.h"
 #include "engine.h"
 
 VkPhysicalDevice DeviceManager::pickPhysicalDevice()

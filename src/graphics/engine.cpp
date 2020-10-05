@@ -7,7 +7,6 @@
 #include <algorithm>
 
 #include "validation.h"
-#include "vulkan_helpers.h"
 #include "vulkan_debug.h"
 #include "../logger.h"
 #include "../file.h"

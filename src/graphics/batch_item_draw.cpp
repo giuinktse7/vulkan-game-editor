@@ -1,7 +1,6 @@
 #include "batch_item_draw.h"
 
 #include <ios>
-#include "vulkan_helpers.h"
 
 constexpr int MaxDrawOffsetPixels = 24;
 
@@ -84,7 +83,7 @@ void Batch::mapStagingBuffer()
 {
   void *data;
 
-  devFuncs()->vkMapMemory(stagingBuffer.vulkanInfo->device(), stagingBuffer.deviceMemory, 0, BatchDeviceSize, 0, &data);
+  stagingBuffer.vulkanInfo->vkMapMemory(stagingBuffer.deviceMemory, 0, BatchDeviceSize, 0, &data);
   this->vertices = reinterpret_cast<Vertex *>(data);
   this->current = vertices;
 
@@ -95,7 +94,7 @@ void Batch::unmapStagingBuffer()
 {
   DEBUG_ASSERT(current != nullptr, "Tried to unmap an item batch that has not been mapped.");
 
-  devFuncs()->vkUnmapMemory(stagingBuffer.vulkanInfo->device(), stagingBuffer.deviceMemory);
+  stagingBuffer.vulkanInfo->vkUnmapMemory(stagingBuffer.deviceMemory);
   this->vertices = nullptr;
   this->current = nullptr;
 }
@@ -110,7 +109,7 @@ void Batch::copyStagingToDevice(VkCommandBuffer commandBuffer)
 
   VkBufferCopy copyRegion = {};
   copyRegion.size = this->vertexCount * sizeof(Vertex);
-  devFuncs()->vkCmdCopyBuffer(commandBuffer, stagingBuffer.buffer, buffer.buffer, 1, &copyRegion);
+  stagingBuffer.vulkanInfo->vkCmdCopyBuffer(commandBuffer, stagingBuffer.buffer, buffer.buffer, 1, &copyRegion);
 }
 
 void BatchDraw::addItem(ObjectDrawInfo &info)

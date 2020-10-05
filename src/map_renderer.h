@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-#include <QVulkanWindowRenderer>
 
 #include <glm/glm.hpp>
 
@@ -14,17 +13,17 @@
 #include "graphics/vertex.h"
 #include "graphics/texture.h"
 #include "graphics/batch_item_draw.h"
+#include "graphics/texture_atlas.h"
 
 #include "item.h"
 #include "items.h"
 
-#include "graphics/texture_atlas.h"
-
 #include "map_view.h"
+#include "util.h"
+#include "input.h"
 
 #include "map.h"
 
-class VulkanWindow;
 class BatchDraw;
 struct ObjectDrawInfo;
 
@@ -63,6 +62,12 @@ struct FrameData
 	VkCommandBuffer commandBuffer = nullptr;
 	BoundBuffer uniformBuffer;
 	VkDescriptorSet uboDescriptorSet = nullptr;
+
+	int currentFrameIndex = 0;
+
+	glm::mat4 projectionMatrix{};
+	MouseAction_t mouseAction = MouseAction::None{};
+	bool mouseHover = false;
 
 	BatchDraw batchDraw;
 };
@@ -121,21 +126,21 @@ private:
 	VkSampler createSampler();
 };
 
-class MapRenderer : public QVulkanWindowRenderer
+class MapRenderer
 {
 public:
-	MapRenderer(VulkanWindow &window);
+	MapRenderer(VulkanInfo &vulkanInfo, MapView *mapView);
 	static const int MAX_NUM_TEXTURES = 256 * 256;
 
 	static const int TILE_SIZE = 32;
 	static const uint32_t MAX_VERTICES = 64 * 1024;
 
-	void initResources() override;
-	void initSwapChainResources() override;
-	void releaseSwapChainResources() override;
-	void releaseResources() override;
+	void initResources(VkFormat colorFormat);
+	void initSwapChainResources(util::Size vulkanSwapChainImageSize);
+	void releaseSwapChainResources();
+	void releaseResources();
 
-	void startNextFrame() override;
+	void startNextFrame();
 
 	VkDescriptorPool &getDescriptorPool()
 	{
@@ -147,23 +152,28 @@ public:
 		return textureDescriptorSetLayout;
 	}
 
-	void setMapView(MapView &mapView)
+	inline void setCurrentFrame(int frameIndex)
 	{
-		this->mapView = &mapView;
+		_currentFrame = &frames[frameIndex];
+	}
+
+	FrameData *currentFrame() const noexcept
+	{
+		return _currentFrame;
 	}
 
 private:
 	bool debug = false;
 	MapView *mapView;
-	VulkanWindow &window;
+	VulkanInfo &vulkanInfo;
 	std::array<FrameData, 3> frames;
 
 	// All sprites are drawn using this index buffer
 	BoundBuffer indexBuffer;
 
-	VkFormat colorFormat;
+	VkFormat colorFormat = VK_FORMAT_UNDEFINED;
 
-	FrameData *currentFrame = nullptr;
+	FrameData *_currentFrame = nullptr;
 
 	VkRenderPass renderPass;
 
@@ -185,8 +195,7 @@ private:
 	*/
 	std::unordered_map<Texture *, VulkanTexture> vulkanTextures;
 
-	QVulkanDeviceFunctions *devFuncs = nullptr;
-
+	util::Size vulkanSwapChainImageSize;
 	void createRenderPass();
 	void createGraphicsPipeline();
 	VkShaderModule createShaderModule(const std::vector<uint8_t> &code);
@@ -199,6 +208,9 @@ private:
 	void updateUniformBuffer();
 
 	void beginRenderPass();
+
+	VkCommandBuffer beginSingleTimeCommands(VulkanInfo *info);
+	uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 	void drawMap();
 	void drawCurrentAction();

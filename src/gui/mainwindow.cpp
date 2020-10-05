@@ -61,7 +61,7 @@ void MainWindow::addMapTab()
 
 void MainWindow::addMapTab(std::shared_ptr<Map> map)
 {
-  VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, std::make_unique<MapView>(mapViewMouseAction, map), mapViewMouseAction);
+  VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, map, mapViewMouseAction);
 
   // Window setup
   vulkanWindow->setVulkanInstance(vulkanInstance);

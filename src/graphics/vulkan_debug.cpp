@@ -3,8 +3,6 @@
 #include "validation.h"
 #include <iostream>
 
-#include "vulkan_helpers.h"
-
 void VulkanDebug::setupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger)
 {
   if (!Validation::enableValidationLayers)

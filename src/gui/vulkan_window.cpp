@@ -21,19 +21,14 @@
 
 #include "gui.h"
 
-VulkanWindow::VulkanWindow(std::unique_ptr<MapView> mapView, MapViewMouseAction &mapViewMouseAction)
+VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, MapViewMouseAction &mapViewMouseAction)
     : QVulkanWindow(nullptr),
+      vulkanInfo(this),
       mapViewMouseAction(mapViewMouseAction),
-      mapView(std::move(mapView)),
+      mapView(std::make_unique<MapView>(std::make_unique<QtUiUtils>(this), mapViewMouseAction, map)),
       scrollAngleBuffer(0)
 {
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
-  connect(this, &VulkanWindow::mousePosChanged, [=](util::Point<float> mousePos) {
-    int x = static_cast<int>(std::round(mousePos.x()));
-    int y = static_cast<int>(std::round(mousePos.y()));
-
-    this->mapView->mouseMoveEvent(ScreenPosition(x, y));
-  });
 }
 
 void VulkanWindow::lostFocus()
@@ -54,12 +49,15 @@ QWidget *VulkanWindow::wrapInWidget(QWidget *parent)
   return wrapper;
 }
 
+VulkanWindow::Renderer::Renderer(VulkanWindow &window)
+    : window(window), renderer(window.vulkanInfo, window.mapView.get()) {}
+
 QVulkanWindowRenderer *VulkanWindow::createRenderer()
 {
   if (!renderer)
   {
     // Memory deleted by QT when QT closes
-    renderer = new MapRenderer(*this);
+    renderer = new VulkanWindow::Renderer(*this);
   }
 
   return renderer;
@@ -145,11 +143,14 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
 
 void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
+  if (xVar == -1)
+    xVar = event->pos().x();
+
+  mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
+
   auto pos = event->windowPos();
   util::Point<float> mousePos(pos.x(), pos.y());
   emit mousePosChanged(mousePos);
-
-  mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
 
   event->ignore();
   QVulkanWindow::mouseMoveEvent(event);
@@ -309,12 +310,10 @@ bool VulkanWindow::event(QEvent *ev)
     showPreviewCursor = false;
     break;
   case QEvent::Enter:
+  {
     showPreviewCursor = true;
-    {
-      auto pos = mapFromGlobal(QCursor::pos());
-      mapView->setMousePos(ScreenPosition(pos.x(), pos.y()));
-    }
-    break;
+  }
+  break;
   default:
     break;
   }
@@ -325,16 +324,5 @@ bool VulkanWindow::event(QEvent *ev)
 
 void VulkanWindow::updateVulkanInfo()
 {
-  vulkanInfo.window = this;
-  vulkanInfo.df = vulkanInstance()->deviceFunctions(device());
-}
-
-VulkanInfoFromWindow::VulkanInfoFromWindow() : window(nullptr)
-{
-}
-
-VulkanInfoFromWindow::VulkanInfoFromWindow(VulkanWindow *window)
-    : window(window)
-{
-  df = window->vulkanInstance()->deviceFunctions(window->device());
+  vulkanInfo.update();
 }

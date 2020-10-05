@@ -30,11 +30,6 @@ struct BoundBuffer
 	void releaseResources();
 
 	bool hasResources() const noexcept;
-
-	inline QVulkanDeviceFunctions *devFuncs() const noexcept
-	{
-		return vulkanInfo->df;
-	}
 };
 
 namespace Buffer

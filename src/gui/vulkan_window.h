@@ -6,10 +6,12 @@
 
 #include "../util.h"
 
-#include "../map_renderer.h"
-#include "../trianglerenderer.h"
 #include "../map_view.h"
 #include "../graphics/vulkan_helpers.h"
+
+#include "../qt/qt_vulkan_info.h"
+
+#include "../map_renderer.h"
 
 class MainWindow;
 
@@ -19,25 +21,53 @@ class QPoint;
 class QEvent;
 QT_END_NAMESPACE
 
-class VulkanInfoFromWindow : public VulkanInfo
-{
-public:
-  VulkanInfoFromWindow();
-  VulkanInfoFromWindow(VulkanWindow *window);
-
-  inline VkDevice device() const override;
-  inline VkPhysicalDevice physicalDevice() const override;
-  inline VkCommandPool graphicsCommandPool() const override;
-  inline VkQueue graphicsQueue() const override;
-  inline uint32_t graphicsQueueFamilyIndex() const override;
-
-  VulkanWindow *window;
-};
-
 class VulkanWindow : public QVulkanWindow
 {
   Q_OBJECT
 public:
+  class Renderer : public QVulkanWindowRenderer
+  {
+  public:
+    Renderer(VulkanWindow &window);
+    inline void initResources() override
+    {
+      renderer.initResources(window.colorFormat());
+    };
+
+    inline void initSwapChainResources() override
+    {
+      renderer.initSwapChainResources(window.vulkanSwapChainImageSize());
+    };
+
+    inline void releaseSwapChainResources() override
+    {
+      renderer.releaseSwapChainResources();
+    };
+
+    inline void releaseResources() override
+    {
+      renderer.releaseResources();
+    };
+
+    inline void startNextFrame() override
+    {
+      renderer.setCurrentFrame(window.currentFrame());
+      auto frame = renderer.currentFrame();
+      frame->currentFrameIndex = window.currentFrame();
+      frame->commandBuffer = window.currentCommandBuffer();
+      frame->frameBuffer = window.currentFramebuffer();
+      frame->mouseAction = window.mapView->mapViewMouseAction.action();
+      frame->mouseHover = window.showPreviewCursor;
+      frame->projectionMatrix = window.projectionMatrix();
+
+      renderer.startNextFrame();
+    }
+
+  private:
+    VulkanWindow &window;
+    MapRenderer renderer;
+  };
+
   class ContextMenu : public QMenu
   {
   public:
@@ -53,9 +83,9 @@ public:
     bool selfClicked(QPoint pos) const;
   };
 
-  VulkanWindow(std::unique_ptr<MapView> mapView, MapViewMouseAction &mapViewMouseAction);
+  VulkanWindow(std::shared_ptr<Map> map, MapViewMouseAction &mapViewMouseAction);
 
-  VulkanInfoFromWindow vulkanInfo;
+  QtVulkanInfo vulkanInfo;
   QWidget *widget = nullptr;
   MapViewMouseAction &mapViewMouseAction;
   bool showPreviewCursor = false;
@@ -98,35 +128,25 @@ private:
 
   std::unique_ptr<MapView> mapView;
 
-  // std::unique_ptr<TriangleRenderer> renderer;
-  MapRenderer *renderer = nullptr;
+  QVulkanWindowRenderer *renderer = nullptr;
   ContextMenu *contextMenu = nullptr;
 
   // Holds the current scroll amount. (see wheelEvent)
   int scrollAngleBuffer = 0;
+
+  int xVar = -1;
 };
 
-inline VkDevice VulkanInfoFromWindow::device() const
+class QtUiUtils : public UIUtils
 {
-  return window->device();
-}
+public:
+  QtUiUtils(VulkanWindow *window) : window(window) {}
+  ScreenPosition mouseScreenPosInView() override
+  {
+    auto pos = window->mapFromGlobal(QCursor::pos());
+    return ScreenPosition(pos.x(), pos.y());
+  }
 
-inline VkPhysicalDevice VulkanInfoFromWindow::physicalDevice() const
-{
-  return window->physicalDevice();
-}
-
-inline VkCommandPool VulkanInfoFromWindow::graphicsCommandPool() const
-{
-  return window->graphicsCommandPool();
-}
-
-inline VkQueue VulkanInfoFromWindow::graphicsQueue() const
-{
-  return window->graphicsQueue();
-}
-
-inline uint32_t VulkanInfoFromWindow::graphicsQueueFamilyIndex() const
-{
-  return window->graphicsQueueFamilyIndex();
-}
+private:
+  VulkanWindow *window;
+};
