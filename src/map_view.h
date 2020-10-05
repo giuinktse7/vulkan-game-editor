@@ -10,11 +10,10 @@
 #include "camera.h"
 #include "position.h"
 #include "util.h"
+#include "input.h"
 #include "selection.h"
 
 #include "history/history.h"
-
-#include "gui/gui.h"
 
 class MapAction;
 
@@ -51,8 +50,8 @@ public:
 		};
 	};
 
-	MapView(MapViewMouseAction &mouseAction);
-	MapView(MapViewMouseAction &mouseAction, std::shared_ptr<Map> map);
+	MapView(std::unique_ptr<UIUtils> uiUtils, MapViewMouseAction &mouseAction);
+	MapView(std::unique_ptr<UIUtils> uiUtils, MapViewMouseAction &mouseAction, std::shared_ptr<Map> map);
 	~MapView();
 
 	MapViewMouseAction &mapViewMouseAction;
@@ -211,15 +210,12 @@ public:
 		long value;
 	};
 
-	void mouseMoveEvent(ScreenPosition mousePos);
 	void panEvent(PanEvent event);
 
-	inline ScreenPosition mousePos() const noexcept
+	inline ScreenPosition mousePos() const
 	{
-		return _mousePos;
+		return uiUtils->mouseScreenPosInView();
 	}
-
-	void setMousePos(const ScreenPosition pos);
 
 	void addObserver(MapView::Observer *observer);
 	void removeObserver(MapView::Observer *observer);
@@ -248,6 +244,8 @@ private:
 	*/
 	static std::unordered_set<MapView *> instances;
 
+	std::unique_ptr<UIUtils> uiUtils;
+
 	friend class MapAction;
 
 	std::shared_ptr<Map> _map;
@@ -261,7 +259,7 @@ private:
 
 	Camera camera;
 
-	ScreenPosition _mousePos;
+	bool canRender = false;
 
 	std::vector<MapView::Observer *> observers;
 

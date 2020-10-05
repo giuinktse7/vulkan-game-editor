@@ -1,6 +1,7 @@
 #include "map_view.h"
 
 #include "const.h"
+#include "../vendor/rollbear-visit/visit.hpp"
 
 std::unordered_set<MapView *> MapView::instances;
 
@@ -10,20 +11,20 @@ Viewport::Viewport()
       zoom(0.25f),
       offset(0L, 0L) {}
 
-MapView::MapView(MapViewMouseAction &mapViewMouseAction)
-    : MapView(mapViewMouseAction, std::make_shared<Map>())
+MapView::MapView(std::unique_ptr<UIUtils> uiUtils, MapViewMouseAction &mapViewMouseAction)
+    : MapView(std::move(uiUtils), mapViewMouseAction, std::make_shared<Map>())
 {
   instances.emplace(this);
 }
 
-MapView::MapView(MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> map)
+MapView::MapView(std::unique_ptr<UIUtils> uiUtils, MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> map)
     : mapViewMouseAction(mapViewMouseAction),
       history(*this),
       selection(*this),
+      uiUtils(std::move(uiUtils)),
       _map(map),
       viewport(),
-      dragState{},
-      _mousePos()
+      dragState{}
 {
   instances.emplace(this);
 }
@@ -191,11 +192,6 @@ void MapView::setViewportSize(int width, int height)
 {
   viewport.width = width;
   viewport.height = height;
-}
-
-void MapView::setMousePos(const ScreenPosition pos)
-{
-  this->_mousePos = pos;
 }
 
 void MapView::deleteSelectedItems()
@@ -477,22 +473,17 @@ void MapView::mousePressEvent(VME::MouseEvent event)
   }
 }
 
-void MapView::mouseMoveEvent(ScreenPosition mousePos)
-{
-  setMousePos(mousePos);
-}
-
 void MapView::mouseMoveEvent(VME::MouseEvent event)
 {
   if (!isDragging())
     return;
 
   auto dragPositions = getDragPoints().value();
-  Position pos = _mousePos.toPos(*this);
+  Position pos = event.pos().toPos(*this);
 
   if (event.buttons() & VME::MouseButtons::LeftButton)
   {
-    std::visit(
+    rollbear::visit(
         util::overloaded{
             [](const MouseAction::Select) {
               // Empty
@@ -500,7 +491,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
 
             [this, pos, event, dragPositions](const MouseAction::RawItem &action) {
               const auto [from, to] = dragPositions;
-              if (pos == to.toPos(getFloor()) || action.area)
+              if (event.pos().worldPos(*this) == to || action.area)
                 return;
 
               if (event.modifiers() & VME::ModifierKeys::Ctrl)
@@ -516,8 +507,10 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
               }
               else
               {
+                int z = this->getFloor();
                 history.startGroup(ActionGroupType::AddMapItem);
-                addItem(pos, action.serverId);
+                for (const auto position : Position::bresenHams(to.toPos(z), pos))
+                  addItem(position, action.serverId);
                 history.endGroup(ActionGroupType::AddMapItem);
               }
             },
@@ -526,7 +519,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
         mapViewMouseAction.action());
   }
 
-  setDragEnd(mouseWorldPos());
+  setDragEnd(event.pos().worldPos(*this));
 }
 
 void MapView::mouseReleaseEvent(VME::MouseEvent event)
@@ -575,10 +568,10 @@ void MapView::zoom(int delta)
   switch (util::sgn(delta))
   {
   case -1:
-    camera.zoomOut(_mousePos);
+    zoomOut();
     break;
   case 1:
-    camera.zoomIn(_mousePos);
+    zoomIn();
     break;
   default:
     break;
@@ -587,15 +580,15 @@ void MapView::zoom(int delta)
 
 void MapView::zoomOut()
 {
-  camera.zoomOut(_mousePos);
+  camera.zoomOut(mousePos());
 }
 void MapView::zoomIn()
 {
-  camera.zoomIn(_mousePos);
+  camera.zoomIn(mousePos());
 }
 void MapView::resetZoom()
 {
-  camera.resetZoom(_mousePos);
+  camera.resetZoom(mousePos());
 }
 
 float MapView::getZoomFactor() const noexcept
