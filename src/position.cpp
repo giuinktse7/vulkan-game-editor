@@ -75,7 +75,11 @@ Position WorldPosition::toPos(int floor) const
  */
 std::vector<Position> Position::bresenHams(Position from, Position to)
 {
+  DEBUG_ASSERT(from.z == to.z, "from and to must be on the same floor.");
   std::vector<Position> result;
+  if (from == to)
+    return result;
+
   int x0 = from.x;
   int y0 = from.y;
   int x1 = to.x;
