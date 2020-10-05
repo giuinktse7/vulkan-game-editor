@@ -5,7 +5,7 @@
 #include <QString>
 #include <QMouseEvent>
 
-#include "gui.h"
+#include "../input.h"
 
 class MainApplication;
 
@@ -84,7 +84,8 @@ namespace QtUtil
     if (qtModifiers & Qt::ALT)
       modifiers |= VME::ModifierKeys::Alt;
 
-    return VME::MouseEvent(buttons, modifiers);
+    ScreenPosition pos(event->pos().x(), event->pos().y());
+    return VME::MouseEvent(pos, buttons, modifiers);
   }
 
   QPixmap itemPixmap(uint16_t serverId);
