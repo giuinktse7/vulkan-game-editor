@@ -104,6 +104,8 @@ std::optional<int> QtUtil::ScrollState::scroll(QWheelEvent *event)
 
 MapView *QtUtil::associatedMapView(QWidget *widget)
 {
+  if (!widget)
+    return nullptr;
   QVariant prop = widget->property(QtUtil::PropertyName::MapView);
   if (prop.isNull())
     return nullptr;
