@@ -25,7 +25,7 @@ VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, MapViewMouseAction &mapView
     : QVulkanWindow(nullptr),
       vulkanInfo(this),
       mapViewMouseAction(mapViewMouseAction),
-      mapView(std::make_unique<MapView>(std::make_unique<QtUiUtils>(this), mapViewMouseAction, map)),
+      mapView(std::make_unique<MapView>(std::make_unique<QtUtil::QtUiUtils>(this), mapViewMouseAction, map)),
       scrollAngleBuffer(0)
 {
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
