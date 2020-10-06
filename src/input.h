@@ -123,6 +123,12 @@ public:
     _mouseAction = MouseAction::Select{};
   }
 
+  template <typename T>
+  T *as()
+  {
+    return std::get_if<T>(&_mouseAction);
+  }
+
 private:
   MouseAction_t _mouseAction = MouseAction::Select{};
 };
