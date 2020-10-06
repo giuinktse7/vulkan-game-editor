@@ -123,8 +123,6 @@ void MapRenderer::startNextFrame()
 {
   g_ecs.getSystem<ItemAnimationSystem>().update();
 
-  // Update current frame data
-  // this->_currentFrame = &frames[frameData.currentFrameIndex];
   _currentFrame->batchDraw.vulkanInfo = &vulkanInfo;
   _currentFrame->batchDraw.commandBuffer = _currentFrame->commandBuffer;
 
@@ -133,6 +131,7 @@ void MapRenderer::startNextFrame()
   updateUniformBuffer();
 
   drawMap();
+  drawCurrentAction();
 
   _currentFrame->batchDraw.prepareDraw();
 
@@ -225,22 +224,32 @@ void MapRenderer::drawMap()
   Position from{mapRect.x1, mapRect.y1, startZ};
   Position to{mapRect.x2, mapRect.y2, endZ};
 
-  bool moving = view.selection.moving();
+  ItemPredicate filter;
+  if (mapView->isDragRemoving())
+  {
+    auto [from, to] = mapView->getDragPoints().value();
+    Region2D dragRegion(from.toPos(floor), to.toPos(floor));
+    uint16_t serverId = std::get<MouseAction::RawItem>(mapView->mapViewMouseAction.action()).serverId;
+
+    filter = [serverId, &dragRegion](const Position pos, const Item &item) {
+      return !(item.serverId() == serverId && dragRegion.contains(pos));
+    };
+  }
+
+  bool movingSelection = view.selection.moving();
   for (auto &tileLocation : view.map()->getRegion(from, to))
   {
-    if (!tileLocation.hasTile() || (moving && tileLocation.tile()->allSelected()))
+    if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
       continue;
 
     uint32_t flags = ItemDrawFlags::DrawNonSelected;
-    if (!moving)
+    if (!movingSelection)
     {
       flags |= ItemDrawFlags::DrawSelected;
     }
 
-    drawTile(tileLocation, flags);
+    drawTile(tileLocation, flags, Position(), filter);
   }
-
-  drawCurrentAction();
 }
 
 void MapRenderer::drawPreviewItem(uint16_t serverId, Position pos)
@@ -288,11 +297,21 @@ void MapRenderer::drawCurrentAction()
               if (action.area)
               {
                 DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
-                auto [from, to] = mapView->getDragPoints().value();
-                int floor = mapView->getFloor();
-                auto area = MapArea(from.toPos(floor), to.toPos(floor));
-                for (auto &pos : area)
+
+                if (mapView->isDragRemoving())
+                {
+                  drawSelectionRectangle();
                   drawPreviewItem(action.serverId, pos);
+                }
+                else
+                {
+                  auto [from, to] = mapView->getDragPoints().value();
+                  int floor = mapView->getFloor();
+                  auto area = MapArea(from.toPos(floor), to.toPos(floor));
+
+                  for (auto &pos : area)
+                    drawPreviewItem(action.serverId, pos);
+                }
               }
               else
               {
@@ -334,13 +353,14 @@ void MapRenderer::drawMovingSelection()
   }
 }
 
-bool MapRenderer::shouldDrawItem(const Item &item, uint32_t flags) const noexcept
+bool MapRenderer::shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter) const noexcept
 {
-  return (item.selected && (flags & ItemDrawFlags::DrawSelected)) ||
-         (flags & ItemDrawFlags::DrawNonSelected);
+  return ((item.selected && (flags & ItemDrawFlags::DrawSelected)) ||
+          (flags & ItemDrawFlags::DrawNonSelected)) &&
+         (!filter || filter(pos, item));
 }
 
-void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, Position offset)
+void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, Position offset, const ItemPredicate &filter)
 {
   auto position = tileLocation.position();
   position += offset;
@@ -350,7 +370,7 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, Pos
   if (groundPtr)
   {
     const Item &ground = *tile->ground();
-    if (shouldDrawItem(ground, flags))
+    if (shouldDrawItem(position, ground, flags, filter))
     {
       auto info = itemDrawInfo(ground, position, flags);
       drawItem(info);
@@ -360,7 +380,7 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, Pos
   DrawOffset drawOffset{0, 0};
   for (const Item &item : tile->items())
   {
-    if (!shouldDrawItem(item, flags))
+    if (!shouldDrawItem(position, item, flags, filter))
       continue;
 
     auto info = itemDrawInfo(item, position, flags);

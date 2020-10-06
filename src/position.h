@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <ostream>
 
+#include "type_trait.h"
 #include "const.h"
 #include "util.h"
 
@@ -178,6 +179,35 @@ inline std::ostream &operator<<(std::ostream &os, const BasePosition<T> &pos)
 	os << "{ x=" << pos.x << ", y=" << pos.y << " }";
 	return os;
 }
+
+/*
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>Region2D>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+*/
+template <typename Pos>
+struct Region2D
+{
+	static_assert(is_base_of_template<BasePosition, Pos>::value, "Pos must derive from BasePosition");
+	Region2D(Pos from, Pos to) : from(from),
+															 to(to),
+															 x0(std::min(from.x, to.x)),
+															 x1(std::max(from.x, to.x)),
+															 y0(std::min(from.y, to.y)),
+															 y1(std::max(from.y, to.y)) {}
+
+	int x0, y0, x1, y1;
+
+	Pos from;
+	Pos to;
+
+	inline bool contains(Pos pos) const
+	{
+		return (x0 <= pos.x && pos.x <= x1) && (y0 <= pos.y && pos.y <= y1);
+	}
+};
 
 namespace std
 {

@@ -234,6 +234,19 @@ public:
 		return instances.find(pointer) != instances.end();
 	}
 
+	template <typename T>
+	T *currentAction() const;
+
+	inline bool isDragRemoving() const
+	{
+		if (!isDragging())
+			return false;
+		auto action = mapViewMouseAction.as<MouseAction::RawItem>();
+		auto modifiers = uiUtils->modifiers();
+
+		return action && (modifiers & VME::ModifierKeys::Shift) && (modifiers & VME::ModifierKeys::Ctrl);
+	}
+
 private:
 	/**
  		*	Keeps track of all MapView instances. This is necessary for QT to

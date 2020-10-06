@@ -163,6 +163,8 @@ public:
 	}
 
 private:
+	using ItemPredicate = std::function<bool(const Position, const Item &item)>;
+
 	bool debug = false;
 	MapView *mapView;
 	VulkanInfo &vulkanInfo;
@@ -221,10 +223,16 @@ private:
 	ObjectDrawInfo itemDrawInfo(const Item &item, Position position, uint32_t drawFlags);
 	ObjectDrawInfo itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags);
 
-	void drawTile(const TileLocation &tileLocation, uint32_t drawFlags = ItemDrawFlags::DrawNonSelected, Position offset = {});
+	/**
+	 * @predicate An Item predicate. Items for which predicate(item) is false will not be rendered.
+	 */
+	void drawTile(const TileLocation &tileLocation,
+								uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
+								Position offset = {},
+								const ItemPredicate &filter = {});
 	void drawItem(ObjectDrawInfo &info);
 
 	void drawBatches();
 
-	bool shouldDrawItem(const Item &item, uint32_t flags) const noexcept;
+	bool shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter = {}) const noexcept;
 };
