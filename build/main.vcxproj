@@ -543,6 +543,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main_autogen\mocs_compilation.cpp" />
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\enum_conversion.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\logging.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\gui.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\borderless_window.h" />
@@ -557,6 +558,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_renderer.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\qt_vulkan_info.h" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\main.cpp" />
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\enum_conversion.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\logging.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\borderless_window.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\border_layout.cpp" />

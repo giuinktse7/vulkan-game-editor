@@ -7,6 +7,9 @@
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\enum_conversion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\logging.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -42,6 +45,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\enum_conversion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\logging.h">
       <Filter>Header Files</Filter>
     </ClInclude>

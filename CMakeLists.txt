@@ -180,6 +180,7 @@ target_link_libraries(common PRIVATE glm)
 
 add_executable(
   main
+  src/qt/enum_conversion.h
   src/qt/logging.h
   src/gui/gui.h
   src/gui/borderless_window.h
@@ -194,6 +195,7 @@ add_executable(
   src/map_renderer.h
   src/qt/qt_vulkan_info.h
   src/main.cpp
+  src/qt/enum_conversion.cpp
   src/qt/logging.cpp
   src/gui/borderless_window.cpp
   src/gui/border_layout.cpp
