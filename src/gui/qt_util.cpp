@@ -10,6 +10,8 @@
 #include <QLabel>
 #include <QPainter>
 
+#include "vulkan_window.h"
+
 #include "../items.h"
 #include "../map_view.h"
 
@@ -36,6 +38,17 @@ namespace
   }
 
 } // namespace
+
+ScreenPosition QtUtil::QtUiUtils::mouseScreenPosInView()
+{
+  auto pos = window->mapFromGlobal(QCursor::pos());
+  return ScreenPosition(pos.x(), pos.y());
+}
+
+VME::ModifierKeys QtUtil::QtUiUtils::modifiers() const
+{
+  return enum_conversion::vmeModifierKeys(QApplication::keyboardModifiers());
+}
 
 QPixmap QtUtil::itemPixmap(uint16_t serverId)
 {

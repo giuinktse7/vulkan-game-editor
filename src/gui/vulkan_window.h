@@ -1,8 +1,10 @@
 #pragma once
 
+#include <memory>
+
 #include <QVulkanWindow>
 #include <QMenu>
-#include <memory>
+#include <QApplication>
 
 #include "../util.h"
 
@@ -135,18 +137,4 @@ private:
   int scrollAngleBuffer = 0;
 
   int xVar = -1;
-};
-
-class QtUiUtils : public UIUtils
-{
-public:
-  QtUiUtils(VulkanWindow *window) : window(window) {}
-  ScreenPosition mouseScreenPosInView() override
-  {
-    auto pos = window->mapFromGlobal(QCursor::pos());
-    return ScreenPosition(pos.x(), pos.y());
-  }
-
-private:
-  VulkanWindow *window;
 };

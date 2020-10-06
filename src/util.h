@@ -156,6 +156,32 @@ namespace util
 	{
 		return (T(0) < val) - (val < T(0));
 	}
+
+	constexpr int msb(int n)
+	{
+		unsigned r = 0;
+
+		while (n >>= 1)
+			r++;
+
+		return r;
+	}
+
+	static constexpr int MultiplyDeBruijnBitPosition[32] =
+			{0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+			 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
+
+	constexpr int lsb(int value)
+	{
+		return MultiplyDeBruijnBitPosition[((uint32_t)((value & -value) * 0x077CB531U)) >> 27];
+	}
+
+	template <typename T>
+	constexpr int lsb(T value)
+	{
+		unsigned int v = static_cast<std::underlying_type_t<T>>(value);
+		return MultiplyDeBruijnBitPosition[((uint32_t)((v & -v) * 0x077CB531U)) >> 27];
+	}
 } // namespace util
 
 inline constexpr int util::Size::width() const noexcept
@@ -213,29 +239,35 @@ inline std::string toString(T value)
 >>>>>>>>>>>>>>>>>>>>>>>>>>>
 */
 
-#define VME_ENUM_OPERATORS(EnumType)                                          \
-	inline constexpr EnumType operator&(EnumType l, EnumType r)                 \
-	{                                                                           \
-		typedef std::underlying_type<EnumType>::type ut;                          \
-		return static_cast<EnumType>(static_cast<ut>(l) & static_cast<ut>(r));    \
-	}                                                                           \
-                                                                              \
-	inline constexpr EnumType operator|(EnumType l, EnumType r)                 \
-	{                                                                           \
-		typedef std::underlying_type<EnumType>::type ut;                          \
-		return static_cast<EnumType>(static_cast<ut>(l) | static_cast<ut>(r));    \
-	}                                                                           \
-                                                                              \
-	inline constexpr EnumType &operator&=(EnumType &lhs, const EnumType rhs)    \
-	{                                                                           \
-		typedef std::underlying_type<EnumType>::type ut;                          \
-		lhs = static_cast<EnumType>(static_cast<ut>(lhs) & static_cast<ut>(rhs)); \
-		return lhs;                                                               \
-	}                                                                           \
-                                                                              \
-	inline constexpr EnumType &operator|=(EnumType &lhs, const EnumType rhs)    \
-	{                                                                           \
-		typedef std::underlying_type<EnumType>::type ut;                          \
-		lhs = static_cast<EnumType>(static_cast<ut>(lhs) | static_cast<ut>(rhs)); \
-		return lhs;                                                               \
+#define VME_ENUM_OPERATORS(EnumType)                                                                   \
+	inline constexpr EnumType operator&(EnumType l, EnumType r)                                          \
+	{                                                                                                    \
+		typedef std::underlying_type<EnumType>::type ut;                                                   \
+		return static_cast<EnumType>(static_cast<ut>(l) & static_cast<ut>(r));                             \
+	}                                                                                                    \
+                                                                                                       \
+	inline constexpr EnumType operator|(EnumType l, EnumType r)                                          \
+	{                                                                                                    \
+		typedef std::underlying_type<EnumType>::type ut;                                                   \
+		return static_cast<EnumType>(static_cast<ut>(l) | static_cast<ut>(r));                             \
+	}                                                                                                    \
+                                                                                                       \
+	inline constexpr EnumType &operator&=(EnumType &lhs, const EnumType rhs)                             \
+	{                                                                                                    \
+		typedef std::underlying_type<EnumType>::type ut;                                                   \
+		lhs = static_cast<EnumType>(static_cast<ut>(lhs) & static_cast<ut>(rhs));                          \
+		return lhs;                                                                                        \
+	}                                                                                                    \
+	inline constexpr EnumType &operator&=(EnumType &lhs, const std::underlying_type<EnumType>::type rhs) \
+	{                                                                                                    \
+		typedef std::underlying_type<EnumType>::type ut;                                                   \
+		lhs = static_cast<EnumType>(static_cast<ut>(lhs) & rhs);                                           \
+		return lhs;                                                                                        \
+	}                                                                                                    \
+                                                                                                       \
+	inline constexpr EnumType &operator|=(EnumType &lhs, const EnumType rhs)                             \
+	{                                                                                                    \
+		typedef std::underlying_type<EnumType>::type ut;                                                   \
+		lhs = static_cast<EnumType>(static_cast<ut>(lhs) | static_cast<ut>(rhs));                          \
+		return lhs;                                                                                        \
 	}

@@ -1,22 +1,22 @@
 #pragma once
 
+#include <optional>
+
 #include <QWidget>
 #include <QPixmap>
 #include <QString>
 #include <QMouseEvent>
+#include <QApplication>
 
 #include "../input.h"
+
+#include "../qt/enum_conversion.h"
 
 class MainApplication;
 
 class QWheelEvent;
 class MapView;
-
-namespace std
-{
-  template <typename>
-  class optional;
-}
+class VulkanWindow;
 
 namespace
 {
@@ -26,6 +26,18 @@ namespace
 
 namespace QtUtil
 {
+  class QtUiUtils : public UIUtils
+  {
+  public:
+    QtUiUtils(VulkanWindow *window) : window(window) {}
+    ScreenPosition mouseScreenPosInView() override;
+
+    VME::ModifierKeys modifiers() const override;
+
+  private:
+    VulkanWindow *window;
+  };
+
   namespace PropertyName
   {
     constexpr const char *MapView = "vme-mapview";
@@ -63,26 +75,8 @@ namespace QtUtil
 
   inline VME::MouseEvent vmeMouseEvent(QMouseEvent *event)
   {
-    auto qtButtons = event->buttons();
-    auto qtModifiers = event->modifiers();
-
-    VME::MouseButtons buttons = VME::MouseButtons::NoButton;
-    VME::ModifierKeys modifiers = VME::ModifierKeys::None;
-
-    if (qtButtons & Qt::LeftButton)
-      buttons |= VME::MouseButtons::LeftButton;
-
-    if (qtButtons & Qt::RightButton)
-      buttons |= VME::MouseButtons::RightButton;
-
-    if (qtModifiers & Qt::CTRL)
-      modifiers |= VME::ModifierKeys::Ctrl;
-
-    if (qtModifiers & Qt::SHIFT)
-      modifiers |= VME::ModifierKeys::Shift;
-
-    if (qtModifiers & Qt::ALT)
-      modifiers |= VME::ModifierKeys::Alt;
+    VME::MouseButtons buttons = enum_conversion::vmeButtons(event->buttons());
+    VME::ModifierKeys modifiers = enum_conversion::vmeModifierKeys(event->modifiers());
 
     ScreenPosition pos(event->pos().x(), event->pos().y());
     return VME::MouseEvent(pos, buttons, modifiers);

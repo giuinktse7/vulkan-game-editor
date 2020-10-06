@@ -92,6 +92,7 @@ public:
   virtual ~UIUtils() = default;
 
   virtual ScreenPosition mouseScreenPosInView() = 0;
+  virtual VME::ModifierKeys modifiers() const = 0;
 };
 
 using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select>;
