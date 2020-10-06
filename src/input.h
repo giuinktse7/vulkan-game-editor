@@ -12,8 +12,15 @@ namespace VME
   {
     NoButton = 0,
     LeftButton = 1 << 0,
-    RightButton = 1 << 1
+    RightButton = 1 << 1,
+    MiddleButton = 1 << 2,
+    BackButton = 1 << 3,
+    ExtraButton1 = 1 << 4,
+    ExtraButton2 = 1 << 5,
+    ExtraButton3 = 1 << 6,
+    ExtraButton4 = 1 << 7
   };
+  using MouseButton = MouseButtons;
   VME_ENUM_OPERATORS(MouseButtons)
 
   enum ModifierKeys
