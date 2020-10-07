@@ -3,10 +3,19 @@
 #include <QVulkanDeviceFunctions>
 #include <QVulkanWindow>
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include "../graphics/vulkan_helpers.h"
 
 #include "../gui/vulkan_window.h"
 #include "../util.h"
+
+#include "../map_view.h"
+
+static const QMatrix4x4 clipCorrectionMatrix = QMatrix4x4(1.0f, 0.0f, 0.0f, 0.0f,
+                                                          0.0f, -1.0f, 0.0f, 0.0f,
+                                                          0.0f, 0.0f, 0.5f, 0.5f,
+                                                          0.0f, 0.0f, 0.0f, 1.0f);
 
 class QtVulkanInfo : public VulkanInfo
 {
@@ -23,6 +32,24 @@ public:
   {
     window->frameReady();
     window->requestUpdate();
+  }
+  glm::mat4 projectionMatrix(MapView &mapView) const override
+  {
+    QMatrix4x4 projection = clipCorrectionMatrix; // adjust for Vulkan-OpenGL clip space differences
+    const util::Size sz = vulkanSwapChainImageSize();
+    QRectF rect;
+    const Viewport &viewport = mapView.getViewport();
+    rect.setX(static_cast<qreal>(viewport.offset.x));
+    rect.setY(static_cast<qreal>(viewport.offset.y));
+    rect.setWidth(sz.width() * viewport.zoom);
+    rect.setHeight(sz.height() * viewport.zoom);
+    projection.ortho(rect);
+
+    glm::mat4 data;
+    float *ptr = glm::value_ptr(data);
+    projection.transposed().copyDataTo(ptr);
+
+    return data;
   }
 
   util::Size vulkanSwapChainImageSize() const override

@@ -60,7 +60,6 @@ public:
       frame->frameBuffer = window.currentFramebuffer();
       frame->mouseAction = window.mapView->mapViewMouseAction.action();
       frame->mouseHover = window.showPreviewCursor;
-      frame->projectionMatrix = window.projectionMatrix();
 
       renderer.startNextFrame();
     }

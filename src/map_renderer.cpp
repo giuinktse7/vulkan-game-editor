@@ -475,7 +475,7 @@ ObjectDrawInfo MapRenderer::itemTypeDrawInfo(const ItemType &itemType, Position 
 
 void MapRenderer::updateUniformBuffer()
 {
-  glm::mat4 projection = _currentFrame->projectionMatrix;
+  glm::mat4 projection = vulkanInfo.projectionMatrix();
   ItemUniformBufferObject uniformBufferObject{projection};
 
   void *data;

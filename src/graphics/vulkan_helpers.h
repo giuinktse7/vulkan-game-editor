@@ -18,6 +18,8 @@ public:
 
   virtual util::Size vulkanSwapChainImageSize() const = 0;
   virtual int maxConcurrentFrameCount() const = 0;
+
+  virtual glm::mat4 projectionMatrix(MapView &mapView) const = 0;
 };
 
 class VulkanInfo : public RenderTarget
