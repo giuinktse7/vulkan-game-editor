@@ -191,17 +191,18 @@ template <typename Pos>
 struct Region2D
 {
 	static_assert(is_base_of_template<BasePosition, Pos>::value, "Pos must derive from BasePosition");
-	Region2D(Pos from, Pos to) : from(from),
-															 to(to),
-															 x0(std::min(from.x, to.x)),
-															 x1(std::max(from.x, to.x)),
-															 y0(std::min(from.y, to.y)),
-															 y1(std::max(from.y, to.y)) {}
-
-	int x0, y0, x1, y1;
+	Region2D(Pos from, Pos to)
+			: from(from),
+				to(to),
+				x0(std::min(from.x, to.x)),
+				y0(std::min(from.y, to.y)),
+				x1(std::max(from.x, to.x)),
+				y1(std::max(from.y, to.y)) {}
 
 	Pos from;
 	Pos to;
+
+	int x0, y0, x1, y1;
 
 	inline bool contains(Pos pos) const
 	{
