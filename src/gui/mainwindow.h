@@ -42,14 +42,11 @@ public:
 
   EditorAction editorAction;
 
-  bool eventFilter(QObject *object, QEvent *event) override;
-
 protected:
   void mousePressEvent(QMouseEvent *event) override;
 
 private:
   void keyPressEvent(QKeyEvent *event) override;
-  bool globalKeyPressEvent(QKeyEvent *event);
 
   // UI
   BorderLayout *rootLayout;
@@ -73,4 +70,13 @@ private:
   QVulkanInstance *vulkanInstance;
 
   // void updatePositionText();
+};
+
+class ItemListEventFilter : public QObject
+{
+public:
+  ItemListEventFilter(QObject *parent = nullptr) : QObject(parent) {}
+
+protected:
+  bool eventFilter(QObject *obj, QEvent *event) override;
 };

@@ -25,8 +25,38 @@
 #include "map_tab_widget.h"
 #include "../util.h"
 #include "qt_util.h"
+#include "../qt/logging.h"
 
 #include "../main.h"
+
+bool ItemListEventFilter::eventFilter(QObject *object, QEvent *event)
+{
+  switch (event->type())
+  {
+  case QEvent::KeyPress:
+  {
+    // VME_LOG_D("Focused widget: " << QApplication::focusWidget());
+    auto keyEvent = static_cast<QKeyEvent *>(event);
+    if (keyEvent->key() == Qt::Key_I)
+    {
+      auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
+      auto vulkanWindow = QtUtil::associatedVulkanWindow(widget);
+      if (vulkanWindow)
+      {
+        QApplication::sendEvent(vulkanWindow, event);
+      }
+
+      return false;
+    }
+
+    break;
+  }
+  default:
+    break;
+  }
+
+  return QObject::eventFilter(object, event);
+}
 
 QLabel *itemImage(uint16_t serverId)
 {
@@ -110,6 +140,7 @@ void MainWindow::initializeUI()
   rootLayout->setMenuBar(menu);
 
   QListView *listView = new QListView;
+  listView->installEventFilter(new ItemListEventFilter(this));
   listView->setItemDelegate(new Delegate(this));
 
   std::vector<ItemTypeModelItem> data;
@@ -169,8 +200,6 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-  qDebug() << "MainWindow::keyPressEvent: " << event;
-  // qDebug() << "MainWindow::keyPressEvent: " << event->type();
   switch (event->key())
   {
   case Qt::Key_Escape:
@@ -182,26 +211,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
       mapTabs->currentMapView()->resetZoom();
     }
     break;
-  case Qt::Key_I:
-  {
-    QWidget *widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-    QVariant prop = widget->property("vulkan-window-wrapper");
-    if (prop.canConvert<bool>() && prop.toBool())
-    {
-      VME_LOG_D("Yep: " << widget);
-    }
-    else
-    {
-      VME_LOG_D("Nop: " << widget);
-    }
-
-    // const Item *topItem = mapTabsmapView->map()->getTopItem(mapView->mouseGamePos());
-    // if (topItem)
-    // {
-    // mapView->mapViewMouseAction.setRawItem(topItem->serverId());
-    // }
-    break;
-  }
   case Qt::Key_Delete:
     mapTabs->currentMapView()->deleteSelectedItems();
     break;
@@ -320,59 +329,4 @@ MapView *getMapViewOnCursor()
 {
   QWidget *widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
   return QtUtil::associatedMapView(widget);
-}
-
-bool MainWindow::globalKeyPressEvent(QKeyEvent *event)
-{
-  switch (event->key())
-  {
-  case Qt::Key_I:
-  {
-
-    /*// TODO!
-      This will consume all clicks of the key 'i', even ones that are input into
-      a text field. For this to work properly, true should only be returned here
-      if the currently focused widget does not need the event.
-    */
-    MapView *mapView = getMapViewOnCursor();
-    if (mapView)
-    {
-      const Item *topItem = mapView->map()->getTopItem(mapView->mouseGamePos());
-      if (topItem)
-      {
-        editorAction.setRawItem(topItem->serverId());
-        // mapView->editorAction.setRawItem(topItem->serverId());
-      }
-    }
-    return true;
-  }
-  break;
-  default:
-    break;
-  }
-
-  return false;
-}
-
-/*
- * This function receives ALL events in the application. This should mostly (if not only) be used
- * to hook events that should happen globally, regardless of focus.
- */
-bool MainWindow::eventFilter(QObject *object, QEvent *event)
-{
-  switch (event->type())
-  {
-  case QEvent::KeyPress:
-  {
-    if (globalKeyPressEvent(static_cast<QKeyEvent *>(event)))
-    {
-      return true;
-    }
-  }
-  break;
-  default:
-    break;
-  }
-
-  return QWidget::eventFilter(object, event);
 }
