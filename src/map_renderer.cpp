@@ -489,7 +489,7 @@ VkDescriptorSet MapRenderer::objectDescriptorSet(const BaseObjectDrawInfo &info)
 
 void MapRenderer::updateUniformBuffer()
 {
-  glm::mat4 projection = vulkanInfo.projectionMatrix();
+  glm::mat4 projection = vulkanInfo.projectionMatrix(*mapView);
   ItemUniformBufferObject uniformBufferObject{projection};
 
   void *data;

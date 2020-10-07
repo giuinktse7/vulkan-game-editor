@@ -11,6 +11,8 @@
 #include "../util.h"
 #include "../debug.h"
 
+#include "../map_view.h"
+
 class RenderTarget
 {
 public:
