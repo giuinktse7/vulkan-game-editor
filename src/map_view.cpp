@@ -89,7 +89,7 @@ bool MapView::hasSelectionMoveOrigin() const
 
 void MapView::addItem(const Position pos, uint16_t id)
 {
-  if (!Items::items.validItemType(id))
+  if (!Items::items.validItemType(id) || pos.x < 0 || pos.y < 0)
     return;
 
   Tile &currentTile = _map->getOrCreateTile(pos);
