@@ -22,12 +22,11 @@ constexpr VkClearColorValue ClearColor = {{0.0f, 0.0f, 0.0f, 1.0f}};
 // A rectangle is drawn using two triangles, each with 3 vertex indices.
 uint32_t IndexBufferSize = 6 * sizeof(uint16_t);
 
-namespace colors
+glm::vec4 colors::opacity(float value)
 {
-  constexpr glm::vec4 Default{1.0f, 1.0f, 1.0f, 1.0f};
-  constexpr glm::vec4 Selected{0.45f, 0.45f, 0.45f, 1.0f};
-  constexpr glm::vec4 SeeThrough{1.0f, 1.0f, 1.0f, 0.35f};
-  constexpr glm::vec4 ItemPreview{0.6f, 0.6f, 0.6f, 0.7f};
+  DEBUG_ASSERT(0 <= value && value <= 1, "value must be in range [0.0f, 1.0f].");
+  return glm::vec4(1.0f, 1.0f, 1.0f, value);
+}
 
 } // namespace colors
 
