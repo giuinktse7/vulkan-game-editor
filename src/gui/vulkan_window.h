@@ -127,8 +127,8 @@ private:
   void wheelEvent(QWheelEvent *event) override;
 
   void onVisibilityChanged(QWindow::Visibility visibility);
-
   std::unique_ptr<MapView> mapView;
+  QtVulkanInfo vulkanInfo;
 
   QVulkanWindowRenderer *renderer = nullptr;
   ContextMenu *contextMenu = nullptr;
