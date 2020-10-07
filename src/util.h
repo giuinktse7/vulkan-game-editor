@@ -81,7 +81,6 @@ namespace util
 	{
 	};
 
-	// helper type for the visitor #4
 	template <class... Ts>
 	struct overloaded : Ts...
 	{

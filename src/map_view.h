@@ -50,11 +50,11 @@ public:
 		};
 	};
 
-	MapView(std::unique_ptr<UIUtils> uiUtils, MapViewMouseAction &mouseAction);
-	MapView(std::unique_ptr<UIUtils> uiUtils, MapViewMouseAction &mouseAction, std::shared_ptr<Map> map);
+	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action);
+	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::shared_ptr<Map> map);
 	~MapView();
 
-	MapViewMouseAction &mapViewMouseAction;
+	EditorAction &editorAction;
 
 	MapHistory::History history;
 
@@ -241,7 +241,7 @@ public:
 	{
 		if (!isDragging())
 			return false;
-		auto action = mapViewMouseAction.as<MouseAction::RawItem>();
+		auto action = editorAction.as<MouseAction::RawItem>();
 		auto modifiers = uiUtils->modifiers();
 
 		return action && (modifiers & VME::ModifierKeys::Shift) && (modifiers & VME::ModifierKeys::Ctrl);

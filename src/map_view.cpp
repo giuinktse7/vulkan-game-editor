@@ -11,14 +11,14 @@ Viewport::Viewport()
       zoom(0.25f),
       offset(0L, 0L) {}
 
-MapView::MapView(std::unique_ptr<UIUtils> uiUtils, MapViewMouseAction &mapViewMouseAction)
-    : MapView(std::move(uiUtils), mapViewMouseAction, std::make_shared<Map>())
+MapView::MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action)
+    : MapView(std::move(uiUtils), action, std::make_shared<Map>())
 {
   instances.emplace(this);
 }
 
-MapView::MapView(std::unique_ptr<UIUtils> uiUtils, MapViewMouseAction &mapViewMouseAction, std::shared_ptr<Map> map)
-    : mapViewMouseAction(mapViewMouseAction),
+MapView::MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::shared_ptr<Map> map)
+    : editorAction(action),
       history(*this),
       selection(*this),
       uiUtils(std::move(uiUtils)),
@@ -338,7 +338,7 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
 
               MouseAction::Select newAction = select;
               newAction.area = false;
-              mapViewMouseAction.set(newAction);
+              editorAction.set(newAction);
             }
           },
 
@@ -368,12 +368,12 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
 
               MouseAction::RawItem newAction = action;
               newAction.area = false;
-              mapViewMouseAction.set(newAction);
+              editorAction.set(newAction);
             }
           },
 
           [](const auto &arg) {}},
-      mapViewMouseAction.action());
+      editorAction.action());
 
   dragState.reset();
 }
@@ -412,7 +412,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
               {
                 MouseAction::Select newAction = action;
                 newAction.area = true;
-                mapViewMouseAction.set(newAction);
+                editorAction.set(newAction);
               }
               else
               {
@@ -444,7 +444,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
               {
                 MouseAction::RawItem newAction = action;
                 newAction.area = true;
-                mapViewMouseAction.set(newAction);
+                editorAction.set(newAction);
               }
               else
               {
@@ -467,7 +467,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
               }
             },
             [](const auto &arg) {}},
-        mapViewMouseAction.action());
+        editorAction.action());
 
     setDragStart(mouseWorldPos());
   }
@@ -516,7 +516,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
             },
 
             [](const auto &arg) {}},
-        mapViewMouseAction.action());
+        editorAction.action());
   }
 
   setDragEnd(event.pos().worldPos(*this));
@@ -625,9 +625,9 @@ void MapView::escapeEvent()
           },
 
           [this](const auto &&arg) {
-            mapViewMouseAction.reset();
+            editorAction.reset();
           }},
-      mapViewMouseAction.action());
+      editorAction.action());
 }
 
 void MapView::addObserver(MapView::Observer *o)

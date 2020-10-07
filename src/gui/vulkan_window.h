@@ -58,7 +58,7 @@ public:
       frame->currentFrameIndex = window.currentFrame();
       frame->commandBuffer = window.currentCommandBuffer();
       frame->frameBuffer = window.currentFramebuffer();
-      frame->mouseAction = window.mapView->mapViewMouseAction.action();
+      frame->mouseAction = window.mapView->editorAction.action();
       frame->mouseHover = window.showPreviewCursor;
 
       renderer.startNextFrame();
@@ -84,11 +84,11 @@ public:
     bool selfClicked(QPoint pos) const;
   };
 
-  VulkanWindow(std::shared_ptr<Map> map, MapViewMouseAction &mapViewMouseAction);
+  VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction);
 
   QtVulkanInfo vulkanInfo;
   QWidget *widget = nullptr;
-  MapViewMouseAction &mapViewMouseAction;
+  EditorAction &editorAction;
   bool showPreviewCursor = false;
 
   std::string debugName;

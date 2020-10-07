@@ -40,7 +40,7 @@ public:
 
   MapTabWidget *mapTabs;
 
-  MapViewMouseAction mapViewMouseAction;
+  EditorAction editorAction;
 
   bool eventFilter(QObject *object, QEvent *event) override;
 

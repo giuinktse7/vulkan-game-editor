@@ -21,11 +21,11 @@
 
 #include "gui.h"
 
-VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, MapViewMouseAction &mapViewMouseAction)
+VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
     : QVulkanWindow(nullptr),
       vulkanInfo(this),
-      mapViewMouseAction(mapViewMouseAction),
-      mapView(std::make_unique<MapView>(std::make_unique<QtUtil::QtUiUtils>(this), mapViewMouseAction, map)),
+      editorAction(editorAction),
+      mapView(std::make_unique<MapView>(std::make_unique<QtUtil::QtUiUtils>(this), editorAction, map)),
       scrollAngleBuffer(0)
 {
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
@@ -203,10 +203,12 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
     const Item *topItem = mapView->map()->getTopItem(mapView->mouseGamePos());
     if (topItem)
     {
-      mapView->mapViewMouseAction.setRawItem(topItem->serverId());
+      mapView->editorAction.setRawItem(topItem->serverId());
     }
     break;
   }
+  case Qt::Key_Space:
+
   default:
     e->ignore();
     QVulkanWindow::keyPressEvent(e);

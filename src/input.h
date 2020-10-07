@@ -100,7 +100,7 @@ using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, Mous
 /*
   Contains mouse actions that can occur on a MapView.
 */
-class MapViewMouseAction
+class EditorAction
 {
 public:
   inline MouseAction_t action() const noexcept

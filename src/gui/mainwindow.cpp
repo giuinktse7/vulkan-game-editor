@@ -61,7 +61,7 @@ void MainWindow::addMapTab()
 
 void MainWindow::addMapTab(std::shared_ptr<Map> map)
 {
-  VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, map, mapViewMouseAction);
+  VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, map, editorAction);
 
   // Window setup
   vulkanWindow->setVulkanInstance(vulkanInstance);
@@ -69,7 +69,7 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
 
   MouseAction::RawItem action;
   action.serverId = 6217;
-  mapViewMouseAction.set(action);
+  editorAction.set(action);
 
   // Create the widget
   MapViewWidget *widget = new MapViewWidget(vulkanWindow);
@@ -129,7 +129,7 @@ void MainWindow::initializeUI()
 
     MouseAction::RawItem action;
     action.serverId = value.itemType->id;
-    mapViewMouseAction.set(action);
+    editorAction.set(action);
   });
   rootLayout->addWidget(listView, BorderLayout::Position::West);
 
@@ -340,7 +340,8 @@ bool MainWindow::globalKeyPressEvent(QKeyEvent *event)
       const Item *topItem = mapView->map()->getTopItem(mapView->mouseGamePos());
       if (topItem)
       {
-        mapView->mapViewMouseAction.setRawItem(topItem->serverId());
+        editorAction.setRawItem(topItem->serverId());
+        // mapView->editorAction.setRawItem(topItem->serverId());
       }
     }
     return true;

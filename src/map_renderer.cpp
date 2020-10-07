@@ -226,7 +226,7 @@ void MapRenderer::drawMap()
   {
     auto [from, to] = mapView->getDragPoints().value();
     Region2D dragRegion(from.toPos(floor), to.toPos(floor));
-    uint16_t serverId = std::get<MouseAction::RawItem>(mapView->mapViewMouseAction.action()).serverId;
+    uint16_t serverId = std::get<MouseAction::RawItem>(mapView->editorAction.action()).serverId;
 
     filter = [serverId, &dragRegion](const Position pos, const Item &item) {
       return !(item.serverId() == serverId && dragRegion.contains(pos));
