@@ -28,8 +28,6 @@ glm::vec4 colors::opacity(float value)
   return glm::vec4(1.0f, 1.0f, 1.0f, value);
 }
 
-} // namespace colors
-
 MapRenderer::MapRenderer(VulkanInfo &vulkanInfo, MapView *mapView)
     : mapView(mapView),
       vulkanInfo(vulkanInfo),

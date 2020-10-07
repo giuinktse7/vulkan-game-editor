@@ -27,6 +27,17 @@
 class BatchDraw;
 struct ObjectDrawInfo;
 
+namespace colors
+{
+	constexpr glm::vec4 Default{1.0f, 1.0f, 1.0f, 1.0f};
+	constexpr glm::vec4 Selected{0.45f, 0.45f, 0.45f, 1.0f};
+	constexpr glm::vec4 SeeThrough{1.0f, 1.0f, 1.0f, 0.35f};
+	constexpr glm::vec4 ItemPreview{0.6f, 0.6f, 0.6f, 0.7f};
+
+	glm::vec4 opacity(float value);
+
+} // namespace colors
+
 namespace ItemDrawFlags
 {
 	constexpr uint32_t None = 0;
