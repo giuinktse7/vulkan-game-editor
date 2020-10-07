@@ -123,3 +123,26 @@ MapView *QtUtil::associatedMapView(QWidget *widget)
   return MapView::isInstance(mapView) ? mapView : nullptr;
 #endif
 }
+
+VulkanWindow *QtUtil::associatedVulkanWindow(QWidget *widget)
+{
+  if (!widget)
+    return nullptr;
+  QVariant prop = widget->property(QtUtil::PropertyName::VulkanWindow);
+  if (prop.isNull())
+    return nullptr;
+
+  VulkanWindow *vulkanWindow = static_cast<VulkanWindow *>(prop.value<void *>());
+#ifdef __DEBUG__VME
+  bool isInstance = VulkanWindow::isInstance(vulkanWindow);
+
+  std::ostringstream msg;
+  msg << "The property QtUtil::PropertyName::MapView for widget " << widget << " must contain a MapView pointer.";
+  DEBUG_ASSERT(isInstance, msg.str());
+
+  return vulkanWindow;
+#else
+  return VulkanWindow::isInstance(vulkanWindow) ? vulkanWindow : nullptr;
+#endif
+  return vulkanWindow;
+}

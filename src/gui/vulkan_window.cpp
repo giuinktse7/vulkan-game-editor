@@ -21,6 +21,9 @@
 
 #include "gui.h"
 
+// Static
+std::unordered_set<const VulkanWindow *> VulkanWindow::instances;
+
 VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
     : QVulkanWindow(nullptr),
       vulkanInfo(this),
@@ -28,7 +31,14 @@ VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
       mapView(std::make_unique<MapView>(std::make_unique<QtUtil::QtUiUtils>(this), editorAction, map)),
       scrollAngleBuffer(0)
 {
+  instances.emplace(this);
+
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
+}
+
+VulkanWindow::~VulkanWindow()
+{
+  instances.erase(this);
 }
 
 void VulkanWindow::lostFocus()
@@ -42,7 +52,9 @@ void VulkanWindow::lostFocus()
 QWidget *VulkanWindow::wrapInWidget(QWidget *parent)
 {
   QWidget *wrapper = QWidget::createWindowContainer(this, parent);
-  QtUtil::associateWithMapView(*wrapper, mapView.get());
+  QtUtil::setMapView(*wrapper, mapView.get());
+  QtUtil::setVulkanWindow(*wrapper, this);
+  wrapper->setObjectName("VulkanWindow wrapper");
 
   widget = wrapper;
 
@@ -208,7 +220,10 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
     break;
   }
   case Qt::Key_Space:
+  {
 
+    break;
+  }
   default:
     e->ignore();
     QVulkanWindow::keyPressEvent(e);
@@ -303,8 +318,10 @@ QRect VulkanWindow::ContextMenu::relativeGeometry() const
 
 bool VulkanWindow::event(QEvent *ev)
 {
-
-  // qDebug() << "[" << QString(debugName.c_str()) << "] " << ev->type() << " { " << mapToGlobal(position()) << " }";
+  // if (!(ev->type() == QEvent::UpdateRequest) && !(ev->type() == QEvent::MouseMove))
+  // {
+  //   qDebug() << "[" << QString(debugName.c_str()) << "] " << ev->type() << " { " << mapToGlobal(position()) << " }";
+  // }
 
   switch (ev->type())
   {

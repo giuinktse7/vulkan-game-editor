@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_set>
 
 #include <QVulkanWindow>
 #include <QMenu>
@@ -85,6 +86,7 @@ public:
   };
 
   VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction);
+  ~VulkanWindow();
 
   QtVulkanInfo vulkanInfo;
   QWidget *widget = nullptr;
@@ -110,6 +112,11 @@ public:
   util::Size vulkanSwapChainImageSize() const;
   glm::mat4 projectionMatrix();
 
+  inline static bool isInstance(const VulkanWindow *pointer)
+  {
+    return instances.find(pointer) != instances.end();
+  }
+
 signals:
   void scrollEvent(int degrees);
   void mousePosChanged(util::Point<float> mousePos);
@@ -119,6 +126,15 @@ protected:
   bool event(QEvent *ev) override;
 
 private:
+  /**
+ 		*	Keeps track of all VulkanWindow instances. This is necessary for QT to
+		* validate VulkanWindow pointers in a QVariant.
+		*
+		* See:
+		* QtUtil::associatedVulkanWindow
+	*/
+  static std::unordered_set<const VulkanWindow *> instances;
+
   void mousePressEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;

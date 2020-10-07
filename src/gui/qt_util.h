@@ -41,7 +41,8 @@ namespace QtUtil
   namespace PropertyName
   {
     constexpr const char *MapView = "vme-mapview";
-  }
+    constexpr const char *VulkanWindow = "vme-vulkan-window";
+  } // namespace PropertyName
 
   template <typename T>
   inline QVariant wrapPointerInQVariant(T *pointer)
@@ -49,12 +50,18 @@ namespace QtUtil
     return QVariant::fromValue(static_cast<void *>(pointer));
   }
 
-  inline void associateWithMapView(QWidget &widget, MapView *mapView)
+  inline void setMapView(QWidget &widget, MapView *mapView)
   {
     widget.setProperty(PropertyName::MapView, wrapPointerInQVariant(mapView));
   }
 
+  inline void setVulkanWindow(QWidget &widget, VulkanWindow *vulkanWindow)
+  {
+    widget.setProperty(PropertyName::VulkanWindow, wrapPointerInQVariant(vulkanWindow));
+  }
+
   MapView *associatedMapView(QWidget *widget);
+  VulkanWindow *associatedVulkanWindow(QWidget *widget);
 
   struct ScrollState
   {
