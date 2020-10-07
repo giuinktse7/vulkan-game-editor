@@ -19,13 +19,35 @@
 
 constexpr uint32_t BatchDeviceSize = 4 * 128 * sizeof(Vertex);
 
-struct ObjectDrawInfo
+struct BaseObjectDrawInfo
 {
 	Appearance *appearance;
 	TextureInfo textureInfo;
-	Position position;
 	glm::vec4 color{};
+	VkDescriptorSet descriptorSet;
+};
+
+/**
+ * Describes an overlay object.
+ * NOTE: Do not use this to draw a map item. For that, use ObjectDrawInfo;
+ * it takes a Position instead of a WorldPosition.
+*/
+struct OverlayObjectDrawInfo : BaseObjectDrawInfo
+{
+	WorldPosition position;
+};
+
+struct ObjectDrawInfo : BaseObjectDrawInfo
+{
+	Position position;
 	DrawOffset drawOffset = {0, 0};
+};
+
+struct ObjectVertexInfo
+{
+	TextureInfo textureInfo;
+	WorldPosition position;
+	glm::vec4 color{};
 	VkDescriptorSet descriptorSet;
 };
 
@@ -34,7 +56,7 @@ struct RectangleDrawInfo
 	WorldPosition from;
 	WorldPosition to;
 	glm::vec4 color{};
-	std::variant<Texture *, TextureInfo> texture;
+	std::variant<const Texture *, TextureInfo> texture;
 	VkDescriptorSet descriptorSet;
 };
 
@@ -105,6 +127,8 @@ public:
 	BatchDraw(VulkanInfo *vulkanInfo = nullptr);
 
 	void addItem(ObjectDrawInfo &info);
+
+	void addOverlayItem(const OverlayObjectDrawInfo &info);
 	void addRectangle(RectangleDrawInfo &info);
 
 	Batch &getBatch() const;
@@ -116,6 +140,8 @@ public:
 private:
 	mutable uint32_t batchIndex = 0;
 	mutable std::vector<Batch> batches;
+
+	void addObjectVertices(const ObjectVertexInfo &info);
 
 	Batch &getBatch(uint32_t requiredVertexCount) const;
 };

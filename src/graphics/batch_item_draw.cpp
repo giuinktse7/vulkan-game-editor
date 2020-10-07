@@ -112,36 +112,69 @@ void Batch::copyStagingToDevice(VkCommandBuffer commandBuffer)
   stagingBuffer.vulkanInfo->vkCmdCopyBuffer(commandBuffer, stagingBuffer.buffer, buffer.buffer, 1, &copyRegion);
 }
 
+void BatchDraw::addOverlayItem(const OverlayObjectDrawInfo &info)
+{
+  WorldPosition position(info.position);
+
+  // Add the item shift if necessary
+  if (info.appearance->hasFlag(AppearanceFlag::Shift))
+  {
+    position.x -= info.appearance->flagData.shiftX;
+    position.y -= info.appearance->flagData.shiftY;
+  }
+
+  ObjectVertexInfo vertexInfo;
+  vertexInfo.position = position;
+  vertexInfo.textureInfo = info.textureInfo;
+  vertexInfo.color = info.color;
+  vertexInfo.descriptorSet = info.descriptorSet;
+
+  addObjectVertices(vertexInfo);
+}
+
 void BatchDraw::addItem(ObjectDrawInfo &info)
 {
-  auto [appearance, textureInfo, position, color, drawOffset, descriptorSet] = info;
-  auto [atlas, window] = textureInfo;
+  const auto *atlas = info.textureInfo.atlas;
 
-  WorldPosition worldPos = MapPosition{position.x + atlas->drawOffset.x, position.y + atlas->drawOffset.y}.worldPos();
+  WorldPosition worldPos = MapPosition{info.position.x + atlas->drawOffset.x, info.position.y + atlas->drawOffset.y}.worldPos();
 
   // Add draw offsets like elevation
   worldPos.x += std::clamp(info.drawOffset.x, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
   worldPos.y += std::clamp(info.drawOffset.y, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
 
   // Add the item shift if necessary
-  if (appearance->hasFlag(AppearanceFlag::Shift))
+  if (info.appearance->hasFlag(AppearanceFlag::Shift))
   {
-    worldPos.x -= appearance->flagData.shiftX;
-    worldPos.y -= appearance->flagData.shiftY;
+    worldPos.x -= info.appearance->flagData.shiftX;
+    worldPos.y -= info.appearance->flagData.shiftY;
   }
+
+  ObjectVertexInfo vertexInfo;
+  vertexInfo.position = worldPos;
+  vertexInfo.textureInfo = info.textureInfo;
+  vertexInfo.color = info.color;
+  vertexInfo.descriptorSet = info.descriptorSet;
+
+  addObjectVertices(vertexInfo);
+}
+
+void BatchDraw::addObjectVertices(const ObjectVertexInfo &info)
+{
+  const auto [atlas, window] = info.textureInfo;
+  const auto &pos = info.position;
 
   uint32_t width = atlas->spriteWidth;
   uint32_t height = atlas->spriteHeight;
   const glm::vec4 fragmentBounds = atlas->getFragmentBounds(window);
 
   Batch &batch = getBatch(4);
-  batch.setDescriptor(descriptorSet);
+  batch.setDescriptor(info.descriptorSet);
 
   std::array<Vertex, 4> vertices{{
-      {{worldPos.x, worldPos.y}, color, {window.x0, window.y0}, fragmentBounds},
-      {{worldPos.x, worldPos.y + height}, color, {window.x0, window.y1}, fragmentBounds},
-      {{worldPos.x + width, worldPos.y + height}, color, {window.x1, window.y1}, fragmentBounds},
-      {{worldPos.x + width, worldPos.y}, color, {window.x1, window.y0}, fragmentBounds},
+      {{pos.x, pos.y}, info.color, {window.x0, window.y0}, fragmentBounds},
+      {{pos.x, pos.y + height}, info.color, {window.x0, window.y1}, fragmentBounds},
+      {{pos.x + width, pos.y + height}, info.color, {window.x1, window.y1}, fragmentBounds},
+      {{pos.x + width, pos.y}, info.color, {window.x1, window.y0}, fragmentBounds},
   }};
 
   batch.addVertices(vertices);
@@ -154,9 +187,7 @@ void BatchDraw::addRectangle(RectangleDrawInfo &info)
   TextureWindow window{};
   glm::vec4 fragmentBounds{};
 
-  DEBUG_ASSERT(std::holds_alternative<Texture *>(info.texture) || std::holds_alternative<TextureInfo>(info.texture), "Unknown texture in addRectangle.");
-
-  if (std::holds_alternative<Texture *>(info.texture))
+  if (std::holds_alternative<const Texture *>(info.texture))
   {
     window = {0, 0, 1, 1};
     fragmentBounds = {0, 0, 1, 1};
