@@ -104,8 +104,8 @@ public:
 
 	bool unused = true;
 
-	void initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, VulkanTexture::Descriptor descriptor);
-	void initResources(Texture &texture, VulkanInfo &vulkanInfo, VulkanTexture::Descriptor descriptor);
+	void initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, const VulkanTexture::Descriptor descriptor);
+	void initResources(const Texture &texture, VulkanInfo &vulkanInfo, const VulkanTexture::Descriptor descriptor);
 	void releaseResources();
 
 	inline bool hasResources() const
@@ -206,7 +206,7 @@ private:
 
 		NOTE: Textures from TextureAtlas class should be stored in 'vulkanTexturesForAppearances'.
 	*/
-	std::unordered_map<Texture *, VulkanTexture> vulkanTextures;
+	std::unordered_map<const Texture *, VulkanTexture> vulkanTextures;
 
 	util::Size vulkanSwapChainImageSize;
 	void createRenderPass();
@@ -229,10 +229,13 @@ private:
 	void drawCurrentAction();
 	void drawPreviewItem(uint16_t serverId, Position pos);
 	void drawMovingSelection();
-	void drawSelectionRectangle();
+	void drawRectangle(const Texture &texture, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
+	void drawSolidRectangle(const SolidColor color, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
 
 	ObjectDrawInfo itemDrawInfo(const Item &item, Position position, uint32_t drawFlags);
 	ObjectDrawInfo itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags);
+
+	VkDescriptorSet objectDescriptorSet(const BaseObjectDrawInfo &info);
 
 	/**
 	 * @predicate An Item predicate. Items for which predicate(item) is false will not be rendered.
@@ -242,6 +245,7 @@ private:
 								Position offset = {},
 								const ItemPredicate &filter = {});
 	void drawItem(ObjectDrawInfo &info);
+	void drawOverlayItemType(uint16_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
 
 	void drawBatches();
 

@@ -249,26 +249,6 @@ void MapRenderer::drawMap()
   }
 }
 
-void MapRenderer::drawPreviewItem(uint16_t serverId, Position pos)
-{
-  auto map = mapView->map();
-  if (pos.x < 0 || pos.x > map->getWidth() || pos.y < 0 || pos.y > map->getHeight())
-    return;
-
-  ItemType &selectedItemType = *Items::items.getItemType(serverId);
-
-  auto info = itemTypeDrawInfo(selectedItemType, pos, ItemDrawFlags::Ghost);
-
-  if (!selectedItemType.isGroundTile())
-  {
-    Tile *tile = map->getTile(pos);
-    int elevation = tile ? tile->getTopElevation() : 0;
-    info.drawOffset = {-elevation, -elevation};
-  }
-
-  drawItem(info);
-}
-
 void MapRenderer::drawCurrentAction()
 {
   // Render current mouse action
@@ -278,7 +258,9 @@ void MapRenderer::drawCurrentAction()
             if (select.area)
             {
               DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
-              drawSelectionRectangle();
+
+              const auto [from, to] = mapView->getDragPoints().value();
+              drawSolidRectangle(SolidColor::Blue, from, to, 0.35f);
             }
             else if (mapView->selection.moving())
             {
@@ -297,8 +279,10 @@ void MapRenderer::drawCurrentAction()
 
                 if (mapView->isDragRemoving())
                 {
-                  drawSelectionRectangle();
-                  drawPreviewItem(action.serverId, pos);
+                  const auto [from, to] = mapView->getDragPoints().value();
+                  drawSolidRectangle(SolidColor::Red, from, to, 0.2f);
+
+                  drawOverlayItemType(action.serverId, to);
                 }
                 else
                 {
@@ -319,6 +303,26 @@ void MapRenderer::drawCurrentAction()
 
           [](const auto &arg) {}},
       _currentFrame->mouseAction);
+}
+
+void MapRenderer::drawPreviewItem(uint16_t serverId, Position pos)
+{
+  auto map = mapView->map();
+  if (pos.x < 0 || pos.x > map->getWidth() || pos.y < 0 || pos.y > map->getHeight())
+    return;
+
+  ItemType &selectedItemType = *Items::items.getItemType(serverId);
+
+  auto info = itemTypeDrawInfo(selectedItemType, pos, ItemDrawFlags::Ghost);
+
+  if (!selectedItemType.isGroundTile())
+  {
+    Tile *tile = map->getTile(pos);
+    int elevation = tile ? tile->getTopElevation() : 0;
+    info.drawOffset = {-elevation, -elevation};
+  }
+
+  drawItem(info);
 }
 
 void MapRenderer::drawMovingSelection()
@@ -395,6 +399,74 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, Pos
 
 void MapRenderer::drawItem(ObjectDrawInfo &info)
 {
+  _currentFrame->batchDraw.addItem(info);
+}
+
+void MapRenderer::drawOverlayItemType(uint16_t serverId, const WorldPosition position, const glm::vec4 color)
+{
+  ItemType &itemType = *Items::items.getItemType(serverId);
+  OverlayObjectDrawInfo info;
+  info.appearance = itemType.appearance;
+  info.position = position;
+  info.color = color;
+  info.textureInfo = itemType.getTextureInfo();
+  info.descriptorSet = objectDescriptorSet(info);
+
+  _currentFrame->batchDraw.addOverlayItem(info);
+}
+
+void MapRenderer::drawSolidRectangle(const SolidColor color, const WorldPosition from, const WorldPosition to, float opacity)
+{
+  Texture &texture = Texture::getOrCreateSolidTexture(color);
+  drawRectangle(texture, from, to, opacity);
+}
+
+void MapRenderer::drawRectangle(const Texture &texture, const WorldPosition from, const WorldPosition to, float opacity)
+{
+  VulkanTexture::Descriptor descriptor;
+  descriptor.layout = textureDescriptorSetLayout;
+  descriptor.pool = descriptorPool;
+
+  auto &vulkanTexture = vulkanTextures[&texture];
+  if (!vulkanTexture.hasResources())
+    vulkanTexture.initResources(texture, vulkanInfo, descriptor);
+
+  RectangleDrawInfo info;
+  info.from = from;
+  info.to = to;
+  info.texture = &texture;
+  info.color = colors::opacity(opacity);
+  info.descriptorSet = vulkanTexture.descriptorSet();
+
+  _currentFrame->batchDraw.addRectangle(info);
+}
+
+ObjectDrawInfo MapRenderer::itemDrawInfo(const Item &item, Position position, uint32_t drawFlags)
+{
+  ObjectDrawInfo info;
+  info.appearance = item.itemType->appearance;
+  info.position = position;
+  info.color = item.selected ? colors::Selected : colors::Default;
+  info.textureInfo = item.getTextureInfo(position);
+  info.descriptorSet = objectDescriptorSet(info);
+
+  return info;
+}
+
+ObjectDrawInfo MapRenderer::itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags)
+{
+  ObjectDrawInfo info;
+  info.appearance = itemType.appearance;
+  info.position = position;
+  info.color = drawFlags & ItemDrawFlags::Ghost ? colors::ItemPreview : colors::Default;
+  info.textureInfo = itemType.getTextureInfo(position);
+  info.descriptorSet = objectDescriptorSet(info);
+
+  return info;
+}
+
+VkDescriptorSet MapRenderer::objectDescriptorSet(const BaseObjectDrawInfo &info)
+{
   VulkanTexture::Descriptor descriptor;
   descriptor.layout = textureDescriptorSetLayout;
   descriptor.pool = descriptorPool;
@@ -412,63 +484,7 @@ void MapRenderer::drawItem(ObjectDrawInfo &info)
     vulkanTexture.initResources(*atlas, vulkanInfo, descriptor);
   }
 
-  info.descriptorSet = vulkanTexture.descriptorSet();
-
-  _currentFrame->batchDraw.addItem(info);
-}
-
-void MapRenderer::drawSelectionRectangle()
-{
-  VulkanTexture::Descriptor descriptor;
-  descriptor.layout = textureDescriptorSetLayout;
-  descriptor.pool = descriptorPool;
-
-  const auto [from, to] = mapView->getDragPoints().value();
-  Texture &texture = Texture::getOrCreateSolidTexture(SolidColor::Blue);
-
-  auto result = vulkanTextures.find(&texture);
-  if (result == vulkanTextures.end())
-  {
-    auto [res, success] = vulkanTextures.try_emplace(&texture);
-    DEBUG_ASSERT(success, "Emplace failed (was the element somehow already present?)");
-  }
-
-  VulkanTexture &vulkanTexture = vulkanTextures.at(&texture);
-  if (!vulkanTexture.hasResources())
-  {
-    vulkanTexture.initResources(texture, vulkanInfo, descriptor);
-  }
-
-  RectangleDrawInfo info;
-  info.from = from;
-  info.to = to;
-  info.texture = &texture;
-  info.color = colors::SeeThrough;
-  info.descriptorSet = vulkanTexture.descriptorSet();
-
-  _currentFrame->batchDraw.addRectangle(info);
-}
-
-ObjectDrawInfo MapRenderer::itemDrawInfo(const Item &item, Position position, uint32_t drawFlags)
-{
-  ObjectDrawInfo info;
-  info.appearance = item.itemType->appearance;
-  info.position = position;
-  info.color = item.selected ? colors::Selected : colors::Default;
-  info.textureInfo = item.getTextureInfo(position);
-
-  return info;
-}
-
-ObjectDrawInfo MapRenderer::itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags)
-{
-  ObjectDrawInfo info;
-  info.appearance = itemType.appearance;
-  info.position = position;
-  info.color = drawFlags & ItemDrawFlags::Ghost ? colors::ItemPreview : colors::Default;
-  info.textureInfo = itemType.getTextureInfo(position);
-
-  return info;
+  return vulkanTexture.descriptorSet();
 }
 
 void MapRenderer::updateUniformBuffer()
@@ -634,7 +650,8 @@ void MapRenderer::createGraphicsPipeline()
   colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
   colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
   colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-  colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+  // colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+  colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
   colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
   colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
@@ -854,6 +871,42 @@ VkShaderModule MapRenderer::createShaderModule(const std::vector<uint8_t> &code)
   return shaderModule;
 }
 
+VkCommandBuffer MapRenderer::beginSingleTimeCommands(VulkanInfo *info)
+{
+  VkCommandBufferAllocateInfo allocInfo{};
+  allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  allocInfo.commandPool = info->graphicsCommandPool();
+  allocInfo.commandBufferCount = 1;
+
+  VkCommandBuffer commandBuffer;
+  info->vkAllocateCommandBuffers(&allocInfo, &commandBuffer);
+
+  VkCommandBufferBeginInfo beginInfo{};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  info->vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+  return commandBuffer;
+}
+
+uint32_t MapRenderer::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+{
+  VkPhysicalDeviceMemoryProperties memProperties;
+  vulkanInfo.vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+  for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+  {
+    if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+    {
+      return i;
+    }
+  }
+
+  throw std::runtime_error("Failed to find suitable memory type!");
+}
+
 /**
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -875,12 +928,12 @@ VulkanTexture::~VulkanTexture()
   }
 }
 
-void VulkanTexture::initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, VulkanTexture::Descriptor descriptor)
+void VulkanTexture::initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, const VulkanTexture::Descriptor descriptor)
 {
   initResources(atlas.getOrCreateTexture(), vulkanInfo, descriptor);
 }
 
-void VulkanTexture::initResources(Texture &texture, VulkanInfo &vulkanInfo, VulkanTexture::Descriptor descriptor)
+void VulkanTexture::initResources(const Texture &texture, VulkanInfo &vulkanInfo, const VulkanTexture::Descriptor descriptor)
 {
   unused = false;
 
@@ -1078,40 +1131,4 @@ VkImageView VulkanTexture::createImageView(VkImage image, VkFormat format)
   }
 
   return imageView;
-}
-
-VkCommandBuffer MapRenderer::beginSingleTimeCommands(VulkanInfo *info)
-{
-  VkCommandBufferAllocateInfo allocInfo{};
-  allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  allocInfo.commandPool = info->graphicsCommandPool();
-  allocInfo.commandBufferCount = 1;
-
-  VkCommandBuffer commandBuffer;
-  info->vkAllocateCommandBuffers(&allocInfo, &commandBuffer);
-
-  VkCommandBufferBeginInfo beginInfo{};
-  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-  info->vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-  return commandBuffer;
-}
-
-uint32_t MapRenderer::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
-{
-  VkPhysicalDeviceMemoryProperties memProperties;
-  vulkanInfo.vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-
-  for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-  {
-    if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-    {
-      return i;
-    }
-  }
-
-  throw std::runtime_error("Failed to find suitable memory type!");
 }
