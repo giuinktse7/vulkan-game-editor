@@ -306,7 +306,7 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
 
   std::visit(
       util::overloaded{
-          [this, from, to](const MouseAction::Select select) {
+          [this, from, to](MouseAction::Select &select) {
             if (select.area)
             {
               std::unordered_set<Position, PositionHash> positions;
@@ -336,13 +336,11 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
               // This prevents having the mouse release trigger a deselect of the tile being hovered
               selection.blockDeselect = true;
 
-              MouseAction::Select newAction = select;
-              newAction.area = false;
-              editorAction.set(newAction);
+              select.area = false;
             }
           },
 
-          [this, modifiers, from, to](const MouseAction::RawItem action) {
+          [this, modifiers, from, to](MouseAction::RawItem &action) {
             if (action.area)
             {
               if (modifiers & VME::ModifierKeys::Ctrl)
@@ -366,9 +364,7 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
                 history.endGroup(ActionGroupType::AddMapItem);
               }
 
-              MouseAction::RawItem newAction = action;
-              newAction.area = false;
-              editorAction.set(newAction);
+              action.area = false;
             }
           },
 
@@ -435,19 +431,17 @@ void MapView::mousePressEvent(VME::MouseEvent event)
               }
             },
 
-            [this, pos, event](const MouseAction::RawItem &action) {
+            [this, pos, event](MouseAction::RawItem &action) {
               clearSelection();
-
-              bool remove = event.modifiers() & VME::ModifierKeys::Ctrl;
 
               if (event.modifiers() & VME::ModifierKeys::Shift)
               {
-                MouseAction::RawItem newAction = action;
-                newAction.area = true;
-                editorAction.set(newAction);
+                action.area = true;
               }
               else
               {
+                bool remove = event.modifiers() & VME::ModifierKeys::Ctrl;
+
                 if (remove)
                 {
                   Tile *tile = getTile(pos);
@@ -466,6 +460,12 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                 }
               }
             },
+
+            [this, event](MouseAction::Pan &pan) {
+              pan.mouseOrigin = ScreenPosition(event.pos().x, event.pos().y);
+              pan.cameraOrigin = cameraPosition();
+            },
+
             [](const auto &arg) {}},
         editorAction.action());
 
@@ -515,6 +515,30 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
               }
             },
 
+            [this, event](MouseAction::Pan &action) {
+              if (action.active())
+              {
+                ScreenPosition delta = event.pos() - action.mouseOrigin.value();
+                long newX = static_cast<long>(std::round(delta.x / camera.zoomFactor()));
+                long newY = static_cast<long>(std::round(delta.y / camera.zoomFactor()));
+
+                auto newPos = action.cameraOrigin.value() + WorldPosition(-newX, -newY);
+
+                if (newPos.x < 0)
+                {
+                  action.cameraOrigin.value().x -= static_cast<int>(std::round((newPos.x)));
+                  newPos.x = 0;
+                }
+                if (newPos.y < 0)
+                {
+                  action.cameraOrigin.value().y -= static_cast<int>(std::round((newPos.y)));
+                  newPos.y = 0;
+                }
+
+                setCameraPosition(newPos);
+              }
+            },
+
             [](const auto &arg) {}},
         editorAction.action());
   }
@@ -526,6 +550,14 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
 {
   if (!(event.buttons() & VME::MouseButtons::LeftButton))
   {
+    std::visit(
+        util::overloaded{
+            [](MouseAction::Pan pan) {
+              pan.stop();
+            },
+            [](const auto &arg) {}},
+        editorAction.action());
+
     if (dragState.has_value())
     {
       endDragging(event.modifiers());
@@ -620,11 +652,11 @@ void MapView::escapeEvent()
 {
   std::visit(
       util::overloaded{
-          [this](const MouseAction::Select) {
+          [this](MouseAction::Select &) {
             clearSelection();
           },
 
-          [this](const auto &&arg) {
+          [this](const auto &arg) {
             editorAction.reset();
           }},
       editorAction.action());

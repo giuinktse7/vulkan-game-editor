@@ -37,7 +37,11 @@ bool ItemListEventFilter::eventFilter(QObject *object, QEvent *event)
   {
     // VME_LOG_D("Focused widget: " << QApplication::focusWidget());
     auto keyEvent = static_cast<QKeyEvent *>(event);
-    if (keyEvent->key() == Qt::Key_I)
+    auto key = keyEvent->key();
+    switch (key)
+    {
+    case Qt::Key_I:
+    case Qt::Key_Space:
     {
       auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
       auto vulkanWindow = QtUtil::associatedVulkanWindow(widget);
@@ -47,8 +51,9 @@ bool ItemListEventFilter::eventFilter(QObject *object, QEvent *event)
       }
 
       return false;
+      break;
     }
-
+    }
     break;
   }
   default:
@@ -215,9 +220,18 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     mapTabs->currentMapView()->deleteSelectedItems();
     break;
   default:
-    event->ignore();
-    QWidget::keyPressEvent(event);
-    break;
+  {
+    auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
+    auto vulkanWindow = QtUtil::associatedVulkanWindow(widget);
+    if (vulkanWindow)
+    {
+      QApplication::sendEvent(vulkanWindow, event);
+    }
+  }
+  // event->ignore();
+  // QWidget::keyPressEvent(event);
+
+  break;
   }
 }
 

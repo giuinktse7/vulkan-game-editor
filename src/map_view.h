@@ -86,6 +86,7 @@ public:
 	bool isEmpty(Position position) const;
 
 	void setCameraPosition(WorldPosition position);
+	WorldPosition cameraPosition() const noexcept;
 	void setX(long x);
 	void setY(long y);
 
@@ -302,4 +303,9 @@ inline void MapView::removeItems(const Tile &tile, UnaryPredicate predicate)
 
 		history.commit(std::move(action));
 	}
+}
+
+inline WorldPosition MapView::cameraPosition() const noexcept
+{
+	return camera.position();
 }

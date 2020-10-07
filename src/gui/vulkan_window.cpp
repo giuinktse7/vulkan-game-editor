@@ -155,9 +155,6 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
 
 void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
-  if (xVar == -1)
-    xVar = event->pos().x();
-
   mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
 
   auto pos = event->windowPos();
@@ -184,6 +181,26 @@ void VulkanWindow::wheelEvent(QWheelEvent *event)
   {
     emit scrollEvent(scrollAngleBuffer / 8);
     scrollAngleBuffer = 0;
+  }
+}
+
+void VulkanWindow::keyReleaseEvent(QKeyEvent *e)
+{
+  if (e->isAutoRepeat())
+    return;
+
+  switch (e->key())
+  {
+  case Qt::Key_Space:
+  {
+    auto pan = mapView->editorAction.as<MouseAction::Pan>();
+    if (pan)
+    {
+      unsetCursor();
+      mapView->editorAction.setPrevious();
+    }
+    break;
+  }
   }
 }
 
@@ -221,6 +238,13 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
   }
   case Qt::Key_Space:
   {
+    if (!mapView->editorAction.is<MouseAction::Pan>())
+    {
+      setCursor(Qt::OpenHandCursor);
+
+      MouseAction::Pan pan;
+      mapView->editorAction.set(pan);
+    }
 
     break;
   }

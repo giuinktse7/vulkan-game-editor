@@ -139,6 +139,7 @@ private:
   void mouseReleaseEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
   void keyPressEvent(QKeyEvent *event) override;
+  void keyReleaseEvent(QKeyEvent *event) override;
   void wheelEvent(QWheelEvent *event) override;
 
   void onVisibilityChanged(QWindow::Visibility visibility);
@@ -149,6 +150,4 @@ private:
 
   // Holds the current scroll amount. (see wheelEvent)
   int scrollAngleBuffer = 0;
-
-  int xVar = -1;
 };

@@ -93,6 +93,20 @@ struct ScreenPosition : public BasePosition<int>
 	WorldPosition worldPos(const MapView &mapView) const;
 	MapPosition mapPos(const MapView &mapView) const;
 	Position toPos(const MapView &mapView) const;
+
+	ScreenPosition &operator-=(const ScreenPosition &rhs)
+	{
+		this->x -= rhs.x;
+		this->y -= rhs.y;
+		return *this;
+	}
+
+	friend ScreenPosition operator-(const ScreenPosition &lhs, const ScreenPosition rhs)
+	{
+		ScreenPosition pos(lhs);
+		pos -= rhs;
+		return pos;
+	}
 };
 
 struct WorldPosition : public BasePosition<long>
@@ -115,6 +129,20 @@ struct WorldPosition : public BasePosition<long>
 	{
 		WorldPosition pos(lhs);
 		pos += rhs;
+		return pos;
+	}
+
+	WorldPosition &operator-=(const WorldPosition &rhs)
+	{
+		this->x -= rhs.x;
+		this->y -= rhs.y;
+		return *this;
+	}
+
+	friend WorldPosition operator-(const WorldPosition &lhs, const WorldPosition rhs)
+	{
+		WorldPosition pos(lhs);
+		pos -= rhs;
 		return pos;
 	}
 };

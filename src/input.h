@@ -75,10 +75,29 @@ struct MouseAction
     bool area = false;
   };
 
+  struct Pan
+  {
+    std::optional<WorldPosition> cameraOrigin;
+    std::optional<ScreenPosition> mouseOrigin;
+
+    inline bool active() const
+    {
+      return cameraOrigin && mouseOrigin;
+    }
+
+    void stop()
+    {
+      cameraOrigin.reset();
+      mouseOrigin.reset();
+    }
+  };
+
   struct None
   {
   };
 };
+
+using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select, MouseAction::Pan>;
 
 /**
  * Utility class for sending UI information to a MapView.
@@ -95,40 +114,57 @@ public:
   virtual VME::ModifierKeys modifiers() const = 0;
 };
 
-using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select>;
-
 /*
   Contains mouse actions that can occur on a MapView.
 */
 class EditorAction
 {
 public:
-  inline MouseAction_t action() const noexcept
+  inline MouseAction_t &action() noexcept
   {
-    return _mouseAction;
+    return _action;
   };
+
+  inline void setPrevious() noexcept
+  {
+    _action = _previousAction;
+    _previousAction = MouseAction::None{};
+  }
+
+  inline MouseAction_t previous() const noexcept
+  {
+    return _previousAction;
+  }
 
   void set(const MouseAction_t action) noexcept
   {
-    _mouseAction = action;
+    _previousAction = _action;
+    _action = action;
   }
 
   void setRawItem(uint16_t serverId) noexcept
   {
-    _mouseAction = MouseAction::RawItem{serverId};
+    set(MouseAction::RawItem{serverId});
   }
 
   void reset() noexcept
   {
-    _mouseAction = MouseAction::Select{};
+    set(MouseAction::Select{});
   }
 
   template <typename T>
   T *as()
   {
-    return std::get_if<T>(&_mouseAction);
+    return std::get_if<T>(&_action);
+  }
+
+  template <typename T>
+  bool is()
+  {
+    return std::holds_alternative<T>(_action);
   }
 
 private:
-  MouseAction_t _mouseAction = MouseAction::Select{};
+  MouseAction_t _previousAction = MouseAction::Select{};
+  MouseAction_t _action = MouseAction::Select{};
 };
