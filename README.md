@@ -12,12 +12,12 @@ An action is an event that can occur and can be undone/redone.
 
 ## Dependencies
 
-- [Vulkan SDK](https://vulkan.lunarg.com/): Low-level 3D graphics and computing API.
-- [QT5](https://www.qt.io/download-open-source) (`Qt::Core` and `Qt::Widgets`): Cross-plaftorm GUI framework.
+- [**Vulkan SDK**](https://vulkan.lunarg.com/): Low-level 3D graphics and computing API.
+- [**QT5 (`Qt::Core` and `Qt::Widgets`)**](https://www.qt.io/download-open-source)  Cross-plaftorm GUI framework.
 
   **NOTE**: The QT framework requires around 8 GB of disk space per target architecture (For example `msvc2019` or `msvc2019_64`).
 
-- [vcpkg](https://github.com/microsoft/vcpkg) C++ package manager.
+- [**vcpkg**](https://github.com/microsoft/vcpkg) C++ package manager.
 - The required libraries can be installed using vcpkg:
 
   ```sh
