@@ -138,7 +138,10 @@
     "qproxystyle": "cpp",
     "qabstractanimation": "cpp",
     "qslider": "cpp",
-    "regex": "cpp"
+    "regex": "cpp",
+    "qtcoredepends": "cpp",
+    "qtguidepends": "cpp",
+    "qtwidgetsdepends": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

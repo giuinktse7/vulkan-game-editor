@@ -23,8 +23,7 @@ MapView::MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::sh
       selection(*this),
       uiUtils(std::move(uiUtils)),
       _map(map),
-      viewport(),
-      dragState{}
+      viewport()
 {
   instances.emplace(this);
 }
@@ -236,16 +235,37 @@ util::Rectangle<int> MapView::getGameBoundingRect() const
   return rect;
 }
 
+std::optional<std::pair<WorldPosition, WorldPosition>> MapView::getDragPoints() const
+{
+  if (!dragRegion.has_value())
+    return {};
+
+  std::pair<WorldPosition, WorldPosition> result;
+  result.first = dragRegion.value().from();
+  result.second = dragRegion.value().to();
+  return result;
+}
+
 void MapView::setDragStart(WorldPosition position)
 {
-  if (dragState.has_value())
+  if (dragRegion.has_value())
   {
-    dragState.value().from = position;
+    dragRegion.value().setFrom(position);
   }
   else
   {
-    dragState = {position, position};
+    dragRegion = Region2D(position, position);
   }
+}
+
+bool MapView::draggingWithSubtract() const
+{
+  if (!isDragging())
+    return false;
+  auto action = editorAction.as<MouseAction::RawItem>();
+  auto modifiers = uiUtils->modifiers();
+
+  return action && (modifiers & VME::ModifierKeys::Shift) && (modifiers & VME::ModifierKeys::Ctrl);
 }
 
 bool MapView::hasSelection() const
@@ -260,9 +280,9 @@ bool MapView::isEmpty(Position position) const
 
 void MapView::setDragEnd(WorldPosition position)
 {
-  DEBUG_ASSERT(dragState.has_value(), "There is no current dragging operation.");
+  DEBUG_ASSERT(dragRegion.has_value(), "There is no current dragging operation.");
 
-  dragState.value().to = position;
+  dragRegion.value().setTo(position);
 }
 
 void MapView::finishMoveSelection(const Position moveDestination)
@@ -299,7 +319,7 @@ void MapView::finishMoveSelection(const Position moveDestination)
 
 void MapView::endDragging(VME::ModifierKeys modifiers)
 {
-  auto [fromWorldPos, toWorldPos] = dragState.value();
+  auto [fromWorldPos, toWorldPos] = dragRegion.value();
 
   Position from = fromWorldPos.toPos(*this);
   Position to = toWorldPos.toPos(*this);
@@ -371,12 +391,12 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
           [](const auto &arg) {}},
       editorAction.action());
 
-  dragState.reset();
+  dragRegion.reset();
 }
 
 bool MapView::isDragging() const
 {
-  return dragState.has_value();
+  return dragRegion.has_value();
 }
 
 void MapView::panEvent(MapView::PanEvent event)
@@ -396,6 +416,7 @@ void MapView::panEvent(MapView::PanEvent event)
 
 void MapView::mousePressEvent(VME::MouseEvent event)
 {
+
   // VME_LOG_D("MapView::mousePressEvent");
   if (event.buttons() & VME::MouseButtons::LeftButton)
   {
@@ -557,7 +578,7 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
             [](const auto &arg) {}},
         editorAction.action());
 
-    if (dragState.has_value())
+    if (dragRegion.has_value())
     {
       endDragging(event.modifiers());
     }
@@ -645,6 +666,17 @@ void MapView::translateY(long y)
 void MapView::translateZ(int z)
 {
   camera.translateZ(z);
+}
+
+bool MapView::inDragRegion(Position pos) const
+{
+  if (!dragRegion)
+    return false;
+
+  WorldPosition topLeft = pos.worldPos();
+  WorldPosition bottomRight(topLeft.x + MapTileSize, topLeft.y + MapTileSize);
+
+  return dragRegion.value().collides(topLeft, bottomRight);
 }
 
 void MapView::escapeEvent()

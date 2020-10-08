@@ -222,7 +222,7 @@ void MapRenderer::drawMap()
   Position to{mapRect.x2, mapRect.y2, endZ};
 
   ItemPredicate filter;
-  if (mapView->isDragRemoving())
+  if (mapView->draggingWithSubtract())
   {
     auto [from, to] = mapView->getDragPoints().value();
     Region2D dragRegion(from.toPos(floor), to.toPos(floor));
@@ -234,18 +234,22 @@ void MapRenderer::drawMap()
   }
 
   bool movingSelection = view.selection.moving();
+
+  uint32_t flags = ItemDrawFlags::DrawNonSelected;
+
+  if (!movingSelection)
+    flags |= ItemDrawFlags::DrawSelected;
+
+  auto selectAction = mapView->editorAction.as<MouseAction::Select>();
+  if (selectAction && selectAction->area)
+    flags |= ItemDrawFlags::ActiveSelectionArea;
+
   for (auto &tileLocation : view.map()->getRegion(from, to))
   {
     if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
       continue;
 
-    uint32_t flags = ItemDrawFlags::DrawNonSelected;
-    if (!movingSelection)
-    {
-      flags |= ItemDrawFlags::DrawSelected;
-    }
-
-    drawTile(tileLocation, flags, Position(), filter);
+    drawTile(tileLocation, flags, filter);
   }
 }
 
@@ -259,8 +263,8 @@ void MapRenderer::drawCurrentAction()
             {
               DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
 
-              const auto [from, to] = mapView->getDragPoints().value();
-              drawSolidRectangle(SolidColor::Blue, from, to, 0.35f);
+              // const auto [from, to] = mapView->getDragPoints().value();
+              // drawSolidRectangle(SolidColor::Blue, from, to, 0.1f);
             }
             else if (mapView->selection.moving())
             {
@@ -277,7 +281,7 @@ void MapRenderer::drawCurrentAction()
               {
                 DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
 
-                if (mapView->isDragRemoving())
+                if (mapView->draggingWithSubtract())
                 {
                   const auto [from, to] = mapView->getDragPoints().value();
                   drawSolidRectangle(SolidColor::Red, from, to, 0.2f);
@@ -359,6 +363,11 @@ bool MapRenderer::shouldDrawItem(const Position pos, const Item &item, uint32_t 
   return ((item.selected && (flags & ItemDrawFlags::DrawSelected)) ||
           (flags & ItemDrawFlags::DrawNonSelected)) &&
          (!filter || filter(pos, item));
+}
+
+void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, const ItemPredicate &filter)
+{
+  drawTile(tileLocation, flags, Position(), filter);
 }
 
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, Position offset, const ItemPredicate &filter)
@@ -443,10 +452,12 @@ void MapRenderer::drawRectangle(const Texture &texture, const WorldPosition from
 
 ObjectDrawInfo MapRenderer::itemDrawInfo(const Item &item, Position position, uint32_t drawFlags)
 {
+  bool drawAsSelected = item.selected || ((drawFlags & ItemDrawFlags::ActiveSelectionArea) && mapView->inDragRegion(position));
+
   ObjectDrawInfo info;
   info.appearance = item.itemType->appearance;
   info.position = position;
-  info.color = item.selected ? colors::Selected : colors::Default;
+  info.color = drawAsSelected ? colors::Selected : colors::Default;
   info.textureInfo = item.getTextureInfo(position);
   info.descriptorSet = objectDescriptorSet(info);
 

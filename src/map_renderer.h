@@ -44,6 +44,7 @@ namespace ItemDrawFlags
 	constexpr uint32_t DrawNonSelected = 1 << 0;
 	constexpr uint32_t DrawSelected = 1 << 1;
 	constexpr uint32_t Ghost = 1 << 2;
+	constexpr uint32_t ActiveSelectionArea = 1 << 3;
 } // namespace ItemDrawFlags
 
 struct TextureOffset
@@ -243,6 +244,9 @@ private:
 	void drawTile(const TileLocation &tileLocation,
 								uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
 								Position offset = {},
+								const ItemPredicate &filter = {});
+	void drawTile(const TileLocation &tileLocation,
+								uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
 								const ItemPredicate &filter = {});
 	void drawItem(ObjectDrawInfo &info);
 	void drawOverlayItemType(uint16_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
