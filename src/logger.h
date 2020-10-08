@@ -10,6 +10,8 @@
 #include <QString>
 #endif
 
+#include "definitions.h"
+
 namespace Logger
 {
 
@@ -46,6 +48,7 @@ namespace Logger
     Logger::info(__s__);      \
   } while (false)
 
+#ifdef _DEBUG_VME
 #define VME_LOG_D(expr)       \
   do                          \
   {                           \
@@ -54,3 +57,9 @@ namespace Logger
     __s__ << expr;            \
     Logger::debug(__s__);     \
   } while (false)
+#else
+#define VME_LOG_D(expr) \
+  do                    \
+  {                     \
+  } while (0)
+#endif

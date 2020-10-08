@@ -16,6 +16,7 @@
 #include "../map_view.h"
 
 #include "../logger.h"
+#include "../definitions.h"
 #include "../qt/logging.h"
 
 namespace
@@ -111,7 +112,7 @@ MapView *QtUtil::associatedMapView(QWidget *widget)
     return nullptr;
 
   MapView *mapView = static_cast<MapView *>(prop.value<void *>());
-#ifdef __DEBUG__VME
+#ifdef _DEBUG_VME
   bool isInstance = MapView::isInstance(mapView);
 
   std::ostringstream msg;
@@ -133,7 +134,7 @@ VulkanWindow *QtUtil::associatedVulkanWindow(QWidget *widget)
     return nullptr;
 
   VulkanWindow *vulkanWindow = static_cast<VulkanWindow *>(prop.value<void *>());
-#ifdef __DEBUG__VME
+#ifdef _DEBUG_VME
   bool isInstance = VulkanWindow::isInstance(vulkanWindow);
 
   std::ostringstream msg;

@@ -6,6 +6,7 @@
 
 #include "lzma.h"
 #include "../debug.h"
+#include "../definitions.h"
 
 #include "../../vendor/lzma/LzmaLib.h"
 
@@ -32,7 +33,7 @@ private:
 
 inline std::vector<uint8_t> LZMA::decompress(std::vector<uint8_t> &&inBuffer)
 {
-#ifdef __DEBUG__VME
+#ifdef _DEBUG_VME
   return decompressDebug(std::move(inBuffer));
 #else
   return decompressRelease(std::move(inBuffer));

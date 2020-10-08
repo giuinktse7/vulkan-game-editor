@@ -1,5 +1,9 @@
 #pragma once
 
+#if defined(_DEBUG) || !defined(QT_NO_DEBUG)
+#define _DEBUG_VME 1
+#endif
+
 // Version info
 // xxyyzzt (major, minor, subversion)
 #define __VME_VERSION_MAJOR__ 0
@@ -21,4 +25,3 @@
 #else
 #define __VME_VERSION__ std::string(std::to_string(__VME_VERSION_MAJOR__) + "." + std::to_string(__VME_VERSION_MINOR__))
 #endif
-

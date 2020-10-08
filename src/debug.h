@@ -9,9 +9,7 @@
 
 #include "logger.h"
 
-#if defined(_DEBUG) || !defined(QT_NO_DEBUG)
-#define __DEBUG__VME
-#endif
+#include "definitions.h"
 
 class GeneralDebugException : public std::exception
 {
@@ -36,7 +34,7 @@ public:
     throw GeneralDebugException(s.str().c_str());                                                       \
   } while (false)
 
-#ifdef __DEBUG__VME
+#ifdef _DEBUG_VME
 #define DEBUG_ASSERT(exp, msg) \
   do                           \
     if (!(exp))                \
