@@ -31,6 +31,8 @@ struct Position : public BasePosition<long>
 
 	void move(long x, long y, int z);
 
+	WorldPosition worldPos() const noexcept;
+
 	Position &operator+=(const Position &rhs)
 	{
 		this->x += rhs.x;
@@ -72,6 +74,7 @@ struct Position : public BasePosition<long>
 			return z;
 	}
 };
+STRUCTURED_BINDING(Position, 3);
 
 struct PositionHash
 {
@@ -208,6 +211,11 @@ inline std::ostream &operator<<(std::ostream &os, const BasePosition<T> &pos)
 	return os;
 }
 
+inline WorldPosition Position::worldPos() const noexcept
+{
+	return WorldPosition(x * MapTileSize, y * MapTileSize);
+}
+
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>
 >>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -220,36 +228,100 @@ struct Region2D
 {
 	static_assert(is_base_of_template<BasePosition, Pos>::value, "Pos must derive from BasePosition");
 	Region2D(Pos from, Pos to)
-			: from(from),
-				to(to),
-				x0(std::min(from.x, to.x)),
-				y0(std::min(from.y, to.y)),
-				x1(std::max(from.x, to.x)),
-				y1(std::max(from.y, to.y)) {}
+			: _from(from),
+				_to(to),
+				_x0(std::min(from.x, to.x)),
+				_y0(std::min(from.y, to.y)),
+				_x1(std::max(from.x, to.x)),
+				_y1(std::max(from.y, to.y)) {}
 
-	Pos from;
-	Pos to;
+	inline Pos from() const noexcept
+	{
+		return _from;
+	}
 
-	int x0, y0, x1, y1;
+	inline Pos to() const noexcept
+	{
+		return _to;
+	}
+
+	inline void setFrom(Pos position)
+	{
+		_from = position;
+		updateMinMax();
+	}
+
+	inline void setTo(Pos position)
+	{
+		_to = position;
+		updateMinMax();
+	}
 
 	inline bool contains(Pos pos) const
 	{
-		return (x0 <= pos.x && pos.x <= x1) && (y0 <= pos.y && pos.y <= y1);
+		return (_x0 <= pos.x && pos.x <= _x1) && (_y0 <= pos.y && pos.y <= _y1);
 	}
-};
 
-namespace std
-{
-	template <>
-	struct tuple_size<Position> : std::integral_constant<size_t, 3>
+	inline bool collides(Pos topLeft, Pos bottomRight) const
 	{
-	};
+		return _x0 < bottomRight.x && _x1 > topLeft.x && _y0 < bottomRight.y && _y1 > topLeft.y;
+	}
+
+	std::string show() const
+	{
+		std::ostringstream s;
+		s << "Region2D { " << _from << " -> " << _to << " (" << _x0 << ", " << _y0 << ")"
+			<< " (" << _x1 << ", " << _y1 << ") }";
+
+		return s.str();
+	}
 
 	template <size_t I>
-	class std::tuple_element<I, Position>
+	auto &get() &
 	{
-	public:
-		using type = decltype(declval<Position>().get<I>());
-	};
+		if constexpr (I == 0)
+			return _from;
+		else if constexpr (I == 1)
+			return _to;
+	}
 
-} // namespace std
+	template <size_t I>
+	auto const &get() const &
+	{
+		if constexpr (I == 0)
+			return _from;
+		else if constexpr (I == 1)
+			return _to;
+	}
+
+	template <size_t I>
+	auto &&get() &&
+	{
+		if constexpr (I == 0)
+			return std::move(_from);
+		else if constexpr (I == 1)
+			return std::move(_to);
+	}
+
+private:
+	Pos _from;
+	Pos _to;
+
+	int _x0, _y0, _x1, _y1;
+
+	void updateMinMax()
+	{
+		_x0 = std::min(_from.x, _to.x);
+		_y0 = std::min(_from.y, _to.y);
+		_x1 = std::max(_from.x, _to.x);
+		_y1 = std::max(_from.y, _to.y);
+	}
+};
+STRUCTURED_BINDING_T1(Region2D, 2);
+
+template <typename T>
+inline std::ostream &operator<<(std::ostream &os, const Region2D<T> &pos)
+{
+	os << pos.show();
+	return os;
+}
