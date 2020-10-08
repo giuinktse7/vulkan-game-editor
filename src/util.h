@@ -270,3 +270,35 @@ inline std::string toString(T value)
 		lhs = static_cast<EnumType>(static_cast<ut>(lhs) | static_cast<ut>(rhs));                          \
 		return lhs;                                                                                        \
 	}
+
+#define STRUCTURED_BINDING(Type, count)                             \
+	namespace std                                                     \
+	{                                                                 \
+		template <>                                                     \
+		struct tuple_size<Type> : std::integral_constant<size_t, count> \
+		{                                                               \
+		};                                                              \
+                                                                    \
+		template <size_t I>                                             \
+		class std::tuple_element<I, Type>                               \
+		{                                                               \
+		public:                                                         \
+			using type = decltype(declval<Type>().get<I>());              \
+		};                                                              \
+	}
+
+#define STRUCTURED_BINDING_T1(Type, count)                             \
+	namespace std                                                        \
+	{                                                                    \
+		template <typename T>                                              \
+		struct tuple_size<Type<T>> : std::integral_constant<size_t, count> \
+		{                                                                  \
+		};                                                                 \
+                                                                       \
+		template <size_t I, typename T>                                    \
+		class std::tuple_element<I, Type<T>>                               \
+		{                                                                  \
+		public:                                                            \
+			using type = decltype(declval<Type<T>>().template get<I>());     \
+		};                                                                 \
+	}
