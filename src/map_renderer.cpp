@@ -287,7 +287,7 @@ void MapRenderer::drawCurrentAction()
                 else
                 {
                   auto [from, to] = mapView->getDragPoints().value();
-                  int floor = mapView->getFloor();
+                  int floor = mapView->floor();
                   auto area = MapArea(from.toPos(floor), to.toPos(floor));
 
                   for (auto &pos : area)

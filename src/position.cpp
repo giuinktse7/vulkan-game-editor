@@ -56,12 +56,12 @@ Position MapPosition::floor(int floor) const
 
 Position ScreenPosition::toPos(const MapView &mapView) const
 {
-  return worldPos(mapView).mapPos().floor(mapView.getFloor());
+  return worldPos(mapView).mapPos().floor(mapView.floor());
 }
 
 Position WorldPosition::toPos(const MapView &mapView) const
 {
-  return toPos(mapView.getFloor());
+  return toPos(mapView.floor());
 }
 
 Position WorldPosition::toPos(int floor) const

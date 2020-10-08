@@ -99,7 +99,7 @@ void Map::removeTile(const Position pos)
   auto leaf = root.getLeafUnsafe(pos.x, pos.y);
   if (leaf)
   {
-    Floor *floor = leaf->getFloor(pos.z);
+    Floor *floor = leaf->floor(pos.z);
     if (floor)
     {
       auto &loc = floor->getTileLocation(pos.x, pos.y);
@@ -116,7 +116,7 @@ std::unique_ptr<Tile> Map::dropTile(const Position pos)
   auto leaf = root.getLeafUnsafe(pos.x, pos.y);
   if (leaf)
   {
-    Floor *floor = leaf->getFloor(pos.z);
+    Floor *floor = leaf->floor(pos.z);
     if (floor)
     {
       auto &loc = floor->getTileLocation(pos.x, pos.y);
@@ -142,7 +142,7 @@ Tile *Map::getTile(const Position pos) const
   if (!leaf)
     return nullptr;
 
-  Floor *floor = leaf->getFloor(pos.z);
+  Floor *floor = leaf->floor(pos.z);
   if (!floor)
     return nullptr;
 
@@ -188,7 +188,7 @@ TileLocation *Map::getTileLocation(int x, int y, int z) const
   quadtree::Node *leaf = root.getLeafUnsafe(x, y);
   if (leaf)
   {
-    Floor *floor = leaf->getFloor(z);
+    Floor *floor = leaf->floor(z);
     return &floor->getTileLocation(x, y);
   }
 
@@ -215,7 +215,7 @@ MapIterator *MapIterator::nextFromLeaf()
 
   for (int z = this->floorIndex; z < MAP_LAYERS; ++z)
   {
-    if (Floor *floor = node->getFloor(z))
+    if (Floor *floor = node->floor(z))
     {
       for (uint32_t i = this->tileIndex; i < MAP_LAYERS; ++i)
       {

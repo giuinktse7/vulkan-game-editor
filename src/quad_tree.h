@@ -58,7 +58,7 @@ namespace quadtree
 
 		Floor &getOrCreateFloor(Position pos);
 		Floor &getOrCreateFloor(int x, int y, int z);
-		Floor *getFloor(uint32_t z) const;
+		Floor *floor(uint32_t z) const;
 
 		TileLocation &getOrCreateTileLocation(Position pos);
 

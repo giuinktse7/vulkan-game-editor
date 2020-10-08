@@ -507,9 +507,8 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
               }
               else
               {
-                int z = this->getFloor();
                 history.startGroup(ActionGroupType::AddMapItem);
-                for (const auto position : Position::bresenHams(to.toPos(z), pos))
+                for (const auto position : Position::bresenHams(to.toPos(floor()), pos))
                   addItem(position, action.serverId);
                 history.endGroup(ActionGroupType::AddMapItem);
               }
