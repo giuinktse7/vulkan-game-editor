@@ -35,10 +35,7 @@ public:
 	public:
 		Observer(MapView *target = nullptr);
 		~Observer();
-		virtual void viewportChanged(const Viewport &viewport)
-		{
-			// Empty
-		}
+		virtual void viewportChanged(const Viewport &viewport) = 0;
 
 		MapView *target;
 
@@ -60,10 +57,7 @@ public:
 
 	Selection selection;
 
-	inline Map *map() const
-	{
-		return _map.get();
-	}
+	inline Map *map() const;
 
 	void mousePressEvent(VME::MouseEvent event);
 	void mouseMoveEvent(VME::MouseEvent event);
@@ -101,25 +95,15 @@ public:
 
 	void addItem(const Position position, uint16_t id);
 
-	inline Position mouseGamePos() const
-	{
-		return mousePos().worldPos(*this).mapPos().floor(getFloor());
-	}
-
-	inline WorldPosition mouseWorldPos() const
-	{
-		return mousePos().worldPos(*this);
-	}
+	inline Position mouseGamePos() const;
+	inline WorldPosition mouseWorldPos() const;
 
 	/*
 		Return the position on the map for the 'point'.
 		A point (0, 0) corresponds to the map position (0, 0, mapViewZ).
 	*/
 	template <typename T>
-	Position toPosition(util::Point<T> point) const
-	{
-		return ScreenPosition(point.x(), point.y()).toPos(*this);
-	}
+	Position toPosition(util::Point<T> point) const;
 
 	/* Note: The indices must be in descending order (std::greater), because
 		otherwise the wrong items could be removed.
@@ -144,38 +128,20 @@ public:
 	const uint32_t windowToMapPos(int windowPos) const;
 	const uint32_t mapToWorldPos(uint32_t mapPos) const;
 
-	inline int z() const noexcept
-	{
-		return static_cast<uint32_t>(camera.floor);
-	}
-
 	void undo()
 	{
 		history.undoLast();
 	}
 
+	inline uint32_t x() const noexcept;
+	inline uint32_t y() const noexcept;
+	inline int z() const noexcept;
 	/*
 		Synonym for z()
 	*/
-	inline int getFloor() const noexcept
-	{
-		return z();
-	}
+	inline int floor() const noexcept;
 
-	inline uint32_t x() const noexcept
-	{
-		return static_cast<uint32_t>(camera.position().x);
-	}
-
-	inline uint32_t y() const noexcept
-	{
-		return static_cast<uint32_t>(camera.position().y);
-	}
-
-	const Viewport &getViewport() const noexcept
-	{
-		return viewport;
-	}
+	const Viewport &getViewport() const noexcept;
 
 	void deleteSelectedItems();
 	void updateSelection(const Position pos);
@@ -184,16 +150,7 @@ public:
 
 	void setDragStart(WorldPosition position);
 	void setDragEnd(WorldPosition position);
-	std::optional<std::pair<WorldPosition, WorldPosition>> getDragPoints() const
-	{
-		if (!dragState.has_value())
-			return {};
-
-		std::pair<WorldPosition, WorldPosition> result;
-		result.first = dragState.value().from;
-		result.second = dragState.value().to;
-		return result;
-	}
+	std::optional<std::pair<WorldPosition, WorldPosition>> getDragPoints() const;
 	void endDragging(VME::ModifierKeys modifiers);
 	bool isDragging() const;
 
@@ -213,10 +170,7 @@ public:
 
 	void panEvent(PanEvent event);
 
-	inline ScreenPosition mousePos() const
-	{
-		return uiUtils->mouseScreenPosInView();
-	}
+	inline ScreenPosition mousePos() const;
 
 	void addObserver(MapView::Observer *observer);
 	void removeObserver(MapView::Observer *observer);
@@ -230,23 +184,16 @@ public:
 	std::unique_ptr<Tile> removeTileInternal(const Position position);
 	void removeSelectionInternal(Tile *tile);
 
-	inline static bool isInstance(MapView *pointer)
-	{
-		return instances.find(pointer) != instances.end();
-	}
+	inline static bool isInstance(MapView *pointer);
 
 	template <typename T>
 	T *currentAction() const;
 
-	inline bool isDragRemoving() const
-	{
-		if (!isDragging())
-			return false;
-		auto action = editorAction.as<MouseAction::RawItem>();
-		auto modifiers = uiUtils->modifiers();
+	bool draggingWithSubtract() const;
 
-		return action && (modifiers & VME::ModifierKeys::Shift) && (modifiers & VME::ModifierKeys::Ctrl);
-	}
+	bool inDragRegion(Position pos) const;
+
+	std::optional<Region2D<WorldPosition>> dragRegion;
 
 private:
 	/**
@@ -265,25 +212,25 @@ private:
 	std::shared_ptr<Map> _map;
 	Viewport viewport;
 
-	struct DragData
-	{
-		WorldPosition from, to;
-	};
-	std::optional<DragData> dragState;
-
 	Camera camera;
 
 	bool canRender = false;
 
 	std::vector<MapView::Observer *> observers;
 
-	Tile deepCopyTile(const Position position) const
-	{
-		return _map->getTile(position)->deepCopy();
-	}
-
+	Tile deepCopyTile(const Position position) const;
 	MapHistory::Action newAction(MapHistory::ActionType actionType) const;
 };
+
+inline Tile MapView::deepCopyTile(const Position position) const
+{
+	return _map->getTile(position)->deepCopy();
+}
+
+inline bool MapView::isInstance(MapView *pointer)
+{
+	return instances.find(pointer) != instances.end();
+}
 
 inline std::ostream &operator<<(std::ostream &os, const util::Rectangle<int> &rect)
 {
@@ -305,7 +252,58 @@ inline void MapView::removeItems(const Tile &tile, UnaryPredicate predicate)
 	}
 }
 
+inline const Viewport &MapView::getViewport() const noexcept
+{
+	return viewport;
+}
+
+inline Map *MapView::map() const
+{
+	return _map.get();
+}
+
 inline WorldPosition MapView::cameraPosition() const noexcept
 {
 	return camera.position();
+}
+
+inline ScreenPosition MapView::mousePos() const
+{
+	return uiUtils->mouseScreenPosInView();
+}
+
+inline Position MapView::mouseGamePos() const
+{
+	return mousePos().worldPos(*this).mapPos().floor(floor());
+}
+
+inline WorldPosition MapView::mouseWorldPos() const
+{
+	return mousePos().worldPos(*this);
+}
+
+template <typename T>
+inline Position MapView::toPosition(util::Point<T> point) const
+{
+	return ScreenPosition(point.x(), point.y()).toPos(*this);
+}
+
+inline uint32_t MapView::x() const noexcept
+{
+	return static_cast<uint32_t>(camera.position().x);
+}
+
+inline uint32_t MapView::y() const noexcept
+{
+	return static_cast<uint32_t>(camera.position().y);
+}
+
+inline int MapView::z() const noexcept
+{
+	return static_cast<uint32_t>(camera.floor);
+}
+
+inline int MapView::floor() const noexcept
+{
+	return z();
 }
