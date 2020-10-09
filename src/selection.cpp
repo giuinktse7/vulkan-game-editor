@@ -51,7 +51,7 @@ void Selection::setSelected(const Position pos, bool selected)
     deselect(pos);
 }
 
-std::unordered_set<Position, PositionHash> Selection::getPositions() const
+const std::unordered_set<Position, PositionHash> &Selection::getPositions() const
 {
   return positionsWithSelection;
 }

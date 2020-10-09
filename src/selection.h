@@ -26,7 +26,7 @@ public:
 
   bool empty() const;
 
-  std::unordered_set<Position, PositionHash> getPositions() const;
+  const std::unordered_set<Position, PositionHash> &getPositions() const;
 
   void deselectAll();
 
