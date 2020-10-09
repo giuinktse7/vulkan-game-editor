@@ -133,13 +133,8 @@ namespace MapHistory
     void add(Move &&move);
 
   private:
-    // struct MoveData
-    // {
-    //   Move move;
-    //   long distance;
-    // };
     Position deltaPos;
-    // std::variant<std::vector<std::vector<Move>>, std::vector<Move>> moves;
+
     std::vector<Move> moves;
     bool sorted = false;
   };

@@ -98,7 +98,7 @@ namespace MapHistory
       : moveData(Move::Entire{}), undoData{Tile(from), Tile(to)} {}
 
   Move::Partial::Partial(bool ground, std::vector<uint16_t> indices)
-      : ground(ground), indices(indices) {}
+      : indices(indices), ground(ground) {}
 
   Move::UndoData::UndoData(Tile &&fromTile, Tile &&toTile)
       : fromTile(std::move(fromTile)), toTile(std::move(toTile)) {}
@@ -271,7 +271,7 @@ namespace MapHistory
     for (auto &move : moves)
       move.commit(mapView);
 
-    VME_LOG_D("Moved " << moves.size() << " tiles.");
+    // VME_LOG_D("Moved " << moves.size() << " tiles.");
   }
 
   void MultiMove::undo(MapView &mapView)

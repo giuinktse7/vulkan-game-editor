@@ -15,6 +15,10 @@ public:
   bool blockDeselect = false;
   std::optional<Position> moveOrigin = {};
 
+  // TODO
+  // Position topLeft() const noexcept;
+  // Position bottomRight() const noexcept;
+
   bool moving() const;
 
   bool contains(const Position pos) const;

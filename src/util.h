@@ -48,7 +48,7 @@ namespace util
 	};
 
 	template <typename T>
-	bool contains(std::optional<T> opt, T value)
+	inline bool contains(std::optional<T> opt, T value)
 	{
 		return opt.has_value() && opt.value() == value;
 	}
