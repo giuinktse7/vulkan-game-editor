@@ -21,15 +21,16 @@ struct BasePosition
 	T y;
 };
 
-struct Position : public BasePosition<long>
+struct Position : public BasePosition<int32_t>
 {
+	using value_type = int32_t;
 	static std::vector<Position> bresenHams(Position from, Position to);
 
 	Position();
-	Position(long x, long y, int z);
+	Position(value_type x, value_type y, int z);
 	int z;
 
-	void move(long x, long y, int z);
+	void move(value_type x, value_type y, int z);
 
 	WorldPosition worldPos() const noexcept;
 
@@ -112,10 +113,11 @@ struct ScreenPosition : public BasePosition<int>
 	}
 };
 
-struct WorldPosition : public BasePosition<long>
+struct WorldPosition : public BasePosition<int32_t>
 {
+	using value_type = int32_t;
 	WorldPosition();
-	WorldPosition(long x, long y);
+	WorldPosition(value_type x, value_type y);
 
 	MapPosition mapPos() const;
 	Position toPos(const MapView &mapView) const;
@@ -150,10 +152,14 @@ struct WorldPosition : public BasePosition<long>
 	}
 };
 
-struct MapPosition : public BasePosition<long>
+/**
+ * A "pixel" (not tile) position on the map independent of any viewport.
+ */
+struct MapPosition : public BasePosition<int32_t>
 {
+	using value_type = int32_t;
 	MapPosition();
-	MapPosition(long x, long y);
+	MapPosition(value_type x, value_type y);
 
 	WorldPosition worldPos() const;
 

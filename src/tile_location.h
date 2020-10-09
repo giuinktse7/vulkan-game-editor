@@ -38,17 +38,17 @@ public:
 		return _position;
 	}
 
-	inline long x() const
+	inline Position::value_type x() const
 	{
 		return _position.x;
 	}
 
-	inline long y() const
+	inline Position::value_type y() const
 	{
 		return _position.y;
 	}
 
-	inline long z() const
+	inline Position::value_type z() const
 	{
 		return _position.z;
 	}

@@ -3,9 +3,9 @@
 #include "map_view.h"
 
 Position::Position() : BasePosition(0, 0), z(0) {}
-Position::Position(long x, long y, int z) : BasePosition(x, y), z(z) {}
+Position::Position(Position::value_type x, Position::value_type y, int z) : BasePosition(x, y), z(z) {}
 
-void Position::move(long x, long y, int z)
+void Position::move(Position::value_type x, Position::value_type y, int z)
 {
   this->x += x;
   this->y += y;
@@ -15,24 +15,24 @@ void Position::move(long x, long y, int z)
 ScreenPosition::ScreenPosition(int x, int y) : BasePosition(x, y) {}
 ScreenPosition::ScreenPosition() : BasePosition(0, 0) {}
 
-WorldPosition::WorldPosition(long x, long y) : BasePosition(x, y) {}
+WorldPosition::WorldPosition(WorldPosition::value_type x, WorldPosition::value_type y) : BasePosition(x, y) {}
 WorldPosition::WorldPosition() : BasePosition(0, 0) {}
 
-MapPosition::MapPosition(long x, long y) : BasePosition(x, y) {}
+MapPosition::MapPosition(WorldPosition::value_type x, WorldPosition::value_type y) : BasePosition(x, y) {}
 MapPosition::MapPosition() : BasePosition(0, 0) {}
 
 WorldPosition ScreenPosition::worldPos(const MapView &mapView) const
 {
-  long newX = std::lroundf(mapView.x() + this->x / mapView.getZoomFactor());
-  long newY = std::lroundf(mapView.y() + this->y / mapView.getZoomFactor());
+  WorldPosition::value_type newX = std::lroundf(mapView.x() + this->x / mapView.getZoomFactor());
+  WorldPosition::value_type newY = std::lroundf(mapView.y() + this->y / mapView.getZoomFactor());
 
   return WorldPosition(newX, newY);
 }
 
 MapPosition ScreenPosition::mapPos(const MapView &mapView) const
 {
-  long newX = std::lroundf((this->x / mapView.getZoomFactor()) / MapTileSize);
-  long newY = std::lroundf((this->y / mapView.getZoomFactor()) / MapTileSize);
+  WorldPosition::value_type newX = std::lroundf((this->x / mapView.getZoomFactor()) / MapTileSize);
+  WorldPosition::value_type newY = std::lroundf((this->y / mapView.getZoomFactor()) / MapTileSize);
 
   return MapPosition(newX, newY);
 }
@@ -40,8 +40,8 @@ MapPosition ScreenPosition::mapPos(const MapView &mapView) const
 MapPosition WorldPosition::mapPos() const
 {
   return MapPosition{
-      static_cast<long>(std::floor(this->x / MapTileSize)),
-      static_cast<long>(std::floor(this->y / MapTileSize))};
+      static_cast<WorldPosition::value_type>(std::floor(this->x / MapTileSize)),
+      static_cast<WorldPosition::value_type>(std::floor(this->y / MapTileSize))};
 }
 
 WorldPosition MapPosition::worldPos() const

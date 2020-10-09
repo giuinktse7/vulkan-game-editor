@@ -26,8 +26,8 @@ public:
   } keys;
 
   void setPosition(WorldPosition position) noexcept;
-  inline void setX(long x) noexcept;
-  inline void setY(long y) noexcept;
+  inline void setX(WorldPosition::value_type x) noexcept;
+  inline void setY(WorldPosition::value_type y) noexcept;
 
   void translate(WorldPosition delta);
   void translateZ(int z);
@@ -36,12 +36,12 @@ public:
   void zoomOut(ScreenPosition zoomOrigin);
   void resetZoom(ScreenPosition zoomOrigin);
 
-  inline constexpr long x() const noexcept
+  inline constexpr WorldPosition::value_type x() const noexcept
   {
     return _position.x;
   }
 
-  inline constexpr long y() const noexcept
+  inline constexpr WorldPosition::value_type y() const noexcept
   {
     return _position.y;
   }
@@ -59,13 +59,13 @@ private:
   void setZoomStep(int zoomStep, ScreenPosition zoomOrigin);
 };
 
-inline void Camera::setX(long x) noexcept
+inline void Camera::setX(WorldPosition::value_type x) noexcept
 {
-  _position.x = std::max(x, 0L);
+  _position.x = std::max(x, 0);
 }
-inline void Camera::setY(long y) noexcept
+inline void Camera::setY(WorldPosition::value_type y) noexcept
 {
-  _position.y = std::max(y, 0L);
+  _position.y = std::max(y, 0);
 }
 
 inline float Camera::zoomFactor() const noexcept

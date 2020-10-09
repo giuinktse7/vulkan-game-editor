@@ -103,17 +103,17 @@ public:
 		return _position;
 	}
 
-	inline long x() const noexcept
+	inline Position::value_type x() const noexcept
 	{
 		return _position.x;
 	}
 
-	inline long y() const noexcept
+	inline Position::value_type y() const noexcept
 	{
 		return _position.y;
 	}
 
-	inline long z() const noexcept
+	inline Position::value_type z() const noexcept
 	{
 		return _position.z;
 	}

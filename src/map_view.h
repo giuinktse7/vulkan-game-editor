@@ -81,11 +81,11 @@ public:
 
 	void setCameraPosition(WorldPosition position);
 	WorldPosition cameraPosition() const noexcept;
-	void setX(long x);
-	void setY(long y);
+	void setX(WorldPosition::value_type x);
+	void setY(WorldPosition::value_type y);
 
-	void translateX(long x);
-	void translateY(long y);
+	void translateX(WorldPosition::value_type x);
+	void translateY(WorldPosition::value_type y);
 	void translateCamera(WorldPosition delta);
 	void translateZ(int z);
 

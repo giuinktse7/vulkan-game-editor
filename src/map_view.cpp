@@ -524,8 +524,8 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
               if (action.active())
               {
                 ScreenPosition delta = event.pos() - action.mouseOrigin.value();
-                long newX = static_cast<long>(std::round(delta.x / camera.zoomFactor()));
-                long newY = static_cast<long>(std::round(delta.y / camera.zoomFactor()));
+                auto newX = static_cast<WorldPosition::value_type>(std::round(delta.x / camera.zoomFactor()));
+                auto newY = static_cast<WorldPosition::value_type>(std::round(delta.y / camera.zoomFactor()));
 
                 auto newPos = action.cameraOrigin.value() + WorldPosition(-newX, -newY);
 
@@ -589,12 +589,12 @@ void MapView::setCameraPosition(WorldPosition position)
   camera.setPosition(position);
 }
 
-void MapView::setX(long x)
+void MapView::setX(WorldPosition::value_type x)
 {
   camera.setX(x);
 }
 
-void MapView::setY(long y)
+void MapView::setY(WorldPosition::value_type y)
 {
   camera.setY(y);
 }
@@ -638,12 +638,12 @@ void MapView::translateCamera(WorldPosition delta)
   camera.translate(delta);
 }
 
-void MapView::translateX(long x)
+void MapView::translateX(WorldPosition::value_type x)
 {
   camera.setX(camera.x() + x);
 }
 
-void MapView::translateY(long y)
+void MapView::translateY(WorldPosition::value_type y)
 {
   camera.setY(camera.y() + y);
 }

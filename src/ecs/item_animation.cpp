@@ -19,7 +19,7 @@ void ItemAnimationComponent::synchronizePhase()
   TimePoint startTime = TimePoint::sinceStart();
 
   auto elapsedTimeMs = startTime.elapsedMillis();
-  long long timeDiff = elapsedTimeMs % loopTime;
+  time_t timeDiff = elapsedTimeMs % loopTime;
 
   size_t phaseIndex = 0;
   while (timeDiff >= 0)
@@ -32,7 +32,7 @@ void ItemAnimationComponent::synchronizePhase()
 
   state.phaseIndex = static_cast<uint32_t>(phaseIndex);
 
-  long long res = elapsedTimeMs - (animationInfo->phases[phaseIndex].maxDuration + timeDiff);
+  time_t res = elapsedTimeMs - (animationInfo->phases[phaseIndex].maxDuration + timeDiff);
   this->state.lastUpdateTime = startTime.forwardMs(res);
 
   return;
@@ -134,7 +134,7 @@ void ItemAnimationSystem::update()
 
     if (animation.animationInfo->synchronized)
     {
-      auto phaseDuration = static_cast<long long>(animation.state.phaseDurationMs);
+      auto phaseDuration = static_cast<time_t>(animation.state.phaseDurationMs);
       auto nextPhaseDuration = animation.animationInfo->phases.at(animation.nextPhase()).maxDuration;
 
       bool outOfSync = elapsedTimeMs >= phaseDuration + nextPhaseDuration;

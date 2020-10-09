@@ -36,7 +36,7 @@ void Camera::updateZoom(ScreenPosition zoomOrigin)
 
 void Camera::setPosition(WorldPosition position) noexcept
 {
-	this->_position = WorldPosition(std::max(position.x, 0L), std::max(position.y, 0L));
+	this->_position = WorldPosition(std::max(position.x, 0), std::max(position.y, 0));
 }
 
 void Camera::translate(WorldPosition delta)
