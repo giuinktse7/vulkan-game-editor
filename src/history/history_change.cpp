@@ -4,102 +4,68 @@
 
 namespace MapHistory
 {
-  /*
-    Static methods
-  */
-  std::optional<Select> Select::fullTile(Tile &tile)
+
+  void Change::commit(MapView &mapView)
   {
-    if (tile.isEmpty())
-      return {};
+    std::visit(
+        util::overloaded{
+            [&mapView](std::unique_ptr<ChangeItem> &change) {
+              DEBUG_ASSERT(!change->committed, "Attempted to commit a change that is already marked as committed.");
 
-    bool includesGround = tile.hasGround() && !tile.ground()->selected;
+              change->commit(mapView);
+              change->committed = true;
+            },
+            [](std::monostate &s) {
+              DEBUG_ASSERT(false, "[MapHistory::Change::commit] An empty change should never get here.");
+            },
+            [&mapView](auto &change) {
+              DEBUG_ASSERT(!change.committed, "Attempted to commit a change that is already marked as committed.");
 
-    std::vector<uint16_t> indices;
-    for (int i = 0; i < tile.itemCount(); ++i)
-    {
-      if (!tile.itemSelected(i))
-      {
-        indices.emplace_back(i);
-      }
-    }
-
-    return Select(tile.position(), indices, includesGround);
+              change.commit(mapView);
+              change.committed = true;
+            }},
+        data);
   }
 
-  std::optional<MapHistory::Deselect> Deselect::fullTile(Tile &tile)
+  void Change::undo(MapView &mapView)
   {
-    if (tile.isEmpty())
-      return {};
+    std::visit(
+        util::overloaded{
+            [&mapView](std::unique_ptr<ChangeItem> &change) {
+              DEBUG_ASSERT(change->committed, "Attempted to undo a change that is not marked as committed.");
 
-    bool includesGround = tile.hasGround() && tile.ground()->selected;
+              change->undo(mapView);
+              change->committed = false;
+            },
+            [](std::monostate &s) {
+              DEBUG_ASSERT(false, "[MapHistory::Change::undo] An empty change should never get here.");
+            },
+            [&mapView](auto &change) {
+              DEBUG_ASSERT(change.committed, "Attempted to undo a change that is not marked as committed.");
 
-    std::vector<uint16_t> indices;
-    for (int i = 0; i < tile.itemCount(); ++i)
-    {
-      if (tile.itemSelected(i))
-      {
-        indices.emplace_back(i);
-      }
-    }
-
-    return Deselect(tile.position(), indices, includesGround);
-  }
-
-  std::optional<Select> Select::topItem(Tile &tile)
-  {
-    if (tile.topItemSelected())
-      return {};
-
-    std::vector<uint16_t> indices;
-
-    bool isTopGround = tile.getTopItem() == tile.ground();
-    if (!isTopGround)
-    {
-      indices.emplace_back(static_cast<uint16_t>(tile.itemCount() - 1));
-    }
-
-    return Select(tile.position(), indices, isTopGround);
-  }
-
-  std::optional<Deselect> Deselect::topItem(Tile &tile)
-  {
-    if (!tile.topItemSelected())
-      return {};
-
-    std::vector<uint16_t> indices;
-    bool isTopGround = tile.getTopItem() == tile.ground();
-    if (!isTopGround)
-    {
-      indices.emplace_back(static_cast<uint16_t>(tile.itemCount() - 1));
-    }
-    return Deselect(tile.position(), indices, isTopGround);
+              change.undo(mapView);
+              change.committed = false;
+            }},
+        data);
   }
 
   SetTile::SetTile(Tile &&tile) : tile(std::move(tile)) {}
 
   void SetTile::commit(MapView &mapView)
   {
-    DEBUG_ASSERT(!committed, "Attempted to commit an action that is already marked as committed.");
-
     std::unique_ptr<Tile> currentTilePtr = mapView.setTileInternal(std::move(tile));
     Tile *currentTile = currentTilePtr.release();
 
     tile = std::move(*currentTile);
-
-    committed = true;
   }
 
   void SetTile::undo(MapView &mapView)
   {
-    DEBUG_ASSERT(committed, "Attempted to undo an action that is not marked as committed.");
-
     tile.initEntities();
     std::unique_ptr<Tile> currentTilePointer = mapView.setTileInternal(std::move(tile));
     Tile *currentTile = currentTilePointer.release();
 
     tile = std::move(*currentTile);
-
-    committed = false;
   }
 
   RemoveTile::RemoveTile(Position pos) : data(pos) {}
@@ -125,10 +91,11 @@ namespace MapHistory
   }
 
   Move::Move(Position from, Position to, bool ground, std::vector<uint16_t> &indices)
-      : undoData{Tile(from), Tile(to)}, moveData(Move::Partial(ground, std::move(indices))) {}
+      : moveData(Move::Partial(ground, std::move(indices))),
+        undoData{Tile(from), Tile(to)} {}
 
   Move::Move(Position from, Position to)
-      : undoData{Tile(from), Tile(to)}, moveData(Move::Entire{}) {}
+      : moveData(Move::Entire{}), undoData{Tile(from), Tile(to)} {}
 
   Move::Partial::Partial(bool ground, std::vector<uint16_t> indices)
       : ground(ground), indices(indices) {}
@@ -175,7 +142,7 @@ namespace MapHistory
 
     std::visit(
         util::overloaded{
-            [this, &mapView, &from, &to](const Entire) {
+            [&mapView, &from, &to](const Entire) {
               if (from.hasGround())
               {
                 mapView.map()->moveTile(from.position(), to.position());
@@ -239,6 +206,41 @@ namespace MapHistory
         indices(indices),
         includesGround(includesGround) {}
 
+  std::optional<Select> Select::fullTile(Tile &tile)
+  {
+    if (tile.isEmpty())
+      return {};
+
+    bool includesGround = tile.hasGround() && !tile.ground()->selected;
+
+    std::vector<uint16_t> indices;
+    for (int i = 0; i < tile.itemCount(); ++i)
+    {
+      if (!tile.itemSelected(i))
+      {
+        indices.emplace_back(i);
+      }
+    }
+
+    return Select(tile.position(), indices, includesGround);
+  }
+
+  std::optional<Select> Select::topItem(Tile &tile)
+  {
+    if (tile.topItemSelected())
+      return {};
+
+    std::vector<uint16_t> indices;
+
+    bool isTopGround = tile.getTopItem() == tile.ground();
+    if (!isTopGround)
+    {
+      indices.emplace_back(static_cast<uint16_t>(tile.itemCount() - 1));
+    }
+
+    return Select(tile.position(), indices, isTopGround);
+  }
+
   void Select::commit(MapView &mapView)
   {
     Tile *tile = mapView.getTile(position);
@@ -270,6 +272,39 @@ namespace MapHistory
         indices(indices),
         includesGround(includesGround) {}
 
+  std::optional<MapHistory::Deselect> Deselect::fullTile(Tile &tile)
+  {
+    if (tile.isEmpty())
+      return {};
+
+    bool includesGround = tile.hasGround() && tile.ground()->selected;
+
+    std::vector<uint16_t> indices;
+    for (int i = 0; i < tile.itemCount(); ++i)
+    {
+      if (tile.itemSelected(i))
+      {
+        indices.emplace_back(i);
+      }
+    }
+
+    return Deselect(tile.position(), indices, includesGround);
+  }
+
+  std::optional<Deselect> Deselect::topItem(Tile &tile)
+  {
+    if (!tile.topItemSelected())
+      return {};
+
+    std::vector<uint16_t> indices;
+    bool isTopGround = tile.getTopItem() == tile.ground();
+    if (!isTopGround)
+    {
+      indices.emplace_back(static_cast<uint16_t>(tile.itemCount() - 1));
+    }
+    return Deselect(tile.position(), indices, isTopGround);
+  }
+
   void Deselect::commit(MapView &mapView)
   {
     Tile *tile = mapView.getTile(position);
@@ -299,39 +334,4 @@ namespace MapHistory
     committed = true;
   }
 
-  void Change::commit(MapView &mapView)
-  {
-    std::visit(
-        util::overloaded{
-            [&mapView](std::unique_ptr<ChangeItem> &change) {
-              change->commit(mapView);
-              change->committed = true;
-            },
-            [](std::monostate &s) {
-              DEBUG_ASSERT(false, "[MapHistory::Change::commit] An empty action should never get here.");
-            },
-            [&mapView](auto &change) {
-              change.commit(mapView);
-              change.committed = true;
-            }},
-        data);
-  }
-
-  void Change::undo(MapView &mapView)
-  {
-    std::visit(
-        util::overloaded{
-            [&mapView](std::unique_ptr<ChangeItem> &change) {
-              change->undo(mapView);
-              change->committed = false;
-            },
-            [](std::monostate &s) {
-              DEBUG_ASSERT(false, "[MapHistory::Change::undo] An empty action should never get here.");
-            },
-            [&mapView](auto &change) {
-              change.undo(mapView);
-              change.committed = false;
-            }},
-        data);
-  }
 } // namespace MapHistory
