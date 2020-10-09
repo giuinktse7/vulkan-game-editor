@@ -156,20 +156,6 @@ public:
 
 	bool hasSelection() const;
 
-	enum class PanType
-	{
-		Horizontal,
-		Vertical
-	};
-
-	struct PanEvent
-	{
-		PanType type;
-		long value;
-	};
-
-	void panEvent(PanEvent event);
-
 	inline ScreenPosition mousePos() const;
 
 	void addObserver(MapView::Observer *observer);

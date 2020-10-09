@@ -399,21 +399,6 @@ bool MapView::isDragging() const
   return dragRegion.has_value();
 }
 
-void MapView::panEvent(MapView::PanEvent event)
-{
-  WorldPosition delta{};
-  switch (event.type)
-  {
-  case PanType::Horizontal:
-    delta.x += event.value;
-    break;
-  case PanType::Vertical:
-    delta.y += event.value;
-  }
-
-  translateCamera(delta);
-}
-
 void MapView::mousePressEvent(VME::MouseEvent event)
 {
 
