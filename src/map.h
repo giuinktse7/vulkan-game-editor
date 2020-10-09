@@ -167,7 +167,6 @@ public:
 		} state;
 
 		Pointer value;
-
 		bool isEnd;
 
 		void nextChunk();
@@ -176,7 +175,7 @@ public:
 
 	Iterator begin()
 	{
-		return Iterator(map, from, to);
+		return Iterator(map, from, to, false);
 	}
 
 	Iterator end()

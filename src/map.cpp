@@ -454,38 +454,35 @@ void MapRegion::Iterator::nextChunk()
 
 void MapRegion::Iterator::updateValue()
 {
-  if (isEnd)
+  while (!isEnd)
   {
-    return;
-  }
-
-  for (int &x = state.chunk.x; x < 4; ++x)
-  {
-    if (state.mapX + x < x1 || state.mapX + x > x2)
+    for (int &x = state.chunk.x; x < 4; ++x)
     {
-      continue;
-    }
-    for (int &y = state.chunk.y; y < 4; ++y)
-    {
-      if (state.mapY + y < y1 || state.mapY + y > y2)
+      if (state.mapX + x < x1 || state.mapX + x > x2)
       {
         continue;
       }
-      Pointer tileLocation = state.chunk.node->getTile(state.mapX + x, state.mapY + y, state.mapZ);
-      if (tileLocation)
+      for (int &y = state.chunk.y; y < 4; ++y)
       {
-        value = tileLocation;
-        // The function can return because the next TileLocation was found
-        return;
+        if (state.mapY + y < y1 || state.mapY + y > y2)
+        {
+          continue;
+        }
+        Pointer tileLocation = state.chunk.node->getTile(state.mapX + x, state.mapY + y, state.mapZ);
+        if (tileLocation)
+        {
+          value = tileLocation;
+          // The function can return because the next TileLocation was found
+          return;
+        }
       }
+      state.chunk.y = 0;
     }
-    state.chunk.y = 0;
-  }
-  state.chunk.x = 0;
+    state.chunk.x = 0;
 
-  state.mapY += 4;
-  nextChunk();
-  updateValue();
+    state.mapY += 4;
+    nextChunk();
+  }
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
