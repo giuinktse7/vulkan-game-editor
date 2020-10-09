@@ -176,133 +176,102 @@ namespace MapHistory
     mapView.map()->insertTile(std::move(undoData.fromTile));
   }
 
-#if _DEBUG_VME
-  MultiMove::MultiMove(size_t initialSize)
-      : sources(initialSize),
-        destinations(initialSize)
+  MultiMove::MultiMove(Position deltaPos, size_t moveOperations)
+      : deltaPos(deltaPos)
   {
-    moves.reserve(initialSize);
-    sizeof(std::vector<std::vector<Move>>);
-  }
-#else
-  MultiMove::MultiMove(size_t initialSize)
-      : destinations(initialSize)
-  {
-    moves.reserve(initialSize);
-  }
-#endif
-
-  /*
-    Given 'move' (C -> A), returns true if adding this move will create a cycle
-    (A -> B -> C -> A)
-  */
-  bool MultiMove::createsCycle(const Move &move)
-  {
-    Position C = move.fromPosition();
-    Position A = move.toPosition();
-
-    auto cDest = destinations.find(C);
-    if (cDest == destinations.end())
-      return false;
-    auto B = moves.at(cDest->second).fromPosition();
-    auto bDest = destinations.find(C);
-
-    if (bDest == destinations.end())
-      return false;
-    return moves.at(bDest->second).fromPosition() == A;
-
-    // Position C = move.fromPosition();
-    // Position A = move.toPosition();
-    // auto srcA = sources.find(A);
-    // if (srcA == sources.end())
-    //   return false;
-
-    // auto B = srcA->second;
-    // auto srcB = sources.find(B);
-    // return srcB != sources.end() && srcB->second == C;
+    moves.reserve(moveOperations);
   }
 
   void MultiMove::add(Move &&move)
   {
-    Position fromPos = move.fromPosition();
-    Position toPos = move.toPosition();
-
-    /* 
-      If a move A is added with a source that matches the destination of move B,
-      then move A must happen before move B.
-    */
-    auto overlapping = destinations.find(fromPos);
-    if (overlapping != destinations.end())
-    {
-      DEBUG_ASSERT(!createsCycle(move), "Adding this move will cause a cyclic dependency (A -> B, B -> C, C -> A) causing the loss of one tile. Something is probably wrong.");
-
-      uint32_t index = overlapping->second;
-      VME_LOG_D(move.fromPosition() << "->" << move.toPosition() << " overlapped by " << moves.at(index).fromPosition() << "->" << moves.at(index).toPosition());
-
-      // Move the overlapping move to the end
-      moves.emplace_back(std::move(moves.at(index)));
-      overlapping->second = moves.size() - 1;
-
-      moves.at(index) = std::move(move);
-      destinations.emplace(toPos, index);
-    }
-    else
-    {
-      moves.emplace_back(fromPos, toPos);
-      destinations.emplace(toPos, moves.size() - 1);
-    }
-
-#if _DEBUG_VME
-    sources.emplace(fromPos);
-#endif
-  }
-
-  void MultiMove::add2(Move &&move)
-  {
-    Position fromPos = move.fromPosition();
-    Position toPos = move.toPosition();
-
-    /* 
-      If a move A is added with a source that matches the destination of move B,
-      then move A must happen before move B.
-    */
-    auto overlapping = destinations.find(fromPos);
-    if (overlapping != destinations.end())
-    {
-      DEBUG_ASSERT(sources.find(toPos) == sources.end(), "Adding this move will cause a cyclic dependency (A -> B, B -> C, C -> A) causing the loss of one tile. Something is probably wrong.");
-
-      uint32_t index = overlapping->second;
-      // Move the overlapping move to the end
-      moves.emplace_back(std::move(moves.at(index)));
-      overlapping->second = moves.size() - 1;
-
-      moves.at(index) = std::move(move);
-      destinations.emplace(toPos, index);
-    }
-    else
-    {
-      moves.emplace_back(fromPos, toPos);
-      destinations.emplace(toPos, moves.size() - 1);
-    }
-
-#if _DEBUG_VME
-    sources.emplace(fromPos);
-#endif
+    moves.emplace_back(std::move(move));
   }
 
   void MultiMove::commit(MapView &mapView)
   {
-    VME_LOG_D("\nCommit:");
-    for (auto &move : moves)
+    DEBUG_ASSERT(!(deltaPos.x == 0 && deltaPos.y == 0), "No-op move is not allowed.");
+    std::function<bool(const Move &lhs, const Move &rhs)> f;
+    if (!sorted)
     {
-      const auto show = [](const Position p) {
-        std::ostringstream s;
-        s << "(" << p.x << ", " << p.y << ")";
-        return s.str();
-      };
-      VME_LOG_D(show(move.fromPosition()) << " -> " << show(move.toPosition()));
-      move.commit(mapView);
+      if (deltaPos.x == 0)
+      {
+        if (deltaPos.y > 0)
+        {
+          f = [](const Move &lhs, const Move &rhs) {
+            const Position p1 = lhs.fromPosition();
+            const Position p2 = rhs.fromPosition();
+            return p1.y > p2.y;
+          };
+        }
+        else
+        {
+          f = [](const Move &lhs, const Move &rhs) {
+            const Position p1 = lhs.fromPosition();
+            const Position p2 = rhs.fromPosition();
+            return p1.y < p2.y;
+          };
+        }
+      }
+      else if (deltaPos.y == 0)
+      {
+        if (deltaPos.x > 0)
+        {
+          f = [](const Move &lhs, const Move &rhs) {
+            const Position p1 = lhs.fromPosition();
+            const Position p2 = rhs.fromPosition();
+            return p1.x > p2.x;
+          };
+        }
+        else
+        {
+          f = [](const Move &lhs, const Move &rhs) {
+            const Position p1 = lhs.fromPosition();
+            const Position p2 = rhs.fromPosition();
+            return p1.x < p2.x;
+          };
+        }
+      }
+      else if (deltaPos.x > 0 && deltaPos.y > 0)
+      {
+        f = [](const Move &lhs, const Move &rhs) {
+          const Position p1 = lhs.fromPosition();
+          const Position p2 = rhs.fromPosition();
+          return p1.x == p2.x ? p1.y > p2.y : p1.x > p2.x;
+        };
+      }
+      else if (deltaPos.x < 0 && deltaPos.y > 0)
+      {
+        f = [](const Move &lhs, const Move &rhs) {
+          const Position p1 = lhs.fromPosition();
+          const Position p2 = rhs.fromPosition();
+          return p1.x == p2.x ? p1.y > p2.y : p1.x < p2.x;
+        };
+      }
+      else if (deltaPos.x > 0 && deltaPos.y < 0)
+      {
+        f = [](const Move &lhs, const Move &rhs) {
+          const Position p1 = lhs.fromPosition();
+          const Position p2 = rhs.fromPosition();
+          return p1.x == p2.x ? p1.y < p2.y : p1.x > p2.x;
+        };
+      }
+      else
+      {
+        f = [](const Move &lhs, const Move &rhs) {
+          const Position p1 = lhs.fromPosition();
+          const Position p2 = rhs.fromPosition();
+          return p1.x == p2.x ? p1.y < p2.y : p1.x < p2.x;
+        };
+      }
+      std::sort(moves.begin(), moves.end(), f);
+
+      sorted = true;
     }
+
+    for (auto &move : moves)
+      move.commit(mapView);
+
+    VME_LOG_D("Moved " << moves.size() << " tiles.");
   }
 
   void MultiMove::undo(MapView &mapView)

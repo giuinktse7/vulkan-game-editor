@@ -201,7 +201,7 @@ void MapView::deleteSelectedItems()
   }
 
   history.startGroup(ActionGroupType::RemoveMapItem);
-  for (auto pos : selection.getPositions())
+  for (const auto pos : selection.getPositions())
   {
     Tile &tile = *getTile(pos);
     if (tile.allSelected())
@@ -291,24 +291,24 @@ void MapView::finishMoveSelection(const Position moveDestination)
   {
     MapHistory::Action action(MapHistory::ActionType::Selection);
 
+    const auto &positions = selection.getPositions();
     Position deltaPos = moveDestination - selection.moveOrigin.value();
-    for (const Position fromPos : selection.getPositions())
+
+    auto multiMove = std::make_unique<MapHistory::MultiMove>(deltaPos, positions.size());
+
+    for (const auto fromPos : positions)
     {
       const Tile &fromTile = *getTile(fromPos);
       Position toPos = fromPos + deltaPos;
       DEBUG_ASSERT(fromTile.hasSelection(), "The tile at each position of a selection should have a selection.");
 
       if (fromTile.allSelected())
-      {
-        auto move = std::make_unique<MapHistory::Move>(MapHistory::Move::entire(fromPos, toPos));
-        action.addChange(std::move(move));
-      }
+        multiMove->add(MapHistory::Move::entire(fromPos, toPos));
       else
-      {
-        auto move = std::make_unique<MapHistory::Move>(MapHistory::Move::selected(fromTile, toPos));
-        action.addChange(std::move(move));
-      }
+        multiMove->add(MapHistory::Move::selected(fromTile, toPos));
     }
+
+    action.addChange(std::move(multiMove));
 
     history.commit(std::move(action));
   }

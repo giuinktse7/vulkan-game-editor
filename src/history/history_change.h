@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <variant>
 
 #include "../tile.h"
 
@@ -125,29 +126,22 @@ namespace MapHistory
   class MultiMove : public ChangeItem
   {
   public:
-    MultiMove(size_t moveOperations);
+    MultiMove(Position deltaPos, size_t moveOperations);
     virtual void commit(MapView &mapView) override;
     virtual void undo(MapView &mapView) override;
 
     void add(Move &&move);
-    void add2(Move &&move);
 
   private:
-#if _DEBUG_VME
-    bool createsCycle(const Move &move);
-    std::unordered_set<Position, PositionHash> sources;
-#endif
-
-    /**
-     * This set is used to store the destinations for all added moves.
-     * If a move A is added with a source that matches the destination of move B,
-     * then move A must happen before move B.
-     * 
-     * The value corresponds to the index for the move in the 'moves' vector.
-     */
-    std::unordered_map<Position, uint32_t, PositionHash> destinations;
-
-    std::list<Move> moves;
+    // struct MoveData
+    // {
+    //   Move move;
+    //   long distance;
+    // };
+    Position deltaPos;
+    // std::variant<std::vector<std::vector<Move>>, std::vector<Move>> moves;
+    std::vector<Move> moves;
+    bool sorted = false;
   };
 
   class SelectMultiple : public ChangeItem
