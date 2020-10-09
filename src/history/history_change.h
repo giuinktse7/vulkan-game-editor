@@ -71,6 +71,10 @@ namespace MapHistory
     std::variant<Tile, Position> data;
   };
 
+  /* 
+    NOTE: The 'from' and 'to' positions are stored in the undoData tiles to
+    save space
+  */
   class Move : public ChangeItem
   {
   public:
@@ -86,8 +90,14 @@ namespace MapHistory
     virtual void undo(MapView &mapView) override;
 
   private:
-    Position fromPosition;
-    Position toPosition;
+    inline Position fromPosition() const noexcept
+    {
+      return undoData.fromTile.position();
+    }
+    inline Position toPosition() const noexcept
+    {
+      return undoData.toTile.position();
+    }
 
     struct Entire
     {
@@ -96,8 +106,8 @@ namespace MapHistory
     struct Partial
     {
       Partial(bool ground, std::vector<uint16_t> indices);
-      bool ground;
       std::vector<uint16_t> indices;
+      bool ground;
     };
 
     std::variant<Entire, Partial> moveData;
@@ -109,7 +119,8 @@ namespace MapHistory
       Tile toTile;
     };
 
-    std::optional<UndoData> undoData;
+    UndoData undoData;
+  };
   };
 
   class SelectMultiple : public ChangeItem

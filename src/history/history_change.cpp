@@ -125,10 +125,10 @@ namespace MapHistory
   }
 
   Move::Move(Position from, Position to, bool ground, std::vector<uint16_t> &indices)
-      : fromPosition(from), toPosition(to), moveData(Move::Partial(ground, std::move(indices))) {}
+      : undoData{Tile(from), Tile(to)}, moveData(Move::Partial(ground, std::move(indices))) {}
 
   Move::Move(Position from, Position to)
-      : fromPosition(from), toPosition(to), moveData(Move::Entire{}) {}
+      : undoData{Tile(from), Tile(to)}, moveData(Move::Entire{}) {}
 
   Move::Partial::Partial(bool ground, std::vector<uint16_t> indices)
       : ground(ground), indices(indices) {}
@@ -163,17 +163,22 @@ namespace MapHistory
 
   void Move::commit(MapView &mapView)
   {
-    Tile &from = mapView.getOrCreateTile(fromPosition);
-    Tile &to = mapView.getOrCreateTile(toPosition);
+    Position fromPos = undoData.fromTile.position();
+    Position toPos = undoData.toTile.position();
 
-    undoData = std::make_optional(Move::UndoData(from.deepCopy(), to.deepCopy()));
+    Tile &from = mapView.getOrCreateTile(fromPos);
+    Tile &to = mapView.getOrCreateTile(toPos);
+
+    // VME_LOG_D("Moving from " << fromPosition << " to " << toPosition);
+    undoData.fromTile = from.deepCopy();
+    undoData.toTile = to.deepCopy();
 
     std::visit(
         util::overloaded{
             [this, &mapView, &from, &to](const Entire) {
               if (from.hasGround())
               {
-                mapView.map()->moveTile(fromPosition, toPosition);
+                mapView.map()->moveTile(from.position(), to.position());
               }
               else
               {
@@ -194,14 +199,15 @@ namespace MapHistory
             }},
         moveData);
 
-    mapView.updateSelection(fromPosition);
-    mapView.updateSelection(toPosition);
+    mapView.updateSelection(fromPos);
+    mapView.updateSelection(toPos);
   }
 
   void Move::undo(MapView &mapView)
   {
-    mapView.map()->insertTile(std::move(undoData.value().fromTile));
-    mapView.map()->insertTile(std::move(undoData.value().toTile));
+    mapView.map()->insertTile(std::move(undoData.toTile));
+    mapView.map()->insertTile(std::move(undoData.fromTile));
+  }
   }
 
   SelectMultiple::SelectMultiple(std::unordered_set<Position, PositionHash> positions, bool select)
