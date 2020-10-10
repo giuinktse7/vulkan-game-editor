@@ -1,7 +1,6 @@
 #include "octree.h"
 
 #include "debug.h"
-#include "position.h"
 
 namespace vme
 {
@@ -9,38 +8,72 @@ namespace vme
   {
     Tree::Tree(uint32_t width, uint32_t height, uint16_t floors)
         : width(width), height(height), floors(floors),
-          top(width / 2, height / 2, floors / 2, width / 4, height / 4, floors / 4)
+          top(width / 2, height / 2, floors / 2, width / 4, height / 4, floors / 4),
+          dimensionPattern(0b111)
     {
-      // int base = 0;
-      root.childBase = 0;
-      // root.children._000 = base;
-      // root.children._001 = base + 1;
-      // root.children._010 = base + 2;
-      // root.children._011 = base + 3;
-      // root.children._100 = base + 4;
-      // root.children._101 = base + 5;
-      // root.children._110 = base + 6;
-      // root.children._111 = base + 7;
-      // root.index = -2;
+      root.childCacheOffset = 0;
 
-      for (int i = 0; i < cachedNodes.size() / 8; ++i)
-        cachedNodes[i].setIndex(i);
+      if (CachedNodeCount.endXIndex == -1)
+        dimensionPattern &= (~0b100);
+      if (CachedNodeCount.endYIndex == -1)
+        dimensionPattern &= (~0b010);
+      if (CachedNodeCount.endZIndex == -1)
+        dimensionPattern &= (~0b001);
+
+      int exponent = 0;
+      if (CachedNodeCount.endXIndex != 0)
+        ++exponent;
+      if (CachedNodeCount.endYIndex != 0)
+        ++exponent;
+      if (CachedNodeCount.endZIndex != 0)
+        ++exponent;
+
+      int offset = power(2, exponent);
+      for (int i = 0; i < CachedNodeCount.amountToInitialize; ++i)
+      {
+        cachedNodes[i].childCacheOffset = (i + 1) * offset;
+        if (i == CachedNodeCount.endXIndex)
+          offset /= 2;
+        if (i == CachedNodeCount.endYIndex)
+          offset /= 2;
+        if (i == CachedNodeCount.endZIndex)
+          offset /= 2;
+      }
     }
 
     void Tree::add(const Position pos)
     {
       TraversalState state = top;
 
+      SplitInfo split;
+
       auto &cached = root;
-      while (cached.childBase != -1)
+      uint16_t index = 0;
+      while (cached.childCacheOffset != -1)
       {
         // x y z
         int pattern = state.update(pos);
-        cached = cachedNodes[cached.child(pattern)];
-        VME_LOG_D(cached.childBase);
-      }
+        split.update(pattern);
 
-      VME_LOG_D("Final state: " << state.show());
+        index = cached.child(pattern);
+        cached = cachedNodes[index];
+        VME_LOG_D(cached.childCacheOffset);
+      }
+      VME_LOG_D("Final cache state: " << state.show());
+      VME_LOG_D(index);
+
+      // If no more splits are possible, this cached node is a leaf node.
+      if (dimensionPattern == 0)
+      {
+        Leaf *leaf;
+        if (!cachedHeapNodes.at(index))
+        {
+          cachedHeapNodes.at(index) = std::make_unique<Leaf>(pos);
+        }
+        leaf = static_cast<Leaf *>(cachedHeapNodes.at(index).get());
+
+        VME_LOG_D("Leaf node: " << leaf->position);
+      }
     }
 
     int Tree::TraversalState::update(Position pos)
@@ -77,61 +110,61 @@ namespace vme
       return pattern;
     }
 
-    Tree::Node::Node()
+    void Tree::SplitInfo::update(int pattern)
     {
+      DEBUG_ASSERT((pattern & (~0b111)) == 0, "Bad pattern.");
+
+      x += (pattern >> 2) & 1;
+      y += (pattern >> 1) & 1;
+      z += pattern & 1;
     }
 
     Tree::CachedNode::CachedNode() {}
 
     uint16_t Tree::CachedNode::child(const int pattern)
     {
-      return childBase + pattern;
-      // switch (pattern)
-      // {
-      // case 0b0:
-      //   return children._000;
-      // case 0b1:
-      //   return children._001;
-      // case 0b10:
-      //   return children._010;
-      // case 0b11:
-      //   return children._011;
-      // case 0b100:
-      //   return children._100;
-      // case 0b101:
-      //   return children._101;
-      // case 0b110:
-      //   return children._110;
-      // case 0b111:
-      //   return children._111;
-      // }
+      return childCacheOffset + pattern;
     }
 
-    void Tree::CachedNode::setIndex(size_t index)
+    void Tree::CachedNode::setChildCacheOffset(size_t offset)
     {
-      // this->index = index;
-      childBase = (index + 1) * 8;
-      // auto base = (index + 1) * 8;
-      // children._000 = base;
-      // children._001 = base + 1;
-      // children._010 = base + 2;
-      // children._011 = base + 3;
-      // children._100 = base + 4;
-      // children._101 = base + 5;
-      // children._110 = base + 6;
-      // children._111 = base + 7;
+      childCacheOffset = offset;
     }
 
-    Tree::HeapNode *Tree::NonLeaf::child(const int pattern) const
+    // Tree::HeapNode *Tree::NodeXY::child(int pattern) const
+    // {
+    //   DEBUG_ASSERT((pattern & (~0b11)) == 0, "Bad pattern.");
+    //   auto child = children[pattern].get();
+    //   return child;
+    // }
+
+    // void Tree::NodeXY::add(const Position pos)
+    // {
+    //   Leaf *leaf = getOrCreateLeaf(pos);
+    // }
+
+    //>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>Leaf>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>
+
+    Tree::Leaf::Leaf(const Position pos)
+        : position(pos.x / ChunkSize.width, pos.y / ChunkSize.height, pos.z / ChunkSize.depth) {}
+
+    Tree::Leaf *Tree::Leaf::leaf(const Position pos) const
     {
-      return children[pattern];
+      return const_cast<Tree::Leaf *>(this);
     }
 
-    Tree::HeapNode &Tree::NonLeaf::getOrCreateChild(const int pattern)
+    Tree::Leaf *Tree::Leaf::getOrCreateLeaf(const Position pos)
     {
-      auto child = children[pattern];
-      if (child)
-        return *child;
+      return this;
+    }
+
+    void Tree::Leaf::add(const Position pos)
+    {
+      Position delta = pos - this->position;
+      auto index = (delta.x * ChunkSize.height + delta.y) * ChunkSize.depth + delta.z;
+      values[index] = true;
     }
 
   } // namespace octree
