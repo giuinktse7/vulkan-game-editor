@@ -6,7 +6,17 @@
 #include <array>
 #include <sstream>
 
+#include "debug.h"
+#include "util.h"
 #include "position.h"
+
+enum SplitDimension
+{
+  X = 1 << 2,
+  Y = 1 << 1,
+  Z = 1 << 0,
+};
+VME_ENUM_OPERATORS(SplitDimension)
 
 namespace vme
 {
@@ -22,6 +32,14 @@ namespace vme
       return result;
     }
 
+    constexpr size_t test(int d)
+    {
+      int exponent = (d & 1) + (d & 0b10) + (d & 0b100);
+      if (exponent == 0)
+        return 0;
+      return power(2, exponent);
+    }
+
     struct Cube
     {
       uint32_t width;
@@ -29,10 +47,25 @@ namespace vme
       uint32_t depth;
     };
 
+    enum ChildDimensions
+    {
+      None = 0,
+      X = 1 << 0,
+      Y = 1 << 1,
+      Z = 1 << 2
+    };
+
     constexpr Cube MapSize = {128, 128, 16};
     constexpr Cube ChunkSize = {64, 64, 8};
 
     constexpr uint32_t MaxSplits = 4;
+
+    struct SplitDelta
+    {
+      int x;
+      int y;
+      int z;
+    };
 
     constexpr struct SplitSize
     {
@@ -134,6 +167,86 @@ namespace vme
     class Tree
     {
     public:
+      class Leaf;
+
+      class HeapNode
+      {
+      public:
+        virtual ~HeapNode() = default;
+        virtual bool isLeaf() const
+        {
+          return false;
+        };
+
+        Leaf *leaf(const Position pos) const;
+        Leaf *getOrCreateLeaf(const Position pos);
+
+        virtual HeapNode *child(int pattern) const
+        {
+          return nullptr;
+        }
+        virtual HeapNode *child(const Position pos) const
+        {
+          return nullptr;
+        };
+        virtual HeapNode *getOrCreateChild(int pattern)
+        {
+          return nullptr;
+        }
+
+        virtual bool contains(const Position pos);
+        virtual void add(const Position pos);
+
+        virtual uint16_t index(const Position &pos) const = 0;
+      };
+
+      class Leaf : public HeapNode
+      {
+      public:
+        Leaf(const Position pos);
+        bool isLeaf() const override;
+
+        bool contains(const Position pos) override;
+        void add(const Position pos) override;
+
+        uint16_t index(const Position &pos) const override
+        {
+          return 0;
+        }
+
+        Position position;
+        bool values[ChunkSize.width * ChunkSize.height * ChunkSize.depth] = {false};
+      };
+
+#define DECLARE_NODE(name, amount)                              \
+  class name : public HeapNode                                  \
+  {                                                             \
+  public:                                                       \
+    name(const Position midPoint, const SplitDelta splitDelta); \
+                                                                \
+    HeapNode *child(int pattern) const override;                \
+    HeapNode *child(const Position pos) const override;         \
+    HeapNode *getOrCreateChild(int index) override;             \
+                                                                \
+    std::array<std::unique_ptr<HeapNode>, amount> children;     \
+                                                                \
+  private:                                                      \
+    Position midPoint;                                          \
+    SplitDelta splitDelta;                                      \
+                                                                \
+    uint16_t index(const Position &pos) const override;         \
+  }
+
+      DECLARE_NODE(NodeX, 2);
+      DECLARE_NODE(NodeY, 2);
+      DECLARE_NODE(NodeZ, 2);
+
+      DECLARE_NODE(NodeXY, 4);
+      DECLARE_NODE(NodeXZ, 4);
+      DECLARE_NODE(NodeYZ, 4);
+
+      DECLARE_NODE(NodeXYZ, 8);
+
       class CachedNode
       {
       public:
@@ -159,10 +272,8 @@ namespace vme
 
       struct TraversalState
       {
-        TraversalState(int x, int y, int z, int dx, int dy, int dz) : x(x), y(y), z(z), dx(dx), dy(dy), dz(dz) {}
-        int x;
-        int y;
-        int z;
+        TraversalState(Position pos, int dx, int dy, int dz) : pos(pos), dx(dx), dy(dy), dz(dz) {}
+        Position pos;
 
         int update(Position p);
 
@@ -173,7 +284,7 @@ namespace vme
         std::string show() const
         {
           std::ostringstream s;
-          s << "(" << x << ", " << y << ", " << z << "), deltas: (" << dx << ", " << dy << ", " << dz << ")";
+          s << "(" << pos.x << ", " << pos.y << ", " << pos.z << "), deltas: (" << dx << ", " << dy << ", " << dz << ")";
           return s.str();
         }
       };
@@ -207,60 +318,6 @@ namespace vme
         }
       };
 
-      class Leaf;
-      class HeapNode
-      {
-      public:
-        virtual ~HeapNode() = default;
-
-      protected:
-        virtual bool isLeaf() const = 0;
-        virtual Leaf *leaf(const Position pos) const = 0;
-        virtual Leaf *getOrCreateLeaf(const Position pos) = 0;
-
-        virtual HeapNode *child(int pattern) const
-        {
-          return nullptr;
-        }
-        virtual HeapNode *getOrCreateChild(int pattern)
-        {
-          return nullptr;
-        }
-
-        virtual void add(const Position pos) = 0;
-      };
-
-      class Leaf : public HeapNode
-      {
-      public:
-        Leaf(const Position pos);
-        bool isLeaf() const override;
-        Leaf *leaf(const Position pos) const override;
-        Leaf *getOrCreateLeaf(const Position pos) override;
-
-        void add(const Position pos) override;
-
-        Position position;
-        bool values[ChunkSize.width * ChunkSize.height * ChunkSize.depth] = {{0}};
-      };
-
-      template <size_t ChildrenCount>
-      class Node : public HeapNode
-      {
-      public:
-        Node(const SplitInfo split);
-        bool isLeaf() const override;
-        Leaf *leaf(const Position pos) const override;
-        Leaf *getOrCreateLeaf(const Position pos) override;
-
-        HeapNode *child(int pattern) const override;
-        HeapNode *getOrCreateChild(int pattern) override;
-
-        void add(const Position pos) override;
-
-        std::array<std::unique_ptr<HeapNode>, ChildrenCount> children;
-      };
-
       CachedNode root;
       std::array<CachedNode, CachedNodeCount.count> cachedNodes;
       std::array<std::unique_ptr<HeapNode>, CachedNodeCount.count - CachedNodeCount.amountToInitialize> cachedHeapNodes;
@@ -268,62 +325,90 @@ namespace vme
       // bits 0bxyz
       int dimensionPattern;
 
-    }; // End of Tree
+      static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData);
 
-    // inline bool Tree::NodeXY::isLeaf() const
-    // {
-    //   return false;
-    // }
+    }; // End of Tree
 
     inline bool Tree::Leaf::isLeaf() const
     {
       return true;
     }
 
-    template <size_t ChildrenCount>
-    Tree::Node<ChildrenCount>::Node(const SplitInfo split) : split(split) {}
+    //>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>Node>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>
 
-    template <size_t ChildrenCount>
-    Tree::HeapNode *Tree::Node<ChildrenCount>::child(int pattern) const
+    // factory function
+    inline std::unique_ptr<Tree::HeapNode> Tree::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta)
     {
-      DEBUG_ASSERT((pattern & ~(0b111)) == 0, "Bad pattern.");
-      auto child = children[pattern].get();
-      return child;
+      std::unique_ptr<HeapNode> ptr;
+      switch (pattern)
+      {
+      case 0: // If no more splits are possible, this cached node is a leaf node.
+        return std::make_unique<Leaf>(midPoint);
+      case 0b1:
+        ptr = std::make_unique<NodeZ>(midPoint, splitDelta);
+        return ptr;
+      case 0b10:
+        return std::make_unique<NodeY>(midPoint, splitDelta);
+      case 0b11:
+        return std::make_unique<NodeYZ>(midPoint, splitDelta);
+      case 0b100:
+        return std::make_unique<NodeX>(midPoint, splitDelta);
+      case 0b101:
+        return std::make_unique<NodeXZ>(midPoint, splitDelta);
+      case 0b110:
+        return std::make_unique<NodeXY>(midPoint, splitDelta);
+      case 0b111:
+        return std::make_unique<NodeXYZ>(midPoint, splitDelta);
+      default:
+        return {};
+      }
     }
 
-    template <size_t ChildrenCount>
-    Tree::HeapNode *Tree::Node<ChildrenCount>::getOrCreateChild(int pattern)
-    {
-      // auto child = children[pattern];
-      // if (child)
-      //   return child;
+    
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>index>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>
+    // inline uint16_t Tree::NodeZ::index(const Position &pos) const
+    // {
+    // int i = 0;
+    // switch (dimensions)
+    // {
+    // case ChildDimensions::X:
+    //   i |= (pos.x > midPoint.x);
+    //   break;
+    // case ChildDimensions::Y:
+    //   i |= (pos.y > midPoint.y);
+    //   break;
+    // case ChildDimensions::Z:
+    //   i |= (pos.z > midPoint.z);
+    //   break;
+    // default:
+    //   ABORT_PROGRAM("Bad dimension (= None)");
+    // }
 
-      return nullptr;
-    }
+    // return i;
+    // }
 
-    template <size_t ChildrenCount>
-    Tree::Leaf *Tree::Node<ChildrenCount>::leaf(const Position pos) const
-    {
-      return nullptr;
-    }
+    // uint16_t Tree::Node<2>::index(const Position &pos) const
+    // {
+    //   int i = 0;
+    //   if (dimensions & (ChildDimensions::X | ChildDimensions::Y))
+    //     i |= ((pos.x > midPoint.x) << 1) + (pos.y > midPoint.y);
+    //   else if (dimensions & (ChildDimensions::X | ChildDimensions::Z))
+    //     i |= ((pos.x > midPoint.x) << 1) + (pos.z > midPoint.z);
+    //   else // YZ
+    //     i |= ((pos.y > midPoint.y) << 1) + (pos.z > midPoint.z);
 
-    template <size_t ChildrenCount>
-    Tree::Leaf *Tree::Node<ChildrenCount>::getOrCreateLeaf(const Position pos)
-    {
-      return nullptr;
-    }
+    //   return i;
+    // }
 
-    template <size_t ChildrenCount>
-    void Tree::Node<ChildrenCount>::add(Position pos)
-    {
-      getOrCreateLeaf(pos)->add(pos);
-    }
-
-    template <size_t ChildrenCount>
-    inline bool Tree::Node<ChildrenCount>::isLeaf() const
-    {
-      return false;
-    }
+    // template <>
+    // uint16_t Tree::Node<3>::index(const Position &pos) const
+    // {
+    //   return ((pos.x > midPoint.x) << 2) | ((pos.y > midPoint.y) << 1) | (pos.z > midPoint.z);
+    // }
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>
