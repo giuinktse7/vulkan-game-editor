@@ -55,10 +55,12 @@ namespace vme
       Z = 1 << 2
     };
 
-    constexpr Cube MapSize = {128, 128, 16};
+    // constexpr Cube MapSize = {128, 128, 16};
+
+    constexpr Cube MapSize = {4096, 4096, 16};
     constexpr Cube ChunkSize = {64, 64, 8};
 
-    constexpr uint32_t MaxSplits = 4;
+    constexpr uint32_t MaxCacheSplitCount = 4;
 
     struct SplitDelta
     {
@@ -69,10 +71,10 @@ namespace vme
 
     constexpr struct SplitSize
     {
-      uint32_t x = std::min(MapSize.width / ChunkSize.width - 1, MaxSplits);
-      uint32_t y = std::min(MapSize.height / ChunkSize.height - 1, MaxSplits);
-      uint32_t z = std::max(std::min(MapSize.depth / ChunkSize.depth - 1, MaxSplits), static_cast<uint32_t>(0));
-    } splitSizes;
+      uint32_t x = std::min(MapSize.width / ChunkSize.width - 1, MaxCacheSplitCount);
+      uint32_t y = std::min(MapSize.height / ChunkSize.height - 1, MaxCacheSplitCount);
+      uint32_t z = std::max(std::min(MapSize.depth / ChunkSize.depth - 1, MaxCacheSplitCount), static_cast<uint32_t>(0));
+    } cacheSplitCounts;
 
     constexpr struct MaxSplit
     {
@@ -84,81 +86,63 @@ namespace vme
     struct CacheData
     {
       uint16_t count = 1;
-      int32_t endXIndex = 0;
-      int32_t endYIndex = 0;
-      int32_t endZIndex = 0;
+      int32_t endXIndex = -1;
+      int32_t endYIndex = -1;
+      int32_t endZIndex = -1;
       uint16_t amountToInitialize = 1;
     };
 
     constexpr CacheData computeCachedNodeCount()
     {
-      SplitSize sizes = splitSizes;
+      SplitSize splitCounts = cacheSplitCounts;
       CacheData cacheData;
       // There are one or zero chunks
-      if (sizes.x == 0 && sizes.y == 0 && sizes.z == 0)
+      if (splitCounts.x == 0 && splitCounts.y == 0 && splitCounts.z == 0)
         return cacheData;
 
       int initModifier = 3;
-
-      if (sizes.x <= MaxSplits)
-      {
-        --initModifier;
-        cacheData.endXIndex = -1;
-      }
-      if (sizes.y <= MaxSplits)
-      {
-        --initModifier;
-        cacheData.endYIndex = -1;
-      }
-      if (sizes.z <= MaxSplits)
-      {
-        --initModifier;
-        cacheData.endZIndex = -1;
-      }
 
       int exponent = 0;
       do
       {
         exponent = 0;
 
-        if (sizes.x > 0)
+        if (splitCounts.x > 0)
         {
           ++exponent;
-          --sizes.x;
+          --splitCounts.x;
         }
 
-        if (sizes.y > 0)
+        if (splitCounts.y > 0)
         {
           ++exponent;
-          --sizes.y;
+          --splitCounts.y;
         }
 
-        if (sizes.z > 0)
+        if (splitCounts.z > 0)
         {
           ++exponent;
-          --sizes.z;
+          --splitCounts.z;
         }
 
         cacheData.count *= power(2, exponent);
 
-        if (sizes.x == 0 && cacheData.endXIndex == 0)
-        {
-          --initModifier;
+        if (splitCounts.x == 0 && cacheData.endXIndex == -1)
           cacheData.endXIndex = cacheData.count;
-        }
-        if (sizes.y == 0 && cacheData.endYIndex == 0)
-        {
-          --initModifier;
+        if (splitCounts.y == 0 && cacheData.endYIndex == -1)
           cacheData.endYIndex = cacheData.count;
-        }
-        if (sizes.z == 0 && cacheData.endZIndex == 0)
-        {
-          --initModifier;
+        if (splitCounts.z == 0 && cacheData.endZIndex == -1)
           cacheData.endZIndex = cacheData.count;
-        }
-      } while (sizes.x > 0 || sizes.y > 0 || sizes.z > 0);
+      } while (splitCounts.x > 0 || splitCounts.y > 0 || splitCounts.z > 0);
 
-      cacheData.amountToInitialize = cacheData.count * (1 - 1 / power(2, initModifier));
+      if (cacheData.endXIndex != cacheData.count)
+        --initModifier;
+      if (cacheData.endYIndex != cacheData.count)
+        --initModifier;
+      if (cacheData.endZIndex != cacheData.count)
+        --initModifier;
+
+      cacheData.amountToInitialize = cacheData.count / power(2, initModifier);
       return cacheData;
     }
     constexpr CacheData CachedNodeCount = computeCachedNodeCount();
@@ -181,6 +165,11 @@ namespace vme
         Leaf *leaf(const Position pos) const;
         Leaf *getOrCreateLeaf(const Position pos);
 
+        virtual std::string show() const
+        {
+          return "Unknown";
+        }
+
         virtual HeapNode *child(int pattern) const
         {
           return nullptr;
@@ -189,7 +178,7 @@ namespace vme
         {
           return nullptr;
         };
-        virtual HeapNode *getOrCreateChild(int pattern)
+        virtual HeapNode *getOrCreateChild(const Position pos)
         {
           return nullptr;
         }
@@ -197,7 +186,7 @@ namespace vme
         virtual bool contains(const Position pos);
         virtual void add(const Position pos);
 
-        virtual uint16_t index(const Position &pos) const = 0;
+        virtual uint16_t getIndex(const Position &pos) const = 0;
       };
 
       class Leaf : public HeapNode
@@ -209,32 +198,45 @@ namespace vme
         bool contains(const Position pos) override;
         void add(const Position pos) override;
 
-        uint16_t index(const Position &pos) const override
+        uint16_t getIndex(const Position &pos) const override
         {
           return 0;
         }
+
+        std::string show() const override;
 
         Position position;
         bool values[ChunkSize.width * ChunkSize.height * ChunkSize.depth] = {false};
       };
 
+      template <size_t ChildCount>
+      class BaseNode : public HeapNode
+      {
+      public:
+        size_t childCount = ChildCount;
+
+        HeapNode *child(int pattern) const override;
+        HeapNode *child(const Position pos) const override;
+        bool isLeaf() const override;
+
+      protected:
+        std::array<std::unique_ptr<HeapNode>, ChildCount> children;
+      };
+
 #define DECLARE_NODE(name, amount)                              \
-  class name : public HeapNode                                  \
+  class name : public BaseNode<amount>                          \
   {                                                             \
   public:                                                       \
     name(const Position midPoint, const SplitDelta splitDelta); \
                                                                 \
-    HeapNode *child(int pattern) const override;                \
-    HeapNode *child(const Position pos) const override;         \
-    HeapNode *getOrCreateChild(int index) override;             \
-                                                                \
-    std::array<std::unique_ptr<HeapNode>, amount> children;     \
+    HeapNode *getOrCreateChild(const Position pos) override;    \
+    std::string show() const override;                          \
                                                                 \
   private:                                                      \
     Position midPoint;                                          \
     SplitDelta splitDelta;                                      \
                                                                 \
-    uint16_t index(const Position &pos) const override;         \
+    uint16_t getIndex(const Position &pos) const override;      \
   }
 
       DECLARE_NODE(NodeX, 2);
@@ -322,9 +324,6 @@ namespace vme
       std::array<CachedNode, CachedNodeCount.count> cachedNodes;
       std::array<std::unique_ptr<HeapNode>, CachedNodeCount.count - CachedNodeCount.amountToInitialize> cachedHeapNodes;
 
-      // bits 0bxyz
-      int dimensionPattern;
-
       static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData);
 
     }; // End of Tree
@@ -332,6 +331,26 @@ namespace vme
     inline bool Tree::Leaf::isLeaf() const
     {
       return true;
+    }
+
+    template <size_t ChildCount>
+    inline bool Tree::BaseNode<ChildCount>::isLeaf() const
+    {
+      return false;
+    }
+
+    template <size_t ChildCount>
+    inline Tree::HeapNode *Tree::BaseNode<ChildCount>::child(int index) const
+    {
+      DEBUG_ASSERT(index < childCount, "Bad pattern.");
+      auto child = children[index].get();
+      return child;
+    }
+
+    template <size_t ChildCount>
+    inline Tree::HeapNode *Tree::BaseNode<ChildCount>::child(const Position pos) const
+    {
+      return children[getIndex(pos)].get();
     }
 
     //>>>>>>>>>>>>>>>>>>>>>
@@ -366,7 +385,6 @@ namespace vme
       }
     }
 
-    
     //>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>index>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>

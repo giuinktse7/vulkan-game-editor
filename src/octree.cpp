@@ -6,19 +6,25 @@ namespace vme
 {
   namespace octree
   {
+    Tree::TraversalState initialTraversalState(uint32_t width, uint32_t height, uint16_t floors)
+    {
+      Position pos(
+          std::max(ChunkSize.width, width / 2),
+          std::max(ChunkSize.height, height / 2),
+          std::max<Position::value_type>(ChunkSize.depth, floors / 2));
+
+      uint32_t dx = std::max(ChunkSize.width, width / 4);
+      uint32_t dy = std::max(ChunkSize.height, height / 4);
+      uint32_t dz = std::max<Position::value_type>(ChunkSize.depth, floors / 4);
+
+      return Tree::TraversalState(pos, dx, dy, dz);
+    }
+
     Tree::Tree(uint32_t width, uint32_t height, uint16_t floors)
         : width(width), height(height), floors(floors),
-          top(Position(width / 2, height / 2, floors / 2), width / 4, height / 4, floors / 4),
-          dimensionPattern(0b111)
+          top(initialTraversalState(width, height, floors))
     {
       root.childCacheOffset = 0;
-
-      if (CachedNodeCount.endXIndex == -1)
-        dimensionPattern &= (~0b100);
-      if (CachedNodeCount.endYIndex == -1)
-        dimensionPattern &= (~0b010);
-      if (CachedNodeCount.endZIndex == -1)
-        dimensionPattern &= (~0b001);
 
       int exponent = 0;
       if (CachedNodeCount.endXIndex != 0)
@@ -45,8 +51,6 @@ namespace vme
     {
       Tree::TraversalState state = top;
 
-      SplitInfo split;
-
       auto &cached = root;
       uint16_t index = 0;
       int pattern = 0;
@@ -54,7 +58,7 @@ namespace vme
       {
         // x y z
         pattern = state.update(pos);
-        split.update(pattern);
+        VME_LOG_D("pattern: " << pattern);
 
         index = cached.child(pattern);
         cached = cachedNodes[index];
@@ -63,17 +67,20 @@ namespace vme
       VME_LOG_D("Final cache state: " << state.show());
       VME_LOG_D(index);
 
+      // state.update(pos);
+
       SplitDelta splitDelta{state.dx, state.dy, state.dz};
 
-      if (splitDelta.x <= ChunkSize.width)
-        pattern &= 1 << 2;
-      if (splitDelta.y <= ChunkSize.height)
-        pattern &= 1 << 1;
-      if (splitDelta.z <= ChunkSize.depth)
-        pattern &= 1 << 0;
+      int currentPattern = 0;
+      if (state.dx >= ChunkSize.width)
+        currentPattern |= (1 << 2);
+      if (state.dy >= ChunkSize.height)
+        currentPattern |= (1 << 1);
+      if (state.dz >= ChunkSize.depth)
+        currentPattern |= (1 << 0);
 
       if (!cachedHeapNodes.at(index))
-        cachedHeapNodes.at(index) = Tree::heapNodeFromSplitPattern(pattern, state.pos, splitDelta);
+        cachedHeapNodes.at(index) = Tree::heapNodeFromSplitPattern(currentPattern, state.pos, splitDelta);
 
       auto node = cachedHeapNodes.at(index).get();
       if (node)
@@ -81,43 +88,67 @@ namespace vme
         VME_LOG_D("Have node.");
         if (node->isLeaf())
         {
+          VME_LOG_D("Cached node was leaf.");
           auto leaf = static_cast<Leaf *>(node);
           leaf->add(pos);
           VME_LOG_D("Leaf node: " << leaf->position);
+        }
+        else
+        {
+          // TODO test this
+          VME_LOG_D("Cached node was not leaf.");
+          auto leaf = node->getOrCreateLeaf(pos);
+          leaf->add(pos);
+          VME_LOG_D("Leaf node (non-cached): " << leaf->position);
         }
       }
     }
 
     int Tree::TraversalState::update(Position pos)
     {
+      int shiftX = (dz >= ChunkSize.depth / 2) + (dy >= ChunkSize.height / 2);
+      int shiftY = shiftX - 1;
+      int shiftZ = shiftY - 1;
+
       int pattern = 0;
-      if (pos.x > this->pos.x)
+      if (dx >= ChunkSize.width / 2)
       {
-        pattern |= (1 << 2);
-        this->pos.x += dx;
-      }
-      else
-        this->pos.x -= dx;
+        if (pos.x > this->pos.x)
+        {
+          pattern |= (1 << shiftX);
+          this->pos.x += dx;
+        }
+        else
+          this->pos.x -= dx;
 
-      if (pos.y > this->pos.y)
+        dx /= 2;
+      }
+
+      if (dy >= ChunkSize.height / 2)
       {
-        pattern |= (1 << 1);
-        this->pos.y += dy;
-      }
-      else
-        this->pos.y -= dy;
+        if (pos.y > this->pos.y)
+        {
+          pattern |= (1 << shiftY);
+          this->pos.y += dy;
+        }
+        else
+          this->pos.y -= dy;
 
-      if (pos.z > this->pos.z)
+        dy /= 2;
+      }
+
+      if (dz >= ChunkSize.depth / 2)
       {
-        pattern |= (1 << 0);
-        this->pos.z += dz;
-      }
-      else
-        this->pos.z -= dz;
+        if (pos.z > this->pos.z)
+        {
+          pattern |= (1 << shiftZ);
+          this->pos.z += dz;
+        }
+        else
+          this->pos.z -= dz;
 
-      dx /= 2;
-      dy /= 2;
-      dz /= 2;
+        dz /= 2;
+      }
 
       return pattern;
     }
@@ -143,18 +174,6 @@ namespace vme
       childCacheOffset = offset;
     }
 
-    // Tree::HeapNode *Tree::NodeXY::child(int pattern) const
-    // {
-    //   DEBUG_ASSERT((pattern & (~0b11)) == 0, "Bad pattern.");
-    //   auto child = children[pattern].get();
-    //   return child;
-    // }
-
-    // void Tree::NodeXY::add(const Position pos)
-    // {
-    //   Leaf *leaf = getOrCreateLeaf(pos);
-    // }
-
     //>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>HeapNode>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -163,14 +182,15 @@ namespace vme
     {
       HeapNode *node = const_cast<Tree::HeapNode *>(this);
       while (!node->isLeaf())
-        node = node->child(node->index(pos));
+        node = node->child(node->getIndex(pos));
 
       return static_cast<Tree::Leaf *>(node);
     }
 
     bool Tree::HeapNode::contains(const Position pos)
     {
-      return false;
+      auto leaf = getOrCreateLeaf(pos);
+      return leaf->contains(pos);
     }
 
     void Tree::HeapNode::add(const Position pos)
@@ -188,7 +208,6 @@ namespace vme
     bool Tree::Leaf::contains(const Position pos)
     {
       auto index = ((pos.x - position.x) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.depth + (pos.z - position.z);
-
       return values[index];
     }
 
@@ -200,7 +219,14 @@ namespace vme
               (position.z <= pos.z && pos.z < position.z + ChunkSize.depth),
           "The position does not belong to this chunk.");
 
-      values[index(pos)] = true;
+      values[getIndex(pos)] = true;
+    }
+
+    std::string Tree::Leaf::show() const
+    {
+      std::ostringstream s;
+      s << "Leaf { " << position << " }";
+      return s.str();
     }
 
     Tree::Leaf *Tree::HeapNode::getOrCreateLeaf(const Position pos)
@@ -208,11 +234,9 @@ namespace vme
       if (isLeaf())
         return static_cast<Tree::Leaf *>(this);
 
-      int childIndex = index(pos);
-
-      auto child = getOrCreateChild(childIndex);
+      auto child = getOrCreateChild(pos);
       while (!child->isLeaf())
-        child = child->getOrCreateChild(child->index(pos));
+        child = child->getOrCreateChild(pos);
 
       return static_cast<Tree::Leaf *>(child);
     }
@@ -223,40 +247,39 @@ namespace vme
     Tree::NodeZ::NodeZ(const Position midPoint, const SplitDelta splitDelta)
         : midPoint(midPoint), splitDelta(splitDelta) {}
 
-    Tree::HeapNode *Tree::NodeZ::child(int pattern) const
+    Tree::HeapNode *Tree::NodeZ::getOrCreateChild(const Position position)
     {
-      DEBUG_ASSERT((pattern & ~(0b1)) == 0, "Bad pattern.");
-      auto child = children[pattern].get();
-      return child;
-    }
-
-    Tree::HeapNode *Tree::NodeZ::child(const Position pos) const
-    {
-      return children[index(pos)].get();
-    }
-
-    Tree::HeapNode *Tree::NodeZ::getOrCreateChild(int index)
-    {
+      auto index = getIndex(position);
       if (children[index])
         return children[index].get();
 
       SplitDelta delta = splitDelta;
-      delta.z >>= 2;
 
-      Position pos = midPoint;
-      pos.z += index == 0 ? -delta.z : delta.z;
+      Position nextMidPoint = midPoint;
+      nextMidPoint.z += index == 0 ? -delta.z : delta.z;
+
+      delta.z >>= 1;
 
       if (delta.z >= ChunkSize.depth)
-        children[index] = std::make_unique<NodeZ>(pos, delta);
+        children[index] = std::make_unique<NodeZ>(nextMidPoint, delta);
       else // Child
-        children[index] = std::make_unique<Leaf>(pos);
+      {
+        children[index] = std::make_unique<Leaf>(position);
+      }
 
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeZ::index(const Position &pos) const
+    inline uint16_t Tree::NodeZ::getIndex(const Position &pos) const
     {
       return pos.z > this->midPoint.z;
+    }
+
+    std::string Tree::NodeZ::show() const
+    {
+      std::ostringstream s;
+      s << "NodeZ { midPoint: " << midPoint << " }";
+      return s.str();
     }
 
     //>>>>>>>>>>>>>>>>>>>>>>
@@ -265,40 +288,39 @@ namespace vme
     Tree::NodeY::NodeY(const Position midPoint, const SplitDelta splitDelta)
         : midPoint(midPoint), splitDelta(splitDelta) {}
 
-    Tree::HeapNode *Tree::NodeY::child(int pattern) const
+    Tree::HeapNode *Tree::NodeY::getOrCreateChild(const Position position)
     {
-      DEBUG_ASSERT((pattern & ~(0b1)) == 0, "Bad pattern.");
-      auto child = children[pattern].get();
-      return child;
-    }
-
-    Tree::HeapNode *Tree::NodeY::child(const Position pos) const
-    {
-      return children[index(pos)].get();
-    }
-
-    Tree::HeapNode *Tree::NodeY::getOrCreateChild(int index)
-    {
+      auto index = getIndex(position);
       if (children[index])
         return children[index].get();
 
       SplitDelta delta = splitDelta;
-      delta.y >>= 2;
 
-      Position pos = midPoint;
-      pos.y += index == 0 ? -delta.y : delta.y;
+      Position nextMidPoint = midPoint;
+      nextMidPoint.y += index == 0 ? -delta.y : delta.y;
+
+      delta.y >>= 1;
 
       if (delta.y >= ChunkSize.height)
-        children[index] = std::make_unique<NodeY>(pos, delta);
+        children[index] = std::make_unique<NodeY>(nextMidPoint, delta);
       else // Child
-        children[index] = std::make_unique<Leaf>(pos);
+      {
+        children[index] = std::make_unique<Leaf>(position);
+      }
 
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeY::index(const Position &pos) const
+    inline uint16_t Tree::NodeY::getIndex(const Position &pos) const
     {
       return pos.y > this->midPoint.y;
+    }
+
+    std::string Tree::NodeY::show() const
+    {
+      std::ostringstream s;
+      s << "NodeY { midPoint: " << midPoint << " }";
+      return s.str();
     }
 
     //>>>>>>>>>>>>>>>>>>>>>>
@@ -307,40 +329,39 @@ namespace vme
     Tree::NodeX::NodeX(const Position midPoint, const SplitDelta splitDelta)
         : midPoint(midPoint), splitDelta(splitDelta) {}
 
-    Tree::HeapNode *Tree::NodeX::child(int pattern) const
+    Tree::HeapNode *Tree::NodeX::getOrCreateChild(const Position position)
     {
-      DEBUG_ASSERT((pattern & ~(0b1)) == 0, "Bad pattern.");
-      auto child = children[pattern].get();
-      return child;
-    }
-
-    Tree::HeapNode *Tree::NodeX::child(const Position pos) const
-    {
-      return children[index(pos)].get();
-    }
-
-    Tree::HeapNode *Tree::NodeX::getOrCreateChild(int index)
-    {
+      auto index = getIndex(position);
       if (children[index])
         return children[index].get();
 
       SplitDelta delta = splitDelta;
-      delta.x >>= 2;
 
-      Position pos = midPoint;
-      pos.x += index == 0 ? -delta.x : delta.x;
+      Position nextMidPoint = midPoint;
+      nextMidPoint.x += index == 0 ? -delta.x : delta.x;
+
+      delta.x >>= 1;
 
       if (delta.x >= ChunkSize.width)
-        children[index] = std::make_unique<NodeX>(pos, delta);
+        children[index] = std::make_unique<NodeX>(nextMidPoint, delta);
       else // Child
-        children[index] = std::make_unique<Leaf>(pos);
+      {
+        children[index] = std::make_unique<Leaf>(position);
+      }
 
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeX::index(const Position &pos) const
+    inline uint16_t Tree::NodeX::getIndex(const Position &pos) const
     {
       return pos.x > this->midPoint.x;
+    }
+
+    std::string Tree::NodeX::show() const
+    {
+      std::ostringstream s;
+      s << "NodeX { midPoint: " << midPoint << " }";
+      return s.str();
     }
 
     //>>>>>>>>>>>>>>>>>>>>>>
@@ -350,56 +371,56 @@ namespace vme
     Tree::NodeXY::NodeXY(const Position midPoint, const SplitDelta splitDelta)
         : midPoint(midPoint), splitDelta(splitDelta) {}
 
-    Tree::HeapNode *Tree::NodeXY::child(int pattern) const
+    inline Tree::HeapNode *Tree::NodeXY::getOrCreateChild(const Position position)
     {
-      DEBUG_ASSERT((pattern & ~(0b11)) == 0, "Bad pattern.");
-      auto child = children[pattern].get();
-      return child;
-    }
-
-    Tree::HeapNode *Tree::NodeXY::child(const Position pos) const
-    {
-      return children[index(pos)].get();
-    }
-
-    inline Tree::HeapNode *Tree::NodeXY::getOrCreateChild(int index)
-    {
+      auto index = getIndex(position);
       if (children[index])
         return children[index].get();
 
       SplitDelta delta = splitDelta;
-      delta.x >>= 2;
-      delta.y >>= 2;
 
-      Position pos = midPoint;
-      pos.x += (index >> 1) == 0 ? -delta.x : delta.x;
-      pos.y += index == 0 ? -delta.y : delta.y;
+      Position nextMidPoint = midPoint;
+      nextMidPoint.x += (index >> 1) == 0 ? -delta.x : delta.x;
+      nextMidPoint.y += (index & 1) == 0 ? -delta.y : delta.y;
+
+      delta.x >>= 1;
+      delta.y >>= 1;
 
       int split = 0;
       split |= (delta.x >= ChunkSize.width) << 1;
       split |= (delta.y >= ChunkSize.height);
+
       switch (split)
       {
       case 0:
-        children[index] = std::make_unique<Leaf>(pos);
+      {
+        children[index] = std::make_unique<Leaf>(position);
         break;
+      }
       case 0b1:
-        children[index] = std::make_unique<NodeY>(pos, delta);
+        children[index] = std::make_unique<NodeY>(nextMidPoint, delta);
         break;
       case 0b10:
-        children[index] = std::make_unique<NodeX>(pos, delta);
+        children[index] = std::make_unique<NodeX>(nextMidPoint, delta);
         break;
       case 0b11:
-        children[index] = std::make_unique<NodeXY>(pos, delta);
+        children[index] = std::make_unique<NodeXY>(nextMidPoint, delta);
         break;
       }
 
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeXY::index(const Position &pos) const
+    inline uint16_t Tree::NodeXY::getIndex(const Position &pos) const
     {
       return ((pos.x > midPoint.x) << 1) + (pos.y > midPoint.y);
+    }
+
+    std::string Tree::NodeXY::show() const
+    {
+      std::ostringstream s;
+      s << "NodeXY { midPoint: " << midPoint << " }";
+      return s.str();
     }
 
     //>>>>>>>>>>>>>>>>>>>>>>
@@ -409,30 +430,20 @@ namespace vme
     Tree::NodeXZ::NodeXZ(const Position midPoint, const SplitDelta splitDelta)
         : midPoint(midPoint), splitDelta(splitDelta) {}
 
-    Tree::HeapNode *Tree::NodeXZ::child(int pattern) const
+    inline Tree::HeapNode *Tree::NodeXZ::getOrCreateChild(const Position position)
     {
-      DEBUG_ASSERT((pattern & ~(0b11)) == 0, "Bad pattern.");
-      auto child = children[pattern].get();
-      return child;
-    }
-
-    Tree::HeapNode *Tree::NodeXZ::child(const Position pos) const
-    {
-      return children[index(pos)].get();
-    }
-
-    inline Tree::HeapNode *Tree::NodeXZ::getOrCreateChild(int index)
-    {
+      auto index = getIndex(position);
       if (children[index])
         return children[index].get();
 
       SplitDelta delta = splitDelta;
-      delta.x >>= 2;
-      delta.z >>= 2;
 
-      Position pos = midPoint;
-      pos.x += (index >> 1) == 0 ? -delta.x : delta.x;
-      pos.z += index == 0 ? -delta.z : delta.z;
+      Position nextMidPoint = midPoint;
+      nextMidPoint.x += (index >> 1) == 0 ? -delta.x : delta.x;
+      nextMidPoint.z += (index & 1) == 0 ? -delta.z : delta.z;
+
+      delta.x >>= 1;
+      delta.z >>= 1;
 
       int split = 0;
       split |= (delta.x >= ChunkSize.width) << 1;
@@ -440,25 +451,32 @@ namespace vme
       switch (split)
       {
       case 0:
-        children[index] = std::make_unique<Leaf>(pos);
+        children[index] = std::make_unique<Leaf>(position);
         break;
       case 0b1:
-        children[index] = std::make_unique<NodeZ>(pos, delta);
+        children[index] = std::make_unique<NodeZ>(nextMidPoint, delta);
         break;
       case 0b10:
-        children[index] = std::make_unique<NodeX>(pos, delta);
+        children[index] = std::make_unique<NodeX>(nextMidPoint, delta);
         break;
       case 0b11:
-        children[index] = std::make_unique<NodeXZ>(pos, delta);
+        children[index] = std::make_unique<NodeXZ>(nextMidPoint, delta);
         break;
       }
 
       return children[index].get();
     }
 
-    uint16_t Tree::NodeXZ::index(const Position &pos) const
+    uint16_t Tree::NodeXZ::getIndex(const Position &pos) const
     {
       return ((pos.x > midPoint.x) << 1) + (pos.z > midPoint.z);
+    }
+
+    std::string Tree::NodeXZ::show() const
+    {
+      std::ostringstream s;
+      s << "NodeXZ { midPoint: " << midPoint << " }";
+      return s.str();
     }
 
     //>>>>>>>>>>>>>>>>>>>>>>
@@ -468,30 +486,20 @@ namespace vme
     Tree::NodeYZ::NodeYZ(const Position midPoint, const SplitDelta splitDelta)
         : midPoint(midPoint), splitDelta(splitDelta) {}
 
-    Tree::HeapNode *Tree::NodeYZ::child(int pattern) const
+    Tree::HeapNode *Tree::NodeYZ::getOrCreateChild(const Position position)
     {
-      DEBUG_ASSERT((pattern & ~(0b11)) == 0, "Bad pattern.");
-      auto child = children[pattern].get();
-      return child;
-    }
-
-    Tree::HeapNode *Tree::NodeYZ::child(const Position pos) const
-    {
-      return children[index(pos)].get();
-    }
-
-    Tree::HeapNode *Tree::NodeYZ::getOrCreateChild(int index)
-    {
+      auto index = getIndex(position);
       if (children[index])
         return children[index].get();
 
       SplitDelta delta = splitDelta;
-      delta.y >>= 2;
-      delta.z >>= 2;
 
-      Position pos = midPoint;
-      pos.y += (index >> 1) == 0 ? -delta.y : delta.y;
-      pos.z += index == 0 ? -delta.z : delta.z;
+      Position nextMidPoint = midPoint;
+      nextMidPoint.y += (index >> 1) == 0 ? -delta.y : delta.y;
+      nextMidPoint.z += (index & 1) == 0 ? -delta.z : delta.z;
+
+      delta.y >>= 1;
+      delta.z >>= 1;
 
       int split = 0;
       split |= (delta.y >= ChunkSize.height) << 1;
@@ -499,25 +507,32 @@ namespace vme
       switch (split)
       {
       case 0:
-        children[index] = std::make_unique<Leaf>(pos);
+        children[index] = std::make_unique<Leaf>(position);
         break;
       case 0b1:
-        children[index] = std::make_unique<NodeZ>(pos, delta);
+        children[index] = std::make_unique<NodeZ>(nextMidPoint, delta);
         break;
       case 0b10:
-        children[index] = std::make_unique<NodeY>(pos, delta);
+        children[index] = std::make_unique<NodeY>(nextMidPoint, delta);
         break;
       case 0b11:
-        children[index] = std::make_unique<NodeYZ>(pos, delta);
+        children[index] = std::make_unique<NodeYZ>(nextMidPoint, delta);
         break;
       }
 
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeYZ::index(const Position &pos) const
+    inline uint16_t Tree::NodeYZ::getIndex(const Position &pos) const
     {
       return ((pos.y > midPoint.y) << 1) + (pos.z > midPoint.z);
+    }
+
+    std::string Tree::NodeYZ::show() const
+    {
+      std::ostringstream s;
+      s << "NodeYZ { midPoint: " << midPoint << " }";
+      return s.str();
     }
 
     //>>>>>>>>>>>>>>>>>>>>>>>>
@@ -527,71 +542,69 @@ namespace vme
     Tree::NodeXYZ::NodeXYZ(const Position midPoint, const SplitDelta splitDelta)
         : midPoint(midPoint), splitDelta(splitDelta) {}
 
-    Tree::HeapNode *Tree::NodeXYZ::child(int pattern) const
+    inline Tree::HeapNode *Tree::NodeXYZ::getOrCreateChild(const Position position)
     {
-      DEBUG_ASSERT((pattern & ~(0b111)) == 0, "Bad pattern.");
-      auto child = children[pattern].get();
-      return child;
-    }
-
-    Tree::HeapNode *Tree::NodeXYZ::child(const Position pos) const
-    {
-      return children[index(pos)].get();
-    }
-
-    inline Tree::HeapNode *Tree::NodeXYZ::getOrCreateChild(int index)
-    {
+      auto index = getIndex(position);
       if (children[index])
         return children[index].get();
 
       SplitDelta delta = splitDelta;
-      delta.x >>= 2;
-      delta.y >>= 2;
-      delta.z >>= 2;
 
-      Position pos = midPoint;
-      pos.x += (index >> 2) == 0 ? -delta.x : delta.x;
-      pos.y += (index >> 1) == 0 ? -delta.y : delta.y;
-      pos.z += index == 0 ? -delta.z : delta.z;
+      Position nextMidPoint = midPoint;
+      nextMidPoint.x += (index >> 2) == 0 ? -delta.x : delta.x;
+      nextMidPoint.y += ((index >> 1) & 1) == 0 ? -delta.y : delta.y;
+      nextMidPoint.z += (index & 1) == 0 ? -delta.z : delta.z;
+
+      delta.x >>= 1;
+      delta.y >>= 1;
+      delta.z >>= 1;
 
       int split = 0;
       split |= (delta.x >= ChunkSize.width) << 2;
       split |= (delta.y >= ChunkSize.height) << 1;
-      split |= (delta.y >= ChunkSize.height);
+      split |= (delta.z >= ChunkSize.depth);
+
       switch (split)
       {
       case 0:
-        children[index] = std::make_unique<Leaf>(pos);
+        children[index] = std::make_unique<Leaf>(position);
         break;
       case 0b1:
-        children[index] = std::make_unique<NodeZ>(pos, delta);
+        children[index] = std::make_unique<NodeZ>(nextMidPoint, delta);
         break;
       case 0b10:
-        children[index] = std::make_unique<NodeY>(pos, delta);
+        children[index] = std::make_unique<NodeY>(nextMidPoint, delta);
         break;
       case 0b11:
-        children[index] = std::make_unique<NodeYZ>(pos, delta);
+        children[index] = std::make_unique<NodeYZ>(nextMidPoint, delta);
         break;
       case 0b100:
-        children[index] = std::make_unique<NodeX>(pos, delta);
+        children[index] = std::make_unique<NodeX>(nextMidPoint, delta);
         break;
       case 0b101:
-        children[index] = std::make_unique<NodeXZ>(pos, delta);
+        children[index] = std::make_unique<NodeXZ>(nextMidPoint, delta);
         break;
       case 0b110:
-        children[index] = std::make_unique<NodeXY>(pos, delta);
+        children[index] = std::make_unique<NodeXY>(nextMidPoint, delta);
         break;
       case 0b111:
-        children[index] = std::make_unique<NodeXYZ>(pos, delta);
+        children[index] = std::make_unique<NodeXYZ>(nextMidPoint, delta);
         break;
       }
 
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeXYZ::index(const Position &pos) const
+    inline uint16_t Tree::NodeXYZ::getIndex(const Position &pos) const
     {
       return ((pos.x > midPoint.x) << 2) | ((pos.y > midPoint.y) << 1) | (pos.z > midPoint.z);
+    }
+
+    std::string Tree::NodeXYZ::show() const
+    {
+      std::ostringstream s;
+      s << "NodeXYZ { midPoint: " << midPoint << " }";
+      return s.str();
     }
 
   } // namespace octree
