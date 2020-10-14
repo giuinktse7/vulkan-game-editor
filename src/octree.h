@@ -10,6 +10,23 @@
 #include "util.h"
 #include "position.h"
 
+// HeapNode macro
+#define DECLARE_NODE(name, amount)                                                \
+  class name : public BaseNode<amount>                                            \
+  {                                                                               \
+  public:                                                                         \
+    name(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent); \
+                                                                                  \
+    HeapNode *getOrCreateChild(const Position pos) override;                      \
+    std::string show() const override;                                            \
+                                                                                  \
+  private:                                                                        \
+    Position midPoint;                                                            \
+    SplitDelta splitDelta;                                                        \
+                                                                                  \
+    uint16_t getIndex(const Position &pos) const override;                        \
+  }
+
 enum SplitDimension
 {
   X = 1 << 2,
@@ -32,13 +49,21 @@ namespace vme
       return result;
     }
 
-    constexpr size_t test(int d)
+    template <typename ValueType>
+    struct BoundingBox
     {
-      int exponent = (d & 1) + (d & 0b10) + (d & 0b100);
-      if (exponent == 0)
-        return 0;
-      return power(2, exponent);
-    }
+      ValueType top, left, bottom, right;
+
+      /*
+        Returns true if the bounding box changed.
+      */
+      template <typename T>
+      bool include(BoundingBox<T> box);
+      /*
+        Returns true if the bounding box changed.
+      */
+      bool include(const Position pos);
+    };
 
     struct Cube
     {
@@ -46,16 +71,6 @@ namespace vme
       uint32_t height;
       uint32_t depth;
     };
-
-    enum ChildDimensions
-    {
-      None = 0,
-      X = 1 << 0,
-      Y = 1 << 1,
-      Z = 1 << 2
-    };
-
-    // constexpr Cube MapSize = {128, 128, 16};
 
     constexpr Cube MapSize = {4096, 4096, 16};
     constexpr Cube ChunkSize = {64, 64, 8};
@@ -156,43 +171,31 @@ namespace vme
       class HeapNode
       {
       public:
+        HeapNode(HeapNode *parent) : parent(parent) {}
         virtual ~HeapNode() = default;
-        virtual bool isLeaf() const
-        {
-          return false;
-        };
+        virtual bool isLeaf() const;
 
         Leaf *leaf(const Position pos) const;
         Leaf *getOrCreateLeaf(const Position pos);
 
-        virtual std::string show() const
-        {
-          return "Unknown";
-        }
+        virtual std::string show() const;
 
-        virtual HeapNode *child(int pattern) const
-        {
-          return nullptr;
-        }
-        virtual HeapNode *child(const Position pos) const
-        {
-          return nullptr;
-        };
-        virtual HeapNode *getOrCreateChild(const Position pos)
-        {
-          return nullptr;
-        }
+        virtual HeapNode *child(int pattern) const;
+        virtual HeapNode *child(const Position pos) const;
+        virtual HeapNode *getOrCreateChild(const Position pos);
 
         virtual bool contains(const Position pos);
         virtual void add(const Position pos);
 
         virtual uint16_t getIndex(const Position &pos) const = 0;
+
+        HeapNode *parent;
       };
 
       class Leaf : public HeapNode
       {
       public:
-        Leaf(const Position pos);
+        Leaf(const Position pos, HeapNode *parent);
         bool isLeaf() const override;
 
         bool contains(const Position pos) override;
@@ -202,39 +205,27 @@ namespace vme
 
         std::string show() const override;
 
-        Position position;
         bool values[ChunkSize.width * ChunkSize.height * ChunkSize.depth] = {false};
+        Position position;
+        BoundingBox<uint8_t> localBoundingBox;
       };
 
       template <size_t ChildCount>
       class BaseNode : public HeapNode
       {
       public:
+        BaseNode(HeapNode *parent) : HeapNode(parent) {}
         size_t childCount = ChildCount;
 
         HeapNode *child(int pattern) const override;
         HeapNode *child(const Position pos) const override;
         bool isLeaf() const override;
 
+        BoundingBox<Position::value_type> boundingBox;
+
       protected:
         std::array<std::unique_ptr<HeapNode>, ChildCount> children;
       };
-
-#define DECLARE_NODE(name, amount)                              \
-  class name : public BaseNode<amount>                          \
-  {                                                             \
-  public:                                                       \
-    name(const Position midPoint, const SplitDelta splitDelta); \
-                                                                \
-    HeapNode *getOrCreateChild(const Position pos) override;    \
-    std::string show() const override;                          \
-                                                                \
-  private:                                                      \
-    Position midPoint;                                          \
-    SplitDelta splitDelta;                                      \
-                                                                \
-    uint16_t getIndex(const Position &pos) const override;      \
-  }
 
       DECLARE_NODE(NodeX, 2);
       DECLARE_NODE(NodeY, 2);
@@ -246,20 +237,25 @@ namespace vme
 
       DECLARE_NODE(NodeXYZ, 8);
 
-      class CachedNode
+      class CachedNode : public HeapNode
       {
       public:
-        CachedNode();
+        CachedNode(HeapNode *parent = nullptr);
+        void setParent(HeapNode *parent);
 
-        uint16_t child(const int pattern) const;
+        uint16_t childOffset(const int pattern) const;
 
       public:
         friend class Tree;
 
+        uint32_t parentOffset = 0;
         int32_t childCacheOffset = -1;
+
+        BoundingBox<Position::value_type> boundingBox;
 
         // void setIndex(size_t index);
         void setChildCacheOffset(size_t offset);
+        uint16_t getIndex(const Position &pos) const override;
       };
 
     public:
@@ -297,32 +293,11 @@ namespace vme
       // Should not change
       TraversalState top;
 
-      struct SplitInfo
-      {
-        uint8_t x = 0;
-        uint8_t y = 0;
-        uint8_t z = 0;
-
-        void update(int pattern);
-
-        inline bool isEdge() const
-        {
-          return x == MaxSplit.x || y == MaxSplit.y || z == MaxSplit.z;
-        }
-
-        std::string show() const
-        {
-          std::ostringstream os;
-          os << "Split {" << static_cast<int>(x) << ", " << static_cast<int>(y) << ", " << static_cast<int>(z) << "}";
-          return os.str();
-        }
-      };
-
       CachedNode root;
-      std::array<CachedNode, CachedNodeCount.count> cachedNodes;
+      std::array<CachedNode, CachedNodeCount.amountToInitialize> cachedNodes;
       std::array<std::unique_ptr<HeapNode>, CachedNodeCount.count - CachedNodeCount.amountToInitialize> cachedHeapNodes;
 
-      static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData);
+      static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData, HeapNode *parent);
 
       HeapNode *fromCache(const Position position) const;
       HeapNode *getOrCreateFromCache(const Position position);
@@ -361,81 +336,81 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>
 
     // factory function
-    inline std::unique_ptr<Tree::HeapNode> Tree::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta)
+    inline std::unique_ptr<Tree::HeapNode> Tree::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta, HeapNode *parent)
     {
-      std::unique_ptr<HeapNode> ptr;
       switch (pattern)
       {
       case 0: // If no more splits are possible, this cached node is a leaf node.
-        return std::make_unique<Leaf>(midPoint);
+        return std::make_unique<Leaf>(midPoint, parent);
       case 0b1:
-        ptr = std::make_unique<NodeZ>(midPoint, splitDelta);
-        return ptr;
+        return std::make_unique<NodeZ>(midPoint, splitDelta, parent);
       case 0b10:
-        return std::make_unique<NodeY>(midPoint, splitDelta);
+        return std::make_unique<NodeY>(midPoint, splitDelta, parent);
       case 0b11:
-        return std::make_unique<NodeYZ>(midPoint, splitDelta);
+        return std::make_unique<NodeYZ>(midPoint, splitDelta, parent);
       case 0b100:
-        return std::make_unique<NodeX>(midPoint, splitDelta);
+        return std::make_unique<NodeX>(midPoint, splitDelta, parent);
       case 0b101:
-        return std::make_unique<NodeXZ>(midPoint, splitDelta);
+        return std::make_unique<NodeXZ>(midPoint, splitDelta, parent);
       case 0b110:
-        return std::make_unique<NodeXY>(midPoint, splitDelta);
+        return std::make_unique<NodeXY>(midPoint, splitDelta, parent);
       case 0b111:
-        return std::make_unique<NodeXYZ>(midPoint, splitDelta);
+        return std::make_unique<NodeXYZ>(midPoint, splitDelta, parent);
       default:
         return {};
       }
     }
 
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>>index>>>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // inline uint16_t Tree::NodeZ::index(const Position &pos) const
-    // {
-    // int i = 0;
-    // switch (dimensions)
-    // {
-    // case ChildDimensions::X:
-    //   i |= (pos.x > midPoint.x);
-    //   break;
-    // case ChildDimensions::Y:
-    //   i |= (pos.y > midPoint.y);
-    //   break;
-    // case ChildDimensions::Z:
-    //   i |= (pos.z > midPoint.z);
-    //   break;
-    // default:
-    //   ABORT_PROGRAM("Bad dimension (= None)");
-    // }
+    inline bool Tree::HeapNode::isLeaf() const
+    {
+      return false;
+    };
 
-    // return i;
-    // }
+    inline std::string Tree::HeapNode::show() const
+    {
+      return "Unknown";
+    }
 
-    // uint16_t Tree::Node<2>::index(const Position &pos) const
-    // {
-    //   int i = 0;
-    //   if (dimensions & (ChildDimensions::X | ChildDimensions::Y))
-    //     i |= ((pos.x > midPoint.x) << 1) + (pos.y > midPoint.y);
-    //   else if (dimensions & (ChildDimensions::X | ChildDimensions::Z))
-    //     i |= ((pos.x > midPoint.x) << 1) + (pos.z > midPoint.z);
-    //   else // YZ
-    //     i |= ((pos.y > midPoint.y) << 1) + (pos.z > midPoint.z);
+    inline Tree::HeapNode *Tree::HeapNode::child(int pattern) const
+    {
+      return nullptr;
+    }
+    inline Tree::HeapNode *Tree::HeapNode::child(const Position pos) const
+    {
+      return nullptr;
+    };
+    inline Tree::HeapNode *Tree::HeapNode::getOrCreateChild(const Position pos)
+    {
+      return nullptr;
+    }
 
-    //   return i;
-    // }
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>BoundingBox>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    template <typename T>
+    inline bool operator==(const BoundingBox<T> &l, const BoundingBox<T> &r) noexcept
+    {
+      return l.top == r.top && l.right == r.right && l.bottom == r.bottom && l.left == r.left;
+    }
+    template <typename T>
+    inline bool operator!=(const BoundingBox<T> &l, const BoundingBox<T> &r) noexcept
+    {
+      return !(l == r);
+    }
 
-    // template <>
-    // uint16_t Tree::Node<3>::index(const Position &pos) const
-    // {
-    //   return ((pos.x > midPoint.x) << 2) | ((pos.y > midPoint.y) << 1) | (pos.z > midPoint.z);
-    // }
+    template <typename T>
+    bool BoundingBox<T>::include(const Position pos)
+    {
+      BoundingBox old = *this;
+      top = std::min<T>(top, pos.y);
+      right = std::max<T>(right, pos.x);
+      bottom = std::max<T>(bottom, pos.y);
+      left = std::min<T>(left, pos.x);
 
-    //>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>>Show>>>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>
+      return old != *this;
+    }
 
   } // namespace octree
 
