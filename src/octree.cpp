@@ -38,9 +38,11 @@ namespace vme
       for (int i = 0; i < CachedNodeCount.amountToInitialize; ++i)
       {
         auto firstChild = (i + 1) * offset;
+        auto lastChild = std::min<uint16_t>(firstChild + offset, CachedNodeCount.amountToInitialize);
+
+        cachedNodes[i].cacheIndex = i;
         cachedNodes[i].childCacheOffset = firstChild;
 
-        auto lastChild = std::min<uint16_t>(firstChild + offset, CachedNodeCount.amountToInitialize);
         for (int k = firstChild; k < lastChild; ++k)
           cachedNodes[k].setParent(&cachedNodes[i]);
 
@@ -73,7 +75,7 @@ namespace vme
       return result ? result.get() : nullptr;
     }
 
-    Tree::HeapNode *Tree::getOrCreateFromCache(const Position position)
+    std::pair<Tree::CachedNode *, Tree::HeapNode *> Tree::getOrCreateFromCache(const Position position)
     {
       Tree::TraversalState state = top;
 
@@ -105,7 +107,7 @@ namespace vme
       if (!cachedHeapNodes.at(cacheHeapIndex))
         cachedHeapNodes.at(cacheHeapIndex) = Tree::heapNodeFromSplitPattern(currentPattern, state.pos, splitDelta, cached);
 
-      return cachedHeapNodes.at(cacheHeapIndex).get();
+      return {cached, cachedHeapNodes.at(cacheHeapIndex).get()};
     }
 
     bool Tree::contains(const Position pos) const
@@ -116,10 +118,13 @@ namespace vme
 
     void Tree::add(const Position pos)
     {
-      auto node = getOrCreateFromCache(pos);
+      auto [cached, node] = getOrCreateFromCache(pos);
       auto l = node->getOrCreateLeaf(pos);
       VME_LOG_D(l->position);
-      l->add(pos);
+
+      bool changed = l->add(pos);
+      if (changed)
+        cached->updateBoundingBoxCached(*this);
 
       // if (node->isLeaf())
       // {
@@ -209,6 +214,11 @@ namespace vme
       childCacheOffset = offset;
     }
 
+    bool Tree::CachedNode::isCachedNode() const noexcept
+    {
+      return true;
+    }
+
     //>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>END TREE>>>>>>>>>
@@ -234,16 +244,11 @@ namespace vme
       return leaf->contains(pos);
     }
 
-    void Tree::HeapNode::add(const Position pos)
-    {
-      getOrCreateLeaf(pos)->add(pos);
-    }
-
     //>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>Leaf>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::Leaf::Leaf(const Position pos, HeapNode *parent)
+    Tree::Leaf::Leaf(const Position pos, Tree::HeapNode *parent)
         : HeapNode(parent), position(pos.x - pos.x % ChunkSize.width, pos.y - pos.y % ChunkSize.height, pos.z - pos.z % ChunkSize.depth) {}
 
     bool Tree::Leaf::contains(const Position pos)
@@ -256,7 +261,7 @@ namespace vme
       return ((pos.x - position.x) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.depth + (pos.z - position.z);
     }
 
-    void Tree::Leaf::add(const Position pos)
+    bool Tree::Leaf::add(const Position pos)
     {
       DEBUG_ASSERT(
           (position.x <= pos.x && pos.x < position.x + ChunkSize.width) &&
@@ -266,10 +271,11 @@ namespace vme
 
       values[getIndex(pos)] = true;
 
-      bool changed = localBoundingBox.include(pos - position);
+      bool changed = boundingBox.include(pos);
       if (changed)
-      {
-      }
+        parent->updateBoundingBox(boundingBox);
+
+      return changed;
     }
 
     std::string Tree::Leaf::show() const
@@ -286,7 +292,12 @@ namespace vme
 
       auto node = getOrCreateChild(pos);
       while (!node->isLeaf())
+      {
+        VME_LOG_D("getOrCreateLeaf: " << node);
         node = node->getOrCreateChild(pos);
+      }
+
+      VME_LOG_D("getOrCreateLeaf (leaf): " << node);
 
       return static_cast<Tree::Leaf *>(node);
     }
@@ -296,7 +307,7 @@ namespace vme
     //>>>>>>>>NodeZ>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
-    Tree::NodeZ::NodeZ(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
+    Tree::NodeZ::NodeZ(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta)
     {
       DEBUG_ASSERT(!parent->isLeaf(), "A parent cannot be a leaf.");
@@ -342,7 +353,7 @@ namespace vme
     //>>>>>>>>NodeY>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
-    Tree::NodeY::NodeY(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
+    Tree::NodeY::NodeY(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
     Tree::HeapNode *Tree::NodeY::getOrCreateChild(const Position position)
@@ -385,7 +396,7 @@ namespace vme
     //>>>>>>>>NodeX>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
-    Tree::NodeX::NodeX(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
+    Tree::NodeX::NodeX(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
     Tree::HeapNode *Tree::NodeX::getOrCreateChild(const Position position)
@@ -429,7 +440,7 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::NodeXY::NodeXY(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
+    Tree::NodeXY::NodeXY(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
     inline Tree::HeapNode *Tree::NodeXY::getOrCreateChild(const Position position)
@@ -490,7 +501,7 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::NodeXZ::NodeXZ(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
+    Tree::NodeXZ::NodeXZ(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
     inline Tree::HeapNode *Tree::NodeXZ::getOrCreateChild(const Position position)
@@ -548,7 +559,7 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::NodeYZ::NodeYZ(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
+    Tree::NodeYZ::NodeYZ(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
     Tree::HeapNode *Tree::NodeYZ::getOrCreateChild(const Position position)
@@ -606,7 +617,7 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::NodeXYZ::NodeXYZ(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
+    Tree::NodeXYZ::NodeXYZ(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
     inline Tree::HeapNode *Tree::NodeXYZ::getOrCreateChild(const Position position)
@@ -680,9 +691,80 @@ namespace vme
       return -1;
     }
 
-    void Tree::CachedNode::setParent(HeapNode *parent)
+    void Tree::CachedNode::setParent(Tree::HeapNode *parent)
     {
       this->parent = parent;
+    }
+
+    void Tree::CachedNode::updateBoundingBoxCached(const Tree &tree)
+    {
+      VME_LOG_D("updateBoundingBoxCached before: " << boundingBox);
+      boundingBox.reset();
+
+      int splits = 0;
+      if (cacheIndex < CachedNodeCount.endXIndex)
+        ++splits;
+      if (cacheIndex < CachedNodeCount.endYIndex)
+        ++splits;
+      if (cacheIndex < CachedNodeCount.endZIndex)
+        ++splits;
+
+      DEBUG_ASSERT(splits != 0, "Update bounding box for leaf node? Bug?");
+
+      int childCount = power(2, splits);
+      for (int i = 0; i < childCount; ++i)
+      {
+        if (childCacheOffset > CachedNodeCount.amountToInitialize) // Get from HeapNode cache
+        {
+          auto &node = tree.cachedHeapNodes.at(childCacheOffset + i - CachedNodeCount.amountToInitialize);
+          if (node)
+            boundingBox.include(node->boundingBox);
+        }
+        else // Get from CachedNode cache
+        {
+          auto node = tree.cachedNodes.at(childCacheOffset + i);
+          boundingBox.include(node.boundingBox);
+        }
+      }
+
+      VME_LOG_D("updateBoundingBoxCached after: " << boundingBox);
+      if (parent)
+        static_cast<CachedNode *>(parent)->updateBoundingBoxCached(tree);
+    }
+
+    bool BoundingBox::contains(const BoundingBox &other) const noexcept
+    {
+      return _top < other._top && _right > other._right && _bottom > other._bottom && _left < other._left;
+    }
+
+    void BoundingBox::reset()
+    {
+      _top = std::numeric_limits<BoundingBox::value_type>::max();
+      _right = std::numeric_limits<BoundingBox::value_type>::min();
+      _bottom = std::numeric_limits<BoundingBox::value_type>::min();
+      _left = std::numeric_limits<BoundingBox::value_type>::max();
+    }
+
+    bool BoundingBox::include(const Position pos)
+    {
+      BoundingBox old = *this;
+      _top = std::min<value_type>(_top, pos.y);
+      _right = std::max<value_type>(_right, pos.x);
+      _bottom = std::max<value_type>(_bottom, pos.y);
+      _left = std::min<value_type>(_left, pos.x);
+
+      return old != *this;
+    }
+
+    bool BoundingBox::include(const BoundingBox bbox)
+    {
+      BoundingBox old = *this;
+      _top = std::min<value_type>(_top, bbox._top);
+      _right = std::max<value_type>(_right, bbox._right);
+      _bottom = std::max<value_type>(_bottom, bbox._bottom);
+      _left = std::min<value_type>(_left, bbox._left);
+
+      return old != *this;
     }
 
   } // namespace octree
