@@ -198,10 +198,7 @@ namespace vme
         bool contains(const Position pos) override;
         void add(const Position pos) override;
 
-        uint16_t getIndex(const Position &pos) const override
-        {
-          return 0;
-        }
+        uint16_t getIndex(const Position &pos) const override;
 
         std::string show() const override;
 
@@ -254,7 +251,7 @@ namespace vme
       public:
         CachedNode();
 
-        uint16_t child(const int pattern);
+        uint16_t child(const int pattern) const;
 
       public:
         friend class Tree;
@@ -294,6 +291,7 @@ namespace vme
       // std::array<Node,
 
       void add(const Position pos);
+      bool contains(const Position pos) const;
 
     private:
       // Should not change
@@ -325,6 +323,11 @@ namespace vme
       std::array<std::unique_ptr<HeapNode>, CachedNodeCount.count - CachedNodeCount.amountToInitialize> cachedHeapNodes;
 
       static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData);
+
+      HeapNode *fromCache(const Position position) const;
+      HeapNode *getOrCreateFromCache(const Position position);
+      Leaf *leaf(const Position position) const;
+      Leaf *getOrCreateLeaf(const Position position);
 
     }; // End of Tree
 

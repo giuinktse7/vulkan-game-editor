@@ -47,25 +47,44 @@ namespace vme
       }
     }
 
-    void Tree::add(const Position pos)
+    Tree::HeapNode *Tree::fromCache(const Position position) const
     {
       Tree::TraversalState state = top;
 
-      auto &cached = root;
+      auto cached = root;
       uint16_t index = 0;
-      int pattern = 0;
       while (cached.childCacheOffset != -1)
       {
-        // x y z
-        pattern = state.update(pos);
-        VME_LOG_D("pattern: " << pattern);
+        int pattern = state.update(position);
+        // VME_LOG_D("pattern: " << pattern);
 
         index = cached.child(pattern);
         cached = cachedNodes[index];
-        VME_LOG_D("Offset: " << cached.childCacheOffset);
+        // VME_LOG_D("Offset: " << cached.childCacheOffset);
       }
-      VME_LOG_D("Final cache state: " << state.show());
-      VME_LOG_D(index);
+
+      auto &result = cachedHeapNodes.at(index);
+      return result ? result.get() : nullptr;
+    }
+
+    Tree::HeapNode *Tree::getOrCreateFromCache(const Position position)
+    {
+      Tree::TraversalState state = top;
+
+      auto cached = root;
+      uint16_t index = 0;
+      while (cached.childCacheOffset != -1)
+      {
+        // x y z
+        int pattern = state.update(position);
+        // VME_LOG_D("pattern: " << pattern);
+
+        index = cached.child(pattern);
+        cached = cachedNodes[index];
+        // VME_LOG_D("Offset: " << cached.childCacheOffset);
+      }
+      // VME_LOG_D("Final cache state: " << state.show());
+      // VME_LOG_D(index);
 
       // state.update(pos);
 
@@ -82,26 +101,37 @@ namespace vme
       if (!cachedHeapNodes.at(index))
         cachedHeapNodes.at(index) = Tree::heapNodeFromSplitPattern(currentPattern, state.pos, splitDelta);
 
-      auto node = cachedHeapNodes.at(index).get();
-      if (node)
-      {
-        VME_LOG_D("Have node.");
-        if (node->isLeaf())
-        {
-          VME_LOG_D("Cached node was leaf.");
-          auto leaf = static_cast<Leaf *>(node);
-          leaf->add(pos);
-          VME_LOG_D("Leaf node: " << leaf->position);
-        }
-        else
-        {
-          // TODO test this
-          VME_LOG_D("Cached node was not leaf.");
-          auto leaf = node->getOrCreateLeaf(pos);
-          leaf->add(pos);
-          VME_LOG_D("Leaf node (non-cached): " << leaf->position);
-        }
-      }
+      return cachedHeapNodes.at(index).get();
+    }
+
+    bool Tree::contains(const Position pos) const
+    {
+      auto l = leaf(pos);
+      return l && l->contains(pos);
+    }
+
+    void Tree::add(const Position pos)
+    {
+      auto node = getOrCreateFromCache(pos);
+      auto l = node->getOrCreateLeaf(pos);
+      VME_LOG_D(l->position);
+      l->add(pos);
+
+      // if (node->isLeaf())
+      // {
+      //   VME_LOG_D("Cached node was leaf.");
+      //   auto leaf = static_cast<Leaf *>(node);
+      //   leaf->add(pos);
+      //   VME_LOG_D("Leaf node: " << leaf->position);
+      // }
+      // else
+      // {
+      //   // TODO test this
+      //   VME_LOG_D("Cached node was not leaf.");
+      //   auto leaf = node->getOrCreateLeaf(pos);
+      //   leaf->add(pos);
+      //   VME_LOG_D("Leaf node (non-cached): " << leaf->position);
+      // }
     }
 
     int Tree::TraversalState::update(Position pos)
@@ -162,9 +192,19 @@ namespace vme
       z += pattern & 1;
     }
 
+    Tree::Leaf *Tree::leaf(const Position position) const
+    {
+      return fromCache(position)->leaf(position);
+    }
+
+    Tree::Leaf *Tree::getOrCreateLeaf(const Position position)
+    {
+      return fromCache(position)->getOrCreateLeaf(position);
+    }
+
     Tree::CachedNode::CachedNode() {}
 
-    uint16_t Tree::CachedNode::child(const int pattern)
+    uint16_t Tree::CachedNode::child(const int pattern) const
     {
       return childCacheOffset + pattern;
     }
@@ -207,8 +247,12 @@ namespace vme
 
     bool Tree::Leaf::contains(const Position pos)
     {
-      auto index = ((pos.x - position.x) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.depth + (pos.z - position.z);
-      return values[index];
+      return values[getIndex(pos)];
+    }
+
+    inline uint16_t Tree::Leaf::getIndex(const Position &pos) const
+    {
+      return ((pos.x - position.x) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.depth + (pos.z - position.z);
     }
 
     void Tree::Leaf::add(const Position pos)
