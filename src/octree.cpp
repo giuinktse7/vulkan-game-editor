@@ -124,6 +124,113 @@ namespace vme
       return ((pos.x - position.x) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.depth + (pos.z - position.z);
     }
 
+    bool Leaf::addToBoundingBox(const Position pos)
+    {
+      int x = pos.x % ChunkSize.width;
+      int y = pos.y % ChunkSize.height;
+      int z = pos.z % ChunkSize.depth;
+
+      bool bboxChange = ((x < low.x || x > high.x) ||
+                         (y < low.y || y > high.y) ||
+                         (z < low.z || z > high.z)) &&
+                        (xs[x] == 0 || ys[y] == 0 || zs[z] == 0);
+
+      xs[x] += 1;
+      ys[y] += 1;
+      zs[z] += 1;
+
+      if (!bboxChange)
+        return false;
+
+      if (empty())
+      {
+        low = {x, y, z};
+        high = low;
+      }
+      else
+      {
+        low = {
+            std::min(x, low.x),
+            std::min(y, low.y),
+            std::min(z, low.z),
+        };
+
+        high = {
+            std::max(x, high.x),
+            std::max(y, high.y),
+            std::max(z, high.z),
+        };
+      }
+
+      boundingBox = BoundingBox(low.y, high.x, high.y, low.x);
+      return true;
+    }
+
+    bool Leaf::removeFromBoundingBox(const Position pos)
+    {
+      uint16_t x = pos.x % ChunkSize.width;
+      uint16_t y = pos.y % ChunkSize.height;
+      uint16_t z = pos.z % ChunkSize.depth;
+
+      xs[x] -= 1;
+      ys[y] -= 1;
+      zs[z] -= 1;
+
+      if (count == 0)
+      {
+        boundingBox = {};
+        low = {};
+        high = {};
+        return false;
+      }
+
+      bool bboxChange = ((x == low.x || x == high.x) ||
+                         (y == low.y || y == high.y) ||
+                         (z == low.z || z == high.z)) &&
+                        (xs[x] == 0 || ys[y] == 0 || zs[z] == 0);
+      if (!bboxChange)
+        return false;
+
+      // Low
+      {
+        uint16_t xIndex = low.x;
+        for (; xIndex < ChunkSize.width && xs[xIndex] == 0; ++xIndex)
+          ;
+        low.x = xIndex;
+
+        uint16_t yIndex = low.y;
+        for (; yIndex >= 0 && ys[yIndex] == 0; --yIndex)
+          ;
+        low.y = yIndex;
+
+        uint16_t zIndex = low.z;
+        for (; zIndex >= 0 && zs[zIndex] == 0; --zIndex)
+          ;
+        low.z = zIndex;
+      }
+
+      // High
+      {
+        uint16_t xIndex = high.x;
+        for (; xIndex >= 0 && xs[xIndex] == 0; --xIndex)
+          ;
+        high.x = xIndex;
+
+        uint16_t yIndex = high.y;
+        for (; yIndex >= 0 && ys[yIndex] == 0; --yIndex)
+          ;
+        high.y = yIndex;
+
+        uint16_t zIndex = high.z;
+        for (; zIndex >= 0 && zs[zIndex] == 0; --zIndex)
+          ;
+        high.z = zIndex;
+      }
+
+      boundingBox = BoundingBox(low.y, high.x, high.y, low.x);
+      return true;
+    }
+
     bool Leaf::add(const Position pos)
     {
       DEBUG_ASSERT(
@@ -132,13 +239,40 @@ namespace vme
               (position.z <= pos.z && pos.z < position.z + ChunkSize.depth),
           "The position does not belong to this chunk.");
 
-      values[getIndex(pos)] = true;
+      auto index = getIndex(pos);
 
-      bool changed = boundingBox.include(pos);
-      if (changed)
+      if (values[index])
+        return false;
+
+      ++count;
+      values[index] = true;
+      bool bboxChanged = addToBoundingBox(pos);
+
+      if (bboxChanged)
         parent->updateBoundingBox(boundingBox);
 
-      return changed;
+      return bboxChanged;
+    }
+
+    bool Leaf::remove(const Position pos)
+    {
+      DEBUG_ASSERT(
+          (position.x <= pos.x && pos.x < position.x + ChunkSize.width) &&
+              (position.y <= pos.y && pos.y < position.y + ChunkSize.height) &&
+              (position.z <= pos.z && pos.z < position.z + ChunkSize.depth),
+          "The position does not belong to this chunk.");
+
+      auto index = getIndex(pos);
+      if (!values[index])
+        return false;
+
+      --count;
+      values[getIndex(pos)] = false;
+      bool bboxChanged = removeFromBoundingBox(pos);
+      if (bboxChanged)
+        parent->updateBoundingBox(boundingBox);
+
+      return bboxChanged;
     }
 
     std::string Leaf::show() const

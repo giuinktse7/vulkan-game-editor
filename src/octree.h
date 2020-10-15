@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <memory>
+#include <optional>
 #include <vector>
 #include <array>
 #include <sstream>
@@ -90,6 +91,9 @@ namespace vme
     struct BoundingBox
     {
       using value_type = Position::value_type;
+      BoundingBox() {}
+      BoundingBox(value_type top, value_type right, value_type bottom, value_type left)
+          : _top(top), _right(right), _bottom(bottom), _left(left) {}
 
       value_type top() const noexcept;
       value_type right() const noexcept;
@@ -115,10 +119,10 @@ namespace vme
       bool contains(const BoundingBox &other) const noexcept;
 
     private:
-      Position::value_type _top = std::numeric_limits<BoundingBox::value_type>::max();
-      Position::value_type _right = std::numeric_limits<BoundingBox::value_type>::min();
-      Position::value_type _bottom = std::numeric_limits<BoundingBox::value_type>::min();
-      Position::value_type _left = std::numeric_limits<BoundingBox::value_type>::max();
+      value_type _top = std::numeric_limits<BoundingBox::value_type>::max();
+      value_type _right = std::numeric_limits<BoundingBox::value_type>::min();
+      value_type _bottom = std::numeric_limits<BoundingBox::value_type>::min();
+      value_type _left = std::numeric_limits<BoundingBox::value_type>::max();
     };
 
     static constexpr Cube ChunkSize = {64, 64, 8};
@@ -228,14 +232,53 @@ namespace vme
       bool isLeaf() const override;
 
       bool contains(const Position pos) override;
+
+      /*
+        Returns true if the bounding box changed.
+      */
       bool add(const Position pos);
+
+      /*
+        Returns true if the bounding box changed.
+      */
+      bool remove(const Position pos);
 
       uint16_t getIndex(const Position &pos) const override;
 
       std::string show() const override;
 
       bool values[ChunkSize.width * ChunkSize.height * ChunkSize.depth] = {false};
+
       Position position;
+
+    private:
+      uint32_t count = 0;
+      struct Indices
+      {
+        int x, y, z = -1;
+      };
+      Indices low;
+      Indices high;
+
+      uint16_t xs[ChunkSize.width] = {0};
+      uint16_t ys[ChunkSize.height] = {0};
+      uint16_t zs[ChunkSize.depth] = {0};
+
+      /*
+        Returns true if the bounding box changed.
+      */
+      bool addToBoundingBox(const Position pos);
+
+      /*
+        Returns true if the bounding box changed.
+      */
+      bool removeFromBoundingBox(const Position pos);
+
+      bool empty() const noexcept
+      {
+        // Choice of low.x is arbitrary. If any value in low/high is -1, the Leaf is empty.
+        return low.x == -1;
+      }
     };
 
     template <size_t ChildCount>
@@ -310,6 +353,7 @@ namespace vme
       uint16_t floors;
 
       void add(const Position pos);
+      void remove(const Position pos);
       bool contains(const Position pos) const;
 
     private:
@@ -444,9 +488,19 @@ namespace vme
     {
       auto [cached, node] = getOrCreateFromCache(pos);
       auto l = node->getOrCreateLeaf(pos);
-      VME_LOG_D(l->position);
 
       bool changed = l->add(pos);
+      if (changed)
+        cached->updateBoundingBoxCached(*this);
+    }
+
+    template <uint16_t CacheSize, uint16_t CacheInitAmount>
+    void Tree<CacheSize, CacheInitAmount>::remove(const Position pos)
+    {
+      auto [cached, node] = getOrCreateFromCache(pos);
+      auto l = node->getOrCreateLeaf(pos);
+
+      bool changed = l->remove(pos);
       if (changed)
         cached->updateBoundingBoxCached(*this);
     }
