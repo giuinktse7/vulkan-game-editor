@@ -55,7 +55,7 @@ namespace vme
       }
     }
 
-    Tree::HeapNode *Tree::fromCache(const Position position) const
+    HeapNode *Tree::fromCache(const Position position) const
     {
       Tree::TraversalState state = top;
 
@@ -75,7 +75,7 @@ namespace vme
       return result ? result.get() : nullptr;
     }
 
-    std::pair<Tree::CachedNode *, Tree::HeapNode *> Tree::getOrCreateFromCache(const Position position)
+    std::pair<CachedNode *, HeapNode *> Tree::getOrCreateFromCache(const Position position)
     {
       Tree::TraversalState state = top;
 
@@ -105,7 +105,7 @@ namespace vme
         currentPattern |= (1 << 0);
 
       if (!cachedHeapNodes.at(cacheHeapIndex))
-        cachedHeapNodes.at(cacheHeapIndex) = Tree::heapNodeFromSplitPattern(currentPattern, state.pos, splitDelta, cached);
+        cachedHeapNodes.at(cacheHeapIndex) = heapNodeFromSplitPattern(currentPattern, state.pos, splitDelta, cached);
 
       return {cached, cachedHeapNodes.at(cacheHeapIndex).get()};
     }
@@ -125,22 +125,6 @@ namespace vme
       bool changed = l->add(pos);
       if (changed)
         cached->updateBoundingBoxCached(*this);
-
-      // if (node->isLeaf())
-      // {
-      //   VME_LOG_D("Cached node was leaf.");
-      //   auto leaf = static_cast<Leaf *>(node);
-      //   leaf->add(pos);
-      //   VME_LOG_D("Leaf node: " << leaf->position);
-      // }
-      // else
-      // {
-      //   // TODO test this
-      //   VME_LOG_D("Cached node was not leaf.");
-      //   auto leaf = node->getOrCreateLeaf(pos);
-      //   leaf->add(pos);
-      //   VME_LOG_D("Leaf node (non-cached): " << leaf->position);
-      // }
     }
 
     int Tree::TraversalState::update(Position pos)
@@ -192,29 +176,29 @@ namespace vme
       return pattern;
     }
 
-    Tree::Leaf *Tree::leaf(const Position position) const
+    Leaf *Tree::leaf(const Position position) const
     {
       return fromCache(position)->leaf(position);
     }
 
-    Tree::Leaf *Tree::getOrCreateLeaf(const Position position)
+    Leaf *Tree::getOrCreateLeaf(const Position position)
     {
       return fromCache(position)->getOrCreateLeaf(position);
     }
 
-    Tree::CachedNode::CachedNode(HeapNode *parent) : HeapNode(parent) {}
+    CachedNode::CachedNode(HeapNode *parent) : HeapNode(parent) {}
 
-    uint16_t Tree::CachedNode::childOffset(const int pattern) const
+    uint16_t CachedNode::childOffset(const int pattern) const
     {
       return childCacheOffset + pattern;
     }
 
-    void Tree::CachedNode::setChildCacheOffset(size_t offset)
+    void CachedNode::setChildCacheOffset(size_t offset)
     {
       childCacheOffset = offset;
     }
 
-    bool Tree::CachedNode::isCachedNode() const noexcept
+    bool CachedNode::isCachedNode() const noexcept
     {
       return true;
     }
@@ -229,16 +213,16 @@ namespace vme
     //>>>>>>>>HeapNode>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::Leaf *Tree::HeapNode::leaf(const Position pos) const
+    Leaf *HeapNode::leaf(const Position pos) const
     {
-      HeapNode *node = const_cast<Tree::HeapNode *>(this);
+      HeapNode *node = const_cast<HeapNode *>(this);
       while (node && !node->isLeaf())
         node = node->child(node->getIndex(pos));
 
-      return node ? static_cast<Tree::Leaf *>(node) : nullptr;
+      return node ? static_cast<Leaf *>(node) : nullptr;
     }
 
-    bool Tree::HeapNode::contains(const Position pos)
+    bool HeapNode::contains(const Position pos)
     {
       auto leaf = getOrCreateLeaf(pos);
       return leaf->contains(pos);
@@ -248,20 +232,20 @@ namespace vme
     //>>>>>>>>Leaf>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::Leaf::Leaf(const Position pos, Tree::HeapNode *parent)
+    Leaf::Leaf(const Position pos, HeapNode *parent)
         : HeapNode(parent), position(pos.x - pos.x % ChunkSize.width, pos.y - pos.y % ChunkSize.height, pos.z - pos.z % ChunkSize.depth) {}
 
-    bool Tree::Leaf::contains(const Position pos)
+    bool Leaf::contains(const Position pos)
     {
       return values[getIndex(pos)];
     }
 
-    inline uint16_t Tree::Leaf::getIndex(const Position &pos) const
+    inline uint16_t Leaf::getIndex(const Position &pos) const
     {
       return ((pos.x - position.x) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.depth + (pos.z - position.z);
     }
 
-    bool Tree::Leaf::add(const Position pos)
+    bool Leaf::add(const Position pos)
     {
       DEBUG_ASSERT(
           (position.x <= pos.x && pos.x < position.x + ChunkSize.width) &&
@@ -278,17 +262,17 @@ namespace vme
       return changed;
     }
 
-    std::string Tree::Leaf::show() const
+    std::string Leaf::show() const
     {
       std::ostringstream s;
       s << "Leaf { " << position << " }";
       return s.str();
     }
 
-    Tree::Leaf *Tree::HeapNode::getOrCreateLeaf(const Position pos)
+    Leaf *HeapNode::getOrCreateLeaf(const Position pos)
     {
       if (isLeaf())
-        return static_cast<Tree::Leaf *>(this);
+        return static_cast<Leaf *>(this);
 
       auto node = getOrCreateChild(pos);
       while (!node->isLeaf())
@@ -299,7 +283,7 @@ namespace vme
 
       VME_LOG_D("getOrCreateLeaf (leaf): " << node);
 
-      return static_cast<Tree::Leaf *>(node);
+      return static_cast<Leaf *>(node);
     }
 
     //>>>>>>>>>>>>>>>>>>>>>>
@@ -307,13 +291,13 @@ namespace vme
     //>>>>>>>>NodeZ>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
-    Tree::NodeZ::NodeZ(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
+    NodeZ::NodeZ(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta)
     {
       DEBUG_ASSERT(!parent->isLeaf(), "A parent cannot be a leaf.");
     }
 
-    Tree::HeapNode *Tree::NodeZ::getOrCreateChild(const Position position)
+    HeapNode *NodeZ::getOrCreateChild(const Position position)
     {
       auto index = getIndex(position);
       if (children[index])
@@ -336,12 +320,12 @@ namespace vme
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeZ::getIndex(const Position &pos) const
+    inline uint16_t NodeZ::getIndex(const Position &pos) const
     {
       return pos.z > this->midPoint.z;
     }
 
-    std::string Tree::NodeZ::show() const
+    std::string NodeZ::show() const
     {
       std::ostringstream s;
       s << "NodeZ { midPoint: " << midPoint << " }";
@@ -353,10 +337,10 @@ namespace vme
     //>>>>>>>>NodeY>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
-    Tree::NodeY::NodeY(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
+    NodeY::NodeY(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
-    Tree::HeapNode *Tree::NodeY::getOrCreateChild(const Position position)
+    HeapNode *NodeY::getOrCreateChild(const Position position)
     {
       auto index = getIndex(position);
       if (children[index])
@@ -379,12 +363,12 @@ namespace vme
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeY::getIndex(const Position &pos) const
+    inline uint16_t NodeY::getIndex(const Position &pos) const
     {
       return pos.y > this->midPoint.y;
     }
 
-    std::string Tree::NodeY::show() const
+    std::string NodeY::show() const
     {
       std::ostringstream s;
       s << "NodeY { midPoint: " << midPoint << " }";
@@ -396,10 +380,10 @@ namespace vme
     //>>>>>>>>NodeX>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
-    Tree::NodeX::NodeX(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
+    NodeX::NodeX(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
-    Tree::HeapNode *Tree::NodeX::getOrCreateChild(const Position position)
+    HeapNode *NodeX::getOrCreateChild(const Position position)
     {
       auto index = getIndex(position);
       if (children[index])
@@ -422,12 +406,12 @@ namespace vme
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeX::getIndex(const Position &pos) const
+    inline uint16_t NodeX::getIndex(const Position &pos) const
     {
       return pos.x > this->midPoint.x;
     }
 
-    std::string Tree::NodeX::show() const
+    std::string NodeX::show() const
     {
       std::ostringstream s;
       s << "NodeX { midPoint: " << midPoint << " }";
@@ -440,10 +424,10 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::NodeXY::NodeXY(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
+    NodeXY::NodeXY(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
-    inline Tree::HeapNode *Tree::NodeXY::getOrCreateChild(const Position position)
+    inline HeapNode *NodeXY::getOrCreateChild(const Position position)
     {
       auto index = getIndex(position);
       if (children[index])
@@ -483,12 +467,12 @@ namespace vme
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeXY::getIndex(const Position &pos) const
+    inline uint16_t NodeXY::getIndex(const Position &pos) const
     {
       return ((pos.x > midPoint.x) << 1) + (pos.y > midPoint.y);
     }
 
-    std::string Tree::NodeXY::show() const
+    std::string NodeXY::show() const
     {
       std::ostringstream s;
       s << "NodeXY { midPoint: " << midPoint << " }";
@@ -501,10 +485,10 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::NodeXZ::NodeXZ(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
+    NodeXZ::NodeXZ(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
-    inline Tree::HeapNode *Tree::NodeXZ::getOrCreateChild(const Position position)
+    inline HeapNode *NodeXZ::getOrCreateChild(const Position position)
     {
       auto index = getIndex(position);
       if (children[index])
@@ -541,12 +525,12 @@ namespace vme
       return children[index].get();
     }
 
-    uint16_t Tree::NodeXZ::getIndex(const Position &pos) const
+    uint16_t NodeXZ::getIndex(const Position &pos) const
     {
       return ((pos.x > midPoint.x) << 1) + (pos.z > midPoint.z);
     }
 
-    std::string Tree::NodeXZ::show() const
+    std::string NodeXZ::show() const
     {
       std::ostringstream s;
       s << "NodeXZ { midPoint: " << midPoint << " }";
@@ -559,10 +543,10 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::NodeYZ::NodeYZ(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
+    NodeYZ::NodeYZ(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
-    Tree::HeapNode *Tree::NodeYZ::getOrCreateChild(const Position position)
+    HeapNode *NodeYZ::getOrCreateChild(const Position position)
     {
       auto index = getIndex(position);
       if (children[index])
@@ -599,12 +583,12 @@ namespace vme
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeYZ::getIndex(const Position &pos) const
+    inline uint16_t NodeYZ::getIndex(const Position &pos) const
     {
       return ((pos.y > midPoint.y) << 1) + (pos.z > midPoint.z);
     }
 
-    std::string Tree::NodeYZ::show() const
+    std::string NodeYZ::show() const
     {
       std::ostringstream s;
       s << "NodeYZ { midPoint: " << midPoint << " }";
@@ -617,10 +601,10 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::NodeXYZ::NodeXYZ(const Position midPoint, const SplitDelta splitDelta, Tree::HeapNode *parent)
+    NodeXYZ::NodeXYZ(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent)
         : BaseNode(parent), midPoint(midPoint), splitDelta(splitDelta) {}
 
-    inline Tree::HeapNode *Tree::NodeXYZ::getOrCreateChild(const Position position)
+    inline HeapNode *NodeXYZ::getOrCreateChild(const Position position)
     {
       auto index = getIndex(position);
       if (children[index])
@@ -673,30 +657,30 @@ namespace vme
       return children[index].get();
     }
 
-    inline uint16_t Tree::NodeXYZ::getIndex(const Position &pos) const
+    inline uint16_t NodeXYZ::getIndex(const Position &pos) const
     {
       return ((pos.x > midPoint.x) << 2) | ((pos.y > midPoint.y) << 1) | (pos.z > midPoint.z);
     }
 
-    std::string Tree::NodeXYZ::show() const
+    std::string NodeXYZ::show() const
     {
       std::ostringstream s;
       s << "NodeXYZ { midPoint: " << midPoint << " }";
       return s.str();
     }
 
-    uint16_t Tree::CachedNode::getIndex(const Position &pos) const
+    uint16_t CachedNode::getIndex(const Position &pos) const
     {
       ABORT_PROGRAM("getIndex called on CachedNode.");
       return -1;
     }
 
-    void Tree::CachedNode::setParent(Tree::HeapNode *parent)
+    void CachedNode::setParent(HeapNode *parent)
     {
       this->parent = parent;
     }
 
-    void Tree::CachedNode::updateBoundingBoxCached(const Tree &tree)
+    void CachedNode::updateBoundingBoxCached(const Tree &tree)
     {
       VME_LOG_D("updateBoundingBoxCached before: " << boundingBox);
       boundingBox.reset();
@@ -765,6 +749,11 @@ namespace vme
       _left = std::min<value_type>(_left, bbox._left);
 
       return old != *this;
+    }
+
+    void test(const Tree &tree)
+    {
+      VME_LOG_D("Hey");
     }
 
   } // namespace octree
