@@ -6,14 +6,15 @@ namespace vme
 {
   namespace octree
   {
-    TraversalState::TraversalState(Cube mapSize)
+    TraversalState::TraversalState(Cube mapSize, CacheInitInfo cacheInfo)
         : pos(
               std::max(ChunkSize.width, mapSize.width / 2),
               std::max(ChunkSize.height, mapSize.height / 2),
               std::max<Position::value_type>(ChunkSize.depth, mapSize.depth / 2)),
           dx(std::max(ChunkSize.width, mapSize.width / 4)),
           dy(std::max(ChunkSize.height, mapSize.height / 4)),
-          dz(std::max<Position::value_type>(ChunkSize.depth, mapSize.depth / 4)) {}
+          dz(std::max<Position::value_type>(ChunkSize.depth, mapSize.depth / 4)),
+          cacheInfo(cacheInfo) {}
 
     std::string TraversalState::show() const
     {
@@ -22,7 +23,62 @@ namespace vme
       return s.str();
     }
 
-    int TraversalState::update(Position pos)
+    int TraversalState::update(uint16_t cacheIndex, Position pos)
+    {
+      int index = 0;
+      int shift = 0;
+
+      if (cacheIndex < cacheInfo.endZIndex)
+      {
+        if (pos.z >= this->pos.z)
+        {
+          this->pos.z += dz;
+          index = 1;
+        }
+        else
+        {
+          this->pos.z -= dz;
+        }
+
+        dz /= 2;
+        ++shift;
+      }
+
+      if (cacheIndex < cacheInfo.endYIndex)
+      {
+        if (pos.y >= this->pos.y)
+        {
+          this->pos.y += dy;
+          index += (1 << shift);
+        }
+        else
+        {
+          this->pos.y -= dy;
+        }
+
+        dy /= 2;
+        ++shift;
+      }
+
+      if (cacheIndex < cacheInfo.endXIndex)
+      {
+        if (pos.x >= this->pos.x)
+        {
+          this->pos.x += dx;
+          index += (1 << shift);
+        }
+        else
+        {
+          this->pos.x -= dx;
+        }
+
+        dx /= 2;
+      }
+
+      return index;
+    }
+
+    int TraversalState::update2(Position pos)
     {
       int shiftX = (dz >= ChunkSize.depth / 2) + (dy >= ChunkSize.height / 2);
       int shiftY = shiftX - 1;
@@ -31,7 +87,7 @@ namespace vme
       int pattern = 0;
       if (dx >= ChunkSize.width / 2)
       {
-        if (pos.x > this->pos.x)
+        if (pos.x >= this->pos.x)
         {
           pattern |= (1 << shiftX);
           this->pos.x += dx;
@@ -44,7 +100,7 @@ namespace vme
 
       if (dy >= ChunkSize.height / 2)
       {
-        if (pos.y > this->pos.y)
+        if (pos.y >= this->pos.y)
         {
           pattern |= (1 << shiftY);
           this->pos.y += dy;
@@ -57,7 +113,7 @@ namespace vme
 
       if (dz >= ChunkSize.depth / 2)
       {
-        if (pos.z > this->pos.z)
+        if (pos.z >= this->pos.z)
         {
           pattern |= (1 << shiftZ);
           this->pos.z += dz;
@@ -142,7 +198,7 @@ namespace vme
       if (!bboxChange)
         return false;
 
-      if (empty())
+      if (count == 1)
       {
         low = {x, y, z};
         high = low;
@@ -162,7 +218,7 @@ namespace vme
         };
       }
 
-      boundingBox = BoundingBox(low.y, high.x, high.y, low.x);
+      boundingBox = BoundingBox(position.y + low.y, position.x + high.x, position.y + high.y, position.x + low.x);
       return true;
     }
 
@@ -227,7 +283,7 @@ namespace vme
         high.z = zIndex;
       }
 
-      boundingBox = BoundingBox(low.y, high.x, high.y, low.x);
+      boundingBox = BoundingBox(position.y + low.y, position.x + high.x, position.y + high.y, position.x + low.x);
       return true;
     }
 
@@ -248,7 +304,7 @@ namespace vme
       values[index] = true;
       bool bboxChanged = addToBoundingBox(pos);
 
-      if (bboxChanged)
+      if (bboxChanged && !parent->isCachedNode())
         parent->updateBoundingBox(boundingBox);
 
       return bboxChanged;
@@ -269,7 +325,7 @@ namespace vme
       --count;
       values[getIndex(pos)] = false;
       bool bboxChanged = removeFromBoundingBox(pos);
-      if (bboxChanged)
+      if (bboxChanged && !parent->isCachedNode())
         parent->updateBoundingBox(boundingBox);
 
       return bboxChanged;
@@ -290,11 +346,11 @@ namespace vme
       auto node = getOrCreateChild(pos);
       while (!node->isLeaf())
       {
-        VME_LOG_D("getOrCreateLeaf: " << node);
+        // VME_LOG_D("getOrCreateLeaf: " << node);
         node = node->getOrCreateChild(pos);
       }
 
-      VME_LOG_D("getOrCreateLeaf (leaf): " << node);
+      // VME_LOG_D("getOrCreateLeaf (leaf): " << node);
 
       return static_cast<Leaf *>(node);
     }
@@ -446,18 +502,17 @@ namespace vme
       if (children[index])
         return children[index].get();
 
-      SplitDelta delta = splitDelta;
-
       Position nextMidPoint = midPoint;
-      nextMidPoint.x += (index >> 1) == 0 ? -delta.x : delta.x;
-      nextMidPoint.y += (index & 1) == 0 ? -delta.y : delta.y;
+      nextMidPoint.x += (index >> 1) == 0 ? -splitDelta.x : splitDelta.x;
+      nextMidPoint.y += (index & 1) == 0 ? -splitDelta.y : splitDelta.y;
 
-      delta.x >>= 1;
-      delta.y >>= 1;
+      SplitDelta childDelta = splitDelta;
+      childDelta.x >>= 1;
+      childDelta.y >>= 1;
 
       int split = 0;
-      split |= (delta.x >= ChunkSize.width) << 1;
-      split |= (delta.y >= ChunkSize.height);
+      split |= (splitDelta.x >= ChunkSize.width) << 1;
+      split |= (splitDelta.y >= ChunkSize.height);
 
       switch (split)
       {
@@ -467,13 +522,13 @@ namespace vme
         break;
       }
       case 0b1:
-        children[index] = std::make_unique<NodeY>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeY>(nextMidPoint, childDelta, this);
         break;
       case 0b10:
-        children[index] = std::make_unique<NodeX>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeX>(nextMidPoint, childDelta, this);
         break;
       case 0b11:
-        children[index] = std::make_unique<NodeXY>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeXY>(nextMidPoint, childDelta, this);
         break;
       }
 

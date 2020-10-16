@@ -276,8 +276,7 @@ namespace vme
 
       bool empty() const noexcept
       {
-        // Choice of low.x is arbitrary. If any value in low/high is -1, the Leaf is empty.
-        return low.x == -1;
+        return count == 0;
       }
     };
 
@@ -330,14 +329,17 @@ namespace vme
 
     struct TraversalState
     {
-      TraversalState(Cube mapSize);
+      TraversalState(Cube mapSize, CacheInitInfo cacheInfo);
       Position pos;
 
-      int update(Position p);
+      int update(uint16_t index, const Position position);
+      int update2(const Position position);
 
       int dx;
       int dy;
       int dz;
+
+      CacheInitInfo cacheInfo;
 
       std::string show() const;
     };
@@ -369,6 +371,10 @@ namespace vme
 
       static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData, HeapNode *parent);
 
+      /*
+        Returns the index of the cached heap node containing the position.
+      */
+      uint16_t cachedHeapNodeIndex(const Position position) const;
       HeapNode *fromCache(const Position position) const;
       std::pair<CachedNode *, HeapNode *> getOrCreateFromCache(const Position position);
       Leaf *leaf(const Position position) const;
@@ -385,7 +391,7 @@ namespace vme
     template <uint16_t CacheSize, uint16_t CacheInitAmount>
     constexpr Tree<CacheSize, CacheInitAmount>::Tree(Cube mapSize, CacheInitInfo cacheInfo)
         : width(mapSize.width), height(mapSize.height), floors(mapSize.depth),
-          top(mapSize),
+          top(mapSize, cacheInfo),
           cacheInfo(cacheInfo)
     {
       root.childCacheOffset = 0;
@@ -420,23 +426,34 @@ namespace vme
     }
 
     template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    HeapNode *Tree<CacheSize, CacheInitAmount>::fromCache(const Position position) const
+    uint16_t Tree<CacheSize, CacheInitAmount>::cachedHeapNodeIndex(const Position position) const
     {
       TraversalState state = top;
+      const CachedNode *cached = &root;
 
-      auto cached = root;
-      int pattern = state.update(position);
-      uint16_t index = cached.childOffset(pattern);
+      int childIndex = state.update(0, position);
+      uint16_t cacheIndex = cached->childOffset(childIndex);
 
-      while (index < cacheInfo.amountToInitialize)
+      while (true)
       {
-        cached = cachedNodes[index];
-        index = cached.childOffset(pattern);
+        childIndex = state.update(cacheIndex, position);
+        cacheIndex = cached->childOffset(childIndex);
+
+        if (cacheIndex >= cachedNodes.size())
+          break;
+
+        cached = &cachedNodes[cacheIndex];
       }
 
-      uint16_t cacheHeapIndex = index - cacheInfo.amountToInitialize;
+      return cacheIndex - cacheInfo.amountToInitialize;
+    }
 
-      auto &result = cachedHeapNodes.at(cacheHeapIndex);
+    template <uint16_t CacheSize, uint16_t CacheInitAmount>
+    HeapNode *Tree<CacheSize, CacheInitAmount>::fromCache(const Position position) const
+    {
+      uint16_t index = cachedHeapNodeIndex(position);
+      auto &result = cachedHeapNodes.at(index);
+
       return result ? result.get() : nullptr;
     }
 
@@ -444,34 +461,41 @@ namespace vme
     std::pair<CachedNode *, HeapNode *> Tree<CacheSize, CacheInitAmount>::getOrCreateFromCache(const Position position)
     {
       TraversalState state = top;
-
       CachedNode *cached = &root;
-      int pattern = state.update(position);
-      uint16_t index = cached->childOffset(pattern);
 
-      while (index < cacheInfo.amountToInitialize)
+      int childIndex = state.update(0, position);
+      uint16_t cacheIndex = cached->childOffset(childIndex);
+
+      while (true)
       {
-        cached = &cachedNodes[index];
-        index = cached->childOffset(pattern);
+        childIndex = state.update(cacheIndex, position);
+        cacheIndex = cached->childOffset(childIndex);
+
+        if (cacheIndex >= cachedNodes.size())
+          break;
+
+        cached = &cachedNodes[cacheIndex];
       }
-      // VME_LOG_D("Final cache state: " << state.show());
-      // VME_LOG_D(index);
+      uint16_t cacheHeapIndex = cacheIndex - cacheInfo.amountToInitialize;
 
-      // state.update(pos);
-      uint16_t cacheHeapIndex = index - cacheInfo.amountToInitialize;
+      int nodeType = 0;
+      if (state.dx >= ChunkSize.width / 2)
+        nodeType |= (1 << 2);
+      if (state.dy >= ChunkSize.height / 2)
+        nodeType |= (1 << 1);
+      if (state.dz >= ChunkSize.depth / 2)
+        nodeType |= (1 << 0);
 
-      SplitDelta splitDelta{state.dx, state.dy, state.dz};
-
-      int currentPattern = 0;
-      if (state.dx >= ChunkSize.width)
-        currentPattern |= (1 << 2);
-      if (state.dy >= ChunkSize.height)
-        currentPattern |= (1 << 1);
-      if (state.dz >= ChunkSize.depth)
-        currentPattern |= (1 << 0);
+      // For leaf node
+      if (nodeType == 0)
+        state.pos = position;
 
       if (!cachedHeapNodes.at(cacheHeapIndex))
-        cachedHeapNodes.at(cacheHeapIndex) = heapNodeFromSplitPattern(currentPattern, state.pos, splitDelta, cached);
+        cachedHeapNodes.at(cacheHeapIndex) = heapNodeFromSplitPattern(
+            nodeType,
+            state.pos,
+            SplitDelta{state.dx, state.dy, state.dz},
+            cached);
 
       return {cached, cachedHeapNodes.at(cacheHeapIndex).get()};
     }
@@ -526,7 +550,7 @@ namespace vme
     template <uint16_t CacheSize, uint16_t CacheInitAmount>
     void CachedNode::updateBoundingBoxCached(const Tree<CacheSize, CacheInitAmount> &tree)
     {
-      VME_LOG_D("updateBoundingBoxCached before: " << boundingBox);
+      // VME_LOG_D("updateBoundingBoxCached before: " << boundingBox);
       boundingBox.reset();
 
       int splits = 0;
@@ -555,7 +579,7 @@ namespace vme
         }
       }
 
-      VME_LOG_D("updateBoundingBoxCached after: " << boundingBox);
+      // VME_LOG_D("updateBoundingBoxCached after: " << boundingBox);
       if (parent)
         static_cast<CachedNode *>(parent)->updateBoundingBoxCached(tree);
     }
@@ -588,9 +612,7 @@ namespace vme
     template <size_t ChildCount>
     inline void BaseNode<ChildCount>::updateBoundingBox(BoundingBox bbox)
     {
-      VME_LOG_D("updateBoundingBox before: " << boundingBox);
-      auto p = this;
-
+      // VME_LOG_D("updateBoundingBox before: " << boundingBox);
       boundingBox.reset();
       for (const std::unique_ptr<HeapNode> &node : children)
       {
@@ -600,8 +622,7 @@ namespace vme
           boundingBox.include(nodeBbox);
         }
       }
-      VME_LOG_D("updateBoundingBox after: " << boundingBox);
-      VME_LOG_D("updateBoundingBox after: " << boundingBox);
+      // VME_LOG_D("updateBoundingBox after: " << boundingBox);
 
       if (!parent->isCachedNode())
         parent->updateBoundingBox(BoundingBox());
