@@ -367,7 +367,7 @@ namespace vme
 
       CachedNode root;
       std::array<CachedNode, CacheInitAmount> cachedNodes;
-      std::array<std::unique_ptr<HeapNode>, CacheSize - CacheInitAmount> cachedHeapNodes;
+      std::array<std::unique_ptr<HeapNode>, CacheSize - CacheInitAmount + 8> cachedHeapNodes;
 
       static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData, HeapNode *parent);
 
@@ -433,12 +433,13 @@ namespace vme
       TraversalState state = top;
       const CachedNode *cached = &root;
 
-      int childIndex = state.update(0, position);
+      int childIndex = state.update(cached->childCacheOffset, position);
       uint16_t cacheIndex = cached->childOffset(childIndex);
+      cached = &cachedNodes[cacheIndex];
 
       while (true)
       {
-        childIndex = state.update(cacheIndex, position);
+        childIndex = state.update(cached->childCacheOffset, position);
         cacheIndex = cached->childOffset(childIndex);
 
         if (cacheIndex >= cachedNodes.size())
@@ -462,16 +463,25 @@ namespace vme
     template <uint16_t CacheSize, uint16_t CacheInitAmount>
     std::pair<CachedNode *, HeapNode *> Tree<CacheSize, CacheInitAmount>::getOrCreateFromCache(const Position position)
     {
+      // VME_LOG_D("getOrCreateFromCache: " << position);
       TraversalState state = top;
       CachedNode *cached = &root;
+      // auto k = this;
 
-      int childIndex = state.update(0, position);
-      uint16_t cacheIndex = cached->childOffset(childIndex);
+      // auto test = [position](TraversalState &state) {
+      //   VME_LOG_D(": " << (state.pos.x < position.x) << " " << (state.pos.y < position.y) << " " << (state.pos.z < position.z));
+      // };
 
+      // VME_LOG_D("Start: " << state.pos);
+
+      int childIndex;
+      uint16_t cacheIndex;
       while (true)
       {
-        childIndex = state.update(cacheIndex, position);
+        // test(state);
+        childIndex = state.update(cached->childCacheOffset, position);
         cacheIndex = cached->childOffset(childIndex);
+        // VME_LOG_D("cache: " << cacheIndex << ", child: " << childIndex << " (" << state.pos << ")");
 
         if (cacheIndex >= cachedNodes.size())
           break;
@@ -479,13 +489,14 @@ namespace vme
         cached = &cachedNodes[cacheIndex];
       }
       uint16_t cacheHeapIndex = cacheIndex - cacheInfo.amountToInitialize;
+      // VME_LOG_D("heap: " << cacheHeapIndex);
 
       int nodeType = 0;
-      if (state.dx >= ChunkSize.width / 2)
+      if (state.dx >= ChunkSize.width)
         nodeType |= (1 << 2);
-      if (state.dy >= ChunkSize.height / 2)
+      if (state.dy >= ChunkSize.height)
         nodeType |= (1 << 1);
-      if (state.dz >= ChunkSize.depth / 2)
+      if (state.dz >= ChunkSize.depth)
         nodeType |= (1 << 0);
 
       // For leaf node
@@ -568,7 +579,7 @@ namespace vme
       int childCount = power(2, splits);
       for (int i = 0; i < childCount; ++i)
       {
-        if (childCacheOffset > tree.cacheInfo.amountToInitialize) // Get from HeapNode cache
+        if (childCacheOffset >= tree.cacheInfo.amountToInitialize) // Get from HeapNode cache
         {
           auto &node = tree.cachedHeapNodes.at(childCacheOffset + i - tree.cacheInfo.amountToInitialize);
           if (node)

@@ -28,7 +28,7 @@ namespace vme
       int index = 0;
       int shift = 0;
 
-      if (cacheIndex < cacheInfo.endZIndex)
+      if (cacheInfo.endZIndex == -1 || cacheIndex < cacheInfo.endZIndex)
       {
         if (pos.z >= this->pos.z)
         {
@@ -44,12 +44,12 @@ namespace vme
         ++shift;
       }
 
-      if (cacheIndex < cacheInfo.endYIndex)
+      if (cacheInfo.endYIndex == -1 || cacheIndex < cacheInfo.endYIndex)
       {
         if (pos.y >= this->pos.y)
         {
           this->pos.y += dy;
-          index += (1 << shift);
+          index |= (1 << shift);
         }
         else
         {
@@ -60,12 +60,12 @@ namespace vme
         ++shift;
       }
 
-      if (cacheIndex < cacheInfo.endXIndex)
+      if (cacheInfo.endXIndex == -1 || cacheIndex < cacheInfo.endXIndex)
       {
         if (pos.x >= this->pos.x)
         {
           this->pos.x += dx;
-          index += (1 << shift);
+          index |= (1 << shift);
         }
         else
         {
@@ -372,20 +372,19 @@ namespace vme
       if (children[index])
         return children[index].get();
 
-      SplitDelta delta = splitDelta;
-
-      Position nextMidPoint = midPoint;
-      nextMidPoint.z += index == 0 ? -delta.z : delta.z;
-
-      delta.z >>= 1;
-
-      if (delta.z >= ChunkSize.depth)
-        children[index] = std::make_unique<NodeZ>(nextMidPoint, delta, this);
-      else // Child
+      if (splitDelta.z < ChunkSize.depth)
       {
         children[index] = std::make_unique<Leaf>(position, this);
+        return children[index].get();
       }
 
+      Position nextMidPoint = midPoint;
+      nextMidPoint.z += index == 0 ? -splitDelta.z : splitDelta.z;
+
+      SplitDelta childDelta = splitDelta;
+      childDelta.z >>= 1;
+
+      children[index] = std::make_unique<NodeZ>(nextMidPoint, childDelta, this);
       return children[index].get();
     }
 
@@ -415,20 +414,19 @@ namespace vme
       if (children[index])
         return children[index].get();
 
-      SplitDelta delta = splitDelta;
-
-      Position nextMidPoint = midPoint;
-      nextMidPoint.y += index == 0 ? -delta.y : delta.y;
-
-      delta.y >>= 1;
-
-      if (delta.y >= ChunkSize.height)
-        children[index] = std::make_unique<NodeY>(nextMidPoint, delta, this);
-      else // Child
+      if (splitDelta.y < ChunkSize.height)
       {
         children[index] = std::make_unique<Leaf>(position, this);
+        return children[index].get();
       }
 
+      Position nextMidPoint = midPoint;
+      nextMidPoint.y += index == 0 ? -splitDelta.y : splitDelta.y;
+
+      SplitDelta childDelta = splitDelta;
+      childDelta.y >>= 1;
+
+      children[index] = std::make_unique<NodeY>(nextMidPoint, childDelta, this);
       return children[index].get();
     }
 
@@ -458,20 +456,19 @@ namespace vme
       if (children[index])
         return children[index].get();
 
-      SplitDelta delta = splitDelta;
-
-      Position nextMidPoint = midPoint;
-      nextMidPoint.x += index == 0 ? -delta.x : delta.x;
-
-      delta.x >>= 1;
-
-      if (delta.x >= ChunkSize.width)
-        children[index] = std::make_unique<NodeX>(nextMidPoint, delta, this);
-      else // Child
+      if (splitDelta.x < ChunkSize.width)
       {
         children[index] = std::make_unique<Leaf>(position, this);
+        return children[index].get();
       }
 
+      Position nextMidPoint = midPoint;
+      nextMidPoint.x += index == 0 ? -splitDelta.x : splitDelta.x;
+
+      SplitDelta childDelta = splitDelta;
+      childDelta.x >>= 1;
+
+      children[index] = std::make_unique<NodeX>(nextMidPoint, childDelta, this);
       return children[index].get();
     }
 
@@ -498,9 +495,21 @@ namespace vme
 
     inline HeapNode *NodeXY::getOrCreateChild(const Position position)
     {
+      auto hm = this;
       auto index = getIndex(position);
       if (children[index])
         return children[index].get();
+
+      int split = 0;
+      split |= (splitDelta.x >= ChunkSize.width) << 1;
+      split |= (splitDelta.y >= ChunkSize.height);
+
+      // Child
+      if (split == 0)
+      {
+        children[index] = std::make_unique<Leaf>(position, this);
+        return children[index].get();
+      }
 
       Position nextMidPoint = midPoint;
       nextMidPoint.x += (index >> 1) == 0 ? -splitDelta.x : splitDelta.x;
@@ -510,17 +519,8 @@ namespace vme
       childDelta.x >>= 1;
       childDelta.y >>= 1;
 
-      int split = 0;
-      split |= (splitDelta.x >= ChunkSize.width) << 1;
-      split |= (splitDelta.y >= ChunkSize.height);
-
       switch (split)
       {
-      case 0:
-      {
-        children[index] = std::make_unique<Leaf>(position, this);
-        break;
-      }
       case 0b1:
         children[index] = std::make_unique<NodeY>(nextMidPoint, childDelta, this);
         break;
@@ -530,6 +530,8 @@ namespace vme
       case 0b11:
         children[index] = std::make_unique<NodeXY>(nextMidPoint, childDelta, this);
         break;
+      default:
+        ABORT_PROGRAM("Should never happen.");
       }
 
       return children[index].get();
@@ -537,7 +539,7 @@ namespace vme
 
     inline uint16_t NodeXY::getIndex(const Position &pos) const
     {
-      return ((pos.x > midPoint.x) << 1) + (pos.y > midPoint.y);
+      return ((pos.x >= midPoint.x) << 1) + (pos.y >= midPoint.y);
     }
 
     std::string NodeXY::show() const
@@ -562,32 +564,41 @@ namespace vme
       if (children[index])
         return children[index].get();
 
-      SplitDelta delta = splitDelta;
+      int split = 0;
+      split |= (splitDelta.x >= ChunkSize.width) << 1;
+      split |= (splitDelta.z >= ChunkSize.depth);
+
+      // Child
+      if (split == 0)
+      {
+        children[index] = std::make_unique<Leaf>(position, this);
+        return children[index].get();
+      }
 
       Position nextMidPoint = midPoint;
-      nextMidPoint.x += (index >> 1) == 0 ? -delta.x : delta.x;
-      nextMidPoint.z += (index & 1) == 0 ? -delta.z : delta.z;
+      nextMidPoint.x += (index >> 1) == 0 ? -splitDelta.x : splitDelta.x;
+      nextMidPoint.z += (index & 1) == 0 ? -splitDelta.z : splitDelta.z;
 
-      delta.x >>= 1;
-      delta.z >>= 1;
+      SplitDelta childDelta = splitDelta;
+      childDelta.x >>= 1;
+      childDelta.z >>= 1;
 
-      int split = 0;
-      split |= (delta.x >= ChunkSize.width) << 1;
-      split |= (delta.z >= ChunkSize.depth);
       switch (split)
       {
       case 0:
         children[index] = std::make_unique<Leaf>(position, this);
         break;
       case 0b1:
-        children[index] = std::make_unique<NodeZ>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeZ>(nextMidPoint, childDelta, this);
         break;
       case 0b10:
-        children[index] = std::make_unique<NodeX>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeX>(nextMidPoint, childDelta, this);
         break;
       case 0b11:
-        children[index] = std::make_unique<NodeXZ>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeXZ>(nextMidPoint, childDelta, this);
         break;
+      default:
+        ABORT_PROGRAM("Should never happen.");
       }
 
       return children[index].get();
@@ -620,32 +631,41 @@ namespace vme
       if (children[index])
         return children[index].get();
 
-      SplitDelta delta = splitDelta;
+      int split = 0;
+      split |= (splitDelta.y >= ChunkSize.height) << 1;
+      split |= (splitDelta.z >= ChunkSize.depth);
+
+      // Child
+      if (split == 0)
+      {
+        children[index] = std::make_unique<Leaf>(position, this);
+        return children[index].get();
+      }
 
       Position nextMidPoint = midPoint;
-      nextMidPoint.y += (index >> 1) == 0 ? -delta.y : delta.y;
-      nextMidPoint.z += (index & 1) == 0 ? -delta.z : delta.z;
+      nextMidPoint.y += (index >> 1) == 0 ? -splitDelta.y : splitDelta.y;
+      nextMidPoint.z += (index & 1) == 0 ? -splitDelta.z : splitDelta.z;
 
-      delta.y >>= 1;
-      delta.z >>= 1;
+      SplitDelta childDelta = splitDelta;
+      childDelta.y >>= 1;
+      childDelta.z >>= 1;
 
-      int split = 0;
-      split |= (delta.y >= ChunkSize.height) << 1;
-      split |= (delta.z >= ChunkSize.depth);
       switch (split)
       {
       case 0:
         children[index] = std::make_unique<Leaf>(position, this);
         break;
       case 0b1:
-        children[index] = std::make_unique<NodeZ>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeZ>(nextMidPoint, childDelta, this);
         break;
       case 0b10:
-        children[index] = std::make_unique<NodeY>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeY>(nextMidPoint, childDelta, this);
         break;
       case 0b11:
-        children[index] = std::make_unique<NodeYZ>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeYZ>(nextMidPoint, childDelta, this);
         break;
+      default:
+        ABORT_PROGRAM("Should never happen.");
       }
 
       return children[index].get();
@@ -678,21 +698,27 @@ namespace vme
       if (children[index])
         return children[index].get();
 
-      SplitDelta delta = splitDelta;
+      int split = 0;
+      split |= (splitDelta.x >= ChunkSize.width) << 2;
+      split |= (splitDelta.y >= ChunkSize.height) << 1;
+      split |= (splitDelta.z >= ChunkSize.depth);
+
+      // Child
+      if (split == 0)
+      {
+        children[index] = std::make_unique<Leaf>(position, this);
+        return children[index].get();
+      }
 
       Position nextMidPoint = midPoint;
-      nextMidPoint.x += (index >> 2) == 0 ? -delta.x : delta.x;
-      nextMidPoint.y += ((index >> 1) & 1) == 0 ? -delta.y : delta.y;
-      nextMidPoint.z += (index & 1) == 0 ? -delta.z : delta.z;
+      nextMidPoint.x += (index >> 2) == 0 ? -splitDelta.x : splitDelta.x;
+      nextMidPoint.y += ((index >> 1) & 1) == 0 ? -splitDelta.y : splitDelta.y;
+      nextMidPoint.z += (index & 1) == 0 ? -splitDelta.z : splitDelta.z;
 
-      delta.x >>= 1;
-      delta.y >>= 1;
-      delta.z >>= 1;
-
-      int split = 0;
-      split |= (delta.x >= ChunkSize.width) << 2;
-      split |= (delta.y >= ChunkSize.height) << 1;
-      split |= (delta.z >= ChunkSize.depth);
+      SplitDelta childDelta = splitDelta;
+      childDelta.x >>= 1;
+      childDelta.y >>= 1;
+      childDelta.z >>= 1;
 
       switch (split)
       {
@@ -700,26 +726,28 @@ namespace vme
         children[index] = std::make_unique<Leaf>(position, this);
         break;
       case 0b1:
-        children[index] = std::make_unique<NodeZ>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeZ>(nextMidPoint, childDelta, this);
         break;
       case 0b10:
-        children[index] = std::make_unique<NodeY>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeY>(nextMidPoint, childDelta, this);
         break;
       case 0b11:
-        children[index] = std::make_unique<NodeYZ>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeYZ>(nextMidPoint, childDelta, this);
         break;
       case 0b100:
-        children[index] = std::make_unique<NodeX>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeX>(nextMidPoint, childDelta, this);
         break;
       case 0b101:
-        children[index] = std::make_unique<NodeXZ>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeXZ>(nextMidPoint, childDelta, this);
         break;
       case 0b110:
-        children[index] = std::make_unique<NodeXY>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeXY>(nextMidPoint, childDelta, this);
         break;
       case 0b111:
-        children[index] = std::make_unique<NodeXYZ>(nextMidPoint, delta, this);
+        children[index] = std::make_unique<NodeXYZ>(nextMidPoint, childDelta, this);
         break;
+      default:
+        ABORT_PROGRAM("Should never happen.");
       }
 
       return children[index].get();
