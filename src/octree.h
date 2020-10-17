@@ -405,23 +405,25 @@ namespace vme
         ++exponent;
 
       int offset = power(2, exponent);
+      int cursor = offset;
       for (int i = 0; i < cacheInfo.amountToInitialize; ++i)
       {
-        auto firstChild = (i + 1) * offset;
-        auto lastChild = std::min<uint16_t>(firstChild + offset, cacheInfo.amountToInitialize);
-
         cachedNodes[i].cacheIndex = i;
-        cachedNodes[i].childCacheOffset = firstChild;
+        cachedNodes[i].childCacheOffset = cursor;
 
-        for (int k = firstChild; k < lastChild; ++k)
+        if (cursor == cacheInfo.endXIndex)
+          offset /= 2;
+        if (cursor == cacheInfo.endYIndex)
+          offset /= 2;
+        if (cursor == cacheInfo.endZIndex)
+          offset /= 2;
+
+        auto lastChild = std::min<uint16_t>(cursor + offset, cacheInfo.amountToInitialize);
+
+        for (int k = cursor; k < lastChild; ++k)
           cachedNodes[k].setParent(&cachedNodes[i]);
 
-        if (i == cacheInfo.endXIndex)
-          offset /= 2;
-        if (i == cacheInfo.endYIndex)
-          offset /= 2;
-        if (i == cacheInfo.endZIndex)
-          offset /= 2;
+        cursor += offset;
       }
     }
 
