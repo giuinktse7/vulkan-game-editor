@@ -85,5 +85,6 @@ There are three targets:
 - **main** (Executable): The `main` target is the executable of the application. This target links the `common` library as a static dependency.
 - **common** (Library): The `common` target contains all code that is not related to GUI (i.e. everything except QT5-reliant code).
 - **common_tests** (Executable): Contains the tests for the `common` library (See [Run tests using CMake](#run-tests-using-cmake)).
+- *perf*** (Executable): Used to run performance profiling (This target might be unnecessary. It is possible that `main` works just as well for profiling).
 
 The main purpose of having the `common` library separate from the `main` target was to enable running unit tests against it. It also ensures that there is no coupling introduced between core editor functionality and QT5 (Only `main` has QT5 as a dependency).
