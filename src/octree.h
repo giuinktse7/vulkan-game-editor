@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "util.h"
 #include "position.h"
+#include "time_point.h"
 
 // HeapNode macro
 #define DECLARE_NODE(name, amount)                                                \
@@ -358,6 +359,8 @@ namespace vme
       void remove(const Position pos);
       bool contains(const Position pos) const;
 
+      BoundingBox boundingBox() const noexcept;
+
     private:
       friend class CachedNode;
       // Should not change
@@ -405,6 +408,11 @@ namespace vme
         ++exponent;
 
       int offset = power(2, exponent);
+
+      // Set parent for root children
+      for (int i = 0; i < offset; ++i)
+        cachedNodes[i].setParent(&root);
+
       int cursor = offset;
       for (int i = 0; i < cacheInfo.amountToInitialize; ++i)
       {
@@ -425,6 +433,12 @@ namespace vme
 
         cursor += offset;
       }
+    }
+
+    template <uint16_t CacheSize, uint16_t CacheInitAmount>
+    BoundingBox Tree<CacheSize, CacheInitAmount>::boundingBox() const noexcept
+    {
+      return root.boundingBox;
     }
 
     template <uint16_t CacheSize, uint16_t CacheInitAmount>
@@ -519,6 +533,8 @@ namespace vme
       auto l = leaf(pos);
       return l && l->contains(pos);
     }
+
+    static long us = 0;
 
     template <uint16_t CacheSize, uint16_t CacheInitAmount>
     void Tree<CacheSize, CacheInitAmount>::add(const Position pos)

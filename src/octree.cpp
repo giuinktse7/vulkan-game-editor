@@ -237,7 +237,7 @@ namespace vme
         boundingBox = {};
         low = {};
         high = {};
-        return false;
+        return true;
       }
 
       bool bboxChange = ((x == low.x || x == high.x) ||
@@ -495,7 +495,6 @@ namespace vme
 
     inline HeapNode *NodeXY::getOrCreateChild(const Position position)
     {
-      auto hm = this;
       auto index = getIndex(position);
       if (children[index])
         return children[index].get();
@@ -522,14 +521,17 @@ namespace vme
       switch (split)
       {
       case 0b1:
-        children[index] = std::make_unique<NodeY>(nextMidPoint, childDelta, this);
+        children[index] = std::make_unique<NodeY>(std::move(nextMidPoint), childDelta, this);
         break;
       case 0b10:
-        children[index] = std::make_unique<NodeX>(nextMidPoint, childDelta, this);
+        children[index] = std::make_unique<NodeX>(std::move(nextMidPoint), childDelta, this);
         break;
       case 0b11:
-        children[index] = std::make_unique<NodeXY>(nextMidPoint, childDelta, this);
+      {
+        children[index] = std::make_unique<NodeXY>(std::move(nextMidPoint), childDelta, this);
         break;
+      }
+
       default:
         ABORT_PROGRAM("Should never happen.");
       }
