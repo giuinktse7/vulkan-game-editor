@@ -14,10 +14,10 @@ constexpr std::string_view ErrorString = "[ERROR] ";
 QString INFO_STRING = QStringLiteral("[Info] ");
 QString DEBUG_STRING = QStringLiteral("[Debug] ");
 
-void Logger::info(const char *s)
-{
-    qDebug().noquote() << INFO_STRING << QString(s);
-}
+// void Logger::info(const char *s)
+// {
+//     qDebug().noquote() << INFO_STRING << QString(s);
+// }
 
 void Logger::info(std::ostringstream &s)
 {

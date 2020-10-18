@@ -28,6 +28,7 @@ struct Position : public BasePosition<int32_t>
 
 	Position();
 	Position(value_type x, value_type y, int z);
+
 	int z;
 
 	void move(value_type x, value_type y, int z);

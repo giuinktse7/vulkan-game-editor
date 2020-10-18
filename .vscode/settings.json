@@ -151,5 +151,8 @@
     "**/.DS_Store": true,
     "**/Debug": true,
     "**/Release": true
+  },
+  "files.watcherExclude": {
+    "**/target": true
   }
 }

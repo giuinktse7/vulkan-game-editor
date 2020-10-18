@@ -77,7 +77,7 @@ public:
 	void selectAll(Tile &tile);
 	void clearSelection();
 	bool hasSelectionMoveOrigin() const;
-	bool isEmpty(Position position) const;
+	bool isEmpty(const Position position) const;
 
 	void setCameraPosition(WorldPosition position);
 	WorldPosition cameraPosition() const noexcept;
@@ -91,7 +91,7 @@ public:
 
 	void zoom(int delta);
 
-	void finishMoveSelection(const Position moveDestination);
+	void finishMoveSelection();
 
 	void addItem(const Position position, uint16_t id);
 

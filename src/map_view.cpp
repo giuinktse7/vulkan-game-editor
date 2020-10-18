@@ -201,7 +201,8 @@ void MapView::deleteSelectedItems()
   }
 
   history.startGroup(ActionGroupType::RemoveMapItem);
-  for (const auto pos : selection.getPositions())
+  const auto &positions = selection.getPositions();
+  for (const auto &pos : positions)
   {
     Tile &tile = *getTile(pos);
     if (tile.allSelected())
@@ -273,7 +274,7 @@ bool MapView::hasSelection() const
   return !selection.empty();
 }
 
-bool MapView::isEmpty(Position position) const
+bool MapView::isEmpty(const Position position) const
 {
   return _map->isTileEmpty(position);
 }
@@ -285,14 +286,14 @@ void MapView::setDragEnd(WorldPosition position)
   dragRegion.value().setTo(position);
 }
 
-void MapView::finishMoveSelection(const Position moveDestination)
+void MapView::finishMoveSelection()
 {
   history.startGroup(ActionGroupType::MoveItems);
   {
     MapHistory::Action action(MapHistory::ActionType::Selection);
 
     const auto &positions = selection.getPositions();
-    Position deltaPos = moveDestination - selection.moveOrigin.value();
+    Position deltaPos = selection.moveDelta();
 
     auto multiMove = std::make_unique<MapHistory::MultiMove>(deltaPos, positions.size());
 
@@ -434,6 +435,8 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                 }
 
                 selection.moveOrigin = pos;
+                selection.update();
+                VME_LOG_D(selection.moveDelta());
               }
             },
 
@@ -491,8 +494,16 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
   {
     rollbear::visit(
         util::overloaded{
-            [](const MouseAction::Select) {
-              // Empty
+            [this](const MouseAction::Select) {
+              if (selection.moving())
+              {
+                // auto mousePos = mouseGamePos();
+                // auto delta = selection.moveOrigin.value() - mousePos;
+                // auto correctionPos = selection.topLeft().value() - delta;
+
+                // selection.outOfBoundCorrection.x = -std::min(correctionPos.x, 0);
+                // selection.outOfBoundCorrection.y = -std::min(correctionPos.y, 0);
+              }
             },
 
             [this, pos, event, dragPositions](const MouseAction::RawItem &action) {
@@ -569,7 +580,7 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
     }
     if (selection.moving())
     {
-      finishMoveSelection(mouseGamePos());
+      finishMoveSelection();
     }
 
     selection.moveOrigin.reset();

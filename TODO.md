@@ -16,6 +16,11 @@
 - [ ] Move selected items
 - [ ] topItem **not** selected: PRESS selects.
 - [ ] topItem selected: RELEASE deselects, but ONLY if mouse has been outside of this tile since the PRESS event.
+- [ ] BUG: A selection can be moved out of bounds. It should clamp to the map size, [and maybe to max/min floor?]
+
+## Optimization
+
+- [ ] Optimize Move actions of large areas by moving map nodes instead of individual tiles.
 
 ### GUI
 

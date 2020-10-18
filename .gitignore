@@ -2,6 +2,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudio,qt,qtcreator,visualstudiocode,c++,cmake
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudio,qt,qtcreator,visualstudiocode,c++,cmake
 
+.metals
+
 debug
 release
 build/main_autogen

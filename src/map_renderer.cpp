@@ -333,8 +333,7 @@ void MapRenderer::drawMovingSelection()
 {
   auto mapRect = mapView->getGameBoundingRect();
 
-  Position moveOrigin = mapView->selection.moveOrigin.value();
-  Position moveDelta = mapView->mouseGamePos() - moveOrigin;
+  Position moveDelta = mapView->selection.moveDelta();
 
   mapRect = mapRect.translate(-moveDelta.x, -moveDelta.y, {0, 0});
 
