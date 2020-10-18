@@ -27,6 +27,116 @@
 
 #include "gui/map_tab_widget.h"
 
+/*********************************************************/
+/*********************************************************/
+/*********************************************************/
+/*********************************************************/
+
+#include "octree.h"
+
+void addChunk(Position from, vme::octree::Tree &tree)
+{
+    auto chunk = vme::octree::ChunkSize;
+    auto to = Position(from.x + chunk.width - 1, from.y + chunk.height - 1, from.z + chunk.depth - 1);
+    for (const auto pos : MapArea(from, to))
+        tree.add(pos);
+}
+
+void testOctree()
+{
+    VME_LOG_D("octree:");
+    constexpr vme::octree::Cube mapSize = {4096, 4096, 16};
+
+    vme::octree::Tree tree = vme::octree::Tree::create(mapSize);
+
+    auto &rand = Random::global();
+    rand.setSeed(123);
+
+    // Positions that were bugged at one point(could include in tests maybe) : tree.add(Position(712, 428, 10));
+    // tree.add(Position(718, 491, 12));
+    // tree.add(Position(67, 473, 8));
+    // tree.add(Position(47, 89, 7));
+
+    // tree.add(Position(960, 2752, 8));
+    // tree.add(Position(3001, 2773, 8));
+
+    auto chunk = vme::octree::ChunkSize;
+    int chunksX = 6;
+    int chunksY = 6;
+    int chunksZ = 2;
+    int positions = chunksX * chunksY * chunksZ * (chunk.width * chunk.height * chunk.depth);
+
+    VME_LOG("Adding from " << Position(0, 0, 0) << " to " << Position(chunksX * chunk.width, chunksY * chunk.height, chunksZ * chunk.depth) << " (" << positions << " positions).");
+    TimePoint start;
+    for (int x = 0; x < chunksX; ++x)
+        for (int y = 0; y < chunksY; ++y)
+            for (int z = 0; z < chunksZ; ++z)
+                addChunk(Position(x * 64, y * 64, z * 8), tree);
+
+    {
+        // These two together created a crash (they shared the same leaf node)
+        // tree.add(Position(979, 2778, 9));
+        // tree.add(Position(3001, 2773, 8));
+    }
+
+    // for (int i = 0; i < 10000; ++i)
+    // {
+    //     auto x = rand.nextInt<int>(0, 4000);
+    //     auto y = rand.nextInt<int>(0, 4000);
+    //     auto z = rand.nextInt<int>(0, 16);
+
+    //     Position pos(x, y, z);
+    //     // VME_LOG_D("(" << i << "): " << pos);
+    //     // VME_LOG_D("(" << i << "): "
+    //     //   << "Position(" << x << "," << y << "," << z << ")");
+    //     // VME_LOG_D("Adding " << pos);
+    //     tree.add(pos);
+    // }
+
+    // {
+
+    // auto b = Position(3638, 873, 5);
+    // tree.add(b);
+
+    // auto a = Position(3644, 797, 0);
+    // tree.add(a);
+
+    // VME_LOG_D(tree.boundingBox());
+
+    // tree.remove(b);
+
+    // VME_LOG_D(tree.boundingBox());
+
+    // }
+
+    // {
+    //     auto a = Position(628, 1354, 7);
+    //     tree.add(a);
+    //     auto b = Position(2518, 1604, 11);
+    //     tree.add(b);
+
+    //     auto c = Position(2507, 1788, 14);
+    //     tree.add(c);
+    // }
+
+    // auto pos = Position(47, 89, 7);
+    // tree.add(pos);
+
+    // VME_LOG_D("Next:");
+    // auto pos2 = Position(1027, 287, 9);
+    // tree.add(pos2);
+
+    // VME_LOG_D("pos2: " << std::boolalpha << tree.contains(pos2));
+    // tree.remove(pos2);
+    // VME_LOG_D("pos2 still here? " << std::boolalpha << tree.contains(pos2));
+
+    VME_LOG("Done in " << start.elapsedMicros() << " us.");
+}
+/*********************************************************/
+/*********************************************************/
+/*********************************************************/
+/*********************************************************/
+
 void loadTextures()
 {
     TimePoint start;
@@ -226,6 +336,9 @@ int main(int argc, char *argv[])
 {
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
+
+    // testOctree();
+    // return 0;
 
     return runApp(argc, argv);
 }

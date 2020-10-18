@@ -146,15 +146,13 @@ namespace vme
       return root.boundingBox;
     }
 
-    uint16_t Tree::cachedHeapNodeIndex(const Position position) const
+    const CachedNode *Tree::getCachedNode(const Position position) const
     {
       TraversalState state = top;
       const CachedNode *cached = &root;
 
-      int childIndex = state.update(cached->childCacheOffset, position);
-      uint16_t cacheIndex = cached->childOffset(childIndex);
-      cached = &cachedNodes[cacheIndex];
-
+      int childIndex;
+      uint16_t cacheIndex;
       while (true)
       {
         childIndex = state.update(cached->childCacheOffset, position);
@@ -166,19 +164,37 @@ namespace vme
         cached = &cachedNodes[cacheIndex];
       }
 
-      return cacheIndex - cacheInfo.amountToInitialize;
+      return cached;
     }
 
-    HeapNode *Tree::fromCache(const Position position) const
+    std::optional<std::pair<CachedNode *, HeapNode *>> Tree::fromCache(const Position position) const
     {
-      uint16_t index = cachedHeapNodeIndex(position);
-      auto &result = cachedHeapNodes.at(index);
+      TraversalState state = top;
+      const CachedNode *cached = &root;
 
-      return result ? result.get() : nullptr;
+      int childIndex;
+      uint16_t cacheIndex;
+      while (true)
+      {
+        childIndex = state.update(cached->childCacheOffset, position);
+        cacheIndex = cached->childOffset(childIndex);
+
+        if (cacheIndex >= cachedNodes.size())
+          break;
+
+        cached = &cachedNodes[cacheIndex];
+      }
+
+      uint16_t cacheHeapIndex = cacheIndex - cacheInfo.amountToInitialize;
+      auto &result = cachedHeapNodes.at(cacheHeapIndex);
+
+      return result ? std::optional<std::pair<CachedNode *, HeapNode *>>{{const_cast<CachedNode *>(cached), result.get()}}
+                    : std::nullopt;
     }
 
     std::pair<CachedNode *, HeapNode *> Tree::getOrCreateFromCache(const Position position)
     {
+
       // VME_LOG_D("getOrCreateFromCache: " << position);
       TraversalState state = top;
       CachedNode *cached = &root;
@@ -231,40 +247,58 @@ namespace vme
 
     bool Tree::contains(const Position pos) const
     {
-      auto l = leaf(pos);
+      auto l = getLeaf(pos);
       return l && l->contains(pos);
     }
 
-    static long us = 0;
-
     void Tree::add(const Position pos)
     {
-      auto [cached, node] = getOrCreateFromCache(pos);
-      auto l = node->getOrCreateLeaf(pos);
+      auto [cached, leaf] = getOrCreateLeaf(pos);
 
-      bool changed = l->add(pos);
+      bool changed = leaf->add(pos);
       if (changed)
         cached->updateBoundingBoxCached(*this);
     }
 
     void Tree::remove(const Position pos)
     {
-      auto [cached, node] = getOrCreateFromCache(pos);
-      auto l = node->getOrCreateLeaf(pos);
+      auto [cached, leaf] = getOrCreateLeaf(pos);
 
-      bool changed = l->remove(pos);
+      bool changed = leaf->remove(pos);
       if (changed)
         cached->updateBoundingBoxCached(*this);
     }
 
-    Leaf *Tree::leaf(const Position position) const
+    Leaf *Tree::getLeaf(const Position position) const
     {
-      return fromCache(position)->leaf(position);
+      if (mostRecentLeaf.second && mostRecentLeaf.second->encloses(position))
+        return mostRecentLeaf.second;
+
+      auto maybeCached = fromCache(position);
+      if (!maybeCached)
+        return nullptr;
+      const auto [cached, node] = maybeCached.value();
+      auto leaf = node->leaf(position);
+      markAsRecent(cached, leaf);
+      return leaf;
     }
 
-    Leaf *Tree::getOrCreateLeaf(const Position position)
+    std::pair<CachedNode *, Leaf *> Tree::getOrCreateLeaf(const Position pos)
     {
-      return fromCache(position)->getOrCreateLeaf(position);
+      if (mostRecentLeaf.second && mostRecentLeaf.second->encloses(pos))
+        return mostRecentLeaf;
+
+      auto [cached, node] = getOrCreateFromCache(pos);
+      auto leaf = node->getOrCreateLeaf(pos);
+
+      markAsRecent(cached, leaf);
+
+      return {cached, leaf};
+    }
+
+    void Tree::markAsRecent(CachedNode *cached, Leaf *leaf) const
+    {
+      mostRecentLeaf = {cached, leaf};
     }
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -355,6 +389,13 @@ namespace vme
     bool Leaf::contains(const Position pos)
     {
       return values[getIndex(pos)];
+    }
+
+    bool Leaf::encloses(const Position pos) const
+    {
+      return (position.x <= pos.x && pos.x < position.x + ChunkSize.width) &&
+             (position.y <= pos.y && pos.y < position.y + ChunkSize.height) &&
+             (position.z <= pos.z && pos.z < position.z + ChunkSize.depth);
     }
 
     inline uint16_t Leaf::getIndex(const Position &pos) const

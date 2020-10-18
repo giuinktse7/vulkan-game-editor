@@ -231,6 +231,9 @@ namespace vme
       Leaf(const Position pos, HeapNode *parent);
       bool isLeaf() const override;
 
+      /*
+        Returns true if the leaf has the position 'pos'.
+      */
       bool contains(const Position pos) override;
 
       /*
@@ -242,6 +245,8 @@ namespace vme
         Returns true if the bounding box changed.
       */
       bool remove(const Position pos);
+
+      bool encloses(const Position pos) const;
 
       uint16_t getIndex(const Position &pos) const override;
 
@@ -374,6 +379,9 @@ namespace vme
 
     private:
       friend class CachedNode;
+
+      mutable std::pair<CachedNode *, Leaf *> mostRecentLeaf;
+
       // Should not change
       TraversalState top;
 
@@ -383,6 +391,8 @@ namespace vme
       std::vector<CachedNode> cachedNodes;
       std::vector<std::unique_ptr<HeapNode>> cachedHeapNodes;
 
+      void markAsRecent(CachedNode *cached, Leaf *leaf) const;
+
       void initializeCache();
 
       static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData, HeapNode *parent);
@@ -391,10 +401,13 @@ namespace vme
         Returns the index of the cached heap node containing the position.
       */
       uint16_t cachedHeapNodeIndex(const Position position) const;
-      HeapNode *fromCache(const Position position) const;
+
+      const CachedNode *getCachedNode(const Position position) const;
+
+      std::optional<std::pair<CachedNode *, HeapNode *>> fromCache(const Position position) const;
       std::pair<CachedNode *, HeapNode *> getOrCreateFromCache(const Position position);
-      Leaf *leaf(const Position position) const;
-      Leaf *getOrCreateLeaf(const Position position);
+      Leaf *getLeaf(const Position position) const;
+      std::pair<CachedNode *, Leaf *> getOrCreateLeaf(const Position position);
 
     }; // End of Tree
 
