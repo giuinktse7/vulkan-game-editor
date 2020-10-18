@@ -78,54 +78,200 @@ namespace vme
       return index;
     }
 
-    int TraversalState::update2(Position pos)
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>Tree Implementation>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+    Tree::Tree(Cube mapSize, CacheInitInfo cacheInfo)
+        : cachedNodes(cacheInfo.amountToInitialize),
+          cachedHeapNodes(cacheInfo.count - cacheInfo.amountToInitialize + 8),
+          width(mapSize.width), height(mapSize.height), floors(mapSize.depth),
+          top(mapSize, cacheInfo),
+          cacheInfo(cacheInfo)
     {
-      int shiftX = (dz >= ChunkSize.depth / 2) + (dy >= ChunkSize.height / 2);
-      int shiftY = shiftX - 1;
-      int shiftZ = shiftY - 1;
-
-      int pattern = 0;
-      if (dx >= ChunkSize.width / 2)
-      {
-        if (pos.x >= this->pos.x)
-        {
-          pattern |= (1 << shiftX);
-          this->pos.x += dx;
-        }
-        else
-          this->pos.x -= dx;
-
-        dx /= 2;
-      }
-
-      if (dy >= ChunkSize.height / 2)
-      {
-        if (pos.y >= this->pos.y)
-        {
-          pattern |= (1 << shiftY);
-          this->pos.y += dy;
-        }
-        else
-          this->pos.y -= dy;
-
-        dy /= 2;
-      }
-
-      if (dz >= ChunkSize.depth / 2)
-      {
-        if (pos.z >= this->pos.z)
-        {
-          pattern |= (1 << shiftZ);
-          this->pos.z += dz;
-        }
-        else
-          this->pos.z -= dz;
-
-        dz /= 2;
-      }
-
-      return pattern;
+      initializeCache();
     }
+
+    Tree Tree::create(const Cube mapSize)
+    {
+      vme::octree::CacheInitInfo info = vme::octree::computeCacheStuff(mapSize);
+
+      return Tree(mapSize, info);
+    }
+
+    void Tree::initializeCache()
+    {
+      root.childCacheOffset = 0;
+
+      int exponent = 0;
+      if (cacheInfo.endXIndex != 0)
+        ++exponent;
+      if (cacheInfo.endYIndex != 0)
+        ++exponent;
+      if (cacheInfo.endZIndex != 0)
+        ++exponent;
+
+      int offset = power(2, exponent);
+
+      // Set parent for root children
+      for (int i = 0; i < offset; ++i)
+        cachedNodes[i].setParent(&root);
+
+      int cursor = offset;
+      for (int i = 0; i < cacheInfo.amountToInitialize; ++i)
+      {
+        cachedNodes[i].cacheIndex = i;
+        cachedNodes[i].childCacheOffset = cursor;
+
+        if (cursor == cacheInfo.endXIndex)
+          offset /= 2;
+        if (cursor == cacheInfo.endYIndex)
+          offset /= 2;
+        if (cursor == cacheInfo.endZIndex)
+          offset /= 2;
+
+        auto lastChild = std::min<uint16_t>(cursor + offset, cacheInfo.amountToInitialize);
+
+        for (int k = cursor; k < lastChild; ++k)
+          cachedNodes[k].setParent(&cachedNodes[i]);
+
+        cursor += offset;
+      }
+    }
+
+    BoundingBox Tree::boundingBox() const noexcept
+    {
+      return root.boundingBox;
+    }
+
+    uint16_t Tree::cachedHeapNodeIndex(const Position position) const
+    {
+      TraversalState state = top;
+      const CachedNode *cached = &root;
+
+      int childIndex = state.update(cached->childCacheOffset, position);
+      uint16_t cacheIndex = cached->childOffset(childIndex);
+      cached = &cachedNodes[cacheIndex];
+
+      while (true)
+      {
+        childIndex = state.update(cached->childCacheOffset, position);
+        cacheIndex = cached->childOffset(childIndex);
+
+        if (cacheIndex >= cachedNodes.size())
+          break;
+
+        cached = &cachedNodes[cacheIndex];
+      }
+
+      return cacheIndex - cacheInfo.amountToInitialize;
+    }
+
+    HeapNode *Tree::fromCache(const Position position) const
+    {
+      uint16_t index = cachedHeapNodeIndex(position);
+      auto &result = cachedHeapNodes.at(index);
+
+      return result ? result.get() : nullptr;
+    }
+
+    std::pair<CachedNode *, HeapNode *> Tree::getOrCreateFromCache(const Position position)
+    {
+      // VME_LOG_D("getOrCreateFromCache: " << position);
+      TraversalState state = top;
+      CachedNode *cached = &root;
+      // auto k = this;
+
+      // auto test = [position](TraversalState &state) {
+      //   VME_LOG_D(": " << (state.pos.x < position.x) << " " << (state.pos.y < position.y) << " " << (state.pos.z < position.z));
+      // };
+
+      // VME_LOG_D("Start: " << state.pos);
+
+      int childIndex;
+      uint16_t cacheIndex;
+      while (true)
+      {
+        // test(state);
+        childIndex = state.update(cached->childCacheOffset, position);
+        cacheIndex = cached->childOffset(childIndex);
+        // VME_LOG_D("cache: " << cacheIndex << ", child: " << childIndex << " (" << state.pos << ")");
+
+        if (cacheIndex >= cachedNodes.size())
+          break;
+
+        cached = &cachedNodes[cacheIndex];
+      }
+      uint16_t cacheHeapIndex = cacheIndex - cacheInfo.amountToInitialize;
+      // VME_LOG_D("heap: " << cacheHeapIndex);
+
+      int nodeType = 0;
+      if (state.dx >= ChunkSize.width)
+        nodeType |= (1 << 2);
+      if (state.dy >= ChunkSize.height)
+        nodeType |= (1 << 1);
+      if (state.dz >= ChunkSize.depth)
+        nodeType |= (1 << 0);
+
+      // For leaf node
+      if (nodeType == 0)
+        state.pos = position;
+
+      if (!cachedHeapNodes.at(cacheHeapIndex))
+        cachedHeapNodes.at(cacheHeapIndex) = heapNodeFromSplitPattern(
+            nodeType,
+            state.pos,
+            SplitDelta{state.dx, state.dy, state.dz},
+            cached);
+
+      return {cached, cachedHeapNodes.at(cacheHeapIndex).get()};
+    }
+
+    bool Tree::contains(const Position pos) const
+    {
+      auto l = leaf(pos);
+      return l && l->contains(pos);
+    }
+
+    static long us = 0;
+
+    void Tree::add(const Position pos)
+    {
+      auto [cached, node] = getOrCreateFromCache(pos);
+      auto l = node->getOrCreateLeaf(pos);
+
+      bool changed = l->add(pos);
+      if (changed)
+        cached->updateBoundingBoxCached(*this);
+    }
+
+    void Tree::remove(const Position pos)
+    {
+      auto [cached, node] = getOrCreateFromCache(pos);
+      auto l = node->getOrCreateLeaf(pos);
+
+      bool changed = l->remove(pos);
+      if (changed)
+        cached->updateBoundingBoxCached(*this);
+    }
+
+    Leaf *Tree::leaf(const Position position) const
+    {
+      return fromCache(position)->leaf(position);
+    }
+
+    Leaf *Tree::getOrCreateLeaf(const Position position)
+    {
+      return fromCache(position)->getOrCreateLeaf(position);
+    }
+
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>End of Tree Implementation>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     CachedNode::CachedNode(HeapNode *parent) : HeapNode(parent) {}
 
@@ -142,6 +288,42 @@ namespace vme
     bool CachedNode::isCachedNode() const noexcept
     {
       return true;
+    }
+
+    void CachedNode::updateBoundingBoxCached(const Tree &tree)
+    {
+      // VME_LOG_D("updateBoundingBoxCached before: " << boundingBox);
+      boundingBox.reset();
+
+      int splits = 0;
+      if (cacheIndex < tree.cacheInfo.endXIndex)
+        ++splits;
+      if (cacheIndex < tree.cacheInfo.endYIndex)
+        ++splits;
+      if (cacheIndex < tree.cacheInfo.endZIndex)
+        ++splits;
+
+      DEBUG_ASSERT(splits != 0, "Update bounding box for leaf node? Bug?");
+
+      int childCount = power(2, splits);
+      for (int i = 0; i < childCount; ++i)
+      {
+        if (childCacheOffset >= tree.cacheInfo.amountToInitialize) // Get from HeapNode cache
+        {
+          auto &node = tree.cachedHeapNodes.at(childCacheOffset + i - tree.cacheInfo.amountToInitialize);
+          if (node)
+            boundingBox.include(node->boundingBox);
+        }
+        else // Get from CachedNode cache
+        {
+          auto node = tree.cachedNodes.at(childCacheOffset + i);
+          boundingBox.include(node.boundingBox);
+        }
+      }
+
+      // VME_LOG_D("updateBoundingBoxCached after: " << boundingBox);
+      if (parent)
+        static_cast<CachedNode *>(parent)->updateBoundingBoxCached(tree);
     }
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>

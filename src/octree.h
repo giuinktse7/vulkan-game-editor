@@ -42,7 +42,6 @@ namespace vme
 {
   namespace octree
   {
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
     class Tree;
     class Leaf;
 
@@ -316,8 +315,8 @@ namespace vme
       bool isCachedNode() const noexcept override;
 
       uint16_t childOffset(const int pattern) const;
-      template <uint16_t CacheSize, uint16_t CacheInitAmount>
-      void updateBoundingBoxCached(const Tree<CacheSize, CacheInitAmount> &tree);
+
+      void updateBoundingBoxCached(const Tree &tree);
 
     public:
       int32_t childCacheOffset = -1;
@@ -345,12 +344,24 @@ namespace vme
       std::string show() const;
     };
 
+    // class Tree
+    // {
+    //   std::unique_ptr<Tree> create(const CacheInitInfo initInfo);
+
+    //   virtual void add(const Position pos) = 0;
+    //   virtual void remove(const Position pos) = 0;
+    //   virtual bool contains(const Position pos) const = 0;
+
+    //   virtual BoundingBox boundingBox() const noexcept = 0;
+    // };
+
     class Node;
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
     class Tree
     {
     public:
-      constexpr Tree(Cube mapSize, CacheInitInfo cacheInfo);
+      static Tree create(const Cube mapSize);
+
+      Tree(Cube mapSize, CacheInitInfo cacheInfo);
       uint32_t width;
       uint32_t height;
       uint16_t floors;
@@ -369,8 +380,10 @@ namespace vme
       CacheInitInfo cacheInfo;
 
       CachedNode root;
-      std::array<CachedNode, CacheInitAmount> cachedNodes;
-      std::array<std::unique_ptr<HeapNode>, CacheSize - CacheInitAmount + 8> cachedHeapNodes;
+      std::vector<CachedNode> cachedNodes;
+      std::vector<std::unique_ptr<HeapNode>> cachedHeapNodes;
+
+      void initializeCache();
 
       static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData, HeapNode *parent);
 
@@ -384,234 +397,6 @@ namespace vme
       Leaf *getOrCreateLeaf(const Position position);
 
     }; // End of Tree
-
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>Tree Implementation>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    constexpr Tree<CacheSize, CacheInitAmount>::Tree(Cube mapSize, CacheInitInfo cacheInfo)
-        : width(mapSize.width), height(mapSize.height), floors(mapSize.depth),
-          top(mapSize, cacheInfo),
-          cacheInfo(cacheInfo)
-    {
-      root.childCacheOffset = 0;
-
-      int exponent = 0;
-      if (cacheInfo.endXIndex != 0)
-        ++exponent;
-      if (cacheInfo.endYIndex != 0)
-        ++exponent;
-      if (cacheInfo.endZIndex != 0)
-        ++exponent;
-
-      int offset = power(2, exponent);
-
-      // Set parent for root children
-      for (int i = 0; i < offset; ++i)
-        cachedNodes[i].setParent(&root);
-
-      int cursor = offset;
-      for (int i = 0; i < cacheInfo.amountToInitialize; ++i)
-      {
-        cachedNodes[i].cacheIndex = i;
-        cachedNodes[i].childCacheOffset = cursor;
-
-        if (cursor == cacheInfo.endXIndex)
-          offset /= 2;
-        if (cursor == cacheInfo.endYIndex)
-          offset /= 2;
-        if (cursor == cacheInfo.endZIndex)
-          offset /= 2;
-
-        auto lastChild = std::min<uint16_t>(cursor + offset, cacheInfo.amountToInitialize);
-
-        for (int k = cursor; k < lastChild; ++k)
-          cachedNodes[k].setParent(&cachedNodes[i]);
-
-        cursor += offset;
-      }
-    }
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    BoundingBox Tree<CacheSize, CacheInitAmount>::boundingBox() const noexcept
-    {
-      return root.boundingBox;
-    }
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    uint16_t Tree<CacheSize, CacheInitAmount>::cachedHeapNodeIndex(const Position position) const
-    {
-      TraversalState state = top;
-      const CachedNode *cached = &root;
-
-      int childIndex = state.update(cached->childCacheOffset, position);
-      uint16_t cacheIndex = cached->childOffset(childIndex);
-      cached = &cachedNodes[cacheIndex];
-
-      while (true)
-      {
-        childIndex = state.update(cached->childCacheOffset, position);
-        cacheIndex = cached->childOffset(childIndex);
-
-        if (cacheIndex >= cachedNodes.size())
-          break;
-
-        cached = &cachedNodes[cacheIndex];
-      }
-
-      return cacheIndex - cacheInfo.amountToInitialize;
-    }
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    HeapNode *Tree<CacheSize, CacheInitAmount>::fromCache(const Position position) const
-    {
-      uint16_t index = cachedHeapNodeIndex(position);
-      auto &result = cachedHeapNodes.at(index);
-
-      return result ? result.get() : nullptr;
-    }
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    std::pair<CachedNode *, HeapNode *> Tree<CacheSize, CacheInitAmount>::getOrCreateFromCache(const Position position)
-    {
-      // VME_LOG_D("getOrCreateFromCache: " << position);
-      TraversalState state = top;
-      CachedNode *cached = &root;
-      // auto k = this;
-
-      // auto test = [position](TraversalState &state) {
-      //   VME_LOG_D(": " << (state.pos.x < position.x) << " " << (state.pos.y < position.y) << " " << (state.pos.z < position.z));
-      // };
-
-      // VME_LOG_D("Start: " << state.pos);
-
-      int childIndex;
-      uint16_t cacheIndex;
-      while (true)
-      {
-        // test(state);
-        childIndex = state.update(cached->childCacheOffset, position);
-        cacheIndex = cached->childOffset(childIndex);
-        // VME_LOG_D("cache: " << cacheIndex << ", child: " << childIndex << " (" << state.pos << ")");
-
-        if (cacheIndex >= cachedNodes.size())
-          break;
-
-        cached = &cachedNodes[cacheIndex];
-      }
-      uint16_t cacheHeapIndex = cacheIndex - cacheInfo.amountToInitialize;
-      // VME_LOG_D("heap: " << cacheHeapIndex);
-
-      int nodeType = 0;
-      if (state.dx >= ChunkSize.width)
-        nodeType |= (1 << 2);
-      if (state.dy >= ChunkSize.height)
-        nodeType |= (1 << 1);
-      if (state.dz >= ChunkSize.depth)
-        nodeType |= (1 << 0);
-
-      // For leaf node
-      if (nodeType == 0)
-        state.pos = position;
-
-      if (!cachedHeapNodes.at(cacheHeapIndex))
-        cachedHeapNodes.at(cacheHeapIndex) = heapNodeFromSplitPattern(
-            nodeType,
-            state.pos,
-            SplitDelta{state.dx, state.dy, state.dz},
-            cached);
-
-      return {cached, cachedHeapNodes.at(cacheHeapIndex).get()};
-    }
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    bool Tree<CacheSize, CacheInitAmount>::contains(const Position pos) const
-    {
-      auto l = leaf(pos);
-      return l && l->contains(pos);
-    }
-
-    static long us = 0;
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    void Tree<CacheSize, CacheInitAmount>::add(const Position pos)
-    {
-      auto [cached, node] = getOrCreateFromCache(pos);
-      auto l = node->getOrCreateLeaf(pos);
-
-      bool changed = l->add(pos);
-      if (changed)
-        cached->updateBoundingBoxCached(*this);
-    }
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    void Tree<CacheSize, CacheInitAmount>::remove(const Position pos)
-    {
-      auto [cached, node] = getOrCreateFromCache(pos);
-      auto l = node->getOrCreateLeaf(pos);
-
-      bool changed = l->remove(pos);
-      if (changed)
-        cached->updateBoundingBoxCached(*this);
-    }
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    Leaf *Tree<CacheSize, CacheInitAmount>::leaf(const Position position) const
-    {
-      return fromCache(position)->leaf(position);
-    }
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    Leaf *Tree<CacheSize, CacheInitAmount>::getOrCreateLeaf(const Position position)
-    {
-      return fromCache(position)->getOrCreateLeaf(position);
-    }
-
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>End of Tree Implementation>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    void CachedNode::updateBoundingBoxCached(const Tree<CacheSize, CacheInitAmount> &tree)
-    {
-      // VME_LOG_D("updateBoundingBoxCached before: " << boundingBox);
-      boundingBox.reset();
-
-      int splits = 0;
-      if (cacheIndex < tree.cacheInfo.endXIndex)
-        ++splits;
-      if (cacheIndex < tree.cacheInfo.endYIndex)
-        ++splits;
-      if (cacheIndex < tree.cacheInfo.endZIndex)
-        ++splits;
-
-      DEBUG_ASSERT(splits != 0, "Update bounding box for leaf node? Bug?");
-
-      int childCount = power(2, splits);
-      for (int i = 0; i < childCount; ++i)
-      {
-        if (childCacheOffset >= tree.cacheInfo.amountToInitialize) // Get from HeapNode cache
-        {
-          auto &node = tree.cachedHeapNodes.at(childCacheOffset + i - tree.cacheInfo.amountToInitialize);
-          if (node)
-            boundingBox.include(node->boundingBox);
-        }
-        else // Get from CachedNode cache
-        {
-          auto node = tree.cachedNodes.at(childCacheOffset + i);
-          boundingBox.include(node.boundingBox);
-        }
-      }
-
-      // VME_LOG_D("updateBoundingBoxCached after: " << boundingBox);
-      if (parent)
-        static_cast<CachedNode *>(parent)->updateBoundingBoxCached(tree);
-    }
 
     inline bool Leaf::isLeaf() const
     {
@@ -662,8 +447,8 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>
 
     // factory function
-    template <uint16_t CacheSize, uint16_t CacheInitAmount>
-    inline std::unique_ptr<HeapNode> Tree<CacheSize, CacheInitAmount>::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta, HeapNode *parent)
+
+    inline std::unique_ptr<HeapNode> Tree::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta, HeapNode *parent)
     {
       switch (pattern)
       {
