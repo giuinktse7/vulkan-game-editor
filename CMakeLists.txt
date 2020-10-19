@@ -100,6 +100,10 @@ set(CommonSources
     ../vendor/lzma/Precomp.h
     ../vendor/lzma/Threads.h
     ../vendor/rollbear-visit/visit.hpp
+    ../vendor/tsl/robin_growth_policy.h
+    ../vendor/tsl/robin_hash.h
+    ../vendor/tsl/robin_map.h
+    ../vendor/tsl/robin_set.h
     src/main.h
     src/map.h
     src/map_io.h

@@ -17,11 +17,11 @@
 #include "texture_atlas.h"
 #include "../time_point.h"
 
-std::unordered_map<uint32_t, Appearance> Appearances::objects;
-std::unordered_map<uint32_t, proto::Appearance> Appearances::outfits;
+default_unordered_map<uint32_t, Appearance> Appearances::objects;
+default_unordered_map<uint32_t, proto::Appearance> Appearances::outfits;
 
 std::vector<SpriteRange> Appearances::textureAtlasSpriteRanges;
-std::unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> Appearances::textureAtlases;
+default_unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> Appearances::textureAtlases;
 
 bool Appearances::isLoaded;
 
@@ -82,7 +82,7 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
         //     }
         //     ++total;
         // }
-        Appearances::objects.emplace(object.id(), object);
+        Appearances::objects.emplace(object.id(), std::move(object));
     }
 
     // std::cout << "Total: " << total << std::endl;
@@ -90,7 +90,7 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
     for (int i = 0; i < parsed.outfit_size(); ++i)
     {
         const proto::Appearance &outfit = parsed.outfit(i);
-        Appearances::outfits[outfit.id()] = outfit;
+        Appearances::outfits[outfit.id()] = std::move(outfit);
     }
 
     Appearances::isLoaded = true;
@@ -459,6 +459,13 @@ Appearance::Appearance(proto::Appearance protobufAppearance)
             flagData.cyclopediaClientId = flags.cyclopediaitem().cyclopedia_type();
     }
 }
+
+Appearance::Appearance(Appearance &&other) noexcept
+    : clientId(other.clientId),
+      name(std::move(other.name)),
+      flagData(std::move(other.flagData)),
+      appearanceData(std::move(other.appearanceData)),
+      flags(std::move(other.flags)) {}
 
 uint32_t Appearance::getFirstSpriteId() const
 {
