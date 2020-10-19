@@ -9,7 +9,6 @@
 #include <limits>
 
 #include "debug.h"
-#include "util.h"
 #include "position.h"
 #include "time_point.h"
 
@@ -203,6 +202,8 @@ namespace vme
         return false;
       }
 
+      virtual void clear() = 0;
+
       Leaf *leaf(const Position pos) const;
       Leaf *getOrCreateLeaf(const Position pos);
 
@@ -244,8 +245,11 @@ namespace vme
             static_assert(I >= 0 && I < 1);
         }
       };
+
       Leaf(const Position pos, HeapNode *parent);
       bool isLeaf() const override;
+
+      void clear() override;
 
       uint32_t count() const noexcept;
 
@@ -270,7 +274,7 @@ namespace vme
 
       std::string show() const override;
 
-      bool values[ChunkSize.width * ChunkSize.height * ChunkSize.depth] = {false};
+      std::array<bool, ChunkSize.width *ChunkSize.height *ChunkSize.depth> values = {false};
 
       Position position;
 
@@ -313,6 +317,7 @@ namespace vme
       HeapNode *child(int pattern) const override;
       HeapNode *child(const Position pos) const override;
       bool isLeaf() const override;
+      void clear() override;
 
       void updateBoundingBox(BoundingBox bbox) override;
 
@@ -341,6 +346,8 @@ namespace vme
 
       void updateBoundingBoxCached(const Tree &tree);
 
+      void clear() override;
+
     public:
       int32_t childCacheOffset = -1;
       uint16_t cacheIndex = 0;
@@ -367,17 +374,6 @@ namespace vme
       std::string show() const;
     };
 
-    // class Tree
-    // {
-    //   std::unique_ptr<Tree> create(const CacheInitInfo initInfo);
-
-    //   virtual void add(const Position pos) = 0;
-    //   virtual void remove(const Position pos) = 0;
-    //   virtual bool contains(const Position pos) const = 0;
-
-    //   virtual BoundingBox boundingBox() const noexcept = 0;
-    // };
-
     class Node;
     class Tree
     {
@@ -391,6 +387,11 @@ namespace vme
 
       void add(const Position pos);
       void remove(const Position pos);
+
+      /*
+        Clear all positions from the tree.
+      */
+      void clear();
 
       bool contains(const Position pos) const;
       long size() const noexcept;
@@ -417,6 +418,13 @@ namespace vme
       std::vector<CachedNode> cachedNodes;
       std::vector<std::unique_ptr<HeapNode>> cachedHeapNodes;
 
+      /*
+        Indices into `cachedNodes` that have been accessed at some point. Used
+        to implement a more efficient clear().
+      */
+      std::vector<uint16_t> usedCacheIndices;
+      std::vector<uint16_t> usedHeapCacheIndices;
+
       void markAsRecent(CachedNode *cached, Leaf *leaf) const;
 
       void initializeCache();
@@ -440,6 +448,11 @@ namespace vme
     inline bool Leaf::isLeaf() const
     {
       return true;
+    }
+
+    void Leaf::clear()
+    {
+      values.fill(false);
     }
 
     template <size_t ChildCount>
@@ -479,6 +492,13 @@ namespace vme
 
       if (!parent->isCachedNode())
         parent->updateBoundingBox(BoundingBox());
+    }
+
+    template <size_t ChildCount>
+    void BaseNode<ChildCount>::clear()
+    {
+      for (auto &c : children)
+        c->clear();
     }
 
     long Tree::size() const noexcept

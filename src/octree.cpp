@@ -141,29 +141,18 @@ namespace vme
       }
     }
 
-    BoundingBox Tree::boundingBox() const noexcept
+    void Tree::clear()
     {
-      return root.boundingBox;
-    }
+      for (const auto i : usedHeapCacheIndices)
+        cachedHeapNodes.at(i)->clear();
 
-    Position Tree::topLeft() const noexcept
-    {
-      return Position(root.boundingBox.left(), root.boundingBox.top(), 7);
-    }
+      for (const auto i : usedCacheIndices)
+        cachedNodes.at(i).clear();
 
-    Position Tree::topRight() const noexcept
-    {
-      return Position(root.boundingBox.right(), root.boundingBox.top(), 7);
-    }
+      usedCacheIndices.clear();
+      usedHeapCacheIndices.clear();
 
-    Position Tree::bottomRight() const noexcept
-    {
-      return Position(root.boundingBox.left(), root.boundingBox.bottom(), 7);
-    }
-
-    Position Tree::bottomLeft() const noexcept
-    {
-      return Position(root.boundingBox.left(), root.boundingBox.bottom(), 7);
+      _size = 0;
     }
 
     const CachedNode *Tree::getCachedNode(const Position position) const
@@ -240,7 +229,12 @@ namespace vme
 
         cached = &cachedNodes[cacheIndex];
       }
+
       uint16_t cacheHeapIndex = cacheIndex - cacheInfo.amountToInitialize;
+
+      usedCacheIndices.emplace_back(cached->cacheIndex);
+      usedHeapCacheIndices.emplace_back(cacheHeapIndex);
+
       // VME_LOG_D("heap: " << cacheHeapIndex);
 
       int nodeType = 0;
@@ -321,6 +315,31 @@ namespace vme
       markAsRecent(cached, leaf);
 
       return {cached, leaf};
+    }
+
+    BoundingBox Tree::boundingBox() const noexcept
+    {
+      return root.boundingBox;
+    }
+
+    Position Tree::topLeft() const noexcept
+    {
+      return Position(root.boundingBox.left(), root.boundingBox.top(), 7);
+    }
+
+    Position Tree::topRight() const noexcept
+    {
+      return Position(root.boundingBox.right(), root.boundingBox.top(), 7);
+    }
+
+    Position Tree::bottomRight() const noexcept
+    {
+      return Position(root.boundingBox.left(), root.boundingBox.bottom(), 7);
+    }
+
+    Position Tree::bottomLeft() const noexcept
+    {
+      return Position(root.boundingBox.left(), root.boundingBox.bottom(), 7);
     }
 
     void Tree::markAsRecent(CachedNode *cached, Leaf *leaf) const
@@ -1021,6 +1040,12 @@ namespace vme
     {
       ABORT_PROGRAM("getIndex called on CachedNode.");
       return -1;
+    }
+
+    void CachedNode::clear()
+    {
+      boundingBox = {};
+      static_cast<CachedNode *>(parent)->clear();
     }
 
     void CachedNode::setParent(HeapNode *parent)
