@@ -106,6 +106,8 @@ namespace vme
 
       void reset();
 
+      bool empty() const noexcept;
+
       /*
         Returns true if the bounding box changed.
       */
@@ -204,6 +206,8 @@ namespace vme
 
       virtual void clear() = 0;
 
+      virtual bool empty() const noexcept;
+
       Leaf *leaf(const Position pos) const;
       Leaf *getOrCreateLeaf(const Position pos);
 
@@ -249,6 +253,8 @@ namespace vme
       Leaf(const Position pos, HeapNode *parent);
       bool isLeaf() const override;
 
+      bool empty() const noexcept override;
+
       void clear() override;
 
       uint32_t count() const noexcept;
@@ -273,6 +279,9 @@ namespace vme
       uint16_t getIndex(const Position &pos) const override;
 
       std::string show() const override;
+
+      Position min();
+      Position max();
 
       std::array<bool, ChunkSize.width *ChunkSize.height *ChunkSize.depth> values = {false};
 
@@ -380,6 +389,53 @@ namespace vme
     public:
       static Tree create(const Cube mapSize);
 
+      class iterator
+      {
+      public:
+        using ValueType = Position;
+        using Reference = Position &;
+        using Pointer = Position *;
+        using IteratorCategory = std::forward_iterator_tag;
+
+        iterator(Tree &tree);
+        static iterator end();
+
+        iterator operator++();
+        iterator operator++(int junk);
+
+        Reference operator*() { return value; }
+        Pointer operator->() { return &value; }
+
+        bool operator==(const iterator &rhs) const;
+        bool operator!=(const iterator &rhs) const { return !(*this == rhs); }
+
+      private:
+        Tree &tree;
+        Position value;
+
+        Leaf *chunk;
+        Position topLeft;
+        Position bottomRight;
+
+        bool isEnd = false;
+
+      private:
+        void nextValue();
+        void nextChunk();
+
+        iterator();
+      };
+
+      iterator begin()
+      {
+        return iterator(*this);
+      }
+
+      iterator end()
+      {
+        return iterator::end();
+      }
+
       Tree(Cube mapSize, CacheInitInfo cacheInfo);
       uint32_t width;
       uint32_t height;
@@ -403,6 +459,11 @@ namespace vme
       Position bottomRight() const noexcept;
       Position bottomLeft() const noexcept;
 
+      BoundingBox::value_type top() const noexcept;
+      BoundingBox::value_type right() const noexcept;
+      BoundingBox::value_type bottom() const noexcept;
+      BoundingBox::value_type left() const noexcept;
+
     private:
       friend class CachedNode;
       long _size = 0;
@@ -410,7 +471,7 @@ namespace vme
       mutable std::pair<CachedNode *, Leaf *> mostRecentLeaf;
 
       // Should not change
-      TraversalState top;
+      TraversalState initialState;
 
       CacheInitInfo cacheInfo;
 
@@ -453,6 +514,21 @@ namespace vme
     inline void Leaf::clear()
     {
       values.fill(false);
+    }
+
+    inline bool Leaf::empty() const noexcept
+    {
+      return _count == 0;
+    }
+
+    inline Position Leaf::min()
+    {
+      return Position(low.x, low.y, low.z);
+    }
+
+    inline Position Leaf::max()
+    {
+      return Position(high.x, high.y, high.z);
     }
 
     template <size_t ChildCount>
@@ -511,6 +587,26 @@ namespace vme
       return _size == 0;
     }
 
+    inline BoundingBox::value_type Tree::top() const noexcept
+    {
+      return root.boundingBox.top();
+    }
+
+    inline BoundingBox::value_type Tree::right() const noexcept
+    {
+      return root.boundingBox.right();
+    }
+
+    inline BoundingBox::value_type Tree::bottom() const noexcept
+    {
+      return root.boundingBox.bottom();
+    }
+
+    inline BoundingBox::value_type Tree::left() const noexcept
+    {
+      return root.boundingBox.left();
+    }
+
     inline std::unique_ptr<HeapNode> Tree::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta, HeapNode *parent)
     {
       switch (pattern)
@@ -550,13 +646,20 @@ namespace vme
     {
       return nullptr;
     }
+
     inline HeapNode *HeapNode::child(const Position pos) const
     {
       return nullptr;
     };
+
     inline HeapNode *HeapNode::getOrCreateChild(const Position pos)
     {
       return nullptr;
+    }
+
+    inline bool HeapNode::empty() const noexcept
+    {
+      return boundingBox.empty();
     }
 
     inline uint32_t Leaf::count() const noexcept { return _count; }
@@ -616,6 +719,11 @@ namespace vme
       _left = value;
     }
 
+    bool BoundingBox::empty() const noexcept
+    {
+      return std::numeric_limits<BoundingBox::value_type>::max();
+    }
+
     inline std::ostream &operator<<(std::ostream &os, const BoundingBox &bbox)
     {
       os << "{ top: " << bbox.top() << ", right: " << bbox.right() << ", bottom: " << bbox.bottom() << ", left: " << bbox.left() << " }";
@@ -627,5 +735,3 @@ namespace vme
 } // namespace vme
 
 STRUCTURED_BINDING(vme::octree::Leaf::UpdateResult, 2);
-
-#undef VME_OCTREE_TREE_TEMPLATE

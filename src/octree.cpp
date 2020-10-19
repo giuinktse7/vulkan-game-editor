@@ -88,7 +88,7 @@ namespace vme
         : width(mapSize.width), height(mapSize.height), floors(mapSize.depth),
           cachedNodes(cacheInfo.amountToInitialize),
           cachedHeapNodes(cacheInfo.count - cacheInfo.amountToInitialize + 8),
-          top(mapSize, cacheInfo),
+          initialState(mapSize, cacheInfo),
           cacheInfo(cacheInfo)
     {
       initializeCache();
@@ -157,7 +157,7 @@ namespace vme
 
     const CachedNode *Tree::getCachedNode(const Position position) const
     {
-      TraversalState state = top;
+      TraversalState state = initialState;
       const CachedNode *cached = &root;
 
       int childIndex;
@@ -178,7 +178,7 @@ namespace vme
 
     std::optional<std::pair<CachedNode *, HeapNode *>> Tree::fromCache(const Position position) const
     {
-      TraversalState state = top;
+      TraversalState state = initialState;
       const CachedNode *cached = &root;
 
       int childIndex;
@@ -205,7 +205,7 @@ namespace vme
     {
 
       // VME_LOG_D("getOrCreateFromCache: " << position);
-      TraversalState state = top;
+      TraversalState state = initialState;
       CachedNode *cached = &root;
       // auto k = this;
 
@@ -446,7 +446,8 @@ namespace vme
 
     inline uint16_t Leaf::getIndex(const Position &pos) const
     {
-      return ((pos.x - position.x) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.depth + (pos.z - position.z);
+      return ((pos.z - position.z) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.width + (pos.x - position.x);
+      //return ((pos.x - position.x) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.depth + (pos.z - position.z);
     }
 
     bool Leaf::addToBoundingBox(const Position pos)
@@ -1087,6 +1088,92 @@ namespace vme
       _left = std::min<value_type>(_left, bbox._left);
 
       return old != *this;
+    }
+
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>Tree::iterator>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+    Tree::iterator::iterator(Tree &tree)
+        : tree(tree), chunk(tree.getLeaf(tree.topLeft())),
+          value(chunk->min()), topLeft(value), bottomRight(chunk->max())
+    {
+      nextValue();
+    }
+
+    Tree::iterator Tree::iterator::end()
+    {
+    }
+
+    void Tree::iterator::nextValue()
+    {
+      while (!chunk->contains(value))
+      {
+        ++value.x;
+        if (value.x > bottomRight.x)
+        {
+          value.x = topLeft.x;
+          ++value.y;
+
+          if (value.y > bottomRight.y)
+          {
+            value.y = topLeft.y;
+            ++value.z;
+
+            if (value.z > bottomRight.z)
+              nextChunk();
+          }
+        }
+      }
+    }
+
+    void Tree::iterator::nextChunk()
+    {
+      Position pos(chunk->position);
+      pos.x += ChunkSize.width;
+      if (pos.x > tree.right())
+      {
+        pos.x = tree.left();
+        pos.y += ChunkSize.height;
+
+        if (pos.y > tree.bottom())
+        {
+          pos.y = tree.top();
+          pos.z += ChunkSize.depth;
+
+          // TODO Z
+          //  if (pos.z > tree.)
+        }
+      }
+    }
+
+    Tree::iterator Tree::iterator::operator++()
+    {
+      nextValue();
+      return *this;
+    }
+
+    Tree::iterator Tree::iterator::operator++(int junk)
+    {
+      Tree::iterator it = *this;
+      ++(*this);
+
+      return it;
+    }
+
+    bool Tree::iterator::operator==(const Tree::iterator &rhs) const
+    {
+      return (isEnd && rhs.isEnd) || (value == rhs.value);
+    }
+
+    Tree::iterator Tree::iterator::end()
+    {
+      auto it = Tree::iterator();
+      it.isEnd = true;
+
+      return it;
     }
 
   } // namespace octree
