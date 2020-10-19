@@ -146,6 +146,26 @@ namespace vme
       return root.boundingBox;
     }
 
+    Position Tree::topLeft() const noexcept
+    {
+      return Position(root.boundingBox.left(), root.boundingBox.top(), 7);
+    }
+
+    Position Tree::topRight() const noexcept
+    {
+      return Position(root.boundingBox.right(), root.boundingBox.top(), 7);
+    }
+
+    Position Tree::bottomRight() const noexcept
+    {
+      return Position(root.boundingBox.left(), root.boundingBox.bottom(), 7);
+    }
+
+    Position Tree::bottomLeft() const noexcept
+    {
+      return Position(root.boundingBox.left(), root.boundingBox.bottom(), 7);
+    }
+
     const CachedNode *Tree::getCachedNode(const Position position) const
     {
       TraversalState state = top;
@@ -255,8 +275,11 @@ namespace vme
     {
       auto [cached, leaf] = getOrCreateLeaf(pos);
 
-      bool changed = leaf->add(pos);
+      const auto [changed, bboxChanged] = leaf->add(pos);
       if (changed)
+        ++_size;
+
+      if (bboxChanged)
         cached->updateBoundingBoxCached(*this);
     }
 
@@ -264,8 +287,12 @@ namespace vme
     {
       auto [cached, leaf] = getOrCreateLeaf(pos);
 
-      bool changed = leaf->remove(pos);
+      const auto [changed, bboxChanged] = leaf->remove(pos);
+
       if (changed)
+        --_size;
+
+      if (bboxChanged)
         cached->updateBoundingBoxCached(*this);
     }
 
@@ -421,7 +448,7 @@ namespace vme
       if (!bboxChange)
         return false;
 
-      if (count == 1)
+      if (_count == 1)
       {
         low = {x, y, z};
         high = low;
@@ -510,7 +537,7 @@ namespace vme
       return true;
     }
 
-    bool Leaf::add(const Position pos)
+    Leaf::UpdateResult Leaf::add(const Position pos)
     {
       DEBUG_ASSERT(
           (position.x <= pos.x && pos.x < position.x + ChunkSize.width) &&
@@ -521,19 +548,19 @@ namespace vme
       auto index = getIndex(pos);
 
       if (values[index])
-        return false;
+        return {false, false};
 
-      ++count;
+      ++_count;
       values[index] = true;
       bool bboxChanged = addToBoundingBox(pos);
 
       if (bboxChanged && !parent->isCachedNode())
         parent->updateBoundingBox(boundingBox);
 
-      return bboxChanged;
+      return {true, bboxChanged};
     }
 
-    bool Leaf::remove(const Position pos)
+    Leaf::UpdateResult Leaf::remove(const Position pos)
     {
       DEBUG_ASSERT(
           (position.x <= pos.x && pos.x < position.x + ChunkSize.width) &&
@@ -543,15 +570,15 @@ namespace vme
 
       auto index = getIndex(pos);
       if (!values[index])
-        return false;
+        return {false, false};
 
-      --count;
+      --_count;
       values[getIndex(pos)] = false;
       bool bboxChanged = removeFromBoundingBox(pos);
       if (bboxChanged && !parent->isCachedNode())
         parent->updateBoundingBox(boundingBox);
 
-      return bboxChanged;
+      return {true, bboxChanged};
     }
 
     std::string Leaf::show() const

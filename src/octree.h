@@ -228,8 +228,26 @@ namespace vme
     class Leaf : public HeapNode
     {
     public:
+      struct UpdateResult
+      {
+        bool change = false;
+        bool bboxChange = false;
+
+        template <size_t I>
+        auto get() const
+        {
+          if constexpr (I == 0)
+            return change;
+          else if constexpr (I == 1)
+            return bboxChange;
+          else
+            static_assert(I >= 0 && I < 1);
+        }
+      };
       Leaf(const Position pos, HeapNode *parent);
       bool isLeaf() const override;
+
+      uint32_t count() const noexcept;
 
       /*
         Returns true if the leaf has the position 'pos'.
@@ -239,12 +257,12 @@ namespace vme
       /*
         Returns true if the bounding box changed.
       */
-      bool add(const Position pos);
+      UpdateResult add(const Position pos);
 
       /*
         Returns true if the bounding box changed.
       */
-      bool remove(const Position pos);
+      UpdateResult remove(const Position pos);
 
       bool encloses(const Position pos) const;
 
@@ -257,7 +275,7 @@ namespace vme
       Position position;
 
     private:
-      uint32_t count = 0;
+      uint32_t _count = 0;
       struct Indices
       {
         int x, y, z = -1;
@@ -373,12 +391,20 @@ namespace vme
 
       void add(const Position pos);
       void remove(const Position pos);
+
       bool contains(const Position pos) const;
+      long size() const noexcept;
+      bool empty() const noexcept;
 
       BoundingBox boundingBox() const noexcept;
+      Position topLeft() const noexcept;
+      Position topRight() const noexcept;
+      Position bottomRight() const noexcept;
+      Position bottomLeft() const noexcept;
 
     private:
       friend class CachedNode;
+      long _size = 0;
 
       mutable std::pair<CachedNode *, Leaf *> mostRecentLeaf;
 
@@ -455,11 +481,15 @@ namespace vme
         parent->updateBoundingBox(BoundingBox());
     }
 
-    //>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>Node>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>
+    long Tree::size() const noexcept
+    {
+      return _size;
+    }
 
-    // factory function
+    bool Tree::empty() const noexcept
+    {
+      return _size == 0;
+    }
 
     inline std::unique_ptr<HeapNode> Tree::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta, HeapNode *parent)
     {
@@ -508,6 +538,8 @@ namespace vme
     {
       return nullptr;
     }
+
+    uint32_t Leaf::count() const noexcept { return _count; }
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -573,5 +605,7 @@ namespace vme
   } // namespace octree
 
 } // namespace vme
+
+STRUCTURED_BINDING(vme::octree::Leaf::UpdateResult, 2);
 
 #undef VME_OCTREE_TREE_TEMPLATE
