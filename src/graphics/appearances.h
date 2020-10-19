@@ -17,15 +17,12 @@
 
 #endif // MESSAGES_WRAPPER_H
 
-#include "../../vendor/tsl/robin_map.h"
-
 #include "../debug.h"
 #include "../position.h"
 #include "../const.h"
+#include "../util.h"
 
 #include "texture_atlas.h"
-
-#define default_unordered_map tsl::robin_map
 
 namespace proto
 {
@@ -382,8 +379,8 @@ public:
   static size_t textureAtlasCount();
 
 private:
-  static default_unordered_map<AppearanceId, Appearance> objects;
-  static default_unordered_map<AppearanceId, proto::Appearance> outfits;
+  static vme_unordered_map<AppearanceId, Appearance> objects;
+  static vme_unordered_map<AppearanceId, proto::Appearance> outfits;
 
   /* 
 		Used for quick retrieval of the correct spritesheet given a sprite ID.
@@ -391,7 +388,7 @@ private:
 	*/
   static std::set<uint32_t> catalogIndex;
 
-  static default_unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> textureAtlases;
+  static vme_unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> textureAtlases;
 
   /* 
 		Used for quick retrieval of a texture atlas given a sprite ID.

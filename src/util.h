@@ -7,6 +7,12 @@
 #include <chrono>
 #include <optional>
 
+#include "../vendor/tsl/robin_map.h"
+#include "../vendor/tsl/robin_set.h"
+
+#define vme_unordered_map tsl::robin_map
+#define vme_unordered_set tsl::robin_set
+
 constexpr bool hasBitSet(uint32_t flag, uint32_t flags)
 {
 	return (flags & flag) != 0;
