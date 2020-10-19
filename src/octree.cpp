@@ -322,26 +322,6 @@ namespace vme
       return root.boundingBox;
     }
 
-    Position Tree::topLeft() const noexcept
-    {
-      return Position(root.boundingBox.left(), root.boundingBox.top(), 7);
-    }
-
-    Position Tree::topRight() const noexcept
-    {
-      return Position(root.boundingBox.right(), root.boundingBox.top(), 7);
-    }
-
-    Position Tree::bottomRight() const noexcept
-    {
-      return Position(root.boundingBox.left(), root.boundingBox.bottom(), 7);
-    }
-
-    Position Tree::bottomLeft() const noexcept
-    {
-      return Position(root.boundingBox.left(), root.boundingBox.bottom(), 7);
-    }
-
     void Tree::markAsRecent(CachedNode *cached, Leaf *leaf) const
     {
       mostRecentLeaf = {cached, leaf};
@@ -488,7 +468,11 @@ namespace vme
         };
       }
 
-      boundingBox = BoundingBox(position.y + low.y, position.x + high.x, position.y + high.y, position.x + low.x);
+      Position from(position.x + low.x, position.y + low.y, position.z + low.z);
+      Position to(position.x + high.x, position.y + high.y, position.z + high.z);
+
+      boundingBox = BoundingBox(from, to);
+
       return true;
     }
 
@@ -553,7 +537,10 @@ namespace vme
         high.z = zIndex;
       }
 
-      boundingBox = BoundingBox(position.y + low.y, position.x + high.x, position.y + high.y, position.x + low.x);
+      Position from(position.x + low.x, position.y + low.y, position.z + low.z);
+      Position to(position.x + high.x, position.y + high.y, position.z + high.z);
+
+      boundingBox = BoundingBox(from, to);
       return true;
     }
 
@@ -1057,24 +1044,35 @@ namespace vme
 
     bool BoundingBox::contains(const BoundingBox &other) const noexcept
     {
-      return _top < other._top && _right > other._right && _bottom > other._bottom && _left < other._left;
+      return (_min.x <= other._min.x && _min.y <= other._min.y && _min.z <= other._min.z) &&
+             (_max.x >= other._max.x && _max.y >= other._max.y && _max.z >= other._max.z);
     }
 
     void BoundingBox::reset()
     {
-      _top = std::numeric_limits<BoundingBox::value_type>::max();
-      _right = std::numeric_limits<BoundingBox::value_type>::min();
-      _bottom = std::numeric_limits<BoundingBox::value_type>::min();
-      _left = std::numeric_limits<BoundingBox::value_type>::max();
+      _min = {
+          std::numeric_limits<BoundingBox::value_type>::max(),
+          std::numeric_limits<BoundingBox::value_type>::max(),
+          std::numeric_limits<BoundingBox::value_type>::max(),
+      };
+
+      _max = {
+          std::numeric_limits<BoundingBox::value_type>::min(),
+          std::numeric_limits<BoundingBox::value_type>::min(),
+          std::numeric_limits<BoundingBox::value_type>::min(),
+      };
     }
 
     bool BoundingBox::include(const Position pos)
     {
       BoundingBox old = *this;
-      _top = std::min<value_type>(_top, pos.y);
-      _right = std::max<value_type>(_right, pos.x);
-      _bottom = std::max<value_type>(_bottom, pos.y);
-      _left = std::min<value_type>(_left, pos.x);
+      _min.x = std::min<value_type>(_min.x, pos.x);
+      _min.y = std::min<value_type>(_min.y, pos.y);
+      _min.z = std::min<value_type>(_min.z, pos.z);
+
+      _max.x = std::max<value_type>(_max.x, pos.x);
+      _max.y = std::max<value_type>(_max.y, pos.y);
+      _max.z = std::max<value_type>(_max.z, pos.z);
 
       return old != *this;
     }
@@ -1082,10 +1080,13 @@ namespace vme
     bool BoundingBox::include(const BoundingBox bbox)
     {
       BoundingBox old = *this;
-      _top = std::min<value_type>(_top, bbox._top);
-      _right = std::max<value_type>(_right, bbox._right);
-      _bottom = std::max<value_type>(_bottom, bbox._bottom);
-      _left = std::min<value_type>(_left, bbox._left);
+      _min.x = std::min<value_type>(_min.x, bbox._min.x);
+      _min.y = std::min<value_type>(_min.y, bbox._min.y);
+      _min.z = std::min<value_type>(_min.z, bbox._min.z);
+
+      _max.x = std::max<value_type>(_max.x, bbox._max.x);
+      _max.y = std::max<value_type>(_max.y, bbox._max.y);
+      _max.z = std::max<value_type>(_max.z, bbox._max.z);
 
       return old != *this;
     }
@@ -1096,20 +1097,20 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::iterator::iterator(Tree &tree)
-        : tree(tree), chunk(tree.getLeaf(tree.topLeft())),
+    Tree::iterator::iterator(Tree *tree)
+        : tree(tree), chunk(tree->getLeaf(tree->min())),
           value(chunk->min()), topLeft(value), bottomRight(chunk->max())
     {
       nextValue();
     }
 
-    Tree::iterator Tree::iterator::end()
+    Tree::iterator::iterator()
     {
     }
 
     void Tree::iterator::nextValue()
     {
-      while (!chunk->contains(value))
+      while (chunk && !chunk->contains(value))
       {
         ++value.x;
         if (value.x > bottomRight.x)
@@ -1133,20 +1134,26 @@ namespace vme
     {
       Position pos(chunk->position);
       pos.x += ChunkSize.width;
-      if (pos.x > tree.right())
+      if (pos.x > tree->maxX())
       {
-        pos.x = tree.left();
+        pos.x = tree->minX();
         pos.y += ChunkSize.height;
 
-        if (pos.y > tree.bottom())
+        if (pos.y > tree->maxY())
         {
-          pos.y = tree.top();
+          pos.y = tree->minY();
           pos.z += ChunkSize.depth;
 
-          // TODO Z
-          //  if (pos.z > tree.)
+          if (pos.z > tree->maxZ())
+          {
+            chunk = nullptr;
+            return;
+          }
         }
       }
+
+      value = pos;
+      chunk = tree->getLeaf(pos);
     }
 
     Tree::iterator Tree::iterator::operator++()

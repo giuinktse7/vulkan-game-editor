@@ -90,19 +90,29 @@ namespace vme
     struct BoundingBox
     {
       using value_type = Position::value_type;
+
       BoundingBox() {}
-      BoundingBox(value_type top, value_type right, value_type bottom, value_type left)
-          : _top(top), _right(right), _bottom(bottom), _left(left) {}
+      BoundingBox(Position min, Position max)
+          : _min(min), _max(max) {}
 
-      value_type top() const noexcept;
-      value_type right() const noexcept;
-      value_type bottom() const noexcept;
-      value_type left() const noexcept;
+      const Position min() const noexcept;
+      const Position max() const noexcept;
 
-      void setTop(value_type value) noexcept;
-      void setRight(value_type value) noexcept;
-      void setBottom(value_type value) noexcept;
-      void setLeft(value_type value) noexcept;
+      value_type minX() const noexcept;
+      value_type minY() const noexcept;
+      value_type minZ() const noexcept;
+
+      value_type maxX() const noexcept;
+      value_type maxY() const noexcept;
+      value_type maxZ() const noexcept;
+
+      void setMinX(value_type value) noexcept;
+      void setMinY(value_type value) noexcept;
+      void setMinZ(value_type value) noexcept;
+
+      void setMaxX(value_type value) noexcept;
+      void setMaxY(value_type value) noexcept;
+      void setMaxZ(value_type value) noexcept;
 
       void reset();
 
@@ -120,10 +130,16 @@ namespace vme
       bool contains(const BoundingBox &other) const noexcept;
 
     private:
-      value_type _top = std::numeric_limits<BoundingBox::value_type>::max();
-      value_type _right = std::numeric_limits<BoundingBox::value_type>::min();
-      value_type _bottom = std::numeric_limits<BoundingBox::value_type>::min();
-      value_type _left = std::numeric_limits<BoundingBox::value_type>::max();
+      Position _min{
+          std::numeric_limits<BoundingBox::value_type>::max(),
+          std::numeric_limits<BoundingBox::value_type>::max(),
+          std::numeric_limits<BoundingBox::value_type>::max(),
+      };
+      Position _max{
+          std::numeric_limits<BoundingBox::value_type>::min(),
+          std::numeric_limits<BoundingBox::value_type>::min(),
+          std::numeric_limits<BoundingBox::value_type>::min(),
+      };
     };
 
     static constexpr Cube ChunkSize = {64, 64, 8};
@@ -309,11 +325,6 @@ namespace vme
         Returns true if the bounding box changed.
       */
       bool removeFromBoundingBox(const Position pos);
-
-      bool empty() const noexcept
-      {
-        return _count == 0;
-      }
     };
 
     template <size_t ChildCount>
@@ -397,7 +408,7 @@ namespace vme
         using Pointer = Position *;
         using IteratorCategory = std::forward_iterator_tag;
 
-        iterator(Tree &tree);
+        iterator(Tree *tree);
         static iterator end();
 
         iterator operator++();
@@ -410,7 +421,7 @@ namespace vme
         bool operator!=(const iterator &rhs) const { return !(*this == rhs); }
 
       private:
-        Tree &tree;
+        Tree *tree;
         Position value;
 
         Leaf *chunk;
@@ -428,7 +439,7 @@ namespace vme
 
       iterator begin()
       {
-        return iterator(*this);
+        return iterator(this);
       }
 
       iterator end()
@@ -454,15 +465,17 @@ namespace vme
       bool empty() const noexcept;
 
       BoundingBox boundingBox() const noexcept;
-      Position topLeft() const noexcept;
-      Position topRight() const noexcept;
-      Position bottomRight() const noexcept;
-      Position bottomLeft() const noexcept;
 
-      BoundingBox::value_type top() const noexcept;
-      BoundingBox::value_type right() const noexcept;
-      BoundingBox::value_type bottom() const noexcept;
-      BoundingBox::value_type left() const noexcept;
+      Position min() const noexcept;
+      Position max() const noexcept;
+
+      BoundingBox::value_type minX() const noexcept;
+      BoundingBox::value_type minY() const noexcept;
+      BoundingBox::value_type minZ() const noexcept;
+
+      BoundingBox::value_type maxX() const noexcept;
+      BoundingBox::value_type maxY() const noexcept;
+      BoundingBox::value_type maxZ() const noexcept;
 
     private:
       friend class CachedNode;
@@ -587,24 +600,108 @@ namespace vme
       return _size == 0;
     }
 
-    inline BoundingBox::value_type Tree::top() const noexcept
+    inline const Position BoundingBox::min() const noexcept
     {
-      return root.boundingBox.top();
+      return _min;
+    }
+    inline const Position BoundingBox::max() const noexcept
+    {
+      return _max;
     }
 
-    inline BoundingBox::value_type Tree::right() const noexcept
+    inline BoundingBox::value_type BoundingBox::minX() const noexcept
     {
-      return root.boundingBox.right();
+      return _min.x;
     }
 
-    inline BoundingBox::value_type Tree::bottom() const noexcept
+    inline BoundingBox::value_type BoundingBox::minY() const noexcept
     {
-      return root.boundingBox.bottom();
+      return _min.y;
     }
 
-    inline BoundingBox::value_type Tree::left() const noexcept
+    inline BoundingBox::value_type BoundingBox::minZ() const noexcept
     {
-      return root.boundingBox.left();
+      return _min.z;
+    }
+
+    inline BoundingBox::value_type BoundingBox::maxX() const noexcept
+    {
+      return _max.x;
+    }
+
+    inline BoundingBox::value_type BoundingBox::maxY() const noexcept
+    {
+      return _max.y;
+    }
+
+    inline BoundingBox::value_type BoundingBox::maxZ() const noexcept
+    {
+      return _max.z;
+    }
+
+    inline void BoundingBox::setMinX(value_type value) noexcept
+    {
+      _min.x = value;
+    }
+
+    inline void BoundingBox::setMinY(value_type value) noexcept
+    {
+      _min.y = value;
+    }
+
+    inline void BoundingBox::setMinZ(value_type value) noexcept
+    {
+      _min.z = value;
+    }
+
+    inline void BoundingBox::setMaxX(value_type value) noexcept
+    {
+      _max.x = value;
+    }
+
+    inline void BoundingBox::setMaxY(value_type value) noexcept
+    {
+      _max.y = value;
+    }
+
+    inline void BoundingBox::setMaxZ(value_type value) noexcept
+    {
+      _max.z = value;
+    }
+
+    inline BoundingBox::value_type Tree::minX() const noexcept
+    {
+      return boundingBox().minX();
+    }
+    inline BoundingBox::value_type Tree::minY() const noexcept
+    {
+      return boundingBox().minY();
+    }
+    inline BoundingBox::value_type Tree::minZ() const noexcept
+    {
+      return boundingBox().minZ();
+    }
+    inline BoundingBox::value_type Tree::maxX() const noexcept
+    {
+      return boundingBox().maxX();
+    }
+    inline BoundingBox::value_type Tree::maxY() const noexcept
+    {
+      return boundingBox().maxY();
+    }
+    inline BoundingBox::value_type Tree::maxZ() const noexcept
+    {
+      return boundingBox().maxZ();
+    }
+
+    inline Position Tree::min() const noexcept
+    {
+      return boundingBox().min();
+    }
+
+    inline Position Tree::max() const noexcept
+    {
+      return boundingBox().max();
     }
 
     inline std::unique_ptr<HeapNode> Tree::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta, HeapNode *parent)
@@ -671,7 +768,7 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>
     inline bool operator==(const BoundingBox &l, const BoundingBox &r) noexcept
     {
-      return l.top() == r.top() && l.right() == r.right() && l.bottom() == r.bottom() && l.left() == r.left();
+      return l.min() == r.min() && l.max() == r.max();
     }
 
     inline bool operator!=(const BoundingBox &l, const BoundingBox &r) noexcept
@@ -679,54 +776,14 @@ namespace vme
       return !(l == r);
     }
 
-    inline BoundingBox::value_type BoundingBox::top() const noexcept
-    {
-      return _top;
-    }
-
-    inline BoundingBox::value_type BoundingBox::right() const noexcept
-    {
-      return _right;
-    }
-
-    inline BoundingBox::value_type BoundingBox::bottom() const noexcept
-    {
-      return _bottom;
-    }
-
-    inline BoundingBox::value_type BoundingBox::left() const noexcept
-    {
-      return _left;
-    }
-
-    inline void BoundingBox::setTop(BoundingBox::value_type value) noexcept
-    {
-      _top = value;
-    }
-
-    inline void BoundingBox::setRight(BoundingBox::value_type value) noexcept
-    {
-      _right = value;
-    }
-
-    inline void BoundingBox::setBottom(BoundingBox::value_type value) noexcept
-    {
-      _bottom = value;
-    }
-
-    inline void BoundingBox::setLeft(BoundingBox::value_type value) noexcept
-    {
-      _left = value;
-    }
-
-    bool BoundingBox::empty() const noexcept
+    inline bool BoundingBox::empty() const noexcept
     {
       return std::numeric_limits<BoundingBox::value_type>::max();
     }
 
     inline std::ostream &operator<<(std::ostream &os, const BoundingBox &bbox)
     {
-      os << "{ top: " << bbox.top() << ", right: " << bbox.right() << ", bottom: " << bbox.bottom() << ", left: " << bbox.left() << " }";
+      os << "{ min: " << bbox.min() << ", max: " << bbox.max() << " }";
       return os;
     }
 
