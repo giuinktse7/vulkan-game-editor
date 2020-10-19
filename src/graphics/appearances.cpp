@@ -17,11 +17,11 @@
 #include "texture_atlas.h"
 #include "../time_point.h"
 
-default_unordered_map<uint32_t, Appearance> Appearances::objects;
-default_unordered_map<uint32_t, proto::Appearance> Appearances::outfits;
+vme_unordered_map<uint32_t, Appearance> Appearances::objects;
+vme_unordered_map<uint32_t, proto::Appearance> Appearances::outfits;
 
 std::vector<SpriteRange> Appearances::textureAtlasSpriteRanges;
-default_unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> Appearances::textureAtlases;
+vme_unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> Appearances::textureAtlases;
 
 bool Appearances::isLoaded;
 

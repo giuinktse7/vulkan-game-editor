@@ -303,7 +303,7 @@ namespace vme
 
       bool empty() const noexcept
       {
-        return count == 0;
+        return _count == 0;
       }
     };
 
@@ -450,7 +450,7 @@ namespace vme
       return true;
     }
 
-    void Leaf::clear()
+    inline void Leaf::clear()
     {
       values.fill(false);
     }
@@ -501,12 +501,12 @@ namespace vme
         c->clear();
     }
 
-    long Tree::size() const noexcept
+    inline long Tree::size() const noexcept
     {
       return _size;
     }
 
-    bool Tree::empty() const noexcept
+    inline bool Tree::empty() const noexcept
     {
       return _size == 0;
     }
@@ -559,7 +559,7 @@ namespace vme
       return nullptr;
     }
 
-    uint32_t Leaf::count() const noexcept { return _count; }
+    inline uint32_t Leaf::count() const noexcept { return _count; }
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>

@@ -85,9 +85,9 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     Tree::Tree(Cube mapSize, CacheInitInfo cacheInfo)
-        : cachedNodes(cacheInfo.amountToInitialize),
+        : width(mapSize.width), height(mapSize.height), floors(mapSize.depth),
+          cachedNodes(cacheInfo.amountToInitialize),
           cachedHeapNodes(cacheInfo.count - cacheInfo.amountToInitialize + 8),
-          width(mapSize.width), height(mapSize.height), floors(mapSize.depth),
           top(mapSize, cacheInfo),
           cacheInfo(cacheInfo)
     {
@@ -501,7 +501,7 @@ namespace vme
       ys[y] -= 1;
       zs[z] -= 1;
 
-      if (count == 0)
+      if (_count == 0)
       {
         boundingBox = {};
         low = {};
@@ -1045,7 +1045,8 @@ namespace vme
     void CachedNode::clear()
     {
       boundingBox = {};
-      static_cast<CachedNode *>(parent)->clear();
+      if (parent)
+        static_cast<CachedNode *>(parent)->clear();
     }
 
     void CachedNode::setParent(HeapNode *parent)
