@@ -400,7 +400,7 @@ MapRegion::Iterator::Iterator(Map &map, Position from, Position to, bool isEnd)
   }
 }
 
-MapRegion::Iterator MapRegion::Iterator::operator++()
+MapRegion::Iterator& MapRegion::Iterator::operator++()
 {
   ++state.chunk.y;
   updateValue();
@@ -509,7 +509,7 @@ MapArea::iterator MapArea::iterator::end()
   return it;
 }
 
-MapArea::iterator MapArea::iterator::operator++()
+MapArea::iterator &MapArea::iterator::operator++()
 {
   value.x += increasing.x ? 1 : -1;
   if (!inBoundsX())

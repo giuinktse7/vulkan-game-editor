@@ -133,7 +133,7 @@ public:
 
 		Iterator(Map &map, Position from, Position to, bool isEnd = false);
 
-		Iterator operator++();
+		Iterator &operator++();
 		Iterator operator++(int junk);
 
 		Reference operator*() { return *value; }
@@ -276,7 +276,7 @@ public:
 		iterator(Position from, Position to);
 		static iterator end();
 
-		iterator operator++();
+		iterator &operator++();
 		iterator operator++(int junk);
 
 		Reference operator*() { return value; }
