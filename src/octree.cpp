@@ -115,6 +115,8 @@ namespace vme
 
       int offset = power(2, exponent);
 
+      root._childCount = offset;
+
       // Set parent for root children
       for (int i = 0; i < offset; ++i)
         cachedNodes[i].setParent(&root);
@@ -133,6 +135,7 @@ namespace vme
           offset /= 2;
 
         auto lastChild = std::min<uint16_t>(cursor + offset, cacheInfo.amountToInitialize);
+        cachedNodes[i]._childCount = offset;
 
         for (int k = cursor; k < lastChild; ++k)
           cachedNodes[k].setParent(&cachedNodes[i]);
@@ -327,6 +330,26 @@ namespace vme
       mostRecentLeaf = {cached, leaf};
     }
 
+    HeapNode *Tree::getChild(int index, HeapNode *node)
+    {
+      if (!node->isCachedNode())
+        return node->child(index);
+
+      // For cached nodes
+      CachedNode *cached = static_cast<CachedNode *>(node);
+      auto childIndex = cached->childOffset(index);
+
+      if (cached->childCacheOffset < cacheInfo.amountToInitialize)
+      {
+        return &cachedNodes.at(childIndex);
+      }
+      else
+      {
+        auto &child = cachedHeapNodes.at(childIndex - cacheInfo.amountToInitialize);
+        return child ? child.get() : nullptr;
+      }
+    }
+
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>End of Tree Implementation>>>>>
@@ -334,6 +357,11 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     CachedNode::CachedNode(HeapNode *parent) : HeapNode(parent) {}
+
+    int CachedNode::childCount() const noexcept
+    {
+      return _childCount;
+    }
 
     uint16_t CachedNode::childOffset(const int pattern) const
     {
@@ -365,8 +393,8 @@ namespace vme
 
       DEBUG_ASSERT(splits != 0, "Update bounding box for leaf node? Bug?");
 
-      int childCount = power(2, splits);
-      for (int i = 0; i < childCount; ++i)
+      int amountOfChildren = power(2, splits);
+      for (int i = 0; i < amountOfChildren; ++i)
       {
         if (childCacheOffset >= tree.cacheInfo.amountToInitialize) // Get from HeapNode cache
         {
@@ -414,7 +442,11 @@ namespace vme
 
     bool Leaf::contains(const Position pos)
     {
-      return values[getIndex(pos)];
+      uint16_t index = getIndex(pos);
+      if (index >= values.size())
+        return false;
+
+      return values[index];
     }
 
     bool Leaf::encloses(const Position pos) const
@@ -1093,24 +1125,120 @@ namespace vme
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>Tree::chunkIterator>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    Tree::chunkIterator::chunkIterator() {}
+    Tree::chunkIterator::chunkIterator(Tree *tree) : tree(tree)
+    {
+      if (tree->root.empty())
+      {
+        isEnd = true;
+      }
+      else
+      {
+        nodes.emplace(&tree->root);
+        nextChunk();
+      }
+    }
+
+    Tree::chunkIterator Tree::chunkIterator::end()
+    {
+      auto it = Tree::chunkIterator();
+      it.isEnd = true;
+
+      return it;
+    }
+
+    Tree::chunkIterator &Tree::chunkIterator::operator++()
+    {
+      nextChunk();
+      return *this;
+    }
+
+    Tree::chunkIterator Tree::chunkIterator::operator++(int junk)
+    {
+      Tree::chunkIterator it = *this;
+      ++(*this);
+
+      return it;
+    }
+
+    bool Tree::chunkIterator::operator==(const Tree::chunkIterator &rhs) const
+    {
+      return !(isEnd ^ rhs.isEnd) && ((isEnd && rhs.isEnd) || (value == rhs.value));
+    }
+
+    void Tree::chunkIterator::nextChunk()
+    {
+      HeapNode *current;
+      while (!nodes.empty())
+      {
+        // VME_LOG_D("??: " << nodes.size());
+
+        current = nodes.front();
+        nodes.pop();
+
+        if (!current->empty())
+        {
+          if (current->isLeaf())
+          {
+            value = static_cast<Leaf *>(current);
+            return;
+          }
+          else
+          {
+            for (int i = 0; i < current->childCount(); ++i)
+            {
+              auto child = tree->getChild(i, current);
+              if (child && !child->empty())
+                nodes.emplace(child);
+            }
+          }
+        }
+      }
+
+      isEnd = true;
+    }
+
+    bool Tree::chunkIterator::finished() const noexcept
+    {
+      return isEnd;
+    }
+
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>Tree::iterator>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::iterator::iterator(Tree *tree)
-        : tree(tree), chunk(tree->getLeaf(tree->min())),
-          value(chunk->min()), topLeft(value), bottomRight(chunk->max())
-    {
-      nextValue();
-    }
-
     Tree::iterator::iterator()
     {
+    }
+    Tree::iterator::iterator(Tree *tree)
+        : chunkIterator(tree),
+          value(currentChunk()->min()),
+          topLeft(value), bottomRight(currentChunk()->max())
+    {
+      if (chunkIterator == Tree::chunkIterator::end())
+      {
+        isEnd = true;
+      }
+      else
+      {
+        if (!currentChunk()->contains(value))
+          nextValue();
+      }
+    }
+
+    Leaf *Tree::iterator::currentChunk() const
+    {
+      return *chunkIterator;
     }
 
     void Tree::iterator::nextValue()
     {
-      while (chunk && !chunk->contains(value))
+      do
       {
         ++value.x;
         if (value.x > bottomRight.x)
@@ -1124,39 +1252,23 @@ namespace vme
             ++value.z;
 
             if (value.z > bottomRight.z)
-              nextChunk();
+            {
+              ++chunkIterator;
+              if (chunkIterator.finished())
+              {
+                isEnd = true;
+                return;
+              }
+
+              topLeft = currentChunk()->min();
+              bottomRight = currentChunk()->max();
+            }
           }
         }
-      }
+      } while (!currentChunk()->contains(value));
     }
 
-    void Tree::iterator::nextChunk()
-    {
-      Position pos(chunk->position);
-      pos.x += ChunkSize.width;
-      if (pos.x > tree->maxX())
-      {
-        pos.x = tree->minX();
-        pos.y += ChunkSize.height;
-
-        if (pos.y > tree->maxY())
-        {
-          pos.y = tree->minY();
-          pos.z += ChunkSize.depth;
-
-          if (pos.z > tree->maxZ())
-          {
-            chunk = nullptr;
-            return;
-          }
-        }
-      }
-
-      value = pos;
-      chunk = tree->getLeaf(pos);
-    }
-
-    Tree::iterator Tree::iterator::operator++()
+    Tree::iterator &Tree::iterator::operator++()
     {
       nextValue();
       return *this;
@@ -1172,7 +1284,7 @@ namespace vme
 
     bool Tree::iterator::operator==(const Tree::iterator &rhs) const
     {
-      return (isEnd && rhs.isEnd) || (value == rhs.value);
+      return !(isEnd ^ rhs.isEnd) && ((isEnd && rhs.isEnd) || (value == rhs.value));
     }
 
     Tree::iterator Tree::iterator::end()

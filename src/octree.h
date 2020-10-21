@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <memory>
 #include <optional>
+#include <queue>
 #include <vector>
 #include <array>
 #include <sstream>
@@ -233,6 +234,8 @@ namespace vme
       virtual HeapNode *child(const Position pos) const;
       virtual HeapNode *getOrCreateChild(const Position pos);
 
+      virtual int childCount() const noexcept = 0;
+
       virtual bool contains(const Position pos);
 
       virtual uint16_t getIndex(const Position &pos) const = 0;
@@ -269,6 +272,8 @@ namespace vme
       Leaf(const Position pos, HeapNode *parent);
       bool isLeaf() const override;
 
+      int childCount() const noexcept override;
+
       bool empty() const noexcept override;
 
       void clear() override;
@@ -296,8 +301,8 @@ namespace vme
 
       std::string show() const override;
 
-      Position min();
-      Position max();
+      Position min() const noexcept;
+      Position max() const noexcept;
 
       std::array<bool, ChunkSize.width *ChunkSize.height *ChunkSize.depth> values = {false};
 
@@ -309,6 +314,10 @@ namespace vme
       {
         int x, y, z = -1;
       };
+      /*
+        Important: Indices hold indices into xs, ys, and zs. To get a position 
+        based on low/high, use min() and max().
+      */
       Indices low;
       Indices high;
 
@@ -332,12 +341,12 @@ namespace vme
     {
     public:
       BaseNode(HeapNode *parent) : HeapNode(parent) {}
-      size_t childCount = ChildCount;
 
       HeapNode *child(int pattern) const override;
       HeapNode *child(const Position pos) const override;
       bool isLeaf() const override;
       void clear() override;
+      int childCount() const noexcept override;
 
       void updateBoundingBox(BoundingBox bbox) override;
 
@@ -361,6 +370,7 @@ namespace vme
       CachedNode(HeapNode *parent = nullptr);
       void setParent(HeapNode *parent);
       bool isCachedNode() const noexcept override;
+      int childCount() const noexcept override;
 
       uint16_t childOffset(const int pattern) const;
 
@@ -368,9 +378,9 @@ namespace vme
 
       void clear() override;
 
-    public:
       int32_t childCacheOffset = -1;
       uint16_t cacheIndex = 0;
+      uint8_t _childCount = 0;
 
       // void setIndex(size_t index);
       void setChildCacheOffset(size_t offset);
@@ -400,6 +410,41 @@ namespace vme
     public:
       static Tree create(const Cube mapSize);
 
+      class chunkIterator
+      {
+      public:
+        using ValueType = Leaf *;
+        using Reference = const ValueType &;
+        using Pointer = Leaf *;
+        using IteratorCategory = std::forward_iterator_tag;
+
+        chunkIterator();
+        chunkIterator(Tree *tree);
+        static chunkIterator end();
+
+        chunkIterator &operator++();
+        chunkIterator operator++(int junk);
+
+        Reference operator*() const { return value; }
+        Pointer operator->() const { return value; }
+
+        bool operator==(const chunkIterator &rhs) const;
+        bool operator!=(const chunkIterator &rhs) const { return !(*this == rhs); }
+
+        bool finished() const noexcept;
+
+      private:
+        Tree *tree;
+
+        std::queue<HeapNode *> nodes;
+
+        Leaf *value;
+
+        bool isEnd = false;
+
+        void nextChunk();
+      };
+
       class iterator
       {
       public:
@@ -411,7 +456,7 @@ namespace vme
         iterator(Tree *tree);
         static iterator end();
 
-        iterator operator++();
+        iterator &operator++();
         iterator operator++(int junk);
 
         Reference operator*() { return value; }
@@ -421,18 +466,18 @@ namespace vme
         bool operator!=(const iterator &rhs) const { return !(*this == rhs); }
 
       private:
-        Tree *tree;
+        chunkIterator chunkIterator;
+
         Position value;
 
-        Leaf *chunk;
         Position topLeft;
         Position bottomRight;
 
         bool isEnd = false;
 
-      private:
         void nextValue();
-        void nextChunk();
+
+        Leaf *currentChunk() const;
 
         iterator();
       };
@@ -499,6 +544,8 @@ namespace vme
       std::vector<uint16_t> usedCacheIndices;
       std::vector<uint16_t> usedHeapCacheIndices;
 
+      HeapNode *getChild(int index, HeapNode *node);
+
       void markAsRecent(CachedNode *cached, Leaf *leaf) const;
 
       void initializeCache();
@@ -519,6 +566,11 @@ namespace vme
 
     }; // End of Tree
 
+    inline int Leaf::childCount() const noexcept
+    {
+      return 0;
+    }
+
     inline bool Leaf::isLeaf() const
     {
       return true;
@@ -534,14 +586,20 @@ namespace vme
       return _count == 0;
     }
 
-    inline Position Leaf::min()
+    inline Position Leaf::min() const noexcept
     {
-      return Position(low.x, low.y, low.z);
+      return position + Position(low.x, low.y, low.z);
     }
 
-    inline Position Leaf::max()
+    inline Position Leaf::max() const noexcept
     {
-      return Position(high.x, high.y, high.z);
+      return position + Position(high.x, high.y, high.z);
+    }
+
+    template <size_t ChildCount>
+    int BaseNode<ChildCount>::childCount() const noexcept
+    {
+      return ChildCount;
     }
 
     template <size_t ChildCount>
@@ -553,7 +611,7 @@ namespace vme
     template <size_t ChildCount>
     inline HeapNode *BaseNode<ChildCount>::child(int index) const
     {
-      DEBUG_ASSERT(index < childCount, "Bad pattern.");
+      DEBUG_ASSERT(index < ChildCount, "Bad pattern.");
       auto child = children[index].get();
       return child;
     }
@@ -587,7 +645,10 @@ namespace vme
     void BaseNode<ChildCount>::clear()
     {
       for (auto &c : children)
-        c->clear();
+      {
+        if (c)
+          c->clear();
+      }
     }
 
     inline long Tree::size() const noexcept
@@ -778,7 +839,7 @@ namespace vme
 
     inline bool BoundingBox::empty() const noexcept
     {
-      return std::numeric_limits<BoundingBox::value_type>::max();
+      return _min.x == std::numeric_limits<BoundingBox::value_type>::max();
     }
 
     inline std::ostream &operator<<(std::ostream &os, const BoundingBox &bbox)

@@ -38,6 +38,8 @@ void addChunk(Position from, vme::octree::Tree &tree)
 {
     auto chunk = vme::octree::ChunkSize;
     auto to = Position(from.x + chunk.width - 1, from.y + chunk.height - 1, from.z + chunk.depth - 1);
+    VME_LOG("addChunk: " << from << " to " << to);
+
     for (const auto pos : MapArea(from, to))
         tree.add(pos);
 }
@@ -59,19 +61,25 @@ void testOctree()
 
     // tree.add(Position(960, 2752, 8));
     // tree.add(Position(3001, 2773, 8));
+    VME_LOG_D("min: " << tree.min());
 
     auto chunk = vme::octree::ChunkSize;
-    int chunksX = 6;
-    int chunksY = 6;
+    int chunksX = 64;
+    int chunksY = 64;
     int chunksZ = 2;
     int positions = chunksX * chunksY * chunksZ * (chunk.width * chunk.height * chunk.depth);
 
     VME_LOG("Adding from " << Position(0, 0, 0) << " to " << Position(chunksX * chunk.width, chunksY * chunk.height, chunksZ * chunk.depth) << " (" << positions << " positions).");
-    TimePoint start;
     for (int x = 0; x < chunksX; ++x)
         for (int y = 0; y < chunksY; ++y)
             for (int z = 0; z < chunksZ; ++z)
                 addChunk(Position(x * 64, y * 64, z * 8), tree);
+
+    int count = 0;
+
+    TimePoint start;
+    for (const auto pos : tree)
+        ++count;
 
     {
         // These two together created a crash (they shared the same leaf node)
@@ -129,8 +137,13 @@ void testOctree()
     // VME_LOG_D("pos2: " << std::boolalpha << tree.contains(pos2));
     // tree.remove(pos2);
     // VME_LOG_D("pos2 still here? " << std::boolalpha << tree.contains(pos2));
+    VME_LOG_D("Count: " << count);
+    VME_LOG("Done in " << start.elapsedMicros() << " us. (" << start.elapsedMillis() << " ms)");
 
-    VME_LOG("Done in " << start.elapsedMicros() << " us.");
+    TimePoint clearStart;
+    tree.clear();
+
+    VME_LOG("Clear in " << clearStart.elapsedMicros() << " us. Size: " << tree.size() << ", contains: " << tree.contains(Position(10, 10, 7)));
 }
 /*********************************************************/
 /*********************************************************/
@@ -337,8 +350,8 @@ int main(int argc, char *argv[])
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
 
-    // testOctree();
-    // return 0;
+    testOctree();
+    return 0;
 
     return runApp(argc, argv);
 }
