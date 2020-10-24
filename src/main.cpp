@@ -261,9 +261,9 @@ std::shared_ptr<Map> makeTestMap2()
     // auto &rand = Random::global();
 
     int i = 0;
-    for (int x = 0; x < 10; ++x)
+    for (int y = 0; y < 10; ++y)
     {
-        for (int y = 0; y < 10; ++y)
+        for (int x = 0; x < 10; ++x)
         {
             map->addItem(Position(1 + x, 1 + y, 7), 35950 + i);
             ++i;
