@@ -350,8 +350,8 @@ int main(int argc, char *argv[])
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
 
-    testOctree();
-    return 0;
+    // testOctree();
+    // return 0;
 
     return runApp(argc, argv);
 }

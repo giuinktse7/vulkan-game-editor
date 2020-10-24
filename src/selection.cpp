@@ -5,7 +5,7 @@
 #include "history/history_action.h"
 
 Selection::Selection(MapView &mapView)
-    : mapView(mapView), outOfBoundCorrection(0, 0, 0)
+    : outOfBoundCorrection(0, 0, 0), mapView(mapView)
 {
 }
 
@@ -34,7 +34,7 @@ Position Selection::moveDelta() const
 
   auto delta = mapView.mouseGamePos() - moveOrigin.value();
 
-  auto topLeftCorrection = topLeft().value() + delta;
+  auto topLeftCorrection = storage.topLeft().value() + delta;
   delta.x -= std::min(topLeftCorrection.x, 0);
   delta.y -= std::min(topLeftCorrection.y, 0);
 
@@ -203,4 +203,53 @@ void SelectionStorage::recomputeBoundingBox()
 void SelectionStorage::clear()
 {
   values.clear();
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>SelectionStorageOctree>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+SelectionStorageOctree::SelectionStorageOctree(const vme::octree::Cube mapSize)
+    : tree(vme::octree::Tree::create(mapSize)) {}
+
+void SelectionStorageOctree::add(Position pos)
+{
+  tree.add(pos);
+}
+
+void SelectionStorageOctree::add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox)
+{
+  for (const auto &pos : positions)
+    tree.add(pos);
+}
+
+void SelectionStorageOctree::remove(Position pos)
+{
+  tree.remove(pos);
+}
+
+void SelectionStorageOctree::update()
+{
+  // No-op
+}
+
+bool SelectionStorageOctree::empty() const noexcept
+{
+  return tree.empty();
+}
+
+bool SelectionStorageOctree::contains(const Position pos) const
+{
+  return tree.contains(pos);
+}
+
+void SelectionStorageOctree::clear()
+{
+  tree.clear();
+}
+
+const std::unordered_set<Position, PositionHash> &SelectionStorageOctree::getPositions() const
+{
 }

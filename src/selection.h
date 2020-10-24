@@ -6,8 +6,55 @@
 
 #include "tile.h"
 #include "util.h"
+#include "octree.h"
 
 class MapView;
+
+class SelectionStorageInterface
+{
+  virtual void add(Position pos) = 0;
+  virtual void add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox) = 0;
+
+  virtual void remove(Position pos) = 0;
+
+  virtual void update() = 0;
+
+  virtual bool empty() const noexcept = 0;
+
+  virtual bool contains(const Position pos) const = 0;
+
+  virtual void clear() = 0;
+
+  virtual const std::unordered_set<Position, PositionHash> &getPositions() const = 0;
+};
+
+class SelectionStorageOctree : SelectionStorageInterface
+{
+  SelectionStorageOctree(const vme::octree::Cube mapSize);
+
+  void add(Position pos);
+  void add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox);
+
+  void remove(Position pos);
+
+  std::optional<Position> topLeft() const noexcept;
+  std::optional<Position> topRight() const noexcept;
+  std::optional<Position> bottomRight() const noexcept;
+  std::optional<Position> bottomLeft() const noexcept;
+
+  void update();
+
+  bool empty() const noexcept;
+
+  bool contains(const Position pos) const;
+
+  void clear();
+
+  const std::unordered_set<Position, PositionHash> &getPositions() const;
+
+private:
+  vme::octree::Tree tree;
+};
 
 class SelectionStorage
 {
@@ -83,8 +130,6 @@ public:
   Position outOfBoundCorrection;
 
   // TODO
-  // Position topLeft() const noexcept;
-  // Position bottomRight() const noexcept;
 
   bool moving() const;
 
@@ -104,26 +149,6 @@ public:
   void deselectAll();
 
   void update();
-
-  std::optional<Position> topLeft() const noexcept
-  {
-    return storage.topLeft();
-  }
-
-  std::optional<Position> topRight() const noexcept
-  {
-    return storage.topRight();
-  }
-
-  std::optional<Position> bottomRight() const noexcept
-  {
-    return storage.bottomRight();
-  }
-
-  std::optional<Position> bottomLeft() const noexcept
-  {
-    return storage.bottomLeft();
-  }
 
   /*
     Clear the selected tile positions. NOTE: This function does not call deselect

@@ -14,6 +14,7 @@
 #include "graphics/texture.h"
 #include "graphics/batch_item_draw.h"
 #include "graphics/texture_atlas.h"
+#include "graphics/vulkan_helpers.h"
 
 #include "item.h"
 #include "items.h"
