@@ -8,6 +8,8 @@
 
 #include <glm/glm.hpp>
 
+#include "buffer.h"
+
 #include "../util.h"
 #include "../debug.h"
 
@@ -91,6 +93,7 @@ public:
 
   virtual void vkGetImageMemoryRequirements(VkImage image, VkMemoryRequirements *pMemoryRequirements) = 0;
   virtual void vkGetPhysicalDeviceMemoryProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties *pMemoryProperties) = 0;
+  virtual void vkCmdPushConstants(VkCommandBuffer commandBuffer, VkPipelineLayout layout, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void *pValues) = 0;
 
   VkCommandBuffer beginSingleTimeCommands();
   void endSingleTimeCommands(VkCommandBuffer buffer);

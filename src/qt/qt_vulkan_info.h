@@ -262,6 +262,11 @@ public:
     df->vkFreeCommandBuffers(device(), commandPool, commandBufferCount, pCommandBuffers);
   }
 
+  void vkCmdPushConstants(VkCommandBuffer commandBuffer, VkPipelineLayout layout, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void *pValues) override
+  {
+    df->vkCmdPushConstants(commandBuffer, layout, stageFlags, offset, size, pValues);
+  }
+
   VkResult vkQueueWaitIdle(VkQueue queue) override
   {
     return df->vkQueueWaitIdle(queue);
