@@ -12,7 +12,6 @@
 #include "graphics/buffer.h"
 #include "graphics/vertex.h"
 #include "graphics/texture.h"
-#include "graphics/batch_item_draw.h"
 #include "graphics/texture_atlas.h"
 #include "graphics/vulkan_helpers.h"
 
@@ -25,13 +24,56 @@
 
 #include "map.h"
 
-class BatchDraw;
-struct ObjectDrawInfo;
+namespace DrawInfo
+{
+	struct Base
+	{
+		Appearance *appearance;
+		TextureInfo textureInfo;
+		glm::vec4 color{};
+		VkDescriptorSet descriptorSet;
+	};
+
+	/**
+ * Describes an overlay object.
+ * NOTE: Do not use this to draw a map item. For that, use ObjectDrawInfo;
+ * it takes a Position instead of a WorldPosition.
+*/
+	struct OverlayObject : Base
+	{
+		WorldPosition position;
+	};
+
+	struct Object : Base
+	{
+		Position position;
+		DrawOffset drawOffset = {0, 0};
+	};
+
+	struct Vertex
+	{
+		TextureInfo textureInfo;
+		WorldPosition position;
+		glm::vec4 color{};
+		VkDescriptorSet descriptorSet;
+	};
+
+	struct Rectangle
+	{
+		WorldPosition from;
+		WorldPosition to;
+		glm::vec4 color{};
+		std::variant<const Texture *, TextureInfo> texture;
+		VkDescriptorSet descriptorSet;
+	};
+
+}; // namespace DrawInfo
 
 namespace colors
 {
 	constexpr glm::vec4 Default{1.0f, 1.0f, 1.0f, 1.0f};
 	constexpr glm::vec4 Selected{0.45f, 0.45f, 0.45f, 1.0f};
+	constexpr glm::vec4 Red{1.0f, 0.0f, 0.0f, 1.0f};
 	constexpr glm::vec4 SeeThrough{1.0f, 1.0f, 1.0f, 0.35f};
 	constexpr glm::vec4 ItemPreview{0.6f, 0.6f, 0.6f, 0.7f};
 
@@ -81,8 +123,6 @@ struct FrameData
 	glm::mat4 projectionMatrix{};
 	MouseAction_t mouseAction = MouseAction::None{};
 	bool mouseHover = false;
-
-	BatchDraw batchDraw;
 };
 
 /*
@@ -185,6 +225,7 @@ private:
 
 	// All sprites are drawn using this index buffer
 	BoundBuffer indexBuffer;
+	BoundBuffer vertexBuffer;
 
 	VkFormat colorFormat = VK_FORMAT_UNDEFINED;
 
@@ -219,10 +260,12 @@ private:
 	void createDescriptorSetLayouts();
 	void createDescriptorSets();
 	void createIndexBuffer();
+	void createVertexBuffer();
 
 	void updateUniformBuffer();
 
 	void beginRenderPass();
+	void setupFrame();
 
 	VkCommandBuffer beginSingleTimeCommands(VulkanInfo *info);
 	uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -234,10 +277,10 @@ private:
 	void drawRectangle(const Texture &texture, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
 	void drawSolidRectangle(const SolidColor color, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
 
-	ObjectDrawInfo itemDrawInfo(const Item &item, Position position, uint32_t drawFlags);
-	ObjectDrawInfo itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags);
+	DrawInfo::Object itemDrawInfo(const Item &item, Position position, uint32_t drawFlags);
+	DrawInfo::Object itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags);
 
-	VkDescriptorSet objectDescriptorSet(const BaseObjectDrawInfo &info);
+	VkDescriptorSet objectDescriptorSet(const DrawInfo::Base &info);
 
 	/**
 	 * @predicate An Item predicate. Items for which predicate(item) is false will not be rendered.
@@ -249,10 +292,12 @@ private:
 	void drawTile(const TileLocation &tileLocation,
 								uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
 								const ItemPredicate &filter = {});
-	void drawItem(ObjectDrawInfo &info);
+	void drawItem(const DrawInfo::Object &info);
 	void drawOverlayItemType(uint16_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
 
-	void drawBatches();
+	void drawRectangle(DrawInfo::Rectangle &info);
 
 	bool shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter = {}) const noexcept;
+
+	VkDescriptorSet currentDescriptorSet;
 };

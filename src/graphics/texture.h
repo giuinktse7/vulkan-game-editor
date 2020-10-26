@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <glm/glm.hpp>
 
 #include <memory>
 
@@ -24,6 +25,8 @@ struct TextureWindow
   float y0;
   float x1;
   float y1;
+
+  glm::vec4 asVec4() const noexcept;
 };
 
 class Texture
@@ -55,6 +58,11 @@ private:
   uint32_t _height;
 };
 
+inline glm::vec4 TextureWindow::asVec4() const noexcept
+{
+  return glm::vec4(x0, y0, x1, y1);
+}
+
 inline int Texture::width() const noexcept
 {
   return _width;
@@ -68,4 +76,10 @@ inline int Texture::height() const noexcept
 inline uint32_t Texture::sizeInBytes() const
 {
   return _width * _height * 4;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const TextureWindow &info)
+{
+  os << "{ x0: " << info.x0 << ", y0: " << info.y0 << ", x1: " << info.x1 << ", y1: " << info.y1;
+  return os;
 }

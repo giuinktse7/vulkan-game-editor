@@ -67,7 +67,6 @@ set(CommonSources
     src/file.h
     src/input.h
     src/graphics/appearances.h
-    src/graphics/batch_item_draw.h
     src/graphics/buffer.h
     src/graphics/compression.h
     src/graphics/device_manager.h
@@ -137,7 +136,6 @@ set(CommonSources
     src/ecs/item_animation.cpp
     src/file.cpp
     src/graphics/appearances.cpp
-    src/graphics/batch_item_draw.cpp
     src/graphics/buffer.cpp
     src/graphics/compression.cpp
     # src/graphics/device_manager.cpp src/graphics/engine.cpp

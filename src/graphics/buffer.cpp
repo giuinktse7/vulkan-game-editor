@@ -113,10 +113,10 @@ bool BoundBuffer::hasResources() const noexcept
   return vulkanInfo != nullptr;
 }
 
-BoundBuffer Buffer::create(VulkanInfo *vulkanInfo, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+BoundBuffer Buffer::create(const Buffer::CreateInfo &createInfo)
 {
-  BoundBuffer boundBuffer(vulkanInfo, size, usage, properties);
-  boundBuffer.initResources(vulkanInfo);
+  BoundBuffer boundBuffer(createInfo.vulkanInfo, createInfo.size, createInfo.usageFlags, createInfo.memoryFlags);
+  boundBuffer.initResources(createInfo.vulkanInfo);
 
   return boundBuffer;
 }

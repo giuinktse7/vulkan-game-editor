@@ -79,16 +79,17 @@ const TextureWindow TextureAtlas::getTextureWindow(uint32_t spriteId) const
 
   uint32_t offset = spriteId - this->firstSpriteId;
 
-  auto row = offset / columns;
+  // BMP stores image upside down in memory
+  auto row = rows - offset / columns - 1;
   auto col = offset % columns;
 
   const float x = static_cast<float>(col) / columns;
-  const float y = static_cast<float>(rows - row) / rows;
+  const float y = static_cast<float>(row) / rows;
 
   const float width = static_cast<float>(spriteWidth) / this->width;
   const float height = static_cast<float>(spriteHeight) / this->height;
 
-  return TextureWindow{x, y, x + width, y - height};
+  return TextureWindow{x, y, x + width, y + height};
 }
 
 const TextureWindow TextureAtlas::getTextureWindowUnNormalized(uint32_t spriteId) const
@@ -206,8 +207,8 @@ glm::vec4 TextureAtlas::getFragmentBounds(const TextureWindow window) const
 
   return {
       window.x0 + offsetX,
-      window.y0 - offsetY,
+      window.y0 + offsetY,
       window.x1 - offsetX,
-      window.y1 + offsetY,
+      window.y1 - offsetY,
   };
 }

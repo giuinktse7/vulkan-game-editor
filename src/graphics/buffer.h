@@ -4,6 +4,8 @@
 
 #include "vulkan_helpers.h"
 
+class VulkanInfo;
+
 struct BoundBuffer
 {
 	BoundBuffer();
@@ -34,7 +36,15 @@ struct BoundBuffer
 
 namespace Buffer
 {
-	BoundBuffer create(VulkanInfo *vulkanInfo, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+	struct CreateInfo
+	{
+		VulkanInfo *vulkanInfo;
+		VkDeviceSize size;
+		VkBufferUsageFlags usageFlags;
+		VkMemoryPropertyFlags memoryFlags;
+	};
+
+	BoundBuffer create(const CreateInfo &createInfo);
 	void copy(VulkanInfo *vulkanInfo, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 	void copyToMemory(VulkanInfo *vulkanInfo, VkDeviceMemory bufferMemory, const uint8_t *data, VkDeviceSize size);

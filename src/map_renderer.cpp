@@ -13,6 +13,53 @@
 #include "util.h"
 #include "logger.h"
 
+/** Order of members matter for this struct due to alignment requirements in the 
+ * vertex shader.
+ * 
+ * See: Vulkan Spec: 14.5.4. Offset and Stride Assignment
+ */
+struct PushConstantData
+{
+  glm::vec4 textureQuad;
+  glm::vec4 fragQuad;
+  glm::vec4 color;
+  glm::vec2 pos;
+  glm::vec2 size;
+};
+
+struct NewVertex
+{
+  glm::ivec2 position;
+
+  static VkVertexInputBindingDescription getBindingDescription()
+  {
+    VkVertexInputBindingDescription bindingDescription{};
+
+    bindingDescription.binding = 0;
+    bindingDescription.stride = sizeof(NewVertex);
+    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    return bindingDescription;
+  }
+
+  static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions()
+  {
+    std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
+
+    attributeDescriptions[0].binding = 0;
+    attributeDescriptions[0].location = 0;
+    attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[0].offset = 0;
+
+    // attributeDescriptions[4].binding = 0;
+    // attributeDescriptions[4].location = 4;
+    // attributeDescriptions[4].format = VK_FORMAT_R8_UINT;
+    // attributeDescriptions[4].offset = offsetof(Vertex, useUbo);
+
+    return attributeDescriptions;
+  }
+};
+
 constexpr int GROUND_FLOOR = 7;
 
 constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
@@ -20,7 +67,8 @@ constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 constexpr VkClearColorValue ClearColor = {{0.0f, 0.0f, 0.0f, 1.0f}};
 
 // A rectangle is drawn using two triangles, each with 3 vertex indices.
-uint32_t IndexBufferSize = 6 * sizeof(uint16_t);
+constexpr uint32_t IndexBufferSize = 6 * sizeof(uint16_t);
+constexpr uint32_t VertexBufferSize = 4 * sizeof(NewVertex);
 
 glm::vec4 colors::opacity(float value)
 {
@@ -56,6 +104,7 @@ void MapRenderer::initResources(VkFormat colorFormat)
   createUniformBuffers();
   createDescriptorPool();
   createDescriptorSets();
+  createVertexBuffer();
   createIndexBuffer();
 
   // VME_LOG_D("End MapRenderer::initResources");
@@ -94,6 +143,7 @@ void MapRenderer::releaseResources()
   vulkanInfo.vkDestroyRenderPass(renderPass, nullptr);
   renderPass = VK_NULL_HANDLE;
 
+  vertexBuffer.releaseResources();
   indexBuffer.releaseResources();
 
   for (const auto id : activeTextureAtlasIds)
@@ -110,7 +160,6 @@ void MapRenderer::releaseResources()
     frame.commandBuffer = VK_NULL_HANDLE;
     frame.frameBuffer = VK_NULL_HANDLE;
     frame.uboDescriptorSet = VK_NULL_HANDLE;
-    frame.batchDraw.reset();
   }
 
   debug = true;
@@ -120,29 +169,27 @@ void MapRenderer::startNextFrame()
 {
   g_ecs.getSystem<ItemAnimationSystem>().update();
 
-  _currentFrame->batchDraw.vulkanInfo = &vulkanInfo;
-  _currentFrame->batchDraw.commandBuffer = _currentFrame->commandBuffer;
-
   mapView->updateViewport();
 
   updateUniformBuffer();
 
+  beginRenderPass();
+
+  setupFrame();
+
   drawMap();
   drawCurrentAction();
 
-  _currentFrame->batchDraw.prepareDraw();
-
-  beginRenderPass();
-  vulkanInfo.vkCmdBindPipeline(_currentFrame->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
-  drawBatches();
   vulkanInfo.vkCmdEndRenderPass(_currentFrame->commandBuffer);
 
   vulkanInfo.frameReady();
+  currentDescriptorSet = nullptr;
 }
 
-void MapRenderer::drawBatches()
+void MapRenderer::setupFrame()
 {
+  vulkanInfo.vkCmdBindPipeline(_currentFrame->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
   const util::Size size = vulkanInfo.vulkanSwapChainImageSize();
 
   VkViewport viewport;
@@ -160,51 +207,19 @@ void MapRenderer::drawBatches()
   vulkanInfo.vkCmdSetScissor(_currentFrame->commandBuffer, 0, 1, &scissor);
 
   VkDeviceSize offsets[] = {0};
-  VkBuffer buffers[] = {nullptr};
 
-  VkDescriptorSet currentDescriptorSet = _currentFrame->uboDescriptorSet;
+  vulkanInfo.vkCmdBindDescriptorSets(
+      _currentFrame->commandBuffer,
+      VK_PIPELINE_BIND_POINT_GRAPHICS,
+      pipelineLayout,
+      0,
+      1,
+      &_currentFrame->uboDescriptorSet,
+      0,
+      nullptr);
 
-  std::array<VkDescriptorSet, 2> descriptorSets = {
-      currentDescriptorSet,
-      nullptr};
-
+  vulkanInfo.vkCmdBindVertexBuffers(_currentFrame->commandBuffer, 0, 1, &vertexBuffer.buffer, offsets);
   vulkanInfo.vkCmdBindIndexBuffer(_currentFrame->commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
-
-  for (auto &batch : _currentFrame->batchDraw.getBatches())
-  {
-    if (!batch.isValid())
-      break;
-
-    buffers[0] = batch.buffer.buffer;
-    vulkanInfo.vkCmdBindVertexBuffers(_currentFrame->commandBuffer, 0, 1, buffers, offsets);
-
-    uint32_t offset = 0;
-    for (const auto &descriptorInfo : batch.descriptorIndices)
-    {
-      descriptorSets[1] = descriptorInfo.descriptor;
-
-      vulkanInfo.vkCmdBindDescriptorSets(
-          _currentFrame->commandBuffer,
-          VK_PIPELINE_BIND_POINT_GRAPHICS,
-          pipelineLayout,
-          0,
-          static_cast<uint32_t>(descriptorSets.size()),
-          descriptorSets.data(),
-          0,
-          nullptr);
-
-      // 4 is vertices for one sprite.
-      uint32_t sprites = (descriptorInfo.end - offset + 1) / 4;
-      for (uint32_t spriteIndex = 0; spriteIndex < sprites; ++spriteIndex)
-      {
-        vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, offset + spriteIndex * 4, 0);
-      }
-
-      offset = descriptorInfo.end + 1;
-    }
-
-    batch.invalidate();
-  }
 }
 
 void MapRenderer::drawMap()
@@ -382,6 +397,7 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, Pos
     if (shouldDrawItem(position, ground, flags, filter))
     {
       auto info = itemDrawInfo(ground, position, flags);
+      // drawItem(info);
       drawItem(info);
     }
   }
@@ -405,22 +421,110 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, Pos
   }
 }
 
-void MapRenderer::drawItem(ObjectDrawInfo &info)
+void MapRenderer::drawItem(const DrawInfo::Object &info)
 {
-  _currentFrame->batchDraw.addItem(info);
+  constexpr int MaxDrawOffsetPixels = 24;
+  const auto *atlas = info.textureInfo.atlas;
+
+  WorldPosition worldPos = MapPosition{info.position.x + atlas->drawOffset.x, info.position.y + atlas->drawOffset.y}.worldPos();
+
+  // Add draw offsets like elevation
+  worldPos.x += std::clamp(info.drawOffset.x, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
+  worldPos.y += std::clamp(info.drawOffset.y, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
+
+  // Add the item shift if necessary
+  if (info.appearance->hasFlag(AppearanceFlag::Shift))
+  {
+    worldPos.x -= info.appearance->flagData.shiftX;
+    worldPos.y -= info.appearance->flagData.shiftY;
+  }
+
+  const auto &window = info.textureInfo.window;
+  const glm::vec4 fragmentBounds = atlas->getFragmentBounds(window);
+
+  PushConstantData pushConstant{};
+  pushConstant.pos = {worldPos.x, worldPos.y};
+  pushConstant.size = {atlas->spriteWidth, atlas->spriteHeight};
+  pushConstant.color = info.color;
+  pushConstant.textureQuad = {window.x0, window.y0, window.x1, window.y1};
+  pushConstant.fragQuad = atlas->getFragmentBounds(window);
+
+  vulkanInfo.vkCmdBindDescriptorSets(
+      _currentFrame->commandBuffer,
+      VK_PIPELINE_BIND_POINT_GRAPHICS,
+      pipelineLayout,
+      1,
+      1,
+      &info.descriptorSet,
+      0,
+      nullptr);
+
+  vulkanInfo.vkCmdPushConstants(_currentFrame->commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantData), &pushConstant);
+  vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
 }
 
 void MapRenderer::drawOverlayItemType(uint16_t serverId, const WorldPosition position, const glm::vec4 color)
 {
   ItemType &itemType = *Items::items.getItemType(serverId);
-  OverlayObjectDrawInfo info;
+  DrawInfo::OverlayObject info;
   info.appearance = itemType.appearance;
   info.position = position;
   info.color = color;
   info.textureInfo = itemType.getTextureInfo();
   info.descriptorSet = objectDescriptorSet(info);
 
-  _currentFrame->batchDraw.addOverlayItem(info);
+  // _currentFrame->batchDraw.addOverlayItem(info);
+}
+
+void MapRenderer::drawRectangle(DrawInfo::Rectangle &info)
+{
+  PushConstantData pushConstant{};
+
+  if (std::holds_alternative<const Texture *>(info.texture))
+  {
+    pushConstant.textureQuad = {0, 0, 1, 1};
+    pushConstant.fragQuad = {0, 0, 1, 1};
+  }
+  else if (std::holds_alternative<TextureInfo>(info.texture))
+  {
+    const TextureInfo textureInfo = std::get<TextureInfo>(info.texture);
+    pushConstant.textureQuad = textureInfo.window.asVec4();
+    pushConstant.fragQuad = textureInfo.atlas->getFragmentBounds(textureInfo.window);
+  }
+
+  auto [x1, y1] = info.from;
+  auto [x2, y2] = info.to;
+
+  // Handle the possible quadrants to draw the texture correctly
+  if (x1 > x2)
+  {
+    std::swap(x1, x2);
+    if (y1 > y2)
+    {
+      std::swap(y1, y2);
+    }
+  }
+  else if (x1 < x2 && y1 > y2)
+  {
+    std::swap(y1, y2);
+  }
+
+  pushConstant.pos = glm::vec2(x1, y1);
+  pushConstant.size = {std::abs(x2 - x1), std::abs(y2 - y1)};
+  pushConstant.color = info.color;
+
+  vulkanInfo.vkCmdBindDescriptorSets(
+      _currentFrame->commandBuffer,
+      VK_PIPELINE_BIND_POINT_GRAPHICS,
+      pipelineLayout,
+      1,
+      1,
+      &info.descriptorSet,
+      0,
+      nullptr);
+
+  vulkanInfo.vkCmdPushConstants(_currentFrame->commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantData), &pushConstant);
+  vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
 }
 
 void MapRenderer::drawSolidRectangle(const SolidColor color, const WorldPosition from, const WorldPosition to, float opacity)
@@ -439,21 +543,21 @@ void MapRenderer::drawRectangle(const Texture &texture, const WorldPosition from
   if (!vulkanTexture.hasResources())
     vulkanTexture.initResources(texture, vulkanInfo, descriptor);
 
-  RectangleDrawInfo info;
+  DrawInfo::Rectangle info;
   info.from = from;
   info.to = to;
   info.texture = &texture;
   info.color = colors::opacity(opacity);
   info.descriptorSet = vulkanTexture.descriptorSet();
 
-  _currentFrame->batchDraw.addRectangle(info);
+  drawRectangle(info);
 }
 
-ObjectDrawInfo MapRenderer::itemDrawInfo(const Item &item, Position position, uint32_t drawFlags)
+DrawInfo::Object MapRenderer::itemDrawInfo(const Item &item, Position position, uint32_t drawFlags)
 {
   bool drawAsSelected = item.selected || ((drawFlags & ItemDrawFlags::ActiveSelectionArea) && mapView->inDragRegion(position));
 
-  ObjectDrawInfo info;
+  DrawInfo::Object info;
   info.appearance = item.itemType->appearance;
   info.position = position;
   info.color = drawAsSelected ? colors::Selected : colors::Default;
@@ -463,9 +567,9 @@ ObjectDrawInfo MapRenderer::itemDrawInfo(const Item &item, Position position, ui
   return info;
 }
 
-ObjectDrawInfo MapRenderer::itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags)
+DrawInfo::Object MapRenderer::itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags)
 {
-  ObjectDrawInfo info;
+  DrawInfo::Object info;
   info.appearance = itemType.appearance;
   info.position = position;
   info.color = drawFlags & ItemDrawFlags::Ghost ? colors::ItemPreview : colors::Default;
@@ -475,7 +579,7 @@ ObjectDrawInfo MapRenderer::itemTypeDrawInfo(const ItemType &itemType, Position 
   return info;
 }
 
-VkDescriptorSet MapRenderer::objectDescriptorSet(const BaseObjectDrawInfo &info)
+VkDescriptorSet MapRenderer::objectDescriptorSet(const DrawInfo::Base &info)
 {
   VulkanTexture::Descriptor descriptor;
   descriptor.layout = textureDescriptorSetLayout;
@@ -500,6 +604,18 @@ VkDescriptorSet MapRenderer::objectDescriptorSet(const BaseObjectDrawInfo &info)
 void MapRenderer::updateUniformBuffer()
 {
   glm::mat4 projection = vulkanInfo.projectionMatrix(*mapView);
+  // const auto p = projection;
+  // std::ostringstream s;
+  // VME_LOG_D("Next:");
+  // for (int i = 0; i < 4; ++i)
+  // {
+  //   s << "x: " << p[i].x << ", ";
+  //   s << "y: " << p[i].y << ", ";
+  //   s << "z: " << p[i].z << ", ";
+  //   s << "w: " << p[i].w << ", ";
+  //   s << std::endl;
+  // }
+  // VME_LOG_D(s.str());
   ItemUniformBufferObject uniformBufferObject{projection};
 
   void *data;
@@ -615,8 +731,8 @@ void MapRenderer::createGraphicsPipeline()
   VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
   vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-  auto bindingDescription = Vertex::getBindingDescription();
-  auto attributeDescriptions = Vertex::getAttributeDescriptions();
+  auto bindingDescription = NewVertex::getBindingDescription();
+  auto attributeDescriptions = NewVertex::getAttributeDescriptions();
 
   vertexInputInfo.vertexBindingDescriptionCount = 1;
   vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -678,17 +794,16 @@ void MapRenderer::createGraphicsPipeline()
   dynamicInfo.dynamicStateCount = sizeof(dynEnable) / sizeof(VkDynamicState);
   dynamicInfo.pDynamicStates = dynEnable;
 
+  VkPushConstantRange pushConstantRange{};
+  pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+  pushConstantRange.offset = 0;
+  pushConstantRange.size = sizeof(PushConstantData);
+
   std::array<VkDescriptorSetLayout, 2> layouts = {uboDescriptorSetLayout, textureDescriptorSetLayout};
   VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
   pipelineLayoutInfo.pSetLayouts = layouts.data();
-
-  VkPushConstantRange pushConstantRange{};
-  pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-  pushConstantRange.size = sizeof(TextureOffset);
-  pushConstantRange.offset = 0;
-
   pipelineLayoutInfo.pushConstantRangeCount = 1;
   pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -762,11 +877,15 @@ void MapRenderer::createUniformBuffers()
 {
   VkDeviceSize bufferSize = sizeof(ItemUniformBufferObject);
 
+  Buffer::CreateInfo info;
+  info.vulkanInfo = &vulkanInfo;
+  info.size = bufferSize;
+  info.usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+  info.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
   for (size_t i = 0; i < vulkanInfo.maxConcurrentFrameCount(); i++)
   {
-    frames[i].uniformBuffer = Buffer::create(&vulkanInfo, bufferSize,
-                                             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    frames[i].uniformBuffer = Buffer::create(info);
   }
 }
 
@@ -835,26 +954,61 @@ void MapRenderer::createDescriptorSets()
   }
 }
 
+void MapRenderer::createVertexBuffer()
+{
+  std::array<glm::ivec2, 4> vertices{{{0, 0}, {0, 1}, {1, 1}, {1, 0}}};
+
+  Buffer::CreateInfo stagingInfo;
+  stagingInfo.vulkanInfo = &vulkanInfo;
+  stagingInfo.size = VertexBufferSize;
+  stagingInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+  stagingInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+  BoundBuffer stagingBuffer = Buffer::create(stagingInfo);
+
+  void *data;
+  vulkanInfo.vkMapMemory(stagingBuffer.deviceMemory, 0, VertexBufferSize, 0, &data);
+  memcpy(data, &vertices, sizeof(vertices));
+
+  Buffer::CreateInfo bufferInfo;
+  bufferInfo.vulkanInfo = &vulkanInfo;
+  bufferInfo.size = VertexBufferSize;
+  bufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+  bufferInfo.memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+  vertexBuffer = Buffer::create(bufferInfo);
+
+  VkCommandBuffer commandBuffer = vulkanInfo.beginSingleTimeCommands();
+  VkBufferCopy copyRegion = {};
+  copyRegion.size = VertexBufferSize;
+  vulkanInfo.vkCmdCopyBuffer(commandBuffer, stagingBuffer.buffer, vertexBuffer.buffer, 1, &copyRegion);
+  vulkanInfo.endSingleTimeCommands(commandBuffer);
+
+  vulkanInfo.vkUnmapMemory(stagingBuffer.deviceMemory);
+}
+
 void MapRenderer::createIndexBuffer()
 {
-  BoundBuffer indexStagingBuffer = Buffer::create(
-      &vulkanInfo,
-      IndexBufferSize,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  std::array<uint16_t, 6> indices{0, 1, 3, 3, 1, 2};
+  Buffer::CreateInfo stagingInfo;
+  stagingInfo.vulkanInfo = &vulkanInfo;
+  stagingInfo.size = IndexBufferSize;
+  stagingInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+  stagingInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+  BoundBuffer indexStagingBuffer = Buffer::create(stagingInfo);
 
   void *data;
   vulkanInfo.vkMapMemory(indexStagingBuffer.deviceMemory, 0, IndexBufferSize, 0, &data);
-  uint16_t *indices = reinterpret_cast<uint16_t *>(data);
-  std::array<uint16_t, 6> indexArray{0, 1, 3, 3, 1, 2};
+  memcpy(data, &indices, sizeof(indices));
 
-  memcpy(indices, &indexArray, sizeof(indexArray));
+  Buffer::CreateInfo bufferInfo;
+  bufferInfo.vulkanInfo = &vulkanInfo;
+  bufferInfo.size = IndexBufferSize;
+  bufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+  bufferInfo.memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-  indexBuffer = Buffer::create(
-      &vulkanInfo,
-      IndexBufferSize,
-      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  indexBuffer = Buffer::create(bufferInfo);
 
   VkCommandBuffer commandBuffer = vulkanInfo.beginSingleTimeCommands();
   VkBufferCopy copyRegion = {};
@@ -952,9 +1106,13 @@ void VulkanTexture::initResources(const Texture &texture, VulkanInfo &vulkanInfo
   uint32_t sizeInBytes = texture.sizeInBytes();
 
   this->vulkanInfo = &vulkanInfo;
-  auto stagingBuffer = Buffer::create(&vulkanInfo, sizeInBytes,
-                                      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  Buffer::CreateInfo bufferInfo;
+  bufferInfo.vulkanInfo = &vulkanInfo;
+  bufferInfo.size = sizeInBytes;
+  bufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+  bufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+  auto stagingBuffer = Buffer::create(bufferInfo);
 
   Buffer::copyToMemory(&vulkanInfo, stagingBuffer.deviceMemory, texture.pixels().data(), sizeInBytes);
 
