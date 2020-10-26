@@ -17,6 +17,9 @@
 - [ ] topItem **not** selected: PRESS selects.
 - [ ] topItem selected: RELEASE deselects, but ONLY if mouse has been outside of this tile since the PRESS event.
 - [ ] BUG: A selection can be moved out of bounds. It should clamp to the map size, [and maybe to max/min floor?]
+- [ ] Reorder items on a tile.
+- [ ] (_Stretch_): reorder an item group among selected tiles. For example, move grass borders one level up.
+      This would require the editor to know about different item groups, like what items are grass borders.
 
 ## Optimization
 
