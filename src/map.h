@@ -51,8 +51,10 @@ public:
 	MapVersion getMapVersion();
 	std::string &getDescription();
 
+	const util::Volume<uint16_t, uint16_t, uint8_t> size() const noexcept;
 	uint16_t width() const noexcept;
 	uint16_t height() const noexcept;
+	uint8_t depth() const noexcept;
 
 	inline const Towns &towns() const noexcept
 	{
@@ -85,7 +87,7 @@ private:
 
 	quadtree::Node root;
 
-	uint16_t width, height;
+	util::Volume<uint16_t, uint16_t, uint8_t> _size;
 
 	/*
 		Replace the tile at the given tile's location. Returns the old tile if one
@@ -106,6 +108,10 @@ private:
 	void createItemAt(Position pos, uint16_t id);
 };
 
+inline const util::Volume<uint16_t, uint16_t, uint8_t> Map::size() const noexcept
+{
+	return _size;
+}
 
 inline uint16_t Map::width() const noexcept
 {
@@ -117,9 +123,9 @@ inline uint16_t Map::height() const noexcept
 	return _size.height();
 }
 
-inline uint16_t Map::getHeight() const noexcept
+inline uint8_t Map::depth() const noexcept
 {
-	return height;
+	return _size.depth();
 }
 
 // Iterator for a map region
@@ -138,9 +144,11 @@ public:
 		using IteratorCategory = std::forward_iterator_tag;
 
 		Iterator(Map &map, Position from, Position to, bool isEnd = false);
+		Iterator(const Iterator &other) = delete;
+		Iterator &operator=(const Iterator &other) = delete;
 
 		Iterator &operator++();
-		Iterator operator++(int junk);
+		// Iterator operator++(int junk);
 
 		Reference operator*() { return *value; }
 		Pointer operator->() { return value; }

@@ -12,10 +12,12 @@
 
 constexpr uint16_t DefaultWidth = 2048;
 constexpr uint16_t DefaultHeight = 2048;
+constexpr uint16_t DefaultDepth = 16;
 
 Map::Map()
-    : root(quadtree::Node::NodeType::Root), width(DefaultWidth), height(DefaultHeight)
+    : root(quadtree::Node::NodeType::Root), _size(DefaultWidth, DefaultHeight, DefaultDepth)
 {
+  DEBUG_ASSERT(util::powerOf2(_size.width()) && util::powerOf2(_size.height()) && util::powerOf2(_size.depth()), "Width & height must be powers of 2");
 }
 
 void Map::clear()
@@ -400,7 +402,7 @@ MapRegion::Iterator::Iterator(Map &map, Position from, Position to, bool isEnd)
   }
 }
 
-MapRegion::Iterator& MapRegion::Iterator::operator++()
+MapRegion::Iterator &MapRegion::Iterator::operator++()
 {
   ++state.chunk.y;
   updateValue();
@@ -408,15 +410,16 @@ MapRegion::Iterator& MapRegion::Iterator::operator++()
   return *this;
 }
 
-MapRegion::Iterator MapRegion::Iterator::operator++(int)
-{
-  Iterator previous(*this);
+// MapRegion::Iterator MapRegion::Iterator::operator++(int)
+// {
 
-  ++state.chunk.y;
-  updateValue();
+//   // Iterator previous(*this);
 
-  return previous;
-}
+//   // ++state.chunk.y;
+//   // updateValue();
+
+//   // return previous;
+// }
 
 bool MapRegion::Iterator::operator==(const MapRegion::Iterator &rhs) const
 {
