@@ -37,6 +37,32 @@ constexpr auto to_underlying(E e) noexcept
 
 namespace util
 {
+	template <typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type * = nullptr>
+	bool powerOf2(T value)
+	{
+		return (value & (value - 1)) == 0 && value != 0;
+	}
+
+	template <typename T1 = float, typename T2 = T1, typename T3 = T2>
+	class Volume
+	{
+	public:
+		constexpr Volume(T1 width, T2 height, T3 depth);
+
+		inline constexpr T1 width() const noexcept;
+		inline constexpr T2 height() const noexcept;
+		inline constexpr T3 depth() const noexcept;
+
+		inline constexpr void setWidth(T1 width) noexcept;
+		inline constexpr void setHeight(T2 height) noexcept;
+		inline constexpr void setDepth(T3 height) noexcept;
+
+	private:
+		int _width;
+		int _height;
+		int _depth;
+	};
+
 	class Size
 	{
 	public:
@@ -188,6 +214,56 @@ namespace util
 		return MultiplyDeBruijnBitPosition[((uint32_t)((v & -v) * 0x077CB531U)) >> 27];
 	}
 } // namespace util
+
+namespace vme
+{
+	using MapSize = util::Volume<uint16_t, uint16_t, uint8_t>;
+}
+
+//>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>
+//>>>>>Volume>>>>>>
+//>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>
+template <typename T1, typename T2, typename T3>
+inline constexpr util::Volume<T1, T2, T3>::Volume(T1 width, T2 height, T3 depth)
+		: _width(width), _height(height), _depth(depth) {}
+
+template <typename T1, typename T2, typename T3>
+inline constexpr T1 util::Volume<T1, T2, T3>::width() const noexcept
+{
+	return _width;
+}
+
+template <typename T1, typename T2, typename T3>
+inline constexpr T2 util::Volume<T1, T2, T3>::height() const noexcept
+{
+	return _height;
+}
+
+template <typename T1, typename T2, typename T3>
+inline constexpr T3 util::Volume<T1, T2, T3>::depth() const noexcept
+{
+	return _depth;
+}
+
+template <typename T1, typename T2, typename T3>
+inline constexpr void util::Volume<T1, T2, T3>::setWidth(T1 width) noexcept
+{
+	_width = width;
+}
+
+template <typename T1, typename T2, typename T3>
+inline constexpr void util::Volume<T1, T2, T3>::setHeight(T2 height) noexcept
+{
+	_height = height;
+}
+
+template <typename T1, typename T2, typename T3>
+inline constexpr void util::Volume<T1, T2, T3>::setDepth(T3 depth) noexcept
+{
+	_depth = depth;
+}
 
 inline constexpr int util::Size::width() const noexcept
 {
