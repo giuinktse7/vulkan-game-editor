@@ -31,8 +31,13 @@ public:
   void frameReady() override
   {
     window->frameReady();
+  }
+
+  void requestUpdate() override
+  {
     window->requestUpdate();
   }
+
   glm::mat4 projectionMatrix(MapView &mapView) const override
   {
     QMatrix4x4 projection = clipCorrectionMatrix; // adjust for Vulkan-OpenGL clip space differences

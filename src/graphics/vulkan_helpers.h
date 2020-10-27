@@ -19,6 +19,7 @@ class RenderTarget
 {
 public:
   virtual void frameReady() = 0;
+  virtual void requestUpdate() = 0;
 
   virtual util::Size vulkanSwapChainImageSize() const = 0;
   virtual int maxConcurrentFrameCount() const = 0;
