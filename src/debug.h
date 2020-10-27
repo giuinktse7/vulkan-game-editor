@@ -11,6 +11,8 @@
 
 #include "definitions.h"
 
+inline bool DEBUG_FLAG_ACTIVE = false;
+
 class GeneralDebugException : public std::exception
 {
 public:
