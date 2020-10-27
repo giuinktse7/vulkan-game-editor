@@ -217,7 +217,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
     break;
   case Qt::Key_Delete:
-    mapTabs->currentMapView()->deleteSelectedItems();
+    mapTabs->currentMapView()->deleteSelection();
     break;
   default:
   {
@@ -317,6 +317,12 @@ QMenuBar *MainWindow::createMenuBar()
     QAction *reloadStyles = new QAction(tr("Reload styles"), this);
     connect(reloadStyles, &QAction::triggered, [=] { QtUtil::qtApp()->loadStyleSheet("default"); });
     menuBar->addAction(reloadStyles);
+  }
+
+  {
+    QAction *debug = new QAction(tr("Toggle debug"), this);
+    connect(debug, &QAction::triggered, [=] { DEBUG_FLAG_ACTIVE = !DEBUG_FLAG_ACTIVE; });
+    menuBar->addAction(debug);
   }
 
   return menuBar;
