@@ -6,14 +6,14 @@ namespace vme
 {
   namespace octree
   {
-    TraversalState::TraversalState(Cube mapSize, CacheInitInfo cacheInfo)
+    TraversalState::TraversalState(vme::MapSize mapSize, CacheInitInfo cacheInfo)
         : pos(
-              std::max(ChunkSize.width, mapSize.width / 2),
-              std::max(ChunkSize.height, mapSize.height / 2),
-              std::max<Position::value_type>(ChunkSize.depth, mapSize.depth / 2)),
-          dx(std::max(ChunkSize.width, mapSize.width / 4)),
-          dy(std::max(ChunkSize.height, mapSize.height / 4)),
-          dz(std::max<Position::value_type>(ChunkSize.depth, mapSize.depth / 4)),
+              std::max<int>(ChunkSize.width, mapSize.width() / 2),
+              std::max<int>(ChunkSize.height, mapSize.height() / 2),
+              std::max<Position::value_type>(ChunkSize.depth, mapSize.depth() / 2)),
+          dx(std::max<int>(ChunkSize.width, mapSize.width() / 4)),
+          dy(std::max<int>(ChunkSize.height, mapSize.height() / 4)),
+          dz(std::max<Position::value_type>(ChunkSize.depth, mapSize.depth() / 4)),
           cacheInfo(cacheInfo) {}
 
     std::string TraversalState::show() const
@@ -84,21 +84,21 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::Tree(Cube mapSize, CacheInitInfo cacheInfo)
-        : width(mapSize.width), height(mapSize.height), floors(mapSize.depth),
-          cachedNodes(cacheInfo.amountToInitialize),
-          cachedHeapNodes(cacheInfo.count - cacheInfo.amountToInitialize + 8),
-          initialState(mapSize, cacheInfo),
-          cacheInfo(cacheInfo)
-    {
-      initializeCache();
-    }
-
-    Tree Tree::create(const Cube mapSize)
+    Tree Tree::create(const MapSize mapSize)
     {
       vme::octree::CacheInitInfo info = vme::octree::computeCacheStuff(mapSize);
 
       return Tree(mapSize, info);
+    }
+
+    Tree::Tree(vme::MapSize mapSize, CacheInitInfo cacheInfo)
+        : width(mapSize.width()), height(mapSize.height()), floors(mapSize.depth()),
+          initialState(mapSize, cacheInfo),
+          cacheInfo(cacheInfo),
+          cachedNodes(cacheInfo.amountToInitialize),
+          cachedHeapNodes(cacheInfo.count - cacheInfo.amountToInitialize + 8)
+    {
+      initializeCache();
     }
 
     void Tree::initializeCache()
@@ -241,11 +241,11 @@ namespace vme
       // VME_LOG_D("heap: " << cacheHeapIndex);
 
       int nodeType = 0;
-      if (state.dx >= ChunkSize.width)
+      if (state.dx >= ChunkSize.width / 2)
         nodeType |= (1 << 2);
-      if (state.dy >= ChunkSize.height)
+      if (state.dy >= ChunkSize.height / 2)
         nodeType |= (1 << 1);
-      if (state.dz >= ChunkSize.depth)
+      if (state.dz >= ChunkSize.depth / 2)
         nodeType |= (1 << 0);
 
       // For leaf node
@@ -270,6 +270,7 @@ namespace vme
 
     void Tree::add(const Position pos)
     {
+      // VME_LOG_D("Size before add: " << size());
       auto [cached, leaf] = getOrCreateLeaf(pos);
 
       const auto [changed, bboxChanged] = leaf->add(pos);
@@ -278,10 +279,16 @@ namespace vme
 
       if (bboxChanged)
         cached->updateBoundingBoxCached(*this);
+
+      DEBUG_ASSERT(boundingBox().has_value(), "Boundingbox empty after add");
+
+      // VME_LOG_D("Size after add: " << size());
     }
 
     void Tree::remove(const Position pos)
     {
+      // VME_LOG_D("Size before remove: " << size());
+
       auto [cached, leaf] = getOrCreateLeaf(pos);
 
       const auto [changed, bboxChanged] = leaf->remove(pos);
@@ -291,6 +298,8 @@ namespace vme
 
       if (bboxChanged)
         cached->updateBoundingBoxCached(*this);
+
+      // VME_LOG_D("Size after remove: " << size());
     }
 
     Leaf *Tree::getLeaf(const Position position) const
@@ -310,9 +319,11 @@ namespace vme
     std::pair<CachedNode *, Leaf *> Tree::getOrCreateLeaf(const Position pos)
     {
       if (mostRecentLeaf.second && mostRecentLeaf.second->encloses(pos))
+      {
         return mostRecentLeaf;
+      }
 
-      auto [cached, node] = getOrCreateFromCache(pos);
+      const auto [cached, node] = getOrCreateFromCache(pos);
       auto leaf = node->getOrCreateLeaf(pos);
 
       markAsRecent(cached, leaf);
@@ -320,9 +331,9 @@ namespace vme
       return {cached, leaf};
     }
 
-    BoundingBox Tree::boundingBox() const noexcept
+    const std::optional<BoundingBox> Tree::boundingBox() const noexcept
     {
-      return root.boundingBox;
+      return root.boundingBox();
     }
 
     void Tree::markAsRecent(CachedNode *cached, Leaf *leaf) const
@@ -330,13 +341,13 @@ namespace vme
       mostRecentLeaf = {cached, leaf};
     }
 
-    HeapNode *Tree::getChild(int index, HeapNode *node)
+    HeapNode *Tree::getChild(int index, const HeapNode *node) const
     {
       if (!node->isCachedNode())
         return node->child(index);
 
       // For cached nodes
-      CachedNode *cached = static_cast<CachedNode *>(node);
+      const CachedNode *cached = static_cast<const CachedNode *>(node);
       auto childIndex = cached->childOffset(index);
 
       if (cached->childCacheOffset < cacheInfo.amountToInitialize)
@@ -381,7 +392,7 @@ namespace vme
     void CachedNode::updateBoundingBoxCached(const Tree &tree)
     {
       // VME_LOG_D("updateBoundingBoxCached before: " << boundingBox);
-      boundingBox.reset();
+      _boundingBox = {};
 
       int splits = 0;
       if (cacheIndex < tree.cacheInfo.endXIndex)
@@ -396,16 +407,25 @@ namespace vme
       int amountOfChildren = power(2, splits);
       for (int i = 0; i < amountOfChildren; ++i)
       {
+        HeapNode *node = nullptr;
         if (childCacheOffset >= tree.cacheInfo.amountToInitialize) // Get from HeapNode cache
         {
-          auto &node = tree.cachedHeapNodes.at(childCacheOffset + i - tree.cacheInfo.amountToInitialize);
-          if (node)
-            boundingBox.include(node->boundingBox);
+          auto &ptr = tree.cachedHeapNodes.at(childCacheOffset + i - tree.cacheInfo.amountToInitialize);
+          if (ptr)
+          {
+            node = ptr.get();
+          }
         }
         else // Get from CachedNode cache
         {
-          auto node = tree.cachedNodes.at(childCacheOffset + i);
-          boundingBox.include(node.boundingBox);
+          node = &tree.cachedNodes.at(childCacheOffset + i);
+        }
+
+        if (node)
+        {
+          auto &box = node->boundingBox();
+          if (box)
+            addBoundingBox(box.value());
         }
       }
 
@@ -427,10 +447,10 @@ namespace vme
       return node ? static_cast<Leaf *>(node) : nullptr;
     }
 
-    bool HeapNode::contains(const Position pos)
+    bool HeapNode::contains(const Position pos) const
     {
-      auto leaf = getOrCreateLeaf(pos);
-      return leaf->contains(pos);
+      auto l = leaf(pos);
+      return l && l->contains(pos);
     }
 
     //>>>>>>>>>>>>>>>>>>>>>
@@ -440,7 +460,7 @@ namespace vme
     Leaf::Leaf(const Position pos, HeapNode *parent)
         : HeapNode(parent), position(pos.x - pos.x % ChunkSize.width, pos.y - pos.y % ChunkSize.height, pos.z - pos.z % ChunkSize.depth) {}
 
-    bool Leaf::contains(const Position pos)
+    bool Leaf::contains(const Position pos) const
     {
       uint16_t index = getIndex(pos);
       if (index >= values.size())
@@ -468,17 +488,63 @@ namespace vme
       int y = pos.y % ChunkSize.height;
       int z = pos.z % ChunkSize.depth;
 
-      bool bboxChange = ((x < low.x || x > high.x) ||
-                         (y < low.y || y > high.y) ||
-                         (z < low.z || z > high.z)) &&
-                        (xs[x] == 0 || ys[y] == 0 || zs[z] == 0);
+      // Must be before changing the xs, ys, zs values.
+      auto a = std::holds_alternative<BoundingBox>(_boundingBox);
+      auto b = (x < low.x || x > high.x) ||
+               (y < low.y || y > high.y) ||
+               (z < low.z || z > high.z);
+      auto c = (xs[x] == 0 || ys[y] == 0 || zs[z] == 0);
+      bool bboxChange = !a || (b && c);
 
       xs[x] += 1;
       ys[y] += 1;
       zs[z] += 1;
 
+#ifdef _DEBUG_VME
+      {
+        size_t total = 0;
+        for (int i = 0; i < ChunkSize.width; ++i)
+          total += xs[i];
+        for (int i = 0; i < ChunkSize.height; ++i)
+          total += ys[i];
+        for (int i = 0; i < ChunkSize.depth; ++i)
+          total += zs[i];
+
+        DEBUG_ASSERT((total / 3) == _count, "Total indices count must be equal to _count.");
+      }
+#endif
+
+      // std::ostringstream s;
+      // int t = 0;
+      // s << "Count: " << _count << "( ";
+      // {
+      //   int total = 0;
+      //   for (int i = 0; i < ChunkSize.width; ++i)
+      //     total += xs[i];
+      //   s << "x: " << total << ", ";
+      //   t += total;
+      // }
+      // {
+      //   int total = 0;
+      //   for (int i = 0; i < ChunkSize.height; ++i)
+      //     total += ys[i];
+      //   s << "y: " << total << ", ";
+      //   t += total;
+      // }
+      // {
+      //   int total = 0;
+      //   for (int i = 0; i < ChunkSize.depth; ++i)
+      //     total += zs[i];
+      //   s << "z: " << total << ")";
+      //   t += total;
+      // }
+      // s << ", diff: " << (int)_count - t / 3;
+      // VME_LOG_D(s.str());
+
       if (!bboxChange)
+      {
         return false;
+      }
 
       if (_count == 1)
       {
@@ -503,10 +569,10 @@ namespace vme
       Position from(position.x + low.x, position.y + low.y, position.z + low.z);
       Position to(position.x + high.x, position.y + high.y, position.z + high.z);
 
-      boundingBox = BoundingBox(from, to);
+      _boundingBox = BoundingBox(from, to);
 
       return true;
-    }
+    } // namespace octree
 
     bool Leaf::removeFromBoundingBox(const Position pos)
     {
@@ -520,7 +586,7 @@ namespace vme
 
       if (_count == 0)
       {
-        boundingBox = {};
+        _boundingBox = {};
         low = {};
         high = {};
         return true;
@@ -535,44 +601,62 @@ namespace vme
 
       // Low
       {
-        uint16_t xIndex = low.x;
-        for (; xIndex < ChunkSize.width && xs[xIndex] == 0; ++xIndex)
-          ;
-        low.x = xIndex;
+        if (x == low.x)
+        {
+          uint16_t xIndex = low.x;
+          for (; xIndex < ChunkSize.width && xs[xIndex] == 0; ++xIndex)
+            ;
+          low.x = xIndex;
+        }
 
-        uint16_t yIndex = low.y;
-        for (; yIndex >= 0 && ys[yIndex] == 0; --yIndex)
-          ;
-        low.y = yIndex;
+        if (y == low.y)
+        {
+          uint16_t yIndex = low.y;
+          for (; yIndex >= 0 && ys[yIndex] == 0; ++yIndex)
+            ;
+          low.y = yIndex;
+        }
 
-        uint16_t zIndex = low.z;
-        for (; zIndex >= 0 && zs[zIndex] == 0; --zIndex)
-          ;
-        low.z = zIndex;
+        if (z == low.z)
+        {
+          uint16_t zIndex = low.z;
+          for (; zIndex >= 0 && zs[zIndex] == 0; ++zIndex)
+            ;
+          low.z = zIndex;
+        }
       }
 
       // High
       {
-        uint16_t xIndex = high.x;
-        for (; xIndex >= 0 && xs[xIndex] == 0; --xIndex)
-          ;
-        high.x = xIndex;
+        if (x == high.x)
+        {
+          uint16_t xIndex = high.x;
+          for (; xIndex >= 0 && xs[xIndex] == 0; --xIndex)
+            ;
+          high.x = xIndex;
+        }
 
-        uint16_t yIndex = high.y;
-        for (; yIndex >= 0 && ys[yIndex] == 0; --yIndex)
-          ;
-        high.y = yIndex;
+        if (y == high.y)
+        {
+          uint16_t yIndex = high.y;
+          for (; yIndex >= 0 && ys[yIndex] == 0; --yIndex)
+            ;
+          high.y = yIndex;
+        }
 
-        uint16_t zIndex = high.z;
-        for (; zIndex >= 0 && zs[zIndex] == 0; --zIndex)
-          ;
-        high.z = zIndex;
+        if (z == high.z)
+        {
+          uint16_t zIndex = high.z;
+          for (; zIndex >= 0 && zs[zIndex] == 0; --zIndex)
+            ;
+          high.z = zIndex;
+        }
       }
 
       Position from(position.x + low.x, position.y + low.y, position.z + low.z);
       Position to(position.x + high.x, position.y + high.y, position.z + high.z);
 
-      boundingBox = BoundingBox(from, to);
+      _boundingBox = BoundingBox(from, to);
       return true;
     }
 
@@ -594,7 +678,7 @@ namespace vme
       bool bboxChanged = addToBoundingBox(pos);
 
       if (bboxChanged && !parent->isCachedNode())
-        parent->updateBoundingBox(boundingBox);
+        parent->updateBoundingBox();
 
       return {true, bboxChanged};
     }
@@ -615,7 +699,7 @@ namespace vme
       values[getIndex(pos)] = false;
       bool bboxChanged = removeFromBoundingBox(pos);
       if (bboxChanged && !parent->isCachedNode())
-        parent->updateBoundingBox(boundingBox);
+        parent->updateBoundingBox();
 
       return {true, bboxChanged};
     }
@@ -1046,7 +1130,7 @@ namespace vme
 
     inline uint16_t NodeXYZ::getIndex(const Position &pos) const
     {
-      return ((pos.x > midPoint.x) << 2) | ((pos.y > midPoint.y) << 1) | (pos.z > midPoint.z);
+      return ((pos.x >= midPoint.x) << 2) | ((pos.y >= midPoint.y) << 1) | (pos.z >= midPoint.z);
     }
 
     std::string NodeXYZ::show() const
@@ -1054,6 +1138,18 @@ namespace vme
       std::ostringstream s;
       s << "NodeXYZ { midPoint: " << midPoint << " }";
       return s.str();
+    }
+
+    bool CachedNode::addBoundingBox(BoundingBox bbox)
+    {
+      if (!std::holds_alternative<BoundingBox>(_boundingBox))
+      {
+        _boundingBox = bbox;
+        return true;
+      }
+
+      BoundingBox &box = std::get<BoundingBox>(_boundingBox);
+      return box.include(bbox);
     }
 
     uint16_t CachedNode::getIndex(const Position &pos) const
@@ -1064,7 +1160,7 @@ namespace vme
 
     void CachedNode::clear()
     {
-      boundingBox = {};
+      _boundingBox = {};
       if (parent)
         static_cast<CachedNode *>(parent)->clear();
     }
@@ -1078,21 +1174,6 @@ namespace vme
     {
       return (_min.x <= other._min.x && _min.y <= other._min.y && _min.z <= other._min.z) &&
              (_max.x >= other._max.x && _max.y >= other._max.y && _max.z >= other._max.z);
-    }
-
-    void BoundingBox::reset()
-    {
-      _min = {
-          std::numeric_limits<BoundingBox::value_type>::max(),
-          std::numeric_limits<BoundingBox::value_type>::max(),
-          std::numeric_limits<BoundingBox::value_type>::max(),
-      };
-
-      _max = {
-          std::numeric_limits<BoundingBox::value_type>::min(),
-          std::numeric_limits<BoundingBox::value_type>::min(),
-          std::numeric_limits<BoundingBox::value_type>::min(),
-      };
     }
 
     bool BoundingBox::include(const Position pos)
@@ -1125,53 +1206,55 @@ namespace vme
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>Tree::chunkIterator>>>>>
+    //>>>>Tree::leafIterator>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    Tree::chunkIterator::chunkIterator() {}
-    Tree::chunkIterator::chunkIterator(Tree *tree) : tree(tree)
+    Tree::leafIterator::leafIterator() {}
+    Tree::leafIterator::leafIterator(const Tree *tree) : tree(tree), value(nullptr)
     {
       if (tree->root.empty())
       {
+        VME_LOG_D("Root was empty");
         isEnd = true;
       }
       else
       {
-        nodes.emplace(&tree->root);
-        nextChunk();
+        HeapNode *rootPtr = const_cast<HeapNode *>(static_cast<const HeapNode *>(&tree->root));
+        nodes.emplace(rootPtr);
+        nextLeaf();
       }
     }
 
-    Tree::chunkIterator Tree::chunkIterator::end()
+    Tree::leafIterator Tree::leafIterator::end()
     {
-      auto it = Tree::chunkIterator();
+      auto it = Tree::leafIterator();
       it.isEnd = true;
 
       return it;
     }
 
-    Tree::chunkIterator &Tree::chunkIterator::operator++()
+    Tree::leafIterator &Tree::leafIterator::operator++()
     {
-      nextChunk();
+      nextLeaf();
       return *this;
     }
 
-    Tree::chunkIterator Tree::chunkIterator::operator++(int junk)
+    Tree::leafIterator Tree::leafIterator::operator++(int junk)
     {
-      Tree::chunkIterator it = *this;
+      Tree::leafIterator it = *this;
       ++(*this);
 
       return it;
     }
 
-    bool Tree::chunkIterator::operator==(const Tree::chunkIterator &rhs) const
+    bool Tree::leafIterator::operator==(const Tree::leafIterator &rhs) const
     {
       return !(isEnd ^ rhs.isEnd) && ((isEnd && rhs.isEnd) || (value == rhs.value));
     }
 
-    void Tree::chunkIterator::nextChunk()
+    void Tree::leafIterator::nextLeaf()
     {
-      HeapNode *current;
+      const HeapNode *current;
       while (!nodes.empty())
       {
         // VME_LOG_D("??: " << nodes.size());
@@ -1183,7 +1266,8 @@ namespace vme
         {
           if (current->isLeaf())
           {
-            value = static_cast<Leaf *>(current);
+            VME_LOG_D("Leaf in nextLeaf!");
+            value = static_cast<const Leaf *>(current);
             return;
           }
           else
@@ -1198,10 +1282,12 @@ namespace vme
         }
       }
 
+      VME_LOG_D("Found no leaf.");
+
       isEnd = true;
     }
 
-    bool Tree::chunkIterator::finished() const noexcept
+    bool Tree::leafIterator::finished() const noexcept
     {
       return isEnd;
     }
@@ -1215,25 +1301,26 @@ namespace vme
     Tree::iterator::iterator()
     {
     }
-    Tree::iterator::iterator(Tree *tree)
-        : chunkIterator(tree),
-          value(currentChunk()->min()),
-          topLeft(value), bottomRight(currentChunk()->max())
+    vme::octree::Tree::iterator::iterator(const vme::octree::Tree *tree)
+        : leafIterator(tree)
     {
-      if (chunkIterator == Tree::chunkIterator::end())
+      if (leafIterator == Tree::leafIterator::end() || !currentLeaf())
       {
         isEnd = true;
+        return;
       }
-      else
-      {
-        if (!currentChunk()->contains(value))
-          nextValue();
-      }
+
+      value = currentLeaf()->min();
+      topLeft = value;
+      bottomRight = currentLeaf()->max();
+
+      if (!currentLeaf()->contains(value))
+        nextValue();
     }
 
-    Leaf *Tree::iterator::currentChunk() const
+    const Leaf *Tree::iterator::currentLeaf() const
     {
-      return *chunkIterator;
+      return *leafIterator;
     }
 
     void Tree::iterator::nextValue()
@@ -1253,19 +1340,20 @@ namespace vme
 
             if (value.z > bottomRight.z)
             {
-              ++chunkIterator;
-              if (chunkIterator.finished())
+              ++leafIterator;
+              if (leafIterator.finished())
               {
                 isEnd = true;
                 return;
               }
 
-              topLeft = currentChunk()->min();
-              bottomRight = currentChunk()->max();
+              topLeft = currentLeaf()->min();
+              bottomRight = currentLeaf()->max();
+              value = topLeft;
             }
           }
         }
-      } while (!currentChunk()->contains(value));
+      } while (!currentLeaf()->contains(value));
     }
 
     Tree::iterator &Tree::iterator::operator++()

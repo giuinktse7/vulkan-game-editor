@@ -12,6 +12,7 @@
 #include "debug.h"
 #include "position.h"
 #include "time_point.h"
+#include "util.h"
 
 // HeapNode macro
 #define DECLARE_NODE(name, amount)                                                \
@@ -92,7 +93,6 @@ namespace vme
     {
       using value_type = Position::value_type;
 
-      BoundingBox() {}
       BoundingBox(Position min, Position max)
           : _min(min), _max(max) {}
 
@@ -115,10 +115,6 @@ namespace vme
       void setMaxY(value_type value) noexcept;
       void setMaxZ(value_type value) noexcept;
 
-      void reset();
-
-      bool empty() const noexcept;
-
       /*
         Returns true if the bounding box changed.
       */
@@ -131,27 +127,19 @@ namespace vme
       bool contains(const BoundingBox &other) const noexcept;
 
     private:
-      Position _min{
-          std::numeric_limits<BoundingBox::value_type>::max(),
-          std::numeric_limits<BoundingBox::value_type>::max(),
-          std::numeric_limits<BoundingBox::value_type>::max(),
-      };
-      Position _max{
-          std::numeric_limits<BoundingBox::value_type>::min(),
-          std::numeric_limits<BoundingBox::value_type>::min(),
-          std::numeric_limits<BoundingBox::value_type>::min(),
-      };
+      Position _min;
+      Position _max;
     };
 
     static constexpr Cube ChunkSize = {64, 64, 8};
     constexpr uint32_t DefaultMaxCacheSplitCount = 4;
 
-    constexpr CacheInitInfo computeCacheStuff(const Cube mapSize, const uint32_t maxCacheSplitCount = DefaultMaxCacheSplitCount)
+    constexpr CacheInitInfo computeCacheStuff(const vme::MapSize mapSize, const uint32_t maxCacheSplitCount = DefaultMaxCacheSplitCount)
     {
       SplitSize splitCounts;
-      splitCounts.x = std::min(mapSize.width / ChunkSize.width - 1, maxCacheSplitCount);
-      splitCounts.y = std::min(mapSize.height / ChunkSize.height - 1, maxCacheSplitCount);
-      splitCounts.z = std::max(std::min(mapSize.depth / ChunkSize.depth - 1, maxCacheSplitCount), static_cast<uint32_t>(0));
+      splitCounts.x = std::min(mapSize.width() / ChunkSize.width - 1, maxCacheSplitCount);
+      splitCounts.y = std::min(mapSize.height() / ChunkSize.height - 1, maxCacheSplitCount);
+      splitCounts.z = std::max(std::min(mapSize.depth() / ChunkSize.depth - 1, maxCacheSplitCount), static_cast<uint32_t>(0));
 
       CacheInitInfo cacheInfo;
       // There are one or zero chunks
@@ -236,17 +224,21 @@ namespace vme
 
       virtual int childCount() const noexcept = 0;
 
-      virtual bool contains(const Position pos);
+      virtual bool contains(const Position pos) const;
 
       virtual uint16_t getIndex(const Position &pos) const = 0;
 
-      virtual void updateBoundingBox(BoundingBox bbox)
+      virtual void updateBoundingBox()
       {
         VME_LOG_D("Warning: Called updateBoundingBox of virtual HeapNode.");
       }
 
+      bool hasBoundingBox() const;
+
+      const std::optional<BoundingBox> boundingBox() const;
+
       HeapNode *parent;
-      BoundingBox boundingBox;
+      std::variant<std::monostate, BoundingBox> _boundingBox;
     };
 
     class Leaf : public HeapNode
@@ -278,21 +270,15 @@ namespace vme
 
       void clear() override;
 
+      bool size() const noexcept;
       uint32_t count() const noexcept;
 
       /*
         Returns true if the leaf has the position 'pos'.
       */
-      bool contains(const Position pos) override;
+      bool contains(const Position pos) const override;
 
-      /*
-        Returns true if the bounding box changed.
-      */
       UpdateResult add(const Position pos);
-
-      /*
-        Returns true if the bounding box changed.
-      */
       UpdateResult remove(const Position pos);
 
       bool encloses(const Position pos) const;
@@ -312,7 +298,27 @@ namespace vme
       uint32_t _count = 0;
       struct Indices
       {
-        int x, y, z = -1;
+        int x = -1;
+        int y = -1;
+        int z = -1;
+
+#ifdef _DEBUG_VME
+        bool validIndices() const noexcept
+        {
+          if (x == -1 || y == -1 || z == -1)
+          {
+            return x == -1 && y == -1 && z == -1;
+          }
+
+          return true;
+        }
+#endif
+
+        bool empty() const
+        {
+          DEBUG_ASSERT(validIndices(), "Invalid octree indices!");
+          return x == -1 || y == -1 || z == -1;
+        }
       };
       /*
         Important: Indices hold indices into xs, ys, and zs. To get a position 
@@ -348,7 +354,7 @@ namespace vme
       void clear() override;
       int childCount() const noexcept override;
 
-      void updateBoundingBox(BoundingBox bbox) override;
+      void updateBoundingBox() override;
 
     protected:
       std::array<std::unique_ptr<HeapNode>, ChildCount> children;
@@ -372,6 +378,8 @@ namespace vme
       bool isCachedNode() const noexcept override;
       int childCount() const noexcept override;
 
+      bool addBoundingBox(BoundingBox boundingBox);
+
       uint16_t childOffset(const int pattern) const;
 
       void updateBoundingBoxCached(const Tree &tree);
@@ -389,11 +397,10 @@ namespace vme
 
     struct TraversalState
     {
-      TraversalState(Cube mapSize, CacheInitInfo cacheInfo);
+      TraversalState(vme::MapSize mapSize, CacheInitInfo cacheInfo);
       Position pos;
 
       int update(uint16_t index, const Position position);
-      int update2(const Position position);
 
       int dx;
       int dy;
@@ -408,9 +415,10 @@ namespace vme
     class Tree
     {
     public:
-      static Tree create(const Cube mapSize);
+      static Tree create(const MapSize mapSize);
+      Tree(vme::MapSize mapSize, CacheInitInfo cacheInfo);
 
-      class chunkIterator
+      class leafIterator
       {
       public:
         using ValueType = Leaf *;
@@ -418,31 +426,31 @@ namespace vme
         using Pointer = Leaf *;
         using IteratorCategory = std::forward_iterator_tag;
 
-        chunkIterator();
-        chunkIterator(Tree *tree);
-        static chunkIterator end();
+        leafIterator();
+        leafIterator(const Tree *tree);
+        static leafIterator end();
 
-        chunkIterator &operator++();
-        chunkIterator operator++(int junk);
+        leafIterator &operator++();
+        leafIterator operator++(int junk);
 
-        Reference operator*() const { return value; }
-        Pointer operator->() const { return value; }
+        const Leaf *operator*() const { return value; }
+        const Leaf *operator->() const { return value; }
 
-        bool operator==(const chunkIterator &rhs) const;
-        bool operator!=(const chunkIterator &rhs) const { return !(*this == rhs); }
+        bool operator==(const leafIterator &rhs) const;
+        bool operator!=(const leafIterator &rhs) const { return !(*this == rhs); }
 
         bool finished() const noexcept;
 
       private:
-        Tree *tree;
+        const Tree *tree;
 
-        std::queue<HeapNode *> nodes;
+        std::queue<const HeapNode *> nodes;
 
-        Leaf *value;
+        const Leaf *value;
 
         bool isEnd = false;
 
-        void nextChunk();
+        void nextLeaf();
       };
 
       class iterator
@@ -453,7 +461,7 @@ namespace vme
         using Pointer = Position *;
         using IteratorCategory = std::forward_iterator_tag;
 
-        iterator(Tree *tree);
+        iterator(const Tree *tree);
         static iterator end();
 
         iterator &operator++();
@@ -466,7 +474,7 @@ namespace vme
         bool operator!=(const iterator &rhs) const { return !(*this == rhs); }
 
       private:
-        chunkIterator chunkIterator;
+        leafIterator leafIterator;
 
         Position value;
 
@@ -477,22 +485,21 @@ namespace vme
 
         void nextValue();
 
-        Leaf *currentChunk() const;
+        const Leaf *currentLeaf() const;
 
         iterator();
       };
 
-      iterator begin()
+      iterator begin() const
       {
         return iterator(this);
       }
 
-      iterator end()
+      iterator end() const
       {
         return iterator::end();
       }
 
-      Tree(Cube mapSize, CacheInitInfo cacheInfo);
       uint32_t width;
       uint32_t height;
       uint16_t floors;
@@ -509,32 +516,34 @@ namespace vme
       long size() const noexcept;
       bool empty() const noexcept;
 
-      BoundingBox boundingBox() const noexcept;
+      const std::optional<BoundingBox> boundingBox() const noexcept;
 
-      Position min() const noexcept;
-      Position max() const noexcept;
+      // Position min() const noexcept;
+      // Position max() const noexcept;
 
-      BoundingBox::value_type minX() const noexcept;
-      BoundingBox::value_type minY() const noexcept;
-      BoundingBox::value_type minZ() const noexcept;
+      // BoundingBox::value_type minX() const noexcept;
+      // BoundingBox::value_type minY() const noexcept;
+      // BoundingBox::value_type minZ() const noexcept;
 
-      BoundingBox::value_type maxX() const noexcept;
-      BoundingBox::value_type maxY() const noexcept;
-      BoundingBox::value_type maxZ() const noexcept;
+      // BoundingBox::value_type maxX() const noexcept;
+      // BoundingBox::value_type maxY() const noexcept;
+      // BoundingBox::value_type maxZ() const noexcept;
+
+      std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
 
     private:
       friend class CachedNode;
       long _size = 0;
 
-      mutable std::pair<CachedNode *, Leaf *> mostRecentLeaf;
-
       // Should not change
       TraversalState initialState;
 
       CacheInitInfo cacheInfo;
-
       CachedNode root;
-      std::vector<CachedNode> cachedNodes;
+
+      mutable std::pair<CachedNode *, Leaf *> mostRecentLeaf;
+      mutable std::vector<CachedNode> cachedNodes;
+
       std::vector<std::unique_ptr<HeapNode>> cachedHeapNodes;
 
       /*
@@ -544,18 +553,13 @@ namespace vme
       std::vector<uint16_t> usedCacheIndices;
       std::vector<uint16_t> usedHeapCacheIndices;
 
-      HeapNode *getChild(int index, HeapNode *node);
+      HeapNode *getChild(int index, const HeapNode *node) const;
 
       void markAsRecent(CachedNode *cached, Leaf *leaf) const;
 
       void initializeCache();
 
       static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData, HeapNode *parent);
-
-      /*
-        Returns the index of the cached heap node containing the position.
-      */
-      uint16_t cachedHeapNodeIndex(const Position position) const;
 
       const CachedNode *getCachedNode(const Position position) const;
 
@@ -576,8 +580,14 @@ namespace vme
       return true;
     }
 
+    inline bool Leaf::size() const noexcept
+    {
+      return _count;
+    }
+
     inline void Leaf::clear()
     {
+      VME_LOG_D("Clear");
       values.fill(false);
     }
 
@@ -623,22 +633,32 @@ namespace vme
     }
 
     template <size_t ChildCount>
-    inline void BaseNode<ChildCount>::updateBoundingBox(BoundingBox bbox)
+    inline void BaseNode<ChildCount>::updateBoundingBox()
     {
       // VME_LOG_D("updateBoundingBox before: " << boundingBox);
-      boundingBox.reset();
+      bool changed = false;
+      _boundingBox = {};
       for (const std::unique_ptr<HeapNode> &node : children)
       {
-        if (node)
+        if (node && node->hasBoundingBox())
         {
-          auto nodeBbox = node->boundingBox;
-          boundingBox.include(nodeBbox);
+          auto nodeBbox = node->boundingBox().value();
+          if (!boundingBox())
+          {
+            _boundingBox = nodeBbox;
+            changed = true;
+          }
+          else
+          {
+            BoundingBox &box = std::get<BoundingBox>(_boundingBox);
+            changed = changed || box.include(nodeBbox);
+          }
         }
       }
       // VME_LOG_D("updateBoundingBox after: " << boundingBox);
 
-      if (!parent->isCachedNode())
-        parent->updateBoundingBox(BoundingBox());
+      if (!parent->isCachedNode() && changed)
+        parent->updateBoundingBox();
     }
 
     template <size_t ChildCount>
@@ -649,6 +669,18 @@ namespace vme
         if (c)
           c->clear();
       }
+    }
+
+    inline std::optional<Position> Tree::getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept
+    {
+      if (!root.boundingBox())
+        return std::nullopt;
+
+      auto &bbox = root.boundingBox().value();
+      return Position(
+          positiveX ? bbox.maxX() : bbox.minX(),
+          positiveY ? bbox.maxY() : bbox.minY(),
+          positiveZ ? bbox.maxZ() : bbox.minZ());
     }
 
     inline long Tree::size() const noexcept
@@ -730,40 +762,40 @@ namespace vme
       _max.z = value;
     }
 
-    inline BoundingBox::value_type Tree::minX() const noexcept
-    {
-      return boundingBox().minX();
-    }
-    inline BoundingBox::value_type Tree::minY() const noexcept
-    {
-      return boundingBox().minY();
-    }
-    inline BoundingBox::value_type Tree::minZ() const noexcept
-    {
-      return boundingBox().minZ();
-    }
-    inline BoundingBox::value_type Tree::maxX() const noexcept
-    {
-      return boundingBox().maxX();
-    }
-    inline BoundingBox::value_type Tree::maxY() const noexcept
-    {
-      return boundingBox().maxY();
-    }
-    inline BoundingBox::value_type Tree::maxZ() const noexcept
-    {
-      return boundingBox().maxZ();
-    }
+    // inline BoundingBox::value_type Tree::minX() const noexcept
+    // {
+    //   return boundingBox().minX();
+    // }
+    // inline BoundingBox::value_type Tree::minY() const noexcept
+    // {
+    //   return boundingBox().minY();
+    // }
+    // inline BoundingBox::value_type Tree::minZ() const noexcept
+    // {
+    //   return boundingBox().minZ();
+    // }
+    // inline BoundingBox::value_type Tree::maxX() const noexcept
+    // {
+    //   return boundingBox().maxX();
+    // }
+    // inline BoundingBox::value_type Tree::maxY() const noexcept
+    // {
+    //   return boundingBox().maxY();
+    // }
+    // inline BoundingBox::value_type Tree::maxZ() const noexcept
+    // {
+    //   return boundingBox().maxZ();
+    // }
 
-    inline Position Tree::min() const noexcept
-    {
-      return boundingBox().min();
-    }
+    // inline Position Tree::min() const noexcept
+    // {
+    //   return boundingBox().min();
+    // }
 
-    inline Position Tree::max() const noexcept
-    {
-      return boundingBox().max();
-    }
+    // inline Position Tree::max() const noexcept
+    // {
+    //   return boundingBox().max();
+    // }
 
     inline std::unique_ptr<HeapNode> Tree::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta, HeapNode *parent)
     {
@@ -815,9 +847,19 @@ namespace vme
       return nullptr;
     }
 
+    inline bool HeapNode::hasBoundingBox() const
+    {
+      return std::holds_alternative<BoundingBox>(_boundingBox);
+    }
+
+    inline const std::optional<BoundingBox> HeapNode::boundingBox() const
+    {
+      return std::holds_alternative<BoundingBox>(_boundingBox) ? std::optional<BoundingBox>(std::get<BoundingBox>(_boundingBox)) : std::nullopt;
+    }
+
     inline bool HeapNode::empty() const noexcept
     {
-      return boundingBox.empty();
+      return std::holds_alternative<std::monostate>(_boundingBox);
     }
 
     inline uint32_t Leaf::count() const noexcept { return _count; }
@@ -835,11 +877,6 @@ namespace vme
     inline bool operator!=(const BoundingBox &l, const BoundingBox &r) noexcept
     {
       return !(l == r);
-    }
-
-    inline bool BoundingBox::empty() const noexcept
-    {
-      return _min.x == std::numeric_limits<BoundingBox::value_type>::max();
     }
 
     inline std::ostream &operator<<(std::ostream &os, const BoundingBox &bbox)

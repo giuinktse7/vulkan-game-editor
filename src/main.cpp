@@ -20,6 +20,7 @@
 #include "items.h"
 #include "time_point.h"
 #include "random.h"
+#include "util.h"
 
 #include "qt/logging.h"
 
@@ -47,7 +48,8 @@ void addChunk(Position from, vme::octree::Tree &tree)
 void testOctree()
 {
     VME_LOG_D("octree:");
-    constexpr vme::octree::Cube mapSize = {4096, 4096, 16};
+    constexpr vme::MapSize mapSize = {2048, 2048, 16};
+    // constexpr vme::MapSize mapSize = {4096, 4096, 16};
 
     vme::octree::Tree tree = vme::octree::Tree::create(mapSize);
 
@@ -61,25 +63,28 @@ void testOctree()
 
     // tree.add(Position(960, 2752, 8));
     // tree.add(Position(3001, 2773, 8));
-    VME_LOG_D("min: " << tree.min());
 
-    auto chunk = vme::octree::ChunkSize;
-    int chunksX = 64;
-    int chunksY = 64;
-    int chunksZ = 2;
-    int positions = chunksX * chunksY * chunksZ * (chunk.width * chunk.height * chunk.depth);
+    tree.add(Position(35, 35, 7));
+    // tree.remove(Position(35, 35, 7));
+    tree.add(Position(64, 32, 7));
 
-    VME_LOG("Adding from " << Position(0, 0, 0) << " to " << Position(chunksX * chunk.width, chunksY * chunk.height, chunksZ * chunk.depth) << " (" << positions << " positions).");
-    for (int x = 0; x < chunksX; ++x)
-        for (int y = 0; y < chunksY; ++y)
-            for (int z = 0; z < chunksZ; ++z)
-                addChunk(Position(x * 64, y * 64, z * 8), tree);
+    // auto chunk = vme::octree::ChunkSize;
+    // int chunksX = 1;
+    // int chunksY = 1;
+    // int chunksZ = 2;
+    // int positions = chunksX * chunksY * chunksZ * (chunk.width * chunk.height * chunk.depth);
+
+    // VME_LOG("Adding from " << Position(0, 0, 0) << " to " << Position(chunksX * chunk.width, chunksY * chunk.height, chunksZ * chunk.depth) << " (" << positions << " positions).");
+    // for (int x = 0; x < chunksX; ++x)
+    //     for (int y = 0; y < chunksY; ++y)
+    //         for (int z = 0; z < chunksZ; ++z)
+    //             addChunk(Position(x * 64, y * 64, z * 8), tree);
 
     int count = 0;
 
     TimePoint start;
-    for (const auto pos : tree)
-        ++count;
+    // for (const auto pos : tree)
+    //     ++count;
 
     {
         // These two together created a crash (they shared the same leaf node)
@@ -238,9 +243,9 @@ std::shared_ptr<Map> makeTestMap1()
     std::shared_ptr<Map> map = std::make_shared<Map>();
     auto &rand = Random::global();
 
-    for (int x = 0; x < 30; ++x)
+    for (int x = 0; x < 200; ++x)
     {
-        for (int y = 0; y < 30; ++y)
+        for (int y = 0; y < 200; ++y)
         {
             map->addItem(Position(x, y, 7), rand.nextInt<uint16_t>(4526, 4542));
         }
