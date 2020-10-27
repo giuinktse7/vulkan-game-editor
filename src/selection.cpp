@@ -5,11 +5,13 @@
 #include "history/history_action.h"
 
 Selection::Selection(MapView &mapView)
-    : outOfBoundCorrection(0, 0, 0), mapView(mapView)
+    : outOfBoundCorrection(0, 0, 0),
+      mapView(mapView),
+      storage(mapView.map()->size())
 {
 }
 
-void Selection::merge(std::unordered_set<Position, PositionHash> &positions)
+void Selection::merge(std::vector<Position> &positions)
 {
   for (const auto &pos : positions)
   {
@@ -18,7 +20,7 @@ void Selection::merge(std::unordered_set<Position, PositionHash> &positions)
   }
 }
 
-void Selection::deselect(std::unordered_set<Position, PositionHash> &positions)
+void Selection::deselect(std::vector<Position> &positions)
 {
   for (const auto &pos : positions)
   {
@@ -29,12 +31,12 @@ void Selection::deselect(std::unordered_set<Position, PositionHash> &positions)
 
 Position Selection::moveDelta() const
 {
-  if (!moveOrigin)
+  if (!moveOrigin || storage.empty())
     return Position(0, 0, 0);
 
   auto delta = mapView.mouseGamePos() - moveOrigin.value();
 
-  auto topLeftCorrection = storage.topLeft().value() + delta;
+  auto topLeftCorrection = storage.getCorner(0, 0, 0).value() + delta;
   delta.x -= std::min(topLeftCorrection.x, 0);
   delta.y -= std::min(topLeftCorrection.y, 0);
 
@@ -66,11 +68,6 @@ void Selection::setSelected(const Position pos, bool selected)
     deselect(pos);
 }
 
-const std::unordered_set<Position, PositionHash> &Selection::getPositions() const
-{
-  return storage.getPositions();
-}
-
 void Selection::clear()
 {
   storage.clear();
@@ -81,17 +78,28 @@ void Selection::deselectAll()
   // There is no need to commit an action if there are no selections
   if (storage.empty())
   {
+    VME_LOG_D("Storage was empty.");
     return;
   }
+
+  VME_LOG_D("Deselecting.");
 
   mapView.history.startGroup(ActionGroupType::Selection);
   MapHistory::Action action(MapHistory::ActionType::Selection);
 
-  action.addChange(MapHistory::SelectMultiple(storage.getPositions(), false));
-  storage.clear();
+  const auto positions = storage.allPositions();
+  VME_LOG_D("Positions in deselectAll: " << positions.size());
+
+  action.addChange(MapHistory::SelectMultiple(std::move(positions), false));
+  // storage.clear();
 
   mapView.history.commit(std::move(action));
   mapView.history.endGroup(ActionGroupType::Selection);
+}
+
+size_t Selection::size() const noexcept
+{
+  return storage.size();
 }
 
 bool Selection::empty() const
@@ -115,10 +123,10 @@ void Selection::update()
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-SelectionStorage::SelectionStorage()
+SelectionStorageSet::SelectionStorageSet()
     : xMin(0), yMin(0), xMax(0), yMax(0), zMin(0), zMax(0) {}
 
-void SelectionStorage::update()
+void SelectionStorageSet::update()
 {
   if (staleBoundingBox)
   {
@@ -127,12 +135,7 @@ void SelectionStorage::update()
   }
 }
 
-const std::unordered_set<Position, PositionHash> &SelectionStorage::getPositions() const
-{
-  return values;
-}
-
-void SelectionStorage::updateBoundingBox(util::Rectangle<Position::value_type> bbox)
+void SelectionStorageSet::updateBoundingBox(util::Rectangle<Position::value_type> bbox)
 {
   yMin = std::min(yMin, bbox.y1);
   xMax = std::max(xMax, bbox.x2);
@@ -140,7 +143,7 @@ void SelectionStorage::updateBoundingBox(util::Rectangle<Position::value_type> b
   xMin = std::min(xMin, bbox.x1);
 }
 
-void SelectionStorage::updateBoundingBox(Position pos)
+void SelectionStorageSet::updateBoundingBox(Position pos)
 {
   xMin = std::min(xMin, pos.x);
   yMin = std::min(yMin, pos.y);
@@ -151,7 +154,7 @@ void SelectionStorage::updateBoundingBox(Position pos)
   zMax = std::max(zMax, pos.z);
 }
 
-void SelectionStorage::setBoundingBox(Position pos)
+void SelectionStorageSet::setBoundingBox(Position pos)
 {
   xMin = pos.x;
   yMin = pos.y;
@@ -162,7 +165,7 @@ void SelectionStorage::setBoundingBox(Position pos)
   zMax = pos.z;
 }
 
-void SelectionStorage::add(Position pos)
+void SelectionStorageSet::add(Position pos)
 {
   if (values.empty())
     setBoundingBox(pos);
@@ -172,7 +175,7 @@ void SelectionStorage::add(Position pos)
   values.emplace(pos);
 }
 
-void SelectionStorage::remove(Position pos)
+void SelectionStorageSet::remove(Position pos)
 {
   if (xMin == pos.x || xMax == pos.x || yMin == pos.y || yMax == pos.y)
     staleBoundingBox = true;
@@ -180,7 +183,7 @@ void SelectionStorage::remove(Position pos)
   values.erase(pos);
 }
 
-void SelectionStorage::add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox)
+void SelectionStorageSet::add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox)
 {
   if (positions.empty())
     return;
@@ -194,13 +197,13 @@ void SelectionStorage::add(std::vector<Position> positions, util::Rectangle<Posi
   updateBoundingBox(bbox);
 }
 
-void SelectionStorage::recomputeBoundingBox()
+void SelectionStorageSet::recomputeBoundingBox()
 {
   for (const auto &pos : values)
     updateBoundingBox(pos);
 }
 
-void SelectionStorage::clear()
+void SelectionStorageSet::clear()
 {
   values.clear();
 }
@@ -211,7 +214,7 @@ void SelectionStorage::clear()
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-SelectionStorageOctree::SelectionStorageOctree(const vme::octree::Cube mapSize)
+SelectionStorageOctree::SelectionStorageOctree(const util::Volume<uint16_t, uint16_t, uint8_t> mapSize)
     : tree(vme::octree::Tree::create(mapSize)) {}
 
 void SelectionStorageOctree::add(Position pos)
@@ -240,6 +243,11 @@ bool SelectionStorageOctree::empty() const noexcept
   return tree.empty();
 }
 
+size_t SelectionStorageOctree::size() const noexcept
+{
+  return tree.size();
+}
+
 bool SelectionStorageOctree::contains(const Position pos) const
 {
   return tree.contains(pos);
@@ -250,6 +258,13 @@ void SelectionStorageOctree::clear()
   tree.clear();
 }
 
-const std::unordered_set<Position, PositionHash> &SelectionStorageOctree::getPositions() const
+const std::vector<Position> SelectionStorageOctree::allPositions() const
 {
+  std::vector<Position> positions;
+  for (const auto &p : tree)
+    positions.emplace_back(p);
+
+  DEBUG_ASSERT(positions.size() == size(), "Amount of positions from the iterator should always be equal to the size.");
+
+  return positions;
 }

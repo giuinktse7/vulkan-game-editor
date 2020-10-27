@@ -280,7 +280,7 @@ namespace MapHistory
       it->undo(mapView);
   }
 
-  SelectMultiple::SelectMultiple(std::unordered_set<Position, PositionHash> positions, bool select)
+  SelectMultiple::SelectMultiple(std::vector<Position> positions, bool select)
       : positions(positions),
         select(select)
   {
@@ -289,17 +289,17 @@ namespace MapHistory
   void SelectMultiple::commit(MapView &mapView)
   {
     if (select)
-      mapView.selection.merge(positions);
+      mapView.selection().merge(positions);
     else
-      mapView.selection.deselect(positions);
+      mapView.selection().deselect(positions);
   }
 
   void SelectMultiple::undo(MapView &mapView)
   {
     if (select)
-      mapView.selection.deselect(positions);
+      mapView.selection().deselect(positions);
     else
-      mapView.selection.merge(positions);
+      mapView.selection().merge(positions);
   }
 
   Select::Select(Position position,
@@ -353,7 +353,7 @@ namespace MapHistory
     if (includesGround)
       tile->setGroundSelected(true);
 
-    mapView.selection.setSelected(position, tile->hasSelection());
+    mapView.selection().setSelected(position, tile->hasSelection());
   }
 
   void Select::undo(MapView &mapView)
@@ -365,7 +365,7 @@ namespace MapHistory
     if (includesGround)
       tile->setGroundSelected(false);
 
-    mapView.selection.setSelected(position, tile->hasSelection());
+    mapView.selection().setSelected(position, tile->hasSelection());
   }
 
   Deselect::Deselect(Position position,
@@ -417,7 +417,7 @@ namespace MapHistory
     if (includesGround)
       tile->setGroundSelected(false);
 
-    mapView.selection.setSelected(position, tile->hasSelection());
+    mapView.selection().setSelected(position, tile->hasSelection());
   }
 
   void Deselect::undo(MapView &mapView)
@@ -429,7 +429,7 @@ namespace MapHistory
     if (includesGround)
       tile->setGroundSelected(true);
 
-    mapView.selection.setSelected(position, tile->hasSelection());
+    mapView.selection().setSelected(position, tile->hasSelection());
   }
 
   void Action::markAsCommitted()

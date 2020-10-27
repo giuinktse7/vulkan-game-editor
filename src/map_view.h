@@ -55,8 +55,6 @@ public:
 
 	MapHistory::History history;
 
-	Selection selection;
-
 	inline Map *map() const;
 
 	void mousePressEvent(VME::MouseEvent event);
@@ -66,6 +64,8 @@ public:
 		Escape the current action (for example when pressing the ESC key)
 	*/
 	void escapeEvent();
+
+	Selection &selection();
 
 	Tile *getTile(const Position pos) const;
 	Tile &getOrCreateTile(const Position pos);
@@ -143,7 +143,7 @@ public:
 
 	const Viewport &getViewport() const noexcept;
 
-	void deleteSelectedItems();
+	void deleteSelection();
 	void updateSelection(const Position pos);
 
 	util::Rectangle<int> getGameBoundingRect() const;
@@ -191,11 +191,13 @@ private:
 	*/
 	static std::unordered_set<MapView *> instances;
 
+	std::shared_ptr<Map> _map;
+	Selection _selection;
+
 	std::unique_ptr<UIUtils> uiUtils;
 
 	friend class MapAction;
 
-	std::shared_ptr<Map> _map;
 	Viewport viewport;
 
 	Camera camera;
@@ -207,6 +209,11 @@ private:
 	Tile deepCopyTile(const Position position) const;
 	MapHistory::Action newAction(MapHistory::ActionType actionType) const;
 };
+
+inline Selection &MapView::selection()
+{
+	return _selection;
+}
 
 inline Tile MapView::deepCopyTile(const Position position) const
 {

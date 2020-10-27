@@ -248,7 +248,7 @@ void MapRenderer::drawMap()
     };
   }
 
-  bool movingSelection = view.selection.moving();
+  bool movingSelection = view.selection().moving();
 
   uint32_t flags = ItemDrawFlags::DrawNonSelected;
 
@@ -281,7 +281,7 @@ void MapRenderer::drawCurrentAction()
               // const auto [from, to] = mapView->getDragPoints().value();
               // drawSolidRectangle(SolidColor::Blue, from, to, 0.1f);
             }
-            else if (mapView->selection.moving())
+            else if (mapView->selection().moving())
             {
               drawMovingSelection();
             }
@@ -348,7 +348,7 @@ void MapRenderer::drawMovingSelection()
 {
   auto mapRect = mapView->getGameBoundingRect();
 
-  Position moveDelta = mapView->selection.moveDelta();
+  Position moveDelta = mapView->selection().moveDelta();
 
   mapRect = mapRect.translate(-moveDelta.x, -moveDelta.y, {0, 0});
 

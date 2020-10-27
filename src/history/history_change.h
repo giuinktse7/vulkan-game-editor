@@ -142,13 +142,13 @@ namespace MapHistory
   class SelectMultiple : public ChangeItem
   {
   public:
-    SelectMultiple(std::unordered_set<Position, PositionHash> positions, bool select = true);
+    SelectMultiple(std::vector<Position> positions, bool select = true);
 
     virtual void commit(MapView &mapView) override;
     virtual void undo(MapView &mapView) override;
 
   private:
-    std::unordered_set<Position, PositionHash> positions;
+    std::vector<Position> positions;
     bool select;
   };
 

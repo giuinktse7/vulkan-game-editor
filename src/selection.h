@@ -10,8 +10,9 @@
 
 class MapView;
 
-class SelectionStorageInterface
+class SelectionStorage
 {
+public:
   virtual void add(Position pos) = 0;
   virtual void add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox) = 0;
 
@@ -24,83 +25,84 @@ class SelectionStorageInterface
   virtual bool contains(const Position pos) const = 0;
 
   virtual void clear() = 0;
+  virtual size_t size() const noexcept = 0;
 
-  virtual const std::unordered_set<Position, PositionHash> &getPositions() const = 0;
+  virtual std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept = 0;
+  virtual std::optional<Position> getCorner(int positiveX, int positiveY, int positiveZ) const noexcept = 0;
+
+  virtual const std::vector<Position> allPositions() const = 0;
 };
 
-class SelectionStorageOctree : SelectionStorageInterface
+class SelectionStorageOctree : public SelectionStorage
 {
-  SelectionStorageOctree(const vme::octree::Cube mapSize);
+public:
+  SelectionStorageOctree(const util::Volume<uint16_t, uint16_t, uint8_t> mapSize);
 
-  void add(Position pos);
-  void add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox);
+  void add(Position pos) override;
+  void add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox) override;
 
-  void remove(Position pos);
+  void remove(Position pos) override;
 
-  std::optional<Position> topLeft() const noexcept;
-  std::optional<Position> topRight() const noexcept;
-  std::optional<Position> bottomRight() const noexcept;
-  std::optional<Position> bottomLeft() const noexcept;
+  void update() override;
 
-  void update();
+  bool empty() const noexcept override;
 
-  bool empty() const noexcept;
+  bool contains(const Position pos) const override;
 
-  bool contains(const Position pos) const;
+  void clear() override;
 
-  void clear();
+  std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept override;
+  std::optional<Position> getCorner(int positiveX, int positiveY, int positiveZ) const noexcept override;
 
-  const std::unordered_set<Position, PositionHash> &getPositions() const;
+  vme::octree::Tree::iterator begin()
+  {
+    return tree.begin();
+  }
+  vme::octree::Tree::iterator end()
+  {
+    return tree.end();
+  }
+
+  size_t size() const noexcept override;
+
+  const std::vector<Position> allPositions() const override;
 
 private:
   vme::octree::Tree tree;
 };
 
-class SelectionStorage
+inline std::optional<Position> SelectionStorageOctree::getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept
+{
+  return tree.getCorner(positiveX, positiveY, positiveZ);
+}
+inline std::optional<Position> SelectionStorageOctree::getCorner(int positiveX, int positiveY, int positiveZ) const noexcept
+{
+  return tree.getCorner(positiveX == 1, positiveY == 1, positiveZ == 1);
+}
+
+class SelectionStorageSet : public SelectionStorage
 {
 public:
-  SelectionStorage();
+  SelectionStorageSet();
 
-  void add(Position pos);
-  void add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox);
+  void add(Position pos) override;
+  void add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox) override;
 
-  void remove(Position pos);
+  void remove(Position pos) override;
 
-  std::optional<Position> topLeft() const noexcept
-  {
-    return empty() ? std::optional<Position>{} : Position(xMin, yMin, zMin);
-  }
+  void update() override;
 
-  std::optional<Position> topRight() const noexcept
-  {
-    return empty() ? std::optional<Position>{} : Position(xMax, yMin, zMin);
-  }
-
-  std::optional<Position> bottomRight() const noexcept
-  {
-    return empty() ? std::optional<Position>{} : Position(xMax, yMax, zMin);
-  }
-
-  std::optional<Position> bottomLeft() const noexcept
-  {
-    return empty() ? std::optional<Position>{} : Position(xMin, yMin, zMin);
-  }
-
-  void update();
-
-  bool empty() const noexcept
+  bool empty() const noexcept override
   {
     return values.empty();
   }
 
-  bool contains(const Position pos) const
+  bool contains(const Position pos) const override
   {
     return values.find(pos) != values.end();
   }
 
-  void clear();
-
-  const std::unordered_set<Position, PositionHash> &getPositions() const;
+  void clear() override;
 
 private:
   std::unordered_set<Position, PositionHash> values;
@@ -135,16 +137,25 @@ public:
 
   Position moveDelta() const;
 
+  vme::octree::Tree::iterator begin()
+  {
+    return storage.begin();
+  }
+  vme::octree::Tree::iterator end()
+  {
+    return storage.end();
+  }
+
   bool contains(const Position pos) const;
   void select(const Position pos);
   void setSelected(const Position pos, bool selected);
   void deselect(const Position pos);
-  void deselect(std::unordered_set<Position, PositionHash> &positions);
-  void merge(std::unordered_set<Position, PositionHash> &positions);
+  void deselect(std::vector<Position> &positions);
+  void merge(std::vector<Position> &positions);
+
+  size_t size() const noexcept;
 
   bool empty() const;
-
-  const std::unordered_set<Position, PositionHash> &getPositions() const;
 
   void deselectAll();
 
@@ -159,5 +170,5 @@ public:
 private:
   MapView &mapView;
 
-  SelectionStorage storage;
+  SelectionStorageOctree storage;
 };
