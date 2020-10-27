@@ -51,8 +51,8 @@ public:
 	MapVersion getMapVersion();
 	std::string &getDescription();
 
-	uint16_t getWidth() const noexcept;
-	uint16_t getHeight() const noexcept;
+	uint16_t width() const noexcept;
+	uint16_t height() const noexcept;
 
 	inline const Towns &towns() const noexcept
 	{
@@ -106,9 +106,15 @@ private:
 	void createItemAt(Position pos, uint16_t id);
 };
 
-inline uint16_t Map::getWidth() const noexcept
+
+inline uint16_t Map::width() const noexcept
 {
-	return width;
+	return _size.width();
+}
+
+inline uint16_t Map::height() const noexcept
+{
+	return _size.height();
 }
 
 inline uint16_t Map::getHeight() const noexcept

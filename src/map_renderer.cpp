@@ -327,7 +327,7 @@ void MapRenderer::drawCurrentAction()
 void MapRenderer::drawPreviewItem(uint16_t serverId, Position pos)
 {
   auto map = mapView->map();
-  if (pos.x < 0 || pos.x > map->getWidth() || pos.y < 0 || pos.y > map->getHeight())
+  if (pos.x < 0 || pos.x > map->width() || pos.y < 0 || pos.y > map->height())
     return;
 
   ItemType &selectedItemType = *Items::items.getItemType(serverId);

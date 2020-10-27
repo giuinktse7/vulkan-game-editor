@@ -151,8 +151,8 @@ void MapIO::saveMap(Map &map)
     OTBMVersion otbmVersion = map.getMapVersion().otbmVersion;
     buffer.writeU32(static_cast<uint32_t>(otbmVersion));
 
-    buffer.writeU16(map.getWidth());
-    buffer.writeU16(map.getHeight());
+    buffer.writeU16(map.width());
+    buffer.writeU16(map.height());
 
     buffer.writeU32(Items::items.getOtbVersionInfo().majorVersion);
     buffer.writeU32(Items::items.getOtbVersionInfo().minorVersion);

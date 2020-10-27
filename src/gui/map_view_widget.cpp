@@ -86,8 +86,8 @@ MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
   }
 
   Map *map = mapView->map();
-  uint16_t width = map->getWidth();
-  uint16_t height = map->getHeight();
+  uint16_t width = map->width();
+  uint16_t height = map->width();
 
   int maxX = width * MapTileSize / MinimumStepSizeInPixels;
   int maxY = height * MapTileSize / MinimumStepSizeInPixels;
