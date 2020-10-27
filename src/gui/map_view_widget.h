@@ -35,6 +35,7 @@ public:
 
   // From MapView::Observer
   void viewportChanged(const Viewport &viewport) override;
+  void mapViewDrawRequested() override;
 
   MapView *mapView;
 

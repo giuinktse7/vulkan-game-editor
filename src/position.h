@@ -334,7 +334,7 @@ inline std::ostream &operator<<(std::ostream &os, const Region2D<T> &pos)
 }
 
 /* Common constants */
-namespace CommonPositions
+namespace PositionConstants
 {
 	const Position Zero = Position(0, 0, 0);
 }

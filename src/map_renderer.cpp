@@ -167,6 +167,7 @@ void MapRenderer::releaseResources()
 
 void MapRenderer::startNextFrame()
 {
+  VME_LOG("Start next frame");
   g_ecs.getSystem<ItemAnimationSystem>().update();
 
   mapView->updateViewport();
@@ -183,6 +184,7 @@ void MapRenderer::startNextFrame()
   vulkanInfo.vkCmdEndRenderPass(_currentFrame->commandBuffer);
 
   vulkanInfo.frameReady();
+  // vulkanInfo.requestUpdate();
   currentDescriptorSet = nullptr;
 }
 
@@ -236,7 +238,7 @@ void MapRenderer::drawMap()
   Position from{mapRect.x1, mapRect.y1, startZ};
   Position to{mapRect.x2, mapRect.y2, endZ};
 
-  ItemPredicate filter;
+  ItemPredicate filter = nullptr;
   if (mapView->draggingWithSubtract())
   {
     auto [from, to] = mapView->getDragPoints().value();
@@ -264,7 +266,7 @@ void MapRenderer::drawMap()
     if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
       continue;
 
-    drawTile(tileLocation, flags, filter);
+    drawTile(tileLocation, flags);
   }
 }
 
@@ -381,23 +383,21 @@ bool MapRenderer::shouldDrawItem(const Position pos, const Item &item, uint32_t 
 
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, const ItemPredicate &filter)
 {
-  drawTile(tileLocation, flags, Position(), filter);
+  drawTile(tileLocation, flags, PositionConstants::Zero, filter);
 }
 
-void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, Position offset, const ItemPredicate &filter)
+void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, const Position offset, const ItemPredicate &filter)
 {
   auto position = tileLocation.position();
   position += offset;
   auto tile = tileLocation.tile();
 
   Item *groundPtr = tile->ground();
-  if (groundPtr)
+  if (groundPtr != nullptr)
   {
-    const Item &ground = *tile->ground();
-    if (shouldDrawItem(position, ground, flags, filter))
+    if (shouldDrawItem(position, *groundPtr, flags, filter))
     {
-      auto info = itemDrawInfo(ground, position, flags);
-      // drawItem(info);
+      auto info = itemDrawInfo(*groundPtr, position, flags);
       drawItem(info);
     }
   }

@@ -36,6 +36,7 @@ public:
 		Observer(MapView *target = nullptr);
 		~Observer();
 		virtual void viewportChanged(const Viewport &viewport) = 0;
+		virtual void mapViewDrawRequested() = 0;
 
 		MapView *target;
 
@@ -44,6 +45,7 @@ public:
 		enum class ChangeType
 		{
 			Viewport,
+			DrawRequest
 		};
 	};
 
@@ -206,8 +208,16 @@ private:
 
 	std::vector<MapView::Observer *> observers;
 
+	/**
+	 * NOTE: Do not use this for anything except to request a draw from mouseEvent.
+	 * Use mousePos() instead.
+	 */
+	Position _drawRequestMousePos;
+
 	Tile deepCopyTile(const Position position) const;
 	MapHistory::Action newAction(MapHistory::ActionType actionType) const;
+
+	void requestDraw();
 };
 
 inline Selection &MapView::selection()

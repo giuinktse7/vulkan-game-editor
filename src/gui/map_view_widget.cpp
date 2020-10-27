@@ -152,6 +152,11 @@ void MapViewWidget::viewportChanged(const Viewport &viewport)
   emit viewportChangedEvent(viewport);
 }
 
+void MapViewWidget::mapViewDrawRequested()
+{
+  vulkanWindow->requestUpdate();
+}
+
 /*
 ********************************
 ********************************

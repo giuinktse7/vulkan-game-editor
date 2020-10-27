@@ -78,12 +78,12 @@ void MapView::clearSelection()
 void MapView::updateSelection(const Position pos)
 {
   Tile *tile = getTile(pos);
-  selection.setSelected(pos, tile && tile->hasSelection());
+  _selection.setSelected(pos, tile && tile->hasSelection());
 }
 
 bool MapView::hasSelectionMoveOrigin() const
 {
-  return selection.moveOrigin.has_value();
+  return _selection.moveOrigin.has_value();
 }
 
 void MapView::addItem(const Position pos, uint16_t id)
@@ -183,7 +183,7 @@ void MapView::updateViewport()
   {
     viewport.zoom = zoom;
     viewport.offset = camera.position();
-    notifyObservers(MapView::Observer::ChangeType::Viewport);
+    notifyObservers(Observer::ChangeType::Viewport);
   }
 }
 
@@ -218,6 +218,7 @@ void MapView::deleteSelection()
   _selection.clear();
 
   history.endGroup(ActionGroupType::RemoveMapItem);
+  requestDraw();
 }
 
 util::Rectangle<int> MapView::getGameBoundingRect() const
@@ -292,6 +293,7 @@ void MapView::finishMoveSelection()
     MapHistory::Action action(MapHistory::ActionType::Selection);
 
     Position deltaPos = _selection.moveDelta();
+    VME_LOG_D("finishMove deltaPos: " << deltaPos);
 
     auto multiMove = std::make_unique<MapHistory::MultiMove>(deltaPos, _selection.size());
     VME_LOG_D("Moving " << _selection.size() << " items.");
@@ -313,6 +315,8 @@ void MapView::finishMoveSelection()
     history.commit(std::move(action));
   }
   history.endGroup(ActionGroupType::MoveItems);
+  requestDraw();
+  VME_LOG_D("Finished move.");
 
   _selection.moveOrigin.reset();
 }
@@ -392,6 +396,7 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
       editorAction.action());
 
   dragRegion.reset();
+  requestDraw();
 }
 
 bool MapView::isDragging() const
@@ -479,15 +484,25 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
     setDragStart(mouseWorldPos());
   }
+
+  requestDraw();
 }
 
 void MapView::mouseMoveEvent(VME::MouseEvent event)
 {
+  Position pos = event.pos().toPos(*this);
+
+  bool needsDraw = pos != _drawRequestMousePos;
+  _drawRequestMousePos = pos;
+
   if (!isDragging())
+  {
+    if (needsDraw)
+      requestDraw();
     return;
+  }
 
   auto dragPositions = getDragPoints().value();
-  Position pos = event.pos().toPos(*this);
 
   if (event.buttons() & VME::MouseButtons::LeftButton)
   {
@@ -505,7 +520,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
               }
             },
 
-            [this, pos, event, dragPositions](const MouseAction::RawItem &action) {
+            [this, pos, event, dragPositions, &needsDraw](const MouseAction::RawItem &action) {
               const auto [from, to] = dragPositions;
               if (event.pos().worldPos(*this) == to || action.area)
                 return;
@@ -519,6 +534,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
 
                   removeItems(*tile, [action](const Item &item) { return item.serverId() == action.serverId; });
                   history.endGroup(ActionGroupType::RemoveMapItem);
+                  needsDraw = true;
                 }
               }
               else
@@ -530,7 +546,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
               }
             },
 
-            [this, event](MouseAction::Pan &action) {
+            [this, event, &needsDraw](MouseAction::Pan &action) {
               if (action.active())
               {
                 ScreenPosition delta = event.pos() - action.mouseOrigin.value();
@@ -551,6 +567,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                 }
 
                 setCameraPosition(newPos);
+                needsDraw = true;
               }
             },
 
@@ -559,6 +576,9 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
   }
 
   setDragEnd(event.pos().worldPos(*this));
+
+  if (needsDraw)
+    requestDraw();
 }
 
 void MapView::mouseReleaseEvent(VME::MouseEvent event)
@@ -584,6 +604,8 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
 
     _selection.moveOrigin.reset();
   }
+
+  requestDraw();
 }
 
 /*
@@ -597,16 +619,19 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
 void MapView::setCameraPosition(WorldPosition position)
 {
   camera.setPosition(position);
+  requestDraw();
 }
 
 void MapView::setX(WorldPosition::value_type x)
 {
   camera.setX(x);
+  requestDraw();
 }
 
 void MapView::setY(WorldPosition::value_type y)
 {
   camera.setY(y);
+  requestDraw();
 }
 
 void MapView::zoom(int delta)
@@ -623,6 +648,8 @@ void MapView::zoom(int delta)
   default:
     break;
   }
+
+  requestDraw();
 }
 
 void MapView::zoomOut()
@@ -674,6 +701,11 @@ bool MapView::inDragRegion(Position pos) const
   return dragRegion.value().collides(topLeft, bottomRight);
 }
 
+void MapView::requestDraw()
+{
+  notifyObservers(Observer::ChangeType::DrawRequest);
+}
+
 void MapView::escapeEvent()
 {
   std::visit(
@@ -716,6 +748,12 @@ void MapView::notifyObservers(MapView::Observer::ChangeType changeType) const
     for (auto observer : observers)
     {
       observer->viewportChanged(viewport);
+    }
+    break;
+  case Observer::ChangeType::DrawRequest:
+    for (auto observer : observers)
+    {
+      observer->mapViewDrawRequested();
     }
     break;
   }

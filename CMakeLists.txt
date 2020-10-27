@@ -18,7 +18,10 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
       CACHE STRING "")
 endif()
 
+set(CMAKE_CXX_STANDARD 17)
+
 set(CMAKE_PREFIX_PATH ${QT_CMAKE_FOLDER})
+set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-format-style='file';-std=c++17")
 
 # set(ARCH "-target x86_64-w64-mingw32") set(CMAKE_ASM_FLAGS "${ARCH}")
 # set(CMAKE_C_FLAGS "${ARCH}") set(CMAKE_CXX_FLAGS "${ARCH}")
@@ -36,8 +39,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 # End QT
-
-set(CMAKE_CXX_STANDARD 17)
 
 find_package(Vulkan REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
@@ -171,6 +172,7 @@ add_library(common STATIC ${CommonSources})
 # target_include_directories(common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_compile_features(common PUBLIC cxx_std_17)
+target_compile_features(common PRIVATE cxx_std_17)
 
 target_link_libraries(common PUBLIC Vulkan::Vulkan)
 target_include_directories(common PUBLIC ${Vulkan_INCLUDE_DIRS})
@@ -216,6 +218,7 @@ add_executable(main ${MainSources})
 
 target_link_libraries(main PRIVATE common)
 
+target_compile_features(main PUBLIC cxx_std_17)
 target_compile_features(main PRIVATE cxx_std_17)
 
 target_link_libraries(main PRIVATE glm)

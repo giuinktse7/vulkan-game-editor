@@ -286,12 +286,12 @@ private:
 	 * @predicate An Item predicate. Items for which predicate(item) is false will not be rendered.
 	 */
 	void drawTile(const TileLocation &tileLocation,
-								uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
-								Position offset = {},
-								const ItemPredicate &filter = {});
+								uint32_t drawFlags,
+								const Position offset,
+								const ItemPredicate &filter = nullptr);
 	void drawTile(const TileLocation &tileLocation,
 								uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
-								const ItemPredicate &filter = {});
+								const ItemPredicate &filter = nullptr);
 	void drawItem(const DrawInfo::Object &info);
 	void drawOverlayItemType(uint16_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
 
