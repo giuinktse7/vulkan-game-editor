@@ -149,9 +149,12 @@ void MainWindow::initializeUI()
   listView->setItemDelegate(new Delegate(this));
 
   std::vector<ItemTypeModelItem> data;
-  for (int i = 4500; i < 4700; ++i)
+  for (int i = 4526; i < 4700; ++i)
   {
-    data.push_back(ItemTypeModelItem::fromServerId(i));
+    if (Items::items.validItemType(i))
+    {
+      data.push_back(ItemTypeModelItem::fromServerId(i));
+    }
   }
 
   QtItemTypeModel *model = new QtItemTypeModel(listView);
@@ -183,8 +186,11 @@ void MainWindow::initializeUI()
   QHBoxLayout *bottomLayout = new QHBoxLayout;
   bottomStatusBar->setLayout(bottomLayout);
 
-  positionStatus->setText("Test");
+  positionStatus->setText("");
   bottomLayout->addWidget(positionStatus);
+
+  zoomStatus->setText("");
+  bottomLayout->addWidget(zoomStatus);
 
   rootLayout->addWidget(bottomStatusBar, BorderLayout::Position::South);
 
@@ -194,7 +200,8 @@ void MainWindow::initializeUI()
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent),
       rootLayout(new BorderLayout),
-      positionStatus(new QLabel)
+      positionStatus(new QLabel),
+      zoomStatus(new QLabel)
 {
   initializeUI();
 }
@@ -343,6 +350,7 @@ void MainWindow::mapViewViewportEvent(MapView &mapView, const Viewport &viewport
 {
   Position pos = mapView.mousePos().toPos(mapView);
   this->positionStatus->setText(toQString(pos));
+  this->zoomStatus->setText(toQString(std::round(mapView.getZoomFactor() * 100)) + "%");
 }
 
 MapView *getMapViewOnCursor()
