@@ -23,8 +23,8 @@ layout(push_constant) uniform PushConstants {
   vec4 textureQuad;
   vec4 fragQuad;
   vec4 color;
-  vec2 position;
-  vec2 size;
+  vec4 position;
+  vec4 size;
 }
 pc;
 

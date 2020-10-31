@@ -218,6 +218,28 @@ public:
 private:
 	using ItemPredicate = std::function<bool(const Position, const Item &item)>;
 
+	struct TextureWindowEqual
+	{
+		size_t operator()(const TextureWindow &l, const TextureWindow &r) const
+		{
+			return l.x0 == r.x0 && l.y0 == r.y0 && l.x1 == r.x1 && l.y1 == r.y1;
+		};
+	};
+	struct TextureWindowHasher
+	{
+		size_t operator()(const TextureWindow &window) const
+		{
+			size_t hash = 0;
+			util::combineHash(hash, window.x0);
+			util::combineHash(hash, window.y0);
+			util::combineHash(hash, window.x1);
+			util::combineHash(hash, window.y1);
+			return hash;
+		}
+	};
+
+	std::unordered_set<TextureWindow, TextureWindowHasher, TextureWindowEqual> testTextureSet;
+
 	bool debug = false;
 	MapView *mapView;
 	VulkanInfo &vulkanInfo;
@@ -238,8 +260,8 @@ private:
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline = 0;
 
-	VkDescriptorSetLayout uboDescriptorSetLayout = 0;
-	VkDescriptorSetLayout textureDescriptorSetLayout;
+	VkDescriptorSetLayout uboDescriptorSetLayout = VK_NULL_HANDLE;
+	VkDescriptorSetLayout textureDescriptorSetLayout = VK_NULL_HANDLE;
 
 	// Vulkan texture resources
 	std::vector<uint32_t> activeTextureAtlasIds;

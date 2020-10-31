@@ -23,8 +23,8 @@ struct PushConstantData
   glm::vec4 textureQuad;
   glm::vec4 fragQuad;
   glm::vec4 color;
-  glm::vec2 pos;
-  glm::vec2 size;
+  glm::vec4 pos;
+  glm::vec4 size;
 };
 
 struct NewVertex
@@ -440,13 +440,19 @@ void MapRenderer::drawItem(const DrawInfo::Object &info)
   }
 
   const auto &window = info.textureInfo.window;
-  const glm::vec4 fragmentBounds = atlas->getFragmentBounds(window);
-
   PushConstantData pushConstant{};
-  pushConstant.pos = {worldPos.x, worldPos.y};
-  pushConstant.size = {atlas->spriteWidth, atlas->spriteHeight};
+
+  glm::vec4 pos{};
+  pos.x = worldPos.x;
+  pos.y = worldPos.y;
+  pushConstant.pos = pos;
+
+  glm::vec4 size{};
+  size.x = atlas->spriteWidth;
+  size.y = atlas->spriteHeight;
+  pushConstant.size = size;
   pushConstant.color = info.color;
-  pushConstant.textureQuad = {window.x0, window.y0, window.x1, window.y1};
+  pushConstant.textureQuad = glm::vec4(window.x0, window.y0, window.x1, window.y1);
   pushConstant.fragQuad = atlas->getFragmentBounds(window);
 
   vulkanInfo.vkCmdBindDescriptorSets(
@@ -509,8 +515,15 @@ void MapRenderer::drawRectangle(DrawInfo::Rectangle &info)
     std::swap(y1, y2);
   }
 
-  pushConstant.pos = glm::vec2(x1, y1);
-  pushConstant.size = {std::abs(x2 - x1), std::abs(y2 - y1)};
+  glm::vec4 pos{};
+  pos.x = x1;
+  pos.y = y1;
+  pushConstant.pos = pos;
+
+  glm::vec4 size{};
+  size.x = std::abs(x2 - x1);
+  size.y = std::abs(y2 - y1);
+  pushConstant.size = size;
   pushConstant.color = info.color;
 
   vulkanInfo.vkCmdBindDescriptorSets(
