@@ -726,10 +726,12 @@ void MapView::escapeEvent()
       util::overloaded{
           [this](MouseAction::Select &) {
             clearSelection();
+            requestDraw();
           },
 
           [this](const auto &arg) {
             editorAction.reset();
+            requestDraw();
           }},
       editorAction.action());
 }
