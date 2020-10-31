@@ -102,16 +102,26 @@ MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
 
   connect(vulkanWindow, &VulkanWindow::keyPressedEvent, this, &MapViewWidget::onWindowKeyPress);
 
-  connect(hbar, &QScrollBar::valueChanged, this, &MapViewWidget::updateMapViewport);
-  connect(vbar, &QScrollBar::valueChanged, this, &MapViewWidget::updateMapViewport);
+  connect(hbar, &QScrollBar::valueChanged, this, &MapViewWidget::setMapViewX);
+  connect(vbar, &QScrollBar::valueChanged, this, &MapViewWidget::setMapViewY);
 }
 
-void MapViewWidget::updateMapViewport()
+void MapViewWidget::setMapViewX(int value)
 {
-  auto viewportX = hbar->value();
-  auto viewportY = vbar->value();
+  auto *mapView = vulkanWindow->getMapView();
+  if (mapView->cameraPosition().x != value)
+  {
+    mapView->setX(value);
+  }
+}
 
-  vulkanWindow->getMapView()->setCameraPosition(WorldPosition(viewportX, viewportY));
+void MapViewWidget::setMapViewY(int value)
+{
+  auto *mapView = vulkanWindow->getMapView();
+  if (mapView->cameraPosition().y != value)
+  {
+    mapView->setY(value);
+  }
 }
 
 void MapViewWidget::onWindowKeyPress(QKeyEvent *event)

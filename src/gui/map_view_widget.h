@@ -49,5 +49,6 @@ private:
   QtScrollBar *vbar;
 
   void onWindowKeyPress(QKeyEvent *event);
-  void updateMapViewport();
+  void setMapViewX(int value);
+  void setMapViewY(int value);
 };
