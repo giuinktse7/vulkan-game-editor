@@ -4,30 +4,37 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <functional>
 
 #include <algorithm>
 #include "const.h"
 #include "position.h"
 #include "util.h"
 
+class MapRegion;
+
 class Camera
 {
-
 public:
-  Camera();
-  int floor;
-
-  struct
+  struct Viewport
   {
-    bool left = false;
-    bool right = false;
-    bool up = false;
-    bool down = false;
-  } keys;
+    WorldPosition::value_type x;
+    WorldPosition::value_type y;
+    int z;
+    WorldPosition::value_type width;
+    WorldPosition::value_type height;
+    float zoom;
+  };
 
-  void setPosition(WorldPosition position) noexcept;
+  std::function<void()> onViewportChanged = []() {};
+
+  Camera();
+
+  void setWorldPosition(WorldPosition position) noexcept;
   inline void setX(WorldPosition::value_type x) noexcept;
   inline void setY(WorldPosition::value_type y) noexcept;
+  inline void setZ(int z) noexcept;
+  inline void setSize(WorldPosition::value_type width, WorldPosition::value_type height) noexcept;
 
   void translate(WorldPosition delta);
   void translateZ(int z);
@@ -36,44 +43,98 @@ public:
   void zoomOut(ScreenPosition zoomOrigin);
   void resetZoom(ScreenPosition zoomOrigin);
 
-  inline constexpr WorldPosition::value_type x() const noexcept
-  {
-    return _position.x;
-  }
-
-  inline constexpr WorldPosition::value_type y() const noexcept
-  {
-    return _position.y;
-  }
+  inline constexpr WorldPosition::value_type x() const noexcept;
+  inline constexpr WorldPosition::value_type y() const noexcept;
+  inline constexpr int z() const noexcept;
 
   inline float zoomFactor() const noexcept;
-  inline WorldPosition position() const noexcept;
+  inline Position position() const noexcept;
+  inline WorldPosition worldPosition() const noexcept;
+
+  inline const Viewport &viewport() const noexcept;
 
 private:
-  int zoomStep;
+  Viewport _viewport;
 
-  float _zoomFactor;
-  WorldPosition _position;
+  int _zoomStep;
 
   void updateZoom(ScreenPosition cursorPos);
   void setZoomStep(int zoomStep, ScreenPosition zoomOrigin);
+
+  float computeZoomFactor() const;
 };
+
+inline constexpr WorldPosition::value_type Camera::x() const noexcept
+{
+  return _viewport.x;
+}
+
+inline constexpr WorldPosition::value_type Camera::y() const noexcept
+{
+  return _viewport.y;
+}
+
+inline constexpr int Camera::z() const noexcept
+{
+  return _viewport.z;
+}
 
 inline void Camera::setX(WorldPosition::value_type x) noexcept
 {
-  _position.x = std::max(x, 0);
+  WorldPosition::value_type oldX = _viewport.x;
+
+  _viewport.x = std::max(x, 0);
+
+  if (oldX != _viewport.x)
+    onViewportChanged();
 }
+
 inline void Camera::setY(WorldPosition::value_type y) noexcept
 {
-  _position.y = std::max(y, 0);
+  WorldPosition::value_type oldY = _viewport.y;
+
+  _viewport.y = std::max(y, 0);
+
+  if (oldY != _viewport.y)
+    onViewportChanged();
+}
+
+inline void Camera::setZ(int z) noexcept
+{
+  WorldPosition::value_type oldZ = _viewport.z;
+
+  _viewport.z = std::clamp(z, 0, MAP_LAYERS - 1);
+
+  if (oldZ != _viewport.z)
+    onViewportChanged();
+}
+
+inline void Camera::setSize(WorldPosition::value_type width, WorldPosition::value_type height) noexcept
+{
+  bool changed = _viewport.width != width || _viewport.height != height;
+  _viewport.width = width;
+  _viewport.height = height;
+
+  if (changed)
+    onViewportChanged();
 }
 
 inline float Camera::zoomFactor() const noexcept
 {
-  return _zoomFactor;
+  return _viewport.zoom;
 }
 
-inline WorldPosition Camera::position() const noexcept
+inline Position Camera::position() const noexcept
 {
-  return _position;
+  return Position(_viewport.x / MapTileSize, _viewport.y / MapTileSize, _viewport.z);
+}
+
+inline WorldPosition Camera::worldPosition() const noexcept
+{
+  return WorldPosition(_viewport.x, _viewport.y);
+}
+
+inline const Camera::Viewport &Camera::viewport() const noexcept
+{
+  return _viewport;
 }

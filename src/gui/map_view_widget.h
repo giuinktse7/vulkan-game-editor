@@ -34,13 +34,13 @@ public:
   MapViewWidget(VulkanWindow *window, QWidget *parent = nullptr);
 
   // From MapView::Observer
-  void viewportChanged(const Viewport &viewport) override;
+  void viewportChanged(const Camera::Viewport &viewport) override;
   void mapViewDrawRequested() override;
 
   MapView *mapView;
 
 signals:
-  void viewportChangedEvent(const Viewport &viewport);
+  void viewportChangedEvent(const Camera::Viewport &viewport);
 
 private:
   VulkanWindow *vulkanWindow;

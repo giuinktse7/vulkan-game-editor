@@ -313,6 +313,10 @@ int runApp(int argc, char *argv[])
     app.loadStyleSheet("default");
     app.loadGameData();
 
+    // ItemType *t = Items::items.getItemType(3817);
+    // VME_LOG(t->getFirstTextureAtlas()->sourceFile);
+    // return 0;
+
     MainWindow mainWindow;
 
     QVulkanInstance instance;

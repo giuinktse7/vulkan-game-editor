@@ -66,7 +66,7 @@ private:
   void createMapTabArea();
 
   void mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos);
-  void mapViewViewportEvent(MapView &mapView, const Viewport &viewport);
+  void mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport);
 
   QVulkanInstance *vulkanInstance;
 

@@ -110,7 +110,6 @@ public:
   QRect localGeometry() const;
 
   util::Size vulkanSwapChainImageSize() const;
-  glm::mat4 projectionMatrix();
 
   inline static bool isInstance(const VulkanWindow *pointer)
   {

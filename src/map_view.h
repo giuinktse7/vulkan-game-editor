@@ -17,16 +17,6 @@
 
 class MapAction;
 
-struct Viewport
-{
-	Viewport();
-	int width;
-	int height;
-	float zoom;
-
-	WorldPosition offset;
-};
-
 class MapView
 {
 public:
@@ -35,7 +25,7 @@ public:
 	public:
 		Observer(MapView *target = nullptr);
 		~Observer();
-		virtual void viewportChanged(const Viewport &viewport) = 0;
+		virtual void viewportChanged(const Camera::Viewport &viewport) = 0;
 		virtual void mapViewDrawRequested() = 0;
 
 		MapView *target;
@@ -81,8 +71,8 @@ public:
 	bool hasSelectionMoveOrigin() const;
 	bool isEmpty(const Position position) const;
 
-	void setCameraPosition(WorldPosition position);
-	WorldPosition cameraPosition() const noexcept;
+	void setCameraPosition(Position position);
+	Position cameraPosition() const noexcept;
 	void setX(WorldPosition::value_type x);
 	void setY(WorldPosition::value_type y);
 
@@ -119,7 +109,6 @@ public:
 	void zoomIn();
 	void resetZoom();
 
-	void updateViewport();
 	void setViewportSize(int width, int height);
 
 	float getZoomFactor() const noexcept;
@@ -135,6 +124,8 @@ public:
 		history.undoLast();
 	}
 
+	MapRegion mapRegion() const;
+
 	inline uint32_t x() const noexcept;
 	inline uint32_t y() const noexcept;
 	inline int z() const noexcept;
@@ -143,7 +134,7 @@ public:
 	*/
 	inline int floor() const noexcept;
 
-	const Viewport &getViewport() const noexcept;
+	const Camera::Viewport &getViewport() const noexcept;
 
 	void deleteSelection();
 	void updateSelection(const Position pos);
@@ -200,8 +191,6 @@ private:
 
 	friend class MapAction;
 
-	Viewport viewport;
-
 	Camera camera;
 
 	bool canRender = false;
@@ -255,9 +244,9 @@ inline void MapView::removeItems(const Tile &tile, UnaryPredicate predicate)
 	}
 }
 
-inline const Viewport &MapView::getViewport() const noexcept
+inline const Camera::Viewport &MapView::getViewport() const noexcept
 {
-	return viewport;
+	return camera.viewport();
 }
 
 inline Map *MapView::map() const
@@ -265,7 +254,7 @@ inline Map *MapView::map() const
 	return _map.get();
 }
 
-inline WorldPosition MapView::cameraPosition() const noexcept
+inline Position MapView::cameraPosition() const noexcept
 {
 	return camera.position();
 }
@@ -293,17 +282,17 @@ inline Position MapView::toPosition(util::Point<T> point) const
 
 inline uint32_t MapView::x() const noexcept
 {
-	return static_cast<uint32_t>(camera.position().x);
+	return static_cast<uint32_t>(camera.worldPosition().x);
 }
 
 inline uint32_t MapView::y() const noexcept
 {
-	return static_cast<uint32_t>(camera.position().y);
+	return static_cast<uint32_t>(camera.worldPosition().y);
 }
 
 inline int MapView::z() const noexcept
 {
-	return static_cast<uint32_t>(camera.floor);
+	return camera.z();
 }
 
 inline int MapView::floor() const noexcept

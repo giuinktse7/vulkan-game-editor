@@ -266,25 +266,6 @@ util::Size VulkanWindow::vulkanSwapChainImageSize() const
   return util::Size(size.width(), size.height());
 }
 
-glm::mat4 VulkanWindow::projectionMatrix()
-{
-  QMatrix4x4 projection = clipCorrectionMatrix(); // adjust for Vulkan-OpenGL clip space differences
-  const QSize sz = swapChainImageSize();
-  QRectF rect;
-  const Viewport &viewport = mapView->getViewport();
-  rect.setX(static_cast<qreal>(viewport.offset.x));
-  rect.setY(static_cast<qreal>(viewport.offset.y));
-  rect.setWidth(sz.width() * viewport.zoom);
-  rect.setHeight(sz.height() * viewport.zoom);
-  projection.ortho(rect);
-
-  glm::mat4 data;
-  float *ptr = glm::value_ptr(data);
-  projection.transposed().copyDataTo(ptr);
-
-  return data;
-}
-
 /*
 >>>>>>>>>>ContextMenu<<<<<<<<<<<
 */

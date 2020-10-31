@@ -43,11 +43,11 @@ public:
     QMatrix4x4 projection = clipCorrectionMatrix; // adjust for Vulkan-OpenGL clip space differences
     const util::Size sz = vulkanSwapChainImageSize();
     QRectF rect;
-    const Viewport &viewport = mapView.getViewport();
-    rect.setX(static_cast<qreal>(viewport.offset.x));
-    rect.setY(static_cast<qreal>(viewport.offset.y));
-    rect.setWidth(sz.width() * viewport.zoom);
-    rect.setHeight(sz.height() * viewport.zoom);
+    const Camera::Viewport &viewport = mapView.getViewport();
+    rect.setX(static_cast<qreal>(viewport.x));
+    rect.setY(static_cast<qreal>(viewport.y));
+    rect.setWidth(sz.width() / viewport.zoom);
+    rect.setHeight(sz.height() / viewport.zoom);
     projection.ortho(rect);
 
     glm::mat4 data;

@@ -113,7 +113,7 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
     mapViewMousePosEvent(*vulkanWindow->getMapView(), mousePos);
   });
 
-  connect(widget, &MapViewWidget::viewportChangedEvent, [this, vulkanWindow](const Viewport &viewport) {
+  connect(widget, &MapViewWidget::viewportChangedEvent, [this, vulkanWindow](const Camera::Viewport &viewport) {
     mapViewViewportEvent(*vulkanWindow->getMapView(), viewport);
   });
 
@@ -346,7 +346,7 @@ void MainWindow::mapViewMousePosEvent(MapView &mapView, util::Point<float> mouse
   this->positionStatus->setText(toQString(pos));
 }
 
-void MainWindow::mapViewViewportEvent(MapView &mapView, const Viewport &viewport)
+void MainWindow::mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport)
 {
   Position pos = mapView.mousePos().toPos(mapView);
   this->positionStatus->setText(toQString(pos));

@@ -5,12 +5,6 @@
 
 std::unordered_set<MapView *> MapView::instances;
 
-Viewport::Viewport()
-    : width(0),
-      height(0),
-      zoom(1.0f),
-      offset(0L, 0L) {}
-
 MapView::MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action)
     : MapView(std::move(uiUtils), action, std::make_shared<Map>())
 {
@@ -22,10 +16,13 @@ MapView::MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::sh
       history(*this),
       _map(map),
       _selection(*this),
-      uiUtils(std::move(uiUtils)),
-      viewport()
+      uiUtils(std::move(uiUtils))
 {
   instances.emplace(this);
+  camera.onViewportChanged = [this]() {
+    this->notifyObservers(Observer::ChangeType::Viewport);
+    requestDraw();
+  };
 }
 
 MapView::~MapView()
@@ -176,23 +173,22 @@ void MapView::removeTile(const Position position)
   history.commit(std::move(action));
 }
 
-void MapView::updateViewport()
+MapRegion MapView::mapRegion() const
 {
-  const float zoom = 1 / camera.zoomFactor();
-  bool changed = viewport.offset != camera.position() || viewport.zoom != zoom;
+  Position from(camera.position());
+  from.z = from.z <= GROUND_FLOOR ? GROUND_FLOOR : MAP_LAYERS - 1;
 
-  if (changed)
-  {
-    viewport.zoom = zoom;
-    viewport.offset = camera.position();
-    notifyObservers(Observer::ChangeType::Viewport);
-  }
+  const Camera::Viewport &viewport = camera.viewport();
+  auto [width, height] = ScreenPosition(viewport.width, viewport.height).mapPos(*this);
+
+  Position to(from.x + width, from.y + height, camera.z());
+
+  return _map->getRegion(from, to);
 }
 
 void MapView::setViewportSize(int width, int height)
 {
-  viewport.width = width;
-  viewport.height = height;
+  camera.setSize(width, height);
 }
 
 void MapView::deleteSelection()
@@ -225,15 +221,15 @@ void MapView::deleteSelection()
 
 util::Rectangle<int> MapView::getGameBoundingRect() const
 {
-  MapPosition mapPos = viewport.offset.mapPos();
+  Position position = camera.position();
 
-  auto [width, height] = ScreenPosition(viewport.width, viewport.height).mapPos(*this);
+  auto [width, height] = ScreenPosition(camera.viewport().width, camera.viewport().height).mapPos(*this);
   util::Rectangle<int> rect;
-  rect.x1 = mapPos.x;
-  rect.y1 = mapPos.y;
+  rect.x1 = position.x;
+  rect.y1 = position.y;
   // Add one to not miss large sprites (64 in width or height) when zoomed in
-  rect.x2 = mapPos.x + width + 10;
-  rect.y2 = mapPos.y + height + 10;
+  rect.x2 = position.x + width + 10;
+  rect.y2 = position.y + height + 10;
 
   return rect;
 }
@@ -478,7 +474,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
             [this, event](MouseAction::Pan &pan) {
               pan.mouseOrigin = event.pos();
-              pan.cameraOrigin = cameraPosition();
+              pan.cameraOrigin = camera.worldPosition();
             },
 
             [](const auto &arg) {}},
@@ -555,20 +551,20 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                 auto newX = static_cast<WorldPosition::value_type>(std::round(delta.x / camera.zoomFactor()));
                 auto newY = static_cast<WorldPosition::value_type>(std::round(delta.y / camera.zoomFactor()));
 
-                auto newPos = action.cameraOrigin.value() + WorldPosition(-newX, -newY);
+                auto newPosition = action.cameraOrigin.value() + WorldPosition(-newX, -newY);
 
-                if (newPos.x < 0)
+                if (newPosition.x < 0)
                 {
-                  action.cameraOrigin.value().x -= static_cast<int>(std::round((newPos.x)));
-                  newPos.x = 0;
+                  action.cameraOrigin.value().x -= static_cast<int>(std::round((newPosition.x)));
+                  newPosition.x = 0;
                 }
-                if (newPos.y < 0)
+                if (newPosition.y < 0)
                 {
-                  action.cameraOrigin.value().y -= static_cast<int>(std::round((newPos.y)));
-                  newPos.y = 0;
+                  action.cameraOrigin.value().y -= static_cast<int>(std::round((newPosition.y)));
+                  newPosition.y = 0;
                 }
 
-                setCameraPosition(newPos);
+                camera.setWorldPosition(newPosition);
               }
             },
 
@@ -617,28 +613,15 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 */
-void MapView::setCameraPosition(WorldPosition position)
-{
-  camera.setPosition(position);
-  updateViewport();
-
-  requestDraw();
-}
 
 void MapView::setX(WorldPosition::value_type x)
 {
   camera.setX(x);
-  updateViewport();
-
-  requestDraw();
 }
 
 void MapView::setY(WorldPosition::value_type y)
 {
   camera.setY(y);
-  updateViewport();
-
-  requestDraw();
 }
 
 void MapView::zoom(int delta)
@@ -662,17 +645,16 @@ void MapView::zoom(int delta)
 void MapView::zoomOut()
 {
   camera.zoomOut(mousePos());
-  updateViewport();
 }
+
 void MapView::zoomIn()
 {
   camera.zoomIn(mousePos());
-  updateViewport();
 }
+
 void MapView::resetZoom()
 {
   camera.resetZoom(mousePos());
-  updateViewport();
 }
 
 float MapView::getZoomFactor() const noexcept
@@ -683,25 +665,21 @@ float MapView::getZoomFactor() const noexcept
 void MapView::translateCamera(WorldPosition delta)
 {
   camera.translate(delta);
-  updateViewport();
 }
 
 void MapView::translateX(WorldPosition::value_type x)
 {
   camera.setX(camera.x() + x);
-  updateViewport();
 }
 
 void MapView::translateY(WorldPosition::value_type y)
 {
   camera.setY(camera.y() + y);
-  updateViewport();
 }
 
 void MapView::translateZ(int z)
 {
   camera.translateZ(z);
-  updateViewport();
 }
 
 bool MapView::inDragRegion(Position pos) const
@@ -763,7 +741,7 @@ void MapView::notifyObservers(MapView::Observer::ChangeType changeType) const
   case Observer::ChangeType::Viewport:
     for (auto observer : observers)
     {
-      observer->viewportChanged(viewport);
+      observer->viewportChanged(camera.viewport());
     }
     break;
   case Observer::ChangeType::DrawRequest:

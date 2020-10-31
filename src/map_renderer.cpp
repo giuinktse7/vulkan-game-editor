@@ -60,8 +60,6 @@ struct NewVertex
   }
 };
 
-constexpr int GROUND_FLOOR = 7;
-
 constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
 constexpr VkClearColorValue ClearColor = {{0.0f, 0.0f, 0.0f, 1.0f}};
@@ -226,22 +224,12 @@ void MapRenderer::setupFrame()
 void MapRenderer::drawMap()
 {
   MapView &view = *mapView;
-  const auto mapRect = view.getGameBoundingRect();
-  int floor = view.z();
-
-  bool aboveGround = floor <= 7;
-
-  int startZ = aboveGround ? GROUND_FLOOR : MAP_LAYERS - 1;
-  int endZ = floor;
-
-  Position from{mapRect.x1, mapRect.y1, startZ};
-  Position to{mapRect.x2, mapRect.y2, endZ};
 
   ItemPredicate filter = nullptr;
   if (mapView->draggingWithSubtract())
   {
     auto [from, to] = mapView->getDragPoints().value();
-    Region2D dragRegion(from.toPos(floor), to.toPos(floor));
+    Region2D dragRegion(from.toPos(view.floor()), to.toPos(view.floor()));
     uint16_t serverId = std::get<MouseAction::RawItem>(mapView->editorAction.action()).serverId;
 
     filter = [serverId, &dragRegion](const Position pos, const Item &item) {
@@ -260,7 +248,7 @@ void MapRenderer::drawMap()
   if (selectAction && selectAction->area)
     flags |= ItemDrawFlags::ActiveSelectionArea;
 
-  for (auto &tileLocation : view.map()->getRegion(from, to))
+  for (auto &tileLocation : view.mapRegion())
   {
     if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
       continue;

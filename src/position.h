@@ -112,6 +112,12 @@ struct ScreenPosition : public BasePosition<int>
 		pos -= rhs;
 		return pos;
 	}
+
+	ScreenPosition operator*(float value)
+	{
+		return ScreenPosition(static_cast<int>(std::round(x * value)),
+													static_cast<int>(std::round(y * value)));
+	}
 };
 
 struct WorldPosition : public BasePosition<int32_t>

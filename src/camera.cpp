@@ -1,62 +1,73 @@
 #include "camera.h"
 
 #include "logger.h"
+#include "map.h"
+#include "const.h"
 
-constexpr int MinZoomStep = 0;
-constexpr int MaxZoomStep = 20;
-constexpr int DefaultZoomStep = (MaxZoomStep - MinZoomStep) / 2;
+namespace
+{
+	constexpr int MinZoomStep = 0;
+	constexpr int MaxZoomStep = 20;
+	constexpr int DefaultZoomStep = (MaxZoomStep - MinZoomStep) / 2;
+} // namespace
 
 Camera::Camera()
-		: floor(7),
-			zoomStep(DefaultZoomStep),
-			_zoomFactor(1.0f),
-			_position(0.0, 0.0)
+		: _viewport{0, 0, GROUND_FLOOR, 0, 0, 1.0f},
+			_zoomStep(DefaultZoomStep) {}
+
+float Camera::computeZoomFactor() const
 {
+	float n = 0.1f;
+	return n * exp(log(1 / n) / 10 * _zoomStep);
 }
 
 void Camera::updateZoom(ScreenPosition zoomOrigin)
 {
-	auto [originX, originY] = zoomOrigin;
+	float newZoomFactor = computeZoomFactor();
 
-	float n = 0.1f;
-	float newZoomFactor = n * exp(log(1 / n) / 10 * zoomStep);
+	float scale = (1 / _viewport.zoom) - (1 / newZoomFactor);
+	ScreenPosition scaled = zoomOrigin * scale;
 
-	WorldPosition newPos(this->_position);
+	WorldPosition newPosition(_viewport.x + scaled.x, _viewport.y + scaled.y);
+	this->setWorldPosition(newPosition);
 
-	newPos.x += originX / _zoomFactor;
-	newPos.x -= originX / newZoomFactor;
-
-	newPos.y += originY / _zoomFactor;
-	newPos.y -= originY / newZoomFactor;
-
-	this->setPosition(newPos);
-
-	_zoomFactor = newZoomFactor;
+	_viewport.zoom = newZoomFactor;
+	onViewportChanged();
 }
 
-void Camera::setPosition(WorldPosition position) noexcept
+void Camera::setWorldPosition(WorldPosition position) noexcept
 {
-	this->_position = WorldPosition(std::max(position.x, 0), std::max(position.y, 0));
+	int oldX = _viewport.x;
+	int oldY = _viewport.y;
+
+	_viewport.x = std::max(position.x, 0);
+	_viewport.y = std::max(position.y, 0);
+
+	if (_viewport.x != oldX || _viewport.y != oldY)
+		onViewportChanged();
 }
 
 void Camera::translate(WorldPosition delta)
 {
-	setPosition(this->_position + delta);
+	setWorldPosition(WorldPosition(_viewport.x, _viewport.y) + delta);
 }
 
 void Camera::translateZ(int z)
 {
-	floor = static_cast<float>(std::clamp(static_cast<int>(floor + z), 0, MAP_LAYERS - 1));
+	int oldFloor = _viewport.z;
+	_viewport.z = static_cast<float>(std::clamp(static_cast<int>(_viewport.z + z), 0, MAP_LAYERS - 1));
+	if (_viewport.z != oldFloor)
+		onViewportChanged();
 }
 
 void Camera::zoomIn(ScreenPosition zoomOrigin)
 {
-	setZoomStep(this->zoomStep + 1, zoomOrigin);
+	setZoomStep(this->_zoomStep + 1, zoomOrigin);
 }
 
 void Camera::zoomOut(ScreenPosition zoomOrigin)
 {
-	setZoomStep(this->zoomStep - 1, zoomOrigin);
+	setZoomStep(this->_zoomStep - 1, zoomOrigin);
 }
 
 void Camera::resetZoom(ScreenPosition zoomOrigin)
@@ -67,9 +78,9 @@ void Camera::resetZoom(ScreenPosition zoomOrigin)
 void Camera::setZoomStep(int zoomStep, ScreenPosition zoomOrigin)
 {
 	int inZoomStep = std::clamp(zoomStep, MinZoomStep, MaxZoomStep);
-	if (this->zoomStep != inZoomStep)
+	if (this->_zoomStep != inZoomStep)
 	{
-		this->zoomStep = inZoomStep;
+		this->_zoomStep = inZoomStep;
 		updateZoom(zoomOrigin);
 	}
 }

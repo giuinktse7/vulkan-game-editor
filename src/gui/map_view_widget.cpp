@@ -146,15 +146,15 @@ void MapViewWidget::onWindowKeyPress(QKeyEvent *event)
   }
 }
 
-void MapViewWidget::viewportChanged(const Viewport &viewport)
+void MapViewWidget::viewportChanged(const Camera::Viewport &viewport)
 {
-  hbar->setValue(viewport.offset.x);
-  vbar->setValue(viewport.offset.y);
+  hbar->setValue(viewport.x);
+  vbar->setValue(viewport.y);
 
   hbar->setPageStep(viewport.width);
   vbar->setPageStep(viewport.height);
 
-  int singleStep = computeSingleStep(viewport.zoom);
+  int singleStep = computeSingleStep(1 / viewport.zoom);
 
   hbar->setSingleStep(singleStep);
   vbar->setSingleStep(singleStep);
