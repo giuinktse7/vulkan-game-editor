@@ -8,7 +8,7 @@ std::unordered_set<MapView *> MapView::instances;
 Viewport::Viewport()
     : width(0),
       height(0),
-      zoom(0.25f),
+      zoom(1.0f),
       offset(0L, 0L) {}
 
 MapView::MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action)
@@ -72,7 +72,10 @@ void MapView::selectAll(Tile &tile)
 
 void MapView::clearSelection()
 {
-  _selection.deselectAll();
+  if (!_selection.empty())
+  {
+    _selection.deselectAll();
+  }
 }
 
 void MapView::updateSelection(const Position pos)
@@ -176,7 +179,6 @@ void MapView::removeTile(const Position position)
 void MapView::updateViewport()
 {
   const float zoom = 1 / camera.zoomFactor();
-
   bool changed = viewport.offset != camera.position() || viewport.zoom != zoom;
 
   if (changed)
@@ -475,7 +477,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
             },
 
             [this, event](MouseAction::Pan &pan) {
-              pan.mouseOrigin = ScreenPosition(event.pos().x, event.pos().y);
+              pan.mouseOrigin = event.pos();
               pan.cameraOrigin = cameraPosition();
             },
 
@@ -567,7 +569,6 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                 }
 
                 setCameraPosition(newPos);
-                needsDraw = true;
               }
             },
 
@@ -619,18 +620,24 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
 void MapView::setCameraPosition(WorldPosition position)
 {
   camera.setPosition(position);
+  updateViewport();
+
   requestDraw();
 }
 
 void MapView::setX(WorldPosition::value_type x)
 {
   camera.setX(x);
+  updateViewport();
+
   requestDraw();
 }
 
 void MapView::setY(WorldPosition::value_type y)
 {
   camera.setY(y);
+  updateViewport();
+
   requestDraw();
 }
 
@@ -655,14 +662,17 @@ void MapView::zoom(int delta)
 void MapView::zoomOut()
 {
   camera.zoomOut(mousePos());
+  updateViewport();
 }
 void MapView::zoomIn()
 {
   camera.zoomIn(mousePos());
+  updateViewport();
 }
 void MapView::resetZoom()
 {
   camera.resetZoom(mousePos());
+  updateViewport();
 }
 
 float MapView::getZoomFactor() const noexcept
@@ -673,21 +683,25 @@ float MapView::getZoomFactor() const noexcept
 void MapView::translateCamera(WorldPosition delta)
 {
   camera.translate(delta);
+  updateViewport();
 }
 
 void MapView::translateX(WorldPosition::value_type x)
 {
   camera.setX(camera.x() + x);
+  updateViewport();
 }
 
 void MapView::translateY(WorldPosition::value_type y)
 {
   camera.setY(camera.y() + y);
+  updateViewport();
 }
 
 void MapView::translateZ(int z)
 {
   camera.translateZ(z);
+  updateViewport();
 }
 
 bool MapView::inDragRegion(Position pos) const

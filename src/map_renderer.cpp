@@ -167,10 +167,9 @@ void MapRenderer::releaseResources()
 
 void MapRenderer::startNextFrame()
 {
-  VME_LOG("Start next frame");
+  // VME_LOG_D("index: " << _currentFrame->currentFrameIndex);
+  // VME_LOG("Start next frame");
   g_ecs.getSystem<ItemAnimationSystem>().update();
-
-  mapView->updateViewport();
 
   updateUniformBuffer();
 
@@ -266,7 +265,7 @@ void MapRenderer::drawMap()
     if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
       continue;
 
-    drawTile(tileLocation, flags);
+    drawTile(tileLocation, flags, filter);
   }
 }
 
