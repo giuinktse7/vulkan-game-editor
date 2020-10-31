@@ -375,9 +375,11 @@ void MapRenderer::drawMovingSelection()
 
 bool MapRenderer::shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter) const noexcept
 {
-  return ((item.selected && (flags & ItemDrawFlags::DrawSelected)) ||
-          (flags & ItemDrawFlags::DrawNonSelected)) &&
-         (!filter || filter(pos, item));
+  bool selected = item.selected && (flags & ItemDrawFlags::DrawSelected);
+  bool unselected = !item.selected && (flags & ItemDrawFlags::DrawNonSelected);
+  bool passFilter = filter && filter(pos, item);
+
+  return selected || unselected || passFilter;
 }
 
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, const ItemPredicate &filter)
