@@ -60,7 +60,6 @@ public:
       frame->commandBuffer = window.currentCommandBuffer();
       frame->frameBuffer = window.currentFramebuffer();
       frame->mouseAction = window.mapView->editorAction.action();
-      frame->mouseHover = window.showPreviewCursor;
 
       renderer.startNextFrame();
     }
@@ -91,7 +90,6 @@ public:
   QtVulkanInfo vulkanInfo;
   QWidget *widget = nullptr;
   EditorAction &editorAction;
-  bool showPreviewCursor = false;
 
   std::string debugName;
 

@@ -277,32 +277,32 @@ void MapRenderer::drawCurrentAction()
           },
 
           [this](const MouseAction::RawItem &action) {
-            if (_currentFrame->mouseHover)
+            Position pos = mapView->mouseGamePos();
+
+            if (action.area)
             {
-              Position pos = mapView->mouseGamePos();
+              DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
 
-              if (action.area)
+              if (mapView->draggingWithSubtract())
               {
-                DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
+                const auto [from, to] = mapView->getDragPoints().value();
+                drawSolidRectangle(SolidColor::Red, from, to, 0.2f);
 
-                if (mapView->draggingWithSubtract())
-                {
-                  const auto [from, to] = mapView->getDragPoints().value();
-                  drawSolidRectangle(SolidColor::Red, from, to, 0.2f);
-
-                  drawOverlayItemType(action.serverId, to);
-                }
-                else
-                {
-                  auto [from, to] = mapView->getDragPoints().value();
-                  int floor = mapView->floor();
-                  auto area = MapArea(from.toPos(floor), to.toPos(floor));
-
-                  for (auto &pos : area)
-                    drawPreviewItem(action.serverId, pos);
-                }
+                drawOverlayItemType(action.serverId, to);
               }
               else
+              {
+                auto [from, to] = mapView->getDragPoints().value();
+                int floor = mapView->floor();
+                auto area = MapArea(from.toPos(floor), to.toPos(floor));
+
+                for (auto &pos : area)
+                  drawPreviewItem(action.serverId, pos);
+              }
+            }
+            else
+            {
+              if (mapView->underMouse())
               {
                 drawPreviewItem(action.serverId, pos);
               }

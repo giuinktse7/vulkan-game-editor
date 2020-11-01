@@ -721,6 +721,18 @@ void MapView::escapeEvent()
       editorAction.action());
 }
 
+void MapView::setUnderMouse(bool underMouse)
+{
+  bool prev = _underMouse;
+
+  _underMouse = underMouse;
+
+  if (prev != underMouse)
+  {
+    requestDraw();
+  }
+}
+
 void MapView::addObserver(MapView::Observer *o)
 {
   auto found = std::find(observers.begin(), observers.end(), o);

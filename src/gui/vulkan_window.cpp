@@ -331,13 +331,11 @@ bool VulkanWindow::event(QEvent *ev)
   switch (ev->type())
   {
   case QEvent::Leave:
-    showPreviewCursor = false;
+    mapView->setUnderMouse(false);
     break;
   case QEvent::Enter:
-  {
-    showPreviewCursor = true;
-  }
-  break;
+    mapView->setUnderMouse(true);
+    break;
   default:
     break;
   }

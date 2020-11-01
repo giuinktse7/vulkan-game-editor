@@ -71,6 +71,9 @@ public:
 	bool hasSelectionMoveOrigin() const;
 	bool isEmpty(const Position position) const;
 
+	void setUnderMouse(bool underMouse);
+	inline bool underMouse() const noexcept;
+
 	void setCameraPosition(Position position);
 	Position cameraPosition() const noexcept;
 	void setX(WorldPosition::value_type x);
@@ -203,6 +206,8 @@ private:
 	 */
 	Position _drawRequestMousePos;
 
+	bool _underMouse = false;
+
 	Tile deepCopyTile(const Position position) const;
 	MapHistory::Action newAction(MapHistory::ActionType actionType) const;
 
@@ -298,4 +303,9 @@ inline int MapView::z() const noexcept
 inline int MapView::floor() const noexcept
 {
 	return z();
+}
+
+inline bool MapView::underMouse() const noexcept
+{
+	return _underMouse;
 }
