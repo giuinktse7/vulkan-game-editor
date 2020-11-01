@@ -17,6 +17,7 @@ class QLabel;
 class QTabWidget;
 class QPushButton;
 class BorderLayout;
+class QListView;
 QT_END_NAMESPACE
 
 class MapTabWidget;
@@ -63,10 +64,12 @@ private:
   void initializeUI();
 
   QMenuBar *createMenuBar();
+  QListView *createItemPalette();
   void createMapTabArea();
 
   void mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos);
   void mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport);
+  void mapTabCloseEvent(int index, QVariant data);
 
   QVulkanInstance *vulkanInstance;
 

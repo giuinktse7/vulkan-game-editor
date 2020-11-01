@@ -141,7 +141,10 @@
     "regex": "cpp",
     "qtcoredepends": "cpp",
     "qtguidepends": "cpp",
-    "qtwidgetsdepends": "cpp"
+    "qtwidgetsdepends": "cpp",
+    "qmodelindex": "cpp",
+    "qquickview": "cpp",
+    "qlayout": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

@@ -11,10 +11,10 @@
 #include <QMouseEvent>
 #include <QSlider>
 #include <QListView>
-#include <QSplitter>
 #include <QVariant>
 #include <QModelIndex>
 #include <QVulkanInstance>
+#include <QQuickView>
 
 #include "vulkan_window.h"
 #include "item_list.h"
@@ -23,6 +23,7 @@
 #include "border_layout.h"
 #include "map_view_widget.h"
 #include "map_tab_widget.h"
+#include "split_widget.h"
 #include "../util.h"
 #include "qt_util.h"
 #include "../qt/logging.h"
@@ -109,13 +110,17 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
   // Create the widget
   MapViewWidget *widget = new MapViewWidget(vulkanWindow);
 
-  connect(vulkanWindow, &VulkanWindow::mousePosChanged, [this, vulkanWindow](util::Point<float> mousePos) {
-    mapViewMousePosEvent(*vulkanWindow->getMapView(), mousePos);
-  });
+  connect(vulkanWindow,
+          &VulkanWindow::mousePosChanged,
+          [this, vulkanWindow](util::Point<float> mousePos) {
+            mapViewMousePosEvent(*vulkanWindow->getMapView(), mousePos);
+          });
 
-  connect(widget, &MapViewWidget::viewportChangedEvent, [this, vulkanWindow](const Camera::Viewport &viewport) {
-    mapViewViewportEvent(*vulkanWindow->getMapView(), viewport);
-  });
+  connect(widget,
+          &MapViewWidget::viewportChangedEvent,
+          [this, vulkanWindow](const Camera::Viewport &viewport) {
+            mapViewViewportEvent(*vulkanWindow->getMapView(), viewport);
+          });
 
   if (map->name().empty())
   {
@@ -130,57 +135,46 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
   }
 }
 
+void MainWindow::mapTabCloseEvent(int index, QVariant data)
+{
+  if (data.canConvert<uint32_t>())
+  {
+    uint32_t id = data.toInt();
+    this->untitledIds.emplace(id);
+  }
+}
+
 void MainWindow::initializeUI()
 {
   mapTabs = new MapTabWidget(this);
-  connect(mapTabs, &MapTabWidget::mapTabClosed, [=](int index, QVariant data) {
-    if (data.canConvert<uint32_t>())
-    {
-      uint32_t id = data.toInt();
-      this->untitledIds.emplace(id);
-    }
-  });
+  connect(mapTabs, &MapTabWidget::mapTabClosed, this, &MainWindow::mapTabCloseEvent);
 
   QMenuBar *menu = createMenuBar();
   rootLayout->setMenuBar(menu);
 
-  QListView *listView = new QListView;
-  listView->installEventFilter(new ItemListEventFilter(this));
-  listView->setItemDelegate(new Delegate(this));
+  Splitter *splitter = new Splitter();
+  rootLayout->addWidget(splitter, BorderLayout::Position::Center);
 
-  std::vector<ItemTypeModelItem> data;
-  for (int i = 4526; i < 4700; ++i)
+  auto itemPalette = createItemPalette();
+  itemPalette->setMinimumWidth(240);
+  itemPalette->setMaximumWidth(600);
+  // rootLayout->addWidget(itemPalette, BorderLayout::Position::West);
+  splitter->addWidget(itemPalette);
+  splitter->setStretchFactor(0, 0);
+
+  splitter->addWidget(mapTabs);
+  splitter->setStretchFactor(1, 1);
+
   {
-    if (Items::items.validItemType(i))
-    {
-      data.push_back(ItemTypeModelItem::fromServerId(i));
-    }
+    QQuickView *view = new QQuickView;
+    view->setSource(QUrl::fromLocalFile("resources/qml/test.qml"));
+    auto container = QWidget::createWindowContainer(view);
+    container->setMinimumWidth(200);
+    splitter->addWidget(container);
+    splitter->setStretchFactor(2, 0);
   }
 
-  QtItemTypeModel *model = new QtItemTypeModel(listView);
-  model->populate(std::move(data));
-
-  listView->setModel(model);
-  listView->setAlternatingRowColors(true);
-  connect(listView, &QListView::clicked, [=](QModelIndex clickedIndex) {
-    QVariant variant = listView->model()->data(clickedIndex);
-    auto value = variant.value<ItemTypeModelItem>();
-
-    MouseAction::RawItem action;
-    action.serverId = value.itemType->id;
-    editorAction.set(action);
-  });
-  rootLayout->addWidget(listView, BorderLayout::Position::West);
-
-  rootLayout->addWidget(mapTabs, BorderLayout::Position::Center);
-
-  QSlider *slider = new QSlider;
-  slider->setMinimum(0);
-  slider->setMaximum(15);
-  slider->setSingleStep(1);
-  slider->setPageStep(5);
-
-  rootLayout->addWidget(slider, BorderLayout::Position::East);
+  splitter->setSizes(QList<int>({200, 800, 200}));
 
   QWidget *bottomStatusBar = new QWidget;
   QHBoxLayout *bottomLayout = new QHBoxLayout;
@@ -240,6 +234,38 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
   break;
   }
+}
+
+QListView *MainWindow::createItemPalette()
+{
+  QListView *itemPalette = new QListView;
+  itemPalette->installEventFilter(new ItemListEventFilter(this));
+  itemPalette->setItemDelegate(new Delegate(this));
+
+  std::vector<ItemTypeModelItem> data;
+  for (int i = 1000; i < 7000; ++i)
+  {
+    if (Items::items.validItemType(i))
+    {
+      data.push_back(ItemTypeModelItem::fromServerId(i));
+    }
+  }
+
+  QtItemTypeModel *model = new QtItemTypeModel(itemPalette);
+  model->populate(std::move(data));
+
+  itemPalette->setModel(model);
+  itemPalette->setAlternatingRowColors(true);
+  connect(itemPalette, &QListView::clicked, [=](QModelIndex clickedIndex) {
+    QVariant variant = itemPalette->model()->data(clickedIndex);
+    auto value = variant.value<ItemTypeModelItem>();
+
+    MouseAction::RawItem action;
+    action.serverId = value.itemType->id;
+    editorAction.set(action);
+  });
+
+  return itemPalette;
 }
 
 QMenuBar *MainWindow::createMenuBar()

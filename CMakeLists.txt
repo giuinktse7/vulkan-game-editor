@@ -191,6 +191,7 @@ set(MainSources
     src/gui/gui.h
     src/gui/borderless_window.h
     src/gui/border_layout.h
+    src/gui/split_widget.h
     src/gui/item_list.h
     src/gui/mainwindow.h
     src/gui/map_view_widget.h
@@ -205,6 +206,7 @@ set(MainSources
     src/qt/logging.cpp
     src/gui/borderless_window.cpp
     src/gui/border_layout.cpp
+    src/gui/split_widget.cpp
     src/gui/item_list.cpp
     src/gui/mainwindow.cpp
     src/gui/map_view_widget.cpp
