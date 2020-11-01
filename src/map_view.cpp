@@ -520,8 +520,15 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
 
             [this, pos, event, dragPositions, &needsDraw](const MouseAction::RawItem &action) {
               const auto [from, to] = dragPositions;
-              if (event.pos().worldPos(*this) == to || action.area)
+              if (action.area)
+              {
+                requestDraw();
                 return;
+              }
+              if (event.pos().worldPos(*this) == to)
+              {
+                return;
+              }
 
               if (event.modifiers() & VME::ModifierKeys::Ctrl)
               {
