@@ -1,7 +1,7 @@
 #include "item_list.h"
 
-#include "../logger.h"
 #include "../items.h"
+#include "../logger.h"
 
 #include "qt_util.h"
 

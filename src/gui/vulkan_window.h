@@ -3,14 +3,14 @@
 #include <memory>
 #include <unordered_set>
 
-#include <QVulkanWindow>
-#include <QMenu>
 #include <QApplication>
+#include <QMenu>
+#include <QVulkanWindow>
 
 #include "../util.h"
 
-#include "../map_view.h"
 #include "../graphics/vulkan_helpers.h"
+#include "../map_view.h"
 
 #include "../qt/qt_vulkan_info.h"
 

@@ -1,8 +1,8 @@
 #include "file.h"
-#include <stdexcept>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 #include "debug.h"
 

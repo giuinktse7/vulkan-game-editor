@@ -4,23 +4,23 @@
 
 #include <glm/glm.hpp>
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include <unordered_map>
 
 #include "graphics/buffer.h"
-#include "graphics/vertex.h"
 #include "graphics/texture.h"
 #include "graphics/texture_atlas.h"
+#include "graphics/vertex.h"
 #include "graphics/vulkan_helpers.h"
 
 #include "item.h"
 #include "items.h"
 
+#include "input.h"
 #include "map_view.h"
 #include "util.h"
-#include "input.h"
 
 #include "map.h"
 

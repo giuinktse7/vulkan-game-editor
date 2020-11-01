@@ -1,14 +1,14 @@
 #pragma once
 
-#include <memory>
-#include <queue>
-#include <optional>
-#include <vector>
 #include <functional>
+#include <memory>
+#include <optional>
+#include <queue>
+#include <vector>
 
+#include <QString>
 #include <QWidget>
 #include <QWidgetAction>
-#include <QString>
 
 QT_BEGIN_NAMESPACE
 class QPlainTextEdit;
@@ -22,8 +22,8 @@ QT_END_NAMESPACE
 
 class MapTabWidget;
 
-#include "vulkan_window.h"
 #include "gui.h"
+#include "vulkan_window.h"
 
 #define QT_MANAGED_POINTER(cls, ...) new cls(__VA_ARGS__);
 

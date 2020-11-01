@@ -1,25 +1,25 @@
 #pragma once
 
-#include <QTabWidget>
-#include <QTabBar>
-#include <QSvgWidget>
 #include <QFrame>
-#include <QString>
-#include <QTimer>
-#include <QObject>
-#include <QVariant>
 #include <QMimeData>
+#include <QObject>
 #include <QPixmap>
+#include <QString>
+#include <QSvgWidget>
+#include <QTabBar>
+#include <QTabWidget>
+#include <QTimer>
+#include <QVariant>
 
 #include <QProxyStyle>
 
 #include <memory>
 
-#include <optional>
 #include "qt_util.h"
+#include <optional>
 
-#include "map_view_widget.h"
 #include "../time_point.h"
+#include "map_view_widget.h"
 
 class QWidget;
 class QMouseEvent;

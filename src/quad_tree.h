@@ -1,12 +1,12 @@
 #pragma once
 
-#include <stdint.h>
 #include <array>
 #include <memory>
+#include <stdint.h>
 
+#include "const.h"
 #include "position.h"
 #include "tile_location.h"
-#include "const.h"
 
 class MapIterator;
 class Map;

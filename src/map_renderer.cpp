@@ -8,10 +8,10 @@
 
 #include "graphics/appearances.h"
 
-#include "ecs/ecs.h"
 #include "debug.h"
-#include "util.h"
+#include "ecs/ecs.h"
 #include "logger.h"
+#include "util.h"
 
 /** Order of members matter for this struct due to alignment requirements in the 
  * vertex shader.

@@ -1,13 +1,13 @@
 #pragma once
 
-#include <type_traits>
+#include <array>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <queue>
-#include <vector>
-#include <array>
 #include <sstream>
-#include <limits>
+#include <type_traits>
+#include <vector>
 
 #include "debug.h"
 #include "position.h"

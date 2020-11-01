@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+
 #include "position.h"
 
 class Town

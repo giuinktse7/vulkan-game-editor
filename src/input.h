@@ -2,8 +2,8 @@
 
 #include <variant>
 
-#include "util.h"
 #include "position.h"
+#include "util.h"
 
 namespace VME
 {

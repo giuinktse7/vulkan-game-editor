@@ -2,9 +2,9 @@
 
 #include <numeric>
 
-#include "tile_location.h"
 #include "ecs/ecs.h"
 #include "ecs/item_animation.h"
+#include "tile_location.h"
 
 Tile::Tile(TileLocation &tileLocation)
     : _position(tileLocation.position()), selectionCount(0), flags(0)

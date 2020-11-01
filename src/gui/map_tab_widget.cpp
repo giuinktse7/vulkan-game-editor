@@ -1,32 +1,32 @@
 #include "map_tab_widget.h"
 
-#include <QWidget>
-#include <QMimeData>
+#include <QAbstractAnimation>
 #include <QDrag>
+#include <QEvent>
+#include <QFrame>
+#include <QGraphicsOpacityEffect>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLayout>
+#include <QMimeData>
 #include <QMouseEvent>
+#include <QPainter>
+#include <QPropertyAnimation>
 #include <QPushButton>
-#include <QSvgWidget>
+#include <QRect>
+#include <QSize>
 #include <QStyle>
 #include <QStyleOptionTab>
-#include <QHBoxLayout>
-#include <QPainter>
-#include <QAbstractAnimation>
-#include <QPropertyAnimation>
-#include <QGraphicsOpacityEffect>
-#include <QLayout>
 #include <QSvgRenderer>
-#include <QFrame>
-#include <QLabel>
-#include <QRect>
-#include <QEvent>
-#include <QSize>
+#include <QSvgWidget>
 #include <QTimer>
+#include <QWidget>
 
 #include <QPaintEvent>
 #include <QStylePainter>
 
-#include <QDesktopWidget>
 #include <QApplication>
+#include <QDesktopWidget>
 
 #include "../logger.h"
 #include "../qt/logging.h"

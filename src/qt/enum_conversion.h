@@ -6,8 +6,8 @@ conversion. This should reduce branching, resulting in faster conversion.
 #pragma once
 
 #include <Qt>
-#include <type_traits>
 #include <array>
+#include <type_traits>
 
 #include "../input.h"
 

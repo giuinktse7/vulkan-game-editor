@@ -2,14 +2,14 @@
 
 #include <type_traits>
 
-#include <vector>
 #include <stack>
 #include <unordered_map>
+#include <vector>
 
-#include "history_change.h"
-#include "../tile_location.h"
 #include "../ecs/item_animation.h"
 #include "../position.h"
+#include "../tile_location.h"
+#include "history_change.h"
 
 class Change;
 class MapView;

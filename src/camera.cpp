@@ -1,8 +1,8 @@
 #include "camera.h"
 
+#include "const.h"
 #include "logger.h"
 #include "map.h"
-#include "const.h"
 
 namespace
 {

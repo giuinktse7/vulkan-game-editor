@@ -1,19 +1,19 @@
 #pragma once
 
-#include <memory>
-#include <unordered_map>
 #include <iostream>
-#include <string>
-#include <stack>
+#include <memory>
 #include <optional>
+#include <stack>
+#include <string>
+#include <unordered_map>
 
 #include "debug.h"
 
 #include "item.h"
+#include "position.h"
+#include "quad_tree.h"
 #include "tile.h"
 #include "tile_location.h"
-#include "quad_tree.h"
-#include "position.h"
 #include "util.h"
 
 #include "town.h"

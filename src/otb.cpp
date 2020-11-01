@@ -1,7 +1,7 @@
 #include "otb.h"
 
-#include <stack>
 #include <iostream>
+#include <stack>
 #include <string>
 
 #include "file.h"

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <QAbstractListModel>
-#include <QVariant>
-#include <QPixmap>
 #include <QAbstractItemDelegate>
+#include <QAbstractListModel>
 #include <QPainter>
+#include <QPixmap>
+#include <QVariant>
 
 #include <vector>
 

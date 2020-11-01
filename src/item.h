@@ -1,17 +1,17 @@
 #pragma once
 
-#include <stdint.h>
 #include <glm/glm.hpp>
-#include <unordered_map>
 #include <optional>
+#include <stdint.h>
+#include <unordered_map>
 
 #include "graphics/texture.h"
 #include "item_attribute.h"
 
-#include "items.h"
-#include "graphics/texture_atlas.h"
-#include "position.h"
 #include "ecs/ecs.h"
+#include "graphics/texture_atlas.h"
+#include "items.h"
+#include "position.h"
 
 class Tile;
 

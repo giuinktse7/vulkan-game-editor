@@ -1,19 +1,19 @@
 #pragma once
 
-#include <string>
+#include <array>
 #include <filesystem>
-#include <unordered_map>
 #include <memory>
 #include <pugixml.hpp>
-#include <vector>
 #include <set>
-#include <array>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
-#include "otb.h"
 #include "const.h"
+#include "otb.h"
 
-#include "position.h"
 #include "graphics/texture_atlas.h"
+#include "position.h"
 
 #include "time_point.h"
 

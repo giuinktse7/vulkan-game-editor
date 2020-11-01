@@ -1,11 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <optional>
-#include <algorithm>
 
-#include "tile_location.h"
 #include "item.h"
+#include "tile_location.h"
 
 class MapView;
 class MapAction;

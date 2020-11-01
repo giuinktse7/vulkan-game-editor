@@ -1,9 +1,9 @@
 #include "quad_tree.h"
 
-#include <iostream>
-#include <string>
-#include <sstream>
 #include <cassert>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 #include "debug.h"
 

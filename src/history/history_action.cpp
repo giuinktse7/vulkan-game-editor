@@ -3,8 +3,8 @@
 #include <iterator>
 
 #include "../debug.h"
-#include "../position.h"
 #include "../map_view.h"
+#include "../position.h"
 #include "../util.h"
 
 namespace MapHistory

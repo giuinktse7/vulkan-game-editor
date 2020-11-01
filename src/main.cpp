@@ -4,9 +4,9 @@
 #include <memory>
 #include <optional>
 
-#include <QLoggingCategory>
 #include <QFile>
 #include <QHBoxLayout>
+#include <QLoggingCategory>
 #include <QStyleFactory>
 
 #include <QFontDatabase>
@@ -18,8 +18,8 @@
 #include "graphics/appearances.h"
 
 #include "items.h"
-#include "time_point.h"
 #include "random.h"
+#include "time_point.h"
 #include "util.h"
 
 #include "qt/logging.h"

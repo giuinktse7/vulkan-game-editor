@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdint.h>
-#include <random>
 #include <cfloat>
+#include <random>
+#include <stdint.h>
 
 /*
 	See https://stackoverflow.com/a/16224552/7157626

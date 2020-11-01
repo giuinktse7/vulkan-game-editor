@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QWidget>
 #include "mainwindow.h"
+#include <QWidget>
 
 #include "../main.h"
 

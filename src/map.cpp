@@ -2,11 +2,11 @@
 
 #include <iostream>
 
-#include "tile_location.h"
+#include "debug.h"
 #include "ecs/ecs.h"
 #include "ecs/item_animation.h"
-#include "debug.h"
 #include "graphics/appearances.h"
+#include "tile_location.h"
 
 #include <stack>
 

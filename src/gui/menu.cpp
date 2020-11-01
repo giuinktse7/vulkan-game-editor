@@ -1,11 +1,11 @@
 #include "menu.h"
 
-#include <QString>
-#include <QKeySequence>
-#include <QObject>
 #include <QHBoxLayout>
+#include <QKeySequence>
 #include <QLabel>
 #include <QMenuBar>
+#include <QObject>
+#include <QString>
 
 MenuAction::MenuActionWidget::MenuActionWidget(QWidget *parent) : QWidget(parent)
 {

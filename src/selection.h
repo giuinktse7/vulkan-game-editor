@@ -4,9 +4,9 @@
 #include <optional>
 #include <unordered_set>
 
+#include "octree.h"
 #include "tile.h"
 #include "util.h"
-#include "octree.h"
 
 class MapView;
 

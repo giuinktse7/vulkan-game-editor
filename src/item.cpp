@@ -1,8 +1,8 @@
 #include "item.h"
 
-#include "items.h"
 #include "ecs/ecs.h"
 #include "ecs/item_animation.h"
+#include "items.h"
 
 Item::Item(ItemTypeId itemTypeId)
 		: itemType(Items::items.getItemType(itemTypeId))

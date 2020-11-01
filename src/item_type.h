@@ -2,9 +2,9 @@
 
 #include <array>
 
-#include "graphics/texture_atlas.h"
-#include "graphics/appearances.h"
 #include "const.h"
+#include "graphics/appearances.h"
+#include "graphics/texture_atlas.h"
 
 #pragma warning(push)
 #pragma warning(disable : 26812)

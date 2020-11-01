@@ -1,7 +1,7 @@
 #include "map_view.h"
 
-#include "const.h"
 #include "../vendor/rollbear-visit/visit.hpp"
+#include "const.h"
 
 std::unordered_set<MapView *> MapView::instances;
 

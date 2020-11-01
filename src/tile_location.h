@@ -1,7 +1,7 @@
 #pragma once
 
-#include "tile.h"
 #include "position.h"
+#include "tile.h"
 
 class Tile;
 class Item;

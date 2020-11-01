@@ -1,11 +1,11 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
 #include <exception>
+#include <iterator>
 #include <string>
 #include <vector>
-#include <array>
-#include <algorithm>
-#include <iterator>
 
 class PropStream;
 

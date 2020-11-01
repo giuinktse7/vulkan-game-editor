@@ -1,10 +1,10 @@
 #include "vulkan_window.h"
 
-#include <QMouseEvent>
+#include <QAction>
+#include <QDialog>
 #include <QFocusEvent>
 #include <QMenu>
-#include <QDialog>
-#include <QAction>
+#include <QMouseEvent>
 
 #include <memory>
 

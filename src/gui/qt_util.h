@@ -2,11 +2,11 @@
 
 #include <optional>
 
-#include <QWidget>
+#include <QApplication>
+#include <QMouseEvent>
 #include <QPixmap>
 #include <QString>
-#include <QMouseEvent>
-#include <QApplication>
+#include <QWidget>
 
 #include "../input.h"
 

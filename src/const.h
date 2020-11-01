@@ -1,7 +1,7 @@
 #pragma once
 
-#include <type_traits>
 #include <stdint.h>
+#include <type_traits>
 
 // Map constants
 constexpr uint16_t MAP_TREE_CHILDREN_COUNT = 16;

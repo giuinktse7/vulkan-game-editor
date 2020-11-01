@@ -1,13 +1,13 @@
 #include "borderless_window.h"
 
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QLabel>
-#include <QMouseEvent>
 #include <QDrag>
-#include <QStyle>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QMimeData>
+#include <QMouseEvent>
+#include <QPushButton>
+#include <QStyle>
+#include <QVBoxLayout>
 
 #include "border_layout.h"
 

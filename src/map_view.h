@@ -1,17 +1,17 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 #include <optional>
 #include <set>
 #include <variant>
+#include <vector>
 
-#include "map.h"
 #include "camera.h"
-#include "position.h"
-#include "util.h"
 #include "input.h"
+#include "map.h"
+#include "position.h"
 #include "selection.h"
+#include "util.h"
 
 #include "history/history.h"
 

@@ -5,9 +5,9 @@
 #include <string>
 
 #include "debug.h"
-#include "version.h"
 #include "definitions.h"
 #include "tile.h"
+#include "version.h"
 
 #pragma warning(push)
 #pragma warning(disable : 26812)

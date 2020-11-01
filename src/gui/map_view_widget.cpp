@@ -1,24 +1,24 @@
 #include "map_view_widget.h"
 
-#include <QSize>
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QScrollBar>
+#include <QSize>
 #include <QStyle>
 #include <QStyleOptionSlider>
 
 #include <QApplication>
-#include <QWidget>
 #include <QDesktopWidget>
 #include <QScreen>
+#include <QWidget>
 
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <QHBoxLayout>
 
 #include "../const.h"
-#include "../map.h"
 #include "../logger.h"
+#include "../map.h"
 
 #include "../qt/logging.h"
 #include "border_layout.h"

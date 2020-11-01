@@ -1,10 +1,10 @@
 #pragma once
 
-#include <stdint.h>
 #include <ostream>
+#include <stdint.h>
 
-#include "type_trait.h"
 #include "const.h"
+#include "type_trait.h"
 #include "util.h"
 
 class MapView;

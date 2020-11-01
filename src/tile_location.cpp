@@ -1,10 +1,10 @@
 #include "tile_location.h"
 
-#include <memory>
 #include <iostream>
-#include "tile.h"
+#include <memory>
 
 #include "debug.h"
+#include "tile.h"
 
 TileLocation::TileLocation()
 {

@@ -1,16 +1,16 @@
 #include "items.h"
 
-#include <iostream>
-#include <utility>
-#include <memory>
 #include <algorithm>
 #include <bitset>
-#include "logger.h"
+#include <iostream>
+#include <memory>
+#include <utility>
 
-#include "version.h"
+#include "file.h"
+#include "logger.h"
 #include "otb.h"
 #include "util.h"
-#include "file.h"
+#include "version.h"
 
 #include "graphics/appearances.h"
 #include "item_type.h"

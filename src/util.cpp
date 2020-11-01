@@ -1,8 +1,8 @@
-
 #include "util.h"
-#include "graphics/validation.h"
 
 #include <algorithm>
+
+#include "graphics/validation.h"
 
 util::Size::Size(int width, int height) : w(width), h(height) {}
 

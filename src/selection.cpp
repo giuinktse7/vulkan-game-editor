@@ -1,8 +1,8 @@
 #include "selection.h"
 
-#include "map_view.h"
 #include "debug.h"
 #include "history/history_action.h"
+#include "map_view.h"
 
 Selection::Selection(MapView &mapView)
     : outOfBoundCorrection(0, 0, 0),

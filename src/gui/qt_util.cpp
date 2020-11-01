@@ -1,22 +1,22 @@
 #include "qt_util.h"
 
-#include <optional>
-#include <memory>
 #include <algorithm>
+#include <memory>
+#include <optional>
 
 #include <QApplication>
-#include <QWheelEvent>
-#include <QSize>
 #include <QLabel>
 #include <QPainter>
+#include <QSize>
+#include <QWheelEvent>
 
 #include "vulkan_window.h"
 
 #include "../items.h"
 #include "../map_view.h"
 
-#include "../logger.h"
 #include "../definitions.h"
+#include "../logger.h"
 #include "../qt/logging.h"
 
 namespace

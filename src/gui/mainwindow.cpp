@@ -1,32 +1,31 @@
 #include "mainwindow.h"
 
-#include <QWidget>
-#include <QGridLayout>
-#include <QPlainTextEdit>
-#include <QMenu>
-#include <QTabWidget>
-#include <QMenuBar>
-#include <QtWidgets>
 #include <QContextMenuEvent>
-#include <QMouseEvent>
-#include <QSlider>
+#include <QGridLayout>
 #include <QListView>
-#include <QVariant>
+#include <QMenu>
+#include <QMenuBar>
 #include <QModelIndex>
-#include <QVulkanInstance>
+#include <QMouseEvent>
+#include <QPlainTextEdit>
 #include <QQuickView>
+#include <QSlider>
+#include <QTabWidget>
+#include <QVariant>
+#include <QVulkanInstance>
+#include <QWidget>
+#include <QtWidgets>
 
-#include "vulkan_window.h"
-#include "item_list.h"
-#include "qt_util.h"
-#include "menu.h"
-#include "border_layout.h"
-#include "map_view_widget.h"
-#include "map_tab_widget.h"
-#include "split_widget.h"
-#include "../util.h"
-#include "qt_util.h"
 #include "../qt/logging.h"
+#include "../util.h"
+#include "border_layout.h"
+#include "item_list.h"
+#include "map_tab_widget.h"
+#include "map_view_widget.h"
+#include "menu.h"
+#include "qt_util.h"
+#include "split_widget.h"
+#include "vulkan_window.h"
 
 #include "../main.h"
 
