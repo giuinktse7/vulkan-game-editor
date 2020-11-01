@@ -50,7 +50,7 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 find_package(
   Qt5
-  COMPONENTS Core Widgets Svg
+  COMPONENTS Core Widgets Qml Quick Svg
   REQUIRED)
 
 set(CommonSources
@@ -226,9 +226,8 @@ target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE glm)
 
 # QT
-target_link_libraries(main PUBLIC Qt::Core)
-target_link_libraries(main PUBLIC Qt::Widgets)
-target_link_libraries(main PUBLIC Qt::Svg)
+target_link_libraries(main PUBLIC Qt::Core Qt::Widgets Qt::Qml Qt::Quick
+                                  Qt::Svg)
 # End QT
 
 # For performance profiling all the code
