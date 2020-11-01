@@ -32,33 +32,90 @@ QMenu::item::selected {
   background-color: #C6C6C6;
 }
 
-/* QTabBar */
+#mapTabWidget {
+}
+
 QTabWidget::pane { /* The tab widget frame */
-    border-top: 2px solid #C2C7CB;
+border: none;
 }
 
 QTabWidget::tab-bar {
+  min-width: 10000ex; /* Arbitrary value, represents width: 100% */
 }
 
-/* Style the tab using the tab sub-control. Note that
-    it reads QTabBar _not_ QTabWidget */
+SvgWidget {
+  margin: 0px;
+  padding: 4px;
+  padding-left: 8px;
+  background: none;
+  background-color: none;
+}
+
+QScrollBar[mapTabBar=true]:horizontal {
+    background: #ffffff;
+    height: 4px;
+}
+QScrollBar[mapTabBar=true]::handle:horizontal {
+    background: #333333;
+    min-width: 20px;
+}
+QScrollBar[mapTabBar=true]::add-line:horizontal {
+    border: none;
+    background: none;
+}
+
+QScrollBar[mapTabBar=true]::sub-line:horizontal {
+    border: none;
+    background: none;
+}
+
+QSvgWidget {
+  background: none;
+}
+
+
+#my-svg {
+  background: none;
+  background-color: none;
+}
+
+QTabBar {
+    qproperty-drawBase: 0;
+}
+
 QTabBar::tab {
-    background: #ececec;
     border-radius: 0px;
     border-right: 1px solid #fff;
     min-width: 8ex;
-    padding-top: 11px;
-    padding-bottom: 11px;
+
+    padding-top: 8px;
+    padding-bottom: 9px;
     padding-left: 17px;
-    padding-right: 5px;
+    padding-right: 0px;
+    margin: 0px;
+
+}
+
+QTabBar::tab:top {
+    margin: 0px;
+}
+
+
+QTabBar::tab:right {
+    margin-right: 0px;
+    padding: 0px;
 }
 
 QTabBar::tab:selected, QTabBar::tab:hover {
 }
 
 QTabBar::tab:selected {
-  background: #fff;
 }
 
 QTabBar::tab:!selected {
+}
+
+QTabBar::tear {
+    width: 0px; 
+    border: none;
 }
