@@ -365,9 +365,9 @@ bool MapRenderer::shouldDrawItem(const Position pos, const Item &item, uint32_t 
 {
   bool selected = item.selected && (flags & ItemDrawFlags::DrawSelected);
   bool unselected = !item.selected && (flags & ItemDrawFlags::DrawNonSelected);
-  bool passFilter = filter && filter(pos, item);
+  bool passFilter = !filter || filter(pos, item);
 
-  return selected || unselected || passFilter;
+  return (selected || unselected) && passFilter;
 }
 
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, const ItemPredicate &filter)
