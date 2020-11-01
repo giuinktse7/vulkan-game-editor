@@ -37,7 +37,7 @@
 namespace
 {
     constexpr int CloseIconSize = 8;
-    constexpr QSize MinSizeHint = ([]() { return QSize(400, 300); }());
+    constexpr QSize MinSizeHint = ([]() { return QSize(150, 300); }());
 
     constexpr int DragScrollThresholdPx = 30;
     constexpr int DragScrollRefreshRateMs = 1000 / 60;
@@ -46,6 +46,9 @@ namespace
 MapTabWidget::MapTabWidget(QWidget *parent)
     : QTabWidget(parent)
 {
+    resize(1200, 600);
+    setSizePolicy(QSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding));
+
     MapTabBar *mapTabBar = new MapTabBar(this);
     setTabBar(mapTabBar);
     mapTabBar->setExpanding(false);
@@ -391,11 +394,6 @@ void MapTabWidget::MapTabBar::setCloseButtonVisible(int index, bool visible)
 
 void MapTabWidget::MapTabBar::mouseMoveEvent(QMouseEvent *event)
 {
-
-    // if (scrollBar->isHidden() || scrollAnimation)
-    // {
-    // }
-
     if (tabAt(event->pos()) != -1)
     {
         setCursor(Qt::PointingHandCursor);
