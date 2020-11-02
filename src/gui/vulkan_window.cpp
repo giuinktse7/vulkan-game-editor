@@ -61,9 +61,6 @@ QWidget *VulkanWindow::wrapInWidget(QWidget *parent)
   return wrapper;
 }
 
-VulkanWindow::Renderer::Renderer(VulkanWindow &window)
-    : window(window), renderer(window.vulkanInfo, window.mapView.get()) {}
-
 QVulkanWindowRenderer *VulkanWindow::createRenderer()
 {
   if (!renderer)
@@ -347,4 +344,45 @@ bool VulkanWindow::event(QEvent *ev)
 void VulkanWindow::updateVulkanInfo()
 {
   vulkanInfo.update();
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>Renderer>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
+VulkanWindow::Renderer::Renderer(VulkanWindow &window)
+    : window(window),
+      renderer(window.vulkanInfo, window.mapView.get()) {}
+
+void VulkanWindow::Renderer::initResources()
+{
+  renderer.initResources(window.colorFormat());
+};
+
+void VulkanWindow::Renderer::initSwapChainResources()
+{
+  renderer.initSwapChainResources(window.vulkanSwapChainImageSize());
+};
+
+void VulkanWindow::Renderer::releaseSwapChainResources()
+{
+  renderer.releaseSwapChainResources();
+};
+
+void VulkanWindow::Renderer::releaseResources()
+{
+  renderer.releaseResources();
+};
+
+void VulkanWindow::Renderer::startNextFrame()
+{
+  renderer.setCurrentFrame(window.currentFrame());
+  auto frame = renderer.currentFrame();
+  frame->currentFrameIndex = window.currentFrame();
+  frame->commandBuffer = window.currentCommandBuffer();
+  frame->frameBuffer = window.currentFramebuffer();
+  frame->mouseAction = window.mapView->editorAction.action();
+
+  renderer.startNextFrame();
 }

@@ -32,37 +32,11 @@ public:
   {
   public:
     Renderer(VulkanWindow &window);
-    inline void initResources() override
-    {
-      renderer.initResources(window.colorFormat());
-    };
-
-    inline void initSwapChainResources() override
-    {
-      renderer.initSwapChainResources(window.vulkanSwapChainImageSize());
-    };
-
-    inline void releaseSwapChainResources() override
-    {
-      renderer.releaseSwapChainResources();
-    };
-
-    inline void releaseResources() override
-    {
-      renderer.releaseResources();
-    };
-
-    inline void startNextFrame() override
-    {
-      renderer.setCurrentFrame(window.currentFrame());
-      auto frame = renderer.currentFrame();
-      frame->currentFrameIndex = window.currentFrame();
-      frame->commandBuffer = window.currentCommandBuffer();
-      frame->frameBuffer = window.currentFramebuffer();
-      frame->mouseAction = window.mapView->editorAction.action();
-
-      renderer.startNextFrame();
-    }
+    void initResources() override;
+    void initSwapChainResources() override;
+    void releaseSwapChainResources() override;
+    void releaseResources() override;
+    void startNextFrame() override;
 
   private:
     VulkanWindow &window;
