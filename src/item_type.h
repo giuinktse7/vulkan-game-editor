@@ -188,10 +188,8 @@ public:
   std::vector<TextureAtlas *> getTextureAtlases() const;
 
   TextureAtlas *getTextureAtlas(uint32_t spriteId) const;
-  TextureAtlas *getFirstTextureAtlas() const noexcept
-  {
-    return atlases.front();
-  }
+  inline TextureAtlas *getFirstTextureAtlas() const noexcept;
+  std::vector<const TextureAtlas *> atlases() const;
 
   bool isGroundTile() const noexcept;
   bool isContainer() const noexcept;
@@ -214,11 +212,8 @@ public:
 
   bool usesSubType() const noexcept;
   bool isStackable() const noexcept;
-
-  bool hasFlag(AppearanceFlag flag) const
-  {
-    return appearance->hasFlag(flag);
-  }
+  inline bool isGroundBorder() const noexcept;
+  inline bool hasFlag(AppearanceFlag flag) const noexcept;
 
   /*
     The items.otb may report a client ID that is incorrect. One such example
@@ -226,41 +221,16 @@ public:
     But there is no object with client ID 395.
     If the client ID is incorrect, it is set to 0.
   */
-  bool isValid() const
-  {
-    return clientId != 0;
-  }
-
-  inline bool hasAnimation() const
-  {
-    return appearance->getSpriteInfo().hasAnimation();
-  }
-
-  inline SpriteAnimation *animation() const
-  {
-    return appearance->getSpriteInfo().animation();
-  }
-
-  // Abilities &getAbilities()
-  // {
-  //   if (!abilities)
-  //   {
-  //     abilities.reset(new Abilities());
-  //   }
-  //   return *abilities;
-  // }
+  inline bool isValid() const noexcept;
+  inline bool hasAnimation() const noexcept;
+  inline SpriteAnimation *animation() const noexcept;
 
   std::string getPluralName() const;
 
-  itemgroup_t group = itemgroup_t::None;
-  ItemTypes_t type = ItemTypes_t::None;
-  uint16_t id = 0;
-  uint16_t clientId = 0;
-  bool stackable = false;
-  bool isAnimation = false;
+  inline int getElevation() const noexcept;
+  bool hasElevation() const noexcept;
 
   std::string editorsuffix;
-
   std::string name;
   std::string article;
   std::string pluralName;
@@ -268,15 +238,8 @@ public:
   std::string runeSpellName;
   std::string vocationString;
 
-  // std::unique_ptr<Abilities> abilities;
-  // std::unique_ptr<ConditionDamage> conditionDamage;
-
-  bool isGroundBorder() const
-  {
-    return hasFlag(AppearanceFlag::GroundBorder);
-  }
-
-  bool decays = false;
+  itemgroup_t group = itemgroup_t::None;
+  ItemTypes_t type = ItemTypes_t::None;
 
   uint32_t weight = 0;
   uint32_t levelDoor = 0;
@@ -291,11 +254,14 @@ public:
   int32_t defense = 0;
   int32_t extraDefense = 0;
   int32_t armor = 0;
-  uint16_t rotateTo = 0;
   int32_t runeMagLevel = 0;
   int32_t runeLevel = 0;
 
+  uint16_t id = 0;
+  uint16_t clientId = 0;
+
   // CombatType_t combatType = COMBAT_NONE;
+  uint16_t rotateTo = 0;
   uint16_t volume;
 
   uint16_t transformToOnUse[2] = {0, 0};
@@ -352,23 +318,56 @@ public:
   bool lookThrough = false;
   bool stopTime = false;
   bool showCount = true;
-
-  int getElevation() const
-  {
-    return appearance->flagData.elevation;
-  }
-
-  bool hasElevation() const
-  {
-    return appearance->hasFlag(AppearanceFlag::Height);
-  }
+  bool decays = false;
+  bool stackable = false;
+  bool isAnimation = false;
 
   Appearance *appearance = nullptr;
 
 private:
-  std::array<TextureAtlas *, CACHED_TEXTURE_ATLAS_AMOUNT> atlases = {};
+  std::array<TextureAtlas *, CACHED_TEXTURE_ATLAS_AMOUNT> _atlases = {};
 
   void cacheTextureAtlas(uint32_t spriteId);
 };
+
+inline bool ItemType::hasFlag(AppearanceFlag flag) const noexcept
+{
+  return appearance->hasFlag(flag);
+}
+
+inline bool ItemType::isGroundBorder() const noexcept
+{
+  return hasFlag(AppearanceFlag::GroundBorder);
+}
+
+inline bool ItemType::isValid() const noexcept
+{
+  return clientId != 0;
+}
+
+inline bool ItemType::hasAnimation() const noexcept
+{
+  return appearance->getSpriteInfo().hasAnimation();
+}
+
+inline SpriteAnimation *ItemType::animation() const noexcept
+{
+  return appearance->getSpriteInfo().animation();
+}
+
+inline int ItemType::getElevation() const noexcept
+{
+  return appearance->flagData.elevation;
+}
+
+inline bool ItemType::hasElevation() const noexcept
+{
+  return appearance->hasFlag(AppearanceFlag::Height);
+}
+
+inline TextureAtlas *ItemType::getFirstTextureAtlas() const noexcept
+{
+  return _atlases.front();
+}
 
 #pragma warning(pop)

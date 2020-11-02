@@ -88,7 +88,7 @@ void ItemType::cacheTextureAtlases()
     for (const auto spriteId : appearance->getSpriteInfo(frameGroup).spriteIds)
     {
       // Stop if the cache is full
-      if (this->atlases.back() != nullptr)
+      if (_atlases.back() != nullptr)
       {
         return;
       }
@@ -100,12 +100,12 @@ void ItemType::cacheTextureAtlases()
 void ItemType::cacheTextureAtlas(uint32_t spriteId)
 {
   // If nothing is cached, cache the TextureAtlas for the first sprite ID in the appearance.
-  if (this->atlases.front() == nullptr)
-    this->atlases.front() = Appearances::getTextureAtlas(this->appearance->getFirstSpriteId());
+  if (_atlases.front() == nullptr)
+    _atlases.front() = Appearances::getTextureAtlas(this->appearance->getFirstSpriteId());
 
-  for (int i = 0; i < atlases.size(); ++i)
+  for (int i = 0; i < _atlases.size(); ++i)
   {
-    TextureAtlas *&atlas = this->atlases[i];
+    TextureAtlas *&atlas = _atlases[i];
     // End of current cache reached, caching the atlas
     if (atlas == nullptr)
     {
@@ -125,7 +125,7 @@ void ItemType::cacheTextureAtlas(uint32_t spriteId)
 
 TextureAtlas *ItemType::getTextureAtlas(uint32_t spriteId) const
 {
-  for (const auto atlas : atlases)
+  for (const auto atlas : _atlases)
   {
     if (atlas == nullptr)
     {
@@ -140,6 +140,21 @@ TextureAtlas *ItemType::getTextureAtlas(uint32_t spriteId) const
 
   return Appearances::getTextureAtlas(spriteId);
 }
+
+std::vector<const TextureAtlas *> ItemType::atlases() const
+{
+  std::vector<const TextureAtlas *> result;
+  for (const auto atlas : _atlases)
+  {
+    if (atlas == nullptr)
+      return result;
+    result.emplace_back(atlas);
+  }
+
+  return result;
+}
+
+// std::vector<TextureAtlas> atlases()
 
 std::string ItemType::getPluralName() const
 {
