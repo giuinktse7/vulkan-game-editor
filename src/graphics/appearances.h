@@ -1,9 +1,9 @@
 #pragma once
 
-#include <unordered_map>
-#include <memory>
-#include <filesystem>
 #include <array>
+#include <filesystem>
+#include <memory>
+#include <unordered_map>
 
 #include <sstream>
 #include <variant>
@@ -17,9 +17,9 @@
 
 #endif // MESSAGES_WRAPPER_H
 
+#include "../const.h"
 #include "../debug.h"
 #include "../position.h"
-#include "../const.h"
 #include "../util.h"
 
 #include "texture_atlas.h"
@@ -256,31 +256,35 @@ private:
 
 struct SpriteInfo
 {
-  uint32_t patternWidth = 0;
-  uint32_t patternHeight = 0;
-  uint32_t patternDepth = 0;
-  uint32_t layers = 1;
 
   std::vector<uint32_t> spriteIds;
-
   uint32_t boundingSquare;
+
+  uint8_t patternWidth = 1;
+  uint8_t patternHeight = 1;
+  uint8_t patternDepth = 1;
+  uint8_t patternSize = 1;
+  uint8_t layers = 1;
+
   bool isOpaque;
 
-  bool hasAnimation() const
-  {
-    return _animation != nullptr;
-  }
+  inline bool hasAnimation() const noexcept;
 
   SpriteAnimation *animation() const;
 
-  friend class Appearance;
-
   // repeated Box bounding_box_per_direction = 9;
 private:
-  static SpriteInfo fromProtobufData(proto::SpriteInfo info);
+  friend class Appearance;
+
+  static SpriteInfo fromProtobufData(proto::SpriteInfo info, bool cumulative);
 
   std::unique_ptr<SpriteAnimation> _animation;
 };
+
+inline bool SpriteInfo::hasAnimation() const noexcept
+{
+  return _animation != nullptr;
+}
 
 struct FrameGroup
 {
@@ -301,9 +305,9 @@ public:
   Appearance(Appearance &&other) noexcept;
   Appearance &operator=(Appearance &&) = default;
 
+  size_t spriteCount(uint32_t frameGroup) const;
+
   const uint32_t getSpriteId(uint32_t frameGroup, int index) const;
-  const uint32_t getSpriteId(int index) const;
-  uint32_t getSpriteId(uint32_t frameGroup, Position pos);
   uint32_t getFirstSpriteId() const;
   const SpriteInfo &getSpriteInfo(size_t frameGroup) const;
   const SpriteInfo &getSpriteInfo() const;

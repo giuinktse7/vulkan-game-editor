@@ -1,21 +1,21 @@
 #include "appearances.h"
 
-#include <iostream>
+#include <algorithm>
 #include <fstream>
+#include <iostream>
+#include <memory>
+#include <nlohmann/json.hpp>
+#include <set>
 #include <string>
 #include <unordered_map>
-#include <nlohmann/json.hpp>
-#include <memory>
-#include <algorithm>
-#include <set>
 
 #include "../logger.h"
 
-#include "../util.h"
 #include "../file.h"
+#include "../util.h"
 
-#include "texture_atlas.h"
 #include "../time_point.h"
+#include "texture_atlas.h"
 
 vme_unordered_map<uint32_t, Appearance> Appearances::objects;
 vme_unordered_map<uint32_t, proto::Appearance> Appearances::outfits;
@@ -55,33 +55,13 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
         const proto::Appearance &object = parsed.object(i);
         auto info = object.frame_group().at(0).sprite_info();
 
-        // if (object.id() == 3031 || object.id() == 103)
+        // if (object.id() == 675)
         // {
-        //     std::cout << "\n(cid: " << object.id() << "): " << std::endl;
-        //     std::cout << "info: " << info << std::endl;
-        //     if (object.has_flags())
-        //     {
-        //         std::cout << "flags: " << object.flags() << std::endl;
-        //     }
+        //     auto info = object.frame_group().at(0).sprite_info();
+        //     VME_LOG_D(info.layers());
+        //     VME_LOG_D(info.sprite_id_size());
         // }
 
-        // if (object.has_flags() && object.flags().has_cumulative() && object.flags().cumulative() && info.sprite_id_size() > 1 && info.has_animation())
-        // {
-        //     std::cout << "\n(cid: " << object.id() << "): " << std::endl;
-        //     std::cout << "framegroups: " << object.frame_group_size() << std::endl;
-        //     std::cout << "info: " << info << std::endl;
-        //     if (object.has_flags())
-        //     {
-        //         std::cout << "flags: " << std::endl;
-        //         std::cout << object.flags() << std::endl;
-        //     }
-        //     if (info.has_animation())
-        //     {
-        //         std::cout << "Animation:" << std::endl
-        //                   << info.animation() << std::endl;
-        //     }
-        //     ++total;
-        // }
         Appearances::objects.emplace(object.id(), std::move(object));
     }
 
@@ -199,7 +179,7 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
     VME_LOG("Loaded compressed texture atlases in " << start.elapsedMillis() << " ms.");
 }
 
-SpriteInfo SpriteInfo::fromProtobufData(proto::SpriteInfo spriteInfo)
+SpriteInfo SpriteInfo::fromProtobufData(proto::SpriteInfo spriteInfo, bool cumulative)
 {
     SpriteInfo info{};
     if (spriteInfo.has_animation())
@@ -212,6 +192,7 @@ SpriteInfo SpriteInfo::fromProtobufData(proto::SpriteInfo spriteInfo)
     info.patternWidth = spriteInfo.pattern_width();
     info.patternHeight = spriteInfo.pattern_height();
     info.patternDepth = spriteInfo.pattern_depth();
+    info.patternSize = info.patternWidth * info.patternHeight * info.patternDepth;
 
     for (auto id : spriteInfo.sprite_id())
     {
@@ -282,7 +263,13 @@ Appearance::Appearance(proto::Appearance protobufAppearance)
 
     if (protobufAppearance.frame_group_size() == 1)
     {
-        this->appearanceData = SpriteInfo::fromProtobufData(protobufAppearance.frame_group().at(0).sprite_info());
+        const auto &spriteInfo = protobufAppearance.frame_group().at(0).sprite_info();
+        bool cumulative = protobufAppearance.flags().has_cumulative() && protobufAppearance.flags().cumulative();
+        this->appearanceData = SpriteInfo::fromProtobufData(spriteInfo, cumulative);
+    }
+    else
+    {
+        VME_LOG_D("More than one frame group for clientId: " << protobufAppearance.id());
     }
 
     // Flags
@@ -487,6 +474,16 @@ const SpriteInfo &Appearance::getSpriteInfo(size_t frameGroup) const
 const SpriteInfo &Appearance::getSpriteInfo() const
 {
     return getSpriteInfo(0);
+}
+
+const uint32_t Appearance::getSpriteId(uint32_t frameGroup, int index) const
+{
+    return getSpriteInfo(frameGroup).spriteIds.at(index);
+}
+
+size_t Appearance::spriteCount(uint32_t frameGroup) const
+{
+    return this->getSpriteInfo(frameGroup).spriteIds.size();
 }
 
 size_t Appearance::frameGroupCount() const

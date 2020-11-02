@@ -160,6 +160,19 @@ enum ItemFlags_t
   FLAG_FORCEUSE = 1 << 26,
 };
 
+/**
+ * A stackable ItemType can have either one sprite ID for all counts, or eight
+ * sprite IDs for different counts.
+ * Note: Often, several of the eight sprite ids are the same, like for
+ * wood (serverId: 5901), which is of the form X,Y,Z,Z,Z,Z,Z,Z where
+ * X, Y and Z are different sprite IDs.
+ */
+enum class StackableSpriteType : uint8_t
+{
+  SingleId,
+  EightIds
+};
+
 class ItemType
 {
 public:
@@ -289,6 +302,7 @@ public:
   uint8_t lightLevel = 0;
   uint8_t lightColor = 0;
   uint8_t shootRange = 1;
+  StackableSpriteType stackableSpriteType = StackableSpriteType::SingleId;
   int8_t hitChance = 0;
 
   bool forceUse = false;

@@ -77,6 +77,10 @@ public:
 		return attributes;
 	}
 
+	inline uint16_t count() const noexcept;
+
+	inline void setCount(uint16_t count) noexcept;
+
 protected:
 	friend class Tile;
 
@@ -86,4 +90,16 @@ private:
 	std::unordered_map<ItemAttribute_t, ItemAttribute> attributes;
 	// Subtype is either fluid type, count, subtype, or charges.
 	uint16_t subtype = 1;
+
+	const uint32_t getPatternIndex(const Position &pos) const;
 };
+
+inline uint16_t Item::count() const noexcept
+{
+	return subtype;
+}
+
+inline void Item::setCount(uint16_t count) noexcept
+{
+	subtype = count;
+}

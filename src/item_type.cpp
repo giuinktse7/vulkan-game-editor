@@ -6,6 +6,8 @@
 const uint32_t ItemType::getPatternIndex(const Position &pos) const
 {
   const SpriteInfo &spriteInfo = appearance->getSpriteInfo();
+  if (spriteInfo.patternSize == 1 || isStackable())
+    return 0;
 
   uint32_t width = spriteInfo.patternWidth;
   uint32_t height = spriteInfo.patternHeight;
@@ -47,25 +49,12 @@ const TextureInfo ItemType::getTextureInfo(uint32_t spriteId) const
 
 const TextureInfo ItemType::getTextureInfo(const Position &pos) const
 {
-  if (!appearance->hasFlag(AppearanceFlag::Take) && appearance->hasFlag(AppearanceFlag::Unmove))
-  {
-    const SpriteInfo &spriteInfo = appearance->getSpriteInfo();
+  const SpriteInfo &spriteInfo = appearance->getSpriteInfo();
 
-    uint32_t width = spriteInfo.patternWidth;
-    uint32_t height = spriteInfo.patternHeight;
-    uint32_t depth = spriteInfo.patternDepth;
+  uint32_t spriteIndex = getPatternIndex(pos);
+  uint32_t spriteId = spriteInfo.spriteIds.at(spriteIndex);
 
-    uint32_t spriteIndex = (pos.x % width) + (pos.y % height) * width + (pos.z % depth) * height * width;
-
-    uint32_t spriteId = spriteInfo.spriteIds.at(spriteIndex);
-    TextureAtlas *atlas = getTextureAtlas(spriteId);
-
-    return TextureInfo{atlas, atlas->getTextureWindow(spriteId)};
-  }
-  else
-  {
-    return getTextureInfo();
-  }
+  return getTextureInfo(spriteId);
 }
 
 std::vector<TextureAtlas *> ItemType::getTextureAtlases() const

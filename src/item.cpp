@@ -3,6 +3,22 @@
 #include "ecs/ecs.h"
 #include "ecs/item_animation.h"
 #include "items.h"
+#include "util.h"
+
+namespace
+{
+	enum class StackSizeOffset
+	{
+		One = 0,
+		Two = 1,
+		Three = 2,
+		Four = 3,
+		Five = 4,
+		Ten = 5,
+		TwentyFive = 6,
+		Fifty = 7
+	};
+}
 
 Item::Item(ItemTypeId itemTypeId)
 		: itemType(Items::items.getItemType(itemTypeId))
@@ -60,24 +76,45 @@ Item Item::deepCopy() const
 
 const TextureInfo Item::getTextureInfo(const Position &pos) const
 {
-	// TODO Add more pattern checks like hanging or cumulative item types
-	const SpriteInfo &spriteInfo = itemType->appearance->getSpriteInfo();
+	// TODO Add more pattern checks like hanging item types
+
+	uint32_t offset = getPatternIndex(pos);
+	const SpriteInfo &spriteInfo = itemType->appearance->getSpriteInfo(0);
+
 	if (spriteInfo.hasAnimation() && isEntity())
 	{
 		auto c = g_ecs.getComponent<ItemAnimationComponent>(getEntityId().value());
-
-		uint32_t width = spriteInfo.patternWidth;
-		uint32_t height = spriteInfo.patternHeight;
-		uint32_t depth = spriteInfo.patternDepth;
-
-		uint32_t patternIndex = itemType->getPatternIndex(pos);
-		uint32_t spriteIndex = patternIndex + c->state.phaseIndex * width * height * depth;
-
-		uint32_t spriteId = spriteInfo.spriteIds.at(spriteIndex);
-
-		return itemType->getTextureInfo(spriteId);
+		offset += c->state.phaseIndex * spriteInfo.patternSize;
 	}
-	return itemType->getTextureInfo(pos);
+
+	uint32_t spriteId = spriteInfo.spriteIds.at(offset);
+	return itemType->getTextureInfo(spriteId);
+}
+
+const uint32_t Item::getPatternIndex(const Position &pos) const
+{
+	const SpriteInfo &spriteInfo = itemType->appearance->getSpriteInfo();
+	if (!itemType->isStackable())
+		return itemType->getPatternIndex(pos);
+
+	// For stackable items
+
+	// Amount of sprites for the different counts
+	uint8_t stackSpriteCount = spriteInfo.patternSize;
+	if (stackSpriteCount == 1)
+		return 0;
+
+	int itemCount = count();
+	if (itemCount <= 5)
+		return itemCount - 1;
+	else if (itemCount < 10)
+		return to_underlying(StackSizeOffset::Five);
+	else if (itemCount < 25)
+		return to_underlying(StackSizeOffset::Ten);
+	else if (itemCount < 50)
+		return to_underlying(StackSizeOffset::TwentyFive);
+	else
+		return to_underlying(StackSizeOffset::Fifty);
 }
 
 bool Item::isGround() const noexcept

@@ -585,7 +585,8 @@ void Items::OtbReader::readNodes()
 			itemType->useable = hasBitSet(FLAG_USEABLE, flags) || appearance.hasFlag(AppearanceFlag::Usable);
 			itemType->pickupable = hasBitSet(FLAG_PICKUPABLE, flags);
 			itemType->moveable = hasBitSet(FLAG_MOVEABLE, flags);
-			itemType->stackable = hasBitSet(FLAG_STACKABLE, flags);
+			// itemType->stackable = hasBitSet(FLAG_STACKABLE, flags);
+			itemType->stackable = appearance.hasFlag(AppearanceFlag::Cumulative);
 
 			itemType->alwaysOnTop = hasBitSet(FLAG_ALWAYSONTOP, flags);
 			itemType->isVertical = hasBitSet(FLAG_VERTICAL, flags);
