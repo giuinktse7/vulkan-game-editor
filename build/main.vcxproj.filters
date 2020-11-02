@@ -40,6 +40,9 @@
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\vulkan_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_property_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_tab_widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -82,6 +85,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\vulkan_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_property_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_tab_widget.h">

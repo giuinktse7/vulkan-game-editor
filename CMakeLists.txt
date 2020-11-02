@@ -198,6 +198,7 @@ set(MainSources
     src/gui/menu.h
     src/gui/qt_util.h
     src/gui/vulkan_window.h
+    src/gui/item_property_window.h
     src/gui/map_tab_widget.h
     src/map_renderer.h
     src/qt/qt_vulkan_info.h
@@ -213,6 +214,7 @@ set(MainSources
     src/gui/menu.cpp
     src/gui/qt_util.cpp
     src/gui/vulkan_window.cpp
+    src/gui/item_property_window.cpp
     src/gui/map_tab_widget.cpp
     src/map_renderer.cpp)
 

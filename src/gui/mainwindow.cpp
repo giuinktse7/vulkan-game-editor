@@ -20,6 +20,7 @@
 #include "../util.h"
 #include "border_layout.h"
 #include "item_list.h"
+#include "item_property_window.h"
 #include "map_tab_widget.h"
 #include "map_view_widget.h"
 #include "menu.h"
@@ -148,6 +149,8 @@ void MainWindow::initializeUI()
   mapTabs = new MapTabWidget(this);
   connect(mapTabs, &MapTabWidget::mapTabClosed, this, &MainWindow::mapTabCloseEvent);
 
+  propertyWindow = new ItemPropertyWindow("resources/qml/test.qml");
+
   QMenuBar *menu = createMenuBar();
   rootLayout->setMenuBar(menu);
 
@@ -165,9 +168,7 @@ void MainWindow::initializeUI()
   splitter->setStretchFactor(1, 1);
 
   {
-    QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile("resources/qml/test.qml"));
-    auto container = QWidget::createWindowContainer(view);
+    auto container = propertyWindow->wrapInWidget();
     container->setMinimumWidth(200);
     splitter->addWidget(container);
     splitter->setStretchFactor(2, 0);
@@ -242,7 +243,7 @@ QListView *MainWindow::createItemPalette()
   itemPalette->setItemDelegate(new Delegate(this));
 
   std::vector<ItemTypeModelItem> data;
-  for (int i = 1000; i < 7000; ++i)
+  for (int i = 2000; i < 2500; ++i)
   {
     if (Items::items.validItemType(i))
     {

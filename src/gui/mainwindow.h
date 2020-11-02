@@ -21,6 +21,7 @@ class QListView;
 QT_END_NAMESPACE
 
 class MapTabWidget;
+class ItemPropertyWindow;
 
 #include "gui.h"
 #include "vulkan_window.h"
@@ -48,6 +49,8 @@ protected:
 
 private:
   void keyPressEvent(QKeyEvent *event) override;
+
+  ItemPropertyWindow *propertyWindow;
 
   // UI
   BorderLayout *rootLayout;

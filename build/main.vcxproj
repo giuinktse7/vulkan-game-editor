@@ -555,6 +555,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\menu.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\qt_util.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\vulkan_window.h" />
+    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_property_window.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_tab_widget.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_renderer.h" />
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\qt_vulkan_info.h" />
@@ -570,6 +571,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\menu.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\qt_util.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\vulkan_window.cpp" />
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_property_window.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_tab_widget.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_renderer.cpp" />
   </ItemGroup>
