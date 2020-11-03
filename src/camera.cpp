@@ -32,7 +32,7 @@ void Camera::updateZoom(ScreenPosition zoomOrigin)
 	this->setWorldPosition(newPosition);
 
 	_viewport.zoom = newZoomFactor;
-	onViewportChanged();
+	fireViewportChange();
 }
 
 void Camera::setWorldPosition(WorldPosition position) noexcept
@@ -44,7 +44,7 @@ void Camera::setWorldPosition(WorldPosition position) noexcept
 	_viewport.y = std::max(position.y, 0);
 
 	if (_viewport.x != oldX || _viewport.y != oldY)
-		onViewportChanged();
+		fireViewportChange();
 }
 
 void Camera::translate(WorldPosition delta)
@@ -57,7 +57,7 @@ void Camera::translateZ(int z)
 	int oldFloor = _viewport.z;
 	_viewport.z = static_cast<float>(std::clamp(static_cast<int>(_viewport.z + z), 0, MAP_LAYERS - 1));
 	if (_viewport.z != oldFloor)
-		onViewportChanged();
+		fireViewportChange();
 }
 
 void Camera::zoomIn(ScreenPosition zoomOrigin)

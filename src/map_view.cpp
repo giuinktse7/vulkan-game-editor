@@ -19,10 +19,13 @@ MapView::MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::sh
       uiUtils(std::move(uiUtils))
 {
   instances.emplace(this);
-  camera.onViewportChanged = [this]() {
-    this->notifyObservers(Observer::ChangeType::Viewport);
-    requestDraw();
-  };
+  camera.onViewportChanged<&MapView::cameraViewportChangedEvent>(this);
+}
+
+void MapView::cameraViewportChangedEvent()
+{
+  viewportChange.fire(camera.viewport());
+  requestDraw();
 }
 
 MapView::~MapView()
@@ -612,6 +615,12 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
   requestDraw();
 }
 
+void MapView::disconnectAll()
+{
+  viewportChange.disconnect_all();
+  drawRequest.disconnect_all();
+}
+
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -702,7 +711,7 @@ bool MapView::inDragRegion(Position pos) const
 
 void MapView::requestDraw()
 {
-  notifyObservers(Observer::ChangeType::DrawRequest);
+  drawRequest.fire();
 }
 
 void MapView::escapeEvent()
@@ -733,60 +742,13 @@ void MapView::setUnderMouse(bool underMouse)
   }
 }
 
-void MapView::addObserver(MapView::Observer *o)
 {
-  auto found = std::find(observers.begin(), observers.end(), o);
-  if (found == observers.end())
-  {
-    observers.push_back(o);
-    o->target = this;
-  }
+  auto tile = _map->getTile(pos);
 }
 
-void MapView::removeObserver(MapView::Observer *o)
-{
-  auto found = std::find(observers.begin(), observers.end(), o);
-  if (found != observers.end())
-  {
-    (*found)->target = nullptr;
-    observers.erase(found);
-  }
-}
+    : tile(tile.deepCopy()) {}
 
-void MapView::notifyObservers(MapView::Observer::ChangeType changeType) const
 {
-  switch (changeType)
-  {
-  case Observer::ChangeType::Viewport:
-    for (auto observer : observers)
-    {
-      observer->viewportChanged(camera.viewport());
-    }
-    break;
-  case Observer::ChangeType::DrawRequest:
-    for (auto observer : observers)
-    {
-      observer->mapViewDrawRequested();
-    }
-    break;
-  }
-}
-
-MapView::Observer::Observer(MapView *target)
-    : target(target)
-{
-  if (target != nullptr)
-  {
-    target->addObserver(this);
-  }
-}
-
-MapView::Observer::~Observer()
-{
-  if (target)
-  {
-    target->removeObserver(this);
-  }
 }
 
 /*

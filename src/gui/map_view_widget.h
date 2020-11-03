@@ -7,6 +7,7 @@
 #include "vulkan_window.h"
 
 #include "../map_view.h"
+#include "../signal.h"
 
 class QWidget;
 class QSize;
@@ -27,20 +28,21 @@ public:
   void addValue(int value);
 };
 
-class MapViewWidget : public QWidget, public MapView::Observer
+class MapViewWidget : public QWidget, public Nano::Observer<>
 {
   Q_OBJECT
 public:
   MapViewWidget(VulkanWindow *window, QWidget *parent = nullptr);
 
-  // From MapView::Observer
-  void viewportChanged(const Camera::Viewport &viewport) override;
-  void mapViewDrawRequested() override;
+  void viewportChanged(const Camera::Viewport &viewport);
+  void mapViewDrawRequested();
+  void selectionChanged();
 
   MapView *mapView;
 
 signals:
   void viewportChangedEvent(const Camera::Viewport &viewport);
+  void selectionChangedEvent();
 
 private:
   VulkanWindow *vulkanWindow;

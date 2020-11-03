@@ -67,12 +67,15 @@ int computeSingleStep(float zoom)
 }
 MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
     : QWidget(parent),
-      MapView::Observer(window->getMapView()),
       mapView(window->getMapView()),
       vulkanWindow(window),
       hbar(new QtScrollBar(Qt::Horizontal)),
       vbar(new QtScrollBar(Qt::Vertical))
 {
+  mapView->onViewportChanged<&MapViewWidget::viewportChanged>(this);
+  mapView->onDrawRequested<&MapViewWidget::mapViewDrawRequested>(this);
+  mapView->selection().onSelectionChanged<&MapViewWidget::selectionChanged>(this);
+
   {
     auto l = new BorderLayout;
     l->addWidget(hbar, BorderLayout::Position::South);
@@ -165,6 +168,11 @@ void MapViewWidget::viewportChanged(const Camera::Viewport &viewport)
 void MapViewWidget::mapViewDrawRequested()
 {
   vulkanWindow->requestUpdate();
+}
+
+void MapViewWidget::selectionChanged()
+{
+  emit selectionChangedEvent();
 }
 
 /*

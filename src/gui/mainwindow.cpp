@@ -122,6 +122,26 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
             mapViewViewportEvent(*vulkanWindow->getMapView(), viewport);
           });
 
+  connect(widget,
+          &MapViewWidget::selectionChangedEvent,
+          [this, vulkanWindow]() {
+            VME_LOG_D("selectionChangedEvent");
+            auto mapView = vulkanWindow->getMapView();
+            if (mapView->selection().size() == 1)
+            {
+              const Position pos = mapView->selection().onlyPosition().value();
+              Tile *tile = mapView->map()->getTile(pos);
+              DEBUG_ASSERT(tile != nullptr, "A tile that has a selection should never be nullptr.");
+
+              if (tile->selectionCount() == 1)
+              {
+                auto item = tile->firstSelectedItem();
+                DEBUG_ASSERT(item != nullptr, "It should be impossible for the selected item to be nullptr.");
+                propertyWindow->setItem(*item);
+              }
+            }
+          });
+
   if (map->name().empty())
   {
     uint32_t untitledNameId = nextUntitledId();
@@ -144,12 +164,38 @@ void MainWindow::mapTabCloseEvent(int index, QVariant data)
   }
 }
 
+void MainWindow::mapTabChangedEvent(int index)
+{
+  mapTabs->getMapView(index)->selection().onSelectionChanged<&MainWindow::mapViewSelectionChangedEvent>(this);
+}
+
+void MainWindow::mapViewSelectionChangedEvent()
+{
+}
+
 void MainWindow::initializeUI()
 {
   mapTabs = new MapTabWidget(this);
   connect(mapTabs, &MapTabWidget::mapTabClosed, this, &MainWindow::mapTabCloseEvent);
+  connect(mapTabs, &MapTabWidget::currentChanged, this, &MainWindow::mapTabChangedEvent);
 
   propertyWindow = new ItemPropertyWindow("resources/qml/test.qml");
+  connect(propertyWindow, &ItemPropertyWindow::countChanged, [this](int count) {
+    auto mapView = currentMapView();
+    if (mapView->selection().size() == 1)
+    {
+      const Position pos = mapView->selection().onlyPosition().value();
+      Tile *tile = mapView->map()->getTile(pos);
+      DEBUG_ASSERT(tile != nullptr, "A tile that has a selection should never be nullptr.");
+
+      if (tile->selectionCount() == 1)
+      {
+        auto item = tile->firstSelectedItem();
+        item->setCount(count);
+        mapView->requestDraw();
+      }
+    }
+  });
 
   QMenuBar *menu = createMenuBar();
   rootLayout->setMenuBar(menu);
@@ -160,7 +206,7 @@ void MainWindow::initializeUI()
   auto itemPalette = createItemPalette();
   itemPalette->setMinimumWidth(240);
   itemPalette->setMaximumWidth(600);
-  // rootLayout->addWidget(itemPalette, BorderLayout::Position::West);
+
   splitter->addWidget(itemPalette);
   splitter->setStretchFactor(0, 0);
 
@@ -198,6 +244,13 @@ MainWindow::MainWindow(QWidget *parent)
       zoomStatus(new QLabel)
 {
   initializeUI();
+
+  // editorAction.onActionChanged<&MainWindow::editorActionChangedEvent>(this);
+}
+
+void MainWindow::editorActionChangedEvent(const MouseAction_t &action)
+{
+  // Currently unused
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
@@ -209,16 +262,16 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
   switch (event->key())
   {
   case Qt::Key_Escape:
-    mapTabs->currentMapView()->escapeEvent();
+    currentMapView()->escapeEvent();
     break;
   case Qt::Key_0:
     if (event->modifiers() & Qt::CTRL)
     {
-      mapTabs->currentMapView()->resetZoom();
+      currentMapView()->resetZoom();
     }
     break;
   case Qt::Key_Delete:
-    mapTabs->currentMapView()->deleteSelection();
+    currentMapView()->deleteSelection();
     break;
   default:
   {
@@ -383,6 +436,11 @@ void MainWindow::mapViewViewportEvent(MapView &mapView, const Camera::Viewport &
   Position pos = mapView.mousePos().toPos(mapView);
   this->positionStatus->setText(toQString(pos));
   this->zoomStatus->setText(toQString(std::round(mapView.getZoomFactor() * 100)) + "%");
+}
+
+MapView *MainWindow::currentMapView() const noexcept
+{
+  return mapTabs->currentMapView();
 }
 
 MapView *getMapViewOnCursor()

@@ -11,6 +11,7 @@
 #include "map.h"
 #include "position.h"
 #include "selection.h"
+#include "signal.h"
 #include "util.h"
 
 #include "history/history.h"
@@ -154,10 +155,6 @@ public:
 
 	inline ScreenPosition mousePos() const;
 
-	void addObserver(MapView::Observer *observer);
-	void removeObserver(MapView::Observer *observer);
-	void notifyObservers(MapView::Observer::ChangeType changeType) const;
-
 	/*
 	TODO: These should probably be private, but they are needed by MapHistory
 		Returns the old tile at the location of the tile.
@@ -177,7 +174,12 @@ public:
 
 	std::optional<Region2D<WorldPosition>> dragRegion;
 
+	void disconnectAll();
+
 private:
+	Nano::Signal<void(const Camera::Viewport &)> viewportChange;
+	Nano::Signal<void()> drawRequest;
+
 	/**
  		*	Keeps track of all MapView instances. This is necessary for QT to
 		* validate MapView pointers in a QVariant.
@@ -211,7 +213,7 @@ private:
 	Tile deepCopyTile(const Position position) const;
 	MapHistory::Action newAction(MapHistory::ActionType actionType) const;
 
-	void requestDraw();
+	void cameraViewportChangedEvent();
 };
 
 inline Selection &MapView::selection()
@@ -308,4 +310,16 @@ inline int MapView::floor() const noexcept
 inline bool MapView::underMouse() const noexcept
 {
 	return _underMouse;
+}
+
+template <auto mem_ptr, typename T>
+void MapView::onViewportChanged(T *instance)
+{
+	viewportChange.connect<mem_ptr>(instance);
+}
+
+template <auto mem_ptr, typename T>
+void MapView::onDrawRequested(T *instance)
+{
+	drawRequest.connect<mem_ptr>(instance);
 }

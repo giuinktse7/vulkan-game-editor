@@ -3,6 +3,7 @@
 #include <variant>
 
 #include "position.h"
+#include "signal.h"
 #include "util.h"
 
 namespace VME
@@ -129,6 +130,8 @@ public:
   {
     _action = _previousAction;
     _previousAction = MouseAction::None{};
+
+    actionChanged.fire(_action);
   }
 
   inline MouseAction_t previous() const noexcept
@@ -140,6 +143,8 @@ public:
   {
     _previousAction = _action;
     _action = action;
+
+    actionChanged.fire(_action);
   }
 
   void setRawItem(uint16_t serverId) noexcept
@@ -164,7 +169,15 @@ public:
     return std::holds_alternative<T>(_action);
   }
 
+  template <auto mem_ptr, typename T>
+  void onActionChanged(T *instance)
+  {
+    actionChanged.connect<mem_ptr>(instance);
+  }
+
 private:
+  Nano::Signal<void(const MouseAction_t &)> actionChanged;
+
   MouseAction_t _previousAction = MouseAction::Select{};
   MouseAction_t _action = MouseAction::Select{};
 };

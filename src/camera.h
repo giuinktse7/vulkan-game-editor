@@ -1,15 +1,16 @@
 #pragma once
 
-#define GLM_FORCE_RADIANS
+#include <algorithm>
 #include <functional>
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 #include "const.h"
 #include "position.h"
+#include "signal.h"
 #include "util.h"
-#include <algorithm>
 
 class MapRegion;
 
@@ -25,8 +26,6 @@ public:
     WorldPosition::value_type height;
     float zoom;
   };
-
-  std::function<void()> onViewportChanged = []() {};
 
   Camera();
 
@@ -53,7 +52,12 @@ public:
 
   inline const Viewport &viewport() const noexcept;
 
+  template <auto mem_ptr, typename T>
+  void onViewportChanged(T *instance);
+
 private:
+  Nano::Signal<void()> viewportChange;
+
   Viewport _viewport;
 
   int _zoomStep;
@@ -62,6 +66,8 @@ private:
   void setZoomStep(int zoomStep, ScreenPosition zoomOrigin);
 
   float computeZoomFactor() const;
+
+  inline void fireViewportChange();
 };
 
 inline constexpr WorldPosition::value_type Camera::x() const noexcept
@@ -86,7 +92,7 @@ inline void Camera::setX(WorldPosition::value_type x) noexcept
   _viewport.x = std::max(x, 0);
 
   if (oldX != _viewport.x)
-    onViewportChanged();
+    fireViewportChange();
 }
 
 inline void Camera::setY(WorldPosition::value_type y) noexcept
@@ -96,7 +102,7 @@ inline void Camera::setY(WorldPosition::value_type y) noexcept
   _viewport.y = std::max(y, 0);
 
   if (oldY != _viewport.y)
-    onViewportChanged();
+    fireViewportChange();
 }
 
 inline void Camera::setZ(int z) noexcept
@@ -106,7 +112,7 @@ inline void Camera::setZ(int z) noexcept
   _viewport.z = std::clamp(z, 0, MAP_LAYERS - 1);
 
   if (oldZ != _viewport.z)
-    onViewportChanged();
+    fireViewportChange();
 }
 
 inline void Camera::setSize(WorldPosition::value_type width, WorldPosition::value_type height) noexcept
@@ -116,7 +122,7 @@ inline void Camera::setSize(WorldPosition::value_type width, WorldPosition::valu
   _viewport.height = height;
 
   if (changed)
-    onViewportChanged();
+    fireViewportChange();
 }
 
 inline float Camera::zoomFactor() const noexcept
@@ -137,4 +143,15 @@ inline WorldPosition Camera::worldPosition() const noexcept
 inline const Camera::Viewport &Camera::viewport() const noexcept
 {
   return _viewport;
+}
+
+template <auto mem_ptr, typename T>
+void Camera::onViewportChanged(T *instance)
+{
+  viewportChange.connect<mem_ptr>(instance);
+}
+
+inline void Camera::fireViewportChange()
+{
+  viewportChange.fire();
 }
