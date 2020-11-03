@@ -13,20 +13,27 @@ Selection::Selection(MapView &mapView)
 
 void Selection::merge(std::vector<Position> &positions)
 {
+  bool changed = false;
   for (const auto &pos : positions)
   {
     mapView.getTile(pos)->selectAll();
-    storage.add(pos);
+    changed = changed || storage.add(pos);
   }
+
+  if (changed)
+    selectionChange.fire();
 }
 
 void Selection::deselect(std::vector<Position> &positions)
 {
+  bool changed = false;
   for (const auto &pos : positions)
   {
     mapView.getTile(pos)->deselectAll();
-    storage.remove(pos);
+    changed = changed || storage.remove(pos);
   }
+  if (changed)
+    selectionChange.fire();
 }
 
 Position Selection::moveDelta() const
@@ -52,12 +59,18 @@ void Selection::select(const Position pos)
 {
   DEBUG_ASSERT(mapView.getTile(pos)->hasSelection(), "The tile does not have a selection.");
 
-  storage.add(pos);
+  bool changed = storage.add(pos);
+
+  if (changed)
+    selectionChange.fire();
 }
 
 void Selection::deselect(const Position pos)
 {
-  storage.remove(pos);
+  bool changed = storage.remove(pos);
+
+  if (changed)
+    selectionChange.fire();
 }
 
 void Selection::setSelected(const Position pos, bool selected)
@@ -70,7 +83,10 @@ void Selection::setSelected(const Position pos, bool selected)
 
 void Selection::clear()
 {
-  storage.clear();
+  bool changed = storage.clear();
+
+  if (changed)
+    selectionChange.fire();
 }
 
 void Selection::deselectAll()
@@ -95,6 +111,8 @@ void Selection::deselectAll()
 
   mapView.history.commit(std::move(action));
   mapView.history.endGroup(ActionGroupType::Selection);
+
+  selectionChange.fire();
 }
 
 size_t Selection::size() const noexcept
@@ -165,7 +183,7 @@ void SelectionStorageSet::setBoundingBox(Position pos)
   zMax = pos.z;
 }
 
-void SelectionStorageSet::add(Position pos)
+bool SelectionStorageSet::add(Position pos)
 {
   if (values.empty())
     setBoundingBox(pos);
@@ -173,20 +191,24 @@ void SelectionStorageSet::add(Position pos)
     updateBoundingBox(pos);
 
   values.emplace(pos);
+
+  return true;
 }
 
-void SelectionStorageSet::remove(Position pos)
+bool SelectionStorageSet::remove(Position pos)
 {
   if (xMin == pos.x || xMax == pos.x || yMin == pos.y || yMax == pos.y)
     staleBoundingBox = true;
 
   values.erase(pos);
+
+  return true;
 }
 
-void SelectionStorageSet::add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox)
+bool SelectionStorageSet::add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox)
 {
   if (positions.empty())
-    return;
+    return false;
 
   if (values.empty())
     setBoundingBox(positions.front());
@@ -195,6 +217,8 @@ void SelectionStorageSet::add(std::vector<Position> positions, util::Rectangle<P
     values.emplace(pos);
 
   updateBoundingBox(bbox);
+
+  return true;
 }
 
 void SelectionStorageSet::recomputeBoundingBox()
@@ -203,9 +227,11 @@ void SelectionStorageSet::recomputeBoundingBox()
     updateBoundingBox(pos);
 }
 
-void SelectionStorageSet::clear()
+bool SelectionStorageSet::clear()
 {
   values.clear();
+
+  return true;
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -217,20 +243,23 @@ void SelectionStorageSet::clear()
 SelectionStorageOctree::SelectionStorageOctree(const util::Volume<uint16_t, uint16_t, uint8_t> mapSize)
     : tree(vme::octree::Tree::create(mapSize)) {}
 
-void SelectionStorageOctree::add(Position pos)
+bool SelectionStorageOctree::add(Position pos)
 {
-  tree.add(pos);
+  return tree.add(pos);
 }
 
-void SelectionStorageOctree::add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox)
+bool SelectionStorageOctree::add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox)
 {
+  bool changed = false;
   for (const auto &pos : positions)
-    tree.add(pos);
+    changed = changed || tree.add(pos);
+
+  return changed;
 }
 
-void SelectionStorageOctree::remove(Position pos)
+bool SelectionStorageOctree::remove(Position pos)
 {
-  tree.remove(pos);
+  return tree.remove(pos);
 }
 
 void SelectionStorageOctree::update()
@@ -253,9 +282,9 @@ bool SelectionStorageOctree::contains(const Position pos) const
   return tree.contains(pos);
 }
 
-void SelectionStorageOctree::clear()
+bool SelectionStorageOctree::clear()
 {
-  tree.clear();
+  return tree.clear();
 }
 
 const std::vector<Position> SelectionStorageOctree::allPositions() const
@@ -267,4 +296,9 @@ const std::vector<Position> SelectionStorageOctree::allPositions() const
   DEBUG_ASSERT(positions.size() == size(), "Amount of positions from the iterator should always be equal to the size.");
 
   return positions;
+}
+
+std::optional<Position> SelectionStorageOctree::onlyPosition() const
+{
+  return tree.onlyPosition();
 }

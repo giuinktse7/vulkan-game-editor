@@ -5,6 +5,7 @@
 #include <unordered_set>
 
 #include "octree.h"
+#include "signal.h"
 #include "tile.h"
 #include "util.h"
 
@@ -13,10 +14,10 @@ class MapView;
 class SelectionStorage
 {
 public:
-  virtual void add(Position pos) = 0;
-  virtual void add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox) = 0;
+  virtual bool add(Position pos) = 0;
+  virtual bool add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox) = 0;
 
-  virtual void remove(Position pos) = 0;
+  virtual bool remove(Position pos) = 0;
 
   virtual void update() = 0;
 
@@ -24,13 +25,14 @@ public:
 
   virtual bool contains(const Position pos) const = 0;
 
-  virtual void clear() = 0;
+  virtual bool clear() = 0;
   virtual size_t size() const noexcept = 0;
 
   virtual std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept = 0;
   virtual std::optional<Position> getCorner(int positiveX, int positiveY, int positiveZ) const noexcept = 0;
 
   virtual const std::vector<Position> allPositions() const = 0;
+  virtual std::optional<Position> onlyPosition() const = 0;
 };
 
 class SelectionStorageOctree : public SelectionStorage
@@ -38,10 +40,10 @@ class SelectionStorageOctree : public SelectionStorage
 public:
   SelectionStorageOctree(const util::Volume<uint16_t, uint16_t, uint8_t> mapSize);
 
-  void add(Position pos) override;
-  void add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox) override;
+  bool add(Position pos) override;
+  bool add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox) override;
 
-  void remove(Position pos) override;
+  bool remove(Position pos) override;
 
   void update() override;
 
@@ -49,7 +51,7 @@ public:
 
   bool contains(const Position pos) const override;
 
-  void clear() override;
+  bool clear() override;
 
   std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept override;
   std::optional<Position> getCorner(int positiveX, int positiveY, int positiveZ) const noexcept override;
@@ -66,6 +68,7 @@ public:
   size_t size() const noexcept override;
 
   const std::vector<Position> allPositions() const override;
+  std::optional<Position> onlyPosition() const override;
 
 private:
   vme::octree::Tree tree;
@@ -85,10 +88,10 @@ class SelectionStorageSet : public SelectionStorage
 public:
   SelectionStorageSet();
 
-  void add(Position pos) override;
-  void add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox) override;
+  bool add(Position pos) override;
+  bool add(std::vector<Position> positions, util::Rectangle<Position::value_type> bbox) override;
 
-  void remove(Position pos) override;
+  bool remove(Position pos) override;
 
   void update() override;
 
@@ -102,7 +105,7 @@ public:
     return values.find(pos) != values.end();
   }
 
-  void clear() override;
+  bool clear() override;
 
 private:
   std::unordered_set<Position, PositionHash> values;
@@ -153,6 +156,9 @@ public:
   void deselect(std::vector<Position> &positions);
   void merge(std::vector<Position> &positions);
 
+  inline const std::vector<Position> allPositions() const;
+  inline std::optional<Position> onlyPosition() const;
+
   size_t size() const noexcept;
 
   bool empty() const;
@@ -167,8 +173,29 @@ public:
   */
   void clear();
 
+  template <auto mem_ptr, typename T>
+  void onSelectionChanged(T *instance);
+
 private:
+  Nano::Signal<void()> selectionChange;
+
   MapView &mapView;
 
   SelectionStorageOctree storage;
 };
+
+inline const std::vector<Position> Selection::allPositions() const
+{
+  return storage.allPositions();
+}
+
+inline std::optional<Position> Selection::onlyPosition() const
+{
+  return storage.onlyPosition();
+}
+
+template <auto mem_ptr, typename T>
+inline void Selection::onSelectionChanged(T *instance)
+{
+  selectionChange.connect<mem_ptr>(instance);
+}
