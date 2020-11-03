@@ -144,8 +144,9 @@ namespace vme
       }
     }
 
-    void Tree::clear()
+    bool Tree::clear()
     {
+      bool changed = _size != 0;
       for (const auto i : usedHeapCacheIndices)
         cachedHeapNodes.at(i)->clear();
 
@@ -156,6 +157,8 @@ namespace vme
       usedHeapCacheIndices.clear();
 
       _size = 0;
+
+      return changed;
     }
 
     const CachedNode *Tree::getCachedNode(const Position position) const
@@ -268,14 +271,19 @@ namespace vme
       return l && l->contains(pos);
     }
 
-    void Tree::add(const Position pos)
+    bool Tree::add(const Position pos)
     {
       // VME_LOG_D("Size before add: " << size());
       auto [cached, leaf] = getOrCreateLeaf(pos);
 
       const auto [changed, bboxChanged] = leaf->add(pos);
       if (changed)
+      {
         ++_size;
+
+        if (_size == 1)
+          _single = pos;
+      }
 
       if (bboxChanged)
         cached->updateBoundingBoxCached(*this);
@@ -283,9 +291,10 @@ namespace vme
       DEBUG_ASSERT(boundingBox().has_value(), "Boundingbox empty after add");
 
       // VME_LOG_D("Size after add: " << size());
+      return changed;
     }
 
-    void Tree::remove(const Position pos)
+    bool Tree::remove(const Position pos)
     {
       // VME_LOG_D("Size before remove: " << size());
 
@@ -294,12 +303,23 @@ namespace vme
       const auto [changed, bboxChanged] = leaf->remove(pos);
 
       if (changed)
+      {
         --_size;
+
+        if (_size == 1)
+          _single = pos;
+      }
 
       if (bboxChanged)
         cached->updateBoundingBoxCached(*this);
 
       // VME_LOG_D("Size after remove: " << size());
+      return changed;
+    }
+
+    std::optional<Position> Tree::onlyPosition() const
+    {
+      return _size == 1 ? _single : std::nullopt;
     }
 
     Leaf *Tree::getLeaf(const Position position) const

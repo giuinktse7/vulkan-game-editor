@@ -504,13 +504,13 @@ namespace vme
       uint32_t height;
       uint16_t floors;
 
-      void add(const Position pos);
-      void remove(const Position pos);
+      bool add(const Position pos);
+      bool remove(const Position pos);
 
       /*
         Clear all positions from the tree.
       */
-      void clear();
+      bool clear();
 
       bool contains(const Position pos) const;
       long size() const noexcept;
@@ -518,18 +518,13 @@ namespace vme
 
       const std::optional<BoundingBox> boundingBox() const noexcept;
 
-      // Position min() const noexcept;
-      // Position max() const noexcept;
-
-      // BoundingBox::value_type minX() const noexcept;
-      // BoundingBox::value_type minY() const noexcept;
-      // BoundingBox::value_type minZ() const noexcept;
-
-      // BoundingBox::value_type maxX() const noexcept;
-      // BoundingBox::value_type maxY() const noexcept;
-      // BoundingBox::value_type maxZ() const noexcept;
-
       std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
+
+      /**
+       * Returns the only position if the tree, ONLY if the tree only has a single
+       * position.
+       */
+      std::optional<Position> onlyPosition() const;
 
     private:
       friend class CachedNode;
@@ -552,6 +547,9 @@ namespace vme
       */
       std::vector<uint16_t> usedCacheIndices;
       std::vector<uint16_t> usedHeapCacheIndices;
+
+      // Provides fast access to a position if there is only one position in the tree.
+      std::optional<Position> _single;
 
       HeapNode *getChild(int index, const HeapNode *node) const;
 
