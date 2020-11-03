@@ -33,6 +33,8 @@ public:
 	bool hasSelection() const;
 	bool topItemSelected() const;
 	bool allSelected() const;
+	inline size_t selectionCount() const noexcept;
+	Item *firstSelectedItem();
 
 	Item *getTopItem() const;
 	bool hasTopItem() const;
@@ -126,7 +128,7 @@ private:
 	std::unique_ptr<Item> _ground;
 	std::vector<Item> _items;
 
-	size_t selectionCount;
+	size_t _selectionCount;
 
 	// This structure makes it possible to access all flags, or map/stat flags separately.
 	union
@@ -174,7 +176,7 @@ inline uint16_t Tile::removeItemsIf(UnaryPredicate &&predicate)
 					{
 						++removedItems;
 						if (item.selected)
-							--this->selectionCount;
+							--this->_selectionCount;
 					}
 
 					return remove;
@@ -183,4 +185,9 @@ inline uint16_t Tile::removeItemsIf(UnaryPredicate &&predicate)
 	}
 
 	return removedItems;
+}
+
+inline size_t Tile::selectionCount() const noexcept
+{
+	return _selectionCount;
 }

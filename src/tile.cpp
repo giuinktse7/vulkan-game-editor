@@ -7,18 +7,18 @@
 #include "tile_location.h"
 
 Tile::Tile(TileLocation &tileLocation)
-    : _position(tileLocation.position()), selectionCount(0), flags(0)
+    : _position(tileLocation.position()), _selectionCount(0), flags(0)
 {
 }
 
 Tile::Tile(Position position)
-    : _position(position), selectionCount(0), flags(0) {}
+    : _position(position), _selectionCount(0), flags(0) {}
 
 Tile::Tile(Tile &&other) noexcept
     : _position(other._position),
       _ground(std::move(other._ground)),
       _items(std::move(other._items)),
-      selectionCount(other.selectionCount),
+      _selectionCount(other._selectionCount),
       flags(other.flags)
 {
 }
@@ -28,7 +28,7 @@ Tile &Tile::operator=(Tile &&other) noexcept
   _items = std::move(other._items);
   _ground = std::move(other._ground);
   _position = std::move(other._position);
-  selectionCount = other.selectionCount;
+  _selectionCount = other._selectionCount;
   flags = other.flags;
 
   return *this;
@@ -55,7 +55,7 @@ Item Tile::dropItem(size_t index)
   _items.erase(_items.begin() + index);
 
   if (item.selected)
-    selectionCount -= 1;
+    _selectionCount -= 1;
 
   return item;
 }
@@ -70,7 +70,7 @@ void Tile::deselectAll()
     item.selected = false;
   }
 
-  selectionCount = 0;
+  _selectionCount = 0;
 }
 
 void Tile::moveItems(Tile &other)
@@ -96,7 +96,7 @@ void Tile::moveSelected(Tile &other)
       other.addItem(std::move(item));
       it = _items.erase(it);
 
-      --selectionCount;
+      --_selectionCount;
     }
     else
     {
@@ -167,7 +167,7 @@ void Tile::addItem(Item &&item)
   else
   {
     if (item.selected)
-      ++selectionCount;
+      ++_selectionCount;
 
     _items.emplace(it, std::move(item));
   }
@@ -180,9 +180,9 @@ void Tile::replaceGround(Item &&ground)
   _ground = std::make_unique<Item>(std::move(ground));
 
   if (s1 && !s2)
-    --selectionCount;
+    --_selectionCount;
   else if (!s1 && s2)
-    ++selectionCount;
+    ++_selectionCount;
 }
 
 void Tile::replaceItem(uint16_t index, Item &&item)
@@ -192,9 +192,9 @@ void Tile::replaceItem(uint16_t index, Item &&item)
   _items.at(index) = std::move(item);
 
   if (s1 && !s2)
-    --selectionCount;
+    --_selectionCount;
   else if (!s1 && s2)
-    ++selectionCount;
+    ++_selectionCount;
 }
 
 void Tile::setGround(std::unique_ptr<Item> ground)
@@ -205,7 +205,7 @@ void Tile::setGround(std::unique_ptr<Item> ground)
     removeGround();
 
   if (ground->selected)
-    ++selectionCount;
+    ++_selectionCount;
 
   _ground = std::move(ground);
 }
@@ -214,7 +214,7 @@ void Tile::removeGround()
 {
   if (_ground->selected)
   {
-    --selectionCount;
+    --_selectionCount;
   }
   _ground.reset();
 }
@@ -232,7 +232,7 @@ void Tile::selectItemAtIndex(size_t index)
   if (!_items.at(index).selected)
   {
     _items.at(index).selected = true;
-    ++selectionCount;
+    ++_selectionCount;
   }
 }
 
@@ -241,7 +241,7 @@ void Tile::deselectItemAtIndex(size_t index)
   if (_items.at(index).selected)
   {
     _items.at(index).selected = false;
-    --selectionCount;
+    --_selectionCount;
   }
 }
 
@@ -260,7 +260,7 @@ void Tile::selectAll()
     item.selected = true;
   }
 
-  selectionCount = count;
+  _selectionCount = count;
 }
 
 void Tile::setGroundSelected(bool selected)
@@ -275,7 +275,7 @@ void Tile::selectGround()
 {
   if (_ground && !_ground->selected)
   {
-    ++selectionCount;
+    ++_selectionCount;
     _ground->selected = true;
   }
 }
@@ -283,7 +283,7 @@ void Tile::deselectGround()
 {
   if (_ground && _ground->selected)
   {
-    --selectionCount;
+    --_selectionCount;
     _ground->selected = false;
   }
 }
@@ -391,7 +391,7 @@ Tile Tile::deepCopy() const
     tile._ground = std::make_unique<Item>(_ground->deepCopy());
   }
 
-  tile.selectionCount = this->selectionCount;
+  tile._selectionCount = this->_selectionCount;
 
   return tile;
 }
@@ -407,12 +407,25 @@ bool Tile::allSelected() const
   if (_ground)
     ++size;
 
-  return selectionCount == size;
+  return _selectionCount == size;
 }
 
 bool Tile::hasSelection() const
 {
-  return selectionCount != 0;
+  return _selectionCount != 0;
+}
+
+Item *Tile::firstSelectedItem()
+{
+  if (_ground && _ground->selected)
+    return ground();
+  for (auto &item : _items)
+  {
+    if (item.selected)
+      return &item;
+  }
+
+  return nullptr;
 }
 
 void Tile::initEntities()
