@@ -4,8 +4,8 @@
       "name": "cl",
       "includePath": [
         "${workspaceFolder}/**",
+        "${vcpkgRoot}/x64-windows/include/**",
         "${vcpkgRoot}/x64-windows/include",
-        "${vcpkgRoot}/x86-windows/include",
         "D:/Programs/glm-0.9.9.8/glm",
         "D:/Programs/VulkanSDK/1.2.141.0/Include",
         "D:/Programs/stb/include",

@@ -144,7 +144,8 @@
     "qtwidgetsdepends": "cpp",
     "qmodelindex": "cpp",
     "qquickview": "cpp",
-    "qlayout": "cpp"
+    "qlayout": "cpp",
+    "qquickitem": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

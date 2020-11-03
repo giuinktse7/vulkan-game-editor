@@ -47,6 +47,7 @@ find_package(Stb REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(pugixml CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_signal_slot.hpp")
 
 find_package(
   Qt5
@@ -54,6 +55,7 @@ find_package(
   REQUIRED)
 
 set(CommonSources
+    src/signal.h
     src/history/history.h
     src/history/history_action.h
     src/history/history_change.h
@@ -182,6 +184,8 @@ target_link_libraries(common PRIVATE ${LIBLZMA_LIBRARIES})
 
 target_link_libraries(common PRIVATE pugixml)
 target_link_libraries(common PRIVATE glm)
+
+target_include_directories(common PUBLIC ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 
 set_target_properties(common PROPERTIES LINK_FLAGS "/PROFILE")
 
