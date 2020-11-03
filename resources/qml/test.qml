@@ -10,35 +10,34 @@ ColumnLayout {
 
     SpinBox {
       id : countSpinbox
+
+      objectName : "count_spinbox"
       value : 1
       from : 1
       to : 100
       editable : true
 
+
       validator : RegExpValidator {
         regExp : /(?:^[1-9][0-9]?$|^100$)?/
       }
 
-      // textFromValue : function (value, locale) {
-      // return Number(Math.min(value, 100)).toLocaleString(locale, 'f', 0);
-      // }
-      // valueFromText : function (text, locale) {
-      // return Math.min(Number.fromLocaleString(locale, text), 100);
-      // }
-
+      onValueChanged : {
+        contentItem.text = textFromValue(countSpinbox.value, countSpinbox.locale);
+      }
 
       contentItem : TextInput {
         selectByMouse : true
         z : 2
         text : countSpinbox.textFromValue(countSpinbox.value, countSpinbox.locale)
 
-        onTextChanged : {
-          console.log("Changed to" + text);
-          if (text !== "") {
+        onTextChanged : { // console.log("Changed to" + text);
+          if(text !== "") {
             countSpinbox.value = text === "0" ? 1 : Math.max(Math.min(parseInt(text), 100), 1);
             text = countSpinbox.textFromValue(countSpinbox.value, countSpinbox.locale);
           }
         }
+
 
         onEditingFinished : {
           if (text === "") {
@@ -56,14 +55,14 @@ ColumnLayout {
 
         readOnly : !countSpinbox.editable
         validator : countSpinbox.validator
-        // inputMethodHints : Qt.ImhFormattedNumbersOnly
+        inputMethodHints : Qt.ImhFormattedNumbersOnly
       }
 
       up.indicator : Rectangle {
         x : countSpinbox.mirrored ? 0 : parent.width - width
         height : parent.height
-        implicitWidth : 40
-        implicitHeight : 40
+        implicitWidth : 20
+        implicitHeight : 20
         // color : countSpinbox.up.pressed ? "#e4e4e4" : "#f6f6f6"
         border.color : enabled ? "#37474F" : "#37474F"
 
@@ -81,8 +80,8 @@ ColumnLayout {
       down.indicator : Rectangle {
         x : countSpinbox.mirrored ? parent.width - width : 0
         height : parent.height
-        implicitWidth : 40
-        implicitHeight : 40
+        implicitWidth : 20
+        implicitHeight : 20
         // color : countSpinbox.down.pressed ? "#e4e4e4" : "#f6f6f6"
         border.color : enabled ? "#37474F" : "#37474F"
 
@@ -98,10 +97,10 @@ ColumnLayout {
         }
       }
 
-      background : Rectangle {
-        implicitWidth : 140
-        border.color : "red"
-      }
+      // background : Rectangle {
+      // implicitWidth : 100
+      // border.color : "red"
+      // }
     }
   }
 
