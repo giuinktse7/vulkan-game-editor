@@ -20,7 +20,7 @@ public slots:
     void onFocusWindowChanged(QWindow *window);
     void onFocusWidgetChanged(QWidget *widget);
 
-    void loadStyleSheet(const QString &sheetName);
+    void loadStyleSheet(const QString &path);
 
 private:
     QWindow *focusedWindow = nullptr;

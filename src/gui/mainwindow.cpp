@@ -179,7 +179,7 @@ void MainWindow::initializeUI()
   connect(mapTabs, &MapTabWidget::mapTabClosed, this, &MainWindow::mapTabCloseEvent);
   connect(mapTabs, &MapTabWidget::currentChanged, this, &MainWindow::mapTabChangedEvent);
 
-  propertyWindow = new ItemPropertyWindow("resources/qml/test.qml");
+  propertyWindow = new ItemPropertyWindow(QUrl("qrc:/vme/qml/itemPropertyWindow.qml"));
   connect(propertyWindow, &ItemPropertyWindow::countChanged, [this](int count) {
     auto mapView = currentMapView();
     if (mapView->selection().size() == 1)

@@ -1,25 +1,22 @@
 #include "item_property_window.h"
 
+#include <QQmlContext>
 #include <QQmlEngine>
 #include <QQmlProperty>
 #include <QWidget>
 
 namespace ObjectName
 {
-  constexpr auto CountSpinbox = "count_spinbox";
-}
+  constexpr auto CountSpinBox = "count_spinbox";
+  constexpr auto ActionIdSpinBox = "action_id_spinbox";
+  constexpr auto UniqueIdSpinBox = "unique_id_spinbox";
+} // namespace ObjectName
 
-ItemPropertyWindow::ItemPropertyWindow(QString path)
-    : _path(std::move(path))
+ItemPropertyWindow::ItemPropertyWindow(QUrl url)
+    : _url(url)
 {
-  setSource(QUrl::fromLocalFile(_path));
-  auto container = QWidget::createWindowContainer(this);
-
-  auto countSpinbox = child(ObjectName::CountSpinbox);
-  QmlBind::connect(countSpinbox, SIGNAL(valueChanged()), [=] {
-    int count = countSpinbox->property("value").toInt();
-    emit countChanged(count);
-  });
+  engine()->rootContext()->setContextProperty("propertyWindow", this);
+  setSource(_url);
 }
 
 void ItemPropertyWindow::setItem(const Item &item)
@@ -29,8 +26,8 @@ void ItemPropertyWindow::setItem(const Item &item)
 
 void ItemPropertyWindow::setCount(int count)
 {
-  auto countSpinbox = child(ObjectName::CountSpinbox);
-  countSpinbox->setProperty("value", count);
+  auto countSpinBox = child(ObjectName::CountSpinBox);
+  countSpinBox->setProperty("value", count);
 }
 
 QWidget *ItemPropertyWindow::wrapInWidget(QWidget *parent)
@@ -43,5 +40,6 @@ QWidget *ItemPropertyWindow::wrapInWidget(QWidget *parent)
 
 void ItemPropertyWindow::reloadSource()
 {
-  setSource(QUrl::fromLocalFile(_path));
+  VME_LOG_D("ItemPropertyWindow source reloaded.");
+  setSource(_url);
 }

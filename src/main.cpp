@@ -310,10 +310,16 @@ std::shared_ptr<Map> makeTestMap2()
 int runApp(int argc, char *argv[])
 {
     MainApplication app(argc, argv);
-    app.loadStyleSheet("default");
+    app.loadStyleSheet(":/vme/style/qss/default.qss");
     app.loadGameData();
 
-    // ItemType *t = Items::items.getItemType(3817);
+    // ItemType *t = Items::items.getItemType(7759);
+    // ItemType *t = Items::items.getItemType(5901);
+    // auto atlases = t->atlases();
+    // for (const auto id : t->appearance->getSpriteInfo().spriteIds)
+    // {
+    //     VME_LOG_D(id);
+    // }
     // VME_LOG(t->getFirstTextureAtlas()->sourceFile);
     // return 0;
 
@@ -349,7 +355,7 @@ int runApp(int argc, char *argv[])
     //     VME_LOG_D(family);
     // }
 
-    VME_LOG_D("???: " << database.hasFamily("Consolas"));
+    // VME_LOG_D("???: " << database.hasFamily("Source Sans Pro"));
 
     return app.exec();
 }
@@ -412,10 +418,9 @@ int borderlessTest(int argc, char *argv[])
     return -1;
 }
 
-void MainApplication::loadStyleSheet(const QString &sheetName)
+void MainApplication::loadStyleSheet(const QString &path)
 {
-    VME_LOG_D("loadStyleSheet");
-    QFile file("resources/style/qss/" + sheetName.toLower() + ".qss");
+    QFile file(path);
     file.open(QFile::ReadOnly);
     QString styleSheet = QString::fromLatin1(file.readAll());
 

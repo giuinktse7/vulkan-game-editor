@@ -49,6 +49,15 @@
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\qrc_qml.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\qrc_style.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\qrc_images.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\enum_conversion.h">
@@ -101,6 +110,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\resources\qml\qml.qrc" />
+    <CustomBuild Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\resources\style\style.qrc" />
+    <CustomBuild Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\resources\images\images.qrc" />
     <CustomBuild Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>

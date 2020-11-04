@@ -2,7 +2,7 @@
 
 #include <QQuickItem>
 #include <QQuickView>
-#include <QString>
+#include <QUrl>
 
 #include "../item.h"
 
@@ -13,7 +13,7 @@ signals:
   void countChanged(int count);
 
 public:
-  ItemPropertyWindow(QString path);
+  ItemPropertyWindow(QUrl url);
 
   QWidget *wrapInWidget(QWidget *parent = nullptr);
 
@@ -22,7 +22,7 @@ public:
   void setItem(const Item &item);
 
 private:
-  QString _path;
+  QUrl _url;
 
   void setCount(int count);
 

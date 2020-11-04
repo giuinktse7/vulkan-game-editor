@@ -41,6 +41,8 @@ namespace
 
     constexpr int DragScrollThresholdPx = 30;
     constexpr int DragScrollRefreshRateMs = 1000 / 60;
+
+    constexpr auto CloseImagePath = ":/vme/images/close.svg";
 } // namespace
 
 MapTabWidget::MapTabWidget(QWidget *parent)
@@ -151,7 +153,7 @@ MapTabWidget::MapTabBar::MapTabBar(MapTabWidget *parent)
     });
 
     // Render close button image
-    QSvgWidget *closeButtonSvg = new QSvgWidget("resources/svg/close.svg");
+    QSvgWidget *closeButtonSvg = new QSvgWidget(CloseImagePath);
     closeButtonSvg->setFixedSize(CloseIconSize, CloseIconSize);
     closeButtonImage = new QImage(closeButtonSvg->size(), QImage::Format_ARGB32);
     closeButtonImage->fill(Qt::transparent);
@@ -272,7 +274,7 @@ void MapTabWidget::MapTabBar::resizeEvent(QResizeEvent *event)
         createScrollVisibilityTimer(400);
     }
 
-    VME_LOG_D("event->size(): " << event->size());
+    // VME_LOG_D("event->size(): " << event->size());
     updateScrollBarVisibility();
 }
 
@@ -751,7 +753,7 @@ void MapTabWidget::MapTabBar::showEvent(QShowEvent *event)
 
 void MapTabWidget::MapTabBar::initCloseButton(int index)
 {
-    SvgWidget *svg = new SvgWidget("resources/svg/close.svg");
+    SvgWidget *svg = new SvgWidget(CloseImagePath);
 
     setTabButton(index, QTabBar::ButtonPosition::RightSide, svg);
 

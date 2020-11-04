@@ -189,6 +189,10 @@ target_include_directories(common PUBLIC ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 
 set_target_properties(common PROPERTIES LINK_FLAGS "/PROFILE")
 
+qt_add_resources(QT_RESOURCES resources/qml/qml.qrc)
+qt_add_resources(QT_RESOURCES resources/style/style.qrc)
+qt_add_resources(QT_RESOURCES resources/images/images.qrc)
+
 set(MainSources
     src/qt/enum_conversion.h
     src/qt/logging.h
@@ -220,7 +224,8 @@ set(MainSources
     src/gui/vulkan_window.cpp
     src/gui/item_property_window.cpp
     src/gui/map_tab_widget.cpp
-    src/map_renderer.cpp)
+    src/map_renderer.cpp
+    ${QT_RESOURCES})
 
 add_executable(main ${MainSources})
 
@@ -259,12 +264,9 @@ target_link_libraries(perf PUBLIC Qt::Widgets)
 target_link_libraries(perf PUBLIC Qt::Svg)
 # End QT
 
-# Move required files post-build
-add_custom_command(
-  TARGET main
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/
-          $<TARGET_FILE_DIR:main>/resources)
+# Move required files post-build add_custom_command( TARGET main POST_BUILD
+# COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/
+# $<TARGET_FILE_DIR:main>/resources)
 
 add_custom_command(
   TARGET main

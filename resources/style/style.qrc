@@ -1,5 +1,5 @@
 <RCC>
-  <qresource prefix="/">
+  <qresource prefix="/vme/style">
     <file>qss/default.qss</file>
   </qresource>
 </RCC>
