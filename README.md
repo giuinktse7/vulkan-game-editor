@@ -21,14 +21,14 @@ An action is an event that can occur and can be undone/redone.
 - The required libraries can be installed using vcpkg:
 
   ```sh
-  vcpkg install liblzma protobuf nlohmann-json stb pugixml glm catch2
+  vcpkg install liblzma protobuf nlohmann-json stb pugixml glm catch2 nano-signal-slot
   ```
 
   **Note**: This command varies depending on the triplet you want to compile against.
   For instance, for compiling against x64-windows, the command would be
 
   ```sh
-  vcpkg install liblzma:x64-windows :x64-windows nlohmann-json:x64-windows stb:x64-windows pugixml:x64-windows
+  liblzma:x64-windows protobuf:x64-windows nlohmann-json:x64-windows stb:x64-windows pugixml:x64-windows glm:x64-windows catch2:x64-windows nano-signal-slot:x64-windows
   ```
 
 ## Building (Windows)
