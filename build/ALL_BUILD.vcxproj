@@ -182,10 +182,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{39B954A3-68F4-3D78-A1F9-22C3B208855E}</Project>
       <Name>main</Name>
     </ProjectReference>
-    <ProjectReference Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\perf.vcxproj">
-      <Project>{4784F52A-63A7-3200-AC78-5ECDBFC55A44}</Project>
-      <Name>perf</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

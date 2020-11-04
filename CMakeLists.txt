@@ -241,29 +241,6 @@ target_link_libraries(main PUBLIC Qt::Core Qt::Widgets Qt::Qml Qt::Quick
                                   Qt::Svg)
 # End QT
 
-# For performance profiling all the code
-add_executable(perf ${CommonSources} ${MainSources})
-
-target_compile_features(perf PUBLIC cxx_std_17)
-
-target_link_libraries(perf PUBLIC Vulkan::Vulkan)
-target_include_directories(perf PUBLIC ${Vulkan_INCLUDE_DIRS})
-
-target_link_libraries(perf PRIVATE protobuf::libprotobuf)
-target_link_libraries(perf PRIVATE ${LIBLZMA_LIBRARIES})
-
-target_link_libraries(perf PRIVATE pugixml)
-target_link_libraries(perf PRIVATE glm)
-
-target_compile_features(perf PRIVATE cxx_std_17)
-target_link_libraries(perf PRIVATE glm)
-
-# QT
-target_link_libraries(perf PUBLIC Qt::Core)
-target_link_libraries(perf PUBLIC Qt::Widgets)
-target_link_libraries(perf PUBLIC Qt::Svg)
-# End QT
-
 # Move required files post-build add_custom_command( TARGET main POST_BUILD
 # COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/
 # $<TARGET_FILE_DIR:main>/resources)
