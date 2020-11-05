@@ -7,21 +7,17 @@
 #include "tile_location.h"
 
 Tile::Tile(TileLocation &tileLocation)
-    : _position(tileLocation.position()), _selectionCount(0), flags(0)
-{
-}
+    : _position(tileLocation.position()), flags(0), _selectionCount(0) {}
 
 Tile::Tile(Position position)
-    : _position(position), _selectionCount(0), flags(0) {}
+    : _position(position), flags(0), _selectionCount(0) {}
 
 Tile::Tile(Tile &&other) noexcept
-    : _position(other._position),
+    : _items(std::move(other._items)),
       _ground(std::move(other._ground)),
-      _items(std::move(other._items)),
-      _selectionCount(other._selectionCount),
-      flags(other.flags)
-{
-}
+      _position(other._position),
+      flags(other.flags),
+      _selectionCount(other._selectionCount) {}
 
 Tile &Tile::operator=(Tile &&other) noexcept
 {

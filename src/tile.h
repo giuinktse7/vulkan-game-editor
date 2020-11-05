@@ -122,13 +122,10 @@ public:
 
 private:
 	friend class MapView;
-	friend class MapAction;
 
-	Position _position;
-	std::unique_ptr<Item> _ground;
 	std::vector<Item> _items;
-
-	size_t _selectionCount;
+	std::unique_ptr<Item> _ground;
+	Position _position;
 
 	// This structure makes it possible to access all flags, or map/stat flags separately.
 	union
@@ -140,6 +137,8 @@ private:
 		};
 		uint32_t flags;
 	};
+
+	uint16_t _selectionCount;
 
 	void replaceGround(Item &&ground);
 	void replaceItem(uint16_t index, Item &&item);
@@ -189,5 +188,5 @@ inline uint16_t Tile::removeItemsIf(UnaryPredicate &&predicate)
 
 inline size_t Tile::selectionCount() const noexcept
 {
-	return _selectionCount;
+	return static_cast<size_t>(_selectionCount);
 }
