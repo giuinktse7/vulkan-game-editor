@@ -413,6 +413,12 @@ bool Tile::hasSelection() const
 
 Item *Tile::firstSelectedItem()
 {
+  const Item *item = static_cast<const Tile *>(this)->firstSelectedItem();
+  return const_cast<Item *>(item);
+}
+
+const Item *Tile::firstSelectedItem() const
+{
   if (_ground && _ground->selected)
     return ground();
   for (auto &item : _items)

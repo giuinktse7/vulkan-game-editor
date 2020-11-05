@@ -8,7 +8,6 @@
 #include "tile_location.h"
 
 class MapView;
-class MapAction;
 class TileLocation;
 
 class Tile
@@ -35,6 +34,7 @@ public:
 	bool allSelected() const;
 	inline size_t selectionCount() const noexcept;
 	Item *firstSelectedItem();
+	const Item *firstSelectedItem() const;
 
 	Item *getTopItem() const;
 	bool hasTopItem() const;
