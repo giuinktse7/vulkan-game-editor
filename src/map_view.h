@@ -18,28 +18,9 @@
 
 class MapAction;
 
-class MapView
+class MapView : public Nano::Observer<>
 {
 public:
-	class Observer
-	{
-	public:
-		Observer(MapView *target = nullptr);
-		~Observer();
-		virtual void viewportChanged(const Camera::Viewport &viewport) = 0;
-		virtual void mapViewDrawRequested() = 0;
-
-		MapView *target;
-
-	private:
-		friend class ::MapView;
-		enum class ChangeType
-		{
-			Viewport,
-			DrawRequest
-		};
-	};
-
 	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action);
 	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::shared_ptr<Map> map);
 	~MapView();
@@ -172,6 +153,12 @@ public:
 
 	bool inDragRegion(Position pos) const;
 
+	template <auto mem_ptr, typename T>
+	void onViewportChanged(T *instance);
+
+	template <auto mem_ptr, typename T>
+	void onDrawRequested(T *instance);
+
 	std::optional<Region2D<WorldPosition>> dragRegion;
 
 	void disconnectAll();
@@ -194,13 +181,9 @@ private:
 
 	std::unique_ptr<UIUtils> uiUtils;
 
-	friend class MapAction;
-
 	Camera camera;
 
 	bool canRender = false;
-
-	std::vector<MapView::Observer *> observers;
 
 	/**
 	 * NOTE: Do not use this for anything except to request a draw from mouseEvent.
@@ -211,6 +194,7 @@ private:
 	bool _underMouse = false;
 
 	Tile deepCopyTile(const Position position) const;
+
 	MapHistory::Action newAction(MapHistory::ActionType actionType) const;
 
 	void cameraViewportChangedEvent();
