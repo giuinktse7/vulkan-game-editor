@@ -20,7 +20,8 @@ enum class ActionGroupType
   Selection,
   AddMapItem,
   RemoveMapItem,
-  MoveItems
+  MoveItems,
+  ModifyItem
 };
 
 namespace MapHistory

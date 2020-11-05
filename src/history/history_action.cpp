@@ -23,6 +23,8 @@ namespace MapHistory
       if (!action.isCommitted())
         action.commit(mapView);
     }
+
+    mapView.selection().update();
   }
 
   void ActionGroup::undo(MapView &mapView)
@@ -32,6 +34,8 @@ namespace MapHistory
       auto &action = *it;
       action.undo(mapView);
     }
+
+    mapView.selection().update();
   }
 
   void Action::redo(MapView &mapView)

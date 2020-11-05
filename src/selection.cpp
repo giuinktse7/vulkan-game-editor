@@ -4,41 +4,36 @@
 #include "history/history_action.h"
 #include "map_view.h"
 
-Selection::Selection(MapView &mapView)
+Selection::Selection(MapView &mapView, Map &map)
     : outOfBoundCorrection(0, 0, 0),
+      map(map),
       mapView(mapView),
-      storage(mapView.map()->size())
+      storage(map.size())
 {
+  DEBUG_ASSERT(mapView.map() == &map, "The selection map differs from the mapView map.");
 }
 
-void Selection::merge(std::vector<Position> &positions)
+void Selection::select(const std::vector<Position> &positions)
 {
-  bool changed = false;
   for (const auto &pos : positions)
   {
-    mapView.getTile(pos)->selectAll();
-    changed = changed || storage.add(pos);
+    bool change = storage.add(pos);
+    _changed = _changed || change;
   }
-
-  if (changed)
-    selectionChange.fire();
 }
 
-void Selection::deselect(std::vector<Position> &positions)
+void Selection::deselect(const std::vector<Position> &positions)
 {
-  bool changed = false;
   for (const auto &pos : positions)
   {
-    mapView.getTile(pos)->deselectAll();
-    changed = changed || storage.remove(pos);
+    bool change = storage.remove(pos);
+    _changed = _changed || change;
   }
-  if (changed)
-    selectionChange.fire();
 }
 
 Position Selection::moveDelta() const
 {
-  if (!moveOrigin || storage.empty())
+  if (!moveOrigin || empty())
     return Position(0, 0, 0);
 
   auto delta = mapView.mouseGamePos() - moveOrigin.value();
@@ -58,19 +53,16 @@ bool Selection::contains(const Position pos) const
 void Selection::select(const Position pos)
 {
   DEBUG_ASSERT(mapView.getTile(pos)->hasSelection(), "The tile does not have a selection.");
+  VME_LOG_D("Selected " << pos);
 
-  bool changed = storage.add(pos);
-
-  if (changed)
-    selectionChange.fire();
+  bool change = storage.add(pos);
+  _changed = _changed || change;
 }
 
 void Selection::deselect(const Position pos)
 {
-  bool changed = storage.remove(pos);
-
-  if (changed)
-    selectionChange.fire();
+  bool change = storage.remove(pos);
+  _changed = _changed || change;
 }
 
 void Selection::setSelected(const Position pos, bool selected)
@@ -83,37 +75,23 @@ void Selection::setSelected(const Position pos, bool selected)
 
 void Selection::clear()
 {
-  bool changed = storage.clear();
-
-  if (changed)
-    selectionChange.fire();
+  bool change = storage.clear();
+  _changed = _changed || change;
 }
 
-void Selection::deselectAll()
-{
-  // There is no need to commit an action if there are no selections
-  if (storage.empty())
-  {
-    VME_LOG_D("Storage was empty.");
-    return;
-  }
+// bool Selection::deselectAll()
+// {
+//   // There is no need to commit an action if there are no selections
+//   if (storage.empty())
+//   {
+//     VME_LOG_D("[Selection::deselectAll] Storage was empty.");
+//     return false;
+//   }
 
-  VME_LOG_D("Deselecting.");
+//   deselect(std::move(allPositions()));
 
-  mapView.history.startGroup(ActionGroupType::Selection);
-  MapHistory::Action action(MapHistory::ActionType::Selection);
-
-  const auto positions = storage.allPositions();
-  VME_LOG_D("Positions in deselectAll: " << positions.size());
-
-  action.addChange(MapHistory::SelectMultiple(std::move(positions), false));
-  // storage.clear();
-
-  mapView.history.commit(std::move(action));
-  mapView.history.endGroup(ActionGroupType::Selection);
-
-  selectionChange.fire();
-}
+//   return true;
+// }
 
 size_t Selection::size() const noexcept
 {
@@ -133,6 +111,21 @@ bool Selection::moving() const
 void Selection::update()
 {
   storage.update();
+
+  if (_changed)
+  {
+    selectionChange.fire();
+    _changed = false;
+  }
+}
+
+std::optional<Position> Selection::getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept
+{
+  return storage.getCorner(positiveX, positiveY, positiveZ);
+}
+std::optional<Position> Selection::getCorner(int positiveX, int positiveY, int positiveZ) const noexcept
+{
+  return storage.getCorner(positiveX, positiveY, positiveZ);
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

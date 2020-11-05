@@ -207,14 +207,11 @@ namespace MapHistory
     Change &operator=(const Change &other) = delete;
 
     Change(Change &&other) noexcept
-        : data(std::move(other.data))
-    {
-    }
+        : data(std::move(other.data)) {}
 
     Change &operator=(Change &&other) noexcept
     {
       data = std::move(other.data);
-      data2 = std::move(other.data2);
       return *this;
     }
 
@@ -222,7 +219,6 @@ namespace MapHistory
     void undo(MapView &mapView);
 
     DataTypes data;
-    std::variant<std::monostate, SetTile> data2;
 
   private:
     Change() : data({}) {}

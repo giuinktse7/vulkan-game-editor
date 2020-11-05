@@ -9,7 +9,7 @@
 #include "tile.h"
 #include "util.h"
 
-class MapView;
+class Map;
 
 class SelectionStorage
 {
@@ -125,9 +125,10 @@ private:
 class Selection
 {
 public:
-  Selection(MapView &mapView);
+  Selection(MapView &mapView, Map &map);
   bool blockDeselect = false;
   std::optional<Position> moveOrigin = {};
+
   /*
     When the mouse goes outside of the map dimensions, this correction is used to
     stop the selection from also going out of bounds.
@@ -138,8 +139,6 @@ public:
 
   bool moving() const;
 
-  Position moveDelta() const;
-
   vme::octree::Tree::iterator begin()
   {
     return storage.begin();
@@ -149,12 +148,19 @@ public:
     return storage.end();
   }
 
+  Position moveDelta() const;
+
+  std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
+  std::optional<Position> getCorner(int positiveX, int positiveY, int positiveZ) const noexcept;
+
   bool contains(const Position pos) const;
+
   void select(const Position pos);
-  void setSelected(const Position pos, bool selected);
+  void select(const std::vector<Position> &positions);
   void deselect(const Position pos);
-  void deselect(std::vector<Position> &positions);
-  void merge(std::vector<Position> &positions);
+  void deselect(const std::vector<Position> &positions);
+  void setSelected(const Position pos, bool selected);
+  // bool deselectAll();
 
   inline const std::vector<Position> allPositions() const;
   inline std::optional<Position> onlyPosition() const;
@@ -162,8 +168,6 @@ public:
   size_t size() const noexcept;
 
   bool empty() const;
-
-  void deselectAll();
 
   void update();
 
@@ -179,6 +183,18 @@ public:
 private:
   Nano::Signal<void()> selectionChange;
 
+  /**
+   * IMPORTANT: Any method that changes the selection *must* set this to true 
+   * if the selection was changed. 
+   * 
+   * This is necessary for selectionChangedEvent to fire when comitting changes 
+   * to the map.
+   * 
+   * @see MapHistory::ActionGroup
+   */
+  bool _changed = false;
+
+  Map &map;
   MapView &mapView;
 
   SelectionStorageOctree storage;
