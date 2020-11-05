@@ -6,6 +6,7 @@
 #include "../tile.h"
 
 class MapView;
+class Map;
 
 namespace MapHistory
 {
@@ -35,6 +36,8 @@ namespace MapHistory
       committed = other.committed;
       return *this;
     }
+
+    Map *getMap(MapView &mapView) const noexcept;
 
     virtual void commit(MapView &mapView) = 0;
     virtual void redo(MapView &mapView)

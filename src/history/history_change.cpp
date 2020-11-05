@@ -5,6 +5,11 @@
 namespace MapHistory
 {
 
+  Map *ChangeItem::getMap(MapView &mapView) const noexcept
+  {
+    return mapView._map.get();
+  }
+
   void Change::commit(MapView &mapView)
   {
     std::visit(
@@ -117,7 +122,10 @@ namespace MapHistory
   {
     std::vector<uint16_t> indices;
     auto &items = tile.items();
-    for (int i = 0; i < tile.itemCount(); ++i)
+    size_t count = tile.itemCount();
+
+    // The indices need to be in descending order for Move::commit to work.
+    for (int i = count - 1; i >= 0; --i)
     {
       if (items.at(i).selected)
         indices.emplace_back(i);
@@ -130,27 +138,27 @@ namespace MapHistory
 
   void Move::commit(MapView &mapView)
   {
+    Map *map = getMap(mapView);
     Position fromPos = undoData.fromTile.position();
     Position toPos = undoData.toTile.position();
 
     Tile &from = mapView.getOrCreateTile(fromPos);
     Tile &to = mapView.getOrCreateTile(toPos);
 
-    // VME_LOG_D("Moving from " << fromPosition << " to " << toPosition);
+    VME_LOG_D("Moving from " << fromPos << " to " << toPos);
     undoData.fromTile = from.deepCopy();
     undoData.toTile = to.deepCopy();
 
     std::visit(
         util::overloaded{
-            [&mapView, &from, &to](const Entire) {
+            [map, &from, &to](const Entire) {
               if (from.hasGround())
               {
-                mapView.map()->moveTile(from.position(), to.position());
+                map->moveTile(from.position(), to.position());
               }
               else
               {
-                for (size_t i = 0; i < from.itemCount(); ++i)
-                  to.addItem(from.dropItem(i));
+                from.moveItems(to);
               }
             },
 
@@ -172,8 +180,10 @@ namespace MapHistory
 
   void Move::undo(MapView &mapView)
   {
-    mapView.map()->insertTile(std::move(undoData.toTile));
-    mapView.map()->insertTile(std::move(undoData.fromTile));
+    Map *map = getMap(mapView);
+
+    map->insertTile(std::move(undoData.toTile));
+    map->insertTile(std::move(undoData.fromTile));
   }
 
   MultiMove::MultiMove(Position deltaPos, size_t moveOperations)
@@ -288,18 +298,44 @@ namespace MapHistory
 
   void SelectMultiple::commit(MapView &mapView)
   {
+    Map *map = getMap(mapView);
     if (select)
-      mapView.selection().merge(positions);
+    {
+      for (const auto &pos : positions)
+      {
+        map->getTile(pos)->selectAll();
+        mapView.selection().select(pos);
+      }
+    }
     else
-      mapView.selection().deselect(positions);
+    {
+      for (const auto &pos : positions)
+      {
+        map->getTile(pos)->deselectAll();
+        mapView.selection().deselect(pos);
+      }
+    }
   }
 
   void SelectMultiple::undo(MapView &mapView)
   {
-    if (select)
-      mapView.selection().deselect(positions);
+    Map *map = getMap(mapView);
+    if (!select)
+    {
+      for (const auto &pos : positions)
+      {
+        map->getTile(pos)->selectAll();
+        mapView.selection().select(pos);
+      }
+    }
     else
-      mapView.selection().merge(positions);
+    {
+      for (const auto &pos : positions)
+      {
+        map->getTile(pos)->deselectAll();
+        mapView.selection().deselect(pos);
+      }
+    }
   }
 
   Select::Select(Position position,
@@ -346,7 +382,7 @@ namespace MapHistory
 
   void Select::commit(MapView &mapView)
   {
-    Tile *tile = mapView.getTile(position);
+    Tile *tile = getMap(mapView)->getTile(position);
     for (const auto i : indices)
       tile->setItemSelected(i, true);
 
@@ -358,7 +394,7 @@ namespace MapHistory
 
   void Select::undo(MapView &mapView)
   {
-    Tile *tile = mapView.getTile(position);
+    Tile *tile = getMap(mapView)->getTile(position);
     for (const auto i : indices)
       tile->setItemSelected(i, false);
 
@@ -410,7 +446,7 @@ namespace MapHistory
 
   void Deselect::commit(MapView &mapView)
   {
-    Tile *tile = mapView.getTile(position);
+    Tile *tile = getMap(mapView)->getTile(position);
     for (const auto i : indices)
       tile->setItemSelected(i, false);
 
@@ -422,7 +458,7 @@ namespace MapHistory
 
   void Deselect::undo(MapView &mapView)
   {
-    Tile *tile = mapView.getTile(position);
+    Tile *tile = getMap(mapView)->getTile(position);
     for (const auto i : indices)
       tile->setItemSelected(i, true);
 
