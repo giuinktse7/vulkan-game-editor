@@ -122,7 +122,7 @@ namespace MapHistory
   {
     std::vector<uint16_t> indices;
     auto &items = tile.items();
-    size_t count = tile.itemCount();
+    int count = static_cast<int>(tile.itemCount());
 
     // The indices need to be in descending order for Move::commit to work.
     for (int i = count - 1; i >= 0; --i)
@@ -145,7 +145,7 @@ namespace MapHistory
     Tile &from = mapView.getOrCreateTile(fromPos);
     Tile &to = mapView.getOrCreateTile(toPos);
 
-    VME_LOG_D("Moving from " << fromPos << " to " << toPos);
+    // VME_LOG_D("Moving from " << fromPos << " to " << toPos);
     undoData.fromTile = from.deepCopy();
     undoData.toTile = to.deepCopy();
 
@@ -345,7 +345,7 @@ namespace MapHistory
         indices(indices),
         includesGround(includesGround) {}
 
-  std::optional<Select> Select::fullTile(Tile &tile)
+  std::optional<Select> Select::fullTile(const Tile &tile)
   {
     if (tile.isEmpty())
       return {};
@@ -364,7 +364,7 @@ namespace MapHistory
     return Select(tile.position(), indices, includesGround);
   }
 
-  std::optional<Select> Select::topItem(Tile &tile)
+  std::optional<Select> Select::topItem(const Tile &tile)
   {
     if (tile.topItemSelected())
       return {};
@@ -411,7 +411,7 @@ namespace MapHistory
         indices(indices),
         includesGround(includesGround) {}
 
-  std::optional<MapHistory::Deselect> Deselect::fullTile(Tile &tile)
+  std::optional<MapHistory::Deselect> Deselect::fullTile(const Tile &tile)
   {
     if (tile.isEmpty())
       return {};
@@ -430,7 +430,7 @@ namespace MapHistory
     return Deselect(tile.position(), indices, includesGround);
   }
 
-  std::optional<Deselect> Deselect::topItem(Tile &tile)
+  std::optional<Deselect> Deselect::topItem(const Tile &tile)
   {
     if (!tile.topItemSelected())
       return {};

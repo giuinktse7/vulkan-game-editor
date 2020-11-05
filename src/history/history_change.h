@@ -162,8 +162,8 @@ namespace MapHistory
            std::vector<uint16_t> indices,
            bool includesGround = false);
 
-    static std::optional<MapHistory::Select> fullTile(Tile &tile);
-    static std::optional<MapHistory::Select> topItem(Tile &tile);
+    static std::optional<MapHistory::Select> fullTile(const Tile &tile);
+    static std::optional<MapHistory::Select> topItem(const Tile &tile);
 
     virtual void commit(MapView &mapView) override;
     virtual void undo(MapView &mapView) override;
@@ -181,8 +181,8 @@ namespace MapHistory
              std::vector<uint16_t> indices,
              bool includesGround = false);
 
-    static std::optional<MapHistory::Deselect> fullTile(Tile &tile);
-    static std::optional<MapHistory::Deselect> topItem(Tile &tile);
+    static std::optional<MapHistory::Deselect> fullTile(const Tile &tile);
+    static std::optional<MapHistory::Deselect> topItem(const Tile &tile);
 
     virtual void commit(MapView &mapView) override;
     virtual void undo(MapView &mapView) override;

@@ -40,7 +40,7 @@ void MapView::selectTopItem(const Position pos)
   selectTopItem(*tile);
 }
 
-void MapView::selectTopItem(Tile &tile)
+void MapView::selectTopItem(const Tile &tile)
 {
   auto selection = MapHistory::Select::topItem(tile);
   if (!selection.has_value())
@@ -52,7 +52,7 @@ void MapView::selectTopItem(Tile &tile)
   history.commit(std::move(action));
 }
 
-void MapView::deselectTopItem(Tile &tile)
+void MapView::deselectTopItem(const Tile &tile)
 {
   auto deselection = MapHistory::Deselect::topItem(tile);
   if (!deselection.has_value())
@@ -64,29 +64,84 @@ void MapView::deselectTopItem(Tile &tile)
   history.commit(std::move(action));
 }
 
-void MapView::selectAll(Tile &tile)
+void MapView::selectTile(const Position &pos)
 {
-  tile.selectAll();
-  _selection.select(tile.position());
+  auto tile = getTile(pos);
+  if (tile)
+    selectTile(*tile);
+}
+
+void MapView::selectTile(const Tile &tile)
+{
+  auto selection = MapHistory::Select::fullTile(tile);
+  if (!selection.has_value())
+    return;
+
+  auto action = newAction(MapHistory::ActionType::Selection);
+  action.addChange(std::move(selection.value()));
+
+  history.commit(std::move(action));
+}
+
+void MapView::deselectTile(const Position &pos)
+{
+  auto tile = getTile(pos);
+  if (tile)
+    deselectTile(*tile);
+}
+
+void MapView::deselectTile(const Tile &tile)
+{
+  auto deselection = MapHistory::Deselect::fullTile(tile);
+  if (!deselection.has_value())
+    return;
+
+  auto action = newAction(MapHistory::ActionType::Selection);
+  action.addChange(std::move(deselection.value()));
+
+  history.commit(std::move(action));
 }
 
 void MapView::clearSelection()
 {
   if (!_selection.empty())
   {
-    _selection.deselectAll();
+    VME_LOG_D("clearSelection");
+    VME_LOG_D("Before: " << _selection.size());
+
+    history.startGroup(ActionGroupType::Selection);
+
+    MapHistory::Action action(MapHistory::ActionType::Selection);
+    action.addChange(MapHistory::SelectMultiple(std::move(_selection.allPositions()), false));
+    history.commit(std::move(action));
+
+    history.endGroup(ActionGroupType::Selection);
+
+    VME_LOG_D("After: " << _selection.size());
   }
 }
 
 void MapView::updateSelection(const Position pos)
 {
-  Tile *tile = getTile(pos);
+  const Tile *tile = getTile(pos);
   _selection.setSelected(pos, tile && tile->hasSelection());
 }
 
 bool MapView::hasSelectionMoveOrigin() const
 {
   return _selection.moveOrigin.has_value();
+}
+
+bool MapView::singleTileSelected() const
+{
+  return _selection.size() == 1;
+}
+
+void MapView::update(ActionGroupType groupType, std::function<void()> f)
+{
+  history.startGroup(groupType);
+  f();
+  history.endGroup(groupType);
 }
 
 void MapView::addItem(const Position pos, uint16_t id)
@@ -742,13 +797,16 @@ void MapView::setUnderMouse(bool underMouse)
   }
 }
 
+void MapView::modifyTile(const Position pos, std::function<void(Tile &)> f)
 {
-  auto tile = _map->getTile(pos);
-}
+  Tile &currentTile = _map->getOrCreateTile(pos);
+  Tile newTile = currentTile.deepCopy();
+  f(newTile);
 
-    : tile(tile.deepCopy()) {}
+  MapHistory::Action action(MapHistory::ActionType::SetTile);
+  action.addChange(MapHistory::SetTile(std::move(newTile)));
 
-{
+  history.commit(std::move(action));
 }
 
 /*

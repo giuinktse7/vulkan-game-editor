@@ -16,7 +16,7 @@
 
 #include "history/history.h"
 
-class MapAction;
+class MapHistory::ChangeItem;
 
 class MapView : public Nano::Observer<>
 {
@@ -29,7 +29,11 @@ public:
 
 	MapHistory::History history;
 
-	inline Map *map() const;
+	inline const Map *map() const noexcept;
+
+	inline uint16_t mapWidth() const noexcept;
+	inline uint16_t mapHeight() const noexcept;
+	inline uint8_t mapDepth() const noexcept;
 
 	void mousePressEvent(VME::MouseEvent event);
 	void mouseMoveEvent(VME::MouseEvent event);
@@ -39,19 +43,41 @@ public:
 	*/
 	void escapeEvent();
 
+	void requestDraw();
+
 	Selection &selection();
 
-	Tile *getTile(const Position pos) const;
+	/**
+	 * Shorthand method for comitting actions within a group. Equivalent to:
+	 * 
+	 * history.startGroup(groupType);
+   * f();
+   * history.endGroup(groupType);
+	 *
+	 */
+	void update(ActionGroupType groupType, std::function<void()> f);
+
+	const Tile *getTile(const Position pos) const;
 	Tile &getOrCreateTile(const Position pos);
 	void insertTile(Tile &&tile);
 	void removeTile(const Position pos);
-	void selectTopItem(Tile &tile);
+	void modifyTile(const Position pos, std::function<void(Tile &)> f);
+
+	void selectTopItem(const Tile &tile);
 	void selectTopItem(const Position pos);
-	void deselectTopItem(Tile &tile);
-	void selectAll(Tile &tile);
+	void deselectTopItem(const Tile &tile);
+
+	void selectTile(const Tile &tile);
+	void selectTile(const Position &pos);
+
+	void deselectTile(const Tile &tile);
+	void deselectTile(const Position &pos);
+
 	void clearSelection();
 	bool hasSelectionMoveOrigin() const;
 	bool isEmpty(const Position position) const;
+
+	bool singleTileSelected() const;
 
 	void setUnderMouse(bool underMouse);
 	inline bool underMouse() const noexcept;
@@ -164,6 +190,8 @@ public:
 	void disconnectAll();
 
 private:
+	friend class MapHistory::ChangeItem;
+
 	Nano::Signal<void(const Camera::Viewport &)> viewportChange;
 	Nano::Signal<void()> drawRequest;
 
@@ -199,6 +227,26 @@ private:
 
 	void cameraViewportChangedEvent();
 };
+
+inline const Map *MapView::map() const noexcept
+{
+	return _map.get();
+}
+
+inline uint16_t MapView::mapWidth() const noexcept
+{
+	return _map->width();
+}
+
+inline uint16_t MapView::mapHeight() const noexcept
+{
+	return _map->height();
+}
+
+inline uint8_t MapView::mapDepth() const noexcept
+{
+	return _map->depth();
+}
 
 inline Selection &MapView::selection()
 {
@@ -238,11 +286,6 @@ inline void MapView::removeItems(const Tile &tile, UnaryPredicate predicate)
 inline const Camera::Viewport &MapView::getViewport() const noexcept
 {
 	return camera.viewport();
-}
-
-inline Map *MapView::map() const
-{
-	return _map.get();
 }
 
 inline Position MapView::cameraPosition() const noexcept

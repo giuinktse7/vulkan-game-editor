@@ -53,7 +53,6 @@ bool Selection::contains(const Position pos) const
 void Selection::select(const Position pos)
 {
   DEBUG_ASSERT(mapView.getTile(pos)->hasSelection(), "The tile does not have a selection.");
-  VME_LOG_D("Selected " << pos);
 
   bool change = storage.add(pos);
   _changed = _changed || change;
