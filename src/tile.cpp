@@ -71,8 +71,13 @@ void Tile::deselectAll()
 
 void Tile::moveItems(Tile &other)
 {
-  // TODO
-  ABORT_PROGRAM("Not implemented.");
+  for (auto &item : _items)
+  {
+    other.addItem(std::move(item));
+  }
+  _items.clear();
+
+  _selectionCount = (_ground && _ground->selected) ? 1 : 0;
 }
 
 void Tile::moveSelected(Tile &other)
