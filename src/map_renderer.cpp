@@ -315,8 +315,7 @@ void MapRenderer::drawCurrentAction()
 
 void MapRenderer::drawPreviewItem(uint16_t serverId, Position pos)
 {
-  auto map = mapView->map();
-  if (pos.x < 0 || pos.x > map->width() || pos.y < 0 || pos.y > map->height())
+  if (pos.x < 0 || pos.x > mapView->mapWidth() || pos.y < 0 || pos.y > mapView->mapHeight())
     return;
 
   ItemType &selectedItemType = *Items::items.getItemType(serverId);
@@ -325,7 +324,7 @@ void MapRenderer::drawPreviewItem(uint16_t serverId, Position pos)
 
   if (!selectedItemType.isGroundTile())
   {
-    Tile *tile = map->getTile(pos);
+    const Tile *tile = mapView->getTile(pos);
     int elevation = tile ? tile->getTopElevation() : 0;
     info.drawOffset = {-elevation, -elevation};
   }
@@ -337,7 +336,9 @@ void MapRenderer::drawMovingSelection()
 {
   auto mapRect = mapView->getGameBoundingRect();
 
-  Position moveDelta = mapView->selection().moveDelta();
+  const Selection &selection = mapView->selection();
+
+  Position moveDelta = selection.moveDelta();
 
   mapRect = mapRect.translate(-moveDelta.x, -moveDelta.y, {0, 0});
 

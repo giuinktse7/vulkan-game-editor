@@ -53,7 +53,7 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
     for (int i = 0; i < parsed.object_size(); ++i)
     {
         const proto::Appearance &object = parsed.object(i);
-        auto info = object.frame_group().at(0).sprite_info();
+        // auto info = object.frame_group().at(0).sprite_info();
 
         // if (object.id() == 675)
         // {
@@ -196,7 +196,7 @@ SpriteInfo SpriteInfo::fromProtobufData(proto::SpriteInfo spriteInfo, bool cumul
 
     for (auto id : spriteInfo.sprite_id())
     {
-        info.spriteIds.emplace_back<uint32_t &>(id);
+        info.spriteIds.emplace_back(id);
     }
 
     return info;
@@ -229,7 +229,7 @@ SpriteAnimation SpriteAnimation::fromProtobufData(proto::SpriteAnimation animati
 
     for (auto phase : animation.sprite_phase())
     {
-        anim.phases.push_back({phase.duration_min(), phase.duration_max()});
+        anim.phases.emplace_back<SpritePhase>({phase.duration_min(), phase.duration_max()});
     }
 
     if (animation.has_default_start_phase())

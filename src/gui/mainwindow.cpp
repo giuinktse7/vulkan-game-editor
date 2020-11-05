@@ -125,12 +125,12 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
   connect(widget,
           &MapViewWidget::selectionChangedEvent,
           [this, vulkanWindow]() {
-            VME_LOG_D("selectionChangedEvent");
+            // VME_LOG_D("selectionChangedEvent");
             auto mapView = vulkanWindow->getMapView();
-            if (mapView->selection().size() == 1)
+            if (mapView->singleTileSelected())
             {
               const Position pos = mapView->selection().onlyPosition().value();
-              Tile *tile = mapView->map()->getTile(pos);
+              const Tile *tile = mapView->getTile(pos);
               DEBUG_ASSERT(tile != nullptr, "A tile that has a selection should never be nullptr.");
 
               if (tile->selectionCount() == 1)
@@ -181,18 +181,20 @@ void MainWindow::initializeUI()
 
   propertyWindow = new ItemPropertyWindow(QUrl("qrc:/vme/qml/itemPropertyWindow.qml"));
   connect(propertyWindow, &ItemPropertyWindow::countChanged, [this](int count) {
-    auto mapView = currentMapView();
-    if (mapView->selection().size() == 1)
+    VME_LOG_D("countChanged");
+    MapView &mapView = *currentMapView();
+    if (mapView.singleTileSelected())
     {
-      const Position pos = mapView->selection().onlyPosition().value();
-      Tile *tile = mapView->map()->getTile(pos);
-      DEBUG_ASSERT(tile != nullptr, "A tile that has a selection should never be nullptr.");
+      const Position pos = mapView.selection().onlyPosition().value();
+      const Tile *tile = mapView.getTile(pos);
 
-      if (tile->selectionCount() == 1)
+      if (tile->firstSelectedItem()->count() != count)
       {
-        auto item = tile->firstSelectedItem();
-        item->setCount(count);
-        mapView->requestDraw();
+        mapView.update(ActionGroupType::ModifyItem, [&mapView, &pos, count] {
+          mapView.modifyTile(pos, [count](Tile &tile) { tile.firstSelectedItem()->setCount(count); });
+        });
+
+        mapView.requestDraw();
       }
     }
   });

@@ -1,6 +1,7 @@
 #include "history.h"
 
 #include "../debug.h"
+#include "../map_view.h"
 
 namespace MapHistory
 {
@@ -56,6 +57,7 @@ namespace MapHistory
 
   void History::endGroup(ActionGroupType groupType)
   {
+    // VME_LOG_D("History::endGroup: " << groupType);
     DEBUG_ASSERT(currentGroup.has_value(), "There is no current group to end.");
     DEBUG_ASSERT(currentGroup.value().groupType == groupType, "The current group type differs from the passed in groupType.");
 

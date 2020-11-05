@@ -88,7 +88,7 @@ MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
     setLayout(l);
   }
 
-  Map *map = mapView->map();
+  const Map *map = mapView->map();
   uint16_t width = map->width();
   uint16_t height = map->width();
 
@@ -172,6 +172,7 @@ void MapViewWidget::mapViewDrawRequested()
 
 void MapViewWidget::selectionChanged()
 {
+  VME_LOG_D("MapViewWidget::selectionChanged");
   emit selectionChangedEvent();
 }
 

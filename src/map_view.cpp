@@ -15,7 +15,7 @@ MapView::MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::sh
     : editorAction(action),
       history(*this),
       _map(map),
-      _selection(*this),
+      _selection(*this, *map.get()),
       uiUtils(std::move(uiUtils))
 {
   instances.emplace(this);
@@ -35,7 +35,7 @@ MapView::~MapView()
 
 void MapView::selectTopItem(const Position pos)
 {
-  Tile *tile = getTile(pos);
+  Tile *tile = _map->getTile(pos);
   DEBUG_ASSERT(tile != nullptr, "nullptr tile");
   selectTopItem(*tile);
 }
@@ -148,7 +148,7 @@ void MapView::removeSelectedItems(const Tile &tile)
   history.commit(std::move(action));
 }
 
-Tile *MapView::getTile(const Position pos) const
+const Tile *MapView::getTile(const Position pos) const
 {
   return _map->getTile(pos);
 }
@@ -204,7 +204,7 @@ void MapView::deleteSelection()
   history.startGroup(ActionGroupType::RemoveMapItem);
   for (const auto &pos : _selection)
   {
-    Tile &tile = *getTile(pos);
+    const Tile &tile = *getTile(pos);
     if (tile.allSelected())
     {
       removeTile(tile.position());
@@ -226,7 +226,8 @@ util::Rectangle<int> MapView::getGameBoundingRect() const
 {
   Position position = camera.position();
 
-  auto [width, height] = ScreenPosition(camera.viewport().width, camera.viewport().height).mapPos(*this);
+  const Camera::Viewport &viewport = camera.viewport();
+  auto [width, height] = ScreenPosition(viewport.width, viewport.height).mapPos(*this);
   util::Rectangle<int> rect;
   rect.x1 = position.x;
   rect.y1 = position.y;
@@ -297,7 +298,7 @@ void MapView::finishMoveSelection()
     VME_LOG_D("finishMove deltaPos: " << deltaPos);
 
     auto multiMove = std::make_unique<MapHistory::MultiMove>(deltaPos, _selection.size());
-    VME_LOG_D("Moving " << _selection.size() << " items.");
+    // VME_LOG_D("Moving " << _selection.size() << " tiles.");
 
     for (const auto fromPos : _selection)
     {
@@ -440,7 +441,6 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                 }
 
                 _selection.moveOrigin = pos;
-                _selection.update();
                 // VME_LOG_D("moveDelta: " << _selection.moveDelta());
               }
             },
@@ -458,7 +458,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
                 if (remove)
                 {
-                  Tile *tile = getTile(pos);
+                  const Tile *tile = getTile(pos);
                   if (tile)
                   {
                     history.startGroup(ActionGroupType::RemoveMapItem);
@@ -535,7 +535,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
 
               if (event.modifiers() & VME::ModifierKeys::Ctrl)
               {
-                Tile *tile = getTile(pos);
+                const Tile *tile = getTile(pos);
                 if (tile)
                 {
                   history.startGroup(ActionGroupType::RemoveMapItem);

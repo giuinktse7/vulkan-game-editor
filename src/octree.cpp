@@ -1286,7 +1286,7 @@ namespace vme
         {
           if (current->isLeaf())
           {
-            VME_LOG_D("Leaf in nextLeaf!");
+            // VME_LOG_D("Leaf in nextLeaf!");
             value = static_cast<const Leaf *>(current);
             return;
           }
@@ -1302,7 +1302,7 @@ namespace vme
         }
       }
 
-      VME_LOG_D("Found no leaf.");
+      // VME_LOG_D("Found no leaf.");
 
       isEnd = true;
     }
