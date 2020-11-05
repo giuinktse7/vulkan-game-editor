@@ -31,7 +31,7 @@ public:
 	MapIterator begin();
 	MapIterator end();
 
-	MapRegion getRegion(Position from, Position to) noexcept;
+	MapRegion getRegion(Position from, Position to) const noexcept;
 
 	TileLocation *getTileLocation(int x, int y, int z) const;
 	TileLocation *getTileLocation(const Position &pos) const;
@@ -76,7 +76,7 @@ public:
 	*/
 	void clear();
 
-	quadtree::Node *getLeafUnsafe(int x, int y);
+	quadtree::Node *getLeafUnsafe(int x, int y) const;
 
 private:
 	friend class MapView;
@@ -132,7 +132,7 @@ inline uint8_t Map::depth() const noexcept
 class MapRegion
 {
 public:
-	MapRegion(Map &map, Position from, Position to) noexcept
+	MapRegion(const Map &map, Position from, Position to) noexcept
 			: map(map), from(from), to(to) {}
 
 	class Iterator
@@ -143,7 +143,7 @@ public:
 		using Pointer = TileLocation *;
 		using IteratorCategory = std::forward_iterator_tag;
 
-		Iterator(Map &map, Position from, Position to, bool isEnd = false);
+		Iterator(const Map &map, Position from, Position to, bool isEnd = false);
 		Iterator(const Iterator &other) = delete;
 		Iterator &operator=(const Iterator &other) = delete;
 
@@ -157,7 +157,7 @@ public:
 		bool operator!=(const Iterator &rhs) const { return !(*this == rhs); }
 
 	private:
-		Map &map;
+		const Map &map;
 		Position from;
 		Position to;
 
@@ -198,7 +198,7 @@ public:
 	}
 
 private:
-	Map &map;
+	const Map &map;
 
 	Position from;
 	Position to;

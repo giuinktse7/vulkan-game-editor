@@ -60,7 +60,7 @@ void Map::addItem(const Position position, uint16_t serverId)
   tile.addItem(Item(serverId));
 }
 
-MapRegion Map::getRegion(Position from, Position to) noexcept
+MapRegion Map::getRegion(Position from, Position to) const noexcept
 {
   return MapRegion(*this, from, to);
 }
@@ -205,7 +205,7 @@ TileLocation &Map::getOrCreateTileLocation(const Position &pos)
   return location;
 }
 
-quadtree::Node *Map::getLeafUnsafe(int x, int y)
+quadtree::Node *Map::getLeafUnsafe(int x, int y) const
 {
   return root.getLeafUnsafe(x, y);
 }
@@ -380,7 +380,7 @@ void Map::createItemAt(Position pos, uint16_t id)
   getOrCreateTile(pos).addItem(std::move(item));
 }
 
-MapRegion::Iterator::Iterator(Map &map, Position from, Position to, bool isEnd)
+MapRegion::Iterator::Iterator(const Map &map, Position from, Position to, bool isEnd)
     : map(map), from(from), to(to), isEnd(isEnd)
 {
   if (!isEnd)
