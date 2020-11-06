@@ -60,7 +60,7 @@ public:
 
 	bool isGround() const noexcept;
 
-	uint16_t getSubtype() const noexcept;
+	uint8_t getSubtype() const noexcept;
 
 	inline bool hasAttributes() const noexcept
 	{
@@ -72,14 +72,26 @@ public:
 		return itemType->alwaysOnTopOrder;
 	}
 
+	void setActionId(uint16_t id);
+	void setUniqueId(uint16_t id);
+	void setText(const std::string &text);
+	void setText(std::string &&text);
+	void setDescription(const std::string &description);
+	void setDescription(std::string &&description);
+
 	const std::unordered_map<ItemAttribute_t, ItemAttribute> &getAttributes() const noexcept
 	{
 		return attributes;
 	}
 
-	inline uint16_t count() const noexcept;
+	inline uint8_t count() const noexcept;
 
-	inline void setCount(uint16_t count) noexcept;
+	inline void setCount(uint8_t count) noexcept;
+
+	bool operator==(const Item &rhs) const
+	{
+		return itemType == rhs.itemType && attributes == rhs.attributes && subtype == rhs.subtype;
+	}
 
 protected:
 	friend class Tile;
@@ -89,17 +101,24 @@ protected:
 private:
 	std::unordered_map<ItemAttribute_t, ItemAttribute> attributes;
 	// Subtype is either fluid type, count, subtype, or charges.
-	uint16_t subtype = 1;
+	uint8_t subtype = 1;
+
+	ItemAttribute &getOrCreateAttribute(ItemAttribute_t attributeType);
 
 	const uint32_t getPatternIndex(const Position &pos) const;
 };
 
-inline uint16_t Item::count() const noexcept
+inline bool operator!=(const Item &lhs, const Item &rhs)
+{
+	return !(lhs == rhs);
+}
+
+inline uint8_t Item::count() const noexcept
 {
 	return subtype;
 }
 
-inline void Item::setCount(uint16_t count) noexcept
+inline void Item::setCount(uint8_t count) noexcept
 {
 	subtype = count;
 }
