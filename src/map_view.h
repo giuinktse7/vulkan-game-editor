@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <set>
@@ -96,7 +97,7 @@ public:
 
 	void finishMoveSelection();
 
-	void addItem(const Position position, uint16_t id);
+	void addItem(const Position &position, uint16_t id);
 
 	inline Position mouseGamePos() const;
 	inline WorldPosition mouseWorldPos() const;
@@ -113,8 +114,7 @@ public:
 	*/
 	void removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices);
 	void removeSelectedItems(const Tile &tile);
-	template <class UnaryPredicate>
-	inline void removeItems(const Tile &tile, UnaryPredicate p);
+	void removeItems(const Tile &tile, std::function<bool(const Item &)> p);
 
 	void zoomOut();
 	void zoomIn();
@@ -130,10 +130,7 @@ public:
 	const uint32_t windowToMapPos(int windowPos) const;
 	const uint32_t mapToWorldPos(uint32_t mapPos) const;
 
-	void undo()
-	{
-		history.undoLast();
-	}
+	void undo();
 
 	MapRegion mapRegion() const;
 
@@ -147,8 +144,7 @@ public:
 
 	const Camera::Viewport &getViewport() const noexcept;
 
-	void deleteSelection();
-	void updateSelection(const Position pos);
+	void deleteSelectedItems();
 
 	util::Rectangle<int> getGameBoundingRect() const;
 
@@ -161,14 +157,6 @@ public:
 	bool hasSelection() const;
 
 	inline ScreenPosition mousePos() const;
-
-	/*
-	TODO: These should probably be private, but they are needed by MapHistory
-		Returns the old tile at the location of the tile.
-	*/
-	std::unique_ptr<Tile> setTileInternal(Tile &&tile);
-	std::unique_ptr<Tile> removeTileInternal(const Position position);
-	void removeSelectionInternal(Tile *tile);
 
 	inline static bool isInstance(MapView *pointer);
 
@@ -186,8 +174,6 @@ public:
 	void onDrawRequested(T *instance);
 
 	std::optional<Region2D<WorldPosition>> dragRegion;
-
-	void disconnectAll();
 
 private:
 	friend class MapHistory::ChangeItem;
@@ -223,7 +209,9 @@ private:
 
 	Tile deepCopyTile(const Position position) const;
 
-	MapHistory::Action newAction(MapHistory::ActionType actionType) const;
+	void selectRegion(const Position &from, const Position &to);
+	void removeItemsInRegion(const Position &from, const Position &to, std::function<bool(const Item &)> predicate);
+	void fillRegion(const Position &from, const Position &to, uint16_t serverId);
 
 	void cameraViewportChangedEvent();
 };
@@ -267,20 +255,6 @@ inline std::ostream &operator<<(std::ostream &os, const util::Rectangle<int> &re
 {
 	os << "{ x1=" << rect.x1 << ", y1=" << rect.y1 << ", x2=" << rect.x2 << ", y2=" << rect.y2 << "}";
 	return os;
-}
-
-template <class UnaryPredicate>
-inline void MapView::removeItems(const Tile &tile, UnaryPredicate predicate)
-{
-
-	Tile newTile = tile.deepCopy();
-	if (newTile.removeItemsIf(predicate) > 0)
-	{
-		MapHistory::Action action(MapHistory::ActionType::ModifyTile);
-		action.addChange(MapHistory::SetTile(std::move(newTile)));
-
-		history.commit(std::move(action));
-	}
 }
 
 inline const Camera::Viewport &MapView::getViewport() const noexcept
