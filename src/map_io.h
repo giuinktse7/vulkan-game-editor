@@ -10,6 +10,16 @@
 #include "otbm.h"
 #include "util.h"
 
+namespace OTBM
+{
+	enum class Token
+	{
+		Start = 0xFE,
+		End = 0xFF,
+		Escape = 0xFD,
+	};
+}
+
 /*
 Small wrapper for a buffer that is written to when saving an OTBM map.
 */
@@ -30,6 +40,9 @@ public:
 
 	void startNode(OTBM::Node_t value);
 	void endNode();
+
+	inline void writeToken(OTBM::Token token);
+	inline void writeNodeType(OTBM::Node_t token);
 
 	void finish();
 
@@ -72,4 +85,14 @@ inline void SaveBuffer::writeU8(OTBM::NodeAttribute value)
 inline void SaveBuffer::writeU8(OTBM::AttributeTypeId value)
 {
 	writeU8(static_cast<uint8_t>(to_underlying(value)));
+}
+
+inline void SaveBuffer::writeToken(OTBM::Token token)
+{
+	buffer.emplace_back(static_cast<uint8_t>(to_underlying(token)));
+}
+
+inline void SaveBuffer::writeNodeType(OTBM::Node_t nodeType)
+{
+	buffer.emplace_back(static_cast<uint8_t>(to_underlying(nodeType)));
 }

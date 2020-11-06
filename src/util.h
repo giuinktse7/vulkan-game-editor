@@ -29,7 +29,7 @@ std::string as_lower_str(std::string s);
 #pragma warning(push)
 #pragma warning(disable : 26812)
 template <typename E>
-constexpr auto to_underlying(E e) noexcept
+inline constexpr auto to_underlying(E e) noexcept
 {
 	return static_cast<std::underlying_type_t<E>>(e);
 }

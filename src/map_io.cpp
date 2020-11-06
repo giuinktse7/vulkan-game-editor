@@ -14,16 +14,6 @@
 
 using namespace OTBM;
 
-namespace
-{
-  enum class Token
-  {
-    Start = 0xFE,
-    End = 0xFF,
-    Escape = 0xFD,
-  };
-}
-
 inline bool operator==(const uint8_t lhs, const Token &rhs)
 {
   return lhs == to_underlying(rhs);
@@ -47,7 +37,7 @@ void SaveBuffer::writeBytes(const uint8_t *cursor, size_t amount)
       {
         flushToFile();
       }
-      buffer.emplace_back(Token::Escape);
+      writeToken(Token::Escape);
       std::cout << std::hex << static_cast<int>(buffer.back()) << std::endl;
     }
 
@@ -70,10 +60,10 @@ void SaveBuffer::startNode(Node_t nodeType)
     flushToFile();
   }
 
-  buffer.emplace_back(Token::Start);
+  writeToken(Token::Start);
   std::cout << std::hex << static_cast<int>(Token::Start) << std::endl;
 
-  buffer.emplace_back(nodeType);
+  writeNodeType(nodeType);
   std::cout << std::hex << static_cast<int>(nodeType) << std::endl;
 }
 
@@ -84,7 +74,7 @@ void SaveBuffer::endNode()
     flushToFile();
   }
 
-  buffer.emplace_back(Token::End);
+  writeToken(Token::End);
   std::cout << std::hex << static_cast<int>(Token::End) << std::endl;
 }
 
