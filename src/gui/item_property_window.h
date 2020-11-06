@@ -24,7 +24,7 @@ public:
 private:
   QUrl _url;
 
-  void setCount(int count);
+  void setCount(uint8_t count);
 
   /**
    * Returns a child from QML with objectName : name

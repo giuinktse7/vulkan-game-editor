@@ -59,7 +59,7 @@ MapTabWidget::MapTabWidget(QWidget *parent)
     connect(mapTabBar, &MapTabBar::tabCloseRequested, this, &MapTabWidget::closeTab);
 }
 
-MapView *MapTabWidget::getMapView(size_t index) const
+MapView *MapTabWidget::getMapView(int index) const
 {
     DEBUG_ASSERT(index < count(), "index must be less than size.");
     return static_cast<MapViewWidget *>(widget(index))->mapView;

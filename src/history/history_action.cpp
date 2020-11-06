@@ -20,8 +20,8 @@ namespace MapHistory
   {
     for (auto &action : actions)
     {
-      if (!action.isCommitted())
-        action.commit(mapView);
+      DEBUG_ASSERT(!action.isCommitted(), "An action in an uncommitted ActionGroup should never be committed.");
+      action.commit(mapView);
     }
 
     mapView.selection().update();
@@ -55,6 +55,8 @@ namespace MapHistory
 
     for (auto &change : changes)
       change.commit(mapView);
+
+    committed = true;
   }
 
   void Action::undo(MapView &mapView)
@@ -63,5 +65,7 @@ namespace MapHistory
 
     for (auto &change : changes)
       change.undo(mapView);
+
+    committed = false;
   }
 } // namespace MapHistory

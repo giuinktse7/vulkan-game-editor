@@ -24,7 +24,7 @@ void ItemPropertyWindow::setItem(const Item &item)
   setCount(item.count());
 }
 
-void ItemPropertyWindow::setCount(int count)
+void ItemPropertyWindow::setCount(uint8_t count)
 {
   auto countSpinBox = child(ObjectName::CountSpinBox);
   countSpinBox->setProperty("value", count);

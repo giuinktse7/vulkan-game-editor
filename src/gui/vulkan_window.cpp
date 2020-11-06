@@ -339,6 +339,14 @@ bool VulkanWindow::event(QEvent *ev)
   case QEvent::Enter:
     mapView->setUnderMouse(true);
     break;
+  case QEvent::ShortcutOverride:
+  {
+    // Shortcut override event
+    QKeyEvent *e = static_cast<QKeyEvent *>(ev);
+    QKeyEvent keyEvent(QEvent::KeyPress, e->key(), e->modifiers(), e->text(), e->isAutoRepeat(), e->count());
+    keyPressEvent(&keyEvent);
+    return true;
+  }
   default:
     break;
   }

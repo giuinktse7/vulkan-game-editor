@@ -274,6 +274,12 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
   case Qt::Key_Delete:
     currentMapView()->deleteSelectedItems();
     break;
+  case Qt::Key_Z:
+    if (event->modifiers() & Qt::CTRL)
+    {
+      currentMapView()->undo();
+    }
+    break;
   default:
   {
     auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());

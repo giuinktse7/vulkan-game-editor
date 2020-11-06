@@ -55,7 +55,7 @@ void Camera::translate(WorldPosition delta)
 void Camera::translateZ(int z)
 {
 	int oldFloor = _viewport.z;
-	_viewport.z = static_cast<float>(std::clamp(static_cast<int>(_viewport.z + z), 0, MAP_LAYERS - 1));
+	_viewport.z = std::clamp(static_cast<int>(_viewport.z + z), 0, MAP_LAYERS - 1);
 	if (_viewport.z != oldFloor)
 		fireViewportChange();
 }
