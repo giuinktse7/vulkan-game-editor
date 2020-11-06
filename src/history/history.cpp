@@ -31,8 +31,6 @@ namespace MapHistory
     if (!action.committed)
     {
       action.commit(*mapView);
-
-      mapView->selection().update();
     }
 
     Action *currentAction = getLatestAction();
