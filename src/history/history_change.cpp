@@ -10,6 +10,33 @@ namespace MapHistory
     return mapView._map.get();
   }
 
+  std::unique_ptr<Tile> ChangeItem::setMapTile(MapView &mapView, Tile &&tile)
+  {
+    mapView.selection().setSelected(tile.position(), tile.hasSelection());
+
+    TileLocation &location = getMap(mapView)->getOrCreateTileLocation(tile.position());
+    std::unique_ptr<Tile> currentTilePointer = location.replaceTile(std::move(tile));
+
+    // Destroy the ECS entities of the old tile
+    currentTilePointer->destroyEntities();
+
+    return currentTilePointer;
+  }
+  std::unique_ptr<Tile> ChangeItem::removeMapTile(MapView &mapView, const Position position)
+  {
+    Map *map = getMap(mapView);
+    Tile *oldTile = map->getTile(position);
+
+    if (oldTile && oldTile->hasSelection())
+    {
+      mapView.selection().deselect(oldTile->position());
+    }
+
+    oldTile->destroyEntities();
+
+    return map->dropTile(position);
+  }
+
   void Change::commit(MapView &mapView)
   {
     std::visit(
@@ -58,7 +85,7 @@ namespace MapHistory
 
   void SetTile::commit(MapView &mapView)
   {
-    std::unique_ptr<Tile> currentTilePtr = mapView.setTileInternal(std::move(tile));
+    std::unique_ptr<Tile> currentTilePtr = setMapTile(mapView, std::move(tile));
     Tile *currentTile = currentTilePtr.release();
 
     tile = std::move(*currentTile);
@@ -67,7 +94,7 @@ namespace MapHistory
   void SetTile::undo(MapView &mapView)
   {
     tile.initEntities();
-    std::unique_ptr<Tile> currentTilePointer = mapView.setTileInternal(std::move(tile));
+    std::unique_ptr<Tile> currentTilePointer = setMapTile(mapView, std::move(tile));
     Tile *currentTile = currentTilePointer.release();
 
     tile = std::move(*currentTile);
@@ -78,7 +105,7 @@ namespace MapHistory
   void RemoveTile::commit(MapView &mapView)
   {
     Position &position = std::get<Position>(data);
-    std::unique_ptr<Tile> currentTilePointer = mapView.removeTileInternal(position);
+    std::unique_ptr<Tile> currentTilePointer = removeMapTile(mapView, position);
     Tile *currentTile = currentTilePointer.release();
 
     data = std::move(*currentTile);
@@ -90,7 +117,7 @@ namespace MapHistory
     Position pos = tile.position();
 
     tile.initEntities();
-    mapView.setTileInternal(std::move(tile));
+    setMapTile(mapView, std::move(tile));
 
     data = pos;
   }
@@ -174,8 +201,11 @@ namespace MapHistory
             }},
         moveData);
 
-    mapView.updateSelection(fromPos);
-    mapView.updateSelection(toPos);
+    const Tile *fromTile = mapView.getTile(fromPos);
+    mapView.selection().setSelected(fromPos, fromTile && fromTile->hasSelection());
+
+    const Tile *toTile = mapView.getTile(toPos);
+    mapView.selection().setSelected(toPos, toTile && toTile->hasSelection());
   }
 
   void Move::undo(MapView &mapView)

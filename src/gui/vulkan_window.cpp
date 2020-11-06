@@ -216,7 +216,7 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
     mapView->escapeEvent();
     break;
   case Qt::Key_Delete:
-    mapView->deleteSelection();
+    mapView->deleteSelectedItems();
     break;
   case Qt::Key_0:
     if (e->modifiers() & Qt::CTRL)
@@ -245,6 +245,12 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
 
     break;
   }
+  case Qt::Key_Z:
+    if (e->modifiers() & Qt::CTRL)
+    {
+      mapView->undo();
+    }
+    break;
   default:
     e->ignore();
     QVulkanWindow::keyPressEvent(e);

@@ -8,7 +8,9 @@ namespace MapHistory
   {
   public:
     History(MapView &mapView);
-    void commit(MapHistory::Action &&action);
+    void commit(Action &&action);
+    void commit(ActionType actionType, Change::DataTypes &&change);
+
     void undoLast();
 
     void startGroup(ActionGroupType groupType);
@@ -18,11 +20,11 @@ namespace MapHistory
     bool currentGroupType(ActionGroupType groupType) const;
 
   private:
-    std::optional<MapHistory::ActionGroup> currentGroup;
-    std::stack<MapHistory::ActionGroup> actionGroups;
+    std::optional<ActionGroup> currentGroup;
+    std::stack<ActionGroup> actionGroups;
 
     MapView *mapView;
 
-    MapHistory::Action *getLatestAction();
+    Action *getLatestAction();
   };
 } // namespace MapHistory

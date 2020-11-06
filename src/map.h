@@ -23,6 +23,11 @@
 class MapView;
 class MapRegion;
 
+namespace MapHistory
+{
+	class ChangeItem;
+}
+
 class Map
 {
 public:
@@ -80,6 +85,7 @@ public:
 
 private:
 	friend class MapView;
+	friend class MapHistory::ChangeItem;
 	std::string _name;
 	Towns _towns;
 	MapVersion mapVersion;

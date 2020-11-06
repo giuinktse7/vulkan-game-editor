@@ -19,6 +19,11 @@ namespace MapHistory
     }
   }
 
+  void History::commit(MapHistory::ActionType actionType, MapHistory::Change::DataTypes &&change)
+  {
+    commit(MapHistory::Action(actionType, std::move(change)));
+  }
+
   void History::commit(Action &&action)
   {
     DEBUG_ASSERT(currentGroup.has_value(), "There is no current group.");

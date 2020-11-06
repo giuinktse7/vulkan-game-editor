@@ -38,6 +38,12 @@ namespace MapHistory
     mapView.selection().update();
   }
 
+  Action::Action(ActionType actionType, Change::DataTypes &&change)
+      : actionType(actionType), committed(false)
+  {
+    addChange(std::move(change));
+  }
+
   void Action::redo(MapView &mapView)
   {
     commit(mapView);

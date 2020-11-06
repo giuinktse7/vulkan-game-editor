@@ -29,7 +29,8 @@ namespace MapHistory
   class Action
   {
   public:
-    Action(MapHistory::ActionType actionType) : actionType(actionType), committed(false) {}
+    Action(ActionType actionType) : actionType(actionType), committed(false) {}
+    Action(ActionType actionType, Change::DataTypes &&change);
 
     Action(const Action &other) = delete;
     Action &operator=(const Action &other) = delete;
