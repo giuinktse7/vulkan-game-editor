@@ -40,6 +40,7 @@ namespace MapHistory
     Map *getMap(MapView &mapView) const noexcept;
     std::unique_ptr<Tile> setMapTile(MapView &mapView, Tile &&tile);
     std::unique_ptr<Tile> removeMapTile(MapView &mapView, const Position position);
+    void updateSelection(MapView &mapView, const Position &position);
 
     virtual void commit(MapView &mapView) = 0;
     virtual void redo(MapView &mapView)

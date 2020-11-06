@@ -10,18 +10,29 @@ namespace MapHistory
     return mapView._map.get();
   }
 
+  void ChangeItem::updateSelection(MapView &mapView, const Position &position)
+  {
+    const Tile *tile = mapView.getTile(position);
+    mapView.selection().setSelected(position, tile && tile->hasSelection());
+  }
+
   std::unique_ptr<Tile> ChangeItem::setMapTile(MapView &mapView, Tile &&tile)
   {
-    mapView.selection().setSelected(tile.position(), tile.hasSelection());
+    const Position position = tile.position();
 
     TileLocation &location = getMap(mapView)->getOrCreateTileLocation(tile.position());
-    std::unique_ptr<Tile> currentTilePointer = location.replaceTile(std::move(tile));
+    std::unique_ptr<Tile> oldTilePointer = location.replaceTile(std::move(tile));
+    if (oldTilePointer)
+    {
+      // Destroy the ECS entities of the old tile
+      oldTilePointer->destroyEntities();
+    }
 
-    // Destroy the ECS entities of the old tile
-    currentTilePointer->destroyEntities();
+    updateSelection(mapView, position);
 
-    return currentTilePointer;
+    return oldTilePointer;
   }
+
   std::unique_ptr<Tile> ChangeItem::removeMapTile(MapView &mapView, const Position position)
   {
     Map *map = getMap(mapView);
@@ -168,6 +179,7 @@ namespace MapHistory
     Map *map = getMap(mapView);
     Position fromPos = undoData.fromTile.position();
     Position toPos = undoData.toTile.position();
+    VME_LOG_D("Commit move: " << fromPos << " -> " << toPos);
 
     Tile &from = mapView.getOrCreateTile(fromPos);
     Tile &to = mapView.getOrCreateTile(toPos);
@@ -201,19 +213,19 @@ namespace MapHistory
             }},
         moveData);
 
-    const Tile *fromTile = mapView.getTile(fromPos);
-    mapView.selection().setSelected(fromPos, fromTile && fromTile->hasSelection());
-
-    const Tile *toTile = mapView.getTile(toPos);
-    mapView.selection().setSelected(toPos, toTile && toTile->hasSelection());
+    updateSelection(mapView, fromPos);
+    updateSelection(mapView, toPos);
   }
 
   void Move::undo(MapView &mapView)
   {
     Map *map = getMap(mapView);
 
-    map->insertTile(std::move(undoData.toTile));
-    map->insertTile(std::move(undoData.fromTile));
+    map->insertTile(undoData.toTile.deepCopy());
+    map->insertTile(undoData.fromTile.deepCopy());
+
+    updateSelection(mapView, undoData.fromTile.position());
+    updateSelection(mapView, undoData.toTile.position());
   }
 
   MultiMove::MultiMove(Position deltaPos, size_t moveOperations)
