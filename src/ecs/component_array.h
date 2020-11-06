@@ -3,9 +3,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "entity.h"
 #include "../debug.h"
 #include "../logger.h"
+#include "entity.h"
 
 #include <type_traits>
 
@@ -29,10 +29,6 @@ public:
 		components.reserve(InitialCapacity);
 		entityToComponentIndex.reserve(InitialCapacity);
 		componentIndexToEntity.reserve(InitialCapacity);
-	}
-	~ComponentArray() override
-	{
-		Logger::debug("~ComponentArray()");
 	}
 
 	void addComponent(ecs::EntityId entity, T &component);
