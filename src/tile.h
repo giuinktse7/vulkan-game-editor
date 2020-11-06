@@ -92,8 +92,9 @@ public:
 	*/
 	size_t getEntityCount();
 
-	uint16_t getMapFlags() const noexcept;
-	uint16_t getStatFlags() const noexcept;
+	inline uint16_t mapFlags() const noexcept;
+	inline uint16_t statFlags() const noexcept;
+	inline uint32_t flags() const noexcept;
 
 	void setLocation(TileLocation &location);
 
@@ -132,10 +133,10 @@ private:
 	{
 		struct
 		{
-			uint16_t mapflags;
-			uint16_t statflags;
+			uint16_t _mapflags;
+			uint16_t _statflags;
 		};
-		uint32_t flags;
+		uint32_t _flags;
 	};
 
 	uint16_t _selectionCount;
@@ -144,13 +145,19 @@ private:
 	void replaceItem(uint16_t index, Item &&item);
 };
 
-inline uint16_t Tile::getMapFlags() const noexcept
+inline uint16_t Tile::mapFlags() const noexcept
 {
-	return mapflags;
+	return _mapflags;
 }
-inline uint16_t Tile::getStatFlags() const noexcept
+
+inline uint16_t Tile::statFlags() const noexcept
 {
-	return statflags;
+	return _statflags;
+}
+
+inline uint32_t Tile::flags() const noexcept
+{
+	return _flags;
 }
 
 template <typename UnaryPredicate>
@@ -189,4 +196,16 @@ inline uint16_t Tile::removeItemsIf(UnaryPredicate &&predicate)
 inline size_t Tile::selectionCount() const noexcept
 {
 	return static_cast<size_t>(_selectionCount);
+}
+
+inline bool operator==(const Tile &lhs, const Tile &rhs)
+{
+	const Item *g1 = lhs.ground();
+	const Item *g2 = rhs.ground();
+	return lhs.flags() == rhs.flags() && lhs.items() == rhs.items() && (!(g1 || g2) || (g1 && g2 && (*g1 == *g2)));
+}
+
+inline bool operator!=(const Tile &lhs, const Tile &rhs)
+{
+	return !(lhs == rhs);
 }

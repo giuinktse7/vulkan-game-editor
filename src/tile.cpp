@@ -7,16 +7,16 @@
 #include "tile_location.h"
 
 Tile::Tile(TileLocation &tileLocation)
-    : _position(tileLocation.position()), flags(0), _selectionCount(0) {}
+    : _position(tileLocation.position()), _flags(0), _selectionCount(0) {}
 
 Tile::Tile(Position position)
-    : _position(position), flags(0), _selectionCount(0) {}
+    : _position(position), _flags(0), _selectionCount(0) {}
 
 Tile::Tile(Tile &&other) noexcept
     : _items(std::move(other._items)),
       _ground(std::move(other._ground)),
       _position(other._position),
-      flags(other.flags),
+      _flags(other._flags),
       _selectionCount(other._selectionCount) {}
 
 Tile &Tile::operator=(Tile &&other) noexcept
@@ -25,7 +25,7 @@ Tile &Tile::operator=(Tile &&other) noexcept
   _ground = std::move(other._ground);
   _position = std::move(other._position);
   _selectionCount = other._selectionCount;
-  flags = other.flags;
+  _flags = other._flags;
 
   return *this;
 }
@@ -163,7 +163,9 @@ void Tile::addItem(Item &&item)
 
   if (replace)
   {
-    replaceItem(it - _items.begin(), std::move(item));
+    auto offset = it - _items.begin();
+    DEBUG_ASSERT(offset < UINT16_MAX, "Offset too large.");
+    replaceItem(static_cast<uint16_t>(offset), std::move(item));
   }
   else
   {
@@ -261,7 +263,8 @@ void Tile::selectAll()
     item.selected = true;
   }
 
-  _selectionCount = count;
+  DEBUG_ASSERT(count < UINT16_MAX, "Count too large.");
+  _selectionCount = static_cast<uint16_t>(count);
 }
 
 void Tile::setGroundSelected(bool selected)
@@ -386,7 +389,7 @@ Tile Tile::deepCopy() const
   {
     tile.addItem(item.deepCopy());
   }
-  tile.flags = this->flags;
+  tile._flags = this->_flags;
   if (_ground)
   {
     tile._ground = std::make_unique<Item>(_ground->deepCopy());
