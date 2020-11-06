@@ -178,7 +178,7 @@ public:
   void clear();
 
   template <auto mem_ptr, typename T>
-  void onSelectionChanged(T *instance);
+  void onChanged(T *instance);
 
 private:
   Nano::Signal<void()> selectionChange;
@@ -211,7 +211,7 @@ inline std::optional<Position> Selection::onlyPosition() const
 }
 
 template <auto mem_ptr, typename T>
-inline void Selection::onSelectionChanged(T *instance)
+inline void Selection::onChanged(T *instance)
 {
   selectionChange.connect<mem_ptr>(instance);
 }

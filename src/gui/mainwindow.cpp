@@ -166,11 +166,10 @@ void MainWindow::mapTabCloseEvent(int index, QVariant data)
 
 void MainWindow::mapTabChangedEvent(int index)
 {
-  mapTabs->getMapView(index)->selection().onSelectionChanged<&MainWindow::mapViewSelectionChangedEvent>(this);
-}
+  if (index == -1)
+    return;
 
-void MainWindow::mapViewSelectionChangedEvent()
-{
+  // Empty for now
 }
 
 void MainWindow::initializeUI()
@@ -273,7 +272,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
     break;
   case Qt::Key_Delete:
-    currentMapView()->deleteSelection();
+    currentMapView()->deleteSelectedItems();
     break;
   default:
   {

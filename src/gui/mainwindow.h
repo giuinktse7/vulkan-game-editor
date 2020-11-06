@@ -69,7 +69,6 @@ private:
 
   void mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos);
   void mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport);
-  void mapViewSelectionChangedEvent();
   void mapTabCloseEvent(int index, QVariant data);
   void mapTabChangedEvent(int index);
 

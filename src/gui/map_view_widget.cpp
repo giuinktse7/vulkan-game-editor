@@ -74,7 +74,7 @@ MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
 {
   mapView->onViewportChanged<&MapViewWidget::viewportChanged>(this);
   mapView->onDrawRequested<&MapViewWidget::mapViewDrawRequested>(this);
-  mapView->selection().onSelectionChanged<&MapViewWidget::selectionChanged>(this);
+  mapView->selection().onChanged<&MapViewWidget::selectionChanged>(this);
 
   {
     auto l = new BorderLayout;
