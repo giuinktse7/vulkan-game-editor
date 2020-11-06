@@ -12,12 +12,22 @@
 #pragma warning(push)
 #pragma warning(disable : 26812)
 
-enum NodeType
+using namespace OTBM;
+
+namespace
 {
-  NODE_START = 0xFE,
-  NODE_END = 0xFF,
-  ESCAPE_CHAR = 0xFD,
-};
+  enum class Token
+  {
+    Start = 0xFE,
+    End = 0xFF,
+    Escape = 0xFD,
+  };
+}
+
+inline bool operator==(const uint8_t lhs, const Token &rhs)
+{
+  return lhs == to_underlying(rhs);
+}
 
 constexpr uint32_t DEFAULT_BUFFER_SIZE = 0xFFFF;
 
@@ -31,13 +41,13 @@ void SaveBuffer::writeBytes(const uint8_t *cursor, size_t amount)
 {
   while (amount > 0)
   {
-    if (*cursor == NODE_START || *cursor == NODE_END || *cursor == ESCAPE_CHAR)
+    if (*cursor == Token::Start || *cursor == Token::End || *cursor == Token::Escape)
     {
       if (buffer.size() + 1 >= maxBufferSize)
       {
         flushToFile();
       }
-      buffer.emplace_back(ESCAPE_CHAR);
+      buffer.emplace_back(Token::Escape);
       std::cout << std::hex << static_cast<int>(buffer.back()) << std::endl;
     }
 
@@ -53,15 +63,15 @@ void SaveBuffer::writeBytes(const uint8_t *cursor, size_t amount)
   }
 }
 
-void SaveBuffer::startNode(OTBM_NodeTypes_t nodeType)
+void SaveBuffer::startNode(Node_t nodeType)
 {
   if (buffer.size() + 2 >= maxBufferSize)
   {
     flushToFile();
   }
 
-  buffer.emplace_back(NODE_START);
-  std::cout << std::hex << static_cast<int>(NODE_START) << std::endl;
+  buffer.emplace_back(Token::Start);
+  std::cout << std::hex << static_cast<int>(Token::Start) << std::endl;
 
   buffer.emplace_back(nodeType);
   std::cout << std::hex << static_cast<int>(nodeType) << std::endl;
@@ -74,8 +84,8 @@ void SaveBuffer::endNode()
     flushToFile();
   }
 
-  buffer.emplace_back(NODE_END);
-  std::cout << std::hex << static_cast<int>(NODE_END) << std::endl;
+  buffer.emplace_back(Token::End);
+  std::cout << std::hex << static_cast<int>(Token::End) << std::endl;
 }
 
 void SaveBuffer::writeU8(uint8_t value)
@@ -146,7 +156,7 @@ void MapIO::saveMap(Map &map)
 
   buffer.writeRawString("OTBM");
 
-  buffer.startNode(OTBM_ROOT);
+  buffer.startNode(Node_t::Root);
   {
     OTBMVersion otbmVersion = map.getMapVersion().otbmVersion;
     buffer.writeU32(static_cast<uint32_t>(otbmVersion));
@@ -157,18 +167,18 @@ void MapIO::saveMap(Map &map)
     buffer.writeU32(Items::items.getOtbVersionInfo().majorVersion);
     buffer.writeU32(Items::items.getOtbVersionInfo().minorVersion);
 
-    buffer.startNode(OTBM_MAP_DATA);
+    buffer.startNode(Node_t::MapData);
     {
-      buffer.writeU8(OTBM_ATTR_DESCRIPTION);
+      buffer.writeU8(NodeAttribute::Description);
       buffer.writeString("Saved by VME (Vulkan Map Editor)" + __VME_VERSION__);
 
-      buffer.writeU8(OTBM_ATTR_DESCRIPTION);
+      buffer.writeU8(NodeAttribute::Description);
       buffer.writeString(map.getDescription());
 
-      buffer.writeU8(OTBM_ATTR_EXT_SPAWN_FILE);
+      buffer.writeU8(NodeAttribute::ExternalSpawnFile);
       buffer.writeString("map.spawn.xml");
 
-      buffer.writeU8(OTBM_ATTR_EXT_HOUSE_FILE);
+      buffer.writeU8(NodeAttribute::ExternalHouseFile);
       buffer.writeString("map.house.xml");
 
       // Tiles
@@ -205,7 +215,7 @@ void MapIO::saveMap(Map &map)
           }
           emptyMap = false;
 
-          buffer.startNode(OTBM_TILE_AREA);
+          buffer.startNode(Node_t::TileArea);
 
           x = pos.x & 0xFF00;
           buffer.writeU16(x);
@@ -218,7 +228,7 @@ void MapIO::saveMap(Map &map)
         }
 
         bool isHouseTile = false;
-        buffer.startNode(isHouseTile ? OTBM_HOUSETILE : OTBM_TILE);
+        buffer.startNode(isHouseTile ? Node_t::Housetile : Node_t::Tile);
 
         buffer.writeU8(location->x() & 0xFF);
         buffer.writeU8(location->y() & 0xFF);
@@ -229,10 +239,10 @@ void MapIO::saveMap(Map &map)
           buffer.writeU32(houseId);
         }
 
-        if (tile->getMapFlags())
+        if (tile->mapFlags())
         {
-          buffer.writeU8(OTBM_ATTR_TILE_FLAGS);
-          buffer.writeU32(tile->getMapFlags());
+          buffer.writeU8(NodeAttribute::TileFlags);
+          buffer.writeU32(tile->mapFlags());
         }
 
         Item *ground = tile->ground();
@@ -262,12 +272,12 @@ void MapIO::saveMap(Map &map)
         buffer.endNode();
       }
 
-      buffer.startNode(OTBM_TOWNS);
+      buffer.startNode(Node_t::Towns);
       for (auto &townEntry : map.towns())
       {
         const Town &town = townEntry.second;
         const Position &townPos = town.getTemplePosition();
-        buffer.startNode(OTBM_TOWN);
+        buffer.startNode(Node_t::Town);
 
         buffer.writeU32(town.getID());
         buffer.writeString(town.getName());
@@ -297,7 +307,7 @@ void MapIO::saveMap(Map &map)
 
 void MapIO::Serializer::serializeItem(const Item &item)
 {
-  buffer.startNode(OTBM_ITEM);
+  buffer.startNode(Node_t::Item);
   buffer.writeU16(item.serverId());
 
   serializeItemAttributes(item);
@@ -312,7 +322,7 @@ void MapIO::Serializer::serializeItemAttributes(const Item &item)
     const ItemType &itemType = *item.itemType;
     if (itemType.usesSubType())
     {
-      buffer.writeU8(OTBM_ATTR_COUNT);
+      buffer.writeU8(NodeAttribute::Count);
       buffer.writeU8(item.getSubtype());
     }
   }
@@ -321,7 +331,7 @@ void MapIO::Serializer::serializeItemAttributes(const Item &item)
   {
     if (item.hasAttributes())
     {
-      buffer.writeU8(static_cast<uint8_t>(OTBM_ATTR_ATTRIBUTE_MAP));
+      buffer.writeU8(static_cast<uint8_t>(NodeAttribute::AttributeMap));
       serializeItemAttributeMap(item.getAttributes());
     }
   }
@@ -330,6 +340,11 @@ void MapIO::Serializer::serializeItemAttributes(const Item &item)
 void MapIO::Serializer::serializeItemAttributeMap(const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes)
 {
   // Can not have more than UINT16_MAX items
+  if (attributes.size() > UINT16_MAX)
+  {
+    Logger::error("Saving an item with more than UINT16_MAX (65535) attributes. Only the first 65535 attributes will be saved.");
+  }
+
   buffer.writeU16(static_cast<uint16_t>(std::min((size_t)UINT16_MAX, attributes.size())));
 
   auto entry = attributes.begin();
@@ -359,21 +374,29 @@ void MapIO::Serializer::serializeItemAttributeMap(const std::unordered_map<ItemA
 
 void MapIO::Serializer::serializeItemAttribute(ItemAttribute &attribute)
 {
-  buffer.writeU8(static_cast<uint8_t>(attribute.type));
-
   if (attribute.holds<std::string>())
   {
-    auto k = attribute.get<std::string>();
-    auto s = k.value();
-    buffer.writeLongString(s);
+    buffer.writeU8(AttributeTypeId::String);
+    buffer.writeLongString(attribute.get<std::string>().value());
   }
   else if (attribute.holds<int>())
   {
+    buffer.writeU8(AttributeTypeId::Integer);
     buffer.writeU32(static_cast<uint32_t>(attribute.get<int>().value()));
   }
   else if (attribute.holds<double>())
   {
+    buffer.writeU8(AttributeTypeId::Double);
     buffer.writeU64(static_cast<uint64_t>(attribute.get<double>().value()));
+  }
+  else if (attribute.holds<bool>())
+  {
+    buffer.writeU8(AttributeTypeId::Boolean);
+    buffer.writeU8(static_cast<uint8_t>(attribute.get<bool>().value()));
+  }
+  else
+  {
+    Logger::error() << "Unknown attribute when saving map: " << attribute;
   }
 }
 

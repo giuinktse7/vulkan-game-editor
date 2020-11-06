@@ -61,6 +61,7 @@ set(CommonSources
     src/history/history_change.h
     src/camera.h
     src/const.h
+    src/otbm.h
     src/debug.h
     src/definitions.h
     src/ecs/component_array.h

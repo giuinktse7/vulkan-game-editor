@@ -18,21 +18,21 @@ enum class ItemAttribute_t
 class ItemAttribute
 {
 public:
+  using ValueType = std::variant<bool, int, double, std::string>;
   ItemAttribute(ItemAttribute_t type);
-  ItemAttribute_t type;
 
   template <typename T>
   bool holds() const
   {
-    return std::holds_alternative<T>(value);
+    return std::holds_alternative<T>(_value);
   }
 
   template <typename T>
   std::optional<T> get()
   {
-    if (std::holds_alternative<T>(value))
+    if (std::holds_alternative<T>(_value))
     {
-      return std::get<T>(value);
+      return std::get<T>(_value);
     }
     else
     {
@@ -40,20 +40,47 @@ public:
     }
   }
 
-protected:
+  bool operator==(const ItemAttribute &rhs) const
+  {
+    return _value == rhs._value;
+  }
+
+  inline ItemAttribute_t type() const noexcept;
+  inline ValueType value() const noexcept;
+
   void setBool(bool value);
   void setInt(int value);
   void setDouble(double value);
-  void setString(std::string &value);
+  void setString(const std::string &value);
+  void setString(std::string &&value);
 
+protected:
 private:
-  std::variant<bool, int, double, std::string> value;
+  ItemAttribute_t _type;
+
+  ValueType _value;
 };
+
+inline ItemAttribute_t ItemAttribute::type() const noexcept
+{
+  return _type;
+}
+
+inline ItemAttribute::ValueType ItemAttribute::value() const noexcept
+{
+  return _value;
+}
 
 template <typename T, typename... Ts>
 inline std::ostream &operator<<(std::ostream &os, const std::variant<T, Ts...> &v)
 {
   std::visit([&os](auto &&arg) { os << arg; }, v);
+  return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const ItemAttribute &attribute)
+{
+  os << "{ type: " << attribute.type() << ", value: " << attribute.value() << "}";
   return os;
 }
 
@@ -75,7 +102,7 @@ inline std::ostream &operator<<(std::ostream &os, ItemAttribute_t type)
     break;
   default:
     Logger::error() << "Could not convert ItemAttribute_t '" << to_underlying(type) << "' to a string.";
-    os << "Unknown ItemAttribute";
+    os << to_underlying(type);
     break;
   }
 
