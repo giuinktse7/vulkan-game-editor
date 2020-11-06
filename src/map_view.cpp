@@ -44,6 +44,7 @@ MapView::~MapView()
 void MapView::undo()
 {
   history.undoLast();
+  requestDraw();
 }
 
 void MapView::selectTopItem(const Position pos)
