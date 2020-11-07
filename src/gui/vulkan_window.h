@@ -1,20 +1,20 @@
 #pragma once
 
+// #include <functional>
 #include <memory>
+// #include <optional>
 #include <unordered_set>
 
 #include <QApplication>
 #include <QMenu>
 #include <QVulkanWindow>
 
-#include "../util.h"
-
 #include "../graphics/vulkan_helpers.h"
+// #include "../input.h"
+// #include "../map_renderer.h"
 #include "../map_view.h"
-
 #include "../qt/qt_vulkan_info.h"
-
-#include "../map_renderer.h"
+// #include "../util.h"
 
 class MainWindow;
 
@@ -23,6 +23,22 @@ class QWidget;
 class QPoint;
 class QEvent;
 QT_END_NAMESPACE
+
+// class MouseState
+// {
+// public:
+//   MouseState();
+
+//   bool pressed(Qt::MouseButton button) const noexcept;
+
+//   inline const Qt::MouseButtons buttons() const noexcept;
+//   inline void setButtons(const Qt::MouseButtons buttons) noexcept;
+//   inline void setPressed(const Qt::MouseButton button) noexcept;
+//   inline void setReleased(const Qt::MouseButton button) noexcept;
+
+// private:
+//   Qt::MouseButtons _buttons;
+// };
 
 class VulkanWindow : public QVulkanWindow
 {
@@ -121,6 +137,28 @@ private:
   QVulkanWindowRenderer *renderer = nullptr;
   ContextMenu *contextMenu = nullptr;
 
+  // MouseState mouseState;
+  //
   // Holds the current scroll amount. (see wheelEvent)
   int scrollAngleBuffer = 0;
 };
+
+// inline const Qt::MouseButtons MouseState::buttons() const noexcept
+// {
+//   return _buttons;
+// }
+
+// inline void MouseState::setButtons(const Qt::MouseButtons buttons) noexcept
+// {
+//   _buttons = buttons;
+// }
+
+// inline void MouseState::setPressed(const Qt::MouseButton button) noexcept
+// {
+//   _buttons = _buttons | button;
+// }
+
+// inline void MouseState::setReleased(const Qt::MouseButton button) noexcept
+// {
+//   _buttons = _buttons & (~button);
+// }
