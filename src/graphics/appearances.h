@@ -353,8 +353,7 @@ public:
   } flagData = {};
 
 private:
-  // Most (if not all) objects have only one FrameGroup. This avoids having to create a vector to store a single element (perf not tested as of 2020/08/02).
-  std::variant<SpriteInfo, std::vector<FrameGroup>> appearanceData;
+  std::vector<FrameGroup> frameGroups;
   AppearanceFlag flags;
 };
 

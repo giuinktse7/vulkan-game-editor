@@ -265,7 +265,11 @@ Appearance::Appearance(proto::Appearance protobufAppearance)
     {
         const auto &spriteInfo = protobufAppearance.frame_group().at(0).sprite_info();
         bool cumulative = protobufAppearance.flags().has_cumulative() && protobufAppearance.flags().cumulative();
-        this->appearanceData = SpriteInfo::fromProtobufData(spriteInfo, cumulative);
+
+        auto group = protobufAppearance.frame_group(0);
+        frameGroups.emplace_back<FrameGroup>({static_cast<FixedFrameGroup>(group.fixed_frame_group()),
+                                              static_cast<uint32_t>(group.id()),
+                                              SpriteInfo::fromProtobufData(spriteInfo, cumulative)});
     }
     else
     {
@@ -451,7 +455,7 @@ Appearance::Appearance(Appearance &&other) noexcept
     : clientId(other.clientId),
       name(std::move(other.name)),
       flagData(std::move(other.flagData)),
-      appearanceData(std::move(other.appearanceData)),
+      frameGroups(std::move(other.frameGroups)),
       flags(std::move(other.flags)) {}
 
 uint32_t Appearance::getFirstSpriteId() const
@@ -461,14 +465,7 @@ uint32_t Appearance::getFirstSpriteId() const
 
 const SpriteInfo &Appearance::getSpriteInfo(size_t frameGroup) const
 {
-    if (std::holds_alternative<SpriteInfo>(appearanceData))
-    {
-        return std::get<SpriteInfo>(appearanceData);
-    }
-    else
-    {
-        return std::get<std::vector<FrameGroup>>(appearanceData).at(frameGroup).spriteInfo;
-    }
+    return frameGroups.at(frameGroup).spriteInfo;
 }
 
 const SpriteInfo &Appearance::getSpriteInfo() const
@@ -488,10 +485,5 @@ size_t Appearance::spriteCount(uint32_t frameGroup) const
 
 size_t Appearance::frameGroupCount() const
 {
-    if (std::holds_alternative<SpriteInfo>(appearanceData))
-    {
-        return 1;
-    }
-
-    return std::get<std::vector<FrameGroup>>(appearanceData).size();
+    return frameGroups.size();
 }
