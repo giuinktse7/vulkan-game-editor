@@ -332,10 +332,18 @@ namespace MapHistory
       it->undo(mapView);
   }
 
-  SelectMultiple::SelectMultiple(std::vector<Position> positions, bool select)
-      : positions(positions),
-        select(select)
+  SelectMultiple::SelectMultiple(const MapView &mapView, std::vector<Position> &&positions, bool select)
+      : select(select)
   {
+    entries.reserve(positions.size());
+    for (auto &position : std::move(positions))
+    {
+      std::vector<uint16_t> indices = getIndices(mapView, position);
+      if (!indices.empty())
+      {
+        entries.emplace_back<Entry>({std::move(position), std::move(indices)});
+      }
+    }
   }
 
   void SelectMultiple::commit(MapView &mapView)
@@ -343,18 +351,18 @@ namespace MapHistory
     Map *map = getMap(mapView);
     if (select)
     {
-      for (const auto &pos : positions)
+      for (auto &entry : entries)
       {
-        map->getTile(pos)->selectAll();
-        mapView.selection().select(pos);
+        map->getTile(entry.position)->selectAll();
+        mapView.selection().select(entry.position);
       }
     }
     else
     {
-      for (const auto &pos : positions)
+      for (auto &entry : entries)
       {
-        map->getTile(pos)->deselectAll();
-        mapView.selection().deselect(pos);
+        map->getTile(entry.position)->deselectAll();
+        mapView.selection().deselect(entry.position);
       }
     }
   }
@@ -362,22 +370,99 @@ namespace MapHistory
   void SelectMultiple::undo(MapView &mapView)
   {
     Map *map = getMap(mapView);
-    if (!select)
+    if (select)
     {
-      for (const auto &pos : positions)
+      for (const auto &entry : entries)
       {
-        map->getTile(pos)->selectAll();
-        mapView.selection().select(pos);
+        Tile &tile = *map->getTile(entry.position);
+
+        if (!entry.indices.empty())
+        {
+          auto it = entry.indices.begin();
+
+          bool ground = entry.indices.front() == 0;
+          if (ground)
+          {
+            tile.deselectGround();
+            ++it;
+          }
+          while (it != entry.indices.end())
+          {
+            uint16_t i = *it;
+            tile.deselectItemAtIndex(i - 1);
+            ++it;
+          }
+
+          updateSelection(mapView, entry.position);
+        }
       }
     }
     else
     {
-      for (const auto &pos : positions)
+      for (const auto &entry : entries)
       {
-        map->getTile(pos)->deselectAll();
-        mapView.selection().deselect(pos);
+        Tile &tile = *map->getTile(entry.position);
+
+        if (!entry.indices.empty())
+        {
+          auto it = entry.indices.begin();
+
+          bool ground = entry.indices.front() == 0;
+          if (ground)
+          {
+            tile.selectGround();
+            ++it;
+          }
+          while (it != entry.indices.end())
+          {
+            uint16_t i = *it;
+            tile.selectItemAtIndex(i - 1);
+            ++it;
+          }
+
+          updateSelection(mapView, entry.position);
+        }
       }
     }
+  }
+
+  std::vector<uint16_t> SelectMultiple::getIndices(const MapView &mapView, const Position &position) const
+  {
+    std::vector<uint16_t> result;
+
+    const Tile &tile = *mapView.getTile(position);
+    const std::vector<Item> &items = tile.items();
+
+    if (select)
+    {
+      if (!(tile.hasGround() && tile.ground()->selected))
+      {
+        // Index 0 corresponds to ground
+        result.emplace_back(0);
+      }
+
+      for (int i = 0; i < items.size(); ++i)
+      {
+        if (!tile.itemSelected(i))
+          result.emplace_back(i + 1);
+      }
+    }
+    else
+    {
+      if (tile.hasGround() && tile.ground()->selected)
+      {
+        // Index 0 corresponds to ground
+        result.emplace_back(0);
+      }
+
+      for (int i = 0; i < items.size(); ++i)
+      {
+        if (tile.itemSelected(i))
+          result.emplace_back(i + 1);
+      }
+    }
+
+    return result;
   }
 
   Select::Select(Position position,

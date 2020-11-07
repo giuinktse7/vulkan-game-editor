@@ -148,14 +148,30 @@ namespace MapHistory
   class SelectMultiple : public ChangeItem
   {
   public:
-    SelectMultiple(std::vector<Position> positions, bool select = true);
+    SelectMultiple(const MapView &mapView, std::vector<Position> &&positions, bool select = true);
 
     virtual void commit(MapView &mapView) override;
     virtual void undo(MapView &mapView) override;
 
   private:
-    std::vector<Position> positions;
+    struct Entry
+    {
+      Position position;
+
+      /**
+       * To save space, the ground tile is represented by the value 0. Hence
+       * item indices are offset by 1. The item at index 0 in a tile is
+       * represented by the value 1 here, etc.
+       * 0: Ground
+       * 1..n: Items
+       */
+      std::vector<uint16_t> indices;
+    };
+
+    std::vector<Entry> entries;
     bool select;
+
+    std::vector<uint16_t> getIndices(const MapView &mapView, const Position &position) const;
   };
 
   class Select : public ChangeItem
