@@ -31,7 +31,7 @@ public:
   virtual std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept = 0;
   virtual std::optional<Position> getCorner(int positiveX, int positiveY, int positiveZ) const noexcept = 0;
 
-  virtual const std::vector<Position> allPositions() const = 0;
+  virtual std::vector<Position> allPositions() const = 0;
   virtual std::optional<Position> onlyPosition() const = 0;
 };
 
@@ -67,7 +67,7 @@ public:
 
   size_t size() const noexcept override;
 
-  const std::vector<Position> allPositions() const override;
+  std::vector<Position> allPositions() const override;
   std::optional<Position> onlyPosition() const override;
 
 private:
@@ -128,6 +128,10 @@ public:
   Selection(MapView &mapView, Map &map);
   bool blockDeselect = false;
   std::optional<Position> moveOrigin = {};
+  std::optional<Position> moveDelta = {};
+
+  void startMove(const Position &origin);
+  void endMove();
 
   /*
     When the mouse goes outside of the map dimensions, this correction is used to
@@ -137,7 +141,7 @@ public:
 
   // TODO
 
-  bool moving() const;
+  bool isMoving() const;
 
   vme::octree::Tree::iterator begin()
   {
@@ -148,7 +152,7 @@ public:
     return storage.end();
   }
 
-  Position moveDelta() const;
+  void updateMoveDelta(const Position &currentPosition);
 
   std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
   std::optional<Position> getCorner(int positiveX, int positiveY, int positiveZ) const noexcept;
@@ -162,7 +166,7 @@ public:
   void setSelected(const Position pos, bool selected);
   // bool deselectAll();
 
-  inline const std::vector<Position> allPositions() const;
+  inline std::vector<Position> allPositions() const;
   inline std::optional<Position> onlyPosition() const;
 
   size_t size() const noexcept;
@@ -200,7 +204,7 @@ private:
   SelectionStorageOctree storage;
 };
 
-inline const std::vector<Position> Selection::allPositions() const
+inline std::vector<Position> Selection::allPositions() const
 {
   return storage.allPositions();
 }

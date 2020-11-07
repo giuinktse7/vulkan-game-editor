@@ -124,7 +124,7 @@ void MapView::clearSelection()
 
     history.commit(
         ActionType::Selection,
-        SelectMultiple(std::move(_selection.allPositions()), false));
+        SelectMultiple(*this, _selection.allPositions(), false));
 
     history.endGroup(ActionGroupType::Selection);
   }
@@ -237,8 +237,9 @@ void MapView::finishMoveSelection()
   {
     Action action(ActionType::Selection);
 
-    Position deltaPos = _selection.moveDelta();
-    VME_LOG_D("finishMove deltaPos: " << deltaPos);
+    Position deltaPos = _selection.moveDelta.value();
+    Position pos = _selection.moveOrigin.value() + _selection.moveDelta.value();
+    VME_LOG_D("finishMoveSelection: " << pos);
 
     auto multiMove = std::make_unique<MultiMove>(deltaPos, _selection.size());
     // VME_LOG_D("Moving " << _selection.size() << " tiles.");
@@ -260,10 +261,9 @@ void MapView::finishMoveSelection()
     history.commit(std::move(action));
   }
   history.endGroup(ActionGroupType::MoveItems);
-  requestDraw();
-  VME_LOG_D("Finished move.");
+  _selection.endMove();
 
-  _selection.moveOrigin.reset();
+  VME_LOG_D("Finished move.");
 }
 
 void MapView::deleteSelectedItems()
@@ -314,7 +314,7 @@ void MapView::selectRegion(const Position &from, const Position &to)
 
     Action action(ActionType::Selection);
 
-    action.addChange(SelectMultiple(positions));
+    action.addChange(SelectMultiple(*this, std::move(positions)));
 
     history.commit(std::move(action));
     history.endGroup(ActionGroupType::Selection);
@@ -538,11 +538,10 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
 
 void MapView::mousePressEvent(VME::MouseEvent event)
 {
-
-  // VME_LOG_D("MapView::mousePressEvent");
+  VME_LOG_D("MapView::mousePressEvent");
   if (event.buttons() & VME::MouseButtons::LeftButton)
   {
-    Position pos = mouseGamePos();
+    Position pos = event.pos().toPos(*this);
 
     std::visit(
         util::overloaded{
@@ -570,7 +569,8 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                   });
                 }
 
-                _selection.moveOrigin = pos;
+                _selection.startMove(pos);
+                VME_LOG_D("Start move: " << pos);
                 // VME_LOG_D("moveDelta: " << _selection.moveDelta());
               }
             },
@@ -639,23 +639,23 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
   {
     rollbear::visit(
         util::overloaded{
-            [this](const MouseAction::Select) {
-              if (_selection.moving())
+            [this, &pos](const MouseAction::Select) {
+              if (hasSelectionMoveOrigin())
               {
-                // auto mousePos = mouseGamePos();
-                // auto delta = _selection.moveOrigin.value() - mousePos;
-                // auto correctionPos = _selection.topLeft().value() - delta;
-
-                // _selection.outOfBoundCorrection.x = -std::min(correctionPos.x, 0);
-                // _selection.outOfBoundCorrection.y = -std::min(correctionPos.y, 0);
+                _selection.updateMoveDelta(pos);
               }
+              // auto mousePos = mouseGamePos();
+              // auto delta = _selection.moveOrigin.value() - mousePos;
+              // auto correctionPos = _selection.topLeft().value() - delta;
+
+              // _selection.outOfBoundCorrection.x = -std::min(correctionPos.x, 0);
+              // _selection.outOfBoundCorrection.y = -std::min(correctionPos.y, 0);
             },
 
-            [this, pos, event, dragPositions, &needsDraw](const MouseAction::RawItem &action) {
+            [this, pos, event, dragPositions](const MouseAction::RawItem &action) {
               const auto [from, to] = dragPositions;
               if (action.area)
               {
-                requestDraw();
                 return;
               }
               if (event.pos().worldPos(*this) == to)
@@ -672,7 +672,6 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
 
                   removeItems(*tile, [action](const Item &item) { return item.serverId() == action.serverId; });
                   history.endGroup(ActionGroupType::RemoveMapItem);
-                  needsDraw = true;
                 }
               }
               else
@@ -684,7 +683,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
               }
             },
 
-            [this, event, &needsDraw](MouseAction::Pan &action) {
+            [this, event](MouseAction::Pan &action) {
               if (action.active())
               {
                 ScreenPosition delta = event.pos() - action.mouseOrigin.value();
@@ -714,12 +713,14 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
 
   setDragEnd(event.pos().worldPos(*this));
 
-  if (needsDraw)
-    requestDraw();
+  requestDraw();
 }
 
 void MapView::mouseReleaseEvent(VME::MouseEvent event)
 {
+  Position pos = event.pos().toPos(*this);
+  VME_LOG_D("MapView::mouseReleaseEvent: " << pos);
+
   if (!(event.buttons() & VME::MouseButtons::LeftButton))
   {
     std::visit(
@@ -734,13 +735,22 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
     {
       endDragging(event.modifiers());
     }
-    if (_selection.moving())
-    {
-      finishMoveSelection();
-    }
 
-    _selection.moveOrigin.reset();
+    if (_selection.moveOrigin.has_value())
+    {
+      if (_selection.moveDelta.has_value() && _selection.moveDelta.value() != PositionConstants::Zero)
+      {
+        waitForDraw([this] { finishMoveSelection(); });
+      }
+      else
+      {
+        _selection.endMove();
+      }
+    }
   }
+
+  requestDraw();
+}
 
 void MapView::waitForDraw(std::function<void()> f)
 {

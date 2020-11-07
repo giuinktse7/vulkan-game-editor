@@ -31,18 +31,32 @@ void Selection::deselect(const std::vector<Position> &positions)
   }
 }
 
-Position Selection::moveDelta() const
+void Selection::updateMoveDelta(const Position &currentPosition)
 {
-  if (!moveOrigin || empty())
-    return Position(0, 0, 0);
+  DEBUG_ASSERT(moveOrigin.has_value(), "There must be a move origin.");
+  DEBUG_ASSERT(!empty(), "The selection should never be empty here.");
 
-  auto delta = mapView.mouseGamePos() - moveOrigin.value();
+  auto delta = currentPosition - moveOrigin.value();
+  if (delta == moveDelta)
+    return;
 
   auto topLeftCorrection = storage.getCorner(0, 0, 0).value() + delta;
   delta.x -= std::min(topLeftCorrection.x, 0);
   delta.y -= std::min(topLeftCorrection.y, 0);
 
-  return delta;
+  moveDelta = delta;
+}
+
+void Selection::startMove(const Position &origin)
+{
+  moveOrigin = origin;
+  moveDelta = PositionConstants::Zero;
+}
+
+void Selection::endMove()
+{
+  moveOrigin.reset();
+  moveDelta.reset();
 }
 
 bool Selection::contains(const Position pos) const
@@ -102,9 +116,9 @@ bool Selection::empty() const
   return storage.empty();
 }
 
-bool Selection::moving() const
+bool Selection::isMoving() const
 {
-  return moveOrigin.has_value() && moveDelta() != Position(0, 0, 0);
+  return moveOrigin.has_value() && moveDelta.has_value() && moveDelta.value() != PositionConstants::Zero;
 }
 
 void Selection::update()
@@ -279,7 +293,7 @@ bool SelectionStorageOctree::clear()
   return tree.clear();
 }
 
-const std::vector<Position> SelectionStorageOctree::allPositions() const
+std::vector<Position> SelectionStorageOctree::allPositions() const
 {
   std::vector<Position> positions;
   for (const auto &p : tree)
