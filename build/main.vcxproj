@@ -706,6 +706,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_property_window.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_tab_widget.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_renderer.cpp" />
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\qt_vulkan_info.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\qrc_qml.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\qrc_style.cpp" />
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\qrc_images.cpp" />

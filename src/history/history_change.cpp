@@ -179,7 +179,7 @@ namespace MapHistory
     Map *map = getMap(mapView);
     Position fromPos = undoData.fromTile.position();
     Position toPos = undoData.toTile.position();
-    VME_LOG_D("Commit move: " << fromPos << " -> " << toPos);
+    // VME_LOG_D("Commit move: " << fromPos << " -> " << toPos);
 
     Tile &from = mapView.getOrCreateTile(fromPos);
     Tile &to = mapView.getOrCreateTile(toPos);

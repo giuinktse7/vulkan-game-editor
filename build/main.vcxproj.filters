@@ -49,6 +49,9 @@
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\qt_vulkan_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\qrc_qml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -113,6 +113,7 @@ public:
 
   virtual ScreenPosition mouseScreenPosInView() = 0;
   virtual VME::ModifierKeys modifiers() const = 0;
+  virtual void waitForDraw(std::function<void()> f) = 0;
 };
 
 /*

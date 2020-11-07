@@ -51,6 +51,11 @@ VME::ModifierKeys QtUtil::QtUiUtils::modifiers() const
   return enum_conversion::vmeModifierKeys(QApplication::keyboardModifiers());
 }
 
+void QtUtil::QtUiUtils::waitForDraw(std::function<void()> f)
+{
+  window->waitingForDraw.emplace(f);
+}
+
 QPixmap QtUtil::itemPixmap(uint16_t serverId)
 {
   if (!Items::items.validItemType(serverId))

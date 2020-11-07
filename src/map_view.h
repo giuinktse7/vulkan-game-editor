@@ -92,6 +92,10 @@ public:
 	void translateY(WorldPosition::value_type y);
 	void translateCamera(WorldPosition delta);
 	void translateZ(int z);
+	/**
+	 * Runs f once after the next draw.
+	 */
+	void waitForDraw(std::function<void()> f);
 
 	void zoom(int delta);
 

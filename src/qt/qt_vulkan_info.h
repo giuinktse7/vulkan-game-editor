@@ -7,7 +7,6 @@
 
 #include "../graphics/vulkan_helpers.h"
 
-#include "../gui/vulkan_window.h"
 #include "../util.h"
 
 #include "../map_view.h"
@@ -17,26 +16,16 @@ static const QMatrix4x4 clipCorrectionMatrix = QMatrix4x4(1.0f, 0.0f, 0.0f, 0.0f
                                                           0.0f, 0.0f, 0.5f, 0.5f,
                                                           0.0f, 0.0f, 0.0f, 1.0f);
 
+class VulkanWindow;
+
 class QtVulkanInfo : public VulkanInfo
 {
 public:
-  QtVulkanInfo(QVulkanWindow *window) : window(window) {}
+  QtVulkanInfo(VulkanWindow *window) : window(window) {}
 
-  void update() override
-  {
-    df = window->vulkanInstance()->deviceFunctions(device());
-    f = window->vulkanInstance()->functions();
-  }
-
-  void frameReady() override
-  {
-    window->frameReady();
-  }
-
-  void requestUpdate() override
-  {
-    window->requestUpdate();
-  }
+  void update() override;
+  void frameReady() override;
+  void requestUpdate() override;
 
   glm::mat4 projectionMatrix(MapView &mapView) const override
   {
@@ -57,22 +46,15 @@ public:
     return data;
   }
 
-  util::Size vulkanSwapChainImageSize() const override
-  {
-    QSize size = window->swapChainImageSize();
-    return util::Size(size.width(), size.height());
-  }
+  util::Size vulkanSwapChainImageSize() const override;
 
-  inline int maxConcurrentFrameCount() const override
-  {
-    return window->MAX_CONCURRENT_FRAME_COUNT;
-  }
+  int maxConcurrentFrameCount() const override;
 
-  inline VkDevice device() const override;
-  inline VkPhysicalDevice physicalDevice() const override;
-  inline VkCommandPool graphicsCommandPool() const override;
-  inline VkQueue graphicsQueue() const override;
-  inline uint32_t graphicsQueueFamilyIndex() const override;
+  VkDevice device() const override;
+  VkPhysicalDevice physicalDevice() const override;
+  VkCommandPool graphicsCommandPool() const override;
+  VkQueue graphicsQueue() const override;
+  uint32_t graphicsQueueFamilyIndex() const override;
 
   inline void vkCmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) override
   {
@@ -287,33 +269,8 @@ public:
   }
 
 private:
-  QVulkanWindow *window;
+  VulkanWindow *window;
 
   QVulkanDeviceFunctions *df;
   QVulkanFunctions *f;
 };
-
-inline VkDevice QtVulkanInfo::device() const
-{
-  return window->device();
-}
-
-inline VkPhysicalDevice QtVulkanInfo::physicalDevice() const
-{
-  return window->physicalDevice();
-}
-
-inline VkCommandPool QtVulkanInfo::graphicsCommandPool() const
-{
-  return window->graphicsCommandPool();
-}
-
-inline VkQueue QtVulkanInfo::graphicsQueue() const
-{
-  return window->graphicsQueue();
-}
-
-inline uint32_t QtVulkanInfo::graphicsQueueFamilyIndex() const
-{
-  return window->graphicsQueueFamilyIndex();
-}

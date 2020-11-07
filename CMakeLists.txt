@@ -226,6 +226,7 @@ set(MainSources
     src/gui/item_property_window.cpp
     src/gui/map_tab_widget.cpp
     src/map_renderer.cpp
+    src/qt/qt_vulkan_info.cpp
     ${QT_RESOURCES})
 
 add_executable(main ${MainSources})

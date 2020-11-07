@@ -237,7 +237,7 @@ void MapRenderer::drawMap()
     };
   }
 
-  bool movingSelection = view.selection().moving();
+  bool movingSelection = view.selection().isMoving();
 
   uint32_t flags = ItemDrawFlags::DrawNonSelected;
 
@@ -270,7 +270,7 @@ void MapRenderer::drawCurrentAction()
               // const auto [from, to] = mapView->getDragPoints().value();
               // drawSolidRectangle(SolidColor::Blue, from, to, 0.1f);
             }
-            else if (mapView->selection().moving())
+            else if (mapView->selection().isMoving())
             {
               drawMovingSelection();
             }
@@ -334,12 +334,10 @@ void MapRenderer::drawPreviewItem(uint16_t serverId, Position pos)
 
 void MapRenderer::drawMovingSelection()
 {
-  auto mapRect = mapView->getGameBoundingRect();
-
   const Selection &selection = mapView->selection();
+  Position moveDelta = selection.moveDelta.value();
 
-  Position moveDelta = selection.moveDelta();
-
+  auto mapRect = mapView->getGameBoundingRect();
   mapRect = mapRect.translate(-moveDelta.x, -moveDelta.y, {0, 0});
 
   // TODO: Use selection Z bounds instead of all floors

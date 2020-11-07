@@ -34,6 +34,8 @@ namespace QtUtil
 
     VME::ModifierKeys modifiers() const override;
 
+    void waitForDraw(std::function<void()> f) override;
+
   private:
     VulkanWindow *window;
   };

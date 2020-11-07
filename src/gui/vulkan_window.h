@@ -61,6 +61,8 @@ public:
   VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction);
   ~VulkanWindow();
 
+  std::queue<std::function<void()>> waitingForDraw;
+
   QtVulkanInfo vulkanInfo;
   QWidget *widget = nullptr;
   EditorAction &editorAction;

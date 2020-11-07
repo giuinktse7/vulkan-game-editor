@@ -742,7 +742,9 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
     _selection.moveOrigin.reset();
   }
 
-  requestDraw();
+void MapView::waitForDraw(std::function<void()> f)
+{
+  uiUtils->waitForDraw(f);
 }
 
 void MapView::escapeEvent()
