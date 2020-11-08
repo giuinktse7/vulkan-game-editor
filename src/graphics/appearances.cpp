@@ -78,37 +78,6 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
     VME_LOG("Loaded appearances.dat in " << start.elapsedMillis() << " ms.");
 }
 
-TextureAtlas *Appearances::getTextureAtlas(const uint32_t spriteId)
-{
-    size_t i = textureAtlasSpriteRanges.size() >> 1;
-
-    // Perform a binary search to find the Texture atlas containing the spriteId.
-
-    SpriteRange range = textureAtlasSpriteRanges[i];
-    size_t change = (textureAtlasSpriteRanges.size() >> 2) + (textureAtlasSpriteRanges.size() & 1);
-
-    while (change != 0)
-    {
-        if (range.start > spriteId)
-        {
-            i -= change;
-        }
-        else if (range.end < spriteId)
-        {
-            i += change;
-        }
-        else
-        {
-            return textureAtlases.at(range.end).get();
-        }
-
-        range = textureAtlasSpriteRanges[i];
-        change = (change >> 1) + (change & 1);
-    }
-
-    ABORT_PROGRAM("There is no sprite with ID " + std::to_string(spriteId));
-}
-
 void Appearances::loadTextureAtlases(const std::filesystem::path catalogContentsPath)
 {
     TimePoint start;
@@ -147,11 +116,12 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
             std::filesystem::path filePath(filename);
             std::filesystem::path absolutePath = basepath / filePath;
 
-            std::vector<uint8_t> buffer = File::read(absolutePath.string());
+            LZMACompressedBuffer compressedBuffer;
+            compressedBuffer.buffer = File::read(absolutePath.string());
 
             Appearances::textureAtlases[lastSpriteId] = std::make_unique<TextureAtlas>(
                 id,
-                std::move(buffer),
+                std::move(compressedBuffer),
                 TextureAtlasSize.width,
                 TextureAtlasSize.height,
                 firstSpriteId,
@@ -177,6 +147,80 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
         [](SpriteRange a, SpriteRange b) { return a.start < b.start; });
 
     VME_LOG("Loaded compressed texture atlases in " << start.elapsedMillis() << " ms.");
+}
+
+std::pair<bool, std::optional<std::string>> Appearances::dumpSpriteFiles(const std::filesystem::path &assetFolder, const std::filesystem::path &destinationFolder)
+{
+    namespace fs = std::filesystem;
+    bool validAssetDirectory = fs::exists(assetFolder) && fs::is_directory(assetFolder);
+    if (!validAssetDirectory)
+    {
+        std::ostringstream s;
+        s << "Invalid asset directory: " << assetFolder;
+        return {false, s.str()};
+    }
+
+    if (fs::exists(destinationFolder) && !fs::is_directory(destinationFolder))
+    {
+        std::ostringstream s;
+        s << "Destination folder must be a directory. Bad destination: " << destinationFolder;
+        return {false, s.str()};
+    }
+
+    if (!fs::exists(destinationFolder))
+    {
+        bool created = fs::create_directory(destinationFolder);
+        if (!created)
+        {
+            return {false, "Could not create destination folder."};
+        }
+    }
+
+    for (const auto &entry : fs::directory_iterator(assetFolder))
+    {
+        if (entry.path().extension() == ".lzma")
+        {
+            auto filepath = (destinationFolder / entry.path().stem());
+            auto file = File::read(entry.path());
+            auto decompressed = LZMA::decompress(std::move(file));
+
+            File::write(filepath, std::move(decompressed));
+            VME_LOG("Wrote " << filepath);
+        }
+    }
+
+    return {true, std::nullopt};
+}
+
+TextureAtlas *Appearances::getTextureAtlas(const uint32_t spriteId)
+{
+    size_t i = textureAtlasSpriteRanges.size() >> 1;
+
+    // Perform a binary search to find the Texture atlas containing the spriteId.
+
+    SpriteRange range = textureAtlasSpriteRanges[i];
+    size_t change = (textureAtlasSpriteRanges.size() >> 2) + (textureAtlasSpriteRanges.size() & 1);
+
+    while (change != 0)
+    {
+        if (range.start > spriteId)
+        {
+            i -= change;
+        }
+        else if (range.end < spriteId)
+        {
+            i += change;
+        }
+        else
+        {
+            return textureAtlases.at(range.end).get();
+        }
+
+        range = textureAtlasSpriteRanges[i];
+        change = (change >> 1) + (change & 1);
+    }
+
+    ABORT_PROGRAM("There is no sprite with ID " + std::to_string(spriteId));
 }
 
 SpriteInfo SpriteInfo::fromProtobufData(proto::SpriteInfo spriteInfo, bool cumulative)

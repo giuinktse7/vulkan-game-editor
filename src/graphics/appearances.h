@@ -364,6 +364,7 @@ class Appearances
 public:
   static void loadTextureAtlases(const std::filesystem::path catalogContentsPath);
   static void loadAppearanceData(const std::filesystem::path path);
+  static std::pair<bool, std::optional<std::string>> dumpSpriteFiles(const std::filesystem::path &assetFolder, const std::filesystem::path &destinationFolder);
 
   static bool hasObject(AppearanceId id)
   {

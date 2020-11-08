@@ -310,6 +310,10 @@ std::shared_ptr<Map> makeTestMap2()
 int runApp(int argc, char *argv[])
 {
     MainApplication app(argc, argv);
+
+    // Appearances::dumpSpriteFiles("D:\\Programs\\Tibia\\packages\\TibiaExternal\\assets", "./spritedump");
+    // return 0;
+
     app.loadStyleSheet(":/vme/style/qss/default.qss");
     app.loadGameData();
 

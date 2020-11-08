@@ -6,6 +6,16 @@
 
 #include "debug.h"
 
+std::vector<uint8_t> File::read(const char *filename)
+{
+	return File::read(std::string(filename));
+}
+
+std::vector<uint8_t> File::read(const std::filesystem::path &path)
+{
+	return File::read(path.string());
+}
+
 std::vector<uint8_t> File::read(const std::string &filepath)
 {
 	std::ifstream ifs(filepath, std::ios::binary | std::ios::ate);
@@ -30,4 +40,10 @@ std::vector<uint8_t> File::read(const std::string &filepath)
 		throw std::runtime_error("Could not read file: " + filepath);
 
 	return buffer;
+}
+
+void File::write(const std::filesystem::path &filepath, std::vector<uint8_t> &&buffer)
+{
+	std::ofstream outfile(filepath, std::ios::out | std::ios::binary);
+	outfile.write((const char *)buffer.data(), buffer.size());
 }
