@@ -230,7 +230,7 @@ void MapRenderer::drawMap()
   {
     auto [from, to] = mapView->getDragPoints().value();
     Region2D dragRegion(from.toPos(view.floor()), to.toPos(view.floor()));
-    uint16_t serverId = std::get<MouseAction::RawItem>(mapView->editorAction.action()).serverId;
+    uint32_t serverId = std::get<MouseAction::RawItem>(mapView->editorAction.action()).serverId;
 
     filter = [serverId, &dragRegion](const Position pos, const Item &item) {
       return !(item.serverId() == serverId && dragRegion.contains(pos));
@@ -313,7 +313,7 @@ void MapRenderer::drawCurrentAction()
       _currentFrame->mouseAction);
 }
 
-void MapRenderer::drawPreviewItem(uint16_t serverId, Position pos)
+void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
 {
   if (pos.x < 0 || pos.x > mapView->mapWidth() || pos.y < 0 || pos.y > mapView->mapHeight())
     return;
@@ -457,7 +457,7 @@ void MapRenderer::drawItem(const DrawInfo::Object &info)
   vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
 }
 
-void MapRenderer::drawOverlayItemType(uint16_t serverId, const WorldPosition position, const glm::vec4 color)
+void MapRenderer::drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color)
 {
   ItemType &itemType = *Items::items.getItemType(serverId);
   DrawInfo::OverlayObject info;

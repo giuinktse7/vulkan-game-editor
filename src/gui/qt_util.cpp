@@ -56,7 +56,7 @@ void QtUtil::QtUiUtils::waitForDraw(std::function<void()> f)
   window->waitingForDraw.emplace(f);
 }
 
-QPixmap QtUtil::itemPixmap(uint16_t serverId)
+QPixmap QtUtil::itemPixmap(uint32_t serverId)
 {
   if (!Items::items.validItemType(serverId))
   {

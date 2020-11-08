@@ -15,7 +15,7 @@ struct ItemTypeModelItem
   ItemType *itemType;
   QPixmap pixmap;
 
-  static ItemTypeModelItem fromServerId(uint16_t serverId);
+  static ItemTypeModelItem fromServerId(uint32_t serverId);
 };
 
 Q_DECLARE_METATYPE(ItemTypeModelItem);

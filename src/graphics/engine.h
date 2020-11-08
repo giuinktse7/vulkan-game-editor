@@ -3,23 +3,23 @@
 #include <vulkan/vulkan.h>
 
 #include <glm/glm.hpp>
-#include <unordered_set>
 #include <memory>
+#include <unordered_set>
 
-#include "device_manager.h"
-#include "texture.h"
-#include "resource-descriptor.h"
 #include "buffer.h"
-#include "vertex.h"
+#include "device_manager.h"
+#include "resource-descriptor.h"
 #include "swapchain.h"
+#include "texture.h"
+#include "vertex.h"
 
 #include "../camera.h"
-#include "../map_view.h"
-#include "../random.h"
-#include "../util.h"
-#include "../time_point.h"
-#include "../position.h"
 #include "../map_renderer.h"
+#include "../map_view.h"
+#include "../position.h"
+#include "../random.h"
+#include "../time_point.h"
+#include "../util.h"
 
 class Map;
 
@@ -243,7 +243,7 @@ public:
 	// 	return mapRenderer->getTextureDescriptorSetLayout();
 	// }
 
-	const std::optional<uint16_t> getSelectedServerId() const
+	const std::optional<uint32_t> getSelectedServerId() const
 	{
 		// TODO
 		return {};

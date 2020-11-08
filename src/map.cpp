@@ -51,7 +51,7 @@ void Map::moveSelectedItems(const Position source, const Position destination)
   }
 }
 
-void Map::addItem(const Position position, uint16_t serverId)
+void Map::addItem(const Position position, uint32_t serverId)
 {
   if (!Items::items.validItemType(serverId))
     return;

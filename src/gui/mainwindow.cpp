@@ -64,7 +64,7 @@ bool ItemListEventFilter::eventFilter(QObject *object, QEvent *event)
   return QObject::eventFilter(object, event);
 }
 
-QLabel *itemImage(uint16_t serverId)
+QLabel *itemImage(uint32_t serverId)
 {
   QLabel *container = new QLabel;
   container->setPixmap(QtUtil::itemPixmap(serverId));

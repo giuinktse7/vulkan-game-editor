@@ -45,7 +45,7 @@ public:
 
 	bool isTileEmpty(const Position pos) const;
 
-	void addItem(const Position position, uint16_t serverId);
+	void addItem(const Position position, uint32_t serverId);
 
 	void insertTile(Tile &&tile);
 	/*

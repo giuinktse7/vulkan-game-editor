@@ -63,7 +63,7 @@ struct MouseAction
 {
   struct RawItem
   {
-    uint16_t serverId = 100;
+    uint32_t serverId = 100;
     /*
       If true, the raw item is currently being drag in an area. Once released,
       each position of the area has an item of serverId added.
@@ -148,7 +148,7 @@ public:
     actionChanged.fire(_action);
   }
 
-  void setRawItem(uint16_t serverId) noexcept
+  void setRawItem(uint32_t serverId) noexcept
   {
     set(MouseAction::RawItem{serverId});
   }

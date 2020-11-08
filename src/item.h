@@ -36,7 +36,7 @@ public:
 
 	// Item(Item &&item) = default;
 
-	uint16_t serverId() const noexcept
+	uint32_t serverId() const noexcept
 	{
 		return itemType->id;
 	}

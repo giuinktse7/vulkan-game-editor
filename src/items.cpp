@@ -51,7 +51,7 @@ Items::Items()
 {
 }
 
-ItemType *Items::getItemType(uint16_t id)
+ItemType *Items::getItemType(uint32_t id)
 {
 	if (id >= itemTypes.size())
 		return nullptr;
@@ -59,7 +59,7 @@ ItemType *Items::getItemType(uint16_t id)
 	return &itemTypes.at(id);
 }
 
-bool Items::validItemType(uint16_t serverId) const
+bool Items::validItemType(uint32_t serverId) const
 {
 	if (serverId >= itemTypes.size())
 		return false;
@@ -67,9 +67,9 @@ bool Items::validItemType(uint16_t serverId) const
 	return itemTypes.at(serverId).appearance != nullptr;
 }
 
-ItemType *Items::getItemTypeByClientId(uint16_t clientId)
+ItemType *Items::getItemTypeByClientId(uint32_t clientId)
 {
-	uint16_t id = clientIdToServerId.at(clientId);
+	uint32_t id = clientIdToServerId.at(clientId);
 	if (id >= itemTypes.size())
 		return nullptr;
 
@@ -420,8 +420,8 @@ void Items::OtbReader::readNodes()
 		uint8_t groupByte = nextU8();
 		uint32_t flags = nextU32();
 
-		uint16_t serverId = 0;
-		uint16_t clientId = 0;
+		uint32_t serverId = 0;
+		uint32_t clientId = 0;
 		uint16_t speed = 0;
 		uint16_t lightLevel = 0;
 		uint16_t lightColor = 0;
@@ -445,21 +445,23 @@ void Items::OtbReader::readNodes()
 			{
 				DEBUG_ASSERT(attributeSize == sizeof(uint16_t), "Invalid attribute length.");
 				serverId = nextU16();
-				itemType = &items.itemTypes[serverId];
-				itemType->id = serverId;
 
 				// Not sure why we do this. It is possibly ids reserved for fluid types.
 				if (30000 < serverId && serverId < 30100)
 				{
 					serverId -= 30000;
 				}
+
+				itemType = &items.itemTypes[serverId];
+				itemType->id = static_cast<uint32_t>(serverId);
+
 				break;
 			}
 
 			case itemproperty_t::ITEM_ATTR_CLIENTID:
 			{
 				DEBUG_ASSERT(attributeSize == sizeof(uint16_t), "Invalid attribute length.");
-				clientId = nextU16();
+				clientId = static_cast<uint32_t>(nextU16());
 				break;
 			}
 
@@ -762,7 +764,7 @@ void Items::OtbReader::skipBytes(size_t bytes)
 	}
 }
 
-ItemType *Items::getNextValidItemType(uint16_t serverId)
+ItemType *Items::getNextValidItemType(uint32_t serverId)
 {
 	ABORT_PROGRAM("Unimplemented! validItemTypeStartId has to be populated.");
 	auto itemType = getItemType(serverId);
@@ -781,7 +783,7 @@ ItemType *Items::getNextValidItemType(uint16_t serverId)
 	return getItemType(*found);
 }
 
-ItemType *Items::getPreviousValidItemType(uint16_t serverId)
+ItemType *Items::getPreviousValidItemType(uint32_t serverId)
 {
 	ABORT_PROGRAM("Unimplemented! validItemTypeEndId has to be populated.");
 
@@ -806,7 +808,7 @@ OTB::VersionInfo Items::getOtbVersionInfo()
 	return otbVersionInfo;
 }
 
-const ItemType &Items::getItemIdByClientId(uint16_t spriteId) const
+const ItemType &Items::getItemIdByClientId(uint32_t clientId) const
 {
-	return itemTypes.at(clientIdToServerId.at(spriteId));
+	return itemTypes.at(clientIdToServerId.at(clientId));
 }

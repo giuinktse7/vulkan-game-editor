@@ -333,7 +333,7 @@ void MapView::removeItemsInRegion(const Position &from, const Position &to, std:
   history.endGroup(ActionGroupType::RemoveMapItem);
 }
 
-void MapView::fillRegion(const Position &from, const Position &to, uint16_t serverId)
+void MapView::fillRegion(const Position &from, const Position &to, uint32_t serverId)
 {
   history.startGroup(ActionGroupType::AddMapItem);
 

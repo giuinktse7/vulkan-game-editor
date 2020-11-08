@@ -36,13 +36,13 @@ public:
   bool reload();
   void clear();
 
-  ItemType *getItemType(uint16_t id);
-  bool validItemType(uint16_t serverId) const;
-  ItemType *getItemTypeByClientId(uint16_t clientId);
+  ItemType *getItemType(uint32_t id);
+  bool validItemType(uint32_t serverId) const;
+  ItemType *getItemTypeByClientId(uint32_t clientId);
 
-  const ItemType &getItemIdByClientId(uint16_t spriteId) const;
+  const ItemType &getItemIdByClientId(uint32_t clientId) const;
 
-  uint16_t getItemIdByName(const std::string &name);
+  uint32_t getItemIdByName(const std::string &name);
 
   size_t size() const
   {
@@ -51,8 +51,8 @@ public:
 
   static Items items;
 
-  ItemType *getNextValidItemType(uint16_t serverId);
-  ItemType *getPreviousValidItemType(uint16_t serverId);
+  ItemType *getNextValidItemType(uint32_t serverId);
+  ItemType *getPreviousValidItemType(uint32_t serverId);
 
   OTB::VersionInfo getOtbVersionInfo();
 
@@ -98,8 +98,8 @@ private:
   };
 
   Items();
-  using ServerID = uint16_t;
-  using ClientID = uint16_t;
+  using ServerID = uint32_t;
+  using ClientID = uint32_t;
   // MapID is used to filter out ItemTypes that do not have an appearance (e.g. invalid ItemTypes).
   // using MapID = uint16_t;
 

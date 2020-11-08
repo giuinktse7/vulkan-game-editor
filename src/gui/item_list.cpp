@@ -5,7 +5,7 @@
 
 #include "qt_util.h"
 
-ItemTypeModelItem ItemTypeModelItem::fromServerId(uint16_t serverId)
+ItemTypeModelItem ItemTypeModelItem::fromServerId(uint32_t serverId)
 {
   ItemTypeModelItem value;
   value.itemType = Items::items.getItemType(serverId);

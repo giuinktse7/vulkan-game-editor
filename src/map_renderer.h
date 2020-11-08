@@ -294,7 +294,7 @@ private:
 
 	void drawMap();
 	void drawCurrentAction();
-	void drawPreviewItem(uint16_t serverId, Position pos);
+	void drawPreviewItem(uint32_t serverId, Position pos);
 	void drawMovingSelection();
 	void drawRectangle(const Texture &texture, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
 	void drawSolidRectangle(const SolidColor color, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
@@ -315,7 +315,7 @@ private:
 								uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
 								const ItemPredicate &filter = nullptr);
 	void drawItem(const DrawInfo::Object &info);
-	void drawOverlayItemType(uint16_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
+	void drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
 
 	void drawRectangle(DrawInfo::Rectangle &info);
 

@@ -91,7 +91,7 @@ namespace QtUtil
     return VME::MouseEvent(pos, buttons, modifiers);
   }
 
-  QPixmap itemPixmap(uint16_t serverId);
+  QPixmap itemPixmap(uint32_t serverId);
   MainApplication *qtApp();
 } // namespace QtUtil
 
