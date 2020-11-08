@@ -25,7 +25,7 @@ namespace
   constexpr uint32_t OFFSET_OF_BMP_START_OFFSET = 10;
 } // namespace
 
-TextureAtlas::TextureAtlas(uint32_t id, CompressedBytes &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, uint32_t lastSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile)
+TextureAtlas::TextureAtlas(uint32_t id, LZMACompressedBuffer &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, uint32_t lastSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile)
     : sourceFile(sourceFile), width(width), height(height), firstSpriteId(firstSpriteId), lastSpriteId(lastSpriteId), _id(id), texture(std::move(buffer))
 {
   switch (spriteLayout)
@@ -172,14 +172,14 @@ Texture *TextureAtlas::getTexture()
 
 bool TextureAtlas::isCompressed() const
 {
-  return std::holds_alternative<CompressedBytes>(texture);
+  return std::holds_alternative<LZMACompressedBuffer>(texture);
 }
 
 void TextureAtlas::decompressTexture()
 {
-  DEBUG_ASSERT(std::holds_alternative<CompressedBytes>(texture), "Tried to decompress a TextureAtlas that does not contain CompressedBytes.");
+  DEBUG_ASSERT(std::holds_alternative<LZMACompressedBuffer>(texture), "Tried to decompress a TextureAtlas that does not contain CompressedBytes.");
 
-  std::vector<uint8_t> decompressed = LZMA::decompress(std::move(std::get<CompressedBytes>(this->texture)));
+  std::vector<uint8_t> decompressed = LZMA::decompress(std::move(std::get<LZMACompressedBuffer>(this->texture).buffer));
   validateBmp(decompressed);
 
   uint32_t offset;
@@ -191,7 +191,7 @@ void TextureAtlas::decompressTexture()
 
 Texture &TextureAtlas::getOrCreateTexture()
 {
-  if (std::holds_alternative<CompressedBytes>(texture))
+  if (std::holds_alternative<LZMACompressedBuffer>(texture))
   {
     decompressTexture();
   }
