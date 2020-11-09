@@ -189,7 +189,7 @@ void MainWindow::initializeUI()
 
       if (tile->firstSelectedItem()->count() != count)
       {
-        mapView.update(ActionGroupType::ModifyItem, [&mapView, &pos, count] {
+        mapView.update(TransactionType::ModifyItem, [&mapView, &pos, count] {
           mapView.modifyTile(pos, [count](Tile &tile) { tile.firstSelectedItem()->setCount(count); });
         });
 

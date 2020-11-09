@@ -194,7 +194,7 @@ private:
    * This is necessary for selectionChangedEvent to fire when comitting changes 
    * to the map.
    * 
-   * @see MapHistory::ActionGroup
+   * @see MapHistory::Transaction
    */
   bool _changed = false;
 

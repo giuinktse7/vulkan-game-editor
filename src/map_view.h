@@ -16,6 +16,7 @@
 #include "util.h"
 
 #include "history/history.h"
+#include "history/history_action.h"
 
 class MapHistory::ChangeItem;
 
@@ -56,7 +57,7 @@ public:
    * history.endGroup(groupType);
 	 *
 	 */
-	void update(ActionGroupType groupType, std::function<void()> f);
+	void update(TransactionType groupType, std::function<void()> f);
 
 	const Tile *getTile(const Position pos) const;
 	Tile &getOrCreateTile(const Position pos);
@@ -83,7 +84,6 @@ public:
 	void setUnderMouse(bool underMouse);
 	inline bool underMouse() const noexcept;
 
-	void setCameraPosition(Position position);
 	Position cameraPosition() const noexcept;
 	void setX(WorldPosition::value_type x);
 	void setY(WorldPosition::value_type y);
@@ -128,13 +128,8 @@ public:
 
 	float getZoomFactor() const noexcept;
 
-	const MapPosition worldToMapPos(WorldPosition worldPos) const;
-	const Position screenToMapPos(ScreenPosition screenPos) const;
-	const MapPosition windowToMapPos(ScreenPosition screenPos) const;
-	const uint32_t windowToMapPos(int windowPos) const;
-	const uint32_t mapToWorldPos(uint32_t mapPos) const;
-
 	void undo();
+	void redo();
 
 	MapRegion mapRegion() const;
 
@@ -163,9 +158,6 @@ public:
 	inline ScreenPosition mousePos() const;
 
 	inline static bool isInstance(MapView *pointer);
-
-	template <typename T>
-	T *currentAction() const;
 
 	bool draggingWithSubtract() const;
 

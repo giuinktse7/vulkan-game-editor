@@ -248,7 +248,14 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
   case Qt::Key_Z:
     if (e->modifiers() & Qt::CTRL)
     {
-      mapView->undo();
+      if (e->modifiers() & Qt::SHIFT)
+      {
+        mapView->redo();
+      }
+      else
+      {
+        mapView->undo();
+      }
     }
     break;
   default:
@@ -256,72 +263,6 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
     QVulkanWindow::keyPressEvent(e);
     break;
   }
-}
-
-MapView *VulkanWindow::getMapView() const
-{
-  return mapView.get();
-}
-
-util::Size VulkanWindow::vulkanSwapChainImageSize() const
-{
-  QSize size = swapChainImageSize();
-  return util::Size(size.width(), size.height());
-}
-
-/*
->>>>>>>>>>ContextMenu<<<<<<<<<<<
-*/
-
-VulkanWindow::ContextMenu::ContextMenu(VulkanWindow *window, QWidget *widget) : QMenu(widget)
-{
-}
-
-bool VulkanWindow::ContextMenu::selfClicked(QPoint pos) const
-{
-  return localGeometry().contains(pos);
-}
-
-void VulkanWindow::ContextMenu::mousePressEvent(QMouseEvent *event)
-{
-  event->ignore();
-  QMenu::mousePressEvent(event);
-
-  // // Propagate the click event to the map window if appropriate
-  // if (!selfClicked(event->pos()))
-  // {
-  //   auto posInWindow = window->mapFromGlobal(event->globalPos());
-  //   VME_LOG_D("posInWindow: " << posInWindow);
-  //   VME_LOG_D("Window geometry: " << window->geometry());
-  //   if (window->localGeometry().contains(posInWindow.x(), posInWindow.y()))
-  //   {
-  //     VME_LOG_D("In window");
-  //     window->mousePressEvent(event);
-  //   }
-  //   else
-  //   {
-  //     event->ignore();
-  //     window->lostFocus();
-  //   }
-  // }
-}
-
-QRect VulkanWindow::ContextMenu::localGeometry() const
-{
-  return QRect(QPoint(0, 0), QPoint(width(), height()));
-}
-QRect VulkanWindow::ContextMenu::relativeGeometry() const
-{
-  VME_LOG_D("relativeGeometry");
-  //  VME_LOG_D(parentWidget()->pos());
-  QPoint p(geometry().left(), geometry().top());
-
-  VME_LOG_D(parentWidget()->mapToGlobal(parentWidget()->pos()));
-
-  VME_LOG_D("Top left: " << p);
-  VME_LOG_D(mapToParent(p));
-
-  return geometry();
 }
 
 bool VulkanWindow::event(QEvent *event)
@@ -442,6 +383,17 @@ bool VulkanWindow::event(QEvent *event)
   return QVulkanWindow::event(event);
 }
 
+MapView *VulkanWindow::getMapView() const
+{
+  return mapView.get();
+}
+
+util::Size VulkanWindow::vulkanSwapChainImageSize() const
+{
+  QSize size = swapChainImageSize();
+  return util::Size(size.width(), size.height());
+}
+
 void VulkanWindow::updateVulkanInfo()
 {
   vulkanInfo.update();
@@ -449,9 +401,67 @@ void VulkanWindow::updateVulkanInfo()
 
 //>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>ContextMenu>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
+
+VulkanWindow::ContextMenu::ContextMenu(VulkanWindow *window, QWidget *widget) : QMenu(widget)
+{
+}
+
+bool VulkanWindow::ContextMenu::selfClicked(QPoint pos) const
+{
+  return localGeometry().contains(pos);
+}
+
+void VulkanWindow::ContextMenu::mousePressEvent(QMouseEvent *event)
+{
+  event->ignore();
+  QMenu::mousePressEvent(event);
+
+  // // Propagate the click event to the map window if appropriate
+  // if (!selfClicked(event->pos()))
+  // {
+  //   auto posInWindow = window->mapFromGlobal(event->globalPos());
+  //   VME_LOG_D("posInWindow: " << posInWindow);
+  //   VME_LOG_D("Window geometry: " << window->geometry());
+  //   if (window->localGeometry().contains(posInWindow.x(), posInWindow.y()))
+  //   {
+  //     VME_LOG_D("In window");
+  //     window->mousePressEvent(event);
+  //   }
+  //   else
+  //   {
+  //     event->ignore();
+  //     window->lostFocus();
+  //   }
+  // }
+}
+
+QRect VulkanWindow::ContextMenu::localGeometry() const
+{
+  return QRect(QPoint(0, 0), QPoint(width(), height()));
+}
+QRect VulkanWindow::ContextMenu::relativeGeometry() const
+{
+  VME_LOG_D("relativeGeometry");
+  //  VME_LOG_D(parentWidget()->pos());
+  QPoint p(geometry().left(), geometry().top());
+
+  VME_LOG_D(parentWidget()->mapToGlobal(parentWidget()->pos()));
+
+  VME_LOG_D("Top left: " << p);
+  VME_LOG_D(mapToParent(p));
+
+  return geometry();
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>Renderer>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>
+
 VulkanWindow::Renderer::Renderer(VulkanWindow &window)
     : window(window),
       renderer(window.vulkanInfo, window.mapView.get()) {}

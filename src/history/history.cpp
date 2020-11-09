@@ -2,20 +2,30 @@
 
 #include "../debug.h"
 #include "../map_view.h"
+#include "../util.h"
+
+namespace
+{
+  constexpr size_t TransactionsReserveAmount = util::power(2, 5);
+};
 
 namespace MapHistory
 {
-  History::History(MapView &mapView) : mapView(&mapView) {}
+  History::History(MapView &mapView)
+      : mapView(&mapView), insertionIndex(0)
+  {
+    transactions.reserve(TransactionsReserveAmount);
+  }
 
   Action *History::getLatestAction()
   {
-    if (!currentGroup.has_value() || currentGroup.value().actions.empty())
+    if (!currentTransaction.has_value() || currentTransaction.value().actions.empty())
     {
       return nullptr;
     }
     else
     {
-      return &currentGroup.value().actions.back();
+      return &currentTransaction.value().actions.back();
     }
   }
 
@@ -26,7 +36,7 @@ namespace MapHistory
 
   void History::commit(Action &&action)
   {
-    DEBUG_ASSERT(currentGroup.has_value(), "There is no current group.");
+    DEBUG_ASSERT(currentTransaction.has_value(), "There is no current transaction.");
 
     if (!action.committed)
     {
@@ -41,53 +51,76 @@ namespace MapHistory
     }
     else
     {
-      currentGroup.value().addAction(std::move(action));
+      currentTransaction.value().addAction(std::move(action));
     }
   }
 
-  bool History::currentGroupType(ActionGroupType groupType) const
+  bool History::currentTransactionType(TransactionType type) const
   {
-    return currentGroup.has_value() && currentGroup.value().groupType == groupType;
+    return currentTransaction.has_value() && currentTransaction.value().type == type;
   }
 
-  void History::startGroup(ActionGroupType groupType)
+  void History::beginTransaction(TransactionType type)
   {
-    DEBUG_ASSERT(currentGroup.has_value() == false, "The previous group was not ended.");
-    // VME_LOG_D("History::startGroup: " << groupType);
+    DEBUG_ASSERT(currentTransaction.has_value() == false, "The previous transaction was not ended.");
+    // VME_LOG_D("History::beginTransaction: " << type);
 
-    currentGroup.emplace(groupType);
+    currentTransaction.emplace(type);
   }
 
-  void History::endGroup(ActionGroupType groupType)
+  void History::endTransaction(TransactionType type)
   {
-    // VME_LOG_D("History::endGroup: " << groupType);
-    DEBUG_ASSERT(currentGroup.has_value(), "There is no current group to end.");
-    DEBUG_ASSERT(currentGroup.value().groupType == groupType, "The current group type differs from the passed in groupType.");
+    // VME_LOG_D("History::endTransaction: " << type);
+    DEBUG_ASSERT(currentTransaction.has_value(), "There is no current transaction to end.");
+    DEBUG_ASSERT(currentTransaction.value().type == type, "The current transaction type differs from the passed in transaction type.");
 
-    if (!currentGroup.value().empty())
+    if (!currentTransaction.value().empty())
     {
-      actionGroups.emplace(std::move(currentGroup.value()));
+      if (insertionIndex < transactions.size())
+      {
+        transactions.erase(transactions.begin() + insertionIndex, transactions.end());
+      }
+
+      transactions.emplace_back(std::move(currentTransaction.value()));
+      ++insertionIndex;
     }
 
-    currentGroup.reset();
+    currentTransaction.reset();
   }
 
-  void History::undoLast()
+  bool History::undo()
   {
-    if (currentGroup.has_value())
+    if (currentTransaction.has_value())
     {
-      endGroup(currentGroup.value().groupType);
+      endTransaction(currentTransaction.value().type);
     }
 
-    if (!actionGroups.empty())
+    if (transactions.empty())
     {
-      actionGroups.top().undo(*mapView);
-      actionGroups.pop();
+      return false;
+    }
+    else
+    {
+      transactions.at(insertionIndex - 1).undo(*mapView);
+      --insertionIndex;
+
+      return true;
     }
   }
 
-  bool History::hasCurrentGroup() const
+  bool History::redo()
   {
-    return currentGroup.has_value();
+    if (insertionIndex == transactions.size())
+      return false;
+
+    transactions.at(insertionIndex).redo(*mapView);
+    ++insertionIndex;
+
+    return true;
+  }
+
+  bool History::hasCurrentTransaction() const
+  {
+    return currentTransaction.has_value();
   }
 } // namespace MapHistory

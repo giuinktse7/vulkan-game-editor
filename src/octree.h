@@ -46,16 +46,6 @@ namespace vme
     class Tree;
     class Leaf;
 
-    template <typename T>
-    constexpr T power(T num, uint32_t pow)
-    {
-      T result = 1;
-      for (; pow >= 1; --pow)
-        result *= num;
-
-      return result;
-    }
-
     struct Cube
     {
       uint32_t width;
@@ -174,7 +164,7 @@ namespace vme
           --splitCounts.z;
         }
 
-        cacheInfo.count *= power(2, dimensions);
+        cacheInfo.count *= util::power(2, dimensions);
 
         if (splitCounts.x == 0 && cacheInfo.endXIndex == -1)
           cacheInfo.endXIndex = cacheInfo.count;
@@ -194,7 +184,7 @@ namespace vme
       if (cacheInfo.endZIndex != cacheInfo.count)
         --remainingDimensions;
 
-      cacheInfo.amountToInitialize = cacheInfo.count / power(2, remainingDimensions);
+      cacheInfo.amountToInitialize = cacheInfo.count / util::power(2, remainingDimensions);
       return cacheInfo;
     }
 

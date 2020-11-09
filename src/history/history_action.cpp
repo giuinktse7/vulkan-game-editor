@@ -9,25 +9,39 @@
 
 namespace MapHistory
 {
-  ActionGroup::ActionGroup(ActionGroupType groupType) : groupType(groupType) {}
+  Transaction::Transaction(TransactionType groupType) : type(groupType) {}
 
-  void ActionGroup::addAction(MapHistory::Action &&action)
+  Transaction::Transaction(Transaction &&other) noexcept
+      : type(other.type),
+        actions(std::move(other.actions))
+  {
+  }
+
+  Transaction &Transaction::operator=(Transaction &&other)
+  {
+    type = other.type;
+    actions = std::move(other.actions);
+
+    return *this;
+  }
+
+  void Transaction::addAction(MapHistory::Action &&action)
   {
     actions.push_back(std::move(action));
   }
 
-  void ActionGroup::commit(MapView &mapView)
+  void Transaction::commit(MapView &mapView)
   {
     for (auto &action : actions)
     {
-      DEBUG_ASSERT(!action.isCommitted(), "An action in an uncommitted ActionGroup should never be committed.");
+      DEBUG_ASSERT(!action.isCommitted(), "An action in an uncommitted Transaction should never be committed.");
       action.commit(mapView);
     }
 
     mapView.selection().update();
   }
 
-  void ActionGroup::undo(MapView &mapView)
+  void Transaction::undo(MapView &mapView)
   {
     for (auto it = actions.rbegin(); it != actions.rend(); ++it)
     {
@@ -36,6 +50,11 @@ namespace MapHistory
     }
 
     mapView.selection().update();
+  }
+
+  void Transaction::redo(MapView &mapView)
+  {
+    commit(mapView);
   }
 
   Action::Action(ActionType actionType, Change::DataTypes &&change)

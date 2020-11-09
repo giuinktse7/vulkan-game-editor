@@ -43,8 +43,20 @@ MapView::~MapView()
 
 void MapView::undo()
 {
-  history.undoLast();
-  requestDraw();
+  bool changed = history.undo();
+  if (changed)
+  {
+    requestDraw();
+  }
+}
+
+void MapView::redo()
+{
+  bool changed = history.redo();
+  if (changed)
+  {
+    requestDraw();
+  }
 }
 
 void MapView::selectTopItem(const Position pos)
@@ -120,13 +132,13 @@ void MapView::clearSelection()
 {
   if (!_selection.empty())
   {
-    history.startGroup(ActionGroupType::Selection);
+    history.beginTransaction(TransactionType::Selection);
 
     history.commit(
         ActionType::Selection,
         SelectMultiple(*this, _selection.allPositions(), false));
 
-    history.endGroup(ActionGroupType::Selection);
+    history.endTransaction(TransactionType::Selection);
   }
 }
 
@@ -139,11 +151,11 @@ void MapView::modifyTile(const Position pos, std::function<void(Tile &)> f)
   history.commit(ActionType::SetTile, SetTile(std::move(newTile)));
 }
 
-void MapView::update(ActionGroupType groupType, std::function<void()> f)
+void MapView::update(TransactionType type, std::function<void()> f)
 {
-  history.startGroup(groupType);
+  history.beginTransaction(type);
   f();
-  history.endGroup(groupType);
+  history.endTransaction(type);
 }
 
 void MapView::addItem(const Position &pos, uint16_t id)
@@ -233,7 +245,7 @@ void MapView::removeTile(const Position position)
 
 void MapView::finishMoveSelection()
 {
-  history.startGroup(ActionGroupType::MoveItems);
+  history.beginTransaction(TransactionType::MoveItems);
   {
     Action action(ActionType::Selection);
 
@@ -260,7 +272,7 @@ void MapView::finishMoveSelection()
 
     history.commit(std::move(action));
   }
-  history.endGroup(ActionGroupType::MoveItems);
+  history.endTransaction(TransactionType::MoveItems);
   _selection.endMove();
 
   VME_LOG_D("Finished move.");
@@ -273,7 +285,7 @@ void MapView::deleteSelectedItems()
     return;
   }
 
-  history.startGroup(ActionGroupType::RemoveMapItem);
+  history.beginTransaction(TransactionType::RemoveMapItem);
   for (const auto &pos : _selection)
   {
     const Tile &tile = *getTile(pos);
@@ -290,7 +302,7 @@ void MapView::deleteSelectedItems()
   // TODO: Save the selected item state
   _selection.clear();
 
-  history.endGroup(ActionGroupType::RemoveMapItem);
+  history.endTransaction(TransactionType::RemoveMapItem);
   requestDraw();
 }
 
@@ -310,39 +322,39 @@ void MapView::selectRegion(const Position &from, const Position &to)
   // Only commit a change if anything was dragged over
   if (!positions.empty())
   {
-    history.startGroup(ActionGroupType::Selection);
+    history.beginTransaction(TransactionType::Selection);
 
     Action action(ActionType::Selection);
 
     action.addChange(SelectMultiple(*this, std::move(positions)));
 
     history.commit(std::move(action));
-    history.endGroup(ActionGroupType::Selection);
+    history.endTransaction(TransactionType::Selection);
   }
 }
 
 void MapView::removeItemsInRegion(const Position &from, const Position &to, std::function<bool(const Item &)> predicate)
 {
-  history.startGroup(ActionGroupType::RemoveMapItem);
+  history.beginTransaction(TransactionType::RemoveMapItem);
   for (auto &tileLocation : this->_map->getRegion(from, to))
   {
     if (tileLocation.hasTile())
       removeItems(*tileLocation.tile(), predicate);
   }
 
-  history.endGroup(ActionGroupType::RemoveMapItem);
+  history.endTransaction(TransactionType::RemoveMapItem);
 }
 
 void MapView::fillRegion(const Position &from, const Position &to, uint32_t serverId)
 {
-  history.startGroup(ActionGroupType::AddMapItem);
+  history.beginTransaction(TransactionType::AddMapItem);
 
   for (const auto &pos : MapArea(from, to))
   {
     addItem(pos, serverId);
   }
 
-  history.endGroup(ActionGroupType::AddMapItem);
+  history.endTransaction(TransactionType::AddMapItem);
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -564,7 +576,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                 if (!topItem->selected)
                 {
                   clearSelection();
-                  update(ActionGroupType::Selection, [this, pos] {
+                  update(TransactionType::Selection, [this, pos] {
                     selectTopItem(pos);
                   });
                 }
@@ -591,16 +603,16 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                   const Tile *tile = getTile(pos);
                   if (tile)
                   {
-                    history.startGroup(ActionGroupType::RemoveMapItem);
+                    history.beginTransaction(TransactionType::RemoveMapItem);
                     removeItems(*tile, [action](const Item &item) { return item.serverId() == action.serverId; });
-                    history.endGroup(ActionGroupType::RemoveMapItem);
+                    history.endTransaction(TransactionType::RemoveMapItem);
                   }
                 }
                 else
                 {
-                  history.startGroup(ActionGroupType::AddMapItem);
+                  history.beginTransaction(TransactionType::AddMapItem);
                   addItem(pos, action.serverId);
-                  history.endGroup(ActionGroupType::AddMapItem);
+                  history.endTransaction(TransactionType::AddMapItem);
                 }
               }
             },
@@ -668,18 +680,18 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                 const Tile *tile = getTile(pos);
                 if (tile)
                 {
-                  history.startGroup(ActionGroupType::RemoveMapItem);
+                  history.beginTransaction(TransactionType::RemoveMapItem);
 
                   removeItems(*tile, [action](const Item &item) { return item.serverId() == action.serverId; });
-                  history.endGroup(ActionGroupType::RemoveMapItem);
+                  history.endTransaction(TransactionType::RemoveMapItem);
                 }
               }
               else
               {
-                history.startGroup(ActionGroupType::AddMapItem);
+                history.beginTransaction(TransactionType::AddMapItem);
                 for (const auto position : Position::bresenHams(to.toPos(floor()), pos))
                   addItem(position, action.serverId);
-                history.endGroup(ActionGroupType::AddMapItem);
+                history.endTransaction(TransactionType::AddMapItem);
               }
             },
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <optional>
+#include <vector>
+
 #include "history_action.h"
 
 namespace MapHistory
@@ -11,17 +14,26 @@ namespace MapHistory
     void commit(Action &&action);
     void commit(ActionType actionType, Change::DataTypes &&change);
 
-    void undoLast();
+    /**
+     * @return true if anything was undone, and false otherwise.
+     */
+    bool undo();
 
-    void startGroup(ActionGroupType groupType);
-    void endGroup(ActionGroupType groupType);
+    /**
+     * @return true if anything was redone, and false otherwise.
+     */
+    bool redo();
 
-    bool hasCurrentGroup() const;
-    bool currentGroupType(ActionGroupType groupType) const;
+    void beginTransaction(TransactionType groupType);
+    void endTransaction(TransactionType groupType);
+
+    bool hasCurrentTransaction() const;
+    bool currentTransactionType(TransactionType groupType) const;
 
   private:
-    std::optional<ActionGroup> currentGroup;
-    std::stack<ActionGroup> actionGroups;
+    std::optional<Transaction> currentTransaction;
+    std::vector<Transaction> transactions;
+    size_t insertionIndex;
 
     MapView *mapView;
 

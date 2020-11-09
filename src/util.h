@@ -216,6 +216,16 @@ namespace util
 		unsigned int v = static_cast<std::underlying_type_t<T>>(value);
 		return MultiplyDeBruijnBitPosition[((uint32_t)((v & -v) * 0x077CB531U)) >> 27];
 	}
+
+	template <typename T>
+	constexpr T power(T num, uint32_t pow)
+	{
+		T result = 1;
+		for (; pow >= 1; --pow)
+			result *= num;
+
+		return result;
+	}
 } // namespace util
 
 namespace vme

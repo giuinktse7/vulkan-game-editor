@@ -113,7 +113,7 @@ namespace vme
       if (cacheInfo.endZIndex != 0)
         ++exponent;
 
-      int offset = power(2, exponent);
+      int offset = util::power(2, exponent);
 
       root._childCount = offset;
 
@@ -424,7 +424,7 @@ namespace vme
 
       DEBUG_ASSERT(splits != 0, "Update bounding box for leaf node? Bug?");
 
-      int amountOfChildren = power(2, splits);
+      int amountOfChildren = util::power(2, splits);
       for (int i = 0; i < amountOfChildren; ++i)
       {
         HeapNode *node = nullptr;

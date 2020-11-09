@@ -15,7 +15,7 @@ class Change;
 class MapView;
 class EditorHistory;
 
-enum class ActionGroupType
+enum class TransactionType
 {
   Selection,
   AddMapItem,
@@ -86,19 +86,18 @@ namespace MapHistory
   Represents a group of actions. One undo command will undo all the actions in
   the group.
 */
-  class ActionGroup
+  class Transaction
   {
   public:
-    ActionGroup(ActionGroupType groupType);
+    Transaction(TransactionType type);
     void addAction(MapHistory::Action &&action);
 
-    ActionGroup(ActionGroup &&other) noexcept
-        : groupType(other.groupType),
-          actions(std::move(other.actions))
-    {
-    }
+    Transaction(Transaction &&other) noexcept;
+    Transaction &operator=(Transaction &&other);
 
     void commit(MapView &mapView);
+
+    void redo(MapView &mapView);
     void undo(MapView &mapView);
 
     inline bool empty() const noexcept
@@ -106,7 +105,7 @@ namespace MapHistory
       return actions.empty();
     }
 
-    ActionGroupType groupType;
+    TransactionType type;
 
   private:
     friend class MapHistory::History;
@@ -114,33 +113,33 @@ namespace MapHistory
   };
 } // namespace MapHistory
 
-inline std::ostringstream stringify(const ActionGroupType &type)
+inline std::ostringstream stringify(const TransactionType &type)
 {
   std::ostringstream s;
 
   switch (type)
   {
-  case ActionGroupType::Selection:
-    s << "ActionGroupType::Selection";
+  case TransactionType::Selection:
+    s << "TransactionType::Selection";
     break;
-  case ActionGroupType::AddMapItem:
-    s << "ActionGroupType::AddMapItem";
+  case TransactionType::AddMapItem:
+    s << "TransactionType::AddMapItem";
     break;
-  case ActionGroupType::RemoveMapItem:
-    s << "ActionGroupType::RemoveMapItem";
+  case TransactionType::RemoveMapItem:
+    s << "TransactionType::RemoveMapItem";
     break;
-  case ActionGroupType::MoveItems:
-    s << "ActionGroupType::MoveItems";
+  case TransactionType::MoveItems:
+    s << "TransactionType::MoveItems";
     break;
   default:
-    s << "Unknown ActionGroupType: " << to_underlying(type);
+    s << "Unknown TransactionType: " << to_underlying(type);
     break;
   }
 
   return s;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const ActionGroupType &type)
+inline std::ostream &operator<<(std::ostream &os, const TransactionType &type)
 {
   os << stringify(type).str();
   return os;
