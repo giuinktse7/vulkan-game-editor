@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -37,6 +38,8 @@ inline constexpr auto to_underlying(E e) noexcept
 
 namespace util
 {
+	std::string unicodePath(std::filesystem::path path);
+
 	template <typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type * = nullptr>
 	bool powerOf2(T value)
 	{

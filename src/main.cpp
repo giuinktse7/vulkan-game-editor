@@ -171,20 +171,54 @@ void loadTextures()
     VME_LOG_D("loadTextures() ms: " << start.elapsedMillis());
 }
 
-void MainApplication::loadGameData()
+std::pair<bool, std::optional<std::string>> MainApplication::loadGameData(std::string version)
 {
+    std::filesystem::path path("data/clients/" / std::filesystem::path(version));
+
+    std::filesystem::path configPath = path / "config.json";
+    if (!std::filesystem::exists(configPath))
+    {
+        std::stringstream s;
+        s << "Could not locate config file for client version " << version << ". You need to add a config.json file at: " + std::filesystem::absolute(configPath).u8string() << std::endl;
+        return {false, s.str()};
+    }
+
+    std::ifstream fileStream(configPath);
+    nlohmann::json config;
+    fileStream >> config;
+    fileStream.close();
+
+    auto assetFolderEntry = config.find("assetFolder");
+    if (assetFolderEntry == config.end())
+    {
+        std::stringstream s;
+        s << "key 'assetFolder' is required in config.json. You can add it here: " << util::unicodePath(configPath) << std::endl;
+        return {false, s.str()};
+    }
+
+    std::filesystem::path assetFolder = assetFolderEntry.value().get<std::string>();
+
+    // Paths are okay, begin loading files
+
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     g_ecs.registerComponent<ItemAnimationComponent>();
     g_ecs.registerSystem<ItemAnimationSystem>();
 
-    Appearances::loadTextureAtlases("data/catalog-content.json");
-    Appearances::loadAppearanceData("data/appearances.dat");
+    Appearances::loadTextureAtlases(path / "catalog-content.json", assetFolder);
+    Appearances::loadAppearanceData(path / "appearances.dat");
 
-    Items::loadFromOtb("data/items.otb");
-    Items::loadFromXml("data/items.xml");
+    Items::loadFromOtb(path / "items.otb");
+    Items::loadFromXml(path / "items.xml");
+    Items::loadMissingItemTypes();
+
+    VME_LOG_D("Items: " << Items::items.size());
+    VME_LOG_D("Client ids: " << Appearances::objectCount());
+    VME_LOG_D("Highest client id: " << Items::items.highestClientId);
 
     // loadTextures();
+
+    return {true, std::nullopt};
 }
 
 MainApplication::MainApplication(int &argc, char **argv) : QApplication(argc, argv)

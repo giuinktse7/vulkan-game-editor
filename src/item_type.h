@@ -275,7 +275,7 @@ public:
 
   // CombatType_t combatType = COMBAT_NONE;
   uint16_t rotateTo = 0;
-  uint16_t volume;
+  uint16_t volume = 0;
 
   uint16_t transformToOnUse[2] = {0, 0};
   uint16_t transformToFree = 0;

@@ -78,7 +78,7 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
     VME_LOG("Loaded appearances.dat in " << start.elapsedMillis() << " ms.");
 }
 
-void Appearances::loadTextureAtlases(const std::filesystem::path catalogContentsPath)
+void Appearances::loadTextureAtlases(const std::filesystem::path catalogContentsPath, const std::filesystem::path assetFolder)
 {
     TimePoint start;
 
@@ -93,8 +93,6 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
     nlohmann::json catalogJson;
     fileStream >> catalogJson;
     fileStream.close();
-
-    std::filesystem::path basepath("C:/Users/giuin/AppData/Local/Tibia11/packages/Tibia/assets");
 
     textureAtlasSpriteRanges.reserve(5000);
 
@@ -114,7 +112,7 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
             // uint8_t area = entry.at("area");
 
             std::filesystem::path filePath(filename);
-            std::filesystem::path absolutePath = basepath / filePath;
+            std::filesystem::path absolutePath = assetFolder / filePath;
 
             LZMACompressedBuffer compressedBuffer;
             compressedBuffer.buffer = File::read(absolutePath.string());
@@ -234,6 +232,16 @@ TextureAtlas *Appearances::getTextureAtlas(const uint32_t spriteId)
     }
 
     ABORT_PROGRAM("There is no sprite with ID " + std::to_string(spriteId));
+}
+
+size_t Appearances::textureAtlasCount()
+{
+    return textureAtlases.size();
+}
+
+size_t Appearances::objectCount()
+{
+    return Appearances::_objects.size();
 }
 
 SpriteInfo SpriteInfo::fromProtobufData(proto::SpriteInfo spriteInfo, bool cumulative)

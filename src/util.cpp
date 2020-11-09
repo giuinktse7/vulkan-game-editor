@@ -24,6 +24,11 @@ std::vector<const char *> getRequiredExtensions()
   return v;
 }
 
+std::string util::unicodePath(std::filesystem::path path)
+{
+  return std::filesystem::absolute(path).u8string();
+}
+
 void to_lower_str(std::string &source)
 {
   std::transform(source.begin(), source.end(), source.begin(), tolower);

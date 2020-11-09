@@ -2,8 +2,11 @@
 
 #include <QApplication>
 #include <QVulkanInstance>
+#include <filesystem>
+#include <optional>
 #include <stdarg.h>
 #include <string>
+#include <utility>
 
 #include "gui/vulkan_window.h"
 
@@ -13,7 +16,7 @@ public:
     MainApplication(int &argc, char **argv);
 
     void setVulkanWindow(VulkanWindow *window);
-    void loadGameData();
+    std::pair<bool, std::optional<std::string>> loadGameData(std::string version);
 
 public slots:
     void onApplicationStateChanged(Qt::ApplicationState state);

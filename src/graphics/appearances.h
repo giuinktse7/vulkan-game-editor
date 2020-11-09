@@ -362,18 +362,20 @@ class Appearances
   using AppearanceId = uint32_t;
 
 public:
-  static void loadTextureAtlases(const std::filesystem::path catalogContentsPath);
+  static void loadTextureAtlases(const std::filesystem::path catalogContentsPath, const std::filesystem::path assetFolder);
+
   static void loadAppearanceData(const std::filesystem::path path);
   static std::pair<bool, std::optional<std::string>> dumpSpriteFiles(const std::filesystem::path &assetFolder, const std::filesystem::path &destinationFolder);
 
+  inline static const vme_unordered_map<AppearanceId, Appearance> &objects();
   static bool hasObject(AppearanceId id)
   {
-    return objects.find(id) != objects.end();
+    return _objects.find(id) != _objects.end();
   }
 
   static Appearance &getObjectById(AppearanceId id)
   {
-    return objects.at(id);
+    return _objects.at(id);
   }
 
   static TextureAtlas *getTextureAtlas(const uint32_t spriteId);
@@ -381,6 +383,7 @@ public:
   static bool isLoaded;
 
   static size_t textureAtlasCount();
+  static size_t objectCount();
 
 private:
   static vme_unordered_map<AppearanceId, Appearance> objects;
@@ -400,6 +403,11 @@ private:
 	*/
   static std::vector<SpriteRange> textureAtlasSpriteRanges;
 };
+
+inline const vme_unordered_map<uint32_t, Appearance> &Appearances::objects()
+{
+  return _objects;
+}
 
 inline std::ostream &operator<<(std::ostream &os, const HookType &hookType)
 {
