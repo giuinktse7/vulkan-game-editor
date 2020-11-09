@@ -63,7 +63,7 @@ QPixmap QtUtil::itemPixmap(uint32_t serverId)
     return blackSquarePixmap();
   }
 
-  ItemType *t = Items::items.getItemType(serverId);
+  ItemType *t = Items::items.getItemTypeByServerId(serverId);
   auto &info = t->getTextureInfoUnNormalized();
 
   TextureAtlas *atlas = info.atlas;

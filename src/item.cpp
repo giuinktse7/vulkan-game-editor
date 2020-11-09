@@ -21,7 +21,7 @@ namespace
 }
 
 Item::Item(ItemTypeId itemTypeId)
-		: itemType(Items::items.getItemType(itemTypeId))
+		: itemType(Items::items.getItemTypeByServerId(itemTypeId))
 {
 	registerEntity();
 }

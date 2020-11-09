@@ -8,7 +8,7 @@
 ItemTypeModelItem ItemTypeModelItem::fromServerId(uint32_t serverId)
 {
   ItemTypeModelItem value;
-  value.itemType = Items::items.getItemType(serverId);
+  value.itemType = Items::items.getItemTypeByServerId(serverId);
   value.pixmap = QtUtil::itemPixmap(serverId);
 
   return value;

@@ -51,12 +51,12 @@ Items::Items()
 {
 }
 
-ItemType *Items::getItemType(uint32_t id)
+ItemType *Items::getItemTypeByServerId(uint32_t serverId)
 {
-	if (id >= itemTypes.size())
+	if (serverId >= itemTypes.size())
 		return nullptr;
 
-	return &itemTypes.at(id);
+	return &itemTypes.at(serverId);
 }
 
 bool Items::validItemType(uint32_t serverId) const
@@ -128,7 +128,7 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 	if (!Items::items.validItemType(id) || reservedForFluid(id, DefaultVersion))
 		return false;
 
-	ItemType &it = *Items::items.getItemType(id);
+	ItemType &it = *Items::items.getItemTypeByServerId(id);
 
 	it.name = itemNode.attribute("name").as_string();
 	it.editorsuffix = itemNode.attribute("editorsuffix").as_string();
@@ -823,45 +823,6 @@ void Items::OtbReader::skipBytes(size_t bytes)
 		++cursor;
 		--bytes;
 	}
-}
-
-ItemType *Items::getNextValidItemType(uint32_t serverId)
-{
-	ABORT_PROGRAM("Unimplemented! validItemTypeStartId has to be populated.");
-	auto itemType = getItemType(serverId);
-	if (itemType->isValid())
-	{
-		return itemType;
-	}
-
-	auto found = std::lower_bound(validItemTypeStartId.begin(), validItemTypeStartId.end(), serverId);
-
-	if (found == validItemTypeStartId.end())
-	{
-		return nullptr;
-	}
-
-	return getItemType(*found);
-}
-
-ItemType *Items::getPreviousValidItemType(uint32_t serverId)
-{
-	ABORT_PROGRAM("Unimplemented! validItemTypeEndId has to be populated.");
-
-	auto itemType = getItemType(serverId);
-	if (itemType->isValid())
-	{
-		return itemType;
-	}
-
-	auto found = std::lower_bound(validItemTypeEndId.begin(), validItemTypeEndId.end(), serverId);
-
-	if (found == validItemTypeEndId.begin())
-	{
-		return nullptr;
-	}
-
-	return getItemType(*(--found));
 }
 
 OTB::VersionInfo Items::getOtbVersionInfo()

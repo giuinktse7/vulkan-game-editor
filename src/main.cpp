@@ -162,7 +162,7 @@ void loadTextures()
     TimePoint start;
     for (uint16_t id = 100; id < Items::items.size(); ++id)
     {
-        ItemType *t = Items::items.getItemType(id);
+        ItemType *t = Items::items.getItemTypeByServerId(id);
 
         if (!Items::items.validItemType(id))
             continue;
@@ -351,7 +351,11 @@ std::shared_ptr<Map> makeTestMap2()
                 VME_LOG_D("Added all " << (39768 - 37733) << " items.");
                 return map;
             }
-            map->addItem(Position(x, y, 7), i);
+            if (Items::items.getItemTypeByServerId(i)->isCorpse())
+                --x;
+            else
+                map->addItem(Position(x, y, 7), i);
+
             ++i;
         }
     }
@@ -374,8 +378,8 @@ int runApp(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    // ItemType *t = Items::items.getItemType(7759);
-    // ItemType *t = Items::items.getItemType(5901);
+    // ItemType *t = Items::items.getItemTypeByServerId(7759);
+    // ItemType *t = Items::items.getItemTypeByServerId(5901);
     // auto atlases = t->atlases();
     // for (const auto id : t->appearance->getSpriteInfo().spriteIds)
     // {

@@ -46,7 +46,7 @@ public:
   bool reload();
   void clear();
 
-  ItemType *getItemType(uint32_t id);
+  ItemType *getItemTypeByServerId(uint32_t serverId);
   bool validItemType(uint32_t serverId) const;
   ItemType *getItemTypeByClientId(uint32_t clientId);
 
@@ -108,8 +108,6 @@ private:
   Items();
   using ServerID = uint32_t;
   using ClientID = uint32_t;
-  // MapID is used to filter out ItemTypes that do not have an appearance (e.g. invalid ItemTypes).
-  // using MapID = uint16_t;
 
   static bool loadItemFromXml(pugi::xml_node itemNode, uint32_t id);
 
@@ -121,11 +119,6 @@ private:
   std::unordered_multimap<std::string, ServerID> nameToItems;
 
   OTB::VersionInfo otbVersionInfo;
-
-  /* Used to hide invalid item ids */
-  // TODO Neither are used right now
-  std::set<uint16_t> validItemTypeStartId;
-  std::set<uint16_t> validItemTypeEndId;
 };
 
 inline std::ostringstream stringify(const itemproperty_t &property)

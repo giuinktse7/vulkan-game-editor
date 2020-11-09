@@ -318,7 +318,7 @@ void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
   if (pos.x < 0 || pos.x > mapView->mapWidth() || pos.y < 0 || pos.y > mapView->mapHeight())
     return;
 
-  ItemType &selectedItemType = *Items::items.getItemType(serverId);
+  ItemType &selectedItemType = *Items::items.getItemTypeByServerId(serverId);
 
   auto info = itemTypeDrawInfo(selectedItemType, pos, ItemDrawFlags::Ghost);
 
@@ -334,8 +334,7 @@ void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
 
 void MapRenderer::drawMovingSelection()
 {
-  const Selection &selection = mapView->selection();
-  Position moveDelta = selection.moveDelta.value();
+  Position moveDelta = mapView->editorAction.as<MouseAction::Select>()->moveDelta.value();
 
   auto mapRect = mapView->getGameBoundingRect();
   mapRect = mapRect.translate(-moveDelta.x, -moveDelta.y, {0, 0});
@@ -459,7 +458,7 @@ void MapRenderer::drawItem(const DrawInfo::Object &info)
 
 void MapRenderer::drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color)
 {
-  ItemType &itemType = *Items::items.getItemType(serverId);
+  ItemType &itemType = *Items::items.getItemTypeByServerId(serverId);
   DrawInfo::OverlayObject info;
   info.appearance = itemType.appearance;
   info.position = position;
