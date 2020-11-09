@@ -28,7 +28,7 @@ namespace MapHistory
     void endTransaction(TransactionType groupType);
 
     bool hasCurrentTransaction() const;
-    bool currentTransactionType(TransactionType groupType) const;
+    bool hasCurrentTransactionType(TransactionType groupType) const;
 
   private:
     std::optional<Transaction> currentTransaction;

@@ -55,7 +55,7 @@ namespace MapHistory
     }
   }
 
-  bool History::currentTransactionType(TransactionType type) const
+  bool History::hasCurrentTransactionType(TransactionType type) const
   {
     return currentTransaction.has_value() && currentTransaction.value().type == type;
   }
@@ -95,7 +95,7 @@ namespace MapHistory
       endTransaction(currentTransaction.value().type);
     }
 
-    if (transactions.empty())
+    if (insertionIndex == 0)
     {
       return false;
     }
