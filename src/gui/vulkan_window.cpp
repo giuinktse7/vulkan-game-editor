@@ -198,6 +198,14 @@ void VulkanWindow::keyReleaseEvent(QKeyEvent *e)
     }
     break;
   }
+  case Qt::Key_Control:
+  {
+    auto rawItem = mapView->editorAction.as<MouseAction::RawItem>();
+    if (rawItem)
+    {
+      rawItem->erase = false;
+    }
+  }
   }
 }
 
@@ -258,6 +266,15 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
       }
     }
     break;
+  case Qt::Key_Control:
+  {
+    auto rawItemAction = mapView->editorAction.as<MouseAction::RawItem>();
+    if (rawItemAction)
+    {
+      rawItemAction->erase = true;
+    }
+    break;
+  }
   default:
     e->ignore();
     QVulkanWindow::keyPressEvent(e);
