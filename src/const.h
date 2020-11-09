@@ -11,6 +11,25 @@ constexpr int GROUND_FLOOR = 7;
 constexpr int MapTileSize = 32;
 constexpr int SpriteSize = 32;
 
+enum class ItemSlot : uint8_t
+{
+	TwoHanded = 0,
+	Head = 1,
+	Amulet = 2,
+	Container = 3,
+	Torso = 4,
+	Shield = 5,
+	OneHanded = 6,
+	Legs = 7,
+	Feet = 8,
+	Ring = 9,
+	// Ammunition slot
+	Belt = 10,
+	StoreInbox = 11,
+	ShoppingBag = 12,
+	None = UINT8_MAX
+};
+
 enum class SpriteLayout
 {
 	ONE_BY_ONE = 0,

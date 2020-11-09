@@ -96,7 +96,7 @@ namespace vme
           initialState(mapSize, cacheInfo),
           cacheInfo(cacheInfo),
           cachedNodes(cacheInfo.amountToInitialize),
-          cachedHeapNodes(cacheInfo.count - cacheInfo.amountToInitialize + 8)
+          cachedHeapNodes(static_cast<size_t>(cacheInfo.count) - cacheInfo.amountToInitialize + 8)
     {
       initializeCache();
     }
@@ -430,7 +430,7 @@ namespace vme
         HeapNode *node = nullptr;
         if (childCacheOffset >= tree.cacheInfo.amountToInitialize) // Get from HeapNode cache
         {
-          auto &ptr = tree.cachedHeapNodes.at(childCacheOffset + i - tree.cacheInfo.amountToInitialize);
+          auto &ptr = tree.cachedHeapNodes.at(static_cast<size_t>(childCacheOffset) + i - tree.cacheInfo.amountToInitialize);
           if (ptr)
           {
             node = ptr.get();
@@ -438,7 +438,7 @@ namespace vme
         }
         else // Get from CachedNode cache
         {
-          node = &tree.cachedNodes.at(childCacheOffset + i);
+          node = &tree.cachedNodes.at(static_cast<size_t>(childCacheOffset) + i);
         }
 
         if (node)
@@ -1229,7 +1229,8 @@ namespace vme
     //>>>>Tree::leafIterator>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    Tree::leafIterator::leafIterator() {}
+
+    Tree::leafIterator::leafIterator(): tree(nullptr), value(nullptr) {}
     Tree::leafIterator::leafIterator(const Tree *tree) : tree(tree), value(nullptr)
     {
       if (tree->root.empty())

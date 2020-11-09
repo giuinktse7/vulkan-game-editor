@@ -174,7 +174,7 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 			}
 			else if (typeValue == "magicfield")
 			{
-				it.group = itemgroup_t::MagicField;
+				it.group = ItemType::Group::MagicField;
 				it.type = ItemTypes_t::MagicField;
 			}
 			else if (typeValue == "teleport")
@@ -338,6 +338,11 @@ void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t flags)
 {
 	auto &appearance = Appearances::getObjectById(itemType.clientId);
 
+	if (appearance.hasFlag(AppearanceFlag::Ground))
+	{
+		itemType.group = ItemType::Group::Ground;
+	}
+
 	// TODO: Check for items that do not have matching flags in .otb and appearances.dat
 	itemType.blockSolid = hasBitSet(FLAG_BLOCK_SOLID, flags);
 	itemType.blockProjectile = hasBitSet(FLAG_BLOCK_PROJECTILE, flags) || appearance.hasFlag(AppearanceFlag::Unsight);
@@ -348,6 +353,9 @@ void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t flags)
 	itemType.moveable = hasBitSet(FLAG_MOVEABLE, flags) || !appearance.hasFlag(AppearanceFlag::Unmove);
 	// itemType.stackable = hasBitSet(FLAG_STACKABLE, flags);
 	itemType.stackable = appearance.hasFlag(AppearanceFlag::Cumulative);
+	itemType.maxTextLen = std::max(
+			static_cast<uint32_t>(itemType.maxTextLen),
+			std::max(appearance.flagData.maxTextLength, appearance.flagData.maxTextLengthOnce));
 
 	itemType.alwaysOnTop = hasBitSet(FLAG_ALWAYSONTOP, flags);
 	itemType.isVertical = hasBitSet(FLAG_VERTICAL, flags);
@@ -387,7 +395,7 @@ void Items::loadMissingItemTypes()
 			++items.highestServerId;
 			uint32_t serverId = items.highestServerId;
 
-			VME_LOG("Loading object id " << clientId << " as server id " << serverId);
+			// VME_LOG("Loading object id " << clientId << " as server id " << serverId);
 
 			if (serverId >= items.size())
 			{
@@ -490,12 +498,12 @@ void Items::OtbReader::readNodes()
 
 		// ItemType itemType;
 
-		uint8_t groupByte = nextU8();
+		uint8_t itemGroup = nextU8();
 		uint32_t flags = nextU32();
 
 		uint32_t serverId = 0;
 		uint32_t clientId = 0;
-		uint16_t speed = 0;
+		// uint16_t speed = 0;
 		uint16_t lightLevel = 0;
 		uint16_t lightColor = 0;
 		uint16_t alwaysOnTopOrder = 0;
@@ -554,8 +562,11 @@ void Items::OtbReader::readNodes()
 
 			case itemproperty_t::ITEM_ATTR_SPEED:
 			{
+				// Speed is added through the appearance protobuf file so we can just
+				// ignore it here.
 				DEBUG_ASSERT(attributeSize == sizeof(uint16_t), "Invalid attribute length.");
-				speed = nextU16();
+				skipBytes(attributeSize);
+				// speed = nextU16();
 				break;
 			}
 
@@ -642,12 +653,12 @@ void Items::OtbReader::readNodes()
 
 		items.clientIdToServerId.emplace(clientId, serverId);
 
-		itemType->group = static_cast<itemgroup_t>(groupByte);
+		itemType->group = static_cast<ItemType::Group>(itemGroup);
 		itemType->type = serverItemType(itemType->group);
 
 		itemType->id = serverId;
 		itemType->clientId = clientId;
-		itemType->speed = speed;
+		// itemType->speed = speed;
 		itemType->lightLevel = static_cast<uint8_t>(lightLevel);
 		itemType->lightColor = static_cast<uint8_t>(lightColor);
 		itemType->alwaysOnTopOrder = alwaysOnTopOrder;
@@ -676,28 +687,28 @@ bool Items::OtbReader::nodeEnd() const
 	return endCursor;
 }
 
-ItemTypes_t Items::OtbReader::serverItemType(itemgroup_t group)
+ItemTypes_t Items::OtbReader::serverItemType(ItemType::Group itemGroup)
 {
-	switch (group)
+	switch (itemGroup)
 	{
-	case itemgroup_t::Container:
+	case ItemType::Group::Container:
 		return ItemTypes_t::Container;
-	case itemgroup_t::Door:
+	case ItemType::Group::Door:
 		return ItemTypes_t::Door;
 		break;
-	case itemgroup_t::MagicField:
+	case ItemType::Group::MagicField:
 		//not used
 		return ItemTypes_t::MagicField;
 		break;
-	case itemgroup_t::Teleport:
+	case ItemType::Group::Teleport:
 		//not used
 		return ItemTypes_t::Teleport;
-	case itemgroup_t::None:
-	case itemgroup_t::Ground:
-	case itemgroup_t::Splash:
-	case itemgroup_t::Fluid:
-	case itemgroup_t::Charges:
-	case itemgroup_t::Deprecated:
+	case ItemType::Group::None:
+	case ItemType::Group::Ground:
+	case ItemType::Group::Splash:
+	case ItemType::Group::Fluid:
+	case ItemType::Group::Charges:
+	case ItemType::Group::Deprecated:
 		return ItemTypes_t::None;
 	default:
 		VME_LOG("Unknown item type!");

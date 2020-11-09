@@ -357,7 +357,7 @@ Appearance::Appearance(proto::Appearance protobufAppearance)
         }                             \
     } while (false)
 
-        ADD_FLAG_UTIL(bank, AppearanceFlag::Bank);
+        ADD_FLAG_UTIL(bank, AppearanceFlag::Ground);
         ADD_FLAG_UTIL(clip, AppearanceFlag::GroundBorder);
         ADD_FLAG_UTIL(bottom, AppearanceFlag::Bottom);
         ADD_FLAG_UTIL(top, AppearanceFlag::Top);
@@ -404,8 +404,8 @@ Appearance::Appearance(proto::Appearance protobufAppearance)
 
 #undef ADD_FLAG_UTIL
 
-        if (hasFlag(AppearanceFlag::Bank))
-            flagData.bankWaypoints = flags.bank().waypoints();
+        if (hasFlag(AppearanceFlag::Ground))
+            flagData.groundSpeed = flags.bank().waypoints();
         if (hasFlag(AppearanceFlag::Write))
             flagData.maxTextLength = flags.write().max_text_length();
         if (hasFlag(AppearanceFlag::WriteOnce))
@@ -438,7 +438,12 @@ Appearance::Appearance(proto::Appearance protobufAppearance)
         if (hasFlag(AppearanceFlag::Lenshelp))
             flagData.lenshelp = flags.lenshelp().id();
         if (hasFlag(AppearanceFlag::Clothes))
-            flagData.itemSlot = flags.clothes().slot();
+        {
+            uint32_t slot = flags.clothes().slot();
+            DEBUG_ASSERT(slot <= 12, "Invalid slot");
+            flagData.itemSlot = static_cast<ItemSlot>(slot);
+        }
+
         if (hasFlag(AppearanceFlag::DefaultAction))
         {
             switch (flags.default_action().action())

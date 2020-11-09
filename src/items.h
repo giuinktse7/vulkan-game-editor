@@ -102,7 +102,7 @@ private:
     std::string nextString(size_t length);
     void skipBytes(size_t bytes);
 
-    ItemTypes_t serverItemType(itemgroup_t byte);
+    ItemTypes_t serverItemType(ItemType::Group itemGroup);
   };
 
   Items();

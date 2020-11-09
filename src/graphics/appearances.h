@@ -103,10 +103,14 @@ enum class AppearancePlayerDefaultAction
 /*
   These are values that represent how the client can interact with the appearance.
   They are mostly used for objects.
+  See: https://tibia.fandom.com/wiki/Appearances.dat
 */
 enum class AppearanceFlag : uint64_t
 {
-  Bank = 1ULL << 0,
+  /**
+   * This is called 'Bank' in the protobuf file.
+   */
+  Ground = 1ULL << 0,
   /*
     If the appearance is ground but only partially covers it, for example the
     top tile where 2 different grounds are displayed.
@@ -325,7 +329,8 @@ public:
   // Appearance flag data
   struct AppearanceFlagData
   {
-    uint32_t bankWaypoints;
+    // This is stored as bank.waypoints in the appearance protobuf file.
+    uint32_t groundSpeed;
     uint32_t maxTextLength;
     uint32_t maxTextLengthOnce;
     // Represents the radius of the emitted light.
@@ -334,7 +339,7 @@ public:
     int elevation = 0;
     uint32_t shiftX = 0;
     uint32_t shiftY = 0;
-    uint32_t itemSlot;
+    ItemSlot itemSlot = ItemSlot::None;
     AppearancePlayerDefaultAction defaultAction = AppearancePlayerDefaultAction::None;
     struct
     {
@@ -488,14 +493,13 @@ inline std::ostringstream stringify(const Appearance::AppearanceFlagData &flags)
     }                                                        \
   } while (false)
 
-  WRITE_INT(bankWaypoints);
+  WRITE_INT(groundSpeed);
   WRITE_INT(maxTextLength);
   WRITE_INT(maxTextLengthOnce);
   WRITE_INT(brightness);
   WRITE_INT(color);
   WRITE_INT(shiftX);
   WRITE_INT(shiftY);
-  WRITE_INT(itemSlot);
   WRITE_INT(market.tradeAsId);
   WRITE_INT(market.showAsId);
   WRITE_INT(market.minLevel);
@@ -511,6 +515,7 @@ inline std::ostringstream stringify(const Appearance::AppearanceFlagData &flags)
   {
     s << "\thookDirection: " << flags.hookDirection << std::endl;
   }
+  s << "\titemSlot: " << to_underlying(flags.itemSlot);
 
   s << "}" << std::endl;
 

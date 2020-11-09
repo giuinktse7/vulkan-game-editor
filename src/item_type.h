@@ -27,46 +27,6 @@ enum FloorChange
   None
 };
 
-enum SlotPositionBits : uint32_t
-{
-  SLOTP_WHEREEVER = 0xFFFFFFFF,
-  SLOTP_HEAD = 1 << 0,
-  SLOTP_NECKLACE = 1 << 1,
-  SLOTP_BACKPACK = 1 << 2,
-  SLOTP_ARMOR = 1 << 3,
-  SLOTP_RIGHT = 1 << 4,
-  SLOTP_LEFT = 1 << 5,
-  SLOTP_LEGS = 1 << 6,
-  SLOTP_FEET = 1 << 7,
-  SLOTP_RING = 1 << 8,
-  SLOTP_AMMO = 1 << 9,
-  SLOTP_DEPOT = 1 << 10,
-  SLOTP_TWO_HAND = 1 << 11,
-  SLOTP_HAND = (SLOTP_LEFT | SLOTP_RIGHT)
-};
-
-enum class itemgroup_t
-{
-  None,
-
-  Ground,
-  Container,
-  Weapon,     //deprecated
-  Ammunition, //deprecated
-  Armor,      //deprecated
-  Charges,
-  Teleport,   //deprecated
-  MagicField, //deprecated
-  Writable,   //deprecated
-  Key,        //deprecated
-  Splash,
-  Fluid,
-  Door, //deprecated
-  Deprecated,
-
-  ITEM_GROUP_LAST
-};
-
 enum itemproperty_t : uint8_t
 {
   ITEM_ATTR_FIRST = 0x10,
@@ -176,6 +136,28 @@ enum class StackableSpriteType : uint8_t
 class ItemType
 {
 public:
+  enum class Group
+  {
+    None,
+
+    Ground,
+    Container,
+    Weapon,     //deprecated
+    Ammunition, //deprecated
+    Armor,      //deprecated
+    Charges,
+    Teleport,   //deprecated
+    MagicField, //deprecated
+    Writable,   //deprecated
+    Key,        //deprecated
+    Splash,
+    Fluid,
+    Door, //deprecated
+    Deprecated,
+
+    ITEM_GROUP_LAST
+  };
+
   ItemType() {}
   //non-copyable
   ItemType(const ItemType &other) = delete;
@@ -251,7 +233,7 @@ public:
   std::string runeSpellName;
   std::string vocationString;
 
-  itemgroup_t group = itemgroup_t::None;
+  ItemType::Group group = ItemType::Group::None;
   ItemTypes_t type = ItemTypes_t::None;
 
   uint32_t weight = 0;
@@ -285,8 +267,6 @@ public:
   uint16_t transformEquipTo = 0;
   uint16_t transformDeEquipTo = 0;
   uint16_t maxItems = 8;
-  uint16_t slotPosition = SLOTP_HAND;
-  uint16_t speed = 0;
   uint16_t wareId = 0;
 
   MagicEffectClasses magicEffect = CONST_ME_NONE;
@@ -338,11 +318,24 @@ public:
 
   Appearance *appearance = nullptr;
 
+  inline uint32_t speed() const noexcept;
+  inline ItemSlot inventorySlot() const noexcept;
+
 private:
   std::array<TextureAtlas *, CACHED_TEXTURE_ATLAS_AMOUNT> _atlases = {};
 
   void cacheTextureAtlas(uint32_t spriteId);
 };
+
+inline uint32_t ItemType::speed() const noexcept
+{
+  return isGroundTile() ? appearance->flagData.groundSpeed : 0;
+}
+
+inline ItemSlot ItemType::inventorySlot() const noexcept
+{
+  return appearance->flagData.itemSlot;
+}
 
 inline bool ItemType::hasFlag(AppearanceFlag flag) const noexcept
 {

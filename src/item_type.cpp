@@ -166,19 +166,19 @@ std::string ItemType::getPluralName() const
 
 bool ItemType::isGroundTile() const noexcept
 {
-  return group == itemgroup_t::Ground;
+  return group == ItemType::Group::Ground;
 }
 bool ItemType::isContainer() const noexcept
 {
-  return group == itemgroup_t::Container;
+  return group == ItemType::Group::Container;
 }
 bool ItemType::isSplash() const noexcept
 {
-  return group == itemgroup_t::Splash;
+  return group == ItemType::Group::Splash;
 }
 bool ItemType::isFluidContainer() const noexcept
 {
-  return group == itemgroup_t::Fluid;
+  return group == ItemType::Group::Fluid;
 }
 
 bool ItemType::isDoor() const noexcept
