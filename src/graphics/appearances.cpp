@@ -194,6 +194,19 @@ std::pair<bool, std::optional<std::string>> Appearances::dumpSpriteFiles(const s
 
 TextureAtlas *Appearances::getTextureAtlas(const uint32_t spriteId)
 {
+    // TODO Checks #1 and #2 should not be necessary. This algorithm can
+    // TODO  probably be improved, but it works for now.
+
+    // TODO #1
+    if (textureAtlasSpriteRanges.back().start <= spriteId)
+    {
+        auto end = textureAtlasSpriteRanges.back().end;
+        DEBUG_ASSERT(spriteId <= end, "spriteId is not present in any texture atlas.");
+
+        return textureAtlases.at(end).get();
+    }
+
+    size_t last = textureAtlasSpriteRanges.size() - 1;
     size_t i = textureAtlasSpriteRanges.size() >> 1;
 
     // Perform a binary search to find the Texture atlas containing the spriteId.
@@ -215,8 +228,8 @@ TextureAtlas *Appearances::getTextureAtlas(const uint32_t spriteId)
         {
             return textureAtlases.at(range.end).get();
         }
-
-        range = textureAtlasSpriteRanges[i];
+        // TODO #2 (The call to std::min())
+        range = textureAtlasSpriteRanges[std::min(i, last)];
         change = (change >> 1) + (change & 1);
     }
 
