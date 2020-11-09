@@ -82,8 +82,11 @@ namespace MapHistory
   {
     DEBUG_ASSERT(committed, "Attempted to undo an action that is not committed.");
 
-    for (auto &change : changes)
+    for (auto it = changes.rbegin(); it != changes.rend(); ++it)
+    {
+      auto &change = *it;
       change.undo(mapView);
+    }
 
     committed = false;
   }
