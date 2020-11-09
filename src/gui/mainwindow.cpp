@@ -105,6 +105,7 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
 
   MouseAction::RawItem action;
   action.serverId = 6217;
+  action.serverId = 2148;
   editorAction.set(action);
 
   // Create the widget
@@ -125,7 +126,6 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
   connect(widget,
           &MapViewWidget::selectionChangedEvent,
           [this, vulkanWindow]() {
-            // VME_LOG_D("selectionChangedEvent");
             auto mapView = vulkanWindow->getMapView();
             if (mapView->singleTileSelected())
             {
@@ -303,7 +303,13 @@ QListView *MainWindow::createItemPalette()
   itemPalette->setItemDelegate(new Delegate(this));
 
   std::vector<ItemTypeModelItem> data;
-  for (int i = 37733; i < 39768; ++i)
+
+  uint32_t from = 100;
+  uint32_t to = 500;
+
+  // uint32_t from = 37733;
+  // uint32_t to = 39768;
+  for (int i = from; i < to; ++i)
   {
     if (Items::items.validItemType(i))
     {

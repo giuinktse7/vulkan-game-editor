@@ -172,7 +172,6 @@ void MapViewWidget::mapViewDrawRequested()
 
 void MapViewWidget::selectionChanged()
 {
-  VME_LOG_D("MapViewWidget::selectionChanged");
   emit selectionChangedEvent();
 }
 

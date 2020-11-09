@@ -76,7 +76,6 @@ public:
 	void deselectTile(const Position &pos);
 
 	void clearSelection();
-	bool hasSelectionMoveOrigin() const;
 	bool isEmpty(const Position position) const;
 
 	bool singleTileSelected() const;
@@ -99,7 +98,7 @@ public:
 
 	void zoom(int delta);
 
-	void finishMoveSelection();
+	void moveSelection(const Position &offset);
 
 	void addItem(const Position &position, uint16_t id);
 
@@ -199,7 +198,7 @@ private:
 	 * NOTE: Do not use this for anything except to request a draw from mouseEvent.
 	 * Use mousePos() instead.
 	 */
-	Position _drawRequestMousePos;
+	Position _previousMouseGamePos;
 
 	bool _underMouse = false;
 
@@ -210,6 +209,8 @@ private:
 	void fillRegion(const Position &from, const Position &to, uint32_t serverId);
 
 	void cameraViewportChangedEvent();
+
+	void setPanOffset(MouseAction::Pan &action, const ScreenPosition &offset);
 };
 
 inline const Map *MapView::map() const noexcept

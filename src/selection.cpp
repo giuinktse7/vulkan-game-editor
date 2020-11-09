@@ -5,8 +5,7 @@
 #include "map_view.h"
 
 Selection::Selection(MapView &mapView, Map &map)
-    : outOfBoundCorrection(0, 0, 0),
-      map(map),
+    : map(map),
       mapView(mapView),
       storage(map.size())
 {
@@ -31,32 +30,10 @@ void Selection::deselect(const std::vector<Position> &positions)
   }
 }
 
-void Selection::updateMoveDelta(const Position &currentPosition)
+bool Selection::isMoving() const noexcept
 {
-  DEBUG_ASSERT(moveOrigin.has_value(), "There must be a move origin.");
-  DEBUG_ASSERT(!empty(), "The selection should never be empty here.");
-
-  auto delta = currentPosition - moveOrigin.value();
-  if (delta == moveDelta)
-    return;
-
-  auto topLeftCorrection = storage.getCorner(0, 0, 0).value() + delta;
-  delta.x -= std::min(topLeftCorrection.x, 0);
-  delta.y -= std::min(topLeftCorrection.y, 0);
-
-  moveDelta = delta;
-}
-
-void Selection::startMove(const Position &origin)
-{
-  moveOrigin = origin;
-  moveDelta = PositionConstants::Zero;
-}
-
-void Selection::endMove()
-{
-  moveOrigin.reset();
-  moveDelta.reset();
+  auto select = mapView.editorAction.as<MouseAction::Select>();
+  return select && select->isMoving();
 }
 
 bool Selection::contains(const Position pos) const
@@ -116,14 +93,9 @@ bool Selection::empty() const
   return storage.empty();
 }
 
-bool Selection::isMoving() const
-{
-  return moveOrigin.has_value() && moveDelta.has_value() && moveDelta.value() != PositionConstants::Zero;
-}
-
 void Selection::update()
 {
-  storage.update();
+  // storage.update();
 
   if (_changed)
   {

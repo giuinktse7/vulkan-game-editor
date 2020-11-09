@@ -127,21 +127,6 @@ class Selection
 public:
   Selection(MapView &mapView, Map &map);
   bool blockDeselect = false;
-  std::optional<Position> moveOrigin = {};
-  std::optional<Position> moveDelta = {};
-
-  void startMove(const Position &origin);
-  void endMove();
-
-  /*
-    When the mouse goes outside of the map dimensions, this correction is used to
-    stop the selection from also going out of bounds.
-  */
-  Position outOfBoundCorrection;
-
-  // TODO
-
-  bool isMoving() const;
 
   vme::octree::Tree::iterator begin()
   {
@@ -152,11 +137,11 @@ public:
     return storage.end();
   }
 
-  void updateMoveDelta(const Position &currentPosition);
-
+  
   std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
   std::optional<Position> getCorner(int positiveX, int positiveY, int positiveZ) const noexcept;
 
+  bool isMoving() const noexcept;
   bool contains(const Position pos) const;
 
   void select(const Position pos);
