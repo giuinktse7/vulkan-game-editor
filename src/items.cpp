@@ -334,6 +334,79 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 	return true;
 }
 
+void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t flags)
+{
+	auto &appearance = Appearances::getObjectById(itemType.clientId);
+
+	// TODO: Check for items that do not have matching flags in .otb and appearances.dat
+	itemType.blockSolid = hasBitSet(FLAG_BLOCK_SOLID, flags);
+	itemType.blockProjectile = hasBitSet(FLAG_BLOCK_PROJECTILE, flags) || appearance.hasFlag(AppearanceFlag::Unsight);
+	itemType.blockPathFind = hasBitSet(FLAG_BLOCK_PATHFIND, flags);
+	itemType.hasHeight = hasBitSet(FLAG_HAS_HEIGHT, flags) || appearance.hasFlag(AppearanceFlag::Height);
+	itemType.useable = hasBitSet(FLAG_USEABLE, flags) || appearance.hasFlag(AppearanceFlag::Usable);
+	itemType.pickupable = hasBitSet(FLAG_PICKUPABLE, flags) || appearance.hasFlag(AppearanceFlag::Take);
+	itemType.moveable = hasBitSet(FLAG_MOVEABLE, flags) || !appearance.hasFlag(AppearanceFlag::Unmove);
+	// itemType.stackable = hasBitSet(FLAG_STACKABLE, flags);
+	itemType.stackable = appearance.hasFlag(AppearanceFlag::Cumulative);
+
+	itemType.alwaysOnTop = hasBitSet(FLAG_ALWAYSONTOP, flags);
+	itemType.isVertical = hasBitSet(FLAG_VERTICAL, flags);
+	itemType.isHorizontal = hasBitSet(FLAG_HORIZONTAL, flags);
+	itemType.isHangable = hasBitSet(FLAG_HANGABLE, flags) || appearance.hasFlag(AppearanceFlag::Hang);
+	itemType.allowDistRead = hasBitSet(FLAG_ALLOWDISTREAD, flags);
+	itemType.rotatable = hasBitSet(FLAG_ROTATABLE, flags) || appearance.hasFlag(AppearanceFlag::Rotate);
+	itemType.canReadText = hasBitSet(FLAG_READABLE, flags) || appearance.hasFlag(AppearanceFlag::Write) || appearance.hasFlag(AppearanceFlag::WriteOnce);
+	itemType.lookThrough = hasBitSet(FLAG_LOOKTHROUGH, flags);
+	itemType.isAnimation = hasBitSet(FLAG_ANIMATION, flags);
+	// iType->walkStack = !hasBitSet(FLAG_FULLTILE, flags);
+	itemType.forceUse = hasBitSet(FLAG_FORCEUSE, flags) || appearance.hasFlag(AppearanceFlag::Forceuse);
+
+	itemType.appearance = &appearance;
+	itemType.cacheTextureAtlases();
+	if (appearance.name.size() != 0)
+	{
+		itemType.name = appearance.name;
+	}
+}
+
+void Items::loadMissingItemTypes()
+{
+	Items &items = Items::items;
+	std::vector<uint32_t> clientIds;
+	for (const auto &pair : Appearances::objects())
+	{
+		clientIds.emplace_back(pair.first);
+	}
+
+	std::sort(clientIds.begin(), clientIds.end());
+
+	for (const auto clientId : clientIds)
+	{
+		if (items.clientIdToServerId.find(clientId) == items.clientIdToServerId.end())
+		{
+			++items.highestServerId;
+			uint32_t serverId = items.highestServerId;
+
+			VME_LOG("Loading object id " << clientId << " as server id " << serverId);
+
+			if (serverId >= items.size())
+			{
+				size_t arbitrarySizeIncrease = 2000;
+				size_t newSize = std::max<size_t>(static_cast<size_t>(serverId), items.size()) + arbitrarySizeIncrease;
+				items.itemTypes.resize(newSize);
+			}
+
+			ItemType &itemType = items.itemTypes.at(serverId);
+			itemType.id = serverId;
+			itemType.clientId = clientId;
+
+			items.clientIdToServerId.emplace(clientId, serverId);
+
+			items.addItemTypeAppearanceData(itemType, 0);
+		}
+	}
+}
+
 void Items::loadFromOtb(const std::filesystem::path path)
 {
 	OtbReader reader(path.string());
@@ -402,11 +475,11 @@ Items::OtbReader::OtbReader(const std::string &file)
 	cursor = buffer.begin();
 	path = file;
 }
-
 void Items::OtbReader::readNodes()
 {
 	Items &items = Items::items;
 	items.itemTypes.resize(ReservedItemCount);
+	// items.itemTypes.reserve(ReservedItemCount);
 	items.clientIdToServerId.reserve(ReservedItemCount);
 	items.nameToItems.reserve(ReservedItemCount);
 
@@ -450,6 +523,20 @@ void Items::OtbReader::readNodes()
 				if (30000 < serverId && serverId < 30100)
 				{
 					serverId -= 30000;
+				}
+
+				items.highestServerId = std::max(items.highestServerId, serverId);
+
+				if (serverId >= items.size())
+				{
+					items.itemTypes.resize(static_cast<size_t>(serverId) + 1);
+				}
+
+				if (serverId >= items.size())
+				{
+					size_t arbitrarySizeIncrease = 2000;
+					size_t newSize = std::max<size_t>(static_cast<size_t>(serverId), items.size()) + arbitrarySizeIncrease;
+					items.itemTypes.resize(newSize);
 				}
 
 				itemType = &items.itemTypes[serverId];
@@ -553,65 +640,28 @@ void Items::OtbReader::readNodes()
 			ABORT_PROGRAM("Encountered item type without a server ID.");
 		}
 
+		items.clientIdToServerId.emplace(clientId, serverId);
+
 		itemType->group = static_cast<itemgroup_t>(groupByte);
 		itemType->type = serverItemType(itemType->group);
 
 		itemType->id = serverId;
 		itemType->clientId = clientId;
 		itemType->speed = speed;
-		itemType->lightLevel = lightLevel;
-		itemType->lightColor = lightColor;
+		itemType->lightLevel = static_cast<uint8_t>(lightLevel);
+		itemType->lightColor = static_cast<uint8_t>(lightColor);
 		itemType->alwaysOnTopOrder = alwaysOnTopOrder;
 		itemType->wareId = wareId;
-
 		itemType->maxTextLen = maxTextLen;
-
-		items.clientIdToServerId.emplace(itemType->clientId, itemType->id);
-
-		if (itemType->id >= items.size())
-		{
-			size_t arbitrarySizeIncrease = 2000;
-			size_t newSize = std::max<size_t>(static_cast<size_t>(itemType->id), items.size()) + arbitrarySizeIncrease;
-			items.itemTypes.resize(newSize);
-		}
 
 		if (Appearances::hasObject(itemType->clientId))
 		{
-			auto &appearance = Appearances::getObjectById(itemType->clientId);
+			items.addItemTypeAppearanceData(*itemType, flags);
+		}
 
-			// TODO: Check for items that do not have matching flags in .otb and appearances.dat
-			itemType->blockSolid = hasBitSet(FLAG_BLOCK_SOLID, flags);
-			itemType->blockProjectile = hasBitSet(FLAG_BLOCK_PROJECTILE, flags);
-			itemType->blockPathFind = hasBitSet(FLAG_BLOCK_PATHFIND, flags);
-			itemType->hasHeight = hasBitSet(FLAG_HAS_HEIGHT, flags);
-			itemType->useable = hasBitSet(FLAG_USEABLE, flags) || appearance.hasFlag(AppearanceFlag::Usable);
-			itemType->pickupable = hasBitSet(FLAG_PICKUPABLE, flags);
-			itemType->moveable = hasBitSet(FLAG_MOVEABLE, flags);
-			// itemType->stackable = hasBitSet(FLAG_STACKABLE, flags);
-			itemType->stackable = appearance.hasFlag(AppearanceFlag::Cumulative);
-
-			itemType->alwaysOnTop = hasBitSet(FLAG_ALWAYSONTOP, flags);
-			itemType->isVertical = hasBitSet(FLAG_VERTICAL, flags);
-			itemType->isHorizontal = hasBitSet(FLAG_HORIZONTAL, flags);
-			itemType->isHangable = hasBitSet(FLAG_HANGABLE, flags);
-			itemType->allowDistRead = hasBitSet(FLAG_ALLOWDISTREAD, flags);
-			itemType->rotatable = hasBitSet(FLAG_ROTATABLE, flags);
-			itemType->canReadText = hasBitSet(FLAG_READABLE, flags);
-			itemType->lookThrough = hasBitSet(FLAG_LOOKTHROUGH, flags);
-			itemType->isAnimation = hasBitSet(FLAG_ANIMATION, flags);
-			// iType->walkStack = !hasBitSet(FLAG_FULLTILE, flags);
-			itemType->forceUse = hasBitSet(FLAG_FORCEUSE, flags);
-
-			itemType->appearance = &appearance;
-			itemType->cacheTextureAtlases();
-			if (appearance.name.size() != 0)
-			{
-				itemType->name = appearance.name;
-			}
-			if (itemType->name.size() == 0 && name.size() != 0)
-			{
-				itemType->name = std::move(name);
-			}
+		if (itemType->name.size() == 0 && name.size() != 0)
+		{
+			itemType->name = std::move(name);
 		}
 
 		[[maybe_unused]] uint8_t endToken = nextU8();

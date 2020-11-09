@@ -19,7 +19,6 @@ BorderLayout::BorderLayout(int spacing)
 
 BorderLayout::~BorderLayout()
 {
-  QLayoutItem *l;
   for (auto &wrapper : items)
     delete wrapper.item;
 }

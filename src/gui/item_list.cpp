@@ -23,7 +23,7 @@ void QtItemTypeModel::populate(std::vector<QtItemTypeModel::Item> &&items)
 
 int QtItemTypeModel::rowCount(const QModelIndex &parent) const
 {
-  return _data.size();
+  return static_cast<int>(_data.size());
 }
 
 QVariant QtItemTypeModel::data(const QModelIndex &index, int role) const

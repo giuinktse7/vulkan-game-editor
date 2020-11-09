@@ -303,7 +303,7 @@ QListView *MainWindow::createItemPalette()
   itemPalette->setItemDelegate(new Delegate(this));
 
   std::vector<ItemTypeModelItem> data;
-  for (int i = 2000; i < 2500; ++i)
+  for (int i = 37733; i < 39768; ++i)
   {
     if (Items::items.validItemType(i))
     {

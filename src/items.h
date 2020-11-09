@@ -30,8 +30,18 @@ enum class ItemTypes_t;
 class Items
 {
 public:
+  static Items items;
+
+  uint32_t highestClientId = 0;
+  uint32_t highestServerId = 0;
+
   static void loadFromOtb(const std::filesystem::path path);
   static void loadFromXml(const std::filesystem::path path);
+
+  /**
+   * Load item types that are not present in the items.otb.
+   */
+  static void loadMissingItemTypes();
 
   bool reload();
   void clear();
@@ -48,8 +58,6 @@ public:
   {
     return itemTypes.size();
   }
-
-  static Items items;
 
   ItemType *getNextValidItemType(uint32_t serverId);
   ItemType *getPreviousValidItemType(uint32_t serverId);
@@ -104,6 +112,8 @@ private:
   // using MapID = uint16_t;
 
   static bool loadItemFromXml(pugi::xml_node itemNode, uint32_t id);
+
+  void addItemTypeAppearanceData(ItemType &itemType, uint32_t itemTypeFlags);
 
   std::vector<ItemType> itemTypes;
   std::unordered_map<ClientID, ServerID> clientIdToServerId;

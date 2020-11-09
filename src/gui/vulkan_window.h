@@ -1,6 +1,6 @@
 #pragma once
 
-// #include <functional>
+#include <functional>
 #include <memory>
 // #include <optional>
 #include <unordered_set>
@@ -11,10 +11,10 @@
 
 #include "../graphics/vulkan_helpers.h"
 // #include "../input.h"
-// #include "../map_renderer.h"
+#include "../map_renderer.h"
 #include "../map_view.h"
 #include "../qt/qt_vulkan_info.h"
-// #include "../util.h"
+#include "../util.h"
 
 class MainWindow;
 

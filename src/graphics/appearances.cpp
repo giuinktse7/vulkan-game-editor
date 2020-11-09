@@ -17,18 +17,13 @@
 #include "../time_point.h"
 #include "texture_atlas.h"
 
-vme_unordered_map<uint32_t, Appearance> Appearances::objects;
+vme_unordered_map<uint32_t, Appearance> Appearances::_objects;
 vme_unordered_map<uint32_t, proto::Appearance> Appearances::outfits;
 
 std::vector<SpriteRange> Appearances::textureAtlasSpriteRanges;
 vme_unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> Appearances::textureAtlases;
 
 bool Appearances::isLoaded;
-
-size_t Appearances::textureAtlasCount()
-{
-    return textureAtlases.size();
-}
 
 void Appearances::loadAppearanceData(const std::filesystem::path path)
 {
@@ -37,8 +32,11 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
     proto::Appearances parsed;
 
     {
-        std::fstream input(path.c_str(), std::ios::in | std::ios::binary);
-        if (!parsed.ParseFromIstream(&input))
+        std::fstream input(path, std::ios::in | std::ios::binary);
+        bool success = parsed.ParseFromIstream(&input);
+        google::protobuf::ShutdownProtobufLibrary();
+
+        if (!success)
         {
             auto absolutePath = std::filesystem::absolute(std::filesystem::path(path));
 
@@ -46,10 +44,9 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
             s << "Failed to parse appearances file at " << absolutePath << "." << std::endl;
             ABORT_PROGRAM(s.str());
         }
-
-        google::protobuf::ShutdownProtobufLibrary();
     }
 
+    // uint32_t highest = 33000;
     for (int i = 0; i < parsed.object_size(); ++i)
     {
         const proto::Appearance &object = parsed.object(i);
@@ -61,8 +58,12 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
         //     VME_LOG_D(info.layers());
         //     VME_LOG_D(info.sprite_id_size());
         // }
-
-        Appearances::objects.emplace(object.id(), std::move(object));
+        // if (object.id() > highest)
+        // {
+        //     VME_LOG_D(object.id());
+        //     highest = object.id();
+        // }
+        Appearances::_objects.emplace(object.id(), std::move(object));
     }
 
     // std::cout << "Total: " << total << std::endl;

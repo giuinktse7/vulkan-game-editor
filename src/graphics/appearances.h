@@ -386,7 +386,7 @@ public:
   static size_t objectCount();
 
 private:
-  static vme_unordered_map<AppearanceId, Appearance> objects;
+  static vme_unordered_map<AppearanceId, Appearance> _objects;
   static vme_unordered_map<AppearanceId, proto::Appearance> outfits;
 
   /* 
@@ -408,6 +408,12 @@ inline const vme_unordered_map<uint32_t, Appearance> &Appearances::objects()
 {
   return _objects;
 }
+
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>Printing>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
 
 inline std::ostream &operator<<(std::ostream &os, const HookType &hookType)
 {
