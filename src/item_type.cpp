@@ -181,6 +181,11 @@ bool ItemType::isFluidContainer() const noexcept
   return group == ItemType::Group::Fluid;
 }
 
+bool ItemType::isCorpse() const noexcept
+{
+  return appearance->hasFlag(AppearanceFlag::Corpse);
+}
+
 bool ItemType::isDoor() const noexcept
 {
   return (type == ItemTypes_t::Door);

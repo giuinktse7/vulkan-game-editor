@@ -190,6 +190,7 @@ public:
   bool isContainer() const noexcept;
   bool isSplash() const noexcept;
   bool isFluidContainer() const noexcept;
+  bool isCorpse() const noexcept;
 
   bool isDoor() const noexcept;
   bool isMagicField() const noexcept;
