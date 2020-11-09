@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "camera.h"
-#include "input.h"
+#include "editor_action.h"
 #include "map.h"
 #include "position.h"
 #include "selection.h"

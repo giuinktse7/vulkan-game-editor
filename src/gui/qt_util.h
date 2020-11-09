@@ -8,7 +8,7 @@
 #include <QString>
 #include <QWidget>
 
-#include "../input.h"
+#include "../editor_action.h"
 
 #include "../qt/enum_conversion.h"
 

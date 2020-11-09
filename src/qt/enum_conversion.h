@@ -9,7 +9,11 @@ conversion. This should reduce branching, resulting in faster conversion.
 #include <array>
 #include <type_traits>
 
-#include "../input.h"
+namespace VME
+{
+  enum ModifierKeys;
+  enum MouseButtons;
+} // namespace VME
 
 namespace enum_conversion
 {

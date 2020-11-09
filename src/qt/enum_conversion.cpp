@@ -1,5 +1,7 @@
 #include "enum_conversion.h"
 
+#include "../editor_action.h"
+
 using namespace enum_conversion::detail;
 
 namespace

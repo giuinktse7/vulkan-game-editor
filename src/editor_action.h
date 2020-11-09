@@ -6,6 +6,8 @@
 #include "signal.h"
 #include "util.h"
 
+class Selection;
+
 namespace VME
 {
 
@@ -78,7 +80,15 @@ struct MouseAction
 
   struct Select
   {
+    std::optional<Position> moveOrigin = {};
+    std::optional<Position> moveDelta = {};
     bool area = false;
+
+    bool isMoving() const;
+
+    void updateMoveDelta(const Selection &selection, const Position &currentPosition);
+    void setMoveOrigin(const Position &origin);
+    void reset();
   };
 
   struct Pan

@@ -18,7 +18,7 @@
 #include "item.h"
 #include "items.h"
 
-#include "input.h"
+#include "editor_action.h"
 #include "map_view.h"
 #include "util.h"
 

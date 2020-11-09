@@ -10,7 +10,6 @@
 #include <QVulkanWindow>
 
 #include "../graphics/vulkan_helpers.h"
-// #include "../input.h"
 #include "../map_renderer.h"
 #include "../map_view.h"
 #include "../qt/qt_vulkan_info.h"

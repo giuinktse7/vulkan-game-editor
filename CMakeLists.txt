@@ -69,7 +69,7 @@ set(CommonSources
     src/ecs/entity.h
     src/ecs/item_animation.h
     src/file.h
-    src/input.h
+    src/editor_action.h
     src/graphics/appearances.h
     src/graphics/buffer.h
     src/graphics/compression.h
@@ -139,6 +139,7 @@ set(CommonSources
     src/ecs/ecs.cpp
     src/ecs/item_animation.cpp
     src/file.cpp
+    src/editor_action.cpp
     src/graphics/appearances.cpp
     src/graphics/buffer.cpp
     src/graphics/compression.cpp
