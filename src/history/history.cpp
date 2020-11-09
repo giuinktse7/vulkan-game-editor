@@ -86,6 +86,8 @@ namespace MapHistory
     }
 
     currentTransaction.reset();
+
+    mapView->selection().update();
   }
 
   bool History::undo()
