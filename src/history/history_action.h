@@ -17,6 +17,7 @@ class EditorHistory;
 
 enum class TransactionType
 {
+  RawItemAction,
   Selection,
   AddMapItem,
   RemoveMapItem,
@@ -130,6 +131,9 @@ inline std::ostringstream stringify(const TransactionType &type)
     break;
   case TransactionType::MoveItems:
     s << "TransactionType::MoveItems";
+    break;
+  case TransactionType::RawItemAction:
+    s << "TransactionType::RawItemAction";
     break;
   default:
     s << "Unknown TransactionType: " << to_underlying(type);
