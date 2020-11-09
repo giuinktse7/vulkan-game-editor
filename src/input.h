@@ -69,6 +69,11 @@ struct MouseAction
       each position of the area has an item of serverId added.
     */
     bool area = false;
+
+    /**
+     * If true, this action erases rather than adds items
+     */
+    bool erase = false;
   };
 
   struct Select

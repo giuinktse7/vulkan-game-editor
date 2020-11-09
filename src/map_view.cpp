@@ -600,6 +600,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
                 if (remove)
                 {
+                  action.erase = true;
                   const Tile *tile = getTile(pos);
                   if (tile)
                   {
@@ -688,10 +689,9 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
               }
               else
               {
-                history.beginTransaction(TransactionType::AddMapItem);
+                DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::AddMapItem), "Incorrect transaction type.");
                 for (const auto position : Position::bresenHams(to.toPos(floor()), pos))
                   addItem(position, action.serverId);
-                history.endTransaction(TransactionType::AddMapItem);
               }
             },
 
