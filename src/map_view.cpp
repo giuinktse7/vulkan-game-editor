@@ -613,7 +613,6 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                 {
                   history.beginTransaction(TransactionType::AddMapItem);
                   addItem(pos, action.serverId);
-                  history.endTransaction(TransactionType::AddMapItem);
                 }
               }
             },
@@ -739,6 +738,12 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
         util::overloaded{
             [](MouseAction::Pan pan) {
               pan.stop();
+            },
+            [this](MouseAction::RawItem action) {
+              if (!(action.area || action.erase))
+              {
+                history.endTransaction(TransactionType::AddMapItem);
+              }
             },
             [](const auto &arg) {}},
         editorAction.action());
