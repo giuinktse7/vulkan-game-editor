@@ -34,11 +34,243 @@ VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
   instances.emplace(this);
 
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
+
+  setShortcut(Qt::Key_Z | Qt::CTRL, ShortcutAction::Undo);
+  setShortcut(Qt::Key_Z | Qt::CTRL | Qt::SHIFT, ShortcutAction::Redo);
+  setShortcut(Qt::Key_Space, ShortcutAction::Pan);
+  setShortcut(Qt::Key_I, ShortcutAction::EyeDropper);
+  setShortcut(Qt::Key_Escape, ShortcutAction::Escape);
+  setShortcut(Qt::Key_Delete, ShortcutAction::Delete);
+  setShortcut(Qt::Key_0 | Qt::CTRL, ShortcutAction::ResetZoom);
+  setShortcut(Qt::Key_Plus | Qt::KeypadModifier, ShortcutAction::FloorUp);
+  setShortcut(Qt::Key_Minus | Qt::KeypadModifier, ShortcutAction::FloorDown);
 }
 
 VulkanWindow::~VulkanWindow()
 {
   instances.erase(this);
+}
+
+void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
+{
+  switch (action)
+  {
+  case ShortcutAction::Undo:
+    mapView->undo();
+    break;
+  case ShortcutAction::Redo:
+    mapView->redo();
+    break;
+  case ShortcutAction::Pan:
+    if (!mapView->editorAction.is<MouseAction::Pan>())
+    {
+      setCursor(Qt::OpenHandCursor);
+
+      MouseAction::Pan pan;
+      mapView->editorAction.set(pan);
+    }
+    break;
+  case ShortcutAction::EyeDropper:
+  {
+    const Item *topItem = mapView->map()->getTopItem(mapView->mouseGamePos());
+    if (topItem)
+    {
+      mapView->editorAction.setRawItem(topItem->serverId());
+    }
+    break;
+  }
+  case ShortcutAction::Escape:
+    mapView->escapeEvent();
+    break;
+  case ShortcutAction::Delete:
+    mapView->deleteSelectedItems();
+    break;
+  case ShortcutAction::ResetZoom:
+    mapView->resetZoom();
+    break;
+  case ShortcutAction::FloorUp:
+    VME_LOG_D("FloorUp");
+    break;
+  case ShortcutAction::FloorDown:
+    VME_LOG_D("FloorDown");
+    break;
+  }
+}
+
+void VulkanWindow::shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event)
+{
+  switch (action)
+  {
+  case ShortcutAction::Pan:
+    auto pan = mapView->editorAction.as<MouseAction::Pan>();
+    if (pan)
+    {
+      unsetCursor();
+      mapView->editorAction.setPrevious();
+    }
+    break;
+  }
+}
+
+void VulkanWindow::mousePressEvent(QMouseEvent *e)
+{
+  VME_LOG_D("VulkanWindow::mousePressEvent");
+  Qt::MouseButton button = e->button();
+  switch (button)
+  {
+  case Qt::MouseButton::RightButton:
+    showContextMenu(e->globalPos());
+    break;
+  case Qt::MouseButton::LeftButton:
+    if (contextMenu)
+    {
+      closeContextMenu();
+    }
+    else
+    {
+      mapView->mousePressEvent(QtUtil::vmeMouseEvent(e));
+    }
+
+    break;
+  default:
+    break;
+  }
+
+  e->ignore();
+}
+
+void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
+{
+  mapView->mouseReleaseEvent(QtUtil::vmeMouseEvent(event));
+}
+
+void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
+{
+  mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
+
+  auto pos = event->windowPos();
+  util::Point<float> mousePos(pos.x(), pos.y());
+  emit mousePosChanged(mousePos);
+
+  event->ignore();
+  QVulkanWindow::mouseMoveEvent(event);
+}
+
+void VulkanWindow::wheelEvent(QWheelEvent *event)
+{
+  /*
+    The minimum rotation amount for a scroll to be registered, in eighths of a degree.
+    For example, 120 MinRotationAmount = (120 / 8) = 15 degrees of rotation.
+  */
+  const int MinRotationAmount = 120;
+
+  // The relative amount that the wheel was rotated, in eighths of a degree.
+  const int deltaY = event->angleDelta().y();
+
+  scrollAngleBuffer += deltaY;
+  if (std::abs(scrollAngleBuffer) >= MinRotationAmount)
+  {
+    emit scrollEvent(scrollAngleBuffer / 8);
+    scrollAngleBuffer = 0;
+  }
+}
+
+void VulkanWindow::keyReleaseEvent(QKeyEvent *e)
+{
+  if (e->isAutoRepeat())
+    return;
+
+  auto shortcut = shortcuts.find(e->key() | e->modifiers());
+  if (shortcut != shortcuts.end())
+  {
+    shortcutReleasedEvent(shortcut->second);
+    return;
+  }
+
+  switch (e->key())
+  {
+  case Qt::Key_Control:
+  {
+    auto rawItem = mapView->editorAction.as<MouseAction::RawItem>();
+    if (rawItem)
+    {
+      rawItem->erase = false;
+    }
+  }
+  }
+}
+
+void VulkanWindow::keyPressEvent(QKeyEvent *e)
+{
+  switch (e->key())
+  {
+  case Qt::Key_Left:
+  case Qt::Key_Right:
+  case Qt::Key_Up:
+  case Qt::Key_Down:
+    e->ignore();
+    emit keyPressedEvent(e);
+    break;
+  case Qt::Key_Control:
+  {
+    auto rawItemAction = mapView->editorAction.as<MouseAction::RawItem>();
+    if (rawItemAction)
+    {
+      rawItemAction->erase = true;
+    }
+    break;
+  }
+  default:
+    e->ignore();
+    QVulkanWindow::keyPressEvent(e);
+    break;
+  }
+}
+
+void VulkanWindow::setShortcut(int keyAndModifiers, ShortcutAction shortcut)
+{
+  shortcuts.emplace(keyAndModifiers, shortcut);
+  shortcutActionToKeyCombination.emplace(shortcut, keyAndModifiers);
+}
+
+std::optional<ShortcutAction> VulkanWindow::getShortcutAction(QKeyEvent *event) const
+{
+  auto shortcut = shortcuts.find(event->key() | event->modifiers());
+
+  return shortcut != shortcuts.end() ? std::optional<ShortcutAction>(shortcut->second) : std::nullopt;
+}
+
+bool VulkanWindow::event(QEvent *event)
+{
+  // if (!(event->type() == QEvent::UpdateRequest) && !(event->type() == QEvent::MouseMove))
+  // {
+  //   qDebug() << "[" << QString(debugName.c_str()) << "] " << event->type() << " { " << mapToGlobal(position()) << " }";
+  // }
+
+  switch (event->type())
+  {
+  case QEvent::Leave:
+    mapView->setUnderMouse(false);
+    break;
+  case QEvent::Enter:
+    mapView->setUnderMouse(true);
+    break;
+  case QEvent::ShortcutOverride:
+  {
+    QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+    auto action = getShortcutAction(keyEvent);
+    if (action)
+    {
+      shortcutPressedEvent(action.value());
+      return true;
+    }
+  }
+  default:
+    break;
+  }
+
+  event->ignore();
+  return QVulkanWindow::event(event);
 }
 
 void VulkanWindow::lostFocus()
@@ -70,33 +302,6 @@ QVulkanWindowRenderer *VulkanWindow::createRenderer()
   }
 
   return renderer;
-}
-
-void VulkanWindow::mousePressEvent(QMouseEvent *e)
-{
-  VME_LOG_D("VulkanWindow::mousePressEvent");
-  Qt::MouseButton button = e->button();
-  switch (button)
-  {
-  case Qt::MouseButton::RightButton:
-    showContextMenu(e->globalPos());
-    break;
-  case Qt::MouseButton::LeftButton:
-    if (contextMenu)
-    {
-      closeContextMenu();
-    }
-    else
-    {
-      mapView->mousePressEvent(QtUtil::vmeMouseEvent(e));
-    }
-
-    break;
-  default:
-    break;
-  }
-
-  e->ignore();
 }
 
 QRect VulkanWindow::localGeometry() const
@@ -143,174 +348,6 @@ void VulkanWindow::showContextMenu(QPoint position)
     this->contextMenu = nullptr;
   });
   menu->popup(position);
-}
-
-void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
-{
-  mapView->mouseReleaseEvent(QtUtil::vmeMouseEvent(event));
-}
-
-void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
-{
-  mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
-
-  auto pos = event->windowPos();
-  util::Point<float> mousePos(pos.x(), pos.y());
-  emit mousePosChanged(mousePos);
-
-  event->ignore();
-  QVulkanWindow::mouseMoveEvent(event);
-}
-
-void VulkanWindow::wheelEvent(QWheelEvent *event)
-{
-  /*
-    The minimum rotation amount for a scroll to be registered, in eighths of a degree.
-    For example, 120 MinRotationAmount = (120 / 8) = 15 degrees of rotation.
-  */
-  const int MinRotationAmount = 120;
-
-  // The relative amount that the wheel was rotated, in eighths of a degree.
-  const int deltaY = event->angleDelta().y();
-
-  scrollAngleBuffer += deltaY;
-  if (std::abs(scrollAngleBuffer) >= MinRotationAmount)
-  {
-    emit scrollEvent(scrollAngleBuffer / 8);
-    scrollAngleBuffer = 0;
-  }
-}
-
-void VulkanWindow::keyReleaseEvent(QKeyEvent *e)
-{
-  if (e->isAutoRepeat())
-    return;
-
-  switch (e->key())
-  {
-  case Qt::Key_Space:
-  {
-    auto pan = mapView->editorAction.as<MouseAction::Pan>();
-    if (pan)
-    {
-      unsetCursor();
-      mapView->editorAction.setPrevious();
-    }
-    break;
-  }
-  case Qt::Key_Control:
-  {
-    auto rawItem = mapView->editorAction.as<MouseAction::RawItem>();
-    if (rawItem)
-    {
-      rawItem->erase = false;
-    }
-  }
-  }
-}
-
-void VulkanWindow::keyPressEvent(QKeyEvent *e)
-{
-  switch (e->key())
-  {
-  case Qt::Key_Left:
-  case Qt::Key_Right:
-  case Qt::Key_Up:
-  case Qt::Key_Down:
-    e->ignore();
-    emit keyPressedEvent(e);
-    break;
-  case Qt::Key_Escape:
-    mapView->escapeEvent();
-    break;
-  case Qt::Key_Delete:
-    mapView->deleteSelectedItems();
-    break;
-  case Qt::Key_0:
-    if (e->modifiers() & Qt::CTRL)
-    {
-      mapView->resetZoom();
-    }
-    break;
-  case Qt::Key_I:
-  {
-    const Item *topItem = mapView->map()->getTopItem(mapView->mouseGamePos());
-    if (topItem)
-    {
-      mapView->editorAction.setRawItem(topItem->serverId());
-    }
-    break;
-  }
-  case Qt::Key_Space:
-  {
-    if (!mapView->editorAction.is<MouseAction::Pan>())
-    {
-      setCursor(Qt::OpenHandCursor);
-
-      MouseAction::Pan pan;
-      mapView->editorAction.set(pan);
-    }
-
-    break;
-  }
-  case Qt::Key_Z:
-    if (e->modifiers() & Qt::CTRL)
-    {
-      if (e->modifiers() & Qt::SHIFT)
-      {
-        mapView->redo();
-      }
-      else
-      {
-        mapView->undo();
-      }
-    }
-    break;
-  case Qt::Key_Control:
-  {
-    auto rawItemAction = mapView->editorAction.as<MouseAction::RawItem>();
-    if (rawItemAction)
-    {
-      rawItemAction->erase = true;
-    }
-    break;
-  }
-  default:
-    e->ignore();
-    QVulkanWindow::keyPressEvent(e);
-    break;
-  }
-}
-
-bool VulkanWindow::event(QEvent *event)
-{
-  // if (!(event->type() == QEvent::UpdateRequest) && !(event->type() == QEvent::MouseMove))
-  // {
-  //   qDebug() << "[" << QString(debugName.c_str()) << "] " << event->type() << " { " << mapToGlobal(position()) << " }";
-  // }
-
-  switch (event->type())
-  {
-  case QEvent::Leave:
-    mapView->setUnderMouse(false);
-    break;
-  case QEvent::Enter:
-    mapView->setUnderMouse(true);
-    break;
-  case QEvent::ShortcutOverride:
-  {
-    // Shortcut override event
-    QKeyEvent *e = static_cast<QKeyEvent *>(event);
-    QKeyEvent keyEvent(QEvent::KeyPress, e->key(), e->modifiers(), e->text(), e->isAutoRepeat(), e->count());
-    keyPressEvent(&keyEvent);
-    return true;
-  }
-  default:
-    break;
-  }
-
-  event->ignore();
-  return QVulkanWindow::event(event);
 }
 
 MapView *VulkanWindow::getMapView() const

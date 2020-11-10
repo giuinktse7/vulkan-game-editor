@@ -2,7 +2,7 @@
 
 #include <functional>
 #include <memory>
-// #include <optional>
+#include <optional>
 #include <unordered_set>
 
 #include <QApplication>
@@ -23,6 +23,17 @@ class QPoint;
 class QEvent;
 QT_END_NAMESPACE
 
+enum class ShortcutAction
+{
+  Undo,
+  Redo,
+  Pan,
+  EyeDropper,
+  Escape,
+  Delete,
+  ResetZoom,
+  FloorUp,
+  FloorDown
 };
 
 class VulkanWindow : public QVulkanWindow
@@ -100,6 +111,22 @@ protected:
   bool event(QEvent *ev) override;
 
 private:
+  void mousePressEvent(QMouseEvent *event) override;
+  void mouseReleaseEvent(QMouseEvent *event) override;
+  void mouseMoveEvent(QMouseEvent *event) override;
+  void keyPressEvent(QKeyEvent *event) override;
+  void keyReleaseEvent(QKeyEvent *event) override;
+  void wheelEvent(QWheelEvent *event) override;
+
+  void shortcutPressedEvent(ShortcutAction action, QKeyEvent *event = nullptr);
+  void shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event = nullptr);
+
+  void onVisibilityChanged(QWindow::Visibility visibility);
+
+  std::optional<ShortcutAction> getShortcutAction(QKeyEvent *event) const;
+
+  void setShortcut(int keyAndModifiers, ShortcutAction shortcut);
+
   /**
  		*	Keeps track of all VulkanWindow instances. This is necessary for QT to
 		* validate VulkanWindow pointers in a QVariant.
@@ -109,14 +136,12 @@ private:
 	*/
   static std::unordered_set<const VulkanWindow *> instances;
 
-  void mousePressEvent(QMouseEvent *event) override;
-  void mouseReleaseEvent(QMouseEvent *event) override;
-  void mouseMoveEvent(QMouseEvent *event) override;
-  void keyPressEvent(QKeyEvent *event) override;
-  void keyReleaseEvent(QKeyEvent *event) override;
-  void wheelEvent(QWheelEvent *event) override;
+  /**
+   * The key is a combination of Qt::Key and Qt Modifiers (Ctrl, Shift, Alt)
+   */
+  vme_unordered_map<int, ShortcutAction> shortcuts;
+  vme_unordered_map<ShortcutAction, int> shortcutActionToKeyCombination;
 
-  void onVisibilityChanged(QWindow::Visibility visibility);
   std::unique_ptr<MapView> mapView;
 
   QVulkanWindowRenderer *renderer = nullptr;
