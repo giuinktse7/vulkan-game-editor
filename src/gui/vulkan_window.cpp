@@ -44,6 +44,7 @@ VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
   setShortcut(Qt::Key_0 | Qt::CTRL, ShortcutAction::ResetZoom);
   setShortcut(Qt::Key_Plus | Qt::KeypadModifier, ShortcutAction::FloorUp);
   setShortcut(Qt::Key_Minus | Qt::KeypadModifier, ShortcutAction::FloorDown);
+  setShortcut(Qt::Key_Q, ShortcutAction::LowerFloorShade);
 }
 
 VulkanWindow::~VulkanWindow()
@@ -76,6 +77,7 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
     if (topItem)
     {
       mapView->editorAction.setRawItem(topItem->serverId());
+      mapView->requestDraw();
     }
     break;
   }
@@ -94,6 +96,9 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
   case ShortcutAction::FloorDown:
     mapView->floorDown();
 
+    break;
+  case ShortcutAction::LowerFloorShade:
+    mapView->toggleViewOption(MapView::ViewOption::ShadeLowerFloors);
     break;
   }
 }

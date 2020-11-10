@@ -24,13 +24,26 @@
 
 #include "map.h"
 
+namespace colors
+{
+	constexpr glm::vec4 Default{1.0f, 1.0f, 1.0f, 1.0f};
+	constexpr glm::vec4 Selected{0.45f, 0.45f, 0.45f, 1.0f};
+	constexpr glm::vec4 Shade = Selected;
+	constexpr glm::vec4 Red{1.0f, 0.0f, 0.0f, 1.0f};
+	constexpr glm::vec4 SeeThrough{1.0f, 1.0f, 1.0f, 0.35f};
+	constexpr glm::vec4 ItemPreview{0.6f, 0.6f, 0.6f, 0.7f};
+
+	glm::vec4 opacity(float value);
+
+} // namespace colors
+
 namespace DrawInfo
 {
 	struct Base
 	{
 		Appearance *appearance;
 		TextureInfo textureInfo;
-		glm::vec4 color{};
+		glm::vec4 color = colors::Default;
 		VkDescriptorSet descriptorSet;
 	};
 
@@ -69,18 +82,6 @@ namespace DrawInfo
 
 }; // namespace DrawInfo
 
-namespace colors
-{
-	constexpr glm::vec4 Default{1.0f, 1.0f, 1.0f, 1.0f};
-	constexpr glm::vec4 Selected{0.45f, 0.45f, 0.45f, 1.0f};
-	constexpr glm::vec4 Red{1.0f, 0.0f, 0.0f, 1.0f};
-	constexpr glm::vec4 SeeThrough{1.0f, 1.0f, 1.0f, 0.35f};
-	constexpr glm::vec4 ItemPreview{0.6f, 0.6f, 0.6f, 0.7f};
-
-	glm::vec4 opacity(float value);
-
-} // namespace colors
-
 namespace ItemDrawFlags
 {
 	constexpr uint32_t None = 0;
@@ -88,6 +89,7 @@ namespace ItemDrawFlags
 	constexpr uint32_t DrawSelected = 1 << 1;
 	constexpr uint32_t Ghost = 1 << 2;
 	constexpr uint32_t ActiveSelectionArea = 1 << 3;
+	constexpr uint32_t Shade = 1 << 4;
 } // namespace ItemDrawFlags
 
 struct TextureOffset
@@ -299,8 +301,11 @@ private:
 	void drawRectangle(const Texture &texture, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
 	void drawSolidRectangle(const SolidColor color, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
 
-	DrawInfo::Object itemDrawInfo(const Item &item, Position position, uint32_t drawFlags);
-	DrawInfo::Object itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags);
+	DrawInfo::Object itemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags);
+	DrawInfo::Object itemTypeDrawInfo(const ItemType &itemType, const Position &position, uint32_t drawFlags);
+
+	glm::vec4 getItemDrawColor(const Item &item, const Position &position, uint32_t drawFlags);
+	glm::vec4 getItemTypeDrawColor(uint32_t drawFlags);
 
 	VkDescriptorSet objectDescriptorSet(const DrawInfo::Base &info);
 

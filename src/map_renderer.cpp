@@ -238,6 +238,9 @@ void MapRenderer::drawMap()
   }
 
   bool movingSelection = view.selection().isMoving();
+  bool shadeLowerFloors = view.hasOption(MapView::ViewOption::ShadeLowerFloors);
+
+  int viewZ = view.z();
 
   uint32_t flags = ItemDrawFlags::DrawNonSelected;
 
@@ -253,7 +256,13 @@ void MapRenderer::drawMap()
     if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
       continue;
 
-    drawTile(tileLocation, flags, filter);
+    uint32_t tileFlags = flags;
+    if (shadeLowerFloors && tileLocation.z() > viewZ)
+    {
+      tileFlags |= ItemDrawFlags::Shade;
+    }
+
+    drawTile(tileLocation, tileFlags, filter);
   }
 }
 
@@ -553,26 +562,46 @@ void MapRenderer::drawRectangle(const Texture &texture, const WorldPosition from
   drawRectangle(info);
 }
 
-DrawInfo::Object MapRenderer::itemDrawInfo(const Item &item, Position position, uint32_t drawFlags)
+glm::vec4 MapRenderer::getItemDrawColor(const Item &item, const Position &position, uint32_t drawFlags)
 {
   bool drawAsSelected = item.selected || ((drawFlags & ItemDrawFlags::ActiveSelectionArea) && mapView->inDragRegion(position));
+  if (drawAsSelected)
+  {
+    return colors::Selected;
+  }
+  else if (drawFlags & ItemDrawFlags::Shade)
+  {
+    return colors::Shade;
+  }
+  else
+  {
+    return colors::Default;
+  }
+}
 
+glm::vec4 MapRenderer::getItemTypeDrawColor(uint32_t drawFlags)
+{
+  return drawFlags & ItemDrawFlags::Ghost ? colors::ItemPreview : colors::Default;
+}
+
+DrawInfo::Object MapRenderer::itemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags)
+{
   DrawInfo::Object info;
   info.appearance = item.itemType->appearance;
   info.position = position;
-  info.color = drawAsSelected ? colors::Selected : colors::Default;
+  info.color = getItemDrawColor(item, position, drawFlags);
   info.textureInfo = item.getTextureInfo(position);
   info.descriptorSet = objectDescriptorSet(info);
 
   return info;
 }
 
-DrawInfo::Object MapRenderer::itemTypeDrawInfo(const ItemType &itemType, Position position, uint32_t drawFlags)
+DrawInfo::Object MapRenderer::itemTypeDrawInfo(const ItemType &itemType, const Position &position, uint32_t drawFlags)
 {
   DrawInfo::Object info;
   info.appearance = itemType.appearance;
   info.position = position;
-  info.color = drawFlags & ItemDrawFlags::Ghost ? colors::ItemPreview : colors::Default;
+  info.color = getItemTypeDrawColor(drawFlags);
   info.textureInfo = itemType.getTextureInfo(position);
   info.descriptorSet = objectDescriptorSet(info);
 

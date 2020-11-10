@@ -23,6 +23,12 @@ class MapHistory::ChangeItem;
 class MapView : public Nano::Observer<>
 {
 public:
+	enum ViewOption
+	{
+		None = 0,
+		ShadeLowerFloors = 1 << 0
+	};
+
 	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action);
 	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::shared_ptr<Map> map);
 	~MapView();
@@ -109,6 +115,11 @@ public:
 	void undo();
 	void redo();
 
+	void toggleViewOption(ViewOption option);
+	void setViewOption(ViewOption option, bool value);
+	inline ViewOption viewOptions() const noexcept;
+	inline bool hasOption(ViewOption option) const noexcept;
+
 	MapRegion mapRegion() const;
 
 	inline uint32_t x() const noexcept;
@@ -193,6 +204,8 @@ private:
 	std::unique_ptr<UIUtils> uiUtils;
 
 	Camera camera;
+
+	ViewOption _viewOptions = ViewOption::None;
 
 	bool canRender = false;
 
@@ -302,6 +315,16 @@ inline bool MapView::underMouse() const noexcept
 	return _underMouse;
 }
 
+inline MapView::ViewOption MapView::viewOptions() const noexcept
+{
+	return _viewOptions;
+}
+
+inline bool MapView::hasOption(ViewOption option) const noexcept
+{
+	return _viewOptions & option;
+}
+
 template <auto MemberFunction, typename T>
 void MapView::onViewportChanged(T *instance)
 {
@@ -313,3 +336,5 @@ void MapView::onDrawRequested(T *instance)
 {
 	drawRequest.connect<MemberFunction>(instance);
 }
+
+VME_ENUM_OPERATORS(MapView::ViewOption)

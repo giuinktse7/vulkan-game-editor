@@ -756,8 +756,11 @@ void MapView::escapeEvent()
   std::visit(
       util::overloaded{
           [this](MouseAction::Select &) {
-            clearSelection();
-            requestDraw();
+            if (!_selection.empty())
+            {
+              clearSelection();
+              requestDraw();
+            }
           },
 
           [this](const auto &arg) {
@@ -765,6 +768,21 @@ void MapView::escapeEvent()
             requestDraw();
           }},
       editorAction.action());
+}
+
+void MapView::setViewOption(ViewOption option, bool value)
+{
+  if (EnumFlag::isSet(_viewOptions, option) != value)
+  {
+    EnumFlag::set(_viewOptions, option, value);
+    requestDraw();
+  }
+}
+
+void MapView::toggleViewOption(ViewOption option)
+{
+  EnumFlag::toggle(_viewOptions, option);
+  requestDraw();
 }
 
 /*
