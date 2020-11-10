@@ -9,8 +9,6 @@
 #pragma warning(push)
 #pragma warning(disable : 26812)
 
-constexpr size_t CACHED_TEXTURE_ATLAS_AMOUNT = 5;
-
 enum FloorChange
 {
   Down,
@@ -317,13 +315,15 @@ public:
   bool stackable = false;
   bool isAnimation = false;
 
-  Appearance *appearance = nullptr;
+  ObjectAppearance *appearance = nullptr;
 
   inline uint32_t speed() const noexcept;
   inline ItemSlot inventorySlot() const noexcept;
 
 private:
-  std::array<TextureAtlas *, CACHED_TEXTURE_ATLAS_AMOUNT> _atlases = {};
+  static constexpr size_t CachedTextureAtlasAmount = 5;
+
+  std::array<TextureAtlas *, CachedTextureAtlasAmount> _atlases = {};
 
   void cacheTextureAtlas(uint32_t spriteId);
 };

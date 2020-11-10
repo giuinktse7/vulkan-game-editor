@@ -119,6 +119,7 @@ set(CommonSources
     src/tile.h
     src/tile_location.h
     src/time_point.h
+    src/creature.h
     src/town.h
     src/type_trait.h
     src/ui_mainwindow.h
@@ -167,6 +168,7 @@ set(CommonSources
     src/tile.cpp
     src/tile_location.cpp
     src/time_point.cpp
+    src/creature.cpp
     src/town.cpp
     src/util.cpp
     src/octree.cpp)

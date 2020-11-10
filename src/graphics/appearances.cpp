@@ -9,16 +9,14 @@
 #include <string>
 #include <unordered_map>
 
-#include "../logger.h"
-
+#include "../creature.h"
 #include "../file.h"
-#include "../util.h"
-
+#include "../logger.h"
 #include "../time_point.h"
+#include "../util.h"
 #include "texture_atlas.h"
 
-vme_unordered_map<uint32_t, Appearance> Appearances::_objects;
-vme_unordered_map<uint32_t, proto::Appearance> Appearances::outfits;
+vme_unordered_map<uint32_t, ObjectAppearance> Appearances::_objects;
 
 std::vector<SpriteRange> Appearances::textureAtlasSpriteRanges;
 vme_unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> Appearances::textureAtlases;
@@ -46,37 +44,25 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
         }
     }
 
-    // uint32_t highest = 33000;
+    TimePoint startObjects;
     for (int i = 0; i < parsed.object_size(); ++i)
     {
         const proto::Appearance &object = parsed.object(i);
-        // auto info = object.frame_group().at(0).sprite_info();
-
-        // if (object.id() == 675)
-        // {
-        //     auto info = object.frame_group().at(0).sprite_info();
-        //     VME_LOG_D(info.layers());
-        //     VME_LOG_D(info.sprite_id_size());
-        // }
-        // if (object.id() > highest)
-        // {
-        //     VME_LOG_D(object.id());
-        //     highest = object.id();
-        // }
-        Appearances::_objects.emplace(object.id(), std::move(object));
+        Appearances::_objects.emplace(object.id(), object);
     }
+    auto objectsMs = startObjects.elapsedMillis();
 
-    // std::cout << "Total: " << total << std::endl;
-
+    TimePoint startOutfits;
     for (int i = 0; i < parsed.outfit_size(); ++i)
     {
-        const proto::Appearance &outfit = parsed.outfit(i);
-        Appearances::outfits[outfit.id()] = std::move(outfit);
+        Creatures::addCreatureType(parsed.outfit(i));
     }
+    auto outfitsMs = startOutfits.elapsedMillis();
+
+    VME_LOG("Loaded appearances.dat in " << start.elapsedMillis() << " ms (objects: " << objectsMs << " ms, "
+                                         << "outfits: " << outfitsMs << " ms).");
 
     Appearances::isLoaded = true;
-
-    VME_LOG("Loaded appearances.dat in " << start.elapsedMillis() << " ms.");
 }
 
 void Appearances::loadTextureAtlases(const std::filesystem::path catalogContentsPath, const std::filesystem::path assetFolder)
@@ -245,7 +231,7 @@ size_t Appearances::objectCount()
     return Appearances::_objects.size();
 }
 
-SpriteInfo SpriteInfo::fromProtobufData(proto::SpriteInfo spriteInfo, bool cumulative)
+SpriteInfo SpriteInfo::fromProtobufData(proto::SpriteInfo spriteInfo)
 {
     SpriteInfo info{};
     if (spriteInfo.has_animation())
@@ -317,7 +303,7 @@ SpriteAnimation SpriteAnimation::fromProtobufData(proto::SpriteAnimation animati
 /*
     Constructs an Appearance from protobuf Appearance data.
 */
-Appearance::Appearance(proto::Appearance protobufAppearance)
+ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
 {
     this->clientId = protobufAppearance.id();
     this->name = protobufAppearance.name();
@@ -335,11 +321,11 @@ Appearance::Appearance(proto::Appearance protobufAppearance)
         auto group = protobufAppearance.frame_group(0);
         frameGroups.emplace_back<FrameGroup>({static_cast<FixedFrameGroup>(group.fixed_frame_group()),
                                               static_cast<uint32_t>(group.id()),
-                                              SpriteInfo::fromProtobufData(spriteInfo, cumulative)});
+                                              SpriteInfo::fromProtobufData(spriteInfo)});
     }
     else
     {
-        VME_LOG_D("More than one frame group for clientId: " << protobufAppearance.id());
+        VME_LOG_D("More than one frame group for object with clientId: " << protobufAppearance.id());
     }
 
     // Flags
@@ -522,39 +508,39 @@ Appearance::Appearance(proto::Appearance protobufAppearance)
     }
 }
 
-Appearance::Appearance(Appearance &&other) noexcept
+ObjectAppearance::ObjectAppearance(ObjectAppearance &&other) noexcept
     : clientId(other.clientId),
       name(std::move(other.name)),
       flagData(std::move(other.flagData)),
       frameGroups(std::move(other.frameGroups)),
       flags(std::move(other.flags)) {}
 
-uint32_t Appearance::getFirstSpriteId() const
+uint32_t ObjectAppearance::getFirstSpriteId() const
 {
     return getSpriteInfo().spriteIds.at(0);
 }
 
-const SpriteInfo &Appearance::getSpriteInfo(size_t frameGroup) const
+const SpriteInfo &ObjectAppearance::getSpriteInfo(size_t frameGroup) const
 {
     return frameGroups.at(frameGroup).spriteInfo;
 }
 
-const SpriteInfo &Appearance::getSpriteInfo() const
+const SpriteInfo &ObjectAppearance::getSpriteInfo() const
 {
     return getSpriteInfo(0);
 }
 
-const uint32_t Appearance::getSpriteId(uint32_t frameGroup, int index) const
+const uint32_t ObjectAppearance::getSpriteId(uint32_t frameGroup, int index) const
 {
     return getSpriteInfo(frameGroup).spriteIds.at(index);
 }
 
-size_t Appearance::spriteCount(uint32_t frameGroup) const
+size_t ObjectAppearance::spriteCount(uint32_t frameGroup) const
 {
     return this->getSpriteInfo(frameGroup).spriteIds.size();
 }
 
-size_t Appearance::frameGroupCount() const
+size_t ObjectAppearance::frameGroupCount() const
 {
     return frameGroups.size();
 }

@@ -260,6 +260,11 @@ private:
 
 struct SpriteInfo
 {
+  static SpriteInfo fromProtobufData(proto::SpriteInfo info);
+
+  inline bool hasAnimation() const noexcept;
+
+  SpriteAnimation *animation() const;
 
   std::vector<uint32_t> spriteIds;
   uint32_t boundingSquare;
@@ -272,15 +277,8 @@ struct SpriteInfo
 
   bool isOpaque;
 
-  inline bool hasAnimation() const noexcept;
-
-  SpriteAnimation *animation() const;
-
-  // repeated Box bounding_box_per_direction = 9;
 private:
-  friend class Appearance;
-
-  static SpriteInfo fromProtobufData(proto::SpriteInfo info, bool cumulative);
+  friend class ObjectAppearance;
 
   std::unique_ptr<SpriteAnimation> _animation;
 };
@@ -300,14 +298,13 @@ struct FrameGroup
 /*
   Convenience wrapper for a tibia::protobuf Appearance
 */
-class Appearance
+class ObjectAppearance
 {
 public:
-  Appearance(proto::Appearance protobufAppearance);
-  Appearance(const Appearance &) = delete;
+  ObjectAppearance(const proto::Appearance &protobufAppearance);
 
-  Appearance(Appearance &&other) noexcept;
-  Appearance &operator=(Appearance &&) = default;
+  ObjectAppearance(ObjectAppearance &&other) noexcept;
+  ObjectAppearance &operator=(ObjectAppearance &&) = default;
 
   size_t spriteCount(uint32_t frameGroup) const;
 
@@ -372,13 +369,14 @@ public:
   static void loadAppearanceData(const std::filesystem::path path);
   static std::pair<bool, std::optional<std::string>> dumpSpriteFiles(const std::filesystem::path &assetFolder, const std::filesystem::path &destinationFolder);
 
-  inline static const vme_unordered_map<AppearanceId, Appearance> &objects();
+  inline static const vme_unordered_map<AppearanceId, ObjectAppearance> &objects();
+
   static bool hasObject(AppearanceId id)
   {
     return _objects.find(id) != _objects.end();
   }
 
-  static Appearance &getObjectById(AppearanceId id)
+  static ObjectAppearance &getObjectById(AppearanceId id)
   {
     return _objects.at(id);
   }
@@ -391,8 +389,7 @@ public:
   static size_t objectCount();
 
 private:
-  static vme_unordered_map<AppearanceId, Appearance> _objects;
-  static vme_unordered_map<AppearanceId, proto::Appearance> outfits;
+  static vme_unordered_map<AppearanceId, ObjectAppearance> _objects;
 
   /* 
 		Used for quick retrieval of the correct spritesheet given a sprite ID.
@@ -409,7 +406,7 @@ private:
   static std::vector<SpriteRange> textureAtlasSpriteRanges;
 };
 
-inline const vme_unordered_map<uint32_t, Appearance> &Appearances::objects()
+inline const vme_unordered_map<uint32_t, ObjectAppearance> &Appearances::objects()
 {
   return _objects;
 }
@@ -478,7 +475,7 @@ inline std::ostream &operator<<(std::ostream &os, const AppearancePlayerDefaultA
   return os;
 }
 
-inline std::ostringstream stringify(const Appearance::AppearanceFlagData &flags)
+inline std::ostringstream stringify(const ObjectAppearance::AppearanceFlagData &flags)
 {
   std::ostringstream s;
 
@@ -522,13 +519,13 @@ inline std::ostringstream stringify(const Appearance::AppearanceFlagData &flags)
   return s;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const Appearance::AppearanceFlagData &flags)
+inline std::ostream &operator<<(std::ostream &os, const ObjectAppearance::AppearanceFlagData &flags)
 {
   os << stringify(flags).str();
   return os;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const Appearance &appearance)
+inline std::ostream &operator<<(std::ostream &os, const ObjectAppearance &appearance)
 {
   std::ostringstream s;
 
