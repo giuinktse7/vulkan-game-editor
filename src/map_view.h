@@ -40,10 +40,7 @@ public:
 		Escape the current action (for example when pressing the ESC key)
 	*/
 	void escapeEvent();
-
 	void requestDraw();
-
-	Selection &selection();
 
 	/**
 	 * Shorthand method for comitting actions within a group. Equivalent to:
@@ -72,16 +69,15 @@ public:
 	void deselectTile(const Position &pos);
 
 	void clearSelection();
-	bool isEmpty(const Position position) const;
-
-	bool singleTileSelected() const;
 
 	void setUnderMouse(bool underMouse);
-	inline bool underMouse() const noexcept;
 
-	Position cameraPosition() const noexcept;
 	void setX(WorldPosition::value_type x);
 	void setY(WorldPosition::value_type y);
+
+	void floorUp();
+	void floorDown();
+	void setFloor(int floor);
 
 	void translateX(WorldPosition::value_type x);
 	void translateY(WorldPosition::value_type y);
@@ -97,17 +93,6 @@ public:
 	void moveSelection(const Position &offset);
 
 	void addItem(const Position &position, uint16_t id);
-
-	inline Position mouseGamePos() const;
-	inline WorldPosition mouseWorldPos() const;
-
-	/*
-		Return the position on the map for the 'point'.
-		A point (0, 0) corresponds to the map position (0, 0, mapViewZ).
-	*/
-	template <typename T>
-	Position toPosition(util::Point<T> point) const;
-
 	/* Note: The indices must be in descending order (std::greater), because
 		otherwise the wrong items could be removed.
 	*/
@@ -121,8 +106,6 @@ public:
 
 	void setViewportSize(int width, int height);
 
-	float getZoomFactor() const noexcept;
-
 	void undo();
 	void redo();
 
@@ -131,32 +114,42 @@ public:
 	inline uint32_t x() const noexcept;
 	inline uint32_t y() const noexcept;
 	inline int z() const noexcept;
-	/*
-		Synonym for z()
-	*/
+	/* Synonym for z() */
 	inline int floor() const noexcept;
-
-	const Camera::Viewport &getViewport() const noexcept;
 
 	void deleteSelectedItems();
 
-	util::Rectangle<int> getGameBoundingRect() const;
-
 	void setDragStart(WorldPosition position);
 	void setDragEnd(WorldPosition position);
-	std::optional<std::pair<WorldPosition, WorldPosition>> getDragPoints() const;
 	void endDragging(VME::ModifierKeys modifiers);
-	bool isDragging() const;
 
+	bool singleTileSelected() const;
+	bool isDragging() const;
 	bool hasSelection() const;
+	bool draggingWithSubtract() const;
+	bool inDragRegion(Position pos) const;
+	inline bool underMouse() const noexcept;
+	bool isEmpty(const Position position) const;
+
+	Position cameraPosition() const noexcept;
+	inline Position mouseGamePos() const;
+	inline WorldPosition mouseWorldPos() const;
+	/*
+		Return the position on the map for the 'point'.
+		A point (0, 0) corresponds to the map position (0, 0, mapViewZ).
+	*/
+	template <typename T>
+	Position toPosition(util::Point<T> point) const;
+
+	Selection &selection();
+	const Camera::Viewport &getViewport() const noexcept;
+	util::Rectangle<int> getGameBoundingRect() const;
+	std::optional<std::pair<WorldPosition, WorldPosition>> getDragPoints() const;
+	float getZoomFactor() const noexcept;
 
 	inline ScreenPosition mousePos() const;
 
 	inline static bool isInstance(MapView *pointer);
-
-	bool draggingWithSubtract() const;
-
-	bool inDragRegion(Position pos) const;
 
 	template <auto MemberFunction, typename T>
 	void onViewportChanged(T *instance);
@@ -171,6 +164,16 @@ public:
 
 private:
 	friend class MapHistory::ChangeItem;
+
+	Tile deepCopyTile(const Position position) const;
+
+	void selectRegion(const Position &from, const Position &to);
+	void removeItemsInRegion(const Position &from, const Position &to, std::function<bool(const Item &)> predicate);
+	void fillRegion(const Position &from, const Position &to, uint32_t serverId);
+
+	void cameraViewportChangedEvent();
+
+	void setPanOffset(MouseAction::Pan &action, const ScreenPosition &offset);
 
 	Nano::Signal<void(const Camera::Viewport &)> viewportChange;
 	Nano::Signal<void()> drawRequest;
@@ -200,16 +203,6 @@ private:
 	Position _previousMouseGamePos;
 
 	bool _underMouse = false;
-
-	Tile deepCopyTile(const Position position) const;
-
-	void selectRegion(const Position &from, const Position &to);
-	void removeItemsInRegion(const Position &from, const Position &to, std::function<bool(const Item &)> predicate);
-	void fillRegion(const Position &from, const Position &to, uint32_t serverId);
-
-	void cameraViewportChangedEvent();
-
-	void setPanOffset(MouseAction::Pan &action, const ScreenPosition &offset);
 };
 
 inline const Map *MapView::map() const noexcept
