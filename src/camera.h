@@ -52,7 +52,7 @@ public:
 
   inline const Viewport &viewport() const noexcept;
 
-  template <auto mem_ptr, typename T>
+  template <auto MemberFunction, typename T>
   void onViewportChanged(T *instance);
 
 private:
@@ -145,10 +145,10 @@ inline const Camera::Viewport &Camera::viewport() const noexcept
   return _viewport;
 }
 
-template <auto mem_ptr, typename T>
+template <auto MemberFunction, typename T>
 void Camera::onViewportChanged(T *instance)
 {
-  viewportChange.connect<mem_ptr>(instance);
+  viewportChange.connect<MemberFunction>(instance);
 }
 
 inline void Camera::fireViewportChange()

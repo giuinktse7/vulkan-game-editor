@@ -137,8 +137,7 @@ public:
     return storage.end();
   }
 
-  
-  std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
+    std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
   std::optional<Position> getCorner(int positiveX, int positiveY, int positiveZ) const noexcept;
 
   bool isMoving() const noexcept;
@@ -166,7 +165,7 @@ public:
   */
   void clear();
 
-  template <auto mem_ptr, typename T>
+  template <auto MemberFunction, typename T>
   void onChanged(T *instance);
 
 private:
@@ -199,8 +198,8 @@ inline std::optional<Position> Selection::onlyPosition() const
   return storage.onlyPosition();
 }
 
-template <auto mem_ptr, typename T>
+template <auto MemberFunction, typename T>
 inline void Selection::onChanged(T *instance)
 {
-  selectionChange.connect<mem_ptr>(instance);
+  selectionChange.connect<MemberFunction>(instance);
 }

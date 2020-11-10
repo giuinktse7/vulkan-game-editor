@@ -185,10 +185,10 @@ public:
     return std::holds_alternative<T>(_action);
   }
 
-  template <auto mem_ptr, typename T>
+  template <auto MemberFunction, typename T>
   void onActionChanged(T *instance)
   {
-    actionChanged.connect<mem_ptr>(instance);
+    actionChanged.connect<MemberFunction>(instance);
   }
 
 private:

@@ -27,10 +27,6 @@ public:
 	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::shared_ptr<Map> map);
 	~MapView();
 
-	EditorAction &editorAction;
-
-	MapHistory::History history;
-
 	inline const Map *map() const noexcept;
 
 	inline uint16_t mapWidth() const noexcept;
@@ -162,11 +158,14 @@ public:
 
 	bool inDragRegion(Position pos) const;
 
-	template <auto mem_ptr, typename T>
+	template <auto MemberFunction, typename T>
 	void onViewportChanged(T *instance);
 
-	template <auto mem_ptr, typename T>
+	template <auto MemberFunction, typename T>
 	void onDrawRequested(T *instance);
+
+	EditorAction &editorAction;
+	MapHistory::History history;
 
 	std::optional<Region2D<WorldPosition>> dragRegion;
 
@@ -310,14 +309,14 @@ inline bool MapView::underMouse() const noexcept
 	return _underMouse;
 }
 
-template <auto mem_ptr, typename T>
+template <auto MemberFunction, typename T>
 void MapView::onViewportChanged(T *instance)
 {
-	viewportChange.connect<mem_ptr>(instance);
+	viewportChange.connect<MemberFunction>(instance);
 }
 
-template <auto mem_ptr, typename T>
+template <auto MemberFunction, typename T>
 void MapView::onDrawRequested(T *instance)
 {
-	drawRequest.connect<mem_ptr>(instance);
+	drawRequest.connect<MemberFunction>(instance);
 }
