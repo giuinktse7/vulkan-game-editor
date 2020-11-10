@@ -41,7 +41,6 @@ namespace DrawInfo
 {
 	struct Base
 	{
-		Appearance *appearance;
 		TextureInfo textureInfo;
 		glm::vec4 color = colors::Default;
 		VkDescriptorSet descriptorSet;
@@ -54,13 +53,20 @@ namespace DrawInfo
 */
 	struct OverlayObject : Base
 	{
+		ObjectAppearance *appearance;
 		WorldPosition position;
 	};
 
 	struct Object : Base
 	{
+		ObjectAppearance *appearance;
 		Position position;
 		DrawOffset drawOffset = {0, 0};
+	};
+
+	struct Creature : Base
+	{
+		Position position;
 	};
 
 	struct Vertex
@@ -303,11 +309,15 @@ private:
 
 	DrawInfo::Object itemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags);
 	DrawInfo::Object itemTypeDrawInfo(const ItemType &itemType, const Position &position, uint32_t drawFlags);
+	DrawInfo::Creature creatureDrawInfo(const Creature &creature, const Position &position, uint32_t drawFlags);
 
 	glm::vec4 getItemDrawColor(const Item &item, const Position &position, uint32_t drawFlags);
+	glm::vec4 getCreatureDrawColor(const Creature &creature, const Position &position, uint32_t drawFlags);
 	glm::vec4 getItemTypeDrawColor(uint32_t drawFlags);
 
 	VkDescriptorSet objectDescriptorSet(const DrawInfo::Base &info);
+
+	void issueDraw(const DrawInfo::Base &info, const WorldPosition &worldPos);
 
 	/**
 	 * @predicate An Item predicate. Items for which predicate(item) is false will not be rendered.
@@ -321,6 +331,8 @@ private:
 								const ItemPredicate &filter = nullptr);
 	void drawItem(const DrawInfo::Object &info);
 	void drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
+
+	void drawCreature(const DrawInfo::Creature &info);
 
 	void drawRectangle(DrawInfo::Rectangle &info);
 

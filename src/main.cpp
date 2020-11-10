@@ -297,48 +297,81 @@ std::shared_ptr<Map> makeTestMap1()
 
 std::shared_ptr<Map> makeTestMap2()
 {
-
     std::shared_ptr<Map> map = std::make_shared<Map>();
-    // auto &rand = Random::global();
 
-    // int i = 0;
-    // for (int y = 0; y < 10; ++y)
-    // {
-    //     for (int x = 0; x < 10; ++x)
-    //     {
-    //         map->addItem(Position(1 + x, 1 + y, 7), 35950 + i);
-    //         ++i;
-    //     }
-    // }
+    // Add some creatures
+    {
+        VME_LOG_D("Creature ids: ");
+        auto addCreature = [&map](Position &pos, uint32_t outfitId) {
+            auto newCreature = Creature::fromOutfitId(outfitId);
+            if (newCreature)
+            {
+                auto &creature = newCreature.value();
+                creature.setDirection(Creature::Direction::South);
+                map->getTile(pos)->setCreature(std::move(creature));
+                VME_LOG_D(outfitId);
+            }
+            else
+            {
+                VME_LOG_D("No creature (" << outfitId << ")");
+            }
+        };
 
-    std::array<uint16_t, 9> sandWaterBorders{7951, 7945, 7952, 7946, 4608, 7944, 7953, 7943, 7954};
+        int outfitId = 2000;
+        auto stop = [&outfitId] { return outfitId < 800; };
+        for (int y = 2; y < 30; y += 2)
+        {
+            if (stop())
+                break;
 
-    Position pos(10, 10, 7);
-    map->addItem(pos, sandWaterBorders[0]);
+            for (int x = 2; x < 30; x += 2)
+            {
+                Position pos(x, y, 7);
+                map->addItem(pos, 103);
 
-    pos.move(1, 0, 0);
-    map->addItem(pos, sandWaterBorders[1]);
+                while (!(Creatures::creatureType(outfitId) || stop()))
+                    --outfitId;
 
-    pos.move(1, 0, 0);
-    map->addItem(pos, sandWaterBorders[2]);
+                if (stop())
+                    break;
 
-    pos.move(-2, 1, 0);
-    map->addItem(pos, sandWaterBorders[3]);
+                addCreature(pos, outfitId);
+                --outfitId;
+            }
+        }
+    }
 
-    pos.move(1, 0, 0);
-    map->addItem(pos, sandWaterBorders[4]);
+    if (false)
+    {
+        std::array<uint16_t, 9> sandWaterBorders{7951, 7945, 7952, 7946, 4608, 7944, 7953, 7943, 7954};
 
-    pos.move(1, 0, 0);
-    map->addItem(pos, sandWaterBorders[5]);
+        Position pos(10, 10, 7);
+        map->addItem(pos, sandWaterBorders[0]);
 
-    pos.move(-2, 1, 0);
-    map->addItem(pos, sandWaterBorders[6]);
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[1]);
 
-    pos.move(1, 0, 0);
-    map->addItem(pos, sandWaterBorders[7]);
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[2]);
 
-    pos.move(1, 0, 0);
-    map->addItem(pos, sandWaterBorders[8]);
+        pos.move(-2, 1, 0);
+        map->addItem(pos, sandWaterBorders[3]);
+
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[4]);
+
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[5]);
+
+        pos.move(-2, 1, 0);
+        map->addItem(pos, sandWaterBorders[6]);
+
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[7]);
+
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[8]);
+    }
 
     // uint32_t i = 37733;
 

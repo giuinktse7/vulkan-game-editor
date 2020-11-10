@@ -415,26 +415,17 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, con
       drawOffset.y -= elevation;
     }
   }
+
+  if (tile->hasCreature())
+  {
+    auto &creature = *tile->creature();
+    drawCreature(creatureDrawInfo(creature, position, flags));
+  }
 }
 
-void MapRenderer::drawItem(const DrawInfo::Object &info)
+void MapRenderer::issueDraw(const DrawInfo::Base &info, const WorldPosition &worldPos)
 {
-  constexpr int MaxDrawOffsetPixels = 24;
-  const auto *atlas = info.textureInfo.atlas;
-
-  WorldPosition worldPos = MapPosition{info.position.x + atlas->drawOffset.x, info.position.y + atlas->drawOffset.y}.worldPos();
-
-  // Add draw offsets like elevation
-  worldPos.x += std::clamp(info.drawOffset.x, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
-  worldPos.y += std::clamp(info.drawOffset.y, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
-
-  // Add the item shift if necessary
-  if (info.appearance->hasFlag(AppearanceFlag::Shift))
-  {
-    worldPos.x -= info.appearance->flagData.shiftX;
-    worldPos.y -= info.appearance->flagData.shiftY;
-  }
-
+  const auto atlas = info.textureInfo.atlas;
   const auto &window = info.textureInfo.window;
   PushConstantData pushConstant{};
 
@@ -465,6 +456,27 @@ void MapRenderer::drawItem(const DrawInfo::Object &info)
   vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
 }
 
+void MapRenderer::drawItem(const DrawInfo::Object &info)
+{
+  constexpr int MaxDrawOffsetPixels = 24;
+  const auto *atlas = info.textureInfo.atlas;
+
+  WorldPosition worldPos = MapPosition{info.position.x + atlas->drawOffset.x, info.position.y + atlas->drawOffset.y}.worldPos();
+
+  // Add draw offsets like elevation
+  worldPos.x += std::clamp(info.drawOffset.x, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
+  worldPos.y += std::clamp(info.drawOffset.y, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
+
+  // Add the item shift if necessary
+  if (info.appearance->hasFlag(AppearanceFlag::Shift))
+  {
+    worldPos.x -= info.appearance->flagData.shiftX;
+    worldPos.y -= info.appearance->flagData.shiftY;
+  }
+
+  issueDraw(info, worldPos);
+}
+
 void MapRenderer::drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color)
 {
   ItemType &itemType = *Items::items.getItemTypeByServerId(serverId);
@@ -475,7 +487,17 @@ void MapRenderer::drawOverlayItemType(uint32_t serverId, const WorldPosition pos
   info.textureInfo = itemType.getTextureInfo();
   info.descriptorSet = objectDescriptorSet(info);
 
-  // _currentFrame->batchDraw.addOverlayItem(info);
+  // TODO Actually draw it
+}
+
+void MapRenderer::drawCreature(const DrawInfo::Creature &info)
+{
+  WorldPosition worldPos = MapPosition{
+      info.position.x + info.textureInfo.atlas->drawOffset.x,
+      info.position.y + info.textureInfo.atlas->drawOffset.y}
+                               .worldPos();
+
+  issueDraw(info, worldPos);
 }
 
 void MapRenderer::drawRectangle(DrawInfo::Rectangle &info)
@@ -584,6 +606,23 @@ glm::vec4 MapRenderer::getItemTypeDrawColor(uint32_t drawFlags)
   return drawFlags & ItemDrawFlags::Ghost ? colors::ItemPreview : colors::Default;
 }
 
+glm::vec4 MapRenderer::getCreatureDrawColor(const Creature &creature, const Position &position, uint32_t drawFlags)
+{
+  bool drawAsSelected = creature.selected || ((drawFlags & ItemDrawFlags::ActiveSelectionArea) && mapView->inDragRegion(position));
+  if (drawAsSelected)
+  {
+    return colors::Selected;
+  }
+  else if (drawFlags & ItemDrawFlags::Shade)
+  {
+    return colors::Shade;
+  }
+  else
+  {
+    return colors::Default;
+  }
+}
+
 DrawInfo::Object MapRenderer::itemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags)
 {
   DrawInfo::Object info;
@@ -592,6 +631,17 @@ DrawInfo::Object MapRenderer::itemDrawInfo(const Item &item, const Position &pos
   info.color = getItemDrawColor(item, position, drawFlags);
   info.textureInfo = item.getTextureInfo(position);
   info.descriptorSet = objectDescriptorSet(info);
+
+  return info;
+}
+
+DrawInfo::Creature MapRenderer::creatureDrawInfo(const Creature &creature, const Position &position, uint32_t drawFlags)
+{
+  DrawInfo::Creature info;
+  info.color = getCreatureDrawColor(creature, position, drawFlags);
+  info.textureInfo = creature.getTextureInfo();
+  info.descriptorSet = objectDescriptorSet(info);
+  info.position = position;
 
   return info;
 }
