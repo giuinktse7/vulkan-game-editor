@@ -311,54 +311,54 @@ std::shared_ptr<Map> makeTestMap2()
     //     }
     // }
 
-    // std::array<uint16_t, 9> sandWaterBorders{7951, 7945, 7952, 7946, 4608, 7944, 7953, 7943, 7954};
+    std::array<uint16_t, 9> sandWaterBorders{7951, 7945, 7952, 7946, 4608, 7944, 7953, 7943, 7954};
 
-    // Position pos(10, 10, 7);
-    // map->addItem(pos, sandWaterBorders[0]);
+    Position pos(10, 10, 7);
+    map->addItem(pos, sandWaterBorders[0]);
 
-    // pos.move(1, 0, 0);
-    // map->addItem(pos, sandWaterBorders[1]);
+    pos.move(1, 0, 0);
+    map->addItem(pos, sandWaterBorders[1]);
 
-    // pos.move(1, 0, 0);
-    // map->addItem(pos, sandWaterBorders[2]);
+    pos.move(1, 0, 0);
+    map->addItem(pos, sandWaterBorders[2]);
 
-    // pos.move(-2, 1, 0);
-    // map->addItem(pos, sandWaterBorders[3]);
+    pos.move(-2, 1, 0);
+    map->addItem(pos, sandWaterBorders[3]);
 
-    // pos.move(1, 0, 0);
-    // map->addItem(pos, sandWaterBorders[4]);
+    pos.move(1, 0, 0);
+    map->addItem(pos, sandWaterBorders[4]);
 
-    // pos.move(1, 0, 0);
-    // map->addItem(pos, sandWaterBorders[5]);
+    pos.move(1, 0, 0);
+    map->addItem(pos, sandWaterBorders[5]);
 
-    // pos.move(-2, 1, 0);
-    // map->addItem(pos, sandWaterBorders[6]);
+    pos.move(-2, 1, 0);
+    map->addItem(pos, sandWaterBorders[6]);
 
-    // pos.move(1, 0, 0);
-    // map->addItem(pos, sandWaterBorders[7]);
+    pos.move(1, 0, 0);
+    map->addItem(pos, sandWaterBorders[7]);
 
-    // pos.move(1, 0, 0);
-    // map->addItem(pos, sandWaterBorders[8]);
+    pos.move(1, 0, 0);
+    map->addItem(pos, sandWaterBorders[8]);
 
-    uint32_t i = 37733;
+    // uint32_t i = 37733;
 
-    for (int y = 0; y < 1000; ++y)
-    {
-        for (int x = 1; x < 40; ++x)
-        {
-            if (i >= 39768)
-            {
-                VME_LOG_D("Added all " << (39768 - 37733) << " items.");
-                return map;
-            }
-            if (Items::items.getItemTypeByServerId(i)->isCorpse())
-                --x;
-            else
-                map->addItem(Position(x, y, 7), i);
+    // for (int y = 0; y < 1000; ++y)
+    // {
+    //     for (int x = 1; x < 40; ++x)
+    //     {
+    //         if (i >= 39768)
+    //         {
+    //             VME_LOG_D("Added all " << (39768 - 37733) << " items.");
+    //             return map;
+    //         }
+    //         if (Items::items.getItemTypeByServerId(i)->isCorpse())
+    //             --x;
+    //         else
+    //             map->addItem(Position(x, y, 7), i);
 
-            ++i;
-        }
-    }
+    //         ++i;
+    //     }
+    // }
 
     return map;
 }

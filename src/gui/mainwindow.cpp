@@ -304,18 +304,23 @@ QListView *MainWindow::createItemPalette()
 
   std::vector<ItemTypeModelItem> data;
 
-  uint32_t from = 100;
-  uint32_t to = 500;
-
-  // uint32_t from = 37733;
-  // uint32_t to = 39768;
-  for (int i = from; i < to; ++i)
-  {
-    if (Items::items.validItemType(i))
+  auto addItemRange = [&data](uint32_t from, uint32_t to) {
+    for (int i = from; i < to; ++i)
     {
-      data.push_back(ItemTypeModelItem::fromServerId(i));
+      if (Items::items.validItemType(i))
+      {
+        data.push_back(ItemTypeModelItem::fromServerId(i));
+      }
     }
-  }
+  };
+
+  addItemRange(103, 104);
+  addItemRange(20776, 20781);
+  addItemRange(21113, 21121);
+  addItemRange(25200, 25296);
+  addItemRange(33571, 36501);
+  addItemRange(23172, 23258);
+  addItemRange(33817, 33852);
 
   QtItemTypeModel *model = new QtItemTypeModel(itemPalette);
   model->populate(std::move(data));

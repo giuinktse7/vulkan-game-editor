@@ -661,7 +661,7 @@ void Items::OtbReader::readNodes()
 		// itemType->speed = speed;
 		itemType->lightLevel = static_cast<uint8_t>(lightLevel);
 		itemType->lightColor = static_cast<uint8_t>(lightColor);
-		itemType->alwaysOnTopOrder = alwaysOnTopOrder;
+		itemType->alwaysOnTopOrder = static_cast<uint8_t>(alwaysOnTopOrder);
 		itemType->wareId = wareId;
 		itemType->maxTextLen = maxTextLen;
 
