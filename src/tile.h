@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 
+#include "creature.h"
 #include "item.h"
 #include "tile_location.h"
 
@@ -97,6 +98,11 @@ public:
 	inline uint32_t flags() const noexcept;
 
 	void setLocation(TileLocation &location);
+	void setCreature(Creature &&creature);
+	void setCreature(std::unique_ptr<Creature> &&creature);
+	std::unique_ptr<Creature> dropCreature();
+	inline Creature *creature() const noexcept;
+	inline bool hasCreature() const noexcept;
 
 	void initEntities();
 	void destroyEntities();
@@ -124,9 +130,13 @@ public:
 private:
 	friend class MapView;
 
+	void replaceGround(Item &&ground);
+	void replaceItem(uint16_t index, Item &&item);
+
 	std::vector<Item> _items;
-	std::unique_ptr<Item> _ground;
 	Position _position;
+	std::unique_ptr<Item> _ground;
+	std::unique_ptr<Creature> _creature;
 
 	// This structure makes it possible to access all flags, or map/stat flags separately.
 	union
@@ -140,9 +150,6 @@ private:
 	};
 
 	uint16_t _selectionCount;
-
-	void replaceGround(Item &&ground);
-	void replaceItem(uint16_t index, Item &&item);
 };
 
 inline uint16_t Tile::mapFlags() const noexcept
@@ -208,4 +215,14 @@ inline bool operator==(const Tile &lhs, const Tile &rhs)
 inline bool operator!=(const Tile &lhs, const Tile &rhs)
 {
 	return !(lhs == rhs);
+}
+
+inline Creature *Tile::creature() const noexcept
+{
+	return _creature ? _creature.get() : nullptr;
+}
+
+inline bool Tile::hasCreature() const noexcept
+{
+	return static_cast<bool>(_creature);
 }
