@@ -89,10 +89,11 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
     mapView->resetZoom();
     break;
   case ShortcutAction::FloorUp:
-    VME_LOG_D("FloorUp");
+    mapView->floorUp();
     break;
   case ShortcutAction::FloorDown:
-    VME_LOG_D("FloorDown");
+    mapView->floorDown();
+
     break;
   }
 }

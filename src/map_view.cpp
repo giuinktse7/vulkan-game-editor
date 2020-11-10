@@ -601,8 +601,6 @@ void MapView::mousePressEvent(VME::MouseEvent event)
             [this, pos, event](MouseAction::RawItem &action) {
               clearSelection();
 
-              TransactionType type;
-
               action.area = event.modifiers() & VME::ModifierKeys::Shift;
               action.erase = event.modifiers() & VME::ModifierKeys::Ctrl;
 
@@ -786,6 +784,21 @@ void MapView::setX(WorldPosition::value_type x)
 void MapView::setY(WorldPosition::value_type y)
 {
   camera.setY(y);
+}
+
+void MapView::floorUp()
+{
+  setFloor(floor() - 1);
+}
+
+void MapView::floorDown()
+{
+  setFloor(floor() + 1);
+}
+
+void MapView::setFloor(int floor)
+{
+  camera.setZ(floor);
 }
 
 void MapView::zoom(int delta)
