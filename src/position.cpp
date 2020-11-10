@@ -95,7 +95,7 @@ std::vector<Position> Position::bresenHams(Position from, Position to)
   while (true)
   {
     if (!(x0 == from.x && y0 == from.y))
-      result.emplace_back(x0, y0, 7);
+      result.emplace_back(x0, y0, from.z);
     if (x0 == x1 && y0 == y1)
       return result;
 
