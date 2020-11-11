@@ -128,6 +128,11 @@ private:
 
   void setShortcut(int keyAndModifiers, ShortcutAction shortcut);
 
+  struct MouseState
+  {
+    Qt::MouseButtons buttons = Qt::MouseButton::NoButton;
+  } mouseState;
+
   /**
  		*	Keeps track of all VulkanWindow instances. This is necessary for QT to
 		* validate VulkanWindow pointers in a QVariant.

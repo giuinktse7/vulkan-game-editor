@@ -118,14 +118,15 @@ void VulkanWindow::shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event
   }
 }
 
-void VulkanWindow::mousePressEvent(QMouseEvent *e)
+void VulkanWindow::mousePressEvent(QMouseEvent *event)
 {
   VME_LOG_D("VulkanWindow::mousePressEvent");
-  Qt::MouseButton button = e->button();
-  switch (button)
+  mouseState.buttons = event->buttons();
+
+  switch (event->button())
   {
   case Qt::MouseButton::RightButton:
-    showContextMenu(e->globalPos());
+    showContextMenu(event->globalPos());
     break;
   case Qt::MouseButton::LeftButton:
     if (contextMenu)
@@ -134,7 +135,7 @@ void VulkanWindow::mousePressEvent(QMouseEvent *e)
     }
     else
     {
-      mapView->mousePressEvent(QtUtil::vmeMouseEvent(e));
+      mapView->mousePressEvent(QtUtil::vmeMouseEvent(event));
     }
 
     break;
@@ -142,16 +143,18 @@ void VulkanWindow::mousePressEvent(QMouseEvent *e)
     break;
   }
 
-  e->ignore();
+  event->ignore();
 }
 
 void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
 {
+  mouseState.buttons = event->buttons();
   mapView->mouseReleaseEvent(QtUtil::vmeMouseEvent(event));
 }
 
 void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
+  mouseState.buttons = event->buttons();
   mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
 
   auto pos = event->windowPos();
