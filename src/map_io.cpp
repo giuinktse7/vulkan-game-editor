@@ -137,7 +137,7 @@ void SaveBuffer::finish()
   flushToFile();
 }
 
-void MapIO::saveMap(Map &map)
+void MapIO::saveMap(const Map &map)
 {
   std::ofstream stream;
   SaveBuffer buffer = SaveBuffer(stream);
@@ -280,7 +280,7 @@ void MapIO::saveMap(Map &map)
       }
       buffer.endNode();
 
-      if (otbmVersion >= OTBMVersion::MAP_OTBM_3)
+      if (otbmVersion >= OTBMVersion::OTBM3)
       {
         // TODO write waypoints
         // TODO See RME: iomap_otb.cpp line 1415
@@ -309,7 +309,7 @@ void MapIO::Serializer::serializeItem(const Item &item)
 
 void MapIO::Serializer::serializeItemAttributes(const Item &item)
 {
-  if (mapVersion.otbmVersion >= OTBMVersion::MAP_OTBM_2)
+  if (mapVersion.otbmVersion >= OTBMVersion::OTBM2)
   {
     const ItemType &itemType = *item.itemType;
     if (itemType.usesSubType())
@@ -319,7 +319,7 @@ void MapIO::Serializer::serializeItemAttributes(const Item &item)
     }
   }
 
-  if (mapVersion.otbmVersion >= OTBMVersion::MAP_OTBM_4)
+  if (mapVersion.otbmVersion >= OTBMVersion::OTBM4)
   {
     if (item.hasAttributes())
     {
@@ -364,27 +364,27 @@ void MapIO::Serializer::serializeItemAttributeMap(const std::unordered_map<ItemA
   }
 }
 
-void MapIO::Serializer::serializeItemAttribute(ItemAttribute &attribute)
+void MapIO::Serializer::serializeItemAttribute(const ItemAttribute &attribute)
 {
   if (attribute.holds<std::string>())
   {
     buffer.writeU8(AttributeTypeId::String);
-    buffer.writeLongString(attribute.get<std::string>().value());
+    buffer.writeLongString(attribute.as<std::string>());
   }
   else if (attribute.holds<int>())
   {
     buffer.writeU8(AttributeTypeId::Integer);
-    buffer.writeU32(static_cast<uint32_t>(attribute.get<int>().value()));
+    buffer.writeU32(static_cast<uint32_t>(attribute.as<int>()));
   }
   else if (attribute.holds<double>())
   {
     buffer.writeU8(AttributeTypeId::Double);
-    buffer.writeU64(static_cast<uint64_t>(attribute.get<double>().value()));
+    buffer.writeU64(static_cast<uint64_t>(attribute.as<double>()));
   }
   else if (attribute.holds<bool>())
   {
     buffer.writeU8(AttributeTypeId::Boolean);
-    buffer.writeU8(static_cast<uint8_t>(attribute.get<bool>().value()));
+    buffer.writeU8(static_cast<uint8_t>(attribute.as<bool>()));
   }
   else
   {

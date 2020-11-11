@@ -58,17 +58,17 @@ private:
 
 namespace MapIO
 {
-	void saveMap(Map &map);
+	void saveMap(const Map &map);
 
 	class Serializer
 	{
 	public:
-		Serializer(SaveBuffer &buffer, MapVersion mapVersion)
+		Serializer(SaveBuffer &buffer, const MapVersion &mapVersion)
 				: mapVersion(mapVersion), buffer(buffer) {}
 		void serializeItem(const Item &item);
 		void serializeItemAttributes(const Item &item);
 		void serializeItemAttributeMap(const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes);
-		void serializeItemAttribute(ItemAttribute &attribute);
+		void serializeItemAttribute(const ItemAttribute &attribute);
 
 	private:
 		MapVersion mapVersion;

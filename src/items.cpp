@@ -466,6 +466,7 @@ void Items::OtbReader::readRoot()
 	info.majorVersion = nextU32(); // items otb format file version
 	info.minorVersion = nextU32(); // client version
 	info.buildNumber = nextU32();	 // build number, revision
+	Items::items.otbVersionInfo = info;
 
 	// OTB description, something like 'OTB 3.62.78-11.1'
 	std::vector<uint8_t> buffer = util::sliceLeading<uint8_t>(nextBytes(128), 0);
@@ -474,7 +475,9 @@ void Items::OtbReader::readRoot()
 	readNodes();
 
 	Items::items.itemTypes.shrink_to_fit();
-	VME_LOG("Loaded items.otb in " << this->start.elapsedMillis() << " ms.");
+	std::ostringstream otbInfo;
+	otbInfo << info.majorVersion << "." << info.minorVersion << ", build: " << info.buildNumber;
+	VME_LOG("Loaded items.otb (" << otbInfo.str() << ") in " << this->start.elapsedMillis() << " ms.");
 }
 
 Items::OtbReader::OtbReader(const std::string &file)
