@@ -11,6 +11,10 @@
 
 #pragma warning(push)
 #pragma warning(disable : 26812)
+namespace
+{
+  const std::filesystem::path OutputFolder("C:/Users/giuin/Desktop");
+}
 
 using namespace OTBM;
 
@@ -38,7 +42,7 @@ void SaveBuffer::writeBytes(const uint8_t *cursor, size_t amount)
         flushToFile();
       }
       writeToken(Token::Escape);
-      std::cout << std::hex << static_cast<int>(buffer.back()) << std::endl;
+      VME_LOG_D(std::hex << static_cast<int>(buffer.back()));
     }
 
     if (buffer.size() + 1 >= maxBufferSize)
@@ -46,7 +50,7 @@ void SaveBuffer::writeBytes(const uint8_t *cursor, size_t amount)
       flushToFile();
     }
     buffer.emplace_back(*cursor);
-    std::cout << std::hex << static_cast<int>(buffer.back()) << std::endl;
+    VME_LOG_D(std::hex << static_cast<int>(buffer.back()));
 
     ++cursor;
     --amount;
@@ -61,10 +65,10 @@ void SaveBuffer::startNode(Node_t nodeType)
   }
 
   writeToken(Token::Start);
-  std::cout << std::hex << static_cast<int>(Token::Start) << std::endl;
+  VME_LOG_D(std::hex << static_cast<int>(Token::Start));
 
   writeNodeType(nodeType);
-  std::cout << std::hex << static_cast<int>(nodeType) << std::endl;
+  VME_LOG_D(std::hex << static_cast<int>(nodeType));
 }
 
 void SaveBuffer::endNode()
@@ -75,7 +79,7 @@ void SaveBuffer::endNode()
   }
 
   writeToken(Token::End);
-  std::cout << std::hex << static_cast<int>(Token::End) << std::endl;
+  VME_LOG_D(std::hex << static_cast<int>(Token::End));
 }
 
 void SaveBuffer::writeU8(uint8_t value)
@@ -127,7 +131,7 @@ void SaveBuffer::writeLongString(const std::string &s)
 
 void SaveBuffer::flushToFile()
 {
-  std::cout << "flushToFile()" << std::endl;
+  VME_LOG_D("flushToFile()");
   stream.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
   buffer.clear();
 }
@@ -142,7 +146,12 @@ void MapIO::saveMap(const Map &map)
   std::ofstream stream;
   SaveBuffer buffer = SaveBuffer(stream);
 
-  stream.open("map2.otbm", std::ofstream::out | std::ios::binary | std::ofstream::trunc);
+  auto path = OutputFolder / std::filesystem::path(map.name());
+  VME_LOG_D("Saving map to: " << path);
+
+  stream.open(
+      path,
+      std::ofstream::out | std::ios::binary | std::ofstream::trunc);
 
   buffer.writeRawString("OTBM");
 
