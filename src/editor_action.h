@@ -2,6 +2,7 @@
 
 #include <variant>
 
+#include "debug.h"
 #include "position.h"
 #include "signal.h"
 #include "util.h"
@@ -142,8 +143,10 @@ public:
     return _action;
   };
 
-  inline void setPrevious() noexcept
+  inline void setPrevious()
   {
+    DEBUG_ASSERT(!_locked, "The action is locked.");
+
     _action = _previousAction;
     _previousAction = MouseAction::None{};
 
@@ -154,9 +157,21 @@ public:
   {
     return _previousAction;
   }
-
-  void set(const MouseAction_t action) noexcept
+  /**
+   * @return true if the set was successful.
+   */
+  bool setIfUnlocked(const MouseAction_t action)
   {
+    if (_locked)
+      return false;
+
+    set(action);
+    return true;
+  }
+
+  void set(const MouseAction_t action)
+  {
+    DEBUG_ASSERT(!_locked, "The action is locked.");
     _previousAction = _action;
     _action = action;
 
@@ -170,6 +185,7 @@ public:
 
   void reset() noexcept
   {
+    unlock();
     set(MouseAction::Select{});
   }
 
@@ -191,9 +207,29 @@ public:
     actionChanged.connect<MemberFunction>(instance);
   }
 
+  inline void lock() noexcept;
+  inline void unlock() noexcept;
+  inline bool locked() const noexcept;
+
 private:
   Nano::Signal<void(const MouseAction_t &)> actionChanged;
 
   MouseAction_t _previousAction = MouseAction::Select{};
   MouseAction_t _action = MouseAction::Select{};
+  bool _locked = false;
 };
+
+inline void EditorAction::lock() noexcept
+{
+  _locked = true;
+}
+
+inline void EditorAction::unlock() noexcept
+{
+  _locked = false;
+}
+
+inline bool EditorAction::locked() const noexcept
+{
+  return _locked;
+}

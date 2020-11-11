@@ -571,9 +571,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
             [this, pos, event](MouseAction::Select &action) {
               if (event.modifiers() & VME::ModifierKeys::Shift)
               {
-                MouseAction::Select newAction = action;
-                newAction.area = true;
-                editorAction.set(newAction);
+                action.area = true;
               }
               else
               {
@@ -593,6 +591,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                 }
 
                 action.setMoveOrigin(pos);
+                editorAction.lock();
                 // VME_LOG_D("Start move: " << pos);
                 // VME_LOG_D("moveDelta: " << _selection.moveDelta());
               }
@@ -600,6 +599,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
             [this, pos, event](MouseAction::RawItem &action) {
               clearSelection();
+              editorAction.lock();
 
               action.area = event.modifiers() & VME::ModifierKeys::Shift;
               action.erase = event.modifiers() & VME::ModifierKeys::Ctrl;
@@ -623,6 +623,8 @@ void MapView::mousePressEvent(VME::MouseEvent event)
             },
 
             [this, event](MouseAction::Pan &pan) {
+              editorAction.lock();
+
               pan.mouseOrigin = event.pos();
               pan.cameraOrigin = camera.worldPosition();
             },
@@ -713,11 +715,13 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
   {
     std::visit(
         util::overloaded{
-            [](MouseAction::Pan pan) {
+            [this](MouseAction::Pan pan) {
               pan.stop();
+              editorAction.unlock();
             },
             [this](MouseAction::RawItem &action) {
               history.endTransaction(TransactionType::RawItemAction);
+              editorAction.unlock();
             },
             [this](MouseAction::Select &select) {
               if (select.isMoving())
@@ -727,11 +731,13 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
                   moveSelection(deltaPos);
 
                   select.reset();
+                  editorAction.unlock();
                 });
               }
               else
               {
                 select.reset();
+                editorAction.unlock();
               }
             },
             [](const auto &arg) {}},

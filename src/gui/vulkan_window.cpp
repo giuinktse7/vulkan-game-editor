@@ -63,18 +63,23 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
     mapView->redo();
     break;
   case ShortcutAction::Pan:
-    if (!mapView->editorAction.is<MouseAction::Pan>())
+  {
+    bool panning = mapView->editorAction.is<MouseAction::Pan>();
+    if (panning || mouseState.buttons & Qt::MouseButton::LeftButton)
     {
-      setCursor(Qt::OpenHandCursor);
-
-      MouseAction::Pan pan;
-      mapView->editorAction.set(pan);
+      break;
     }
+
+    setCursor(Qt::OpenHandCursor);
+
+    MouseAction::Pan pan;
+    mapView->editorAction.setIfUnlocked(pan);
     break;
+  }
   case ShortcutAction::EyeDropper:
   {
     const Item *topItem = mapView->map()->getTopItem(mapView->mouseGamePos());
-    if (topItem)
+    if (topItem && !mapView->editorAction.locked())
     {
       mapView->editorAction.setRawItem(topItem->serverId());
       mapView->requestDraw();
