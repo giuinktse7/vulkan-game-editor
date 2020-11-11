@@ -22,28 +22,15 @@ public:
   ItemAttribute(ItemAttribute_t type);
 
   template <typename T>
-  bool holds() const
-  {
-    return std::holds_alternative<T>(_value);
-  }
+  inline bool holds() const;
 
   template <typename T>
-  std::optional<T> get()
-  {
-    if (std::holds_alternative<T>(_value))
-    {
-      return std::get<T>(_value);
-    }
-    else
-    {
-      return {};
-    }
-  }
+  inline std::optional<T> get() const;
 
-  bool operator==(const ItemAttribute &rhs) const
-  {
-    return _value == rhs._value;
-  }
+  template <typename T>
+  inline T as() const;
+
+  bool operator==(const ItemAttribute &rhs) const;
 
   inline ItemAttribute_t type() const noexcept;
   inline ValueType value() const noexcept;
@@ -69,6 +56,31 @@ inline ItemAttribute_t ItemAttribute::type() const noexcept
 inline ItemAttribute::ValueType ItemAttribute::value() const noexcept
 {
   return _value;
+}
+
+template <typename T>
+inline bool ItemAttribute::holds() const
+{
+  return std::holds_alternative<T>(_value);
+}
+
+template <typename T>
+inline std::optional<T> ItemAttribute::get() const
+{
+  if (std::holds_alternative<T>(_value))
+  {
+    return std::get<T>(_value);
+  }
+  else
+  {
+    return {};
+  }
+}
+
+template <typename T>
+inline T ItemAttribute::as() const
+{
+  return std::get<T>(_value);
 }
 
 template <typename T, typename... Ts>

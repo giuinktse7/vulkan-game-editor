@@ -75,3 +75,8 @@ void ItemAttribute::setString(std::string &&value)
     Logger::error() << "Tried to assign value " << value << " to an ItemAttribute of type " << _type;
   }
 }
+
+bool ItemAttribute::operator==(const ItemAttribute &rhs) const
+{
+  return _value == rhs._value;
+}
