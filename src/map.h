@@ -33,8 +33,8 @@ class Map
 public:
 	Map();
 
-	MapIterator begin();
-	MapIterator end();
+	MapIterator begin() const;
+	MapIterator end() const;
 
 	MapRegion getRegion(Position from, Position to) const noexcept;
 
@@ -53,8 +53,8 @@ public:
 	*/
 	void moveTile(Position from, Position to);
 
-	MapVersion getMapVersion();
-	std::string &getDescription();
+	const MapVersion &getMapVersion() const;
+	const std::string &getDescription() const;
 
 	const util::Volume<uint16_t, uint16_t, uint8_t> size() const noexcept;
 	uint16_t width() const noexcept;

@@ -15,7 +15,7 @@ constexpr uint16_t DefaultHeight = 2048;
 constexpr uint16_t DefaultDepth = 16;
 
 Map::Map()
-    : root(quadtree::Node::NodeType::Root), _size(DefaultWidth, DefaultHeight, DefaultDepth)
+    : _name(""), root(quadtree::Node::NodeType::Root), _size(DefaultWidth, DefaultHeight, DefaultDepth)
 {
   DEBUG_ASSERT(util::powerOf2(_size.width()) && util::powerOf2(_size.height()) && util::powerOf2(_size.depth()), "Width & height must be powers of 2");
 }
@@ -244,14 +244,14 @@ void MapIterator::emplace(quadtree::Node *node)
   stack.emplace(node);
 }
 
-MapIterator Map::begin()
+MapIterator Map::begin() const
 {
   MapIterator iterator;
-  iterator.emplace(&this->root);
+  iterator.emplace(&const_cast<Map *>(this)->root);
 
   while (!iterator.stack.empty())
   {
-    MapIterator::NodeIndex &current = iterator.stack.top();
+    auto &current = iterator.stack.top();
 
     if (current.node->isLeaf())
     {
@@ -290,7 +290,7 @@ MapIterator &MapIterator::operator++()
 {
   while (!stack.empty())
   {
-    MapIterator::NodeIndex &current = stack.top();
+    auto &current = stack.top();
 
     if (current.node->isLeaf())
     {
@@ -330,7 +330,7 @@ MapIterator &MapIterator::operator++()
   return *this;
 }
 
-MapIterator Map::end()
+MapIterator Map::end() const
 {
   MapIterator iterator;
   return iterator.end();
@@ -356,12 +356,12 @@ TileLocation *MapIterator::operator->()
   return value;
 }
 
-MapVersion Map::getMapVersion()
+const MapVersion &Map::getMapVersion() const
 {
   return mapVersion;
 }
 
-std::string &Map::getDescription()
+const std::string &Map::getDescription() const
 {
   return description;
 }
