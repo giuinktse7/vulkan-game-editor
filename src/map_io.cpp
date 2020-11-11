@@ -254,6 +254,7 @@ void MapIO::saveMap(const Map &map)
           else
           {
             DEBUG_ASSERT(ground->serverId() <= UINT16_MAX, "This OTBM version only supports 16-bit server ids");
+            buffer.writeU8(NodeAttribute::Item);
             buffer.writeU16(ground->serverId());
           }
         }
