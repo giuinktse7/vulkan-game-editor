@@ -84,3 +84,13 @@ void Camera::setZoomStep(int zoomStep, ScreenPosition zoomOrigin)
 		updateZoom(zoomOrigin);
 	}
 }
+
+uint32_t Camera::Viewport::gameWidth() const
+{
+	return std::ceil<uint32_t>(width / (zoom * MapTileSize));
+}
+
+uint32_t Camera::Viewport::gameHeight() const
+{
+	return std::ceil<uint32_t>(height / (zoom * MapTileSize));
+}

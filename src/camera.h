@@ -25,6 +25,9 @@ public:
     WorldPosition::value_type width;
     WorldPosition::value_type height;
     float zoom;
+
+    uint32_t gameWidth() const;
+    uint32_t gameHeight() const;
   };
 
   Camera();
