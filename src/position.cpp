@@ -18,9 +18,6 @@ ScreenPosition::ScreenPosition() : BasePosition(0, 0) {}
 WorldPosition::WorldPosition(WorldPosition::value_type x, WorldPosition::value_type y) : BasePosition(x, y) {}
 WorldPosition::WorldPosition() : BasePosition(0, 0) {}
 
-MapPosition::MapPosition(WorldPosition::value_type x, WorldPosition::value_type y) : BasePosition(x, y) {}
-MapPosition::MapPosition() : BasePosition(0, 0) {}
-
 WorldPosition ScreenPosition::worldPos(const MapView &mapView) const
 {
   WorldPosition::value_type newX = std::lroundf(mapView.x() + this->x / mapView.getZoomFactor());
@@ -29,34 +26,9 @@ WorldPosition ScreenPosition::worldPos(const MapView &mapView) const
   return WorldPosition(newX, newY);
 }
 
-MapPosition ScreenPosition::mapPos(const MapView &mapView) const
-{
-  WorldPosition::value_type newX = std::lroundf((this->x / mapView.getZoomFactor()) / MapTileSize);
-  WorldPosition::value_type newY = std::lroundf((this->y / mapView.getZoomFactor()) / MapTileSize);
-
-  return MapPosition(newX, newY);
-}
-
-MapPosition WorldPosition::mapPos() const
-{
-  return MapPosition{
-      static_cast<WorldPosition::value_type>(std::floor(this->x / MapTileSize)),
-      static_cast<WorldPosition::value_type>(std::floor(this->y / MapTileSize))};
-}
-
-WorldPosition MapPosition::worldPos() const
-{
-  return WorldPosition(this->x * MapTileSize, this->y * MapTileSize);
-}
-
-Position MapPosition::floor(int floor) const
-{
-  return Position(this->x, this->y, floor);
-}
-
 Position ScreenPosition::toPos(const MapView &mapView) const
 {
-  return worldPos(mapView).mapPos().floor(mapView.floor());
+  return worldPos(mapView).toPos(mapView.floor());
 }
 
 Position WorldPosition::toPos(const MapView &mapView) const
@@ -66,7 +38,20 @@ Position WorldPosition::toPos(const MapView &mapView) const
 
 Position WorldPosition::toPos(int floor) const
 {
-  return mapPos().floor(floor);
+  // Because of Tibia's perspective, movement in Z also means movement in X and Y
+  int offset = floor - GROUND_FLOOR;
+
+  auto newX = static_cast<WorldPosition::value_type>(std::floor(this->x / MapTileSize)) - offset;
+  auto newY = static_cast<WorldPosition::value_type>(std::floor(this->y / MapTileSize)) - offset;
+
+  return Position(newX, newY, floor);
+}
+
+WorldPosition Position::worldPos() const noexcept
+{
+  // Because of Tibia's perspective, movement in Z also means movement in X and Y
+  int offset = z - GROUND_FLOOR;
+  return WorldPosition((x + offset) * MapTileSize, (y + offset) * MapTileSize);
 }
 
 /**

@@ -9,7 +9,23 @@
 
 class MapView;
 struct WorldPosition;
-struct MapPosition;
+
+enum GameDirection : uint8_t
+{
+	DIRECTION_NORTH = 0,
+	DIRECTION_EAST = 1,
+	DIRECTION_SOUTH = 2,
+	DIRECTION_WEST = 3,
+
+	DIRECTION_DIAGONAL_MASK = 4,
+	DIRECTION_SOUTHWEST = DIRECTION_DIAGONAL_MASK | 0,
+	DIRECTION_SOUTHEAST = DIRECTION_DIAGONAL_MASK | 1,
+	DIRECTION_NORTHWEST = DIRECTION_DIAGONAL_MASK | 2,
+	DIRECTION_NORTHEAST = DIRECTION_DIAGONAL_MASK | 3,
+
+	DIRECTION_LAST = DIRECTION_NORTHEAST,
+	DIRECTION_NONE = 8,
+};
 
 template <typename T>
 struct BasePosition
@@ -96,7 +112,6 @@ struct ScreenPosition : public BasePosition<int>
 	ScreenPosition();
 	ScreenPosition(int x, int y);
 	WorldPosition worldPos(const MapView &mapView) const;
-	MapPosition mapPos(const MapView &mapView) const;
 	Position toPos(const MapView &mapView) const;
 
 	ScreenPosition &operator-=(const ScreenPosition &rhs)
@@ -126,7 +141,6 @@ struct WorldPosition : public BasePosition<int32_t>
 	WorldPosition();
 	WorldPosition(value_type x, value_type y);
 
-	MapPosition mapPos() const;
 	Position toPos(const MapView &mapView) const;
 	Position toPos(int floor) const;
 
@@ -159,36 +173,6 @@ struct WorldPosition : public BasePosition<int32_t>
 	}
 };
 
-/**
- * A "pixel" (not tile) position on the map independent of any viewport.
- */
-struct MapPosition : public BasePosition<int32_t>
-{
-	using value_type = int32_t;
-	MapPosition();
-	MapPosition(value_type x, value_type y);
-
-	WorldPosition worldPos() const;
-
-	Position floor(int floor) const;
-};
-
-enum GameDirection : uint8_t
-{
-	DIRECTION_NORTH = 0,
-	DIRECTION_EAST = 1,
-	DIRECTION_SOUTH = 2,
-	DIRECTION_WEST = 3,
-
-	DIRECTION_DIAGONAL_MASK = 4,
-	DIRECTION_SOUTHWEST = DIRECTION_DIAGONAL_MASK | 0,
-	DIRECTION_SOUTHEAST = DIRECTION_DIAGONAL_MASK | 1,
-	DIRECTION_NORTHWEST = DIRECTION_DIAGONAL_MASK | 2,
-	DIRECTION_NORTHEAST = DIRECTION_DIAGONAL_MASK | 3,
-
-	DIRECTION_LAST = DIRECTION_NORTHEAST,
-	DIRECTION_NONE = 8,
-};
 inline bool operator==(const Position &pos1, const Position &pos2) noexcept
 {
 	return pos1.x == pos2.x && pos1.y == pos2.y && pos1.z == pos2.z;
@@ -197,12 +181,6 @@ inline bool operator==(const Position &pos1, const Position &pos2) noexcept
 inline bool operator!=(const Position &pos1, const Position &pos2) noexcept
 {
 	return !(pos1 == pos2);
-}
-
-inline std::ostream &operator<<(std::ostream &os, const Position &pos)
-{
-	os << pos.x << ':' << pos.y << ':' << pos.z;
-	return os;
 }
 
 template <typename T>
@@ -217,22 +195,10 @@ inline bool operator!=(const BasePosition<T> &pos1, const BasePosition<T> &pos2)
 	return !(pos1 == pos2);
 }
 
-template <typename T>
-inline std::ostream &operator<<(std::ostream &os, const BasePosition<T> &pos)
-{
-	os << "{ x=" << pos.x << ", y=" << pos.y << " }";
-	return os;
-}
-
-inline WorldPosition Position::worldPos() const noexcept
-{
-	return WorldPosition(x * MapTileSize, y * MapTileSize);
-}
-
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>
 >>>>>>>>>>>>>>>>>>>>>>>>>>>
->>>>>>>>>>Region2D>>>>>>>>>>>
+>>>>>>>>>>Region2D>>>>>>>>>
 >>>>>>>>>>>>>>>>>>>>>>>>>>>
 >>>>>>>>>>>>>>>>>>>>>>>>>>>
 */
@@ -332,15 +298,28 @@ private:
 };
 STRUCTURED_BINDING_T1(Region2D, 2);
 
+/* Common constants */
+namespace PositionConstants
+{
+	const Position Zero = Position(0, 0, 0);
+}
+
+template <typename T>
+inline std::ostream &operator<<(std::ostream &os, const BasePosition<T> &pos)
+{
+	os << "{ x=" << pos.x << ", y=" << pos.y << " }";
+	return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const Position &pos)
+{
+	os << pos.x << ':' << pos.y << ':' << pos.z;
+	return os;
+}
+
 template <typename T>
 inline std::ostream &operator<<(std::ostream &os, const Region2D<T> &pos)
 {
 	os << pos.show();
 	return os;
-}
-
-/* Common constants */
-namespace PositionConstants
-{
-	const Position Zero = Position(0, 0, 0);
 }
