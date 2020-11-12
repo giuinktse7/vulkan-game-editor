@@ -203,10 +203,10 @@ void MapIO::saveMap(const Map &map)
           continue;
         }
 
-        const Position &pos = location->position();
+        const Position &savePos = offsetToFitOtbmFormat(location->position());
 
         // Need new node?
-        if (pos.x < x || pos.x > x + 0xFF || pos.y < y || pos.y > y + 0xFF || pos.z != z)
+        if (savePos.x < x || savePos.x > x + 0xFF || savePos.y < y || savePos.y > y + 0xFF || savePos.z != z)
         {
           if (!emptyMap)
           {
@@ -216,13 +216,13 @@ void MapIO::saveMap(const Map &map)
 
           buffer.startNode(Node_t::TileArea);
 
-          x = pos.x & 0xFF00;
+          x = savePos.x & 0xFF00;
           buffer.writeU16(x);
 
-          y = pos.y & 0xFF00;
+          y = savePos.y & 0xFF00;
           buffer.writeU16(y);
 
-          z = pos.z;
+          z = savePos.z;
           buffer.writeU8(z);
         }
 

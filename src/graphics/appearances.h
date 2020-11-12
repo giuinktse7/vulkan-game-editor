@@ -290,9 +290,15 @@ inline bool SpriteInfo::hasAnimation() const noexcept
 
 struct FrameGroup
 {
+  FrameGroup(FixedFrameGroup fixedGroup, uint32_t id, SpriteInfo &&spriteInfo)
+      : fixedGroup(fixedGroup), id(id), spriteInfo(std::move(spriteInfo)) {}
+
   FixedFrameGroup fixedGroup;
   uint32_t id;
   SpriteInfo spriteInfo;
+
+  FrameGroup(const FrameGroup &) = delete;
+  FrameGroup(FrameGroup &&) = default;
 };
 
 /*

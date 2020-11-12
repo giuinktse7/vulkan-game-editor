@@ -709,7 +709,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
 void MapView::mouseReleaseEvent(VME::MouseEvent event)
 {
   Position pos = event.pos().toPos(*this);
-  // VME_LOG_D("MapView::mouseReleaseEvent: " << pos);
+  VME_LOG_D("MapView::mouseReleaseEvent: " << pos);
 
   if (!(event.buttons() & VME::MouseButtons::LeftButton))
   {
@@ -720,8 +720,11 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
               editorAction.unlock();
             },
             [this](MouseAction::RawItem &action) {
-              history.endTransaction(TransactionType::RawItemAction);
-              editorAction.unlock();
+              if (history.hasCurrentTransactionType(TransactionType::RawItemAction))
+              {
+                history.endTransaction(TransactionType::RawItemAction);
+                editorAction.unlock();
+              }
             },
             [this](MouseAction::Select &select) {
               if (select.isMoving())

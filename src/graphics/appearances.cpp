@@ -319,9 +319,9 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
         bool cumulative = protobufAppearance.flags().has_cumulative() && protobufAppearance.flags().cumulative();
 
         auto group = protobufAppearance.frame_group(0);
-        frameGroups.emplace_back<FrameGroup>({static_cast<FixedFrameGroup>(group.fixed_frame_group()),
-                                              static_cast<uint32_t>(group.id()),
-                                              SpriteInfo::fromProtobufData(spriteInfo)});
+        frameGroups.emplace_back(static_cast<FixedFrameGroup>(group.fixed_frame_group()),
+                                 static_cast<uint32_t>(group.id()),
+                                 SpriteInfo::fromProtobufData(spriteInfo));
     }
     else
     {

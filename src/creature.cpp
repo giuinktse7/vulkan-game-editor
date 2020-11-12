@@ -19,15 +19,15 @@ CreatureType::CreatureType(const tibia::protobuf::appearances::Appearance &appea
     const auto frameGroup = appearance.frame_group().at(i);
     const auto &spriteInfo = frameGroup.sprite_info();
 
-    frameGroups.emplace_back<FrameGroup>({static_cast<FixedFrameGroup>(frameGroup.fixed_frame_group()),
-                                          static_cast<uint32_t>(frameGroup.id()),
-                                          SpriteInfo::fromProtobufData(spriteInfo)});
+    _frameGroups.emplace_back<FrameGroup>({static_cast<FixedFrameGroup>(frameGroup.fixed_frame_group()),
+                                           static_cast<uint32_t>(frameGroup.id()),
+                                           SpriteInfo::fromProtobufData(spriteInfo)});
   }
 }
 
 const FrameGroup &CreatureType::frameGroup(size_t index) const
 {
-  return frameGroups.at(index);
+  return _frameGroups.at(index);
 }
 
 Creature::Creature(const CreatureType &creatureType)
@@ -65,7 +65,7 @@ const TextureInfo Creature::getTextureInfo() const
 {
   auto &frameGroup = creatureType.frameGroup(0);
 
-  uint32_t spriteIndex = to_underlying(_direction);
+  uint32_t spriteIndex = std::min<uint32_t>(to_underlying(_direction), frameGroup.spriteInfo.spriteIds.size() - 1);
   auto spriteId = frameGroup.spriteInfo.spriteIds.at(spriteIndex);
 
   TextureAtlas *atlas = creatureType.getTextureAtlas(spriteId);
@@ -97,9 +97,9 @@ TextureAtlas *CreatureType::getTextureAtlas(uint32_t spriteId) const
 
 void CreatureType::cacheTextureAtlases()
 {
-  for (int i = 0; i < frameGroups.size(); ++i)
+  for (int i = 0; i < _frameGroups.size(); ++i)
   {
-    for (const auto spriteId : frameGroups.at(i).spriteInfo.spriteIds)
+    for (const auto spriteId : _frameGroups.at(i).spriteInfo.spriteIds)
     {
       // Stop if the cache is full
       if (_atlases.back() != nullptr)
@@ -116,7 +116,7 @@ void CreatureType::cacheTextureAtlas(uint32_t spriteId)
   // If nothing is cached, cache the TextureAtlas for the first sprite ID in the appearance.
   if (_atlases.front() == nullptr)
   {
-    uint32_t firstSpriteId = frameGroups.at(0).spriteInfo.spriteIds.at(0);
+    uint32_t firstSpriteId = _frameGroups.at(0).spriteInfo.spriteIds.at(0);
     _atlases.front() = Appearances::getTextureAtlas(firstSpriteId);
   }
 

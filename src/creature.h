@@ -39,6 +39,7 @@ public:
   inline uint32_t id() const noexcept;
 
   const FrameGroup &frameGroup(size_t index) const;
+  inline const std::vector<FrameGroup> &frameGroups() const noexcept;
   TextureAtlas *getTextureAtlas(uint32_t spriteId) const;
 
 private:
@@ -47,7 +48,7 @@ private:
   static constexpr size_t CachedTextureAtlasAmount = 5;
 
   std::array<TextureAtlas *, CachedTextureAtlasAmount> _atlases = {};
-  std::vector<FrameGroup> frameGroups;
+  std::vector<FrameGroup> _frameGroups;
   uint32_t _id;
 
   bool _npc;
@@ -86,6 +87,11 @@ private:
   Direction _direction = Direction::North;
 };
 
+inline const std::vector<FrameGroup> &CreatureType::frameGroups() const noexcept
+{
+  return _frameGroups;
+}
+
 inline uint32_t CreatureType::id() const noexcept
 {
   return _id;
@@ -93,6 +99,6 @@ inline uint32_t CreatureType::id() const noexcept
 
 inline const CreatureType *Creatures::creatureType(uint32_t id)
 {
-  tsl::robin_map<uint32_t, CreatureType>::iterator result = _creatureTypes.find(id);
+  auto result = _creatureTypes.find(id);
   return result == _creatureTypes.end() ? nullptr : &result->second;
 }

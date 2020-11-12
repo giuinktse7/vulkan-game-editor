@@ -74,6 +74,7 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
 
     MouseAction::Pan pan;
     mapView->editorAction.setIfUnlocked(pan);
+    mapView->requestDraw();
     break;
   }
   case ShortcutAction::EyeDropper:
