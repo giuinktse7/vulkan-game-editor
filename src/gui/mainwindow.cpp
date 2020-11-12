@@ -16,6 +16,8 @@
 #include <QWidget>
 #include <QtWidgets>
 
+#include "../main.h"
+#include "../map_io.h"
 #include "../qt/logging.h"
 #include "../util.h"
 #include "border_layout.h"
@@ -27,8 +29,6 @@
 #include "qt_util.h"
 #include "split_widget.h"
 #include "vulkan_window.h"
-
-#include "../main.h"
 
 bool ItemListEventFilter::eventFilter(QObject *object, QEvent *event)
 {
@@ -103,11 +103,6 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
   vulkanWindow->setVulkanInstance(vulkanInstance);
   vulkanWindow->debugName = map->name().empty() ? toString(vulkanWindow) : map->name();
 
-  MouseAction::RawItem action;
-  action.serverId = 6217;
-  action.serverId = 2148;
-  editorAction.set(action);
-
   // Create the widget
   MapViewWidget *widget = new MapViewWidget(vulkanWindow);
 
@@ -145,9 +140,10 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
   if (map->name().empty())
   {
     uint32_t untitledNameId = nextUntitledId();
-    QString tabTitle = QString("Untitled-%1").arg(untitledNameId);
+    QString mapName = QString("Untitled-%1.otbm").arg(untitledNameId);
+    map->setName(mapName.toStdString());
 
-    mapTabs->addTabWithButton(widget, tabTitle, untitledNameId);
+    mapTabs->addTabWithButton(widget, mapName, untitledNameId);
   }
   else
   {
@@ -233,6 +229,9 @@ void MainWindow::initializeUI()
   zoomStatus->setText("");
   bottomLayout->addWidget(zoomStatus);
 
+  creatureId->setText("");
+  bottomLayout->addWidget(creatureId);
+
   rootLayout->addWidget(bottomStatusBar, BorderLayout::Position::South);
 
   setLayout(rootLayout);
@@ -242,9 +241,9 @@ MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent),
       rootLayout(new BorderLayout),
       positionStatus(new QLabel),
-      zoomStatus(new QLabel)
+      zoomStatus(new QLabel),
+      creatureId(new QLabel)
 {
-  initializeUI();
 
   // editorAction.onActionChanged<&MainWindow::editorActionChangedEvent>(this);
 }
@@ -305,7 +304,7 @@ QListView *MainWindow::createItemPalette()
   std::vector<ItemTypeModelItem> data;
 
   auto addItemRange = [&data](uint32_t from, uint32_t to) {
-    for (int i = from; i < to; ++i)
+    for (uint32_t i = from; i < to; ++i)
     {
       if (Items::items.validItemType(i))
       {
@@ -315,12 +314,13 @@ QListView *MainWindow::createItemPalette()
   };
 
   addItemRange(103, 104);
+  addItemRange(1025, 1029);
   addItemRange(20776, 20781);
-  addItemRange(21113, 21121);
-  addItemRange(25200, 25296);
-  addItemRange(33571, 36501);
-  addItemRange(23172, 23258);
-  addItemRange(33817, 33852);
+  // addItemRange(21113, 21121);
+  // addItemRange(25200, 25296);
+  // addItemRange(33571, 36501);
+  // addItemRange(23172, 23258);
+  // addItemRange(33817, 33852);
 
   QtItemTypeModel *model = new QtItemTypeModel(itemPalette);
   model->populate(std::move(data));
@@ -333,7 +333,7 @@ QListView *MainWindow::createItemPalette()
 
     MouseAction::RawItem action;
     action.serverId = value.itemType->id;
-    editorAction.set(action);
+    editorAction.setIfUnlocked(action);
   });
 
   return itemPalette;
@@ -350,6 +350,10 @@ QMenuBar *MainWindow::createMenuBar()
     auto newMap = new MenuAction(tr("New Map"), Qt::CTRL + Qt::Key_N, this);
     connect(newMap, &QWidgetAction::triggered, [this] { this->addMapTab(); });
     fileMenu->addAction(newMap);
+
+    auto saveMap = new MenuAction(tr("Save"), Qt::CTRL + Qt::Key_S, this);
+    connect(saveMap, &QWidgetAction::triggered, [this] { MapIO::saveMap(*(currentMapView()->map())); });
+    fileMenu->addAction(saveMap);
 
     auto closeMap = new MenuAction(tr("Close"), Qt::CTRL + Qt::Key_W, this);
     connect(closeMap, &QWidgetAction::triggered, mapTabs, &MapTabWidget::removeCurrentTab);
@@ -446,6 +450,16 @@ void MainWindow::setVulkanInstance(QVulkanInstance *instance)
 void MainWindow::mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos)
 {
   Position pos = mapView.toPosition(mousePos);
+  auto tile = mapView.getTile(pos);
+  if (tile && tile->hasCreature())
+  {
+    auto id = std::to_string(tile->creature()->creatureType.id());
+    this->creatureId->setText("Creature ID: " + QString::fromStdString(id));
+  }
+  else
+  {
+    this->creatureId->setText("");
+  }
   this->positionStatus->setText(toQString(pos));
 }
 

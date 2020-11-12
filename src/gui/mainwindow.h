@@ -37,16 +37,17 @@ public:
   MainWindow(QWidget *parent = nullptr);
 
   void setVulkanInstance(QVulkanInstance *instance);
+  void initializeUI();
 
   void addMapTab();
   void addMapTab(std::shared_ptr<Map> map);
+
+  EditorAction editorAction;
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;
 
 private:
-  EditorAction editorAction;
-
   // UI
   MapTabWidget *mapTabs;
   ItemPropertyWindow *propertyWindow;
@@ -55,6 +56,7 @@ private:
 
   QLabel *positionStatus;
   QLabel *zoomStatus;
+  QLabel *creatureId;
 
   uint32_t highestUntitledId = 0;
   std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> untitledIds;
@@ -74,7 +76,6 @@ private:
 
   void editorActionChangedEvent(const MouseAction_t &action);
 
-  void initializeUI();
   QMenuBar *createMenuBar();
   QListView *createItemPalette();
 

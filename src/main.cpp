@@ -220,6 +220,7 @@ std::pair<bool, std::optional<std::string>> MainApplication::loadGameData(std::s
 
     // loadTextures();
 
+    gameDataLoaded = true;
     return {true, std::nullopt};
 }
 
@@ -228,11 +229,16 @@ MainApplication::MainApplication(int &argc, char **argv) : QApplication(argc, ar
     connect(this, &QApplication::applicationStateChanged, this, &MainApplication::onApplicationStateChanged);
     connect(this, &QApplication::focusWindowChanged, this, &MainApplication::onFocusWindowChanged);
     connect(this, &QApplication::focusChanged, this, &MainApplication::onFocusWidgetChanged);
-}
 
-void MainApplication::setVulkanWindow(VulkanWindow *window)
-{
-    this->vulkanWindow = window;
+    loadStyleSheet(":/vme/style/qss/default.qss");
+
+    vulkanInstance.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
+
+    if (!vulkanInstance.create())
+        qFatal("Failed to create Vulkan instance: %d", vulkanInstance.errorCode());
+
+    mainWindow.setVulkanInstance(&vulkanInstance);
+    mainWindow.resize(1024, 768);
 }
 
 void MainApplication::onApplicationStateChanged(Qt::ApplicationState state)
@@ -300,78 +306,77 @@ std::shared_ptr<Map> makeTestMap2()
     std::shared_ptr<Map> map = std::make_shared<Map>();
 
     // Add some creatures
-    {
-        VME_LOG_D("Creature ids: ");
-        auto addCreature = [&map](Position &pos, uint32_t outfitId) {
-            auto newCreature = Creature::fromOutfitId(outfitId);
-            if (newCreature)
-            {
-                auto &creature = newCreature.value();
-                creature.setDirection(Creature::Direction::South);
-                map->getTile(pos)->setCreature(std::move(creature));
-                VME_LOG_D(outfitId);
-            }
-            else
-            {
-                VME_LOG_D("No creature (" << outfitId << ")");
-            }
-        };
+    // {
+    //     VME_LOG_D("Creature ids: ");
+    //     auto addCreature = [&map](Position &pos, uint32_t outfitId) {
+    //         auto newCreature = Creature::fromOutfitId(outfitId);
+    //         if (newCreature)
+    //         {
+    //             auto &creature = newCreature.value();
+    //             creature.setDirection(Creature::Direction::South);
+    //             map->getTile(pos)->setCreature(std::move(creature));
+    //             VME_LOG_D(outfitId);
+    //         }
+    //         else
+    //         {
+    //             VME_LOG_D("No creature (" << outfitId << ")");
+    //         }
+    //     };
 
-        int outfitId = 2000;
-        auto stop = [&outfitId] { return outfitId < 800; };
-        for (int y = 2; y < 30; y += 2)
-        {
-            if (stop())
-                break;
+    //     int outfitId = 2000;
+    //     auto stop = [&outfitId] { return outfitId < 800; };
+    //     for (int y = 2; y < 70; y += 3)
+    //     {
+    //         if (stop())
+    //             break;
 
-            for (int x = 2; x < 30; x += 2)
-            {
-                Position pos(x, y, 7);
-                map->addItem(pos, 103);
+    //         for (int x = 2; x < 70; x += 3)
+    //         {
+    //             Position pos(x, y, 7);
+    //             map->addItem(pos, 103);
 
-                while (!(Creatures::creatureType(outfitId) || stop()))
-                    --outfitId;
+    //             while (!(Creatures::creatureType(outfitId) || stop()))
+    //                 --outfitId;
 
-                if (stop())
-                    break;
+    //             if (stop())
+    //                 break;
 
-                addCreature(pos, outfitId);
-                --outfitId;
-            }
-        }
-    }
+    //             addCreature(pos, outfitId);
+    //             --outfitId;
+    //         }
+    //     }
+    // }
 
-    if (false)
-    {
-        std::array<uint16_t, 9> sandWaterBorders{7951, 7945, 7952, 7946, 4608, 7944, 7953, 7943, 7954};
+    // {
+    //     std::array<uint16_t, 9> sandWaterBorders{7951, 7945, 7952, 7946, 4608, 7944, 7953, 7943, 7954};
 
-        Position pos(10, 10, 7);
-        map->addItem(pos, sandWaterBorders[0]);
+    //     Position pos(10, 10, 7);
+    //     map->addItem(pos, sandWaterBorders[0]);
 
-        pos.move(1, 0, 0);
-        map->addItem(pos, sandWaterBorders[1]);
+    //     pos.move(1, 0, 0);
+    //     map->addItem(pos, sandWaterBorders[1]);
 
-        pos.move(1, 0, 0);
-        map->addItem(pos, sandWaterBorders[2]);
+    //     pos.move(1, 0, 0);
+    //     map->addItem(pos, sandWaterBorders[2]);
 
-        pos.move(-2, 1, 0);
-        map->addItem(pos, sandWaterBorders[3]);
+    //     pos.move(-2, 1, 0);
+    //     map->addItem(pos, sandWaterBorders[3]);
 
-        pos.move(1, 0, 0);
-        map->addItem(pos, sandWaterBorders[4]);
+    //     pos.move(1, 0, 0);
+    //     map->addItem(pos, sandWaterBorders[4]);
 
-        pos.move(1, 0, 0);
-        map->addItem(pos, sandWaterBorders[5]);
+    //     pos.move(1, 0, 0);
+    //     map->addItem(pos, sandWaterBorders[5]);
 
-        pos.move(-2, 1, 0);
-        map->addItem(pos, sandWaterBorders[6]);
+    //     pos.move(-2, 1, 0);
+    //     map->addItem(pos, sandWaterBorders[6]);
 
-        pos.move(1, 0, 0);
-        map->addItem(pos, sandWaterBorders[7]);
+    //     pos.move(1, 0, 0);
+    //     map->addItem(pos, sandWaterBorders[7]);
 
-        pos.move(1, 0, 0);
-        map->addItem(pos, sandWaterBorders[8]);
-    }
+    //     pos.move(1, 0, 0);
+    //     map->addItem(pos, sandWaterBorders[8]);
+    // }
 
     // uint32_t i = 37733;
 
@@ -396,14 +401,30 @@ std::shared_ptr<Map> makeTestMap2()
     return map;
 }
 
-int runApp(int argc, char *argv[])
+int MainApplication::run()
 {
+    assert(gameDataLoaded);
+
+    mainWindow.show();
+    return exec();
+}
+
+void MainApplication::initializeUI()
+{
+    mainWindow.initializeUI();
+
+    // uint32_t grassTuft = 6217;
+
+    mainWindow.editorAction.setRawItem(2148);
+}
+
+int main(int argc, char *argv[])
+{
+    Random::global().setSeed(123);
+    TimePoint::setApplicationStartTimePoint();
+
     MainApplication app(argc, argv);
 
-    // Appearances::dumpSpriteFiles("D:\\Programs\\Tibia\\packages\\TibiaExternal\\assets", "./spritedump");
-    // return 0;
-
-    app.loadStyleSheet(":/vme/style/qss/default.qss");
     const auto [success, error] = app.loadGameData("12.60.10411");
     if (!success)
     {
@@ -411,41 +432,12 @@ int runApp(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    // ItemType *t = Items::items.getItemTypeByServerId(7759);
-    // ItemType *t = Items::items.getItemTypeByServerId(5901);
-    // auto atlases = t->atlases();
-    // for (const auto id : t->appearance->getSpriteInfo().spriteIds)
-    // {
-    //     VME_LOG_D(id);
-    // }
-    // VME_LOG(t->getFirstTextureAtlas()->sourceFile);
-    // return 0;
+    app.initializeUI();
 
-    MainWindow mainWindow;
+    // app.mainWindow.addMapTab(makeTestMap1());
+    app.mainWindow.addMapTab(makeTestMap2());
 
-    QVulkanInstance instance;
-
-    instance.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
-
-    if (!instance.create())
-        qFatal("Failed to create Vulkan instance: %d", instance.errorCode());
-
-    mainWindow.setVulkanInstance(&instance);
-
-    {
-        std::shared_ptr<Map> map = makeTestMap1();
-        mainWindow.addMapTab(map);
-    }
-
-    {
-        std::shared_ptr<Map> map = makeTestMap2();
-        mainWindow.addMapTab(map);
-    }
-
-    mainWindow.resize(1024, 768);
-    mainWindow.show();
-
-    QFontDatabase database;
+    // QFontDatabase database;
 
     // const QStringList fontFamilies = database.families();
     // for (auto family : fontFamilies)
@@ -455,18 +447,44 @@ int runApp(int argc, char *argv[])
 
     // VME_LOG_D("???: " << database.hasFamily("Source Sans Pro"));
 
-    return app.exec();
+    // Appearances::dumpSpriteFiles("D:\\Programs\\Tibia\\packages\\TibiaExternal\\assets", "./spritedump");
+
+    // std::vector<uint32_t> bounacOutfitIds{1290, 1301, 1317, 1316, 1338, 1339};
+    // MainUtils::printOutfitAtlases(bounacOutfitIds);
+
+    // ItemType *t = Items::items.getItemTypeByServerId(7759);
+    // ItemType *t = Items::items.getItemTypeByServerId(5901);
+    // auto atlases = t->atlases();
+    // for (const auto id : t->appearance->getSpriteInfo().spriteIds)
+    // {
+    //     VME_LOG_D(id);
+    // }
+    // VME_LOG(t->getFirstTextureAtlas()->sourceFile);
+
+    return app.run();
 }
 
-int main(int argc, char *argv[])
+void MainUtils::printOutfitAtlases(std::vector<uint32_t> outfitIds)
 {
-    Random::global().setSeed(123);
-    TimePoint::setApplicationStartTimePoint();
+    std::unordered_set<const TextureAtlas *> atlases;
+    for (const auto id : outfitIds)
+    {
+        auto &type = *Creatures::creatureType(id);
+        auto &groups = type.frameGroups();
+        for (const FrameGroup &frameGroup : groups)
+        {
+            for (const auto spriteId : frameGroup.spriteInfo.spriteIds)
+            {
+                atlases.emplace(Appearances::getTextureAtlas(spriteId));
+            }
+        }
+    }
 
-    // testOctree();
-    // return 0;
-
-    return runApp(argc, argv);
+    VME_LOG("Looktype atlases:");
+    for (const auto atlas : atlases)
+    {
+        VME_LOG(atlas->sourceFile);
+    }
 }
 
 void MainApplication::loadStyleSheet(const QString &path)
