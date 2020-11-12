@@ -21,7 +21,6 @@
 #include "../qt/logging.h"
 #include "../util.h"
 #include "border_layout.h"
-#include "item_list.h"
 #include "item_property_window.h"
 #include "map_tab_widget.h"
 #include "map_view_widget.h"
@@ -204,6 +203,9 @@ void MainWindow::initializeUI()
   itemPalette->setMinimumWidth(240);
   itemPalette->setMaximumWidth(600);
 
+  itemPalette->addItems(1533, 1542);
+  itemPalette->addItems(5315, 5331);
+
   splitter->addWidget(itemPalette);
   splitter->setStretchFactor(0, 0);
 
@@ -295,48 +297,32 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
   }
 }
 
-QListView *MainWindow::createItemPalette()
+ItemList *MainWindow::createItemPalette()
 {
-  QListView *itemPalette = new QListView;
-  itemPalette->installEventFilter(new ItemListEventFilter(this));
-  itemPalette->setItemDelegate(new Delegate(this));
+  ItemList *itemList = new ItemList;
+  itemList->installEventFilter(new ItemListEventFilter(this));
+  itemList->setItemDelegate(new Delegate(this));
 
   std::vector<ItemTypeModelItem> data;
 
-  auto addItemRange = [&data](uint32_t from, uint32_t to) {
-    for (uint32_t i = from; i < to; ++i)
-    {
-      if (Items::items.validItemType(i))
-      {
-        data.push_back(ItemTypeModelItem::fromServerId(i));
-      }
-    }
-  };
-
-  addItemRange(103, 104);
-  addItemRange(1025, 1029);
-  addItemRange(20776, 20781);
+  // addItemRange(103, 104);
+  // addItemRange(1025, 1029);
+  // addItemRange(20776, 20781);
   // addItemRange(21113, 21121);
   // addItemRange(25200, 25296);
   // addItemRange(33571, 36501);
   // addItemRange(23172, 23258);
   // addItemRange(33817, 33852);
 
-  QtItemTypeModel *model = new QtItemTypeModel(itemPalette);
-  model->populate(std::move(data));
-
-  itemPalette->setModel(model);
-  itemPalette->setAlternatingRowColors(true);
-  connect(itemPalette, &QListView::clicked, [=](QModelIndex clickedIndex) {
-    QVariant variant = itemPalette->model()->data(clickedIndex);
-    auto value = variant.value<ItemTypeModelItem>();
+  connect(itemList, &QListView::clicked, [this, itemList](QModelIndex index) {
+    auto value = itemList->itemAtIndex(index);
 
     MouseAction::RawItem action;
     action.serverId = value.itemType->id;
     editorAction.setIfUnlocked(action);
   });
 
-  return itemPalette;
+  return itemList;
 }
 
 QMenuBar *MainWindow::createMenuBar()

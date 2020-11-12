@@ -5,6 +5,35 @@
 
 #include "qt_util.h"
 
+ItemList::ItemList(QWidget *parent) : QListView(parent)
+{
+  setAlternatingRowColors(true);
+
+  _model = new QtItemTypeModel(this);
+  setModel(_model);
+}
+
+void ItemList::addItem(uint32_t serverId)
+{
+  _model->addItem(serverId);
+}
+
+void ItemList::addItems(std::vector<uint32_t> &&serverIds)
+{
+  _model->addItems(std::move(serverIds));
+}
+
+void ItemList::addItems(uint32_t from, uint32_t to)
+{
+  _model->addItems(from, to);
+}
+
+ItemTypeModelItem ItemList::itemAtIndex(QModelIndex index)
+{
+  QVariant variant = _model->data(index);
+  return variant.value<ItemTypeModelItem>();
+}
+
 ItemTypeModelItem ItemTypeModelItem::fromServerId(uint32_t serverId)
 {
   ItemTypeModelItem value;
@@ -14,7 +43,7 @@ ItemTypeModelItem ItemTypeModelItem::fromServerId(uint32_t serverId)
   return value;
 }
 
-void QtItemTypeModel::populate(std::vector<QtItemTypeModel::Item> &&items)
+void QtItemTypeModel::populate(std::vector<ItemTypeModelItem> &&items)
 {
   beginResetModel();
   _data = std::move(items);
@@ -24,6 +53,49 @@ void QtItemTypeModel::populate(std::vector<QtItemTypeModel::Item> &&items)
 int QtItemTypeModel::rowCount(const QModelIndex &parent) const
 {
   return static_cast<int>(_data.size());
+}
+
+void QtItemTypeModel::addItem(uint32_t serverId)
+{
+  if (Items::items.validItemType(serverId))
+  {
+    beginInsertRows(QModelIndex(), _data.size(), _data.size() + 1);
+    _data.emplace_back(ItemTypeModelItem::fromServerId(serverId));
+    endInsertRows();
+  }
+}
+void QtItemTypeModel::addItems(uint32_t from, uint32_t to)
+{
+  DEBUG_ASSERT(from < to, "Bad range.");
+
+  std::vector<uint32_t> ids;
+
+  // Assume that most IDs in the range are valid
+  ids.reserve(to - from);
+
+  for (int serverId = from; serverId < to; ++serverId)
+  {
+    if (Items::items.validItemType(serverId))
+    {
+      ids.emplace_back(serverId);
+    }
+  }
+
+  addItems(std::move(ids));
+}
+
+void QtItemTypeModel::addItems(std::vector<uint32_t> &&serverIds)
+{
+  std::remove_if(serverIds.begin(), serverIds.end(), [](uint32_t serverId) {
+    return !Items::items.validItemType(serverId);
+  });
+
+  beginInsertRows(QModelIndex(), _data.size(), _data.size() + serverIds.size());
+  for (const auto serverId : serverIds)
+  {
+    _data.emplace_back(ItemTypeModelItem::fromServerId(serverId));
+  }
+  endInsertRows();
 }
 
 QVariant QtItemTypeModel::data(const QModelIndex &index, int role) const

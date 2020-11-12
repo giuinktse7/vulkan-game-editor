@@ -24,6 +24,7 @@ class MapTabWidget;
 class ItemPropertyWindow;
 
 #include "gui.h"
+#include "item_list.h"
 #include "signal.h"
 #include "vulkan_window.h"
 
@@ -77,7 +78,7 @@ private:
   void editorActionChangedEvent(const MouseAction_t &action);
 
   QMenuBar *createMenuBar();
-  QListView *createItemPalette();
+  ItemList *createItemPalette();
 
   // void updatePositionText();
 };
