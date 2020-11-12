@@ -276,7 +276,7 @@ inline ScreenPosition MapView::mousePos() const
 
 inline Position MapView::mouseGamePos() const
 {
-	return mousePos().worldPos(*this).mapPos().floor(floor());
+	return mousePos().toPos(*this);
 }
 
 inline WorldPosition MapView::mouseWorldPos() const

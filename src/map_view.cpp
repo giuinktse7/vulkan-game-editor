@@ -383,13 +383,12 @@ util::Rectangle<int> MapView::getGameBoundingRect() const
   Position position = camera.position();
 
   const Camera::Viewport &viewport = camera.viewport();
-  auto [width, height] = ScreenPosition(viewport.width, viewport.height).mapPos(*this);
   util::Rectangle<int> rect;
   rect.x1 = position.x;
   rect.y1 = position.y;
   // Add one to not miss large sprites (64 in width or height) when zoomed in
-  rect.x2 = position.x + width + 10;
-  rect.y2 = position.y + height + 10;
+  rect.x2 = position.x + viewport.gameWidth() + 10;
+  rect.y2 = position.y + viewport.gameHeight() + 10;
 
   return rect;
 }
@@ -411,9 +410,7 @@ MapRegion MapView::mapRegion() const
   from.z = from.z <= GROUND_FLOOR ? GROUND_FLOOR : MAP_LAYERS - 1;
 
   const Camera::Viewport &viewport = camera.viewport();
-  auto [width, height] = ScreenPosition(viewport.width, viewport.height).mapPos(*this);
-
-  Position to(from.x + width, from.y + height, camera.z());
+  Position to(from.x + viewport.gameWidth(), from.y + viewport.gameHeight(), camera.z());
 
   return _map->getRegion(from, to);
 }

@@ -460,8 +460,7 @@ void MapRenderer::drawItem(const DrawInfo::Object &info)
 {
   constexpr int MaxDrawOffsetPixels = 24;
   const auto *atlas = info.textureInfo.atlas;
-
-  WorldPosition worldPos = MapPosition{info.position.x + atlas->drawOffset.x, info.position.y + atlas->drawOffset.y}.worldPos();
+  WorldPosition worldPos = (info.position + Position(atlas->drawOffset.x, atlas->drawOffset.y, 0)).worldPos();
 
   // Add draw offsets like elevation
   worldPos.x += std::clamp(info.drawOffset.x, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
@@ -492,11 +491,7 @@ void MapRenderer::drawOverlayItemType(uint32_t serverId, const WorldPosition pos
 
 void MapRenderer::drawCreature(const DrawInfo::Creature &info)
 {
-  WorldPosition worldPos = MapPosition{
-      info.position.x + info.textureInfo.atlas->drawOffset.x,
-      info.position.y + info.textureInfo.atlas->drawOffset.y}
-                               .worldPos();
-
+  WorldPosition worldPos = (info.position + Position(info.textureInfo.atlas->drawOffset.x, info.textureInfo.atlas->drawOffset.y, 0)).worldPos();
   issueDraw(info, worldPos);
 }
 
