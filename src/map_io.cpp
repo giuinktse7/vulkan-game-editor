@@ -203,7 +203,7 @@ void MapIO::saveMap(const Map &map)
           continue;
         }
 
-        const Position &savePos = offsetToFitOtbmFormat(location->position());
+        const Position &savePos = location->position();
 
         // Need new node?
         if (savePos.x < x || savePos.x > x + 0xFF || savePos.y < y || savePos.y > y + 0xFF || savePos.z != z)
