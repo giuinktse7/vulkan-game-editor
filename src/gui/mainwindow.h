@@ -57,7 +57,7 @@ private:
 
   QLabel *positionStatus;
   QLabel *zoomStatus;
-  QLabel *creatureId;
+  QLabel *topItemInfo;
 
   uint32_t highestUntitledId = 0;
   std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> untitledIds;

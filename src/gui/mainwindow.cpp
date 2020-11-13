@@ -231,8 +231,8 @@ void MainWindow::initializeUI()
   zoomStatus->setText("");
   bottomLayout->addWidget(zoomStatus);
 
-  creatureId->setText("");
-  bottomLayout->addWidget(creatureId);
+  topItemInfo->setText("");
+  bottomLayout->addWidget(topItemInfo);
 
   rootLayout->addWidget(bottomStatusBar, BorderLayout::Position::South);
 
@@ -244,7 +244,7 @@ MainWindow::MainWindow(QWidget *parent)
       rootLayout(new BorderLayout),
       positionStatus(new QLabel),
       zoomStatus(new QLabel),
-      creatureId(new QLabel)
+      topItemInfo(new QLabel)
 {
 
   // editorAction.onActionChanged<&MainWindow::editorActionChangedEvent>(this);
@@ -437,16 +437,24 @@ void MainWindow::mapViewMousePosEvent(MapView &mapView, util::Point<float> mouse
 {
   Position pos = mapView.toPosition(mousePos);
   auto tile = mapView.getTile(pos);
-  if (tile && tile->hasCreature())
+  if (!tile || tile->isEmpty())
+  {
+    topItemInfo->setText("");
+  }
+  else if (tile->hasCreature())
   {
     auto id = std::to_string(tile->creature()->creatureType.id());
-    this->creatureId->setText("Creature ID: " + QString::fromStdString(id));
+    topItemInfo->setText("Creature looktype: " + QString::fromStdString(id));
   }
-  else
+  else if (tile->hasTopItem())
   {
-    this->creatureId->setText("");
+    auto topItem = tile->getTopItem();
+    std::ostringstream s;
+    s << "Item \"" << topItem->name() << "\" id: " << topItem->serverId() << " cid: " << topItem->clientId();
+    topItemInfo->setText(QString::fromStdString(s.str()));
   }
-  this->positionStatus->setText(toQString(pos));
+
+  positionStatus->setText(toQString(pos));
 }
 
 void MainWindow::mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport)
