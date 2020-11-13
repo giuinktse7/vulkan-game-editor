@@ -29,7 +29,7 @@ namespace ecs
 	public:
 		virtual ~Entity()
 		{
-			// Empty
+			destroyEntity();
 		}
 
 		template <typename T>
@@ -43,10 +43,12 @@ namespace ecs
 		void markForDestruction();
 
 		virtual std::optional<EntityId> getEntityId() const = 0;
-		virtual void destroyEntity() = 0;
+
 		virtual bool isEntity() const = 0;
 
 		virtual void setEntityId(EntityId id) = 0;
+
+		virtual void destroyEntity() {}
 	};
 
 	class OptionalEntity : public Entity

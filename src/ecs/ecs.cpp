@@ -67,7 +67,6 @@ void ecs::OptionalEntity::destroyEntity()
   {
     // VME_LOG("Destroying entity with id: " << getEntityId().value());
     g_ecs.destroy(getEntityId().value());
+    entityId.reset();
   }
-
-  entityId.reset();
 }
