@@ -62,14 +62,8 @@ namespace quadtree
 
 		TileLocation &getOrCreateTileLocation(Position pos);
 
-		inline bool isLeaf() const noexcept
-		{
-			return nodeType == Node::NodeType::Leaf;
-		}
-		inline bool isRoot() const noexcept
-		{
-			return nodeType == Node::NodeType::Root;
-		}
+		inline bool isLeaf() const noexcept;
+		inline bool isRoot() const noexcept;
 
 		friend class ::Map;
 		friend class ::MapIterator;
@@ -83,3 +77,13 @@ namespace quadtree
 		};
 	};
 }; // namespace quadtree
+
+inline bool quadtree::Node::isLeaf() const noexcept
+{
+	return nodeType == NodeType::Leaf;
+}
+
+inline bool quadtree::Node::isRoot() const noexcept
+{
+	return nodeType == NodeType::Root;
+}

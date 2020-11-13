@@ -11,8 +11,8 @@ using namespace quadtree;
 using namespace std;
 
 // uint32_t has 32 bits: +- get 16 bits each. 4 least sig.
-// is used within a chunk. This gives (16 - 4) / 2 levels in the tree.
-constexpr uint32_t QuadTreeDepth = (16 - 4) / 2;
+// is used within a chunk. This gives (16 - 4) / 2 = 6 levels in the tree.
+constexpr uint32_t QuadTreeDepth = 6;
 
 // The implementation assumes a map in the range [-65535, 65535]
 

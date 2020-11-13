@@ -493,7 +493,10 @@ void MapRegion::Iterator::updateValue()
 //>>>>>>>>>>>MapArea>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-MapArea::MapArea(Position from, Position to) : from(from), to(to) {}
+MapArea::MapArea(Position from, Position to) : from(from), to(to)
+{
+  DEBUG_ASSERT(from.x >= 0 && from.y >= 0 && to.x >= 0 && to.y >= 0, "Position x, y must be positive");
+}
 
 MapArea::iterator::iterator(Position from, Position to) : from(from), to(to), value(from)
 {

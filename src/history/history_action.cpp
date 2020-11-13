@@ -63,6 +63,16 @@ namespace MapHistory
     addChange(std::move(change));
   }
 
+  void Action::reserve(size_t size)
+  {
+    changes.reserve(size);
+  }
+
+  void Action::shrinkToFit()
+  {
+    changes.shrink_to_fit();
+  }
+
   void Action::redo(MapView &mapView)
   {
     commit(mapView);

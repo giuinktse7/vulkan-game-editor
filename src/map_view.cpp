@@ -339,12 +339,28 @@ void MapView::removeItemsInRegion(const Position &from, const Position &to, std:
 
 void MapView::fillRegion(const Position &from, const Position &to, uint32_t serverId)
 {
+  if (!Items::items.validItemType(serverId))
+    return;
+
   history.beginTransaction(TransactionType::AddMapItem);
+
+  Action action(ActionType::SetTile);
+  action.reserve(Position::tilesInRegion(from, to));
 
   for (const auto &pos : MapArea(from, to))
   {
-    addItem(pos, serverId);
+    const Tile &currentTile = _map->getOrCreateTile(pos);
+
+    Tile newTile(currentTile.deepCopy());
+    newTile.addItem(Item(serverId));
+
+    // action.addChange(SetTile(std::move(newTile)));
+    action.changes.emplace_back(SetTile(std::move(newTile)));
   }
+
+  action.shrinkToFit();
+
+  history.commit(std::move(action));
 
   history.endTransaction(TransactionType::AddMapItem);
 }

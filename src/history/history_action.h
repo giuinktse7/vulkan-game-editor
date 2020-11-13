@@ -41,9 +41,12 @@ namespace MapHistory
           actionType(other.actionType),
           committed(other.committed) {}
 
+    void reserve(size_t size);
+    void shrinkToFit();
+
     std::vector<Change> changes;
 
-    void addChange(Change::DataTypes change)
+    void addChange(Change::DataTypes &&change)
     {
       changes.emplace_back(std::move(change));
     }

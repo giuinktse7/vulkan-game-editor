@@ -97,3 +97,12 @@ std::vector<Position> Position::bresenHams(Position from, Position to)
     }
   }
 }
+
+uint32_t Position::tilesInRegion(const Position &from, const Position &to)
+{
+  uint32_t dx = static_cast<uint32_t>(std::max(1, std::abs(to.x - from.x)));
+  uint32_t dy = static_cast<uint32_t>(std::max(1, std::abs(to.y - from.y)));
+  uint32_t dz = static_cast<uint32_t>(std::max(1, std::abs(to.z - from.z)));
+
+  return dx * dy * dz;
+}

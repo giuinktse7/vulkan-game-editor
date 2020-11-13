@@ -42,6 +42,7 @@ public:
 	void mousePressEvent(VME::MouseEvent event);
 	void mouseMoveEvent(VME::MouseEvent event);
 	void mouseReleaseEvent(VME::MouseEvent event);
+
 	/*
 		Escape the current action (for example when pressing the ESC key)
 	*/

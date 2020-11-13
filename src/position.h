@@ -41,6 +41,7 @@ struct Position : public BasePosition<int32_t>
 {
 	using value_type = int32_t;
 	static std::vector<Position> bresenHams(Position from, Position to);
+	static uint32_t tilesInRegion(const Position &from, const Position &to);
 
 	Position();
 	Position(value_type x, value_type y, int z);
