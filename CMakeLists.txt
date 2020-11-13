@@ -109,7 +109,7 @@ set(CommonSources
     ../vendor/tsl/robin_set.h
     src/main.h
     src/map.h
-    src/map_io.h
+    src/save_map.h
     src/map_view.h
     src/otb.h
     src/position.h
@@ -158,7 +158,7 @@ set(CommonSources
     src/item_type.cpp
     src/logger.cpp
     src/map.cpp
-    src/map_io.cpp
+    src/save_map.cpp
     src/map_view.cpp
     src/otb.cpp
     src/position.cpp
