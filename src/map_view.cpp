@@ -616,7 +616,10 @@ void MapView::mousePressEvent(VME::MouseEvent event)
               }
               else
               {
-                addItem(pos, action.serverId);
+                if (!action.area)
+                {
+                  addItem(pos, action.serverId);
+                }
               }
             },
 
