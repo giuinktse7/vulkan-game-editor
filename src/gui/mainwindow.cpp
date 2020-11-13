@@ -425,6 +425,12 @@ QMenuBar *MainWindow::createMenuBar()
     menuBar->addAction(debug);
   }
 
+  {
+    QAction *runTest = new QAction(tr("Run MapView test"), this);
+    connect(runTest, &QAction::triggered, [=] { currentMapView()->perfTest(); });
+    menuBar->addAction(runTest);
+  }
+
   return menuBar;
 }
 
