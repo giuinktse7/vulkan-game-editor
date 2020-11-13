@@ -339,7 +339,7 @@ void MapIO::Serializer::serializeItemAttributes(const Item &item)
   }
 }
 
-void MapIO::Serializer::serializeItemAttributeMap(const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes)
+void MapIO::Serializer::serializeItemAttributeMap(const vme_unordered_map<ItemAttribute_t, ItemAttribute> &attributes)
 {
   // Can not have more than UINT16_MAX items
   if (attributes.size() > UINT16_MAX)

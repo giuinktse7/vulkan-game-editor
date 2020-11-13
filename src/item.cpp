@@ -26,11 +26,6 @@ Item::Item(ItemTypeId itemTypeId)
 	registerEntity();
 }
 
-// std::optional<Entity> entity;
-// ItemType *itemType;
-// std::unordered_map<ItemAttribute_t, ItemAttribute> attributes;
-// uint16_t subtype = 1;
-
 Item::Item(Item &&other) noexcept
 		: ecs::OptionalEntity(std::move(other)),
 			itemType(other.itemType),
@@ -38,6 +33,7 @@ Item::Item(Item &&other) noexcept
 			attributes(std::move(other.attributes)),
 			subtype(other.subtype)
 {
+	// Necessary because the move does not remove the entity id of 'other'
 	other.entityId.reset();
 }
 
@@ -49,6 +45,7 @@ Item &Item::operator=(Item &&other) noexcept
 	subtype = other.subtype;
 	selected = other.selected;
 
+	// Necessary because the move does not remove the entity id of 'other'
 	other.entityId.reset();
 
 	return *this;
@@ -80,7 +77,6 @@ const TextureInfo Item::getTextureInfo(const Position &pos) const
 
 	uint32_t offset = getPatternIndex(pos);
 	const SpriteInfo &spriteInfo = itemType->appearance->getSpriteInfo(0);
-
 	if (spriteInfo.hasAnimation() && isEntity())
 	{
 		auto c = g_ecs.getComponent<ItemAnimationComponent>(getEntityId().value());
@@ -162,9 +158,10 @@ void Item::setDescription(std::string &&description)
 	getOrCreateAttribute(ItemAttribute_t::Description).setString(std::move(description));
 }
 
-ItemAttribute &Item::getOrCreateAttribute(ItemAttribute_t attributeType)
+ItemAttribute &Item::getOrCreateAttribute(const ItemAttribute_t attributeType)
 {
-	return attributes.try_emplace(attributeType, attributeType).first->second;
+	attributes.try_emplace(attributeType, attributeType);
+	return attributes.at(attributeType);
 }
 
 void Item::registerEntity()

@@ -79,7 +79,7 @@ public:
 	void setDescription(const std::string &description);
 	void setDescription(std::string &&description);
 
-	const std::unordered_map<ItemAttribute_t, ItemAttribute> &getAttributes() const noexcept
+	const vme_unordered_map<ItemAttribute_t, ItemAttribute> &getAttributes() const noexcept
 	{
 		return attributes;
 	}
@@ -99,11 +99,11 @@ protected:
 	void registerEntity();
 
 private:
-	std::unordered_map<ItemAttribute_t, ItemAttribute> attributes;
+	vme_unordered_map<ItemAttribute_t, ItemAttribute> attributes;
 	// Subtype is either fluid type, count, subtype, or charges.
 	uint8_t subtype = 1;
 
-	ItemAttribute &getOrCreateAttribute(ItemAttribute_t attributeType);
+	ItemAttribute &getOrCreateAttribute(const ItemAttribute_t attributeType);
 
 	const uint32_t getPatternIndex(const Position &pos) const;
 };

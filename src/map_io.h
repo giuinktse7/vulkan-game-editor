@@ -67,7 +67,7 @@ namespace MapIO
 				: mapVersion(mapVersion), buffer(buffer) {}
 		void serializeItem(const Item &item);
 		void serializeItemAttributes(const Item &item);
-		void serializeItemAttributeMap(const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes);
+		void serializeItemAttributeMap(const vme_unordered_map<ItemAttribute_t, ItemAttribute> &attributes);
 		void serializeItemAttribute(const ItemAttribute &attribute);
 
 	private:
