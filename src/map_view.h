@@ -33,6 +33,9 @@ public:
 	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::shared_ptr<Map> map);
 	~MapView();
 
+	// Only for testing
+	void perfTest();
+
 	inline const Map *map() const noexcept;
 
 	inline uint16_t mapWidth() const noexcept;

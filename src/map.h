@@ -61,20 +61,10 @@ public:
 	uint16_t height() const noexcept;
 	uint8_t depth() const noexcept;
 
-	inline const Towns &towns() const noexcept
-	{
-		return _towns;
-	}
+	inline const Towns &towns() const noexcept;
+	inline const std::string &name() const noexcept;
 
-	inline const std::string &name() const noexcept
-	{
-		return _name;
-	}
-
-	void setName(std::string name)
-	{
-		_name = name;
-	}
+	void setName(std::string name);
 
 	/*
 		Clear the map.
@@ -132,6 +122,21 @@ inline uint16_t Map::height() const noexcept
 inline uint8_t Map::depth() const noexcept
 {
 	return _size.depth();
+}
+
+inline const Towns &Map::towns() const noexcept
+{
+	return _towns;
+}
+
+inline const std::string &Map::name() const noexcept
+{
+	return _name;
+}
+
+inline void Map::setName(std::string name)
+{
+	_name = name;
 }
 
 // Iterator for a map region

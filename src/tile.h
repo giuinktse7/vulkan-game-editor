@@ -17,7 +17,7 @@ public:
 	Tile(Position position);
 
 	Tile(TileLocation &location);
-	~Tile();
+	// ~Tile();
 
 	Tile(const Tile &) = delete;
 	Tile &operator=(const Tile &) = delete;
@@ -39,11 +39,8 @@ public:
 
 	Item *getTopItem() const;
 	bool hasTopItem() const;
-	Item *ground() const;
-	inline bool hasGround() const
-	{
-		return static_cast<bool>(_ground);
-	}
+	inline Item *ground() const noexcept;
+	inline bool hasGround() const noexcept;
 
 	void addItem(Item &&item);
 	void removeItem(size_t index);
@@ -198,6 +195,16 @@ inline uint16_t Tile::removeItemsIf(UnaryPredicate &&predicate)
 	}
 
 	return removedItems;
+}
+
+inline bool Tile::hasGround() const noexcept
+{
+	return static_cast<bool>(_ground);
+}
+
+Item *Tile::ground() const noexcept
+{
+	return _ground.get();
 }
 
 inline size_t Tile::selectionCount() const noexcept

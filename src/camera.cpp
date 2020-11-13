@@ -87,10 +87,10 @@ void Camera::setZoomStep(int zoomStep, ScreenPosition zoomOrigin)
 
 uint32_t Camera::Viewport::gameWidth() const
 {
-	return std::ceil<uint32_t>(width / (zoom * MapTileSize));
+	return static_cast<uint32_t>(std::ceil(width / (zoom * MapTileSize)));
 }
 
 uint32_t Camera::Viewport::gameHeight() const
 {
-	return std::ceil<uint32_t>(height / (zoom * MapTileSize));
+	return static_cast<uint32_t>(std::ceil(height / (zoom * MapTileSize)));
 }

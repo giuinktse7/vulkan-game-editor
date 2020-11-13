@@ -1,7 +1,7 @@
 #include "ecs.h"
 
-#include "item_animation.h"
 #include "../logger.h"
+#include "item_animation.h"
 
 ECS g_ecs;
 
@@ -65,6 +65,7 @@ void ecs::OptionalEntity::destroyEntity()
 {
   if (isEntity() && !g_ecs.isMarkedForDestruction(getEntityId().value()))
   {
+    // VME_LOG("Destroying entity with id: " << getEntityId().value());
     g_ecs.destroy(getEntityId().value());
   }
 

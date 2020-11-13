@@ -31,7 +31,7 @@ namespace MapHistory
     virtual ~ChangeItem() {}
 
     ChangeItem(ChangeItem &&other) = default;
-    ChangeItem &operator=(const ChangeItem &&other) noexcept
+    ChangeItem &operator=(ChangeItem &&other) noexcept
     {
       committed = other.committed;
       return *this;

@@ -65,7 +65,7 @@ const TextureInfo Creature::getTextureInfo() const
 {
   auto &frameGroup = creatureType.frameGroup(0);
 
-  uint32_t spriteIndex = std::min<uint32_t>(to_underlying(_direction), frameGroup.spriteInfo.spriteIds.size() - 1);
+  uint32_t spriteIndex = std::min<uint32_t>(to_underlying(_direction), static_cast<uint32_t>(frameGroup.spriteInfo.spriteIds.size()) - 1);
   auto spriteId = frameGroup.spriteInfo.spriteIds.at(spriteIndex);
 
   TextureAtlas *atlas = creatureType.getTextureAtlas(spriteId);

@@ -14,18 +14,18 @@ TimePoint TimePoint::now()
     return TimePoint(steady_clock::now());
 }
 
-time_t TimePoint::elapsedMillis(TimePoint start)
+time_t TimePoint::elapsedMillis(TimePoint start) const
 {
     return duration_cast<milliseconds>(this->timePoint - start.timePoint).count();
 }
 
-time_t TimePoint::elapsedMillis()
+time_t TimePoint::elapsedMillis() const
 {
     auto now = steady_clock::now();
     return duration_cast<milliseconds>(now - this->timePoint).count();
 }
 
-time_t TimePoint::elapsedMicros()
+time_t TimePoint::elapsedMicros() const
 {
     auto now = steady_clock::now();
     return duration_cast<microseconds>(now - this->timePoint).count();

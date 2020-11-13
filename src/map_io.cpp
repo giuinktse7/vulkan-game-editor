@@ -23,7 +23,7 @@ inline bool operator==(const uint8_t lhs, const Token &rhs)
   return lhs == to_underlying(rhs);
 }
 
-constexpr uint32_t DEFAULT_BUFFER_SIZE = 0xFFFF;
+constexpr uint32_t DEFAULT_BUFFER_SIZE = util::power(2, 20);
 
 SaveBuffer::SaveBuffer(std::ofstream &stream)
     : stream(stream), maxBufferSize(DEFAULT_BUFFER_SIZE)
@@ -42,7 +42,7 @@ void SaveBuffer::writeBytes(const uint8_t *cursor, size_t amount)
         flushToFile();
       }
       writeToken(Token::Escape);
-      VME_LOG_D(std::hex << static_cast<int>(buffer.back()));
+      // VME_LOG_D(std::hex << static_cast<int>(buffer.back()));
     }
 
     if (buffer.size() + 1 >= maxBufferSize)
@@ -50,7 +50,7 @@ void SaveBuffer::writeBytes(const uint8_t *cursor, size_t amount)
       flushToFile();
     }
     buffer.emplace_back(*cursor);
-    VME_LOG_D(std::hex << static_cast<int>(buffer.back()));
+    // VME_LOG_D(std::hex << static_cast<int>(buffer.back()));
 
     ++cursor;
     --amount;
@@ -65,10 +65,10 @@ void SaveBuffer::startNode(Node_t nodeType)
   }
 
   writeToken(Token::Start);
-  VME_LOG_D(std::hex << static_cast<int>(Token::Start));
+  // VME_LOG_D(std::hex << static_cast<int>(Token::Start));
 
   writeNodeType(nodeType);
-  VME_LOG_D(std::hex << static_cast<int>(nodeType));
+  // VME_LOG_D(std::hex << static_cast<int>(nodeType));
 }
 
 void SaveBuffer::endNode()
@@ -79,7 +79,7 @@ void SaveBuffer::endNode()
   }
 
   writeToken(Token::End);
-  VME_LOG_D(std::hex << static_cast<int>(Token::End));
+  // VME_LOG_D(std::hex << static_cast<int>(Token::End));
 }
 
 void SaveBuffer::writeU8(uint8_t value)
@@ -131,7 +131,7 @@ void SaveBuffer::writeLongString(const std::string &s)
 
 void SaveBuffer::flushToFile()
 {
-  VME_LOG_D("flushToFile()");
+  // VME_LOG_D("flushToFile()");
   stream.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
   buffer.clear();
 }
@@ -349,27 +349,28 @@ void MapIO::Serializer::serializeItemAttributeMap(const vme_unordered_map<ItemAt
 
   buffer.writeU16(static_cast<uint16_t>(std::min((size_t)UINT16_MAX, attributes.size())));
 
-  auto entry = attributes.begin();
-
   int i = 0;
-  while (entry != attributes.end() && i <= UINT16_MAX)
+  for (const auto &entry : attributes)
   {
-    const ItemAttribute_t &attributeType = entry->first;
+    if (i == UINT16_MAX)
+      break;
+
+    // Write the attribute name
+    const ItemAttribute_t &attributeType = entry.first;
     std::stringstream attributeTypeString;
     attributeTypeString << attributeType;
-    std::string s = attributeTypeString.str();
-    if (s.size() > UINT16_MAX)
+    std::string attributeName = attributeTypeString.str();
+    if (attributeName.size() > UINT16_MAX)
     {
-      buffer.writeString(s.substr(0, UINT16_MAX));
+      buffer.writeString(attributeName.substr(0, UINT16_MAX));
     }
     else
     {
-      buffer.writeString(s);
+      buffer.writeString(attributeName);
     }
 
-    auto attribute = entry->second;
-    serializeItemAttribute(attribute);
-    ++entry;
+    // Write the attribute value
+    serializeItemAttribute(entry.second);
     ++i;
   }
 }

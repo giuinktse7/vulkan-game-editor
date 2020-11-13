@@ -1,18 +1,18 @@
 #pragma once
 
-#include <string>
+#include <bitset>
+#include <memory>
 #include <optional>
+#include <queue>
+#include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
-#include <bitset>
-#include <queue>
-#include <memory>
-#include <type_traits>
 
 #include "../debug.h"
 #include "../util.h"
-#include "entity.h"
 #include "component_array.h"
+#include "entity.h"
 
 class ECS;
 
@@ -54,11 +54,11 @@ namespace ecs
 	public:
 		std::optional<ecs::EntityId> getEntityId() const override;
 		bool isEntity() const override;
-		void destroyEntity() override;
 
 		void setEntityId(ecs::EntityId id) override;
 
-	protected:
+		void destroyEntity() override;
+
 		std::optional<EntityId> entityId;
 	};
 

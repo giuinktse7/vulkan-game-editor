@@ -13,7 +13,7 @@ public:
 	static void setApplicationStartTimePoint();
 
 	template <typename T>
-	time_t timeSince(TimePoint other)
+	time_t timeSince(TimePoint other) const
 	{
 		return std::chrono::duration_cast<T>(this->timePoint - other.timePoint).count();
 	}
@@ -44,9 +44,9 @@ public:
 		return addTime<std::chrono::milliseconds>(delta);
 	}
 
-	time_t elapsedMillis();
-	time_t elapsedMicros();
-	time_t elapsedMillis(TimePoint start);
+	time_t elapsedMillis() const;
+	time_t elapsedMicros() const;
+	time_t elapsedMillis(TimePoint start) const;
 
 private:
 	std::chrono::steady_clock::time_point timePoint;

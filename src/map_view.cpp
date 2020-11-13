@@ -2,6 +2,7 @@
 
 #include "../vendor/rollbear-visit/visit.hpp"
 #include "const.h"
+#include "time_point.h"
 
 using namespace MapHistory;
 
@@ -918,4 +919,22 @@ void MapView::setUnderMouse(bool underMouse)
   {
     requestDraw();
   }
+}
+
+void MapView::perfTest()
+{
+  VME_LOG("Testing fillregion..");
+  TimePoint start;
+  Position from(0, 0, 7);
+  Position to(2000, 2000, 7);
+
+  fillRegion(from, to, 4526);
+
+  VME_LOG("fillRegion finished in " << start.elapsedMillis() << " ms.");
+  TimePoint start2;
+  waitForDraw([start2] {
+    VME_LOG("draw finished in " << start2.elapsedMillis() << " ms.");
+  });
+
+  requestDraw();
 }

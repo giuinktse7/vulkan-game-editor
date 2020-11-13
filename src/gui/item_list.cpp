@@ -59,7 +59,8 @@ void QtItemTypeModel::addItem(uint32_t serverId)
 {
   if (Items::items.validItemType(serverId))
   {
-    beginInsertRows(QModelIndex(), _data.size(), _data.size() + 1);
+    int size = static_cast<int>(_data.size());
+    beginInsertRows(QModelIndex(), size, size + 1);
     _data.emplace_back(ItemTypeModelItem::fromServerId(serverId));
     endInsertRows();
   }
@@ -73,7 +74,7 @@ void QtItemTypeModel::addItems(uint32_t from, uint32_t to)
   // Assume that most IDs in the range are valid
   ids.reserve(to - from);
 
-  for (int serverId = from; serverId < to; ++serverId)
+  for (uint32_t serverId = from; serverId < to; ++serverId)
   {
     if (Items::items.validItemType(serverId))
     {
@@ -90,7 +91,8 @@ void QtItemTypeModel::addItems(std::vector<uint32_t> &&serverIds)
     return !Items::items.validItemType(serverId);
   });
 
-  beginInsertRows(QModelIndex(), _data.size(), _data.size() + serverIds.size());
+  int size = static_cast<int>(_data.size());
+  beginInsertRows(QModelIndex(), size, size + serverIds.size());
   for (const auto serverId : serverIds)
   {
     _data.emplace_back(ItemTypeModelItem::fromServerId(serverId));

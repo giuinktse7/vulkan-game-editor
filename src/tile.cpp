@@ -32,10 +32,6 @@ Tile &Tile::operator=(Tile &&other) noexcept
   return *this;
 }
 
-Tile::~Tile()
-{
-}
-
 void Tile::setLocation(TileLocation &location)
 {
   _position = location.position();
@@ -198,14 +194,14 @@ void Tile::addItem(Item &&item)
 
 void Tile::replaceGround(Item &&ground)
 {
-  bool s1 = _ground && _ground->selected;
-  bool s2 = ground.selected;
-  _ground = std::make_unique<Item>(std::move(ground));
+  bool currentSelected = _ground && _ground->selected;
 
-  if (s1 && !s2)
+  if (currentSelected && !ground.selected)
     --_selectionCount;
-  else if (!s1 && s2)
+  else if (!currentSelected && ground.selected)
     ++_selectionCount;
+
+  _ground = std::make_unique<Item>(std::move(ground));
 }
 
 void Tile::replaceItem(uint16_t index, Item &&item)
@@ -351,11 +347,6 @@ void Tile::deselectTopItem()
   }
 }
 
-Item *Tile::ground() const
-{
-  return _ground.get();
-}
-
 bool Tile::hasTopItem() const
 {
   return !isEmpty();
@@ -427,7 +418,7 @@ Tile Tile::deepCopy() const
 
 bool Tile::isEmpty() const
 {
-  return !_ground && _items.empty();
+  return !_ground && _items.empty() && !_creature;
 }
 
 bool Tile::allSelected() const
