@@ -7,28 +7,23 @@
 #include <optional>
 
 #include <QFile>
+#include <QFontDatabase>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QLoggingCategory>
 #include <QStyleFactory>
 
-#include <QFontDatabase>
-#include <QLabel>
-
-#include "gui/borderless_window.h"
-#include "gui/map_view_widget.h"
-
+#include "ecs/ecs.h"
 #include "graphics/appearances.h"
-
+#include "gui/borderless_window.h"
+#include "gui/map_tab_widget.h"
+#include "gui/map_view_widget.h"
 #include "items.h"
+#include "load_map.h"
+#include "qt/logging.h"
 #include "random.h"
 #include "time_point.h"
 #include "util.h"
-
-#include "qt/logging.h"
-
-#include "ecs/ecs.h"
-
-#include "gui/map_tab_widget.h"
 
 /*********************************************************/
 /*********************************************************/
@@ -347,36 +342,36 @@ std::shared_ptr<Map> makeTestMap2()
     //     }
     // }
 
-    // {
-    //     std::array<uint16_t, 9> sandWaterBorders{7951, 7945, 7952, 7946, 4608, 7944, 7953, 7943, 7954};
+    {
+        std::array<uint16_t, 9> sandWaterBorders{7951, 7945, 7952, 7946, 4608, 7944, 7953, 7943, 7954};
 
-    //     Position pos(10, 10, 7);
-    //     map->addItem(pos, sandWaterBorders[0]);
+        Position pos(10, 10, 7);
+        map->addItem(pos, sandWaterBorders[0]);
 
-    //     pos.move(1, 0, 0);
-    //     map->addItem(pos, sandWaterBorders[1]);
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[1]);
 
-    //     pos.move(1, 0, 0);
-    //     map->addItem(pos, sandWaterBorders[2]);
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[2]);
 
-    //     pos.move(-2, 1, 0);
-    //     map->addItem(pos, sandWaterBorders[3]);
+        pos.move(-2, 1, 0);
+        map->addItem(pos, sandWaterBorders[3]);
 
-    //     pos.move(1, 0, 0);
-    //     map->addItem(pos, sandWaterBorders[4]);
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[4]);
 
-    //     pos.move(1, 0, 0);
-    //     map->addItem(pos, sandWaterBorders[5]);
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[5]);
 
-    //     pos.move(-2, 1, 0);
-    //     map->addItem(pos, sandWaterBorders[6]);
+        pos.move(-2, 1, 0);
+        map->addItem(pos, sandWaterBorders[6]);
 
-    //     pos.move(1, 0, 0);
-    //     map->addItem(pos, sandWaterBorders[7]);
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[7]);
 
-    //     pos.move(1, 0, 0);
-    //     map->addItem(pos, sandWaterBorders[8]);
-    // }
+        pos.move(1, 0, 0);
+        map->addItem(pos, sandWaterBorders[8]);
+    }
 
     // uint32_t i = 37733;
 
@@ -425,11 +420,24 @@ int main(int argc, char *argv[])
 
     MainApplication app(argc, argv);
 
-    const auto [success, error] = app.loadGameData("12.60.10411");
-    if (!success)
     {
-        VME_LOG(error.value());
-        return EXIT_FAILURE;
+        const auto [success, error] = app.loadGameData("12.60.10411");
+        if (!success)
+        {
+            VME_LOG(error.value());
+            return EXIT_FAILURE;
+        }
+    }
+
+    {
+        std::filesystem::path mapPath = "C:/Users/giuin/Desktop/Untitled-1.otbm";
+        auto [map, error] = LoadMap::loadMap(mapPath);
+        if (error)
+        {
+            VME_LOG("Map load error: " << error.value());
+        }
+        VME_LOG("Finished loading map.");
+        return 0;
     }
 
     app.initializeUI();

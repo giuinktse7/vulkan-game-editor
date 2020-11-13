@@ -17,8 +17,8 @@
 #include <QtWidgets>
 
 #include "../main.h"
-#include "../map_io.h"
 #include "../qt/logging.h"
+#include "../save_map.h"
 #include "../util.h"
 #include "border_layout.h"
 #include "item_property_window.h"
@@ -203,8 +203,35 @@ void MainWindow::initializeUI()
   itemPalette->setMinimumWidth(240);
   itemPalette->setMaximumWidth(600);
 
+  itemPalette->addItem(103);
   itemPalette->addItems(1533, 1542);
   itemPalette->addItems(5315, 5331);
+
+  itemPalette->addItem(1038);
+  itemPalette->addItems(1036, 1038);
+  itemPalette->addItem(1040);
+  itemPalette->addItem(405);
+
+  // Flat roof
+  {
+    itemPalette->addItem(920);
+    // Borders
+    itemPalette->addItem(921);
+    itemPalette->addItem(6565);
+    itemPalette->addItem(6564);
+    itemPalette->addItem(922);
+    itemPalette->addItem(5051);
+    itemPalette->addItem(5053);
+    itemPalette->addItem(5045);
+    itemPalette->addItem(5047);
+    itemPalette->addItem(923);
+    itemPalette->addItem(5048);
+    itemPalette->addItem(5050);
+    itemPalette->addItem(5054);
+    itemPalette->addItem(924);
+  }
+
+  itemPalette->addItem(4526);
 
   splitter->addWidget(itemPalette);
   splitter->setStretchFactor(0, 0);
@@ -338,7 +365,7 @@ QMenuBar *MainWindow::createMenuBar()
     fileMenu->addAction(newMap);
 
     auto saveMap = new MenuAction(tr("Save"), Qt::CTRL + Qt::Key_S, this);
-    connect(saveMap, &QWidgetAction::triggered, [this] { MapIO::saveMap(*(currentMapView()->map())); });
+    connect(saveMap, &QWidgetAction::triggered, [this] { SaveMap::saveMap(*(currentMapView()->map())); });
     fileMenu->addAction(saveMap);
 
     auto closeMap = new MenuAction(tr("Close"), Qt::CTRL + Qt::Key_W, this);

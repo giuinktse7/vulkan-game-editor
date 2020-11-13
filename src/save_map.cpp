@@ -18,130 +18,9 @@ namespace
 
 using namespace OTBM;
 
-inline bool operator==(const uint8_t lhs, const Token &rhs)
-{
-  return lhs == to_underlying(rhs);
-}
-
 constexpr uint32_t DEFAULT_BUFFER_SIZE = util::power(2, 20);
 
-SaveBuffer::SaveBuffer(std::ofstream &stream)
-    : stream(stream), maxBufferSize(DEFAULT_BUFFER_SIZE)
-{
-  buffer.reserve(DEFAULT_BUFFER_SIZE);
-}
-
-void SaveBuffer::writeBytes(const uint8_t *cursor, size_t amount)
-{
-  while (amount > 0)
-  {
-    if (*cursor == Token::Start || *cursor == Token::End || *cursor == Token::Escape)
-    {
-      if (buffer.size() + 1 >= maxBufferSize)
-      {
-        flushToFile();
-      }
-      writeToken(Token::Escape);
-      // VME_LOG_D(std::hex << static_cast<int>(buffer.back()));
-    }
-
-    if (buffer.size() + 1 >= maxBufferSize)
-    {
-      flushToFile();
-    }
-    buffer.emplace_back(*cursor);
-    // VME_LOG_D(std::hex << static_cast<int>(buffer.back()));
-
-    ++cursor;
-    --amount;
-  }
-}
-
-void SaveBuffer::startNode(Node_t nodeType)
-{
-  if (buffer.size() + 2 >= maxBufferSize)
-  {
-    flushToFile();
-  }
-
-  writeToken(Token::Start);
-  // VME_LOG_D(std::hex << static_cast<int>(Token::Start));
-
-  writeNodeType(nodeType);
-  // VME_LOG_D(std::hex << static_cast<int>(nodeType));
-}
-
-void SaveBuffer::endNode()
-{
-  if (buffer.size() + 1 >= maxBufferSize)
-  {
-    flushToFile();
-  }
-
-  writeToken(Token::End);
-  // VME_LOG_D(std::hex << static_cast<int>(Token::End));
-}
-
-void SaveBuffer::writeU8(uint8_t value)
-{
-  writeBytes(&value, 1);
-}
-
-void SaveBuffer::writeU16(uint16_t value)
-{
-  writeBytes(reinterpret_cast<uint8_t *>(&value), 2);
-}
-
-void SaveBuffer::writeU32(uint32_t value)
-{
-  writeBytes(reinterpret_cast<uint8_t *>(&value), 4);
-}
-
-void SaveBuffer::writeU64(uint64_t value)
-{
-  writeBytes(reinterpret_cast<uint8_t *>(&value), 8);
-}
-
-void SaveBuffer::writeString(const std::string &s)
-{
-  if (s.size() > UINT16_MAX)
-  {
-    ABORT_PROGRAM("OTBM does not support strings larger than 65535 bytes.");
-  }
-
-  writeU16(static_cast<uint16_t>(s.size()));
-  writeBytes(reinterpret_cast<uint8_t *>(const_cast<char *>(s.data())), s.size());
-}
-
-void SaveBuffer::writeRawString(const std::string &s)
-{
-  writeBytes(reinterpret_cast<uint8_t *>(const_cast<char *>(s.data())), s.size());
-}
-
-void SaveBuffer::writeLongString(const std::string &s)
-{
-  if (s.size() > UINT32_MAX)
-  {
-    ABORT_PROGRAM("OTBM does not support long strings larger than 2^32 bytes.");
-  }
-
-  writeU32(static_cast<uint32_t>(s.size()));
-  writeBytes(reinterpret_cast<uint8_t *>(const_cast<char *>(s.data())), s.size());
-}
-
-void SaveBuffer::flushToFile()
-{
-  // VME_LOG_D("flushToFile()");
-  stream.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
-  buffer.clear();
-}
-
-void SaveBuffer::finish()
-{
-  flushToFile();
-}
-
-void MapIO::saveMap(const Map &map)
+void SaveMap::saveMap(const Map &map)
 {
   std::ofstream stream;
   SaveBuffer buffer = SaveBuffer(stream);
@@ -306,7 +185,7 @@ void MapIO::saveMap(const Map &map)
   stream.close();
 }
 
-void MapIO::Serializer::serializeItem(const Item &item)
+void SaveMap::Serializer::serializeItem(const Item &item)
 {
   buffer.startNode(Node_t::Item);
   DEBUG_ASSERT(item.serverId() <= UINT16_MAX, "This OTBM version only supports 16-bit server ids");
@@ -317,7 +196,7 @@ void MapIO::Serializer::serializeItem(const Item &item)
   buffer.endNode();
 }
 
-void MapIO::Serializer::serializeItemAttributes(const Item &item)
+void SaveMap::Serializer::serializeItemAttributes(const Item &item)
 {
   if (mapVersion.otbmVersion >= OTBMVersion::OTBM2)
   {
@@ -339,7 +218,7 @@ void MapIO::Serializer::serializeItemAttributes(const Item &item)
   }
 }
 
-void MapIO::Serializer::serializeItemAttributeMap(const vme_unordered_map<ItemAttribute_t, ItemAttribute> &attributes)
+void SaveMap::Serializer::serializeItemAttributeMap(const vme_unordered_map<ItemAttribute_t, ItemAttribute> &attributes)
 {
   // Can not have more than UINT16_MAX items
   if (attributes.size() > UINT16_MAX)
@@ -375,7 +254,7 @@ void MapIO::Serializer::serializeItemAttributeMap(const vme_unordered_map<ItemAt
   }
 }
 
-void MapIO::Serializer::serializeItemAttribute(const ItemAttribute &attribute)
+void SaveMap::Serializer::serializeItemAttribute(const ItemAttribute &attribute)
 {
   if (attribute.holds<std::string>())
   {
@@ -401,6 +280,128 @@ void MapIO::Serializer::serializeItemAttribute(const ItemAttribute &attribute)
   {
     Logger::error() << "Unknown attribute when saving map: " << attribute;
   }
+}
+
+//>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>
+//>>>>>SaveBuffer>>>>>
+//>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>
+
+SaveBuffer::SaveBuffer(std::ofstream &stream)
+    : stream(stream), maxBufferSize(DEFAULT_BUFFER_SIZE)
+{
+  buffer.reserve(DEFAULT_BUFFER_SIZE);
+}
+
+void SaveBuffer::writeBytes(const uint8_t *cursor, size_t amount)
+{
+  while (amount > 0)
+  {
+    if (*cursor == Token::Start || *cursor == Token::End || *cursor == Token::Escape)
+    {
+      if (buffer.size() + 1 >= maxBufferSize)
+      {
+        flushToFile();
+      }
+      writeToken(Token::Escape);
+      // VME_LOG_D(std::hex << static_cast<int>(buffer.back()));
+    }
+
+    if (buffer.size() + 1 >= maxBufferSize)
+    {
+      flushToFile();
+    }
+    buffer.emplace_back(*cursor);
+    // VME_LOG_D(std::hex << static_cast<int>(buffer.back()));
+
+    ++cursor;
+    --amount;
+  }
+}
+
+void SaveBuffer::startNode(Node_t nodeType)
+{
+  if (buffer.size() + 2 >= maxBufferSize)
+  {
+    flushToFile();
+  }
+
+  writeToken(Token::Start);
+  // VME_LOG_D(std::hex << static_cast<int>(Token::Start));
+
+  writeNodeType(nodeType);
+  // VME_LOG_D(std::hex << static_cast<int>(nodeType));
+}
+
+void SaveBuffer::endNode()
+{
+  if (buffer.size() + 1 >= maxBufferSize)
+  {
+    flushToFile();
+  }
+
+  writeToken(Token::End);
+  // VME_LOG_D(std::hex << static_cast<int>(Token::End));
+}
+
+void SaveBuffer::writeU8(uint8_t value)
+{
+  writeBytes(&value, 1);
+}
+
+void SaveBuffer::writeU16(uint16_t value)
+{
+  writeBytes(reinterpret_cast<uint8_t *>(&value), 2);
+}
+
+void SaveBuffer::writeU32(uint32_t value)
+{
+  writeBytes(reinterpret_cast<uint8_t *>(&value), 4);
+}
+
+void SaveBuffer::writeU64(uint64_t value)
+{
+  writeBytes(reinterpret_cast<uint8_t *>(&value), 8);
+}
+
+void SaveBuffer::writeString(const std::string &s)
+{
+  if (s.size() > UINT16_MAX)
+  {
+    ABORT_PROGRAM("OTBM does not support strings larger than 65535 bytes.");
+  }
+
+  writeU16(static_cast<uint16_t>(s.size()));
+  writeBytes(reinterpret_cast<uint8_t *>(const_cast<char *>(s.data())), s.size());
+}
+
+void SaveBuffer::writeRawString(const std::string &s)
+{
+  writeBytes(reinterpret_cast<uint8_t *>(const_cast<char *>(s.data())), s.size());
+}
+
+void SaveBuffer::writeLongString(const std::string &s)
+{
+  if (s.size() > UINT32_MAX)
+  {
+    ABORT_PROGRAM("OTBM does not support long strings larger than 2^32 bytes.");
+  }
+
+  writeU32(static_cast<uint32_t>(s.size()));
+  writeBytes(reinterpret_cast<uint8_t *>(const_cast<char *>(s.data())), s.size());
+}
+
+void SaveBuffer::flushToFile()
+{
+  // VME_LOG_D("flushToFile()");
+  stream.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
+  buffer.clear();
+}
+
+void SaveBuffer::finish()
+{
+  flushToFile();
 }
 
 #pragma warning(pop)

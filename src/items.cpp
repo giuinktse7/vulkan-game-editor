@@ -761,7 +761,7 @@ uint16_t Items::OtbReader::nextU16()
 
 uint32_t Items::OtbReader::nextU32()
 {
-	uint16_t result = 0;
+	uint32_t result = 0;
 	int shift = 0;
 	while (shift < 4)
 	{

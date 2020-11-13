@@ -10,16 +10,6 @@
 #include "otbm.h"
 #include "util.h"
 
-namespace OTBM
-{
-	enum class Token
-	{
-		Start = 0xFE,
-		End = 0xFF,
-		Escape = 0xFD,
-	};
-}
-
 /*
 Small wrapper for a buffer that is written to when saving an OTBM map.
 */
@@ -56,7 +46,7 @@ private:
 	void flushToFile();
 };
 
-namespace MapIO
+namespace SaveMap
 {
 	void saveMap(const Map &map);
 
@@ -75,7 +65,7 @@ namespace MapIO
 		SaveBuffer &buffer;
 	};
 
-} // namespace MapIO
+} // namespace SaveMap
 
 inline void SaveBuffer::writeU8(OTBM::NodeAttribute value)
 {

@@ -2,8 +2,24 @@
 
 namespace OTBM
 {
+  enum class Token
+  {
+    Start = 0xFE,
+    End = 0xFF,
+    Escape = 0xFD,
+  };
 
-// Pragma pack is VERY important since otherwise it won't be able to load the structs correctly
+  inline bool operator==(const uint8_t lhs, const Token &rhs)
+  {
+    return lhs == to_underlying(rhs);
+  }
+
+  inline bool operator!=(const uint8_t lhs, const Token &rhs)
+  {
+    return !(lhs == to_underlying(rhs));
+  }
+
+// Pragma pack is VERY important since otherwise it won't be able to load the structs correctly (Comment from Remere's Map Editor)
 #pragma pack(1)
 
   enum class NodeAttribute
