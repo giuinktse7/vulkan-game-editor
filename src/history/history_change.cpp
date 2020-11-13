@@ -100,6 +100,9 @@ namespace MapHistory
     Tile *currentTile = currentTilePtr.release();
 
     tile = std::move(*currentTile);
+
+    // Memory no longer handled by the unique ptr, must delete
+    delete currentTile;
   }
 
   void SetTile::undo(MapView &mapView)
@@ -109,6 +112,9 @@ namespace MapHistory
     Tile *currentTile = currentTilePointer.release();
 
     tile = std::move(*currentTile);
+
+    // Memory no longer handled by the unique ptr, must delete
+    delete currentTile;
   }
 
   RemoveTile::RemoveTile(Position pos) : data(pos) {}
@@ -120,6 +126,9 @@ namespace MapHistory
     Tile *currentTile = currentTilePointer.release();
 
     data = std::move(*currentTile);
+
+    // Memory no longer handled by the unique ptr, must delete
+    delete currentTile;
   }
 
   void RemoveTile::undo(MapView &mapView)
