@@ -80,3 +80,8 @@ bool ItemAttribute::operator==(const ItemAttribute &rhs) const
 {
   return _value == rhs._value;
 }
+
+bool ItemAttribute::operator!=(const ItemAttribute &rhs) const
+{
+  return !(_value == rhs._value);
+}

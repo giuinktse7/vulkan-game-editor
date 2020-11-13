@@ -31,6 +31,7 @@ public:
   inline T as() const;
 
   bool operator==(const ItemAttribute &rhs) const;
+  bool operator!=(const ItemAttribute &rhs) const;
 
   inline ItemAttribute_t type() const noexcept;
   inline ValueType value() const noexcept;
