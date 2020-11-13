@@ -486,6 +486,8 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
   Position from = fromWorldPos.toPos(*this);
   Position to = toWorldPos.toPos(*this);
 
+  dragRegion.reset();
+
   std::visit(
       util::overloaded{
           [this, from, to](MouseAction::Select &select) {
@@ -522,7 +524,6 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
           [](const auto &arg) {}},
       editorAction.action());
 
-  dragRegion.reset();
   requestDraw();
 }
 
