@@ -8,13 +8,16 @@ class Item;
 
 class TileLocation
 {
-	TileLocation();
-
 public:
+	TileLocation();
 	~TileLocation();
 
 	TileLocation(const TileLocation &) = delete;
 	TileLocation &operator=(const TileLocation &) = delete;
+
+	TileLocation(TileLocation &&other) noexcept;
+	TileLocation &operator=(TileLocation&& other) noexcept;
+
 
 	std::unique_ptr<Tile> replaceTile(Tile &&tile);
 

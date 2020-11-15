@@ -11,6 +11,17 @@ TileLocation::TileLocation()
   // std::cout << "TileLocation()" << std::endl;
 }
 
+TileLocation::TileLocation(TileLocation &&other) noexcept
+    : _tile(std::move(other._tile)), _position(std::move(other._position)) {}
+
+TileLocation &TileLocation::operator=(TileLocation &&other) noexcept
+{
+  _tile = std::move(other._tile);
+  _position = std::move(other._position);
+
+  return *this;
+}
+
 TileLocation::~TileLocation()
 {
   // std::cout << "~TileLocation()" << std::endl;
