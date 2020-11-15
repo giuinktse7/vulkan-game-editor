@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util.h"
+
 namespace OTBM
 {
   enum class Token

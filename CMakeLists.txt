@@ -138,6 +138,7 @@ set(CommonSources
     src/history/history_action.cpp
     src/history/history_change.cpp
     src/camera.cpp
+    src/otbm.cpp
     src/ecs/ecs.cpp
     src/ecs/item_animation.cpp
     src/file.cpp

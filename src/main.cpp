@@ -429,21 +429,24 @@ int main(int argc, char *argv[])
         }
     }
 
+    std::filesystem::path mapPath = "C:/Users/giuin/Desktop/Untitled-1.otbm";
+
+    std::variant<Map, std::string> result = LoadMap::loadMap(mapPath);
+    if (!std::holds_alternative<Map>(result))
     {
-        std::filesystem::path mapPath = "C:/Users/giuin/Desktop/Untitled-1.otbm";
-        auto [map, error] = LoadMap::loadMap(mapPath);
-        if (error)
-        {
-            VME_LOG("Map load error: " << error.value());
-        }
-        VME_LOG("Finished loading map.");
+        VME_LOG("Map load error: " << std::get<std::string>(result));
         return 0;
     }
 
-    app.initializeUI();
+    VME_LOG("Finished loading map.");
 
+    Map loadedMap = std::move(std::get<Map>(result));
+    std::shared_ptr<Map> sharedMap = std::make_shared<Map>(std::move(loadedMap));
+
+    app.initializeUI();
+    app.mainWindow.addMapTab(sharedMap);
     // app.mainWindow.addMapTab(makeTestMap1());
-    app.mainWindow.addMapTab(makeTestMap2());
+    // app.mainWindow.addMapTab(makeTestMap2());
 
     // QFontDatabase database;
 

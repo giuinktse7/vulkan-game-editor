@@ -42,12 +42,6 @@ Node &Node::operator=(Node &&other) noexcept
   return *this;
 }
 
-Node::~Node()
-{
-  auto k = this;
-  VME_LOG_D("~Node()");
-}
-
 void Node::clear()
 {
   DEBUG_ASSERT(isRoot(), "Only a root can be cleared.");

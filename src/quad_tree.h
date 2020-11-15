@@ -80,7 +80,6 @@ namespace quadtree
 
 		Node(NodeType nodeType);
 		Node(NodeType nodeType, int level);
-		~Node();
 
 		Node(Node &&other) noexcept;
 		Node &operator=(Node &&other) noexcept;

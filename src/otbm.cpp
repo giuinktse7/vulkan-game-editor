@@ -1,5 +1,6 @@
 #include "otbm.h"
 
+
 namespace
 {
   vme_unordered_set<OTBM::Node_t> nodeTypes{
