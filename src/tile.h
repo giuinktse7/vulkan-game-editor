@@ -94,6 +94,8 @@ public:
 	inline uint16_t statFlags() const noexcept;
 	inline uint32_t flags() const noexcept;
 
+	void setFlags(uint32_t flags);
+
 	void setLocation(TileLocation &location);
 	void setCreature(Creature &&creature);
 	void setCreature(std::unique_ptr<Creature> &&creature);

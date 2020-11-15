@@ -42,8 +42,8 @@ void SaveMap::saveMap(const Map &map)
     buffer.writeU16(map.width());
     buffer.writeU16(map.height());
 
-    buffer.writeU32(Items::items.getOtbVersionInfo().majorVersion);
-    buffer.writeU32(Items::items.getOtbVersionInfo().minorVersion);
+    buffer.writeU32(Items::items.otbVersionInfo().majorVersion);
+    buffer.writeU32(Items::items.otbVersionInfo().minorVersion);
 
     buffer.startNode(Node_t::MapData);
     {
@@ -51,7 +51,7 @@ void SaveMap::saveMap(const Map &map)
       buffer.writeString("Saved by VME (Vulkan Map Editor)" + __VME_VERSION__);
 
       buffer.writeU8(NodeAttribute::Description);
-      buffer.writeString(map.getDescription());
+      buffer.writeString(map.description());
 
       buffer.writeU8(NodeAttribute::ExternalSpawnFile);
       buffer.writeString("map.spawn.xml");
@@ -85,7 +85,7 @@ void SaveMap::saveMap(const Map &map)
         const Position &savePos = location->position();
 
         // Need new node?
-        if (savePos.x < x || savePos.x > x + 0xFF || savePos.y < y || savePos.y > y + 0xFF || savePos.z != z)
+        if (emptyMap || savePos.x < x || savePos.x > x + 0xFF || savePos.y < y || savePos.y > y + 0xFF || savePos.z != z)
         {
           if (!emptyMap)
           {
@@ -156,11 +156,11 @@ void SaveMap::saveMap(const Map &map)
       for (auto &townEntry : map.towns())
       {
         const Town &town = townEntry.second;
-        const Position &townPos = town.getTemplePosition();
+        const Position &townPos = town.templePosition();
         buffer.startNode(Node_t::Town);
 
-        buffer.writeU32(town.getID());
-        buffer.writeString(town.getName());
+        buffer.writeU32(town.id());
+        buffer.writeString(town.name());
         buffer.writeU16(townPos.x);
         buffer.writeU16(townPos.y);
         buffer.writeU8(townPos.z);
@@ -204,7 +204,7 @@ void SaveMap::Serializer::serializeItemAttributes(const Item &item)
     if (itemType.usesSubType())
     {
       buffer.writeU8(NodeAttribute::Count);
-      buffer.writeU8(item.getSubtype());
+      buffer.writeU8(item.subtype());
     }
   }
 
@@ -213,12 +213,12 @@ void SaveMap::Serializer::serializeItemAttributes(const Item &item)
     if (item.hasAttributes())
     {
       buffer.writeU8(static_cast<uint8_t>(NodeAttribute::AttributeMap));
-      serializeItemAttributeMap(item.getAttributes());
+      serializeItemAttributeMap(item.attributes());
     }
   }
 }
 
-void SaveMap::Serializer::serializeItemAttributeMap(const vme_unordered_map<ItemAttribute_t, ItemAttribute> &attributes)
+void SaveMap::Serializer::serializeItemAttributeMap(const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes)
 {
   // Can not have more than UINT16_MAX items
   if (attributes.size() > UINT16_MAX)
@@ -235,10 +235,7 @@ void SaveMap::Serializer::serializeItemAttributeMap(const vme_unordered_map<Item
       break;
 
     // Write the attribute name
-    const ItemAttribute_t &attributeType = entry.first;
-    std::stringstream attributeTypeString;
-    attributeTypeString << attributeType;
-    std::string attributeName = attributeTypeString.str();
+    std::string attributeName = ItemAttribute::attributeTypeToString(entry.first);
     if (attributeName.size() > UINT16_MAX)
     {
       buffer.writeString(attributeName.substr(0, UINT16_MAX));

@@ -454,6 +454,11 @@ const Item *Tile::firstSelectedItem() const
   return nullptr;
 }
 
+void Tile::setFlags(uint32_t flags)
+{
+  _flags = flags;
+}
+
 void Tile::initEntities()
 {
   if (_ground)
