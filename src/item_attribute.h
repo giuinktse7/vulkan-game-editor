@@ -21,6 +21,12 @@ public:
   using ValueType = std::variant<bool, int, double, std::string>;
   ItemAttribute(ItemAttribute_t type);
 
+  // ItemAttribute(ItemAttribute &&other) noexcept;
+  // ItemAttribute &operator=(ItemAttribute &&other) noexcept;
+
+  static std::string attributeTypeToString(const ItemAttribute_t attributeType);
+  static std::optional<ItemAttribute_t> parseAttributeString(const std::string &attributeString);
+
   template <typename T>
   inline bool holds() const;
 
@@ -42,7 +48,6 @@ public:
   void setString(const std::string &value);
   void setString(std::string &&value);
 
-protected:
 private:
   ItemAttribute_t _type;
 
@@ -99,25 +104,6 @@ inline std::ostream &operator<<(std::ostream &os, const ItemAttribute &attribute
 
 inline std::ostream &operator<<(std::ostream &os, ItemAttribute_t type)
 {
-  switch (type)
-  {
-  case ItemAttribute_t::UniqueId:
-    os << "UniqueId";
-    break;
-  case ItemAttribute_t::ActionId:
-    os << "ActionId";
-    break;
-  case ItemAttribute_t::Text:
-    os << "Text";
-    break;
-  case ItemAttribute_t::Description:
-    os << "Description";
-    break;
-  default:
-    Logger::error() << "Could not convert ItemAttribute_t '" << to_underlying(type) << "' to a string.";
-    os << to_underlying(type);
-    break;
-  }
-
+  os << ItemAttribute::attributeTypeToString(type);
   return os;
 }

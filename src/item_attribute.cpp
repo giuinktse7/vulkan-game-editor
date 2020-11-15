@@ -1,5 +1,22 @@
 #include "item_attribute.h"
 
+namespace
+{
+  vme_unordered_map<ItemAttribute_t, std::string> attributeToStringMap = {
+      std::make_pair(ItemAttribute_t::UniqueId, "UniqueId"),
+      std::make_pair(ItemAttribute_t::ActionId, "ActionId"),
+      std::make_pair(ItemAttribute_t::Text, "Text"),
+      std::make_pair(ItemAttribute_t::Description, "Description"),
+  };
+  vme_unordered_map<std::string, ItemAttribute_t> stringToAttributeMap = {
+      std::make_pair("UniqueId", ItemAttribute_t::UniqueId),
+      std::make_pair("ActionId", ItemAttribute_t::ActionId),
+      std::make_pair("Text", ItemAttribute_t::Text),
+      std::make_pair("Description", ItemAttribute_t::Description),
+  };
+  ;
+} // namespace
+
 ItemAttribute::ItemAttribute(ItemAttribute_t type)
     : _type(type)
 {
@@ -15,6 +32,17 @@ ItemAttribute::ItemAttribute(ItemAttribute_t type)
     break;
   }
 }
+
+// ItemAttribute::ItemAttribute(ItemAttribute &&other) noexcept
+//     : _type(std::move(other._type)), _value(std::move(other._value)) {}
+
+// ItemAttribute &ItemAttribute::operator=(ItemAttribute &&other) noexcept
+// {
+//   _type = std::move(other._type);
+//   _value = std::move(other._value);
+
+//   return *this;
+// }
 
 void ItemAttribute::setBool(bool value)
 {
@@ -74,6 +102,19 @@ void ItemAttribute::setString(std::string &&value)
   {
     Logger::error() << "Tried to assign value " << value << " to an ItemAttribute of type " << _type;
   }
+}
+
+std::string ItemAttribute::attributeTypeToString(const ItemAttribute_t attributeType)
+{
+  return attributeToStringMap.at(attributeType);
+}
+
+std::optional<ItemAttribute_t> ItemAttribute::parseAttributeString(const std::string &attributeString)
+{
+  auto found = stringToAttributeMap.find(attributeString);
+  return found != stringToAttributeMap.end()
+             ? std::optional<ItemAttribute_t>(found->second)
+             : std::nullopt;
 }
 
 bool ItemAttribute::operator==(const ItemAttribute &rhs) const
