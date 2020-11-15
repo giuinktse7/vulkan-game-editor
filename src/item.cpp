@@ -30,8 +30,9 @@ Item::Item(Item &&other) noexcept
 		: ecs::OptionalEntity(std::move(other)),
 			itemType(other.itemType),
 			selected(other.selected),
-			attributes(std::move(other.attributes)),
-			subtype(other.subtype)
+			_attributes(std::move(other._attributes)),
+			_subtype(other._subtype),
+			_itemData(std::move(other._itemData))
 {
 	// Necessary because the move does not remove the entity id of 'other'
 	other.entityId.reset();
@@ -41,8 +42,9 @@ Item &Item::operator=(Item &&other) noexcept
 {
 	entityId = std::move(other.entityId);
 	itemType = other.itemType;
-	attributes = std::move(other.attributes);
-	subtype = other.subtype;
+	_attributes = std::move(other._attributes);
+	_subtype = other._subtype;
+	_itemData = std::move(other._itemData);
 	selected = other.selected;
 
 	// Necessary because the move does not remove the entity id of 'other'
@@ -64,8 +66,11 @@ Item::~Item()
 Item Item::deepCopy() const
 {
 	Item item(this->itemType->id);
-	item.attributes = this->attributes;
-	item.subtype = this->subtype;
+	item._attributes = this->_attributes;
+	item._subtype = this->_subtype;
+	if (_itemData) {
+		item._itemData = _itemData->copy();
+	}
 	item.selected = this->selected;
 
 	return item;

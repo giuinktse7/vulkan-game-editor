@@ -9,17 +9,33 @@
 #include "item_attribute.h"
 
 #include "ecs/ecs.h"
+#include "graphics/texture.h"
 #include "graphics/texture_atlas.h"
+#include "item_attribute.h"
 #include "items.h"
 #include "position.h"
 
 class Tile;
+
+enum class ItemDataType
+{
+	Teleport,
+	HouseDoor,
+	Depot,
+	Container
+};
 
 class Item : public ecs::OptionalEntity
 {
 	using ItemTypeId = uint32_t;
 
 public:
+	struct Data
+	{
+		virtual ItemDataType type() const noexcept = 0;
+		virtual std::unique_ptr<Data> copy() const = 0;
+	};
+
 	ItemType *itemType;
 	bool selected = false;
 
@@ -36,10 +52,9 @@ public:
 
 	// Item(Item &&item) = default;
 
-	uint32_t serverId() const noexcept
-	{
-		return itemType->id;
-	}
+	template <typename T, typename std::enable_if<std::is_base_of<Data, T>::value>::type * = nullptr>
+	void setItemData(T &&itemData);
+	std::unique_ptr<Item::Data> _itemData;
 
 	uint32_t clientId() const noexcept
 	{
@@ -84,41 +99,97 @@ public:
 		return attributes;
 	}
 
-	inline uint8_t count() const noexcept;
-
-	inline void setCount(uint8_t count) noexcept;
-
-	bool operator==(const Item &rhs) const
+namespace ItemData
+{
+	struct Teleport : public Item::Data
 	{
-		return itemType == rhs.itemType && attributes == rhs.attributes && subtype == rhs.subtype;
-	}
+		Teleport(const Position destination) : destination(destination) {}
+		ItemDataType type() const noexcept override
+		{
+			return ItemDataType::Teleport;
+		}
 
-protected:
-	friend class Tile;
+		std::unique_ptr<Item::Data> copy() const override
+		{
+			return std::make_unique<Teleport>(destination);
+		}
 
-	void registerEntity();
+		Position destination;
+	};
 
-private:
-	vme_unordered_map<ItemAttribute_t, ItemAttribute> attributes;
-	// Subtype is either fluid type, count, subtype, or charges.
-	uint8_t subtype = 1;
+	struct HouseDoor : public Item::Data
+	{
+		HouseDoor(uint8_t doorId) : doorId(doorId) {}
+		ItemDataType type() const noexcept override
+		{
+			return ItemDataType::HouseDoor;
+		}
 
-	ItemAttribute &getOrCreateAttribute(const ItemAttribute_t attributeType);
+		std::unique_ptr<Item::Data> copy() const override
+		{
+			return std::make_unique<HouseDoor>(doorId);
+		}
 
-	const uint32_t getPatternIndex(const Position &pos) const;
-};
+		uint8_t doorId;
+	};
 
-inline bool operator!=(const Item &lhs, const Item &rhs)
-{
-	return !(lhs == rhs);
-}
+	struct Depot : public Item::Data
+	{
+		Depot(uint16_t depotId) : depotId(depotId) {}
+		ItemDataType type() const noexcept override
+		{
+			return ItemDataType::Depot;
+		}
 
-inline uint8_t Item::count() const noexcept
-{
-	return subtype;
-}
+		std::unique_ptr<Item::Data> copy() const override
+		{
+			return std::make_unique<Depot>(depotId);
+		}
 
-inline void Item::setCount(uint8_t count) noexcept
-{
-	subtype = count;
-}
+		uint16_t depotId;
+	};
+
+	struct Container : public Item::Data
+	{
+		Container() {}
+		Container(const std::vector<Item> &items)
+		{
+			for (const auto &item : items)
+			{
+				_items.emplace_back(item.deepCopy());
+			}
+		}
+
+		ItemDataType type() const noexcept override
+		{
+			return ItemDataType::Container;
+		}
+
+		std::unique_ptr<Item::Data> copy() const override
+		{
+			return std::make_unique<Container>(_items);
+		}
+
+		void addItem(Item &&item)
+		{
+			_items.emplace_back(std::move(item));
+		}
+
+		Item &itemAt(size_t index)
+		{
+			return _items.at(index);
+		}
+
+		const Item &itemAt(size_t index) const
+		{
+			return _items.at(index);
+		}
+
+		const std::vector<Item> &items() const noexcept
+		{
+			return _items;
+		}
+
+		std::vector<Item> _items;
+	};
+} // namespace ItemData
