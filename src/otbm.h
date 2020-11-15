@@ -33,9 +33,9 @@ namespace OTBM
     Desc = 7,
     TeleportDestination = 8,
     Item = 9,
-    Depot_id = 10,
+    DepotId = 10,
     ExternalSpawnFile = 11,
-    Rune_charges = 12,
+    RuneCharges = 12,
     ExternalHouseFile = 13,
     HouseDoorId = 14,
     Count = 15,
@@ -115,6 +115,8 @@ namespace OTBM
   };
 
 #pragma pack()
+
+  bool isNodeType(uint8_t value);
 
   enum class AttributeTypeId
   {

@@ -1,8 +1,8 @@
 #include "otb.h"
 
 #include <iostream>
+#include <sstream>
 #include <stack>
-#include <string>
 
 #include "file.h"
 #include "util.h"
@@ -13,6 +13,13 @@ namespace OTB
   using NodeStack = std::stack<Node *>;
 
   constexpr Identifier wildcard = {{'\0', '\0', '\0', '\0'}};
+
+  std::string OTB::VersionInfo::show() const
+  {
+    std::ostringstream s;
+    s << "OTB " << majorVersion << "." << minorVersion << "." << buildNumber << "-";
+    return s.str();
+  }
 
   Loader::Loader(const std::string &fileName, const Identifier &acceptedIdentifier)
   {

@@ -29,6 +29,8 @@ namespace OTB
     int minorVersion = 0x0;
     uint32_t buildNumber = 0;
     uint8_t CSDVersion[128];
+
+    std::string show() const;
   };
 
   using Identifier = std::array<char, 4>;
