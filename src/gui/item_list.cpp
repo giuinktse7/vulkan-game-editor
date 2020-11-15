@@ -82,14 +82,19 @@ void QtItemTypeModel::addItems(uint32_t from, uint32_t to)
     }
   }
 
+  ids.shrink_to_fit();
+
   addItems(std::move(ids));
 }
 
 void QtItemTypeModel::addItems(std::vector<uint32_t> &&serverIds)
 {
-  std::remove_if(serverIds.begin(), serverIds.end(), [](uint32_t serverId) {
-    return !Items::items.validItemType(serverId);
-  });
+  serverIds.erase(std::remove_if(serverIds.begin(),
+                                 serverIds.end(),
+                                 [](uint32_t serverId) {
+                                   return !Items::items.validItemType(serverId);
+                                 }),
+                  serverIds.end());
 
   int size = static_cast<int>(_data.size());
   beginInsertRows(QModelIndex(), size, size + serverIds.size());
