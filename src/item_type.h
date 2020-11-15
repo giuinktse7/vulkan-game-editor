@@ -277,7 +277,11 @@ public:
   FluidTypes_t fluidSource = FLUID_NONE;
 
   FloorChange floorChange = FloorChange::None;
-  uint8_t alwaysOnTopOrder = 0;
+  /*
+    Also called alwaysOnTopOrder. Used to determine order for items on a tile,
+    when more than one itemtype has alwaysBottomOfTile = true
+  */
+  uint8_t stackOrderIndex = 0;
   uint8_t lightLevel = 0;
   uint8_t lightColor = 0;
   uint8_t shootRange = 1;
@@ -287,7 +291,6 @@ public:
   bool forceUse = false;
   bool forceSerialize = false;
   bool hasHeight = false;
-  bool walkStack = true;
   bool blockSolid = false;
   bool blockPickupable = false;
   bool blockProjectile = false;
@@ -301,7 +304,7 @@ public:
   bool rotatable = false;
   bool useable = false;
   bool moveable = false;
-  bool alwaysOnTop = false;
+  bool alwaysBottomOfTile = false;
   bool canReadText = false;
   bool canWriteText = false;
   bool isVertical = false;

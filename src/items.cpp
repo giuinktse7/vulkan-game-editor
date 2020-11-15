@@ -357,7 +357,7 @@ void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t flags)
 			static_cast<uint32_t>(itemType.maxTextLen),
 			std::max(appearance.flagData.maxTextLength, appearance.flagData.maxTextLengthOnce));
 
-	itemType.alwaysOnTop = hasBitSet(FLAG_ALWAYSONTOP, flags);
+	itemType.alwaysBottomOfTile = hasBitSet(FLAG_ALWAYSONTOP, flags) || appearance.hasFlag(AppearanceFlag::Top);
 	itemType.isVertical = hasBitSet(FLAG_VERTICAL, flags);
 	itemType.isHorizontal = hasBitSet(FLAG_HORIZONTAL, flags);
 	itemType.isHangable = hasBitSet(FLAG_HANGABLE, flags) || appearance.hasFlag(AppearanceFlag::Hang);
@@ -366,7 +366,6 @@ void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t flags)
 	itemType.canReadText = hasBitSet(FLAG_READABLE, flags) || appearance.hasFlag(AppearanceFlag::Write) || appearance.hasFlag(AppearanceFlag::WriteOnce);
 	itemType.lookThrough = hasBitSet(FLAG_LOOKTHROUGH, flags);
 	itemType.isAnimation = hasBitSet(FLAG_ANIMATION, flags);
-	// iType->walkStack = !hasBitSet(FLAG_FULLTILE, flags);
 	itemType.forceUse = hasBitSet(FLAG_FORCEUSE, flags) || appearance.hasFlag(AppearanceFlag::Forceuse);
 
 	itemType.appearance = &appearance;
@@ -509,7 +508,7 @@ void Items::OtbReader::readNodes()
 		// uint16_t speed = 0;
 		uint16_t lightLevel = 0;
 		uint16_t lightColor = 0;
-		uint16_t alwaysOnTopOrder = 0;
+		uint16_t stackOrderIndex = 0;
 		uint16_t wareId = 0;
 		std::string name;
 		uint16_t maxTextLen = 0;
@@ -585,7 +584,7 @@ void Items::OtbReader::readNodes()
 			case itemproperty_t::ITEM_ATTR_TOPORDER:
 			{
 				DEBUG_ASSERT(attributeSize == sizeof(uint8_t), "Invalid attribute length.");
-				alwaysOnTopOrder = nextU8();
+				stackOrderIndex = nextU8();
 				break;
 			}
 
@@ -664,7 +663,7 @@ void Items::OtbReader::readNodes()
 		// itemType->speed = speed;
 		itemType->lightLevel = static_cast<uint8_t>(lightLevel);
 		itemType->lightColor = static_cast<uint8_t>(lightColor);
-		itemType->alwaysOnTopOrder = static_cast<uint8_t>(alwaysOnTopOrder);
+		itemType->stackOrderIndex = static_cast<uint8_t>(stackOrderIndex);
 		itemType->wareId = wareId;
 		itemType->maxTextLen = maxTextLen;
 

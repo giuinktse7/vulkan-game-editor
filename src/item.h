@@ -150,7 +150,7 @@ inline bool Item::hasAttributes() const noexcept
 
 inline const int Item::getTopOrder() const noexcept
 {
-	return itemType->alwaysOnTopOrder;
+	return itemType->stackOrderIndex;
 }
 
 inline const std::unordered_map<ItemAttribute_t, ItemAttribute> &Item::attributes() const noexcept
