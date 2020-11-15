@@ -123,14 +123,9 @@ bool Item::isGround() const noexcept
 	return itemType->isGroundTile();
 }
 
-uint8_t Item::getSubtype() const noexcept
+void Item::setAttribute(ItemAttribute &&attribute)
 {
-	if (itemType->hasSubType())
-	{
-		return subtype;
-	}
-
-	return 0;
+	_attributes.emplace(attribute.type(), std::move(attribute));
 }
 
 void Item::setActionId(uint16_t id)
@@ -165,8 +160,8 @@ void Item::setDescription(std::string &&description)
 
 ItemAttribute &Item::getOrCreateAttribute(const ItemAttribute_t attributeType)
 {
-	attributes.try_emplace(attributeType, attributeType);
-	return attributes.at(attributeType);
+	_attributes.try_emplace(attributeType, attributeType);
+	return _attributes.at(attributeType);
 }
 
 void Item::registerEntity()

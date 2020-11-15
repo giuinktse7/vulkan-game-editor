@@ -2,11 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <optional>
-#include <stdint.h>
 #include <unordered_map>
-
-#include "graphics/texture.h"
-#include "item_attribute.h"
 
 #include "ecs/ecs.h"
 #include "graphics/texture.h"
@@ -52,40 +48,16 @@ public:
 
 	// Item(Item &&item) = default;
 
-	template <typename T, typename std::enable_if<std::is_base_of<Data, T>::value>::type * = nullptr>
-	void setItemData(T &&itemData);
-	std::unique_ptr<Item::Data> _itemData;
-
-	uint32_t clientId() const noexcept
-	{
-		return itemType->clientId;
-	}
-
-	const std::string name() const noexcept
-	{
-		return itemType->name;
-	}
-
-	const uint32_t weight() const noexcept
-	{
-		return itemType->weight;
-	}
-
-	const TextureInfo getTextureInfo(const Position &pos) const;
-
+	uint32_t serverId() const noexcept;
+	uint32_t clientId() const noexcept;
+	const std::string name() const noexcept;
+	const uint32_t weight() const noexcept;
 	bool isGround() const noexcept;
-
-	uint8_t getSubtype() const noexcept;
-
-	inline bool hasAttributes() const noexcept
-	{
-		return attributes.size() > 0;
-	}
-
-	inline const int getTopOrder() const noexcept
-	{
-		return itemType->alwaysOnTopOrder;
-	}
+	uint8_t subtype() const noexcept;
+	inline uint8_t count() const noexcept;
+	inline bool hasAttributes() const noexcept;
+	inline const int getTopOrder() const noexcept;
+	const TextureInfo getTextureInfo(const Position &pos) const;
 
 	void setActionId(uint16_t id);
 	void setUniqueId(uint16_t id);
@@ -93,11 +65,110 @@ public:
 	void setText(std::string &&text);
 	void setDescription(const std::string &description);
 	void setDescription(std::string &&description);
+	void setAttribute(ItemAttribute &&attribute);
+	inline void setSubtype(uint8_t subtype) noexcept;
+	inline void setCount(uint8_t count) noexcept;
+	inline void setCharges(uint8_t charges) noexcept;
 
-	const vme_unordered_map<ItemAttribute_t, ItemAttribute> &getAttributes() const noexcept
-	{
-		return attributes;
-	}
+	template <typename T, typename std::enable_if<std::is_base_of<Data, T>::value>::type * = nullptr>
+	void setItemData(T &&itemData);
+
+	const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes() const noexcept;
+
+	bool operator==(const Item &rhs) const;
+
+protected:
+	friend class Tile;
+
+	void registerEntity();
+
+private:
+	std::unordered_map<ItemAttribute_t, ItemAttribute> _attributes;
+	std::unique_ptr<Item::Data> _itemData;
+	// Subtype is either fluid type, count, subtype, or charges.
+	uint8_t _subtype = 1;
+
+	ItemAttribute &getOrCreateAttribute(const ItemAttribute_t attributeType);
+
+	const uint32_t getPatternIndex(const Position &pos) const;
+};
+
+inline uint32_t Item::serverId() const noexcept
+{
+	return itemType->id;
+}
+
+inline uint32_t Item::clientId() const noexcept
+{
+	return itemType->clientId;
+}
+
+inline const std::string Item::name() const noexcept
+{
+	return itemType->name;
+}
+
+inline const uint32_t Item::weight() const noexcept
+{
+	return itemType->weight;
+}
+
+inline bool operator!=(const Item &lhs, const Item &rhs)
+{
+	return !(lhs == rhs);
+}
+
+inline uint8_t Item::count() const noexcept
+{
+	return _subtype;
+}
+
+inline uint8_t Item::subtype() const noexcept
+{
+	return _subtype;
+}
+
+inline void Item::setSubtype(uint8_t subtype) noexcept
+{
+	this->_subtype = subtype;
+}
+
+inline void Item::setCount(uint8_t count) noexcept
+{
+	_subtype = count;
+}
+
+inline void Item::setCharges(uint8_t charges) noexcept
+{
+	_subtype = charges;
+}
+
+inline bool Item::hasAttributes() const noexcept
+{
+	return _attributes.size() > 0;
+}
+
+inline const int Item::getTopOrder() const noexcept
+{
+	return itemType->alwaysOnTopOrder;
+}
+
+inline const std::unordered_map<ItemAttribute_t, ItemAttribute> &Item::attributes() const noexcept
+{
+	return _attributes;
+}
+
+inline bool Item::operator==(const Item &rhs) const
+{
+	return itemType == rhs.itemType && _attributes == rhs._attributes && _subtype == rhs._subtype;
+}
+
+template <typename T, typename std::enable_if<std::is_base_of<Item::Data, T>::value>::type *>
+inline void Item::setItemData(T &&itemData)
+{
+	// TODO Maybe weird
+	_itemData = std::make_unique<T>(itemData);
+}
 
 namespace ItemData
 {
