@@ -15,9 +15,43 @@ constexpr uint16_t DefaultHeight = 2048;
 constexpr uint16_t DefaultDepth = 16;
 
 Map::Map()
+    : Map(DefaultWidth, DefaultHeight, DefaultDepth) {}
+
+Map::Map(uint16_t width, uint16_t height) : _name(""), root(quadtree::Node::NodeType::Root), _size(DefaultWidth, DefaultHeight, DefaultDepth)
+{
+  DEBUG_ASSERT(util::powerOf2(_size.width()) && util::powerOf2(_size.height()) && util::powerOf2(_size.depth()), "Width & height must be powers of 2");
+}
+
+Map::Map(uint16_t width, uint16_t height, uint8_t depth)
     : _name(""), root(quadtree::Node::NodeType::Root), _size(DefaultWidth, DefaultHeight, DefaultDepth)
 {
   DEBUG_ASSERT(util::powerOf2(_size.width()) && util::powerOf2(_size.height()) && util::powerOf2(_size.depth()), "Width & height must be powers of 2");
+}
+
+Map::Map(Map &&other) noexcept
+    : _name(std::move(other._name)),
+      _towns(std::move(other._towns)),
+      mapVersion(std::move(other.mapVersion)),
+      _description(std::move(other._description)),
+      _spawnFilepath(std::move(other._spawnFilepath)),
+      _houseFilepath(std::move(other._houseFilepath)),
+      root(std::move(other.root)),
+      _size(std::move(other._size))
+{
+}
+
+Map &Map::operator=(Map &&other) noexcept
+{
+  _name = std::move(other._name);
+  _towns = std::move(other._towns);
+  mapVersion = std::move(other.mapVersion);
+  _description = std::move(other._description);
+  _spawnFilepath = std::move(other._spawnFilepath);
+  _houseFilepath = std::move(other._houseFilepath);
+  root = std::move(other.root);
+  _size = std::move(other._size);
+
+  return *this;
 }
 
 void Map::clear()

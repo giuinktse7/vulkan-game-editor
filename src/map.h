@@ -32,6 +32,11 @@ class Map
 {
 public:
 	Map();
+	Map(uint16_t width, uint16_t height);
+	Map(uint16_t width, uint16_t height, uint8_t depth);
+
+	Map(Map &&other) noexcept;
+	Map &operator=(Map &&other) noexcept;
 
 	MapIterator begin() const;
 	MapIterator end() const;
