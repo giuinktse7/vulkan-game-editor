@@ -15,17 +15,19 @@ class Floor
 {
 public:
 	Floor(int x, int y, int z);
-	~Floor() noexcept;
 
 	Floor(const Floor &) = delete;
 	Floor &operator=(const Floor &) = delete;
+
+	Floor(Floor &&other) noexcept;
+	Floor &operator=(Floor &&other) noexcept;
 
 	TileLocation &getTileLocation(int x, int y);
 	TileLocation &getTileLocation(uint32_t index);
 
 private:
 	// x, y locations
-	TileLocation locations[MAP_TREE_CHILDREN_COUNT];
+	std::array<TileLocation, MAP_TREE_CHILDREN_COUNT> locations{};
 };
 
 namespace quadtree
@@ -40,9 +42,48 @@ namespace quadtree
 		};
 
 	public:
+		class Children
+		{
+		public:
+			static constexpr size_t Amount = MAP_TREE_CHILDREN_COUNT;
+
+			Children(NodeType type);
+			~Children();
+
+			Children(Children &&other);
+
+			Children &operator=(Children &&other);
+
+			void construct();
+			void destruct();
+			void reset();
+
+			size_t size() const noexcept;
+
+			void setNode(size_t index, std::unique_ptr<Node> &&value);
+			void setFloor(size_t index, std::unique_ptr<Floor> &&value);
+
+			std::unique_ptr<Node> &nodePtr(size_t index);
+			std::unique_ptr<Floor> &floorPtr(size_t index);
+
+			Node *node(size_t index) const;
+			Floor *floor(size_t index) const;
+
+		private:
+			NodeType _type;
+			union
+			{
+				std::unique_ptr<Node> nodes[Amount];
+				std::unique_ptr<Floor> floors[Amount];
+			};
+		};
+
 		Node(NodeType nodeType);
 		Node(NodeType nodeType, int level);
 		~Node();
+
+		Node(Node &&other) noexcept;
+		Node &operator=(Node &&other) noexcept;
 
 		void clear();
 
@@ -70,11 +111,7 @@ namespace quadtree
 
 	protected:
 		NodeType nodeType = NodeType::Root;
-		union
-		{
-			std::array<std::unique_ptr<Node>, MAP_TREE_CHILDREN_COUNT> nodes{};
-			std::array<std::unique_ptr<Floor>, MAP_TREE_CHILDREN_COUNT> children;
-		};
+		Children children;
 	};
 }; // namespace quadtree
 
