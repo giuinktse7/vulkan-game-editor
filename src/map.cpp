@@ -583,3 +583,38 @@ bool MapArea::iterator::operator==(const MapArea::iterator &rhs) const
   return (isEnd && rhs.isEnd) ||
          (value == rhs.value && from == rhs.from && to == rhs.to);
 }
+
+void Map::addTown(Town &&town)
+{
+  _towns.emplace(town.id(), std::move(town));
+}
+
+const Town *Map::getTown(const std::string &name) const
+{
+  auto found = std::find_if(_towns.begin(), _towns.end(), [&name](const std::pair<uint32_t, Town> &pair) {
+    return pair.second.name() == name;
+  });
+
+  return found != _towns.end() ? &found->second : nullptr;
+}
+
+Town *Map::getTown(const std::string &name)
+{
+  auto found = std::find_if(_towns.begin(), _towns.end(), [&name](const std::pair<uint32_t, Town> &pair) {
+    return pair.second.name() == name;
+  });
+
+  return found != _towns.end() ? &found.value() : nullptr;
+}
+
+Town *Map::getTown(uint32_t id)
+{
+  auto found = _towns.find(id);
+  return found != _towns.end() ? &found.value() : nullptr;
+}
+
+const Town *Map::getTown(uint32_t id) const
+{
+  auto found = _towns.find(id);
+  return found != _towns.end() ? &found.value() : nullptr;
+}

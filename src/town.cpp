@@ -2,69 +2,34 @@
 
 #include "tile.h"
 
-Towns::Towns()
+Town::Town(uint32_t id) : _id(id), _name("") {}
+
+const std::string &Town::name() const noexcept
 {
-  ////
+  return _name;
 }
 
-Towns::~Towns()
+uint32_t Town::id() const noexcept
 {
-  clear();
+  return _id;
 }
 
-void Towns::clear()
+const Position &Town::templePosition() const noexcept
 {
-  towns.clear();
+  return _templePosition;
 }
 
-bool Towns::addTown(Town &town)
+void Town::setId(uint32_t id)
 {
-  auto it = find(town.getID());
-  if (it != end())
-  {
-    return false;
-  }
-  towns.insert(std::pair<uint32_t, Town>(town.getID(), town));
-  return true;
+  _id = id;
 }
 
-uint32_t Towns::getEmptyID()
+void Town::setName(const std::string &name)
 {
-  uint32_t empty = 0;
-  for (auto it = begin(); it != end(); ++it)
-  {
-    if (it->second.getID() > empty)
-    {
-      empty = it->second.getID();
-    }
-  }
-  return empty + 1;
+  _name = name;
 }
 
-Town *Towns::getTown(std::string &name)
+void Town::setTemplePosition(const Position position)
 {
-  for (auto it = begin(); it != end(); ++it)
-  {
-    if (it->second.getName() == name)
-    {
-      return &it->second;
-    }
-  }
-  return nullptr;
-}
-
-Town *Towns::getTown(uint32_t id)
-{
-  auto it = find(id);
-  if (it != end())
-  {
-    return &it->second;
-  }
-
-  return nullptr;
-}
-
-void Town::setTemplePosition(const Position &pos)
-{
-  templePosition = pos;
+  _templePosition = position;
 }

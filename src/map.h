@@ -66,7 +66,13 @@ public:
 	uint16_t height() const noexcept;
 	uint8_t depth() const noexcept;
 
-	inline const Towns &towns() const noexcept;
+	inline const vme_unordered_map<uint32_t, Town> &towns() const noexcept;
+	void addTown(Town &&town);
+	const Town *getTown(const std::string &name) const;
+	Town *getTown(const std::string &name);
+	const Town *getTown(uint32_t id) const;
+	Town *getTown(uint32_t id);
+
 	inline const std::string &name() const noexcept;
 
 	void setName(std::string name);
@@ -82,7 +88,7 @@ private:
 	friend class MapView;
 	friend class MapHistory::ChangeItem;
 	std::string _name;
-	Towns _towns;
+	vme_unordered_map<uint32_t, Town> _towns;
 	MapVersion mapVersion;
 	std::string description;
 
@@ -129,7 +135,7 @@ inline uint8_t Map::depth() const noexcept
 	return _size.depth();
 }
 
-inline const Towns &Map::towns() const noexcept
+inline const vme_unordered_map<uint32_t, Town> &Map::towns() const noexcept
 {
 	return _towns;
 }
