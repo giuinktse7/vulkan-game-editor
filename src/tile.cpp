@@ -130,66 +130,44 @@ void Tile::addItem(Item &&item)
     return;
   }
 
-  std::vector<Item>::iterator it;
-
-  bool replace = false;
   ItemType &itemType = *item.itemType;
-  if (itemType.alwaysOnTop)
-  {
-    for (it = _items.begin(); it != _items.end(); ++it)
-    {
-      ItemType &currentType = *it->itemType;
 
-      if (currentType.alwaysOnTop)
-      {
-        if (itemType.isGroundBorder())
-        {
-          if (!currentType.isGroundBorder())
-          {
-            break;
-          }
-        }
-        else // New item is not a border
-        {
-          if (currentType.alwaysOnTop)
-          {
-            if (!currentType.isGroundBorder())
-            {
-              // Replace the current item at cursor with the new item
-              replace = true;
-              break;
-            }
-          }
-        }
-        // if (item.getTopOrder() < cursor->getTopOrder())
-        // {
-        //   break;
-        // }
-      }
-      else
-      {
-        break;
-      }
-    }
-  }
-  else
-  {
-    it = _items.end();
-  }
-
-  if (replace)
-  {
-    auto offset = it - _items.begin();
-    DEBUG_ASSERT(offset < UINT16_MAX, "Offset too large.");
-    replaceItem(static_cast<uint16_t>(offset), std::move(item));
-  }
-  else
+  // Place item on top of tile if it does not want to be on bottom.
+  if (!itemType.alwaysBottomOfTile)
   {
     if (item.selected)
       ++_selectionCount;
 
-    _items.emplace(it, std::move(item));
+    _items.emplace(_items.end(), std::move(item));
+    return;
   }
+
+  bool replace = false;
+  bool border = itemType.isGroundBorder();
+
+  auto cursor = _items.begin();
+  for (; cursor != _items.end(); ++cursor)
+  {
+    ItemType &currentType = *cursor->itemType;
+    if (!currentType.alwaysBottomOfTile)
+      break;
+
+    if (itemType.isGroundBorder() && !currentType.isGroundBorder())
+      break;
+
+    if (!currentType.isGroundBorder())
+    {
+      // Replace the current item at cursor with the new item
+      size_t index = static_cast<size_t>(cursor - _items.begin());
+      replaceItem(index, std::move(item));
+      return;
+    }
+  }
+
+  if (item.selected)
+    ++_selectionCount;
+
+  _items.emplace(cursor, std::move(item));
 }
 
 void Tile::replaceGround(Item &&ground)
@@ -204,7 +182,7 @@ void Tile::replaceGround(Item &&ground)
   _ground = std::make_unique<Item>(std::move(ground));
 }
 
-void Tile::replaceItem(uint16_t index, Item &&item)
+void Tile::replaceItem(size_t index, Item &&item)
 {
   bool s1 = _items.at(index).selected;
   bool s2 = item.selected;

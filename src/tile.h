@@ -130,7 +130,7 @@ private:
 	friend class MapView;
 
 	void replaceGround(Item &&ground);
-	void replaceItem(uint16_t index, Item &&item);
+	void replaceItem(size_t index, Item &&item);
 
 	std::vector<Item> _items;
 	Position _position;
