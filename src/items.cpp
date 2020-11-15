@@ -466,7 +466,7 @@ void Items::OtbReader::readRoot()
 	info.majorVersion = nextU32(); // items otb format file version
 	info.minorVersion = nextU32(); // client version
 	info.buildNumber = nextU32();	 // build number, revision
-	Items::items.otbVersionInfo = info;
+	Items::items._otbVersionInfo = info;
 
 	// OTB description, something like 'OTB 3.62.78-11.1'
 	std::vector<uint8_t> buffer = util::sliceLeading<uint8_t>(nextBytes(128), 0);
@@ -828,9 +828,9 @@ void Items::OtbReader::skipBytes(size_t bytes)
 	}
 }
 
-OTB::VersionInfo Items::getOtbVersionInfo()
+const OTB::VersionInfo Items::otbVersionInfo() const
 {
-	return otbVersionInfo;
+	return _otbVersionInfo;
 }
 
 const ItemType &Items::getItemIdByClientId(uint32_t clientId) const

@@ -62,7 +62,7 @@ public:
   ItemType *getNextValidItemType(uint32_t serverId);
   ItemType *getPreviousValidItemType(uint32_t serverId);
 
-  OTB::VersionInfo getOtbVersionInfo();
+  const OTB::VersionInfo Items::otbVersionInfo() const;
 
 private:
   class OtbReader
@@ -118,7 +118,7 @@ private:
   // std::unordered_map<ServerID, MapID> serverIdToMapId;
   std::unordered_multimap<std::string, ServerID> nameToItems;
 
-  OTB::VersionInfo otbVersionInfo;
+  OTB::VersionInfo _otbVersionInfo;
 };
 
 inline std::ostringstream stringify(const itemproperty_t &property)
