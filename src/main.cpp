@@ -20,6 +20,7 @@
 #include "gui/map_view_widget.h"
 #include "items.h"
 #include "load_map.h"
+#include "minimap.h"
 #include "qt/logging.h"
 #include "random.h"
 #include "time_point.h"
@@ -417,6 +418,11 @@ int main(int argc, char *argv[])
 {
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
+
+    {
+        // Minimap color test
+        // constexpr auto a = Minimap::colors[210].rgbaInfo();
+    }
 
     MainApplication app(argc, argv);
 

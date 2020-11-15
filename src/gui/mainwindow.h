@@ -47,6 +47,7 @@ public:
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;
+  bool event(QEvent *event) override;
 
 private:
   // UI

@@ -724,6 +724,44 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
   requestDraw();
 }
 
+void MapView::endCurrentAction(VME::ModifierKeys modifiers)
+{
+  std::visit(
+      util::overloaded{
+          [this](MouseAction::Pan pan) {
+            pan.stop();
+            editorAction.unlock();
+          },
+
+          [this, modifiers](MouseAction::RawItem &action) {
+            if (history.hasCurrentTransactionType(TransactionType::RawItemAction))
+            {
+              history.endTransaction(TransactionType::RawItemAction);
+              editorAction.unlock();
+            }
+          },
+
+          [this](MouseAction::Select &select) {
+            if (select.isMoving())
+            {
+              waitForDraw([this, &select] {
+                Position deltaPos = select.moveDelta.value();
+                moveSelection(deltaPos);
+
+                select.reset();
+                editorAction.unlock();
+              });
+            }
+            else
+            {
+              select.reset();
+              editorAction.unlock();
+            }
+          },
+          [](const auto &arg) {}},
+      editorAction.action());
+}
+
 void MapView::mouseReleaseEvent(VME::MouseEvent event)
 {
   Position pos = event.pos().toPos(*this);
@@ -731,38 +769,7 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
 
   if (!(event.buttons() & VME::MouseButtons::LeftButton))
   {
-    std::visit(
-        util::overloaded{
-            [this](MouseAction::Pan pan) {
-              pan.stop();
-              editorAction.unlock();
-            },
-            [this](MouseAction::RawItem &action) {
-              if (history.hasCurrentTransactionType(TransactionType::RawItemAction))
-              {
-                history.endTransaction(TransactionType::RawItemAction);
-                editorAction.unlock();
-              }
-            },
-            [this](MouseAction::Select &select) {
-              if (select.isMoving())
-              {
-                waitForDraw([this, &select] {
-                  Position deltaPos = select.moveDelta.value();
-                  moveSelection(deltaPos);
-
-                  select.reset();
-                  editorAction.unlock();
-                });
-              }
-              else
-              {
-                select.reset();
-                editorAction.unlock();
-              }
-            },
-            [](const auto &arg) {}},
-        editorAction.action());
+    endCurrentAction(event.modifiers());
 
     if (dragRegion.has_value())
     {

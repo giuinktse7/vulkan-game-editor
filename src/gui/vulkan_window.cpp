@@ -160,6 +160,12 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
 
 void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
+  // If leftbutton up
+  // if (!(event->buttons() & Qt::LeftButton) && (mouseState.buttons & Qt::LeftButton))
+  // {
+  //   mapView->mouseReleaseEvent(QtUtil::vmeMouseEvent(event));
+  // }
+
   mouseState.buttons = event->buttons();
   mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
 

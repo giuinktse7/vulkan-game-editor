@@ -277,6 +277,16 @@ MainWindow::MainWindow(QWidget *parent)
   // editorAction.onActionChanged<&MainWindow::editorActionChangedEvent>(this);
 }
 
+bool MainWindow::event(QEvent *e)
+{
+  // if (!(e->type() == QEvent::UpdateRequest) && !(e->type() == QEvent::MouseMove))
+  // {
+  //   qDebug() << "[MainWindow] " << e->type();
+  // }
+
+  return QWidget::event(e);
+}
+
 void MainWindow::editorActionChangedEvent(const MouseAction_t &action)
 {
   // Currently unused
