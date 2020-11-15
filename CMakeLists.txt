@@ -119,6 +119,7 @@ set(CommonSources
     src/selection.h
     src/tile.h
     src/tile_location.h
+    src/minimap.h
     src/time_point.h
     src/creature.h
     src/town.h
@@ -170,6 +171,7 @@ set(CommonSources
     src/selection.cpp
     src/tile.cpp
     src/tile_location.cpp
+    src/minimap.cpp
     src/time_point.cpp
     src/creature.cpp
     src/town.cpp
