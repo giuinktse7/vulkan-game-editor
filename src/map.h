@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -41,6 +42,8 @@ public:
 	MapIterator begin() const;
 	MapIterator end() const;
 
+	Tile &getOrCreateTile(const Position &pos);
+
 	MapRegion getRegion(Position from, Position to) const noexcept;
 
 	TileLocation *getTileLocation(int x, int y, int z) const;
@@ -59,7 +62,13 @@ public:
 	void moveTile(Position from, Position to);
 
 	const MapVersion &getMapVersion() const;
-	const std::string &getDescription() const;
+	const std::string &description() const;
+	const std::filesystem::path &spawnFilepath() const;
+	const std::filesystem::path &houseFilepath() const;
+
+	void setDescription(std::string description);
+	void setSpawnFilepath(std::filesystem::path path);
+	void setHouseFilepath(std::filesystem::path path);
 
 	const util::Volume<uint16_t, uint16_t, uint8_t> size() const noexcept;
 	uint16_t width() const noexcept;
@@ -90,7 +99,10 @@ private:
 	std::string _name;
 	vme_unordered_map<uint32_t, Town> _towns;
 	MapVersion mapVersion;
-	std::string description;
+	std::string _description;
+
+	std::filesystem::path _spawnFilepath;
+	std::filesystem::path _houseFilepath;
 
 	quadtree::Node root;
 
@@ -103,7 +115,6 @@ private:
 	std::unique_ptr<Tile> replaceTile(Tile &&tile);
 
 	Tile &getOrCreateTile(int x, int y, int z);
-	Tile &getOrCreateTile(const Position &pos);
 	TileLocation &getOrCreateTileLocation(const Position &pos);
 	void removeTile(const Position pos);
 

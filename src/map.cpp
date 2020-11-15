@@ -293,13 +293,13 @@ MapIterator Map::begin() const
       return next ? *next : end();
     }
 
-    uint32_t size = static_cast<uint32_t>(current.node->nodes.size());
+    uint32_t size = static_cast<uint32_t>(current.node->children.size());
     for (uint32_t i = current.cursor; i < size; ++i)
     {
-      if (auto &child = current.node->nodes[i])
+      if (auto child = current.node->children.node(i))
       {
         current.cursor = i + 1;
-        iterator.emplace(child.get());
+        iterator.emplace(child);
         break;
       }
     }
@@ -341,7 +341,7 @@ MapIterator &MapIterator::operator++()
     tileIndex = 0;
     floorIndex = 0;
 
-    size_t size = current.node->nodes.size();
+    size_t size = current.node->children.size();
     // This node is finished
     if (current.cursor == size)
     {
@@ -351,10 +351,10 @@ MapIterator &MapIterator::operator++()
 
     for (; current.cursor < size; ++current.cursor)
     {
-      if (auto &child = current.node->nodes[current.cursor])
+      if (auto child = current.node->children.node(current.cursor))
       {
         current.cursor += 1;
-        emplace(child.get());
+        emplace(child);
         break;
       }
     }
@@ -395,9 +395,33 @@ const MapVersion &Map::getMapVersion() const
   return mapVersion;
 }
 
-const std::string &Map::getDescription() const
+const std::string &Map::description() const
 {
-  return description;
+  return _description;
+}
+
+const std::filesystem::path &Map::spawnFilepath() const
+{
+  return _spawnFilepath;
+}
+const std::filesystem::path &Map::houseFilepath() const
+{
+  return _houseFilepath;
+}
+
+void Map::setDescription(std::string description)
+{
+  _description = description;
+}
+
+void Map::setSpawnFilepath(std::filesystem::path path)
+{
+  _spawnFilepath = path;
+}
+
+void Map::setHouseFilepath(std::filesystem::path path)
+{
+  _houseFilepath = path;
 }
 
 void Map::createItemAt(Position pos, uint16_t id)
