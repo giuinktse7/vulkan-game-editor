@@ -8,6 +8,7 @@
 #include "graphics/texture.h"
 #include "graphics/texture_atlas.h"
 #include "item_attribute.h"
+#include "item_wrapper.h"
 #include "items.h"
 #include "position.h"
 
@@ -15,6 +16,7 @@ class Tile;
 
 enum class ItemDataType
 {
+	Normal,
 	Teleport,
 	HouseDoor,
 	Depot,
@@ -46,6 +48,8 @@ public:
 
 	Item deepCopy() const;
 
+	bool isContainer() const noexcept;
+
 	// Item(Item &&item) = default;
 
 	uint32_t serverId() const noexcept;
@@ -58,6 +62,7 @@ public:
 	inline bool hasAttributes() const noexcept;
 	inline const int getTopOrder() const noexcept;
 	const TextureInfo getTextureInfo(const Position &pos) const;
+	inline ItemDataType itemDataType() const;
 
 	void setActionId(uint16_t id);
 	void setUniqueId(uint16_t id);
@@ -72,10 +77,15 @@ public:
 
 	template <typename T, typename std::enable_if<std::is_base_of<Data, T>::value>::type * = nullptr>
 	void setItemData(T &&itemData);
+	inline Item::Data *data() const;
 
 	const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes() const noexcept;
 
 	bool operator==(const Item &rhs) const;
+
+	// Wrapper converters for convenient _itemData access
+	template <typename T, typename std::enable_if<std::is_base_of<ItemWrapper, T>::value>::type * = nullptr>
+	T as();
 
 protected:
 	friend class Tile;
@@ -158,6 +168,11 @@ inline const std::unordered_map<ItemAttribute_t, ItemAttribute> &Item::attribute
 	return _attributes;
 }
 
+inline ItemDataType Item::itemDataType() const
+{
+	return _itemData ? _itemData->type() : ItemDataType::Normal;
+}
+
 inline bool Item::operator==(const Item &rhs) const
 {
 	return itemType == rhs.itemType && _attributes == rhs._attributes && _subtype == rhs._subtype;
@@ -167,7 +182,18 @@ template <typename T, typename std::enable_if<std::is_base_of<Item::Data, T>::va
 inline void Item::setItemData(T &&itemData)
 {
 	// TODO Maybe weird
-	_itemData = std::make_unique<T>(itemData);
+	_itemData = std::make_unique<T>(std::move(itemData));
+}
+
+//>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>
+//>>>>>Properties>>>>
+//>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>
+
+inline bool Item::isContainer() const noexcept
+{
+	return itemType->isContainer();
 }
 
 namespace ItemData
@@ -231,6 +257,15 @@ namespace ItemData
 			}
 		}
 
+		Container(Container &&other) noexcept
+				: _items(std::move(other._items)) {}
+
+		Container &operator=(Container &&other) noexcept
+		{
+			_items = std::move(other._items);
+			return *this;
+		}
+
 		ItemDataType type() const noexcept override
 		{
 			return ItemDataType::Container;
@@ -261,6 +296,22 @@ namespace ItemData
 			return _items;
 		}
 
+		size_t size() const noexcept
+		{
+			return _items.size();
+		}
+
 		std::vector<Item> _items;
 	};
 } // namespace ItemData
+
+inline Item::Data *Item::data() const
+{
+	return _itemData.get();
+}
+
+template <typename T, typename std::enable_if<std::is_base_of<ItemWrapper, T>::value>::type *>
+T Item::as()
+{
+	return T(*this);
+}

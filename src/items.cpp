@@ -342,6 +342,10 @@ void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t flags)
 	{
 		itemType.group = ItemType::Group::Ground;
 	}
+	else if (appearance.hasFlag(AppearanceFlag::Container))
+	{
+		itemType.group = ItemType::Group::Container;
+	}
 
 	// TODO: Check for items that do not have matching flags in .otb and appearances.dat
 	itemType.blockSolid = hasBitSet(FLAG_BLOCK_SOLID, flags);

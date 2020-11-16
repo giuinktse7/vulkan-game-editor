@@ -87,6 +87,7 @@ set(CommonSources
     src/graphics/vulkan_debug.h
     src/graphics/vulkan_helpers.h
     src/item.h
+    src/item_wrapper.h
     src/items.h
     src/item_attribute.h
     src/item_type.h
@@ -156,6 +157,7 @@ set(CommonSources
     src/graphics/texture_atlas.cpp
     src/graphics/vulkan_debug.cpp
     src/item.cpp
+    src/item_wrapper.cpp
     src/items.cpp
     src/item_attribute.cpp
     src/item_type.cpp

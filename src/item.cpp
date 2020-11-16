@@ -68,7 +68,8 @@ Item Item::deepCopy() const
 	Item item(this->itemType->id);
 	item._attributes = this->_attributes;
 	item._subtype = this->_subtype;
-	if (_itemData) {
+	if (_itemData)
+	{
 		item._itemData = _itemData->copy();
 	}
 	item.selected = this->selected;
