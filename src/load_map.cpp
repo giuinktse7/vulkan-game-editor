@@ -5,6 +5,23 @@
 
 namespace
 {
+  // The first four bytes of an .otbm file must be 'OTBM' or all 0 (\0\0\0\0).
+  std::array<std::string, 2> OTBMFileIdentifiers{
+      "OTBM",
+      std::string(4, static_cast<char>(0))};
+
+  std::string OtbmWildcard(4, static_cast<char>(0));
+
+  bool validOtbmIdentifier(const std::string &identifier)
+  {
+    auto found = std::find(
+        OTBMFileIdentifiers.begin(),
+        OTBMFileIdentifiers.end(),
+        identifier);
+
+    return found != OTBMFileIdentifiers.end();
+  }
+
   template <typename T>
   std::string operator+(const std::string &lhs, const T &rhs)
   {
@@ -23,12 +40,12 @@ std::variant<Map, std::string> LoadMap::loadMap(std::filesystem::path &path)
 
   LoadBuffer buffer(File::read(path));
 
-  std::string header = buffer.nextString(4);
-  if (header != "OTBM")
+  std::string otbmIdentifier = buffer.nextString(4);
+  if (!validOtbmIdentifier(otbmIdentifier))
   {
     return error("Bad format: The first four bytes of the .otbm file must be"
-                 "\"OTBM\", but they were " +
-                 header);
+                 "'OTBM' or '0000', but they were '" +
+                 otbmIdentifier + "'");
   }
 
   OTBM::Node_t rootNodeType = buffer.readNodeStart();
