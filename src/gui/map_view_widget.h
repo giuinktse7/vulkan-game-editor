@@ -42,7 +42,7 @@ public:
 
 signals:
   void viewportChangedEvent(const Camera::Viewport &viewport);
-  void selectionChangedEvent();
+  void selectionChangedEvent(MapView &mapView);
 
 private:
   VulkanWindow *vulkanWindow;

@@ -172,7 +172,7 @@ void MapViewWidget::mapViewDrawRequested()
 
 void MapViewWidget::selectionChanged()
 {
-  emit selectionChangedEvent();
+  emit selectionChangedEvent(*mapView);
 }
 
 /*

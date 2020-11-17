@@ -148,7 +148,8 @@
     "qquickitem": "cpp",
     "qqmlcontext": "cpp",
     "qloggingcategory": "cpp",
-    "qabstractlistmodel": "cpp"
+    "qabstractlistmodel": "cpp",
+    "qurl": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

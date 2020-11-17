@@ -25,6 +25,7 @@ class ItemPropertyWindow;
 
 #include "gui.h"
 #include "item_list.h"
+#include "qt_util.h"
 #include "signal.h"
 #include "vulkan_window.h"
 
@@ -72,6 +73,7 @@ private:
   void keyPressEvent(QKeyEvent *event) override;
 
   void mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos);
+  void mapViewSelectionChangedEvent(MapView &mapView);
   void mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport);
   void mapTabCloseEvent(int index, QVariant data);
   void mapTabChangedEvent(int index);
@@ -84,11 +86,9 @@ private:
   // void updatePositionText();
 };
 
-class ItemListEventFilter : public QObject
+class ItemListEventFilter : public QtUtil::EventFilter
 {
 public:
-  ItemListEventFilter(QObject *parent = nullptr) : QObject(parent) {}
-
-protected:
+  ItemListEventFilter(QObject *parent) : QtUtil::EventFilter(parent) {}
   bool eventFilter(QObject *obj, QEvent *event) override;
 };

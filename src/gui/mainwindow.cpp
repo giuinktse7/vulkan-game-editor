@@ -63,14 +63,6 @@ bool ItemListEventFilter::eventFilter(QObject *object, QEvent *event)
   return QObject::eventFilter(object, event);
 }
 
-QLabel *itemImage(uint32_t serverId)
-{
-  QLabel *container = new QLabel;
-  container->setPixmap(QtUtil::itemPixmap(serverId));
-
-  return container;
-}
-
 uint32_t MainWindow::nextUntitledId()
 {
   uint32_t id;
@@ -119,22 +111,8 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
 
   connect(widget,
           &MapViewWidget::selectionChangedEvent,
-          [this, vulkanWindow]() {
-            auto mapView = vulkanWindow->getMapView();
-            if (mapView->singleTileSelected())
-            {
-              const Position pos = mapView->selection().onlyPosition().value();
-              const Tile *tile = mapView->getTile(pos);
-              DEBUG_ASSERT(tile != nullptr, "A tile that has a selection should never be nullptr.");
-
-              if (tile->selectionCount() == 1)
-              {
-                auto item = tile->firstSelectedItem();
-                DEBUG_ASSERT(item != nullptr, "It should be impossible for the selected item to be nullptr.");
-                propertyWindow->setItem(*item);
-              }
-            }
-          });
+          this,
+          &MainWindow::mapViewSelectionChangedEvent);
 
   if (map->name().empty())
   {
@@ -166,6 +144,147 @@ void MainWindow::mapTabChangedEvent(int index)
 
   // Empty for now
 }
+
+MainWindow::MainWindow(QWidget *parent)
+    : QWidget(parent),
+      rootLayout(new BorderLayout),
+      positionStatus(new QLabel),
+      zoomStatus(new QLabel),
+      topItemInfo(new QLabel)
+{
+
+  // editorAction.onActionChanged<&MainWindow::editorActionChangedEvent>(this);
+}
+
+//>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>Events>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>
+
+void MainWindow::mapViewSelectionChangedEvent(MapView &mapView)
+{
+  if (mapView.singleTileSelected())
+  {
+    const Position pos = mapView.selection().onlyPosition().value();
+    const Tile *tile = mapView.getTile(pos);
+    DEBUG_ASSERT(tile != nullptr, "A tile that has a selection should never be nullptr.");
+
+    if (tile->selectionCount() == 1)
+    {
+      auto item = tile->firstSelectedItem();
+      DEBUG_ASSERT(item != nullptr, "It should be impossible for the selected item to be nullptr.");
+      propertyWindow->setItem(*item);
+    }
+  }
+  else
+  {
+    propertyWindow->resetItem();
+  }
+}
+
+void MainWindow::mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos)
+{
+  Position pos = mapView.toPosition(mousePos);
+  auto tile = mapView.getTile(pos);
+  if (!tile || tile->isEmpty())
+  {
+    topItemInfo->setText("");
+  }
+  else if (tile->hasCreature())
+  {
+    auto id = std::to_string(tile->creature()->creatureType.id());
+    topItemInfo->setText("Creature looktype: " + QString::fromStdString(id));
+  }
+  else if (tile->hasTopItem())
+  {
+    auto topItem = tile->getTopItem();
+    std::ostringstream s;
+    s << "Item \"" << topItem->name() << "\" id: " << topItem->serverId() << " cid: " << topItem->clientId();
+    topItemInfo->setText(QString::fromStdString(s.str()));
+  }
+
+  positionStatus->setText(toQString(pos));
+}
+
+void MainWindow::mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport)
+{
+  Position pos = mapView.mousePos().toPos(mapView);
+  this->positionStatus->setText(toQString(pos));
+  this->zoomStatus->setText(toQString(std::round(mapView.getZoomFactor() * 100)) + "%");
+}
+
+bool MainWindow::event(QEvent *e)
+{
+  // if (!(e->type() == QEvent::UpdateRequest) && !(e->type() == QEvent::MouseMove))
+  // {
+  //   qDebug() << "[MainWindow] " << e->type();
+  // }
+
+  return QWidget::event(e);
+}
+
+void MainWindow::editorActionChangedEvent(const MouseAction_t &action)
+{
+  // Currently unused
+}
+
+void MainWindow::mousePressEvent(QMouseEvent *event)
+{
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+  switch (event->key())
+  {
+  case Qt::Key_Escape:
+    currentMapView()->escapeEvent();
+    break;
+  case Qt::Key_0:
+    if (event->modifiers() & Qt::CTRL)
+    {
+      currentMapView()->resetZoom();
+    }
+    break;
+  case Qt::Key_Delete:
+    currentMapView()->deleteSelectedItems();
+    break;
+  case Qt::Key_Z:
+    if (event->modifiers() & Qt::CTRL)
+    {
+      currentMapView()->undo();
+    }
+    break;
+  default:
+  {
+    auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
+    auto vulkanWindow = QtUtil::associatedVulkanWindow(widget);
+    if (vulkanWindow)
+    {
+      QApplication::sendEvent(vulkanWindow, event);
+    }
+
+    break;
+  }
+  }
+}
+
+MapView *MainWindow::currentMapView() const noexcept
+{
+  return mapTabs->currentMapView();
+}
+
+MapView *getMapViewOnCursor()
+{
+  QWidget *widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
+  return QtUtil::associatedMapView(widget);
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>Initialization>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>
 
 void MainWindow::initializeUI()
 {
@@ -266,74 +385,6 @@ void MainWindow::initializeUI()
   setLayout(rootLayout);
 }
 
-MainWindow::MainWindow(QWidget *parent)
-    : QWidget(parent),
-      rootLayout(new BorderLayout),
-      positionStatus(new QLabel),
-      zoomStatus(new QLabel),
-      topItemInfo(new QLabel)
-{
-
-  // editorAction.onActionChanged<&MainWindow::editorActionChangedEvent>(this);
-}
-
-bool MainWindow::event(QEvent *e)
-{
-  // if (!(e->type() == QEvent::UpdateRequest) && !(e->type() == QEvent::MouseMove))
-  // {
-  //   qDebug() << "[MainWindow] " << e->type();
-  // }
-
-  return QWidget::event(e);
-}
-
-void MainWindow::editorActionChangedEvent(const MouseAction_t &action)
-{
-  // Currently unused
-}
-
-void MainWindow::mousePressEvent(QMouseEvent *event)
-{
-}
-
-void MainWindow::keyPressEvent(QKeyEvent *event)
-{
-  switch (event->key())
-  {
-  case Qt::Key_Escape:
-    currentMapView()->escapeEvent();
-    break;
-  case Qt::Key_0:
-    if (event->modifiers() & Qt::CTRL)
-    {
-      currentMapView()->resetZoom();
-    }
-    break;
-  case Qt::Key_Delete:
-    currentMapView()->deleteSelectedItems();
-    break;
-  case Qt::Key_Z:
-    if (event->modifiers() & Qt::CTRL)
-    {
-      currentMapView()->undo();
-    }
-    break;
-  default:
-  {
-    auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-    auto vulkanWindow = QtUtil::associatedVulkanWindow(widget);
-    if (vulkanWindow)
-    {
-      QApplication::sendEvent(vulkanWindow, event);
-    }
-  }
-  // event->ignore();
-  // QWidget::keyPressEvent(event);
-
-  break;
-  }
-}
-
 ItemList *MainWindow::createItemPalette()
 {
   ItemList *itemList = new ItemList;
@@ -341,15 +392,6 @@ ItemList *MainWindow::createItemPalette()
   itemList->setItemDelegate(new Delegate(this));
 
   std::vector<ItemTypeModelItem> data;
-
-  // addItemRange(103, 104);
-  // addItemRange(1025, 1029);
-  // addItemRange(20776, 20781);
-  // addItemRange(21113, 21121);
-  // addItemRange(25200, 25296);
-  // addItemRange(33571, 36501);
-  // addItemRange(23172, 23258);
-  // addItemRange(33817, 33852);
 
   connect(itemList, &QListView::clicked, [this, itemList](QModelIndex index) {
     auto value = itemList->itemAtIndex(index);
@@ -475,46 +517,4 @@ QMenuBar *MainWindow::createMenuBar()
 void MainWindow::setVulkanInstance(QVulkanInstance *instance)
 {
   vulkanInstance = instance;
-}
-
-void MainWindow::mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos)
-{
-  Position pos = mapView.toPosition(mousePos);
-  auto tile = mapView.getTile(pos);
-  if (!tile || tile->isEmpty())
-  {
-    topItemInfo->setText("");
-  }
-  else if (tile->hasCreature())
-  {
-    auto id = std::to_string(tile->creature()->creatureType.id());
-    topItemInfo->setText("Creature looktype: " + QString::fromStdString(id));
-  }
-  else if (tile->hasTopItem())
-  {
-    auto topItem = tile->getTopItem();
-    std::ostringstream s;
-    s << "Item \"" << topItem->name() << "\" id: " << topItem->serverId() << " cid: " << topItem->clientId();
-    topItemInfo->setText(QString::fromStdString(s.str()));
-  }
-
-  positionStatus->setText(toQString(pos));
-}
-
-void MainWindow::mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport)
-{
-  Position pos = mapView.mousePos().toPos(mapView);
-  this->positionStatus->setText(toQString(pos));
-  this->zoomStatus->setText(toQString(std::round(mapView.getZoomFactor() * 100)) + "%");
-}
-
-MapView *MainWindow::currentMapView() const noexcept
-{
-  return mapTabs->currentMapView();
-}
-
-MapView *getMapViewOnCursor()
-{
-  QWidget *widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-  return QtUtil::associatedMapView(widget);
 }

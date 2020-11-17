@@ -20,6 +20,7 @@ struct ContainerItem : public ItemWrapper
   ContainerItem(Item &item);
 
   size_t containerSize() const;
+  size_t containerCapacity() const;
 
   ItemData::Container *container() const;
 };

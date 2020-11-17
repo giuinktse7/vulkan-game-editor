@@ -18,6 +18,7 @@
 #include "gui/borderless_window.h"
 #include "gui/map_tab_widget.h"
 #include "gui/map_view_widget.h"
+#include "item_wrapper.h"
 #include "items.h"
 #include "load_map.h"
 #include "minimap.h"
@@ -411,7 +412,8 @@ void MainApplication::initializeUI()
 
     // uint32_t grassTuft = 6217;
 
-    mainWindow.editorAction.setRawItem(2148);
+    // mainWindow.editorAction.setRawItem(2148);
+    mainWindow.editorAction.setRawItem(1987);
 }
 
 int main(int argc, char *argv[])
@@ -434,6 +436,16 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
     }
+
+    // Item item(1987);
+    // ItemData::Container container;
+    // container.addItem(std::move(goldCoin));
+    // item.setItemData(std::move(container));
+
+    // auto k = item.as<ContainerItem>();
+    // auto x = k.containerSize();
+
+    // return 0;
 
     std::filesystem::path mapPath = "C:/Users/giuin/Desktop/Untitled-1.otbm";
 

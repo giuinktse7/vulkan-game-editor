@@ -93,6 +93,15 @@ namespace QtUtil
 
   QPixmap itemPixmap(uint32_t serverId);
   MainApplication *qtApp();
+
+  class EventFilter : public QObject
+  {
+  public:
+    EventFilter(QObject *parent) : QObject(parent) {}
+
+  protected:
+    virtual bool eventFilter(QObject *obj, QEvent *event) = 0;
+  };
 } // namespace QtUtil
 
 template <typename T>

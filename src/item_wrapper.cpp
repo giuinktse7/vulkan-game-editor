@@ -23,3 +23,8 @@ size_t ContainerItem::containerSize() const
 {
   return container()->size();
 }
+
+size_t ContainerItem::containerCapacity() const
+{
+  return item.itemType->volume;
+}
