@@ -13,7 +13,8 @@ An action is an event that can occur and can be undone/redone.
 ## Dependencies
 
 - [**Vulkan SDK**](https://vulkan.lunarg.com/) Low-level 3D graphics and computing API.
-- [**QT5 (`Qt::Core` and `Qt::Widgets`)**](https://www.qt.io/download-open-source) Cross-plaftorm GUI framework.
+- [**QT5 (`Qt::Core`, `Qt::Widgets`, `Qt::Qml`, `Qt::Quick` and`Qt::Svg`)
+                                  **](https://www.qt.io/download-open-source) Cross-plaftorm GUI framework.
 
   **NOTE**: The QT framework requires around 8 GB of disk space per target architecture (For example `msvc2019` or `msvc2019_64`).
 
