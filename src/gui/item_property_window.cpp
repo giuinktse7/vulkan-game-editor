@@ -41,5 +41,7 @@ QWidget *ItemPropertyWindow::wrapInWidget(QWidget *parent)
 void ItemPropertyWindow::reloadSource()
 {
   VME_LOG_D("ItemPropertyWindow source reloaded.");
-  setSource(_url);
+  engine()->clearComponentCache();
+  setSource(QUrl::fromLocalFile("../resources/qml/itemPropertyWindow.qml"));
+}
 }

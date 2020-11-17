@@ -452,6 +452,7 @@ QMenuBar *MainWindow::createMenuBar()
     reloadMenu->addAction(reloadStyles);
 
     QAction *reloadPropertyQml = new QAction(tr("Reload Properties QML"), this);
+    reloadPropertyQml->setShortcut(Qt::Key_F5);
     connect(reloadPropertyQml, &QAction::triggered, [=] { propertyWindow->reloadSource(); });
     reloadMenu->addAction(reloadPropertyQml);
   }
