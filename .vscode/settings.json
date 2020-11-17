@@ -149,7 +149,8 @@
     "qqmlcontext": "cpp",
     "qloggingcategory": "cpp",
     "qabstractlistmodel": "cpp",
-    "qurl": "cpp"
+    "qurl": "cpp",
+    "qquickwindow": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

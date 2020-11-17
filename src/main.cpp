@@ -11,6 +11,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLoggingCategory>
+#include <QQuickWindow>
 #include <QStyleFactory>
 
 #include "ecs/ecs.h"
@@ -489,7 +490,7 @@ int main(int argc, char *argv[])
     //     VME_LOG_D(id);
     // }
     // VME_LOG(t->getFirstTextureAtlas()->sourceFile);
-
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
     return app.run();
 }
 
