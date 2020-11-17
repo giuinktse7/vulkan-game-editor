@@ -5,6 +5,6 @@
       <file>vme/SpinBox.qml</file>
       <file>vme/spinbox/IndicatorButton.qml</file>
       <file>vme/qmldir</file>
-      <file>vme/SourceSansPro-Regular.ttf</file>
+      <file>vme/fonts/SourceSansPro-Regular.ttf</file>
   </qresource>
 </RCC>
