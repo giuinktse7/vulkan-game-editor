@@ -165,7 +165,7 @@ void loadTextures()
         if (!Items::items.validItemType(id))
             continue;
 
-        const TextureInfo &info = t->getTextureInfoUnNormalized();
+        const TextureInfo &info = t->getTextureInfo(false);
         info.atlas->getOrCreateTexture();
     }
     VME_LOG_D("loadTextures() ms: " << start.elapsedMillis());

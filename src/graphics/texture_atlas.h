@@ -23,6 +23,12 @@ constexpr struct
 
 struct TextureInfo
 {
+	enum class CoordinateType
+	{
+		Normalized,
+		Unnormalized
+	};
+
 	TextureAtlas *atlas;
 	TextureWindow window;
 };
@@ -60,9 +66,7 @@ public:
 	DrawOffset drawOffset;
 
 	glm::vec4 getFragmentBounds(const TextureWindow window) const;
-
-	const TextureWindow getTextureWindow(uint32_t spriteId) const;
-	const TextureWindow getTextureWindowUnNormalized(uint32_t spriteId) const;
+	const TextureWindow getTextureWindow(uint32_t spriteId, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
 
 	bool isCompressed() const;
 

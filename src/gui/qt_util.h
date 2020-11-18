@@ -15,6 +15,8 @@
 class MainApplication;
 
 class QWheelEvent;
+struct TextureInfo;
+class Item;
 class MapView;
 class VulkanWindow;
 
@@ -92,6 +94,8 @@ namespace QtUtil
   }
 
   QPixmap itemPixmap(uint32_t serverId);
+  QPixmap itemPixmap(const Position &pos, const Item &item);
+  QPixmap itemPixmap(const TextureInfo &info);
   MainApplication *qtApp();
 
   class EventFilter : public QObject

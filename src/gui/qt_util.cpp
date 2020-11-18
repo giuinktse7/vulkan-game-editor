@@ -64,8 +64,19 @@ QPixmap QtUtil::itemPixmap(uint32_t serverId)
   }
 
   ItemType *t = Items::items.getItemTypeByServerId(serverId);
-  auto &info = t->getTextureInfoUnNormalized();
+  auto info = t->getTextureInfo(TextureInfo::CoordinateType::Unnormalized);
 
+  return itemPixmap(info);
+}
+
+QPixmap QtUtil::itemPixmap(const Position &pos, const Item &item)
+{
+  auto info = item.getTextureInfo(pos, TextureInfo::CoordinateType::Unnormalized);
+  return itemPixmap(info);
+}
+
+QPixmap QtUtil::itemPixmap(const TextureInfo &info)
+{
   TextureAtlas *atlas = info.atlas;
 
   const uint8_t *pixelData = atlas->getOrCreateTexture().pixels().data();
@@ -84,8 +95,6 @@ QPixmap QtUtil::itemPixmap(uint32_t serverId)
   {
     return QPixmap::fromImage(sprite.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
   }
-
-  return QPixmap::fromImage(sprite);
 }
 
 MainApplication *QtUtil::qtApp()

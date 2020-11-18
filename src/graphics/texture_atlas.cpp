@@ -73,40 +73,41 @@ TextureAtlas::TextureAtlas(uint32_t id, LZMACompressedBuffer &&buffer, uint32_t 
   }
 }
 
-const TextureWindow TextureAtlas::getTextureWindow(uint32_t spriteId) const
+const TextureWindow TextureAtlas::getTextureWindow(uint32_t spriteId, TextureInfo::CoordinateType coordinateType) const
 {
   DEBUG_ASSERT(firstSpriteId <= spriteId && spriteId <= lastSpriteId, "The TextureAtlas does not contain that sprite ID.");
 
-  uint32_t offset = spriteId - this->firstSpriteId;
+  if (coordinateType == TextureInfo::CoordinateType::Normalized)
+  {
 
-  auto row = offset / columns;
-  auto col = offset % columns;
+    uint32_t offset = spriteId - this->firstSpriteId;
 
-  const float x = static_cast<float>(col) / columns;
-  const float y = static_cast<float>(rows - row) / rows;
+    auto row = offset / columns;
+    auto col = offset % columns;
 
-  const float width = static_cast<float>(spriteWidth) / this->width;
-  const float height = static_cast<float>(spriteHeight) / this->height;
+    const float x = static_cast<float>(col) / columns;
+    const float y = static_cast<float>(rows - row) / rows;
 
-  return TextureWindow{x, y - height, x + width, y};
-}
+    const float width = static_cast<float>(spriteWidth) / this->width;
+    const float height = static_cast<float>(spriteHeight) / this->height;
 
-const TextureWindow TextureAtlas::getTextureWindowUnNormalized(uint32_t spriteId) const
-{
-  DEBUG_ASSERT(firstSpriteId <= spriteId && spriteId <= lastSpriteId, "The TextureAtlas does not contain that sprite ID.");
+    return TextureWindow{x, y - height, x + width, y};
+  }
+  else
+  {
+    uint32_t offset = spriteId - this->firstSpriteId;
 
-  uint32_t offset = spriteId - this->firstSpriteId;
+    auto row = offset / columns;
+    auto col = offset % columns;
 
-  auto row = offset / columns;
-  auto col = offset % columns;
+    const float x = static_cast<float>(col) * spriteWidth;
+    const float y = static_cast<float>(rows - row - 1) * spriteHeight;
 
-  const float x = static_cast<float>(col) * spriteWidth;
-  const float y = static_cast<float>(rows - row - 1) * spriteHeight;
+    const float width = static_cast<float>(spriteWidth);
+    const float height = static_cast<float>(spriteHeight);
 
-  const float width = static_cast<float>(spriteWidth);
-  const float height = static_cast<float>(spriteHeight);
-
-  return TextureWindow{x, y, width, height};
+    return TextureWindow{x, y, width, height};
+  }
 }
 
 void print_byte(uint8_t b)

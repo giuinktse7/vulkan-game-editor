@@ -18,43 +18,29 @@ const uint32_t ItemType::getPatternIndex(const Position &pos) const
   return spriteIndex;
 }
 
-const TextureInfo ItemType::getTextureInfoUnNormalized() const
+const TextureInfo ItemType::getTextureInfo(TextureInfo::CoordinateType coordinateType) const
 {
   uint32_t spriteId = appearance->getFirstSpriteId();
-  TextureAtlas *atlas = getTextureAtlas(spriteId);
-
-  TextureInfo info;
-  info.atlas = atlas;
-  info.window = atlas->getTextureWindowUnNormalized(spriteId);
-
-  return info;
+  return getTextureInfo(spriteId, coordinateType);
 }
 
-const TextureInfo ItemType::getTextureInfo() const
-{
-  uint32_t spriteId = appearance->getFirstSpriteId();
-  return getTextureInfo(spriteId);
-}
-
-const TextureInfo ItemType::getTextureInfo(uint32_t spriteId) const
-{
-  TextureAtlas *atlas = getTextureAtlas(spriteId);
-
-  TextureInfo info;
-  info.atlas = atlas;
-  info.window = atlas->getTextureWindow(spriteId);
-
-  return info;
-}
-
-const TextureInfo ItemType::getTextureInfo(const Position &pos) const
+const TextureInfo ItemType::getTextureInfo(const Position &pos, TextureInfo::CoordinateType coordinateType) const
 {
   const SpriteInfo &spriteInfo = appearance->getSpriteInfo();
 
   uint32_t spriteIndex = getPatternIndex(pos);
   uint32_t spriteId = spriteInfo.spriteIds.at(spriteIndex);
 
-  return getTextureInfo(spriteId);
+  return getTextureInfo(spriteId, coordinateType);
+}
+
+const TextureInfo ItemType::getTextureInfo(uint32_t spriteId, TextureInfo::CoordinateType coordinateType) const
+{
+  TextureInfo info;
+  info.atlas = getTextureAtlas(spriteId);
+  info.window = info.atlas->getTextureWindow(spriteId, coordinateType);
+
+  return info;
 }
 
 std::vector<TextureAtlas *> ItemType::getTextureAtlases() const

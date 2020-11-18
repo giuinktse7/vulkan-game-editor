@@ -77,7 +77,7 @@ Item Item::deepCopy() const
 	return item;
 }
 
-const TextureInfo Item::getTextureInfo(const Position &pos) const
+const TextureInfo Item::getTextureInfo(const Position &pos, TextureInfo::CoordinateType coordinateType) const
 {
 	// TODO Add more pattern checks like hanging item types
 
@@ -90,7 +90,7 @@ const TextureInfo Item::getTextureInfo(const Position &pos) const
 	}
 
 	uint32_t spriteId = spriteInfo.spriteIds.at(offset);
-	return itemType->getTextureInfo(spriteId);
+	return itemType->getTextureInfo(spriteId, coordinateType);
 }
 
 const uint32_t Item::getPatternIndex(const Position &pos) const
