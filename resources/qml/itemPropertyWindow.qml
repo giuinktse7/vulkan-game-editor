@@ -112,7 +112,6 @@ ScrollView {
             anchors.fill : parent
             anchors.verticalCenter : parent.verticalCenter
             source : itemDropArea.imageUrl
-
           }
         }
       }

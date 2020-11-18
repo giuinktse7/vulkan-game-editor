@@ -142,7 +142,6 @@ void Delegate::paint(QPainter *painter, const QStyleOptionViewItem &option, cons
 
   painter->drawText(40, option.rect.y() + 18, QString::number(data.itemType->id));
   painter->drawPixmap(4, option.rect.y(), data.pixmap);
-  // painter->drawLine(0, option.rect.y() + 19, option.rect.width(), option.rect.y() + 19);
 }
 
 QSize Delegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const

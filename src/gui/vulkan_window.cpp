@@ -166,28 +166,35 @@ void VulkanWindow::mousePressEvent(QMouseEvent *event)
 
 void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
+  if (dragOperation)
+  {
+    QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+    dragOperation.value().mouseMoveEvent(mouseEvent);
+  }
+
   const auto selection = editorAction.as<MouseAction::Select>();
 
   // Handle external drag operation
   if (selection && selection->isMoving())
   {
-    if (dragOperation)
+    if (!containsMouse())
     {
-      QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-      dragOperation.value().mouseMoveEvent(mouseEvent);
-    }
-    else
-    {
-      if (!containsMouse())
-      {
-        auto tile = mapView->singleSelectedTile();
+      auto tile = mapView->singleSelectedTile();
 
-        if (tile && tile->selectionCount() == 1)
-        {
-          Item *item = tile->firstSelectedItem();
-          dragOperation = ItemDragOperation(tile->position(), item, this);
-          dragOperation.value().start();
-        }
+      if (tile && tile->selectionCount() == 1)
+      {
+        DEBUG_ASSERT(mapView->editorAction.is<MouseAction::Select>(), "Should always be selection here.");
+
+        Item *item = tile->firstSelectedItem();
+
+        MouseAction::ExternalItemDrag externalDrag;
+        externalDrag.tile = tile;
+        externalDrag.item = item;
+        mapView->editorAction.unlock();
+        mapView->editorAction.set(externalDrag);
+
+        dragOperation = ItemDragOperation(tile->position(), item, this);
+        dragOperation.value().start();
       }
     }
   }
@@ -211,9 +218,14 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
   // Propagate drag operation
   if (dragOperation)
   {
+    DEBUG_ASSERT(mapView->editorAction.is<MouseAction::ExternalItemDrag>(), "editorAction should always be ExternalItemDrag here.");
+
     QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
     dragOperation.value().mouseReleaseEvent(mouseEvent);
     dragOperation.reset();
+
+    mapView->editorAction.unlock();
+    mapView->editorAction.setPrevious();
   }
 
   mouseState.buttons = event->buttons();
@@ -561,13 +573,14 @@ ItemDragOperation::ItemDragOperation(const Position &itemPosition, Item *item, Q
 
 void ItemDragOperation::start()
 {
+  // QPixmap rgbPixmap = QPixmap::fromImage(pixmap.toImage().convertToFormat(QImage::Format::Format_RGB32));
   QApplication::setOverrideCursor(pixmap);
   dragging = true;
 }
 
 void ItemDragOperation::finish()
 {
-  QApplication::restoreOverrideCursor();
+  // QApplication::restoreOverrideCursor();
   dragging = false;
 }
 

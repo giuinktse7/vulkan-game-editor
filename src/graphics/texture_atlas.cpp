@@ -79,7 +79,6 @@ const TextureWindow TextureAtlas::getTextureWindow(uint32_t spriteId, TextureInf
 
   if (coordinateType == TextureInfo::CoordinateType::Normalized)
   {
-
     uint32_t offset = spriteId - this->firstSpriteId;
 
     auto row = offset / columns;

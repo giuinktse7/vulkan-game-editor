@@ -8,6 +8,8 @@
 #include "util.h"
 
 class Selection;
+class Tile;
+class Item;
 
 namespace VME
 {
@@ -64,6 +66,10 @@ namespace VME
 
 struct MouseAction
 {
+  struct None
+  {
+  };
+
   struct RawItem
   {
     uint32_t serverId = 100;
@@ -109,12 +115,14 @@ struct MouseAction
     }
   };
 
-  struct None
+  struct ExternalItemDrag
   {
+    Tile *tile;
+    Item *item;
   };
 };
 
-using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select, MouseAction::Pan>;
+using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select, MouseAction::Pan, MouseAction::ExternalItemDrag>;
 
 /**
  * Utility class for sending UI information to a MapView.
@@ -147,15 +155,17 @@ public:
   {
     DEBUG_ASSERT(!_locked, "The action is locked.");
 
-    _action = _previousAction;
-    _previousAction = MouseAction::None{};
+    _action = _previousAction.action;
+    _locked = _previousAction.locked;
+
+    _previousAction = {MouseAction::None{}, false};
 
     actionChanged.fire(_action);
   }
 
-  inline MouseAction_t previous() const noexcept
+  inline const MouseAction_t &previous() const noexcept
   {
-    return _previousAction;
+    return _previousAction.action;
   }
   /**
    * @return true if the set was successful.
@@ -172,7 +182,7 @@ public:
   void set(const MouseAction_t action)
   {
     DEBUG_ASSERT(!_locked, "The action is locked.");
-    _previousAction = _action;
+    _previousAction = {_action, _locked};
     _action = action;
 
     actionChanged.fire(_action);
@@ -214,7 +224,13 @@ public:
 private:
   Nano::Signal<void(const MouseAction_t &)> actionChanged;
 
-  MouseAction_t _previousAction = MouseAction::Select{};
+  struct MouseActionState
+  {
+    MouseAction_t action;
+    bool locked;
+  };
+
+  MouseActionState _previousAction = {MouseAction::Select{}, false};
   MouseAction_t _action = MouseAction::Select{};
   bool _locked = false;
 };
