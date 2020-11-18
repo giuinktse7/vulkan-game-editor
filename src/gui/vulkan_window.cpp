@@ -2,9 +2,13 @@
 
 #include <QAction>
 #include <QDialog>
+#include <QDrag>
 #include <QFocusEvent>
 #include <QMenu>
+#include <QMimeData>
 #include <QMouseEvent>
+#include <QQuickView>
+#include <QWidget>
 
 #include <memory>
 
@@ -16,7 +20,9 @@
 #include "../logger.h"
 #include "../position.h"
 
+#include "../main.h"
 #include "../qt/logging.h"
+#include "mainwindow.h"
 #include "qt_util.h"
 
 #include "gui.h"
@@ -109,6 +115,12 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
   }
 }
 
+//>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>Events>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>
+
 void VulkanWindow::shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event)
 {
   switch (action)
@@ -152,22 +164,39 @@ void VulkanWindow::mousePressEvent(QMouseEvent *event)
   event->ignore();
 }
 
-void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
-{
-  mouseState.buttons = event->buttons();
-  mapView->mouseReleaseEvent(QtUtil::vmeMouseEvent(event));
-}
-
 void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
-  // If leftbutton up
-  // if (!(event->buttons() & Qt::LeftButton) && (mouseState.buttons & Qt::LeftButton))
-  // {
-  //   mapView->mouseReleaseEvent(QtUtil::vmeMouseEvent(event));
-  // }
+  const auto selection = editorAction.as<MouseAction::Select>();
 
-  mouseState.buttons = event->buttons();
-  mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
+  // Handle external drag operation
+  if (selection && selection->isMoving())
+  {
+    if (dragOperation)
+    {
+      QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+      dragOperation.value().mouseMoveEvent(mouseEvent);
+    }
+    else
+    {
+      if (!containsMouse())
+      {
+        auto tile = mapView->singleSelectedTile();
+
+        if (tile && tile->selectionCount() == 1)
+        {
+          Item *item = tile->firstSelectedItem();
+          dragOperation = ItemDragOperation(tile->position(), item, this);
+          dragOperation.value().start();
+        }
+      }
+    }
+  }
+
+  if (containsMouse())
+  {
+    mouseState.buttons = event->buttons();
+    mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
+  }
 
   auto pos = event->windowPos();
   util::Point<float> mousePos(pos.x(), pos.y());
@@ -175,6 +204,20 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 
   event->ignore();
   QVulkanWindow::mouseMoveEvent(event);
+}
+
+void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
+{
+  // Propagate drag operation
+  if (dragOperation)
+  {
+    QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+    dragOperation.value().mouseReleaseEvent(mouseEvent);
+    dragOperation.reset();
+  }
+
+  mouseState.buttons = event->buttons();
+  mapView->mouseReleaseEvent(QtUtil::vmeMouseEvent(event));
 }
 
 void VulkanWindow::wheelEvent(QWheelEvent *event)
@@ -263,10 +306,10 @@ std::optional<ShortcutAction> VulkanWindow::getShortcutAction(QKeyEvent *event) 
 
 bool VulkanWindow::event(QEvent *event)
 {
-  // if (!(event->type() == QEvent::UpdateRequest) && !(event->type() == QEvent::MouseMove))
-  // {
-  //   qDebug() << "[" << QString(debugName.c_str()) << "] " << event->type() << " { " << mapToGlobal(position()) << " }";
-  // }
+  if (!(event->type() == QEvent::UpdateRequest) && !(event->type() == QEvent::MouseMove))
+  {
+    qDebug() << "[" << QString(debugName.c_str()) << "] " << event->type() << " { " << mapToGlobal(position()) << " }";
+  }
 
   switch (event->type())
   {
@@ -285,6 +328,13 @@ bool VulkanWindow::event(QEvent *event)
       shortcutPressedEvent(action.value());
       return true;
     }
+    break;
+  }
+  case QEvent::DragLeave:
+  {
+    requestUpdate();
+    VME_LOG_D("Requested update");
+    break;
   }
   default:
     break;
@@ -387,6 +437,14 @@ void VulkanWindow::updateVulkanInfo()
   vulkanInfo.update();
 }
 
+bool VulkanWindow::containsMouse() const
+{
+  QSize windowSize = size();
+  auto mousePos = mapFromGlobal(QCursor::pos());
+
+  return (0 <= mousePos.x() && mousePos.x() <= windowSize.width()) && (0 <= mousePos.y() && mousePos.y() <= windowSize.height());
+}
+
 //>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>ContextMenu>>>>>
@@ -484,4 +542,125 @@ void VulkanWindow::Renderer::startNextFrame()
   frame->mouseAction = window.mapView->editorAction.action();
 
   renderer.startNextFrame();
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>ItemDragOperation>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+ItemDragOperation::ItemDragOperation(const Position &itemPosition, Item *item, QWindow *parent)
+    : _parent(parent),
+      _hoveredObject(QtUtil::qtApp()->widgetAt(QCursor::pos())),
+      item(item),
+      pixmap(QtUtil::itemPixmap(itemPosition, *item)),
+      dragging(false)
+{
+}
+
+void ItemDragOperation::start()
+{
+  QApplication::setOverrideCursor(pixmap);
+  dragging = true;
+}
+
+void ItemDragOperation::finish()
+{
+  QApplication::restoreOverrideCursor();
+  dragging = false;
+}
+
+bool ItemDragOperation::isDragging() const
+{
+  return dragging;
+}
+
+bool ItemDragOperation::mouseMoveEvent(QMouseEvent *event)
+{
+  auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
+  auto object = static_cast<QObject *>(widget);
+
+  auto pos = widget->mapFromGlobal(_parent->mapToGlobal(event->pos()));
+  VME_LOG_D("ItemDragOperation::mouseMoveEvent: " << pos);
+
+  bool changed = object != _hoveredObject;
+  if (changed)
+  {
+    sendDragLeaveEvent(_hoveredObject, pos, event);
+    sendDragEnterEvent(object, pos, event);
+
+    setHoveredObject(object);
+  }
+  else
+  {
+    sendDragMoveEvent(object, pos, event);
+  }
+
+  return changed;
+}
+
+bool ItemDragOperation::mouseReleaseEvent(QMouseEvent *event)
+{
+  auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
+  auto pos = widget->mapFromGlobal(_parent->mapToGlobal(event->pos()));
+
+  sendDragDropEvent(widget, pos, event);
+  finish();
+
+  return true;
+}
+
+void ItemDragOperation::setHoveredObject(QObject *object)
+{
+  qDebug() << "setHoveredObject: " << _hoveredObject;
+  _hoveredObject = object;
+}
+
+bool ItemDragOperation::hoversParent() const
+{
+  return _hoveredObject == _parent;
+}
+
+QObject *ItemDragOperation::hoveredObject() const
+{
+  return _hoveredObject;
+}
+
+void ItemDragOperation::sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event)
+{
+  if (!object)
+    return;
+  QMimeData mimeData;
+  QDragEnterEvent dragEnterEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
+  QApplication::sendEvent(object, &dragEnterEvent);
+}
+
+void ItemDragOperation::sendDragLeaveEvent(QObject *object, QPoint position, QMouseEvent *event)
+{
+  if (!object)
+    return;
+
+  QDragLeaveEvent dragLeaveEvent;
+  QApplication::sendEvent(object, &dragLeaveEvent);
+}
+
+void ItemDragOperation::sendDragMoveEvent(QObject *object, QPoint position, QMouseEvent *event)
+{
+  if (!object)
+    return;
+
+  QMimeData mimeData;
+  QDragMoveEvent dragMoveEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
+  QApplication::sendEvent(object, &dragMoveEvent);
+}
+
+void ItemDragOperation::sendDragDropEvent(QObject *object, QPoint position, QMouseEvent *event)
+{
+  if (!object)
+    return;
+
+  QMimeData mimeData;
+  QDropEvent dropEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
+  QApplication::sendEvent(object, &dropEvent);
 }

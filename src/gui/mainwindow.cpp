@@ -89,6 +89,7 @@ void MainWindow::addMapTab()
 void MainWindow::addMapTab(std::shared_ptr<Map> map)
 {
   VulkanWindow *vulkanWindow = QT_MANAGED_POINTER(VulkanWindow, map, editorAction);
+  vulkanWindow->mainWindow = this;
 
   // Window setup
   vulkanWindow->setVulkanInstance(vulkanInstance);
@@ -164,18 +165,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::mapViewSelectionChangedEvent(MapView &mapView)
 {
-  if (mapView.singleTileSelected())
+  const Item *selectedItem = mapView.singleSelectedItem();
+  if (selectedItem)
   {
-    const Position pos = mapView.selection().onlyPosition().value();
-    const Tile *tile = mapView.getTile(pos);
-    DEBUG_ASSERT(tile != nullptr, "A tile that has a selection should never be nullptr.");
-
-    if (tile->selectionCount() == 1)
-    {
-      auto item = tile->firstSelectedItem();
-      DEBUG_ASSERT(item != nullptr, "It should be impossible for the selected item to be nullptr.");
-      propertyWindow->setItem(*item);
-    }
+    propertyWindow->setItem(*selectedItem);
   }
   else
   {
@@ -222,6 +215,12 @@ bool MainWindow::event(QEvent *e)
   // }
 
   return QWidget::event(e);
+}
+
+bool MainWindow::vulkanWindowEvent(QEvent *event)
+{
+  // qDebug() << "[MainWindow] vulkanWindowEvent: " << event;
+  return true;
 }
 
 void MainWindow::editorActionChangedEvent(const MouseAction_t &action)
@@ -360,6 +359,7 @@ void MainWindow::initializeUI()
 
   {
     auto container = propertyWindow->wrapInWidget();
+    VME_LOG_D("propertyWindow container: " << container);
     container->setMinimumWidth(200);
     splitter->addWidget(container);
     splitter->setStretchFactor(2, 0);

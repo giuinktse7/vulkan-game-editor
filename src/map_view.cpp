@@ -462,6 +462,44 @@ bool MapView::singleTileSelected() const
   return _selection.size() == 1;
 }
 
+const Tile *MapView::singleSelectedTile() const
+{
+  if (!singleTileSelected())
+    return nullptr;
+
+  auto pos = _selection.onlyPosition().value();
+  return getTile(pos);
+}
+
+Tile *MapView::singleSelectedTile()
+{
+  return const_cast<Tile *>(const_cast<const MapView *>(this)->singleSelectedTile());
+}
+
+const Item *MapView::singleSelectedItem() const
+{
+  if (!singleTileSelected())
+    return nullptr;
+
+  const Position pos = _selection.onlyPosition().value();
+  const Tile *tile = getTile(pos);
+  DEBUG_ASSERT(tile != nullptr, "A tile that has a selection should never be nullptr.");
+
+  if (tile->selectionCount() != 1)
+    return nullptr;
+
+  auto item = tile->firstSelectedItem();
+  DEBUG_ASSERT(item != nullptr, "It should be impossible for the selected item to be nullptr.");
+
+  return item;
+}
+
+Item *MapView::singleSelectedItem()
+{
+  const Item *item = const_cast<const MapView *>(this)->singleSelectedItem();
+  return const_cast<Item *>(item);
+}
+
 bool MapView::isEmpty(const Position position) const
 {
   return _map->isTileEmpty(position);

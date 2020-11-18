@@ -427,6 +427,7 @@ int main(int argc, char *argv[])
         // constexpr auto a = Minimap::colors[210].rgbaInfo();
     }
 
+    // QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
     MainApplication app(argc, argv);
 
     {
@@ -490,7 +491,9 @@ int main(int argc, char *argv[])
     //     VME_LOG_D(id);
     // }
     // VME_LOG(t->getFirstTextureAtlas()->sourceFile);
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
+
+    // QApplication::setOverrideCursor(QtUtil::itemPixmap(1987));
+
     return app.run();
 }
 

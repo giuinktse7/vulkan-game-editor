@@ -139,6 +139,20 @@ public:
 	void endDragging(VME::ModifierKeys modifiers);
 
 	bool singleTileSelected() const;
+	const Tile *singleSelectedTile() const;
+	Tile *singleSelectedTile();
+
+	/**
+	 * Returns the only selected item if there is **exactly one** selected item.
+	 * Returns nullptr otherwise.
+	 */
+	const Item *singleSelectedItem() const;
+	/**
+	 * Returns the only selected item if there is **exactly one** selected item.
+	 * Returns nullptr otherwise.
+	 */
+	Item *singleSelectedItem();
+
 	bool isDragging() const;
 	bool hasSelection() const;
 	bool draggingWithSubtract() const;

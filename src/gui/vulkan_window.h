@@ -7,6 +7,7 @@
 
 #include <QApplication>
 #include <QMenu>
+#include <QPixmap>
 #include <QVulkanWindow>
 
 #include "../graphics/vulkan_helpers.h"
@@ -16,12 +17,43 @@
 #include "../util.h"
 
 class MainWindow;
+class Item;
 
 QT_BEGIN_NAMESPACE
 class QWidget;
 class QPoint;
 class QEvent;
 QT_END_NAMESPACE
+
+class ItemDragOperation
+{
+public:
+  ItemDragOperation(const Position &itemPosition, Item *item, QWindow *parent);
+
+  void start();
+  void finish();
+  bool isDragging() const;
+  bool mouseMoveEvent(QMouseEvent *event);
+  bool mouseReleaseEvent(QMouseEvent *event);
+  QObject *hoveredObject() const;
+  bool hoversParent() const;
+
+private:
+  void sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event);
+  void sendDragLeaveEvent(QObject *object, QPoint position, QMouseEvent *event);
+  void sendDragMoveEvent(QObject *object, QPoint position, QMouseEvent *event);
+  void sendDragDropEvent(QObject *object, QPoint position, QMouseEvent *event);
+
+  void setHoveredObject(QObject *object);
+
+  QWindow *_parent;
+  QObject *_hoveredObject;
+  Item *item;
+
+  QPixmap pixmap;
+
+  bool dragging;
+};
 
 enum class ShortcutAction
 {
@@ -103,6 +135,8 @@ public:
     return instances.find(pointer) != instances.end();
   }
 
+  MainWindow *mainWindow;
+
 signals:
   void scrollEvent(int degrees);
   void mousePosChanged(util::Point<float> mousePos);
@@ -127,6 +161,8 @@ private:
   std::optional<ShortcutAction> getShortcutAction(QKeyEvent *event) const;
 
   void setShortcut(int keyAndModifiers, ShortcutAction shortcut);
+
+  bool containsMouse() const;
 
   struct MouseState
   {
@@ -155,4 +191,6 @@ private:
 
   // Holds the current scroll amount. (see wheelEvent)
   int scrollAngleBuffer = 0;
+
+  std::optional<ItemDragOperation> dragOperation;
 };

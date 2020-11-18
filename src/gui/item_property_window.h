@@ -10,6 +10,13 @@
 #include "../item.h"
 #include "qt_util.h"
 
+class PropertyWindowEventFilter : public QtUtil::EventFilter
+{
+public:
+  PropertyWindowEventFilter(QObject *parent) : QtUtil::EventFilter(parent) {}
+  bool eventFilter(QObject *obj, QEvent *event) override;
+};
+
 namespace QtItemModel
 {
   class Model;

@@ -46,6 +46,8 @@ public:
 
   EditorAction editorAction;
 
+  bool vulkanWindowEvent(QEvent *event);
+
 protected:
   void mousePressEvent(QMouseEvent *event) override;
   bool event(QEvent *event) override;

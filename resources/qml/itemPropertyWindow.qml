@@ -81,6 +81,42 @@ ScrollView {
       // }
       // }
 
+      Rectangle {
+        width : 32
+        height : 32
+        border.color : "red"
+        DropArea {
+          id : itemDropArea
+          property string imageUrl : ""
+          x : 0
+          y : 0
+          width : 32
+          height : 32
+
+          onDropped : {
+            console.log("DropArea::onDropped");
+
+            const serverId = 1987;
+            imageUrl = serverId != -1 ? "image://itemTypes/" + serverId : "";
+          }
+
+          Rectangle {
+            anchors.fill : parent
+            border.color : "green"
+            border.width : 2
+
+            visible : parent.containsDrag
+          }
+          Image {
+            visible : itemDropArea.imageUrl != ""
+            anchors.fill : parent
+            anchors.verticalCenter : parent.verticalCenter
+            source : itemDropArea.imageUrl
+
+          }
+        }
+      }
+
 
       ColumnLayout {
         Layout.alignment : Qt.AlignTop

@@ -14,10 +14,18 @@ namespace ObjectName
   constexpr auto ItemContainerArea = "item_container_area";
 } // namespace ObjectName
 
+bool PropertyWindowEventFilter::eventFilter(QObject *obj, QEvent *event)
+{
+  // qDebug() << "PropertyWindowEventFilter:" << event;
+  return false;
+
+  // return QObject::eventFilter(obj, event);
+}
+
 ItemPropertyWindow::ItemPropertyWindow(QUrl url)
     : _url(url)
 {
-
+  installEventFilter(new PropertyWindowEventFilter(this));
   auto model = new QtItemTest::ItemModel();
 
   // auto k = item.as<ContainerItem>();
