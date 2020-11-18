@@ -114,15 +114,9 @@ struct MouseAction
       mouseOrigin.reset();
     }
   };
-
-  struct ExternalItemDrag
-  {
-    Tile *tile;
-    Item *item;
-  };
 };
 
-using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select, MouseAction::Pan, MouseAction::ExternalItemDrag>;
+using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select, MouseAction::Pan>;
 
 /**
  * Utility class for sending UI information to a MapView.
