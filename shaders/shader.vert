@@ -1,57 +1,77 @@
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
-#extension GL_EXT_debug_printf : enable
+#version 460
+// #extension GL_ARB_separate_shader_objects : enable
 
-const int BM_NONE = 0;
-const int BM_BLEND = 1;
-const int BM_ADD = 2;
-const int BM_ADDX2 = 3;
+// The position of this vertex.
+// One of:
+// A = (0, 0)
+// B = (0, 1)
+// C = (1, 1)
+// D = (1, 0)
+//
+// A--------D
+// |        |
+// |        |
+// |        |
+// B--------C
+//
+layout(location = 0) in ivec2 inLocation;
 
-layout (binding = 0) uniform UBO 
-{
-	mat4 projection;
-} ubo;
+layout(binding = 0) uniform UBO { mat4 projection; }
+ubo;
 
-layout(location = 0) in vec2 inPosition;
-layout(location = 1) in vec4 inColor;
-layout(location = 2) in vec2 inTexCoord;
-layout(location = 3) in vec4 inTexRect;
+layout(push_constant) uniform PushConstants {
+  vec4 textureQuad;
+  vec4 fragQuad;
+  vec4 color;
+  vec4 position;
+  vec4 size;
+}
+pc;
 
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
-layout(location = 2) out vec4 rect;
+layout(location = 2) out vec4 fragTexBoundary;
 layout(location = 3) out float fragOpacity;
 
-out gl_PerVertex {
-    vec4 gl_Position;
-};
+out gl_PerVertex { vec4 gl_Position; };
 
 void main() {
-    float opacity = inColor.w;
-    vec4 color = inColor;
+  float opacity = pc.color.w;
+  vec4 color = pc.color;
 
-    // if(blendMode == BM_NONE) {
-    //     opacity = 1.0f;
-    //     color.a = 1.0f;
-    // } else if(blendMode == BM_BLEND) {
-    //     opacity = color.a;
-    // } else if(blendMode == BM_ADD) {
-    //     opacity = 0.0f;
-    // } else if(blendMode == BM_ADDX2) {
-    //     opacity = 0.0f;
-    //     color *= 2.0f;
-    // }
-    // vec4 thing = vec4(inPosition.x, inPosition.y, 0.0, 1.0);
-    vec4 thing = ubo.projection * vec4(inPosition.x, inPosition.y, 0.0, 1.0);
+  vec2 pos = vec2(pc.position.x, pc.position.y);
+  pos.x += inLocation.x * pc.size.x;
+  pos.y += inLocation.y * pc.size.y;
 
-    // OpenGL uses inverted y axis, Vulkan does not
-    //  gl_Position = vec4(thing.x, thing.y, thing.z, 1.0f);
-    gl_Position = thing;
+  // Note: OpenGL uses inverted y axis while Vulkan does not. This difference
+  // is corrected by the projection.
+  gl_Position = ubo.projection * vec4(pos.x, pos.y, 0.0, 1.0);
+  /*
+  gl_Position = ubo.projection * vec4(0, 0, 0.0, 1.0);
 
-    fragColor = color;
-    fragTexCoord = inTexCoord;
-    rect = inTexRect;
-    fragOpacity = opacity;
+  if (inLocation.x == 0 && inLocation.y == 0) {
+    color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+  }
+  if (inLocation.x == 0 && inLocation.y == 1) {
+    color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
+  }
+  if (inLocation.x == 1 && inLocation.y == 1) {
+    color = vec4(0.0f, 0.0f, 1.0f, 1.0f);
+  }
+  if (inLocation.x == 1 && inLocation.y == 0) {
+    color = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+  }
+  */
+
+  vec2 texCoord;
+  texCoord.x = inLocation.x == 0 ? pc.textureQuad.x : pc.textureQuad.z;
+  // y=0 uses the larger y component because the texture atlases are saved as
+  // BMP, and BMP images are stored "upside down", i.e. y grows upwards instead
+  // of downwards.
+  texCoord.y = inLocation.y == 0 ? pc.textureQuad.w : pc.textureQuad.y;
+
+  fragColor = pc.color;
+  fragTexCoord = texCoord;
+  fragTexBoundary = pc.fragQuad;
+  fragOpacity = opacity;
 }
-
-
