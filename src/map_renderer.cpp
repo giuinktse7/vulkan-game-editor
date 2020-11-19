@@ -343,6 +343,12 @@ void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
 
 void MapRenderer::drawMovingSelection()
 {
+  // External drag operation (e.g. for dropping an item in a container)
+  if (!mapView->underMouse() && mapView->singleItemSelected())
+  {
+    return;
+  }
+
   Position moveDelta = mapView->editorAction.as<MouseAction::Select>()->moveDelta.value();
 
   auto mapRect = mapView->getGameBoundingRect();
