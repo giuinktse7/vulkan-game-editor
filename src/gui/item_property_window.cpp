@@ -5,6 +5,8 @@
 #include <QQmlProperty>
 #include <QWidget>
 
+#include "vulkan_window.h"
+
 namespace ObjectName
 {
   constexpr auto CountSpinBox = "count_spinbox";
@@ -160,4 +162,18 @@ QHash<int, QByteArray> QtItemTest::ItemModel::roleNames() const
   roles[ServerIdRole] = "serverId";
 
   return roles;
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>QML Callbacks>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>
+
+void ItemPropertyWindow::itemDropEvent(QByteArray array)
+{
+
+  auto mapItem = ItemDragOperation::MimeData::MapItem::fromByteArray(array);
+  Item item(mapItem.moveFromMap());
+  VME_LOG_D("Dropping: " << item.name() << ", (" << item.serverId() << ")");
 }

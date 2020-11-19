@@ -93,8 +93,15 @@ ScrollView {
           width : 32
           height : 32
 
-          onDropped : {
-            console.log("DropArea::onDropped");
+
+          onEntered : (drag) => {
+            drag.accept();
+          }
+
+          onDropped : function (drop) {
+            drop.accept();
+            const data = drop.getDataAsArrayBuffer("vulkan-game-editor-mimetype:map-item");
+            propertyWindow.itemDropEvent(data);
 
             const serverId = 1987;
             imageUrl = serverId != -1 ? "image://itemTypes/" + serverId : "";

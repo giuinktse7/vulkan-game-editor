@@ -19,6 +19,7 @@
 #include "gui/borderless_window.h"
 #include "gui/map_tab_widget.h"
 #include "gui/map_view_widget.h"
+#include "gui/vulkan_window.h"
 #include "item_wrapper.h"
 #include "items.h"
 #include "load_map.h"
@@ -421,6 +422,8 @@ int main(int argc, char *argv[])
 {
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
+
+    qRegisterMetaTypeStreamOperators<ItemDragOperation::MimeData::MapItem>("ItemDragOperation::MimeData::MapItem");
 
     {
         // Minimap color test

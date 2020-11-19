@@ -1,5 +1,9 @@
 #include "vulkan_window.h"
 
+#include <algorithm>
+#include <glm/gtc/type_ptr.hpp>
+#include <memory>
+
 #include <QAction>
 #include <QDialog>
 #include <QDrag>
@@ -10,22 +14,15 @@
 #include <QQuickView>
 #include <QWidget>
 
-#include <memory>
-
-#include <glm/gtc/type_ptr.hpp>
-
+#include "../logger.h"
+#include "../main.h"
 #include "../map_renderer.h"
 #include "../map_view.h"
-
-#include "../logger.h"
 #include "../position.h"
-
-#include "../main.h"
 #include "../qt/logging.h"
+#include "gui.h"
 #include "mainwindow.h"
 #include "qt_util.h"
-
-#include "gui.h"
 
 // Static
 std::unordered_set<const VulkanWindow *> VulkanWindow::instances;
@@ -166,7 +163,15 @@ void VulkanWindow::mousePressEvent(QMouseEvent *event)
 
 void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
+  bool mouseInside = containsMouse();
+  mapView->setUnderMouse(mouseInside);
   const auto selection = editorAction.as<MouseAction::Select>();
+
+  if (mouseInside)
+  {
+    mouseState.buttons = event->buttons();
+    mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
+  }
 
   // Handle external drag operation
   if (selection && selection->isMoving())
@@ -178,8 +183,10 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
     }
     else
     {
-      if (!containsMouse())
+      if (!mouseInside)
       {
+        mapView->setUnderMouse(false);
+
         auto tile = mapView->singleSelectedTile();
 
         if (tile && tile->selectionCount() == 1)
@@ -188,16 +195,11 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 
           Item *item = tile->firstSelectedItem();
           dragOperation.emplace(mapView.get(), tile, item, this);
+          dragOperation.value().setRenderCondition([this] { return !this->containsMouse(); });
           dragOperation.value().start();
         }
       }
     }
-  }
-
-  if (containsMouse())
-  {
-    mouseState.buttons = event->buttons();
-    mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
   }
 
   auto pos = event->windowPos();
@@ -305,12 +307,17 @@ std::optional<ShortcutAction> VulkanWindow::getShortcutAction(QKeyEvent *event) 
   return shortcut != shortcuts.end() ? std::optional<ShortcutAction>(shortcut->second) : std::nullopt;
 }
 
+void VulkanWindow::dropEvent(QDropEvent *event)
+{
+  VME_LOG_D("VulkanWindow::dropEvent");
+}
+
 bool VulkanWindow::event(QEvent *event)
 {
-  if (!(event->type() == QEvent::UpdateRequest) && !(event->type() == QEvent::MouseMove))
-  {
-    qDebug() << "[" << QString(debugName.c_str()) << "] " << event->type() << " { " << mapToGlobal(position()) << " }";
-  }
+  // if (!(event->type() == QEvent::UpdateRequest) && !(event->type() == QEvent::MouseMove))
+  // {
+  //   qDebug() << "[" << QString(debugName.c_str()) << "] " << event->type() << " { " << mapToGlobal(position()) << " }";
+  // }
 
   switch (event->type())
   {
@@ -321,6 +328,9 @@ bool VulkanWindow::event(QEvent *event)
   case QEvent::Enter:
   case QEvent::DragEnter:
     mapView->setUnderMouse(true);
+    break;
+  case QEvent::Drop:
+    dropEvent(static_cast<QDropEvent *>(event));
     break;
   case QEvent::ShortcutOverride:
   {
@@ -554,18 +564,37 @@ ItemDragOperation::ItemDragOperation(MapView *mapView, Tile *tile, Item *item, Q
       pixmap(QtUtil::itemPixmap(tile->position(), *item)),
       dragging(false)
 {
+  // mimeData.setData(mimeData.mapItemMimeType(), mimeData.mapItem);
 }
 
 void ItemDragOperation::start()
 {
   VME_LOG_D("ItemDragOperation::start()");
-  QApplication::setOverrideCursor(pixmap);
+  showCursor();
   dragging = true;
+}
+
+void ItemDragOperation::showCursor()
+{
+  if (!renderingCursor)
+  {
+    QApplication::setOverrideCursor(pixmap);
+    renderingCursor = true;
+  }
+}
+
+void ItemDragOperation::hideCursor()
+{
+  if (renderingCursor)
+  {
+    QApplication::restoreOverrideCursor();
+    renderingCursor = false;
+  }
 }
 
 void ItemDragOperation::finish()
 {
-  QApplication::restoreOverrideCursor();
+  hideCursor();
   dragging = false;
 }
 
@@ -574,13 +603,26 @@ bool ItemDragOperation::isDragging() const
   return dragging;
 }
 
+void ItemDragOperation::setRenderCondition(std::function<bool()> f)
+{
+  shouldRender = f;
+}
+
 bool ItemDragOperation::mouseMoveEvent(QMouseEvent *event)
 {
+  if (shouldRender())
+  {
+    showCursor();
+  }
+  else
+  {
+    hideCursor();
+  }
+
   auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
   auto object = static_cast<QObject *>(widget);
 
   auto pos = widget->mapFromGlobal(_parent->mapToGlobal(event->pos()));
-  VME_LOG_D("ItemDragOperation::mouseMoveEvent: " << pos);
 
   bool changed = object != _hoveredObject;
   if (changed)
@@ -604,6 +646,7 @@ bool ItemDragOperation::mouseReleaseEvent(QMouseEvent *event)
   auto pos = widget->mapFromGlobal(_parent->mapToGlobal(event->pos()));
 
   sendDragDropEvent(widget, pos, event);
+
   finish();
 
   return true;
@@ -612,12 +655,8 @@ bool ItemDragOperation::mouseReleaseEvent(QMouseEvent *event)
 void ItemDragOperation::setHoveredObject(QObject *object)
 {
   qDebug() << "setHoveredObject: " << _hoveredObject;
-  _hoveredObject = object;
-}
 
-bool ItemDragOperation::hoversParent() const
-{
-  return _hoveredObject == _parent;
+  _hoveredObject = object;
 }
 
 QObject *ItemDragOperation::hoveredObject() const
@@ -625,12 +664,30 @@ QObject *ItemDragOperation::hoveredObject() const
   return _hoveredObject;
 }
 
+QVariant ItemDragOperation::MimeData::retrieveData(const QString &mimeType, QVariant::Type type) const
+{
+  QVariant data;
+  if (mimeType != mapItemMimeType())
+  {
+    VME_LOG_D("ItemDragOperation does not accept mimeType: " << mimeType);
+    return data;
+  }
+
+  /*
+      The data must be QByteArray. Otherwise QML can't read it.
+      It seems like QML does not perform an implicit conversion from QVariant(X)
+      to QVariant(QByteArray)).
+    */
+  data.setValue(mapItem.toByteArray());
+
+  return data;
+}
+
 void ItemDragOperation::sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event)
 {
   if (!object)
     return;
 
-  QMimeData mimeData;
   QDragEnterEvent dragEnterEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
   QApplication::sendEvent(object, &dragEnterEvent);
 }
@@ -658,23 +715,63 @@ void ItemDragOperation::sendDragDropEvent(QObject *object, QPoint position, QMou
   if (!object)
     return;
 
-  Item item(mimeData.mapItem.moveFromMap());
-  VME_LOG_D("Dropping: " << item.name() << ", (" << item.serverId() << ")");
-
   QDropEvent dropEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
+  // QDropEvent dropEvent(position, Qt::DropAction::MoveAction, nullptr, event->buttons(), event->modifiers());
   QApplication::sendEvent(object, &dropEvent);
 }
 
 ItemDragOperation::MimeData::MapItem::MapItem() : MapItem(nullptr, nullptr, nullptr) {}
 
 ItemDragOperation::MimeData::MapItem::MapItem(MapView *mapView, Tile *tile, Item *item)
-    : mapView(mapView), tile(tile), item(item)
+    : mapView(mapView), tile(tile), item(item), testValue(5)
 {
 }
 
 Item ItemDragOperation::MimeData::MapItem::moveFromMap()
 {
   return mapView->dropItem(tile, item);
+}
+
+QByteArray ItemDragOperation::MimeData::MapItem::toByteArray() const
+{
+  qDebug() << "mapItem before serialize: " << (*this);
+  QByteArray byteArray;
+  QDataStream dataStream(&byteArray, QIODevice::WriteOnly);
+
+  std::array<uint8_t, 8> buffer;
+  auto mapViewPtr = util::pointerAddress(mapView);
+  dataStream << mapViewPtr;
+
+  uint64_t tilePtr = (uint64_t)tile;
+  dataStream << tilePtr;
+
+  uint64_t itemPtr = (uint64_t)item;
+  dataStream << itemPtr;
+
+  return byteArray;
+}
+
+ItemDragOperation::MimeData::MapItem ItemDragOperation::MimeData::MapItem::fromByteArray(QByteArray &byteArray)
+{
+  MapItem mapItem;
+
+  QDataStream dataStream(&byteArray, QIODevice::ReadOnly);
+
+    uint64_t mapViewPtr;
+  dataStream >> mapViewPtr;
+  mapItem.mapView = (MapView *)mapViewPtr;
+
+  uint64_t tilePtr;
+  dataStream >> tilePtr;
+  mapItem.tile = (Tile *)tilePtr;
+
+  uint64_t itemPtr;
+  dataStream >> itemPtr;
+  mapItem.item = (Item *)itemPtr;
+
+  qDebug() << "mapItem after serialize: " << mapItem;
+
+  return mapItem;
 }
 
 ItemDragOperation::MimeData::MimeData(MapView *mapView, Tile *tile, Item *item)
@@ -697,34 +794,30 @@ ItemDragOperation::MimeData::MimeData(MapView *mapView, Tile *tile, Item *item)
 //   return in;
 // }
 
-// void ItemDragOperation::MimeData::setItem(Tile *tile, Item *item)
-// {
-//   QByteArray byteArray;
-//   QDataStream dataStream(&byteArray, QIODevice::WriteOnly);
-//   dataStream << tile;
-//   dataStream
-
-//       setData(MapTabMimeData::integerMimeType(), byteArray);
-// }
-
-// Item *ItemDragOperation::MimeData::getItem() const
-// {
-//   QByteArray byteArray = data(integerMimeType());
-//   QDataStream dataStream(&byteArray, QIODevice::ReadOnly);
-//   int value;
-//   dataStream >> value;
-
-//   return value;
-// }
-
 bool ItemDragOperation::MimeData::hasFormat(const QString &mimeType) const
 {
-  return QMimeData::hasFormat(mimeType) || mimeType == mapItemMimeType();
+  return mimeType == mapItemMimeType();
 }
 
 QStringList ItemDragOperation::MimeData::formats() const
 {
-  QStringList formats = QMimeData::formats();
-  formats.append(mapItemMimeType());
-  return formats;
+  return QStringList() << mapItemMimeType();
+}
+
+QDataStream &operator<<(QDataStream &out, const ItemDragOperation::MimeData::MapItem &mapItem)
+{
+  // auto ptrval(*reinterpret_cast<qulonglong *>(&scoreptr));
+
+  quint64 mapViewPtr = reinterpret_cast<quint64>(mapItem.mapView);
+  out << mapViewPtr;
+  // out << mapItem.mapView;
+  return out;
+}
+
+QDataStream &operator>>(QDataStream &in, ItemDragOperation::MimeData::MapItem &mapItem)
+{
+  quint64 testValuePtr;
+  in >> testValuePtr;
+  mapItem.mapView = reinterpret_cast<MapView *>(testValuePtr);
+  return in;
 }

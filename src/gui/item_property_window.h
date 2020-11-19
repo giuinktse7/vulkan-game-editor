@@ -44,6 +44,9 @@ class ItemPropertyWindow : public QQuickView
 signals:
   void countChanged(int count);
 
+public slots:
+  void itemDropEvent(QByteArray array);
+
 public:
   ItemPropertyWindow(QUrl url);
 

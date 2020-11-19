@@ -7,6 +7,7 @@
 
 #include <QApplication>
 #include <QDataStream>
+#include <QDebug>
 #include <QMenu>
 #include <QMimeData>
 #include <QPixmap>
@@ -41,12 +42,15 @@ public:
       MapItem();
       MapItem(MapView *mapView, Tile *tile, Item *item);
       Item moveFromMap();
+      QByteArray toByteArray() const;
+      static MapItem fromByteArray(QByteArray &byteArray);
 
-    private:
       MapView *mapView;
       Tile *tile;
       Item *item;
+      int testValue;
     };
+
     MimeData(MapView *mapView, Tile *tile, Item *item);
 
     static const QString mapItemMimeType()
@@ -61,14 +65,17 @@ public:
     bool hasFormat(const QString &mimeType) const override;
     QStringList formats() const override;
 
-    // QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
+    QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
 
     // static QDataStream &operator<<(QDataStream &out, const RawData &rawData);
     // static QDataStream &operator>>(QDataStream &in, RawData &rawData);
+
     MimeData::MapItem mapItem;
   };
 
   ItemDragOperation(MapView *mapView, Tile *tile, Item *item, QWindow *parent);
+
+  void setRenderCondition(std::function<bool()> f);
 
   void start();
   void finish();
@@ -76,7 +83,6 @@ public:
   bool mouseMoveEvent(QMouseEvent *event);
   bool mouseReleaseEvent(QMouseEvent *event);
   QObject *hoveredObject() const;
-  bool hoversParent() const;
 
 private:
   void sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event);
@@ -86,14 +92,23 @@ private:
 
   void setHoveredObject(QObject *object);
 
+  void showCursor();
+  void hideCursor();
+
   QWindow *_parent;
   QObject *_hoveredObject;
 
   QPixmap pixmap;
   ItemDragOperation::MimeData mimeData;
 
+  std::function<bool()> shouldRender = [] { return true; };
+
   bool dragging;
+  bool renderingCursor = false;
 };
+
+QDataStream &operator<<(QDataStream &out, const ItemDragOperation::MimeData::MapItem &myObj);
+QDataStream &operator>>(QDataStream &in, ItemDragOperation::MimeData::MapItem &myObj);
 
 Q_DECLARE_METATYPE(ItemDragOperation::MimeData::MapItem);
 
@@ -194,6 +209,7 @@ private:
   void keyPressEvent(QKeyEvent *event) override;
   void keyReleaseEvent(QKeyEvent *event) override;
   void wheelEvent(QWheelEvent *event) override;
+  void dropEvent(QDropEvent *event);
 
   void shortcutPressedEvent(ShortcutAction action, QKeyEvent *event = nullptr);
   void shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event = nullptr);
@@ -236,3 +252,9 @@ private:
 
   std::optional<ItemDragOperation> dragOperation;
 };
+
+inline QDebug operator<<(QDebug &dbg, const ItemDragOperation::MimeData::MapItem &mapItem)
+{
+  dbg.nospace() << "MapItem { mapView: " << mapItem.mapView << ", tile: " << mapItem.tile << ", item:" << mapItem.item << "}";
+  return dbg.maybeSpace();
+}

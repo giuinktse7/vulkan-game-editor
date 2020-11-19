@@ -725,17 +725,16 @@ QStringList MapTabMimeData::formats() const
 
 QVariant MapTabMimeData::retrieveData(const QString &mimeType, QVariant::Type type) const
 {
-    if (QMimeData::hasFormat(mimeType))
-    {
-        return QMimeData::retrieveData(mimeType, type);
-    }
-
     if (mimeType == integerMimeType())
     {
         QDataStream buffer(data(mimeType));
         int x;
         buffer >> x;
         return x;
+    }
+    else if (QMimeData::hasFormat(mimeType))
+    {
+        return QMimeData::retrieveData(mimeType, type);
     }
     else
     {
