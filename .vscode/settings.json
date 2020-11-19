@@ -150,7 +150,8 @@
     "qloggingcategory": "cpp",
     "qabstractlistmodel": "cpp",
     "qurl": "cpp",
-    "qquickwindow": "cpp"
+    "qquickwindow": "cpp",
+    "qdatastream": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

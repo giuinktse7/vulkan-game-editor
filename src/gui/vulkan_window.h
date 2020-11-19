@@ -6,7 +6,9 @@
 #include <unordered_set>
 
 #include <QApplication>
+#include <QDataStream>
 #include <QMenu>
+#include <QMimeData>
 #include <QPixmap>
 #include <QVulkanWindow>
 
@@ -28,7 +30,45 @@ QT_END_NAMESPACE
 class ItemDragOperation
 {
 public:
-  ItemDragOperation(const Position &itemPosition, Item *item, QWindow *parent);
+  /*
+  Defines the available MimeData for a drag & drop operation on a map tab.
+*/
+  class MimeData : public QMimeData
+  {
+  public:
+    struct MapItem
+    {
+      MapItem();
+      MapItem(MapView *mapView, Tile *tile, Item *item);
+      Item moveFromMap();
+
+    private:
+      MapView *mapView;
+      Tile *tile;
+      Item *item;
+    };
+    MimeData(MapView *mapView, Tile *tile, Item *item);
+
+    static const QString mapItemMimeType()
+    {
+      static const QString mimeType = "vulkan-game-editor-mimetype:map-item";
+      return mimeType;
+    }
+
+    // void setItem(Tile *tile, Item *item);
+    // int getItem() const;
+
+    bool hasFormat(const QString &mimeType) const override;
+    QStringList formats() const override;
+
+    // QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
+
+    // static QDataStream &operator<<(QDataStream &out, const RawData &rawData);
+    // static QDataStream &operator>>(QDataStream &in, RawData &rawData);
+    MimeData::MapItem mapItem;
+  };
+
+  ItemDragOperation(MapView *mapView, Tile *tile, Item *item, QWindow *parent);
 
   void start();
   void finish();
@@ -48,12 +88,14 @@ private:
 
   QWindow *_parent;
   QObject *_hoveredObject;
-  Item *item;
 
   QPixmap pixmap;
+  ItemDragOperation::MimeData mimeData;
 
   bool dragging;
 };
+
+Q_DECLARE_METATYPE(ItemDragOperation::MimeData::MapItem);
 
 enum class ShortcutAction
 {
