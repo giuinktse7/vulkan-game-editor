@@ -34,9 +34,6 @@ public:
 		virtual std::unique_ptr<Data> copy() const = 0;
 	};
 
-	ItemType *itemType;
-	bool selected = false;
-
 	Item(ItemTypeId serverId);
 	~Item();
 
@@ -87,20 +84,23 @@ public:
 	template <typename T, typename std::enable_if<std::is_base_of<ItemWrapper, T>::value>::type * = nullptr>
 	T as();
 
+	ItemType *itemType;
+	bool selected = false;
+
 protected:
 	friend class Tile;
 
 	void registerEntity();
 
 private:
+	ItemAttribute &getOrCreateAttribute(const ItemAttribute_t attributeType);
+
+	const uint32_t getPatternIndex(const Position &pos) const;
+
 	std::unordered_map<ItemAttribute_t, ItemAttribute> _attributes;
 	std::unique_ptr<Item::Data> _itemData;
 	// Subtype is either fluid type, count, subtype, or charges.
 	uint8_t _subtype = 1;
-
-	ItemAttribute &getOrCreateAttribute(const ItemAttribute_t attributeType);
-
-	const uint32_t getPatternIndex(const Position &pos) const;
 };
 
 inline uint32_t Item::serverId() const noexcept
