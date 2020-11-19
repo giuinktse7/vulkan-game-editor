@@ -80,10 +80,12 @@ To run the test suite `common_tests`, run `./runtest` in the project root.
 
 #### CMake Targets
 
-There are three targets:
+There are four targets:
 
-- **main** (Executable): The `main` target is the executable of the application. This target links the `common` library as a static dependency.
-- **common** (Library): The `common` target contains all code that is not related to GUI (i.e. everything except QT5-reliant code).
-- **common_tests** (Executable): Contains the tests for the `common` library (See [Run tests using CMake](#run-tests-using-cmake)).
+- **main** (Executable): The `main` target is the executable of the application. This target links the `common` and `gui` libraries statically.
+- **common** (Library): The `common` target contains all code that **is not** related to GUI (i.e. everything except QT5-reliant code).
+- **gui** (Library): The `gui` target contains all code that **is** related to GUI (i.e. all code that is QT5-reliant).
 
-The main purpose of having the `common` library separate from the `main` target was to enable running unit tests against it. It also ensures that there is no coupling introduced between core editor functionality and QT5 (Only `main` has QT5 as a dependency).
+- **common_tests** (Executable): Contains tests for the `common` and `gui` libraries (See [Run tests using CMake](#run-tests-using-cmake)).
+
+The main purpose of having the `common` and `gui` library separate from the `main` target was to enable running unit tests against the code. It also ensures that there is no coupling introduced between core editor functionality and QT5 (`common` does not have QT5 as a dependency).

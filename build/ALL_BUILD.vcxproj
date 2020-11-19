@@ -178,6 +178,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{812758D9-1D43-3B6F-9757-3835610C0F18}</Project>
       <Name>common_tests</Name>
     </ProjectReference>
+    <ProjectReference Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\gui.vcxproj">
+      <Project>{72A3EC9D-652A-3282-8B1B-94906A396C93}</Project>
+      <Name>gui</Name>
+    </ProjectReference>
     <ProjectReference Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main.vcxproj">
       <Project>{39B954A3-68F4-3D78-A1F9-22C3B208855E}</Project>
       <Name>main</Name>

@@ -4,54 +4,6 @@
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\main_autogen\mocs_compilation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\enum_conversion.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\logging.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\borderless_window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\border_layout.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\split_widget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_list.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\mainwindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_view_widget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\menu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\qt_util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\vulkan_window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_property_window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_tab_widget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_renderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\qt_vulkan_info.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\build\qrc_qml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -63,65 +15,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\enum_conversion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\logging.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\gui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\borderless_window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\border_layout.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\split_widget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_list.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\mainwindow.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_view_widget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\menu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\qt_util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\vulkan_window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\item_property_window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\gui\map_tab_widget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\map_renderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\src\qt\qt_vulkan_info.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\resources\qml\qml.qrc" />
     <CustomBuild Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\resources\style\style.qrc" />
     <CustomBuild Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\resources\images\images.qrc" />
     <CustomBuild Include="D:\dev\C++\vulkan-map-editor\vulkan-map-editor\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{2282CEFD-B0F1-39AC-8F93-F63D3B1456FD}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{96694E27-6F7B-38BD-BEBF-6E283F78685D}</UniqueIdentifier>
     </Filter>

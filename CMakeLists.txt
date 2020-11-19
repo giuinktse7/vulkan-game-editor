@@ -55,6 +55,7 @@ find_package(
   REQUIRED)
 
 set(CommonSources
+    src/config.h
     src/signal.h
     src/history/history.h
     src/history/history_action.h
@@ -108,7 +109,7 @@ set(CommonSources
     ../vendor/tsl/robin_hash.h
     ../vendor/tsl/robin_map.h
     ../vendor/tsl/robin_set.h
-    src/main.h
+    ../vendor/result/result.h
     src/map.h
     src/save_map.h
     src/load_map.h
@@ -136,6 +137,7 @@ set(CommonSources
     ../vendor/lzma/LzmaEnc.c
     ../vendor/lzma/LzmaLib.c
     ../vendor/lzma/Threads.c
+    src/config.cpp
     src/history/history.cpp
     src/history/history_action.cpp
     src/history/history_change.cpp
@@ -200,11 +202,7 @@ target_include_directories(common PUBLIC ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 
 set_target_properties(common PROPERTIES LINK_FLAGS "/PROFILE")
 
-qt_add_resources(QT_RESOURCES resources/qml/qml.qrc)
-qt_add_resources(QT_RESOURCES resources/style/style.qrc)
-qt_add_resources(QT_RESOURCES resources/images/images.qrc)
-
-set(MainSources
+set(GuiSources
     src/qt/enum_conversion.h
     src/qt/logging.h
     src/gui/gui.h
@@ -221,6 +219,7 @@ set(MainSources
     src/gui/map_tab_widget.h
     src/map_renderer.h
     src/qt/qt_vulkan_info.h
+    src/main.h
     src/main.cpp
     src/qt/enum_conversion.cpp
     src/qt/logging.cpp
@@ -236,22 +235,33 @@ set(MainSources
     src/gui/item_property_window.cpp
     src/gui/map_tab_widget.cpp
     src/map_renderer.cpp
-    src/qt/qt_vulkan_info.cpp
-    ${QT_RESOURCES})
+    src/qt/qt_vulkan_info.cpp)
 
-add_executable(main ${MainSources})
+add_library(gui STATIC ${GuiSources})
+
+target_link_libraries(gui PRIVATE common)
+target_link_libraries(gui PRIVATE glm)
+
+target_compile_features(gui PUBLIC cxx_std_17)
+target_compile_features(gui PRIVATE cxx_std_17)
+
+# QT
+target_link_libraries(gui PUBLIC Qt::Core Qt::Widgets Qt::Qml Qt::Quick Qt::Svg)
+# End QT
+
+# set(Src)
+
+qt_add_resources(QT_RESOURCES resources/qml/qml.qrc)
+qt_add_resources(QT_RESOURCES resources/style/style.qrc)
+qt_add_resources(QT_RESOURCES resources/images/images.qrc)
+
+add_executable(main ${QT_RESOURCES})
 
 target_link_libraries(main PRIVATE common)
+target_link_libraries(main PRIVATE gui)
 
 target_compile_features(main PUBLIC cxx_std_17)
 target_compile_features(main PRIVATE cxx_std_17)
-
-target_link_libraries(main PRIVATE glm)
-
-# QT
-target_link_libraries(main PUBLIC Qt::Core Qt::Widgets Qt::Qml Qt::Quick
-                                  Qt::Svg)
-# End QT
 
 # Move required files post-build add_custom_command( TARGET main POST_BUILD
 # COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/
