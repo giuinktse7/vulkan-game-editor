@@ -40,6 +40,28 @@ namespace util
 {
 	std::string unicodePath(std::filesystem::path path);
 
+	template <typename T>
+	decltype(auto) pointerAddress(T *pointer)
+	{
+		if constexpr (sizeof(void *) == 8)
+		{
+			uint64_t result = (uint64_t)pointer;
+			return result;
+		}
+		else if (sizeof(void *) == 4)
+		{
+			uint32_t result = (uint32_t)pointer;
+			return result;
+		}
+		else
+		{
+			static_assert(false, "Invalid pointer size. Pointer size must be 4 or 8 bytes.");
+			return 0;
+		}
+	}
+
+	using PointerAddress = decltype(pointerAddress((void *)nullptr));
+
 	template <typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type * = nullptr>
 	bool powerOf2(T value)
 	{
