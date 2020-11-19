@@ -366,6 +366,18 @@ void MapView::fillRegion(const Position &from, const Position &to, uint32_t serv
   history.endTransaction(TransactionType::AddMapItem);
 }
 
+Item MapView::dropItem(Tile *tile, Item *item)
+{
+  // TODO Add redo/undo for this action
+
+  Item droppedItem(_map->dropItem(tile, item));
+
+  _selection.setSelected(tile->position(), tile->hasSelection());
+  _selection.update();
+
+  return droppedItem;
+}
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>End of Map mutators>>>
@@ -474,6 +486,18 @@ const Tile *MapView::singleSelectedTile() const
 Tile *MapView::singleSelectedTile()
 {
   return const_cast<Tile *>(const_cast<const MapView *>(this)->singleSelectedTile());
+}
+
+bool MapView::singleItemSelected() const
+{
+  if (!singleTileSelected())
+    return nullptr;
+
+  const Position pos = _selection.onlyPosition().value();
+  const Tile *tile = getTile(pos);
+  DEBUG_ASSERT(tile != nullptr, "A tile that has a selection should never be nullptr.");
+
+  return tile->selectionCount() == 1;
 }
 
 const Item *MapView::singleSelectedItem() const

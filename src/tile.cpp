@@ -72,6 +72,23 @@ Item Tile::dropItem(size_t index)
   return item;
 }
 
+Item Tile::dropItem(Item *item)
+{
+  DEBUG_ASSERT(!(_ground && item == _ground.get()), "Can not drop ground using dropItem (as of now. It will maybe make sense in the future to be able to do so).");
+
+  auto found = std::find_if(_items.begin(), _items.end(), [item](const Item &_item) {
+    return item == &_item;
+  });
+
+  if (found != _items.end())
+  {
+    auto index = static_cast<size_t>(found - _items.begin());
+    return dropItem(index);
+  }
+
+  ABORT_PROGRAM("The item was not present in the tile.");
+}
+
 void Tile::deselectAll()
 {
   if (_ground)

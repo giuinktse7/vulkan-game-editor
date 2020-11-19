@@ -123,6 +123,12 @@ private:
 		Remove and release ownership of the tile
 	*/
 	std::unique_ptr<Tile> dropTile(const Position pos);
+
+	/*
+		Remove and release ownership of the item
+	*/
+	Item dropItem(Tile *tile, Item *item);
+
 	void createItemAt(Position pos, uint16_t id);
 };
 

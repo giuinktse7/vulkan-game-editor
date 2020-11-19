@@ -138,9 +138,12 @@ public:
 	void setDragEnd(WorldPosition position);
 	void endDragging(VME::ModifierKeys modifiers);
 
+	Item dropItem(Tile *tile, Item *item);
+
 	bool singleTileSelected() const;
 	const Tile *singleSelectedTile() const;
 	Tile *singleSelectedTile();
+	bool singleItemSelected() const;
 
 	/**
 	 * Returns the only selected item if there is **exactly one** selected item.
