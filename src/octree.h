@@ -55,9 +55,9 @@ namespace vme
 
     struct SplitDelta
     {
-      int x;
-      int y;
-      int z;
+      uint32_t x;
+      uint32_t y;
+      uint32_t z;
     };
 
     constexpr struct SplitSize
@@ -392,9 +392,9 @@ namespace vme
 
       int update(uint16_t index, const Position position);
 
-      int dx;
-      int dy;
-      int dz;
+      uint32_t dx;
+      uint32_t dy;
+      uint32_t dz;
 
       CacheInitInfo cacheInfo;
 

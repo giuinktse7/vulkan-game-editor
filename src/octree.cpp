@@ -1230,12 +1230,12 @@ namespace vme
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-    Tree::leafIterator::leafIterator(): tree(nullptr), value(nullptr) {}
+    Tree::leafIterator::leafIterator() : tree(nullptr), value(nullptr) {}
     Tree::leafIterator::leafIterator(const Tree *tree) : tree(tree), value(nullptr)
     {
       if (tree->root.empty())
       {
-        VME_LOG_D("Root was empty");
+        // VME_LOG_D("Root was empty");
         isEnd = true;
       }
       else
