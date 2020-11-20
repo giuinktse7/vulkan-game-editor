@@ -22,7 +22,6 @@ class MainApplication : public QApplication
 public:
     MainApplication(int &argc, char **argv);
 
-    std::pair<bool, std::optional<std::string>> loadGameData(std::string version);
     void initializeUI();
 
     int run();
@@ -44,6 +43,4 @@ private:
     QWidget *currentWidget = nullptr;
 
     QWindow *vulkanWindow = nullptr;
-
-    bool gameDataLoaded = false;
 };

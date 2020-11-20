@@ -14,6 +14,7 @@
 #include <QQuickWindow>
 #include <QStyleFactory>
 
+#include "config.h"
 #include "ecs/ecs.h"
 #include "graphics/appearances.h"
 #include "gui/borderless_window.h"
@@ -170,57 +171,6 @@ void loadTextures()
         info.atlas->getOrCreateTexture();
     }
     VME_LOG_D("loadTextures() ms: " << start.elapsedMillis());
-}
-
-std::pair<bool, std::optional<std::string>> MainApplication::loadGameData(std::string version)
-{
-    std::filesystem::path path("data/clients/" / std::filesystem::path(version));
-
-    std::filesystem::path configPath = path / "config.json";
-    if (!std::filesystem::exists(configPath))
-    {
-        std::stringstream s;
-        s << "Could not locate config file for client version " << version << ". You need to add a config.json file at: " + std::filesystem::absolute(configPath).u8string() << std::endl;
-        return {false, s.str()};
-    }
-
-    std::ifstream fileStream(configPath);
-    nlohmann::json config;
-    fileStream >> config;
-    fileStream.close();
-
-    auto assetFolderEntry = config.find("assetFolder");
-    if (assetFolderEntry == config.end())
-    {
-        std::stringstream s;
-        s << "key 'assetFolder' is required in config.json. You can add it here: " << util::unicodePath(configPath) << std::endl;
-        return {false, s.str()};
-    }
-
-    std::filesystem::path assetFolder = assetFolderEntry.value().get<std::string>();
-
-    // Paths are okay, begin loading files
-
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-    g_ecs.registerComponent<ItemAnimationComponent>();
-    g_ecs.registerSystem<ItemAnimationSystem>();
-
-    Appearances::loadTextureAtlases(path / "catalog-content.json", assetFolder);
-    Appearances::loadAppearanceData(path / "appearances.dat");
-
-    Items::loadFromOtb(path / "items.otb");
-    Items::loadFromXml(path / "items.xml");
-    Items::loadMissingItemTypes();
-
-    VME_LOG_D("Items: " << Items::items.size());
-    VME_LOG_D("Client ids: " << Appearances::objectCount());
-    VME_LOG_D("Highest client id: " << Items::items.highestClientId);
-
-    // loadTextures();
-
-    gameDataLoaded = true;
-    return {true, std::nullopt};
 }
 
 MainApplication::MainApplication(int &argc, char **argv) : QApplication(argc, argv)
@@ -402,8 +352,6 @@ std::shared_ptr<Map> makeTestMap2()
 
 int MainApplication::run()
 {
-    assert(gameDataLoaded);
-
     mainWindow.show();
     return exec();
 }
@@ -423,7 +371,7 @@ int main(int argc, char *argv[])
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
 
-    qRegisterMetaTypeStreamOperators<ItemDragOperation::MimeData::MapItem>("ItemDragOperation::MimeData::MapItem");
+    // qRegisterMetaTypeStreamOperators<ItemDragOperation::MimeData::MapItem>("ItemDragOperation::MimeData::MapItem");
 
     {
         // Minimap color test
@@ -433,24 +381,15 @@ int main(int argc, char *argv[])
     // QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
     MainApplication app(argc, argv);
 
+    auto configResult = Config::create("12.60.10411");
+    if (configResult.isErr())
     {
-        const auto [success, error] = app.loadGameData("12.60.10411");
-        if (!success)
-        {
-            VME_LOG(error.value());
-            return EXIT_FAILURE;
-        }
+        VME_LOG(configResult.unwrapErr().show());
+        return EXIT_FAILURE;
     }
 
-    // Item item(1987);
-    // ItemData::Container container;
-    // container.addItem(std::move(goldCoin));
-    // item.setItemData(std::move(container));
-
-    // auto k = item.as<ContainerItem>();
-    // auto x = k.containerSize();
-
-    // return 0;
+    Config config = configResult.unwrap();
+    config.loadOrTerminate();
 
     std::filesystem::path mapPath = "C:/Users/giuin/Desktop/Untitled-1.otbm";
 
@@ -458,7 +397,7 @@ int main(int argc, char *argv[])
     if (!std::holds_alternative<Map>(result))
     {
         VME_LOG("Map load error: " << std::get<std::string>(result));
-        return 0;
+        return EXIT_FAILURE;
     }
 
     VME_LOG("Finished loading map.");

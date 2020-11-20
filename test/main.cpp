@@ -3,21 +3,19 @@
 
 #define VME_TEST
 
-#include "../src/ecs/ecs.h"
-#include "../src/ecs/item_animation.h"
-#include "../src/graphics/appearances.h"
-#include "../src/items.h"
+#include "../src/config.h"
+#include "../src/debug.h"
 
 int main(int argc, char *argv[])
 {
-  g_ecs.registerComponent<ItemAnimationComponent>();
-  g_ecs.registerSystem<ItemAnimationSystem>();
+  auto configResult = Config::create("12.60.10411");
+  if (configResult.isErr())
+  {
+    ABORT_PROGRAM(configResult.unwrapErr().show());
+  }
 
-  Appearances::loadTextureAtlases("data/catalog-content.json");
-  Appearances::loadAppearanceData("data/appearances.dat");
-
-  Items::loadFromOtb("data/items.otb");
-  Items::loadFromXml("data/items.xml");
+  Config config = configResult.unwrap();
+  config.loadOrTerminate();
 
   int result = Catch::Session().run(argc, argv);
   return result;
