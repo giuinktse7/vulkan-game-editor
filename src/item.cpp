@@ -177,3 +177,92 @@ void Item::registerEntity()
 		g_ecs.addComponent(entityId, ItemAnimationComponent(animation));
 	}
 }
+
+//>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>ItemData>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>
+
+ItemData::Container::Container(uint16_t capacity, const std::vector<Item> &items)
+{
+	DEBUG_ASSERT(capacity >= items.size(), "Too many items.");
+
+	for (const auto &item : items)
+	{
+		_items.emplace_back(item.deepCopy());
+	}
+}
+
+ItemData::Container::Container(Container &&other) noexcept
+		: _items(std::move(other._items)), _capacity(std::move(other._capacity)) {}
+
+ItemData::Container &ItemData::Container::operator=(Container &&other) noexcept
+{
+	_items = std::move(other._items);
+	_capacity = std::move(other._capacity);
+	return *this;
+}
+
+ItemDataType ItemData::Container::type() const noexcept
+{
+	return ItemDataType::Container;
+}
+
+std::unique_ptr<Item::Data> ItemData::Container::copy() const
+{
+	return std::make_unique<Container>(_capacity, _items);
+}
+
+bool ItemData::Container::isFull() const noexcept
+{
+	return _capacity == _items.size();
+}
+
+bool ItemData::Container::addItem(Item &&item)
+{
+	if (isFull())
+		return false;
+
+	_items.emplace_back(std::move(item));
+	return true;
+}
+
+bool ItemData::Container::addItem(int index, Item &&item)
+{
+	if (isFull())
+		return false;
+
+	_items.emplace(_items.begin() + index, std::move(item));
+	return true;
+}
+
+Item &ItemData::Container::itemAt(size_t index)
+{
+	return _items.at(index);
+}
+
+const Item &ItemData::Container::itemAt(size_t index) const
+{
+	return _items.at(index);
+}
+
+const std::vector<Item> &ItemData::Container::items() const noexcept
+{
+	return _items;
+}
+
+size_t ItemData::Container::size() const noexcept
+{
+	return _items.size();
+}
+
+uint16_t ItemData::Container::capacity() const noexcept
+{
+	return _capacity;
+}
+
+uint16_t ItemData::Container::volume() const noexcept
+{
+	return _capacity;
+}

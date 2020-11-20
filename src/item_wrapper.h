@@ -3,6 +3,8 @@
 // Utility wrappers for items that have extra data
 //
 
+#include <optional>
+
 class Item;
 namespace ItemData
 {
@@ -17,10 +19,20 @@ struct ItemWrapper
 
 struct ContainerItem : public ItemWrapper
 {
-  ContainerItem(Item &item);
+  ContainerItem(const ContainerItem &other) noexcept;
+
+  static std::optional<ContainerItem> wrap(Item &item);
 
   size_t containerSize() const;
   size_t containerCapacity() const;
+  bool full() const;
+  bool empty() const;
+
+  bool addItem(Item &&item);
+  const Item &itemAt(size_t index) const;
 
   ItemData::Container *container() const;
+
+private:
+  ContainerItem(Item &item);
 };

@@ -248,60 +248,30 @@ namespace ItemData
 
 	struct Container : public Item::Data
 	{
-		Container() {}
-		Container(const std::vector<Item> &items)
-		{
-			for (const auto &item : items)
-			{
-				_items.emplace_back(item.deepCopy());
-			}
-		}
+		Container(uint16_t capacity) : _capacity(capacity) {}
+		Container(uint16_t capacity, const std::vector<Item> &items);
 
-		Container(Container &&other) noexcept
-				: _items(std::move(other._items)) {}
+		Container(Container &&other) noexcept;
+		Container &operator=(Container &&other) noexcept;
 
-		Container &operator=(Container &&other) noexcept
-		{
-			_items = std::move(other._items);
-			return *this;
-		}
+		ItemDataType type() const noexcept override;
+		std::unique_ptr<Item::Data> copy() const override;
 
-		ItemDataType type() const noexcept override
-		{
-			return ItemDataType::Container;
-		}
+		bool addItem(Item &&item);
+		bool addItem(int index, Item &&item);
 
-		std::unique_ptr<Item::Data> copy() const override
-		{
-			return std::make_unique<Container>(_items);
-		}
+		Item &itemAt(size_t index);
 
-		void addItem(Item &&item)
-		{
-			_items.emplace_back(std::move(item));
-		}
+		const Item &itemAt(size_t index) const;
+		const std::vector<Item> &items() const noexcept;
+		size_t size() const noexcept;
+		bool isFull() const noexcept;
 
-		Item &itemAt(size_t index)
-		{
-			return _items.at(index);
-		}
-
-		const Item &itemAt(size_t index) const
-		{
-			return _items.at(index);
-		}
-
-		const std::vector<Item> &items() const noexcept
-		{
-			return _items;
-		}
-
-		size_t size() const noexcept
-		{
-			return _items.size();
-		}
+		uint16_t capacity() const noexcept;
+		uint16_t volume() const noexcept;
 
 		std::vector<Item> _items;
+		uint16_t _capacity;
 	};
 } // namespace ItemData
 
