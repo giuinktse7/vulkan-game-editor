@@ -215,7 +215,11 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
   // Propagate drag operation
   if (dragOperation)
   {
-    dragOperation.value().mouseReleaseEvent(event);
+    bool accepted = dragOperation->sendDropEvent(event);
+    if (!accepted)
+    {
+      mapView->editorAction.as<MouseAction::Select>()->moveDelta.emplace(PositionConstants::Zero);
+    }
     dragOperation.reset();
   }
 
@@ -640,16 +644,16 @@ bool ItemDragOperation::mouseMoveEvent(QMouseEvent *event)
   return changed;
 }
 
-bool ItemDragOperation::mouseReleaseEvent(QMouseEvent *event)
+bool ItemDragOperation::sendDropEvent(QMouseEvent *event)
 {
   auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
   auto pos = widget->mapFromGlobal(_parent->mapToGlobal(event->pos()));
 
-  sendDragDropEvent(widget, pos, event);
+  bool accepted = sendDragDropEvent(widget, pos, event);
 
   finish();
 
-  return true;
+  return accepted;
 }
 
 void ItemDragOperation::setHoveredObject(QObject *object)
@@ -710,14 +714,15 @@ void ItemDragOperation::sendDragMoveEvent(QObject *object, QPoint position, QMou
   QApplication::sendEvent(object, &dragMoveEvent);
 }
 
-void ItemDragOperation::sendDragDropEvent(QObject *object, QPoint position, QMouseEvent *event)
+bool ItemDragOperation::sendDragDropEvent(QObject *object, QPoint position, QMouseEvent *event)
 {
   if (!object)
-    return;
+    return false;
 
   QDropEvent dropEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
   // QDropEvent dropEvent(position, Qt::DropAction::MoveAction, nullptr, event->buttons(), event->modifiers());
-  QApplication::sendEvent(object, &dropEvent);
+  bool accepted = QApplication::sendEvent(object, &dropEvent);
+  return accepted;
 }
 
 ItemDragOperation::MimeData::MapItem::MapItem() : MapItem(nullptr, nullptr, nullptr) {}
@@ -744,15 +749,19 @@ QByteArray ItemDragOperation::MimeData::MapItem::toByteArray() const
   return byteArray;
 }
 
-ItemDragOperation::MimeData::MapItem ItemDragOperation::MimeData::MapItem::fromByteArray(QByteArray &byteArray)
+std::optional<ItemDragOperation::MimeData::MapItem> ItemDragOperation::MimeData::MapItem::fromByteArray(QByteArray &byteArray)
 {
   MapItem mapItem;
+  DEBUG_ASSERT(byteArray.size() == sizeof(util::PointerAddress) * 3, "Invalid byte array size.");
 
   QDataStream dataStream(&byteArray, QIODevice::ReadOnly);
 
   mapItem.mapView = QtUtil::readPointer<MapView *>(dataStream);
   mapItem.tile = QtUtil::readPointer<Tile *>(dataStream);
   mapItem.item = QtUtil::readPointer<Item *>(dataStream);
+
+  if (mapItem.mapView == nullptr || mapItem.tile == nullptr || mapItem.item == nullptr)
+    return std::nullopt;
 
   return mapItem;
 }

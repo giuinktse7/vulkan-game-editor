@@ -43,7 +43,7 @@ public:
       MapItem(MapView *mapView, Tile *tile, Item *item);
       Item moveFromMap();
       QByteArray toByteArray() const;
-      static MapItem fromByteArray(QByteArray &byteArray);
+      static std::optional<MapItem> fromByteArray(QByteArray &byteArray);
 
       bool operator==(const MapItem &other) const
       {
@@ -79,14 +79,14 @@ public:
   void finish();
   bool isDragging() const;
   bool mouseMoveEvent(QMouseEvent *event);
-  bool mouseReleaseEvent(QMouseEvent *event);
+  bool sendDropEvent(QMouseEvent *event);
   QObject *hoveredObject() const;
 
 private:
   void sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event);
   void sendDragLeaveEvent(QObject *object, QPoint position, QMouseEvent *event);
   void sendDragMoveEvent(QObject *object, QPoint position, QMouseEvent *event);
-  void sendDragDropEvent(QObject *object, QPoint position, QMouseEvent *event);
+  bool sendDragDropEvent(QObject *object, QPoint position, QMouseEvent *event);
 
   void setHoveredObject(QObject *object);
 
@@ -100,6 +100,7 @@ private:
   ItemDragOperation::MimeData mimeData;
 
   std::function<bool()> shouldRender = [] { return true; };
+  std::function<void()> onDropRejected = [] {};
 
   bool dragging;
   bool renderingCursor = false;

@@ -165,7 +165,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::mapViewSelectionChangedEvent(MapView &mapView)
 {
-  const Item *selectedItem = mapView.singleSelectedItem();
+  Item *selectedItem = mapView.singleSelectedItem();
   if (selectedItem)
   {
     propertyWindow->setItem(*selectedItem);

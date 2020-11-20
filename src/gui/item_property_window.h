@@ -17,9 +17,9 @@ public:
   bool eventFilter(QObject *obj, QEvent *event) override;
 };
 
-namespace QtItemModel
+namespace GuiItemContainer
 {
-  class Model;
+  class ItemModel;
 }
 
 class QmlApplicationContext : public QObject
@@ -45,7 +45,7 @@ signals:
   void countChanged(int count);
 
 public slots:
-  void itemDropEvent(QByteArray array);
+  void itemDropEvent(int index, QByteArray array);
 
 public:
   ItemPropertyWindow(QUrl url);
@@ -54,12 +54,12 @@ public:
 
   void reloadSource();
 
-  void setItem(const Item &item);
+  void setItem(Item &item);
   void resetItem();
 
 private:
   QUrl _url;
-  QtItemModel::Model *model;
+  GuiItemContainer::ItemModel *itemContainerModel;
 
   void setCount(uint8_t count);
   void setContainerVisible(bool visible);
@@ -125,43 +125,50 @@ public:
   }
 };
 
-namespace QtItemTest
+namespace GuiItemContainer
 {
-  class ItemWrapper
-  {
-  public:
-    ItemWrapper(Item *item);
+  // class ItemWrapper
+  // {
+  // public:
+  //   ItemWrapper(Item *item);
 
-    int serverId() const;
+  //   int serverId() const;
 
-    bool hasItem() const noexcept;
+  //   bool hasItem() const noexcept;
 
-  private:
-    Item *item;
-  };
+  // private:
+  //   Item *item;
+  // };
 
   class ItemModel : public QAbstractListModel
   {
     Q_OBJECT
+    Q_PROPERTY(int capacity READ capacity NOTIFY capacityChanged)
+
   public:
-    enum AnimalRoles
+    enum ItemModelRole
     {
       ServerIdRole = Qt::UserRole + 1
     };
 
     ItemModel(QObject *parent = 0);
 
-    void addItem(const ItemWrapper &item);
-    void setContainer(ContainerItem &container);
+    void addItem(Item &&item);
+    void setContainer(ContainerItem &&container);
+    void reset();
+    int capacity();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
+  signals:
+    void capacityChanged(int capacity);
+
   protected:
     QHash<int, QByteArray> roleNames() const;
 
   private:
-    std::vector<ItemWrapper> _itemWrappers;
+    std::optional<ContainerItem> _container;
   };
-} // namespace QtItemTest
+} // namespace GuiItemContainer

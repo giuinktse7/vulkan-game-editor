@@ -28,25 +28,9 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url)
     : _url(url)
 {
   installEventFilter(new PropertyWindowEventFilter(this));
-  auto model = new QtItemTest::ItemModel();
+  itemContainerModel = new GuiItemContainer::ItemModel();
 
-  // auto k = item.as<ContainerItem>();
-
-  std::vector<uint32_t> serverIds{{1987, 2148, 5710, 2673, 2463, 2649}};
-  // std::vector<uint32_t> serverIds{{4526, 103, 4566, 7062, 3216, 6580, 4526, 103, 4566, 7062, 3216, 6580}};
-  // for (const auto id : serverIds)
-  //   model->addItem(new Item(id));
-
-  auto bag = new Item(1987);
-  ItemData::Container container;
-  for (const auto id : serverIds)
-    container.addItem(Item(id));
-
-  bag->setItemData(std::move(container));
-
-  model->setContainer(bag->as<ContainerItem>());
-
-  setInitialProperties({{"containerItems", QVariant::fromValue(model)}});
+  setInitialProperties({{"containerItems", QVariant::fromValue(itemContainerModel)}});
 
   engine()->rootContext()->setContextProperty("propertyWindow", this);
   engine()->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
@@ -57,14 +41,35 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url)
   engine()->rootContext()->setContextProperty("applicationContext", applicationContext);
 }
 
-void ItemPropertyWindow::setItem(const Item &item)
+void ItemPropertyWindow::setItem(Item &item)
 {
-  setContainerVisible(item.isContainer());
+  bool isContainer = item.isContainer();
+  if (isContainer)
+  {
+    auto container = ContainerItem::wrap(item);
+    if (container->empty())
+    {
+      std::vector<uint32_t> serverIds{{1987, 2148, 5710, 2673, 2463, 2649}};
+
+      for (const auto id : serverIds)
+        container->addItem(Item(id));
+    }
+
+    itemContainerModel->setContainer(std::move(container.value()));
+  }
+  else
+  {
+    itemContainerModel->reset();
+  }
+
+  setContainerVisible(isContainer);
   setCount(item.count());
 }
 
 void ItemPropertyWindow::resetItem()
 {
+  VME_LOG_D("ResetItem");
+  itemContainerModel->reset();
   setContainerVisible(false);
   setCount(1);
 }
@@ -96,84 +101,126 @@ void ItemPropertyWindow::reloadSource()
   setSource(QUrl::fromLocalFile("../resources/qml/itemPropertyWindow.qml"));
 }
 
-QtItemTest::ItemWrapper::ItemWrapper(Item *item)
-    : item(item)
-{
-}
-
-int QtItemTest::ItemWrapper::serverId() const
-{
-  return hasItem() ? item->serverId() : -1;
-}
-
-bool QtItemTest::ItemWrapper::hasItem() const noexcept
-{
-  return item != nullptr;
-}
-
-QtItemTest::ItemModel::ItemModel(QObject *parent)
-    : QAbstractListModel(parent)
-{
-}
-
-void QtItemTest::ItemModel::setContainer(ContainerItem &container)
-{
-  _itemWrappers.clear();
-  size_t size = container.containerSize();
-  for (int i = 0; i < container.containerCapacity(); ++i)
-  {
-    if (i < size)
-      addItem(&container.container()->itemAt(i));
-    else
-      addItem(nullptr);
-  }
-}
-
-void QtItemTest::ItemModel::addItem(const ItemWrapper &item)
-{
-  beginInsertRows(QModelIndex(), rowCount(), rowCount() + 1);
-  _itemWrappers.emplace_back(item);
-  endInsertRows();
-}
-
-int QtItemTest::ItemModel::rowCount(const QModelIndex &parent) const
-{
-  return static_cast<int>(_itemWrappers.size());
-}
-
-QVariant QtItemTest::ItemModel::data(const QModelIndex &index, int role) const
-{
-  auto row = index.row();
-  if (row < 0 || row >= _itemWrappers.size())
-    return QVariant();
-
-  const ItemWrapper &itemWrapper = _itemWrappers.at(row);
-  if (role == ServerIdRole)
-  {
-    return itemWrapper.hasItem() ? itemWrapper.serverId() : -1;
-  }
-
-  return QVariant();
-}
-
-QHash<int, QByteArray> QtItemTest::ItemModel::roleNames() const
-{
-  QHash<int, QByteArray> roles;
-  roles[ServerIdRole] = "serverId";
-
-  return roles;
-}
-
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>QML Callbacks>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 
-void ItemPropertyWindow::itemDropEvent(QByteArray array)
+void ItemPropertyWindow::itemDropEvent(int index, QByteArray array)
 {
-
+  VME_LOG_D("Index: " << index);
   auto mapItem = ItemDragOperation::MimeData::MapItem::fromByteArray(array);
-  Item item(mapItem.moveFromMap());
+  if (!mapItem)
+  {
+    VME_LOG("[Warning]: Could not read MapItem from qml QByteArray.");
+    return;
+  }
+
+  Item item(mapItem.value().moveFromMap());
   VME_LOG_D("Dropping: " << item.name() << ", (" << item.serverId() << ")");
+  // itemContainerModel->
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>GuiItemContainer>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+// GuiItemContainer::ItemWrapper::ItemWrapper(Item *item)
+//     : item(item)
+// {
+// }
+
+// int GuiItemContainer::ItemWrapper::serverId() const
+// {
+//   return hasItem() ? item->serverId() : -1;
+// }
+
+// bool GuiItemContainer::ItemWrapper::hasItem() const noexcept
+// {
+//   return item != nullptr;
+// }
+
+GuiItemContainer::ItemModel::ItemModel(QObject *parent)
+    : QAbstractListModel(parent), _container(std::nullopt) {}
+
+void GuiItemContainer::ItemModel::setContainer(ContainerItem &&container)
+{
+  int oldCapacity = capacity();
+  VME_LOG_D("GuiItemContainer::ItemModel::setContainer capacity: " << container.containerCapacity());
+  // beginInsertRows(QModelIndex(), 0, container.containerCapacity() - 1);
+  beginResetModel();
+  _container.emplace(std::move(container));
+  endResetModel();
+  // endInsertRows();
+
+  int newCapacity = capacity();
+
+  if (newCapacity != oldCapacity)
+  {
+    emit capacityChanged(newCapacity);
+  }
+}
+
+int GuiItemContainer::ItemModel::capacity()
+{
+  return _container ? _container->containerCapacity() : 0;
+}
+
+void GuiItemContainer::ItemModel::reset()
+{
+  if (!_container.has_value())
+    return;
+
+  VME_LOG_D("GuiItemContainer::ItemModel::reset");
+  beginResetModel();
+  _container.reset();
+  endResetModel();
+
+  emit capacityChanged(0);
+}
+
+void GuiItemContainer::ItemModel::addItem(Item &&item)
+{
+  DEBUG_ASSERT(_container.has_value(), "Requires a container.");
+  auto size = _container->containerSize();
+  beginInsertRows(QModelIndex(), size, size + 1);
+  _container->addItem(std::move(item));
+  endInsertRows();
+}
+
+int GuiItemContainer::ItemModel::rowCount(const QModelIndex &parent) const
+{
+  return _container ? static_cast<int>(_container->containerCapacity()) : 0;
+}
+
+QVariant GuiItemContainer::ItemModel::data(const QModelIndex &modelIndex, int role) const
+{
+  auto index = modelIndex.row();
+  if (!_container || index < 0 || index >= rowCount())
+    return QVariant();
+
+  if (role == ServerIdRole)
+  {
+    if (index >= _container->containerSize())
+    {
+      return -1;
+    }
+    else
+    {
+      return _container->itemAt(index).serverId();
+    }
+  }
+
+  return QVariant();
+}
+
+QHash<int, QByteArray> GuiItemContainer::ItemModel::roleNames() const
+{
+  QHash<int, QByteArray> roles;
+  roles[ServerIdRole] = "serverId";
+
+  return roles;
 }

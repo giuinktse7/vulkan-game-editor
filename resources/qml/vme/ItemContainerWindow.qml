@@ -1,30 +1,39 @@
 import QtQuick.Controls 2.15
 import QtQuick 2.15
+import "./item_container_window" as Components
+
 
 Rectangle {
   id : itemContainer
 
+  property var model
+
   readonly property int fixedWidth : 36 * 4
   readonly property int minHeight : 36
-  readonly property int maxHeight : itemContainerView.cellHeight * Math.ceil(model.rowCount() / 4)
-  property variant model
+  property int maxHeight : {
+    return itemContainerView.cellHeight * Math.ceil(model.capacity / 4);
+  }
+  // property int maxHeight : itemContainerView.cellHeight * 2
   property int preferredHeight : maxHeight
 
   width : fixedWidth
 
-  onHeightChanged : {
-    console.log("height: " + height);
-  }
-
   color : "#777"
+
   Component {
     id : itemDelegate
 
     Rectangle {
-      required property int serverId
+      id : itemSlot
 
-      width : itemContainerView.cellWidth
-      height : itemContainerView.cellHeight
+      required property int serverId
+      required property int index
+
+      // width : itemContainerView.cellWidth
+      // height : itemContainerView.cellHeight
+      width : 36
+      height : 36
+
 
       color : "transparent"
 
@@ -38,26 +47,42 @@ Rectangle {
         Image {
           anchors.fill : parent
           source : {
-            console.log(serverId);
+            console.log("Yep");
             return serverId != -1 ? "image://itemTypes/" + serverId : "";
           }
         }
+
+        // Components.ContainerSlotDragDrop {
+        // onItemDroppedFromMap : function (mapItemBuffer) {
+        //     propertyWindow.itemDropEvent(itemSlot.index, mapItemBuffer);
+        // }
+        // }
+
+        // MouseArea {
+        // anchors.fill : parent
+        // onPressed : {
+        //     console.log("Pressed: " + itemSlot.index);
+        // }
+        // }
       }
     }
   } // Component: itemDelegate
 
   GridView {
     id : itemContainerView
-    model : parent.model
+    model: parent.model
 
     anchors.centerIn : parent
 
-
     width : parent.width
-    height : Math.min(parent.height, cellHeight * Math.ceil(model.rowCount() / 4))
+    // height : Math.min(parent.height, cellHeight * Math.ceil(model.rowCount() / 4))
+    height : {
+      return Math.min(parent.height, cellHeight * 2);
+    }
     cellWidth : 36
     cellHeight : 36
-    contentHeight : 36 * Math.ceil(model.rowCount() / 4)
+    // contentHeight : 36 * Math.ceil(model.rowCount() / 4)
+    contentHeight : 36 * 2
     clip : true
     // boundsBehavior : Flickable.StopAtBounds
     boundsBehavior : Flickable.OvershootBounds
