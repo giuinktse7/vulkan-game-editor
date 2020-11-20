@@ -138,7 +138,7 @@ void QtItemTest::ItemModel::addItem(const ItemWrapper &item)
 
 int QtItemTest::ItemModel::rowCount(const QModelIndex &parent) const
 {
-  return _itemWrappers.size();
+  return static_cast<int>(_itemWrappers.size());
 }
 
 QVariant QtItemTest::ItemModel::data(const QModelIndex &index, int role) const

@@ -3,6 +3,7 @@
 #include <optional>
 
 #include <QApplication>
+#include <QDataStream>
 #include <QMouseEvent>
 #include <QPixmap>
 #include <QString>
@@ -47,6 +48,16 @@ namespace QtUtil
     constexpr const char *MapView = "vme-mapview";
     constexpr const char *VulkanWindow = "vme-vulkan-window";
   } // namespace PropertyName
+
+  template <typename T, typename std::enable_if<std::is_pointer<T>::value>::type * = nullptr>
+  T readPointer(QDataStream &dataStream)
+  {
+    // static_assert(std::is_pointer<T>::value, "Expected a pointer");
+
+    util::PointerAddress pointer;
+    dataStream >> pointer;
+    return (T)pointer;
+  }
 
   template <typename T>
   inline QVariant wrapPointerInQVariant(T *pointer)

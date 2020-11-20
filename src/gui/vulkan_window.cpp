@@ -723,7 +723,7 @@ void ItemDragOperation::sendDragDropEvent(QObject *object, QPoint position, QMou
 ItemDragOperation::MimeData::MapItem::MapItem() : MapItem(nullptr, nullptr, nullptr) {}
 
 ItemDragOperation::MimeData::MapItem::MapItem(MapView *mapView, Tile *tile, Item *item)
-    : mapView(mapView), tile(tile), item(item), testValue(5)
+    : mapView(mapView), tile(tile), item(item)
 {
 }
 
@@ -734,19 +734,12 @@ Item ItemDragOperation::MimeData::MapItem::moveFromMap()
 
 QByteArray ItemDragOperation::MimeData::MapItem::toByteArray() const
 {
-  qDebug() << "mapItem before serialize: " << (*this);
   QByteArray byteArray;
   QDataStream dataStream(&byteArray, QIODevice::WriteOnly);
 
-  std::array<uint8_t, 8> buffer;
-  auto mapViewPtr = util::pointerAddress(mapView);
-  dataStream << mapViewPtr;
-
-  uint64_t tilePtr = (uint64_t)tile;
-  dataStream << tilePtr;
-
-  uint64_t itemPtr = (uint64_t)item;
-  dataStream << itemPtr;
+  dataStream << util::pointerAddress(mapView);
+  dataStream << util::pointerAddress(tile);
+  dataStream << util::pointerAddress(item);
 
   return byteArray;
 }
@@ -757,19 +750,9 @@ ItemDragOperation::MimeData::MapItem ItemDragOperation::MimeData::MapItem::fromB
 
   QDataStream dataStream(&byteArray, QIODevice::ReadOnly);
 
-    uint64_t mapViewPtr;
-  dataStream >> mapViewPtr;
-  mapItem.mapView = (MapView *)mapViewPtr;
-
-  uint64_t tilePtr;
-  dataStream >> tilePtr;
-  mapItem.tile = (Tile *)tilePtr;
-
-  uint64_t itemPtr;
-  dataStream >> itemPtr;
-  mapItem.item = (Item *)itemPtr;
-
-  qDebug() << "mapItem after serialize: " << mapItem;
+  mapItem.mapView = QtUtil::readPointer<MapView *>(dataStream);
+  mapItem.tile = QtUtil::readPointer<Tile *>(dataStream);
+  mapItem.item = QtUtil::readPointer<Item *>(dataStream);
 
   return mapItem;
 }
@@ -802,22 +785,4 @@ bool ItemDragOperation::MimeData::hasFormat(const QString &mimeType) const
 QStringList ItemDragOperation::MimeData::formats() const
 {
   return QStringList() << mapItemMimeType();
-}
-
-QDataStream &operator<<(QDataStream &out, const ItemDragOperation::MimeData::MapItem &mapItem)
-{
-  // auto ptrval(*reinterpret_cast<qulonglong *>(&scoreptr));
-
-  quint64 mapViewPtr = reinterpret_cast<quint64>(mapItem.mapView);
-  out << mapViewPtr;
-  // out << mapItem.mapView;
-  return out;
-}
-
-QDataStream &operator>>(QDataStream &in, ItemDragOperation::MimeData::MapItem &mapItem)
-{
-  quint64 testValuePtr;
-  in >> testValuePtr;
-  mapItem.mapView = reinterpret_cast<MapView *>(testValuePtr);
-  return in;
 }

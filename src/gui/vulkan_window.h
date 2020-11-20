@@ -45,10 +45,14 @@ public:
       QByteArray toByteArray() const;
       static MapItem fromByteArray(QByteArray &byteArray);
 
+      bool operator==(const MapItem &other) const
+      {
+        return mapView == other.mapView && tile == other.tile && item == other.item;
+      }
+
       MapView *mapView;
       Tile *tile;
       Item *item;
-      int testValue;
     };
 
     MimeData(MapView *mapView, Tile *tile, Item *item);
@@ -59,16 +63,10 @@ public:
       return mimeType;
     }
 
-    // void setItem(Tile *tile, Item *item);
-    // int getItem() const;
-
     bool hasFormat(const QString &mimeType) const override;
     QStringList formats() const override;
 
     QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
-
-    // static QDataStream &operator<<(QDataStream &out, const RawData &rawData);
-    // static QDataStream &operator>>(QDataStream &in, RawData &rawData);
 
     MimeData::MapItem mapItem;
   };
@@ -106,9 +104,6 @@ private:
   bool dragging;
   bool renderingCursor = false;
 };
-
-QDataStream &operator<<(QDataStream &out, const ItemDragOperation::MimeData::MapItem &myObj);
-QDataStream &operator>>(QDataStream &in, ItemDragOperation::MimeData::MapItem &myObj);
 
 Q_DECLARE_METATYPE(ItemDragOperation::MimeData::MapItem);
 
