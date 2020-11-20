@@ -96,8 +96,6 @@ std::optional<Config::Error> Config::load()
   VME_LOG_D("Client ids: " << Appearances::objectCount());
   VME_LOG_D("Highest client id: " << Items::items.highestClientId);
 
-  // loadTextures();
-
   _loaded = true;
   return result;
 }

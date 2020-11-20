@@ -12,6 +12,13 @@
 #include "gui/mainwindow.h"
 #include "gui/vulkan_window.h"
 
+// TemporaryTest includes
+#include <memory>
+
+#include "map.h"
+#include "octree.h"
+// End TemporaryTest includes
+
 namespace MainUtils
 {
     void printOutfitAtlases(std::vector<uint32_t> outfitIds);
@@ -44,3 +51,14 @@ private:
 
     QWindow *vulkanWindow = nullptr;
 };
+
+namespace TemporaryTest
+{
+    void loadAllTexturesIntoMemory();
+
+    void addChunk(Position from, vme::octree::Tree &tree);
+    void testOctree();
+
+    std::shared_ptr<Map> makeTestMap1();
+    std::shared_ptr<Map> makeTestMap2();
+} // namespace TemporaryTest
