@@ -133,13 +133,9 @@ void MapView::clearSelection()
 {
   if (!_selection.empty())
   {
-    history.beginTransaction(TransactionType::Selection);
-
     history.commit(
         ActionType::Selection,
         SelectMultiple(*this, _selection.allPositions(), false));
-
-    history.endTransaction(TransactionType::Selection);
   }
 }
 
@@ -152,7 +148,7 @@ void MapView::modifyTile(const Position pos, std::function<void(Tile &)> f)
   history.commit(ActionType::SetTile, SetTile(std::move(newTile)));
 }
 
-void MapView::update(TransactionType type, std::function<void()> f)
+void MapView::commitTransaction(TransactionType type, std::function<void()> f)
 {
   history.beginTransaction(type);
   f();
@@ -216,6 +212,22 @@ void MapView::removeSelectedItems(const Tile &tile)
   action.addChange(SetTile(std::move(newTile)));
 
   history.commit(std::move(action));
+}
+
+void MapView::removeItem(Tile &tile, Item *item)
+{
+  // TODO Commit this to history
+
+  tile.removeItem([item](const Item &_item) { return item == &_item; });
+  _selection.updatePosition(tile.position());
+  _selection.update();
+}
+
+void MapView::removeItem(Tile &tile, std::function<bool(const Item &)> predicate)
+{
+  // TODO Commit this to history
+
+  tile.removeItem(predicate);
 }
 
 void MapView::removeItems(const Tile &tile, std::function<bool(const Item &)> predicate)
@@ -372,7 +384,8 @@ Item MapView::dropItem(Tile *tile, Item *item)
 
   Item droppedItem(_map->dropItem(tile, item));
 
-  _selection.setSelected(tile->position(), tile->hasSelection());
+  _selection.updatePosition(tile->position());
+
   _selection.update();
 
   return droppedItem;
@@ -630,6 +643,22 @@ void MapView::setPanOffset(MouseAction::Pan &action, const ScreenPosition &offse
   camera.setWorldPosition(newPosition);
 }
 
+void MapView::startItemDrag(Tile *tile, Item *item)
+{
+  auto select = editorAction.as<MouseAction::Select>();
+
+  DEBUG_ASSERT(select != nullptr, "editorAction must be select here.");
+  select->reset();
+
+  MouseAction::DragDropItem drag(tile, item);
+  drag.updateMoveDelta(mouseGamePos());
+
+  editorAction.set(drag);
+  editorAction.lock();
+
+  mapItemDragStart.fire(tile, item);
+}
+
 //>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>
 //>>>>>>Events>>>>>>
@@ -646,7 +675,16 @@ void MapView::mousePressEvent(VME::MouseEvent event)
     std::visit(
         util::overloaded{
             [this, pos, event](MouseAction::Select &action) {
-              if (event.modifiers() & VME::ModifierKeys::Shift)
+              if (event.modifiers() & VME::ModifierKeys::Alt)
+              {
+                Item *topItem = _map->getTopItem(pos);
+                if (topItem)
+                {
+                  Tile *tile = _map->getTile(pos);
+                  startItemDrag(tile, topItem);
+                }
+              }
+              else if (event.modifiers() & VME::ModifierKeys::Shift)
               {
                 action.area = true;
               }
@@ -655,14 +693,14 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                 const Item *topItem = _map->getTopItem(pos);
                 if (!topItem)
                 {
-                  clearSelection();
+                  commitTransaction(TransactionType::Selection, [this] { clearSelection(); });
                   return;
                 }
 
                 if (!topItem->selected)
                 {
-                  clearSelection();
-                  update(TransactionType::Selection, [this, pos] {
+                  commitTransaction(TransactionType::Selection, [this, pos] {
+                    clearSelection();
                     selectTopItem(pos);
                   });
                 }
@@ -675,7 +713,8 @@ void MapView::mousePressEvent(VME::MouseEvent event)
             },
 
             [this, pos, event](MouseAction::RawItem &action) {
-              clearSelection();
+              commitTransaction(TransactionType::Selection, [this] { clearSelection(); });
+
               editorAction.lock();
 
               action.area = event.modifiers() & VME::ModifierKeys::Shift;
@@ -714,18 +753,17 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
     auto worldPos = event.pos().worldPos(*this);
     setDragStart(worldPos);
-  }
 
+    _previousMouseGamePos = pos;
+  }
   requestDraw();
 }
 
 void MapView::mouseMoveEvent(VME::MouseEvent event)
 {
-  Position prevPos = _previousMouseGamePos;
   Position pos = event.pos().toPos(*this);
 
-  bool newTile = prevPos != pos;
-  _previousMouseGamePos = pos;
+  bool newTile = _previousMouseGamePos != pos;
 
   if (!isDragging())
   {
@@ -746,9 +784,32 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
               {
                 select.updateMoveDelta(_selection, pos);
               }
+
+              if (select.isMoving() && this->_selection.size() == 1 && !underMouse())
+              {
+                auto tile = singleSelectedTile();
+
+                if (tile && tile->selectionCount() == 1)
+                {
+                  Item *item = tile->firstSelectedItem();
+
+                  editorAction.unlock();
+                  startItemDrag(tile, item);
+                }
+              }
             },
 
-            [this, pos, prevPos, event, newTile](const MouseAction::RawItem &action) {
+            [this, &pos, newTile](MouseAction::DragDropItem &drag) {
+              if (newTile || prevUnderMouse())
+              {
+                if (drag.moveOrigin.has_value())
+                {
+                  drag.updateMoveDelta(pos);
+                }
+              }
+            },
+
+            [this, pos, &event, newTile](const MouseAction::RawItem &action) {
               if (!newTile || action.area)
               {
                 return;
@@ -767,7 +828,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
               else
               {
                 DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::RawItemAction), "Incorrect transaction type.");
-                for (const auto position : Position::bresenHams(prevPos, pos))
+                for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
                   addItem(position, action.serverId);
               }
             },
@@ -783,6 +844,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
     setDragEnd(event.pos().worldPos(*this));
   }
 
+  _previousMouseGamePos = pos;
   requestDraw();
 }
 
@@ -820,6 +882,26 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
               editorAction.unlock();
             }
           },
+
+          [this](MouseAction::DragDropItem &drag) {
+            if (this->underMouse() && drag.isMoving())
+            {
+              waitForDraw([this, &drag] {
+                Position deltaPos = drag.moveDelta.value();
+                moveSelection(deltaPos);
+
+                // drag.reset();
+                editorAction.unlock();
+                editorAction.setPrevious();
+              });
+            }
+            else
+            {
+              editorAction.unlock();
+              editorAction.setPrevious();
+            }
+          },
+
           [](const auto &arg) {}},
       editorAction.action());
 }
@@ -854,7 +936,7 @@ void MapView::escapeEvent()
           [this](MouseAction::Select &) {
             if (!_selection.empty())
             {
-              clearSelection();
+              commitTransaction(TransactionType::Selection, [this] { clearSelection(); });
               requestDraw();
             }
           },
@@ -980,11 +1062,11 @@ void MapView::requestDraw()
 
 void MapView::setUnderMouse(bool underMouse)
 {
-  bool prev = _underMouse;
+  _prevUnderMouse = _underMouse;
 
   _underMouse = underMouse;
 
-  if (prev != underMouse)
+  if (_prevUnderMouse != underMouse)
   {
     requestDraw();
   }

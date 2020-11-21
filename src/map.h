@@ -50,6 +50,7 @@ public:
 	TileLocation *getTileLocation(const Position &pos) const;
 	Tile *getTile(const Position pos) const;
 	const Item *getTopItem(const Position pos) const;
+	Item *getTopItem(const Position pos);
 
 	bool isTileEmpty(const Position pos) const;
 

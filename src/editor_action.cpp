@@ -3,7 +3,7 @@
 #include "debug.h"
 #include "selection.h"
 
-bool MouseAction::Select::isMoving() const
+bool MouseAction::MoveAction::isMoving() const
 {
   return moveOrigin.has_value() && moveDelta.has_value() && moveDelta.value() != PositionConstants::Zero;
 }
@@ -24,14 +24,43 @@ void MouseAction::Select::updateMoveDelta(const Selection &selection, const Posi
   moveDelta = delta;
 }
 
-void MouseAction::Select::setMoveOrigin(const Position &origin)
+void MouseAction::MoveAction::setMoveOrigin(const Position &origin)
 {
   moveOrigin = origin;
   moveDelta = PositionConstants::Zero;
 }
 
-void MouseAction::Select::reset()
+void MouseAction::MoveAction::reset()
 {
   moveOrigin.reset();
   moveDelta.reset();
+}
+
+MouseAction::DragDropItem::DragDropItem(Tile *tile, Item *item)
+    : tile(tile), item(item)
+{
+  moveOrigin = tile->position();
+  moveDelta = PositionConstants::Zero;
+}
+
+void MouseAction::DragDropItem::updateMoveDelta(const Position &currentPosition)
+{
+  DEBUG_ASSERT(moveOrigin.has_value(), "There must be a move origin.");
+
+  auto delta = currentPosition - moveOrigin.value();
+  if (delta == moveDelta)
+    return;
+
+  moveDelta = delta;
+}
+
+bool MouseAction::Pan::active() const
+{
+  return cameraOrigin && mouseOrigin;
+}
+
+void MouseAction::Pan::stop()
+{
+  cameraOrigin.reset();
+  mouseOrigin.reset();
 }

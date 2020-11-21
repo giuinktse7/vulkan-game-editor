@@ -37,6 +37,7 @@ VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
   instances.emplace(this);
 
   connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
+  mapView->onMapItemDragStart<&VulkanWindow::mapItemDragStartEvent>(this);
 
   setShortcut(Qt::Key_Z | Qt::CTRL, ShortcutAction::Undo);
   setShortcut(Qt::Key_Z | Qt::CTRL | Qt::SHIFT, ShortcutAction::Redo);
@@ -68,7 +69,7 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
   case ShortcutAction::Pan:
   {
     bool panning = mapView->editorAction.is<MouseAction::Pan>();
-    if (panning || mouseState.buttons & Qt::MouseButton::LeftButton)
+    if (panning || QApplication::mouseButtons() & Qt::MouseButton::LeftButton)
     {
       break;
     }
@@ -118,6 +119,13 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
 //>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>
 
+void VulkanWindow::mapItemDragStartEvent(Tile *tile, Item *item)
+{
+  dragOperation.emplace(mapView.get(), tile, item, this);
+  dragOperation.value().setRenderCondition([this] { return !this->containsMouse(); });
+  dragOperation.value().start();
+}
+
 void VulkanWindow::shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event)
 {
   switch (action)
@@ -135,6 +143,8 @@ void VulkanWindow::shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event
 
 void VulkanWindow::mousePressEvent(QMouseEvent *event)
 {
+  bool mouseInside = containsMouse();
+  mapView->setUnderMouse(mouseInside);
   VME_LOG_D("VulkanWindow::mousePressEvent");
   mouseState.buttons = event->buttons();
 
@@ -165,41 +175,14 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
   bool mouseInside = containsMouse();
   mapView->setUnderMouse(mouseInside);
-  const auto selection = editorAction.as<MouseAction::Select>();
 
-  if (mouseInside)
-  {
-    mouseState.buttons = event->buttons();
-    mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
-  }
+  mouseState.buttons = event->buttons();
+  mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
 
   // Handle external drag operation
-  if (selection && selection->isMoving())
+  if (dragOperation)
   {
-    if (dragOperation)
-    {
-      QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-      dragOperation.value().mouseMoveEvent(mouseEvent);
-    }
-    else
-    {
-      if (!mouseInside)
-      {
-        mapView->setUnderMouse(false);
-
-        auto tile = mapView->singleSelectedTile();
-
-        if (tile && tile->selectionCount() == 1)
-        {
-          DEBUG_ASSERT(mapView->editorAction.is<MouseAction::Select>(), "Should always be selection here.");
-
-          Item *item = tile->firstSelectedItem();
-          dragOperation.emplace(mapView.get(), tile, item, this);
-          dragOperation.value().setRenderCondition([this] { return !this->containsMouse(); });
-          dragOperation.value().start();
-        }
-      }
-    }
+    dragOperation->mouseMoveEvent(event);
   }
 
   auto pos = event->windowPos();
@@ -216,10 +199,20 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
   if (dragOperation)
   {
     bool accepted = dragOperation->sendDropEvent(event);
-    if (!accepted)
+    if (accepted)
     {
-      mapView->editorAction.as<MouseAction::Select>()->moveDelta.emplace(PositionConstants::Zero);
+      // Only remove the item from the map if it was not dropped back onto the map.
+      if (!containsMouse())
+      {
+        const auto &mapItem = dragOperation->mimeData.mapItem;
+        mapView->removeItem(*mapItem.tile, mapItem.item);
+      }
     }
+    else
+    {
+      mapView->editorAction.as<MouseAction::DragDropItem>()->moveDelta.emplace(PositionConstants::Zero);
+    }
+
     dragOperation.reset();
   }
 
@@ -313,7 +306,10 @@ std::optional<ShortcutAction> VulkanWindow::getShortcutAction(QKeyEvent *event) 
 
 void VulkanWindow::dropEvent(QDropEvent *event)
 {
-  VME_LOG_D("VulkanWindow::dropEvent");
+  if (event->mimeData()->hasFormat(ItemDragOperation::MapItemFormat))
+  {
+    event->accept();
+  }
 }
 
 bool VulkanWindow::event(QEvent *event)
@@ -348,10 +344,10 @@ bool VulkanWindow::event(QEvent *event)
     break;
   }
   default:
+    event->ignore();
     break;
   }
 
-  event->ignore();
   return QVulkanWindow::event(event);
 }
 
@@ -566,16 +562,18 @@ ItemDragOperation::ItemDragOperation(MapView *mapView, Tile *tile, Item *item, Q
       _hoveredObject(QtUtil::qtApp()->widgetAt(QCursor::pos())),
       mimeData(mapView, tile, item),
       pixmap(QtUtil::itemPixmap(tile->position(), *item)),
-      dragging(false)
+      renderingCursor(false)
 {
   // mimeData.setData(mimeData.mapItemMimeType(), mimeData.mapItem);
+
+  auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
+  auto pos = widget->mapFromGlobal(_parent->mapToGlobal(QCursor::pos()));
+  sendDragEnterEvent(_hoveredObject, pos);
 }
 
 void ItemDragOperation::start()
 {
   VME_LOG_D("ItemDragOperation::start()");
-  showCursor();
-  dragging = true;
 }
 
 void ItemDragOperation::showCursor()
@@ -599,12 +597,6 @@ void ItemDragOperation::hideCursor()
 void ItemDragOperation::finish()
 {
   hideCursor();
-  dragging = false;
-}
-
-bool ItemDragOperation::isDragging() const
-{
-  return dragging;
 }
 
 void ItemDragOperation::setRenderCondition(std::function<bool()> f)
@@ -685,6 +677,15 @@ QVariant ItemDragOperation::MimeData::retrieveData(const QString &mimeType, QVar
   data.setValue(mapItem.toByteArray());
 
   return data;
+}
+
+void ItemDragOperation::sendDragEnterEvent(QObject *object, QPoint position)
+{
+  if (!object)
+    return;
+
+  QDragEnterEvent dragEnterEvent(position, Qt::DropAction::MoveAction, &mimeData, QApplication::mouseButtons(), QApplication::keyboardModifiers());
+  QApplication::sendEvent(object, &dragEnterEvent);
 }
 
 void ItemDragOperation::sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event)

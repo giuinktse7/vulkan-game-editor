@@ -70,6 +70,17 @@ struct MouseAction
   {
   };
 
+  struct MoveAction
+  {
+    std::optional<Position> moveOrigin = {};
+    std::optional<Position> moveDelta = {};
+
+    bool isMoving() const;
+
+    void setMoveOrigin(const Position &origin);
+    void reset();
+  };
+
   struct RawItem
   {
     uint32_t serverId = 100;
@@ -85,17 +96,21 @@ struct MouseAction
     bool erase = false;
   };
 
-  struct Select
+  struct Select : public MoveAction
   {
-    std::optional<Position> moveOrigin = {};
-    std::optional<Position> moveDelta = {};
-    bool area = false;
-
-    bool isMoving() const;
-
     void updateMoveDelta(const Selection &selection, const Position &currentPosition);
-    void setMoveOrigin(const Position &origin);
-    void reset();
+
+    bool area = false;
+  };
+
+  struct DragDropItem : public MoveAction
+  {
+    DragDropItem(Tile *tile, Item *item);
+
+    void updateMoveDelta(const Position &currentPosition);
+
+    Tile *tile;
+    Item *item;
   };
 
   struct Pan
@@ -103,20 +118,12 @@ struct MouseAction
     std::optional<WorldPosition> cameraOrigin;
     std::optional<ScreenPosition> mouseOrigin;
 
-    inline bool active() const
-    {
-      return cameraOrigin && mouseOrigin;
-    }
-
-    void stop()
-    {
-      cameraOrigin.reset();
-      mouseOrigin.reset();
-    }
+    bool active() const;
+    void stop();
   };
 };
 
-using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select, MouseAction::Pan>;
+using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select, MouseAction::Pan, MouseAction::DragDropItem>;
 
 /**
  * Utility class for sending UI information to a MapView.

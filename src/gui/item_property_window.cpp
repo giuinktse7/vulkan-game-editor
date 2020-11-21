@@ -32,7 +32,9 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url)
 
   setInitialProperties({{"containerItems", QVariant::fromValue(itemContainerModel)}});
 
-  engine()->rootContext()->setContextProperty("propertyWindow", this);
+  qmlRegisterSingletonInstance("Vme.context", 1, 0, "C_PropertyWindow", this);
+
+  // engine()->rootContext()->setContextProperty("contextPropertyWindow", this);
   engine()->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
 
   setSource(_url);
@@ -64,14 +66,15 @@ void ItemPropertyWindow::setItem(Item &item)
 
   setContainerVisible(isContainer);
   setCount(item.count());
+  currentItem = &item;
 }
 
 void ItemPropertyWindow::resetItem()
 {
-  VME_LOG_D("ResetItem");
   itemContainerModel->reset();
   setContainerVisible(false);
   setCount(1);
+  currentItem = nullptr;
 }
 
 void ItemPropertyWindow::setCount(uint8_t count)
@@ -107,19 +110,38 @@ void ItemPropertyWindow::reloadSource()
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 
-void ItemPropertyWindow::itemDropEvent(int index, QByteArray array)
+bool ItemPropertyWindow::testDropEvent(QByteArray serializedMapItem)
 {
-  VME_LOG_D("Index: " << index);
-  auto mapItem = ItemDragOperation::MimeData::MapItem::fromByteArray(array);
+  auto mapItem = ItemDragOperation::MimeData::MapItem::fromByteArray(serializedMapItem);
   if (!mapItem)
   {
     VME_LOG("[Warning]: Could not read MapItem from qml QByteArray.");
-    return;
+    return false;
   }
 
-  Item item(mapItem.value().moveFromMap());
-  VME_LOG_D("Dropping: " << item.name() << ", (" << item.serverId() << ")");
-  // itemContainerModel->
+  return true;
+}
+
+bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedMapItem)
+{
+  VME_LOG_D("Index: " << index);
+  auto mapItem = ItemDragOperation::MimeData::MapItem::fromByteArray(serializedMapItem);
+  if (!mapItem)
+  {
+    VME_LOG("[Warning]: Could not read MapItem from qml QByteArray.");
+    return false;
+  }
+
+  // Can not add an item to its own container
+  if (mapItem->item == currentItem)
+  {
+    VME_LOG_D("Can not add item to itself.");
+    return false;
+  }
+
+  Item item(mapItem->item->deepCopy());
+  VME_LOG_D("[ItemPropertyWindow::itemDropEvent] Adding to container:" << item.name() << ", (" << item.serverId() << ")");
+  return itemContainerModel->addItem(std::move(item));
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -166,7 +188,7 @@ void GuiItemContainer::ItemModel::setContainer(ContainerItem &&container)
 
 int GuiItemContainer::ItemModel::capacity()
 {
-  return _container ? _container->containerCapacity() : 0;
+  return _container ? static_cast<int>(_container->containerCapacity()) : 0;
 }
 
 void GuiItemContainer::ItemModel::reset()
@@ -182,13 +204,25 @@ void GuiItemContainer::ItemModel::reset()
   emit capacityChanged(0);
 }
 
-void GuiItemContainer::ItemModel::addItem(Item &&item)
+bool GuiItemContainer::ItemModel::addItem(Item &&item)
 {
   DEBUG_ASSERT(_container.has_value(), "Requires a container.");
-  auto size = _container->containerSize();
-  beginInsertRows(QModelIndex(), size, size + 1);
-  _container->addItem(std::move(item));
-  endInsertRows();
+
+  if (_container->full())
+    return false;
+
+  int size = static_cast<int>(_container->containerSize());
+
+  ItemModel::createIndex(size, 0);
+  ;
+
+  // beginInsertRows(QModelIndex(), size, size + 1);
+  bool added = _container->addItem(std::move(item));
+  // endInsertRows();
+
+  dataChanged(ItemModel::createIndex(size, 0), ItemModel::createIndex(size + 1, 0));
+
+  return added;
 }
 
 int GuiItemContainer::ItemModel::rowCount(const QModelIndex &parent) const

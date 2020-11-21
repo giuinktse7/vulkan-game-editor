@@ -63,6 +63,12 @@ void Selection::setSelected(const Position pos, bool selected)
     deselect(pos);
 }
 
+void Selection::updatePosition(const Position pos)
+{
+  auto tile = mapView.getTile(pos);
+  setSelected(pos, tile && tile->hasSelection());
+}
+
 void Selection::clear()
 {
   bool change = storage.clear();

@@ -12,8 +12,7 @@ namespace MapHistory
 
   void ChangeItem::updateSelection(MapView &mapView, const Position &position)
   {
-    const Tile *tile = mapView.getTile(position);
-    mapView.selection().setSelected(position, tile && tile->hasSelection());
+    mapView.selection().updatePosition(position);
   }
 
   std::unique_ptr<Tile> ChangeItem::setMapTile(MapView &mapView, Tile &&tile)
@@ -525,7 +524,7 @@ namespace MapHistory
     if (includesGround)
       tile->setGroundSelected(true);
 
-    mapView.selection().setSelected(position, tile->hasSelection());
+    updateSelection(mapView, position);
   }
 
   void Select::undo(MapView &mapView)
@@ -537,7 +536,7 @@ namespace MapHistory
     if (includesGround)
       tile->setGroundSelected(false);
 
-    mapView.selection().setSelected(position, tile->hasSelection());
+    updateSelection(mapView, position);
   }
 
   Deselect::Deselect(Position position,
@@ -589,7 +588,7 @@ namespace MapHistory
     if (includesGround)
       tile->setGroundSelected(false);
 
-    mapView.selection().setSelected(position, tile->hasSelection());
+    updateSelection(mapView, position);
   }
 
   void Deselect::undo(MapView &mapView)
@@ -601,7 +600,7 @@ namespace MapHistory
     if (includesGround)
       tile->setGroundSelected(true);
 
-    mapView.selection().setSelected(position, tile->hasSelection());
+    updateSelection(mapView, position);
   }
 
   void Action::markAsCommitted()

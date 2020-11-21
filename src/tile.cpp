@@ -61,6 +61,38 @@ void Tile::removeItem(size_t index)
   _items.erase(_items.begin() + index);
 }
 
+void Tile::removeItem(Item *item)
+{
+  if (_ground.get() == item)
+  {
+    removeGround();
+    return;
+  }
+
+  auto found = findItem([item](const Item &_item) {
+    return item == &_item;
+  });
+
+  if (found != _items.end())
+  {
+    auto index = static_cast<size_t>(found - _items.begin());
+    removeItem(index);
+  }
+  else
+  {
+    ABORT_PROGRAM("[Tile::removeItem] The item was not present in the tile.");
+  }
+}
+
+void Tile::removeItem(std::function<bool(const Item &)> predicate)
+{
+  auto found = findItem(predicate);
+  if (found != _items.end())
+  {
+    removeItem(found - _items.begin());
+  }
+}
+
 Item Tile::dropItem(size_t index)
 {
   Item item = std::move(_items.at(index));
@@ -76,7 +108,7 @@ Item Tile::dropItem(Item *item)
 {
   DEBUG_ASSERT(!(_ground && item == _ground.get()), "Can not drop ground using dropItem (as of now. It will maybe make sense in the future to be able to do so).");
 
-  auto found = std::find_if(_items.begin(), _items.end(), [item](const Item &_item) {
+  auto found = findItem([item](const Item &_item) {
     return item == &_item;
   });
 
@@ -86,7 +118,7 @@ Item Tile::dropItem(Item *item)
     return dropItem(index);
   }
 
-  ABORT_PROGRAM("The item was not present in the tile.");
+  ABORT_PROGRAM("[Tile::dropItem] The item was not present in the tile.");
 }
 
 void Tile::deselectAll()
@@ -452,6 +484,11 @@ const Item *Tile::firstSelectedItem() const
 void Tile::setFlags(uint32_t flags)
 {
   _flags = flags;
+}
+
+const std::vector<Item>::const_iterator Tile::findItem(std::function<bool(const Item &)> predicate) const
+{
+  return std::find_if(_items.begin(), _items.end(), predicate);
 }
 
 void Tile::initEntities()

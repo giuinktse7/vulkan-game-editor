@@ -44,6 +44,8 @@ public:
 
 	void addItem(Item &&item);
 	void removeItem(size_t index);
+	void removeItem(Item *item);
+	void removeItem(std::function<bool(const Item &)> predicate);
 	Item dropItem(size_t index);
 	Item dropItem(Item *item);
 	void removeGround();
@@ -51,6 +53,8 @@ public:
 	void setGround(std::unique_ptr<Item> ground);
 	void moveItems(Tile &other);
 	void moveSelected(Tile &other);
+
+	const std::vector<Item>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
 
 	/**
 	 * @return The amount of removed items

@@ -236,6 +236,11 @@ void MapRenderer::drawMap()
       return !(item.serverId() == serverId && dragRegion.contains(pos));
     };
   }
+  else if (mapView->editorAction.is<MouseAction::DragDropItem>())
+  {
+    auto drag = mapView->editorAction.as<MouseAction::DragDropItem>();
+    filter = [&drag](const Position pos, const Item &item) { return &item != drag->item; };
+  }
 
   bool movingSelection = view.selection().isMoving();
   bool shadeLowerFloors = view.hasOption(MapView::ViewOption::ShadeLowerFloors);
@@ -315,6 +320,14 @@ void MapRenderer::drawCurrentAction()
               {
                 drawPreviewItem(action.serverId, pos);
               }
+            }
+          },
+
+          [this](const MouseAction::DragDropItem drag) {
+            if (mapView->underMouse())
+            {
+              auto info = itemDrawInfo(*drag.item, drag.tile->position() + drag.moveDelta.value(), ItemDrawFlags::DrawNonSelected);
+              drawItem(info);
             }
           },
 

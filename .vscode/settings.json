@@ -164,5 +164,8 @@
   },
   "files.watcherExclude": {
     "**/target": true
+  },
+  "pretty-formatter": {
+    "indentSize": 2
   }
 }

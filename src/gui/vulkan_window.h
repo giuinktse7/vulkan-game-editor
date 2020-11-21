@@ -31,6 +31,8 @@ QT_END_NAMESPACE
 class ItemDragOperation
 {
 public:
+  static constexpr auto MapItemFormat = "vulkan-game-editor-mimetype:map-item";
+
   /*
   Defines the available MimeData for a drag & drop operation on a map tab.
 */
@@ -82,7 +84,10 @@ public:
   bool sendDropEvent(QMouseEvent *event);
   QObject *hoveredObject() const;
 
+  ItemDragOperation::MimeData mimeData;
+
 private:
+  void sendDragEnterEvent(QObject *object, QPoint position);
   void sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event);
   void sendDragLeaveEvent(QObject *object, QPoint position, QMouseEvent *event);
   void sendDragMoveEvent(QObject *object, QPoint position, QMouseEvent *event);
@@ -97,13 +102,11 @@ private:
   QObject *_hoveredObject;
 
   QPixmap pixmap;
-  ItemDragOperation::MimeData mimeData;
 
   std::function<bool()> shouldRender = [] { return true; };
   std::function<void()> onDropRejected = [] {};
 
-  bool dragging;
-  bool renderingCursor = false;
+  bool renderingCursor;
 };
 
 Q_DECLARE_METATYPE(ItemDragOperation::MimeData::MapItem);
@@ -211,6 +214,8 @@ private:
   void shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event = nullptr);
 
   void onVisibilityChanged(QWindow::Visibility visibility);
+
+  void mapItemDragStartEvent(Tile *tile, Item *item);
 
   std::optional<ShortcutAction> getShortcutAction(QKeyEvent *event) const;
 

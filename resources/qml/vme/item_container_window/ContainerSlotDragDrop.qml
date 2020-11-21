@@ -6,41 +6,37 @@ Item {
   width : 32
   height : 32
 
-  signal itemDroppedFromMap(var mapItemBuffer)
+  signal itemDroppedFromMap(var mapItemBuffer, var dropCallback)
 
-  DropArea {
-    id : itemDropArea
-    property string imageUrl : ""
-    x : 0
-    y : 0
-    width : 32
-    height : 32
+    DropArea {
+      id : itemDropArea
+      x : 0
+      y : 0
+      width : 32
+      height : 32
 
-    onEntered : function (drag) {
-      drag.accept();
-    }
+      onEntered : function (drag) {
+        drag.accept();
+        console.log("Accepted");
+      }
 
-    onDropped : function (drop) {
-      drop.accept();
-      var data = drop.getDataAsArrayBuffer("vulkan-game-editor-mimetype:map-item");
-      root.itemDroppedFromMap(data);
+      onDropped : function (drop) {
+        var mapItemBuffer = drop.getDataAsArrayBuffer("vulkan-game-editor-mimetype:map-item");
+        root.itemDroppedFromMap(mapItemBuffer, (accept) => {
+          if (accept) {
+            drop.accept();
+          }
+        });
+      }
 
-      const serverId = 1987;
-      imageUrl = serverId != -1 ? "image://itemTypes/" + serverId : "";
-    }
+      Rectangle {
+        anchors.fill : parent
 
-    Rectangle {
-      anchors.fill : parent
-      border.color : "green"
-      border.width : 2
+        color : "transparent"
+        border.color : "#FFB74D"
+        border.width : 1
 
-      visible : parent.containsDrag
-    }
-    Image {
-      visible : itemDropArea.imageUrl != ""
-      anchors.fill : parent
-      anchors.verticalCenter : parent.verticalCenter
-      source : itemDropArea.imageUrl
+        visible : parent.containsDrag
+      }
     }
   }
-}

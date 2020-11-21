@@ -193,6 +193,11 @@ Tile *Map::getTile(const Position pos) const
   return floor->getTileLocation(pos.x, pos.y).tile();
 }
 
+Item *Map::getTopItem(const Position pos)
+{
+  return const_cast<Item *>(const_cast<const Map *>(this)->getTopItem(pos));
+}
+
 const Item *Map::getTopItem(const Position pos) const
 {
   Tile *tile = getTile(pos);

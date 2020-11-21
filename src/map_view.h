@@ -60,7 +60,7 @@ public:
    * history.endGroup(groupType);
 	 *
 	 */
-	void update(TransactionType groupType, std::function<void()> f);
+	void commitTransaction(TransactionType groupType, std::function<void()> f);
 
 	const Tile *getTile(const Position pos) const;
 	Tile &getOrCreateTile(const Position pos);
@@ -109,6 +109,8 @@ public:
 	void removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices);
 	void removeSelectedItems(const Tile &tile);
 	void removeItems(const Tile &tile, std::function<bool(const Item &)> p);
+	void removeItem(Tile &tile, Item *item);
+	void removeItem(Tile &tile, std::function<bool(const Item &)> p);
 
 	void zoomOut();
 	void zoomIn();
@@ -138,6 +140,8 @@ public:
 	void setDragEnd(WorldPosition position);
 	void endDragging(VME::ModifierKeys modifiers);
 
+	void startItemDrag(Tile *tile, Item *item);
+
 	Item dropItem(Tile *tile, Item *item);
 
 	bool singleTileSelected() const;
@@ -161,6 +165,8 @@ public:
 	bool draggingWithSubtract() const;
 	bool inDragRegion(Position pos) const;
 	inline bool underMouse() const noexcept;
+	inline bool prevUnderMouse() const noexcept;
+
 	bool isEmpty(const Position position) const;
 
 	Position cameraPosition() const noexcept;
@@ -189,6 +195,9 @@ public:
 	template <auto MemberFunction, typename T>
 	void onDrawRequested(T *instance);
 
+	template <auto MemberFunction, typename T>
+	void onMapItemDragStart(T *instance);
+
 	EditorAction &editorAction;
 	MapHistory::History history;
 
@@ -209,6 +218,7 @@ private:
 	void setPanOffset(MouseAction::Pan &action, const ScreenPosition &offset);
 
 	Nano::Signal<void(const Camera::Viewport &)> viewportChange;
+	Nano::Signal<void(Tile *tile, Item *item)> mapItemDragStart;
 	Nano::Signal<void()> drawRequest;
 
 	/**
@@ -231,12 +241,9 @@ private:
 
 	bool canRender = false;
 
-	/**
-	 * NOTE: Do not use this for anything except to request a draw from mouseEvent.
-	 * Use mousePos() instead.
-	 */
 	Position _previousMouseGamePos;
 
+	bool _prevUnderMouse = false;
 	bool _underMouse = false;
 };
 
@@ -337,6 +344,11 @@ inline bool MapView::underMouse() const noexcept
 	return _underMouse;
 }
 
+inline bool MapView::prevUnderMouse() const noexcept
+{
+	return _prevUnderMouse;
+}
+
 inline MapView::ViewOption MapView::viewOptions() const noexcept
 {
 	return _viewOptions;
@@ -357,6 +369,12 @@ template <auto MemberFunction, typename T>
 void MapView::onDrawRequested(T *instance)
 {
 	drawRequest.connect<MemberFunction>(instance);
+}
+
+template <auto MemberFunction, typename T>
+void MapView::onMapItemDragStart(T *instance)
+{
+	mapItemDragStart.connect<MemberFunction>(instance);
 }
 
 VME_ENUM_OPERATORS(MapView::ViewOption)

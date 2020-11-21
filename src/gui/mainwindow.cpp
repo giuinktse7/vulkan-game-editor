@@ -165,10 +165,15 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::mapViewSelectionChangedEvent(MapView &mapView)
 {
+  VME_LOG_D("mapViewSelectionChangedEvent");
   Item *selectedItem = mapView.singleSelectedItem();
   if (selectedItem)
   {
-    propertyWindow->setItem(*selectedItem);
+    bool showInPropertyWindow = !(QApplication::keyboardModifiers() & Qt::KeyboardModifier::AltModifier);
+    if (showInPropertyWindow)
+    {
+      propertyWindow->setItem(*selectedItem);
+    }
   }
   else
   {
@@ -302,7 +307,7 @@ void MainWindow::initializeUI()
 
       if (tile->firstSelectedItem()->count() != count)
       {
-        mapView.update(TransactionType::ModifyItem, [&mapView, &pos, count] {
+        mapView.commitTransaction(TransactionType::ModifyItem, [&mapView, &pos, count] {
           mapView.modifyTile(pos, [count](Tile &tile) { tile.firstSelectedItem()->setCount(count); });
         });
 

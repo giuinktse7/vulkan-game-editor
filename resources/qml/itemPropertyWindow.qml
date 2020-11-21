@@ -2,6 +2,7 @@ import QtQuick.Controls 2.15
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import "./vme" as Vme
+import Vme.context 1.0 as Context
 
 ScrollView {
   id : propertyContainer
@@ -99,12 +100,14 @@ ScrollView {
           }
 
           onDropped : function (drop) {
-            drop.accept();
-            const data = drop.getDataAsArrayBuffer("vulkan-game-editor-mimetype:map-item");
-            propertyWindow.itemDropEvent(-1, data);
+            const mapItemBuffer = drop.getDataAsArrayBuffer("vulkan-game-editor-mimetype:map-item");
+            const accepted = Context.C_PropertyWindow.testDropEvent(mapItemBuffer);
+            if (accepted) {
+              drop.accept();
 
-            const serverId = 1987;
-            imageUrl = serverId != -1 ? "image://itemTypes/" + serverId : "";
+              const serverId = 1987;
+              imageUrl = serverId != -1 ? "image://itemTypes/" + serverId : "";
+            }
           }
 
           Rectangle {
@@ -148,8 +151,7 @@ ScrollView {
           Layout.preferredHeight : 30
 
           objectName : "count_spinbox"
-          onValueChanged : {
-            propertyWindow.countChanged(value);
+          onValueChanged : { // C_PropertyWindow.countChanged(value);
           }
         }
       }
@@ -328,6 +330,13 @@ ScrollView {
           Layout.minimumWidth : fixedWidth
           Layout.minimumHeight : 36
           Layout.preferredHeight : preferredHeight
+
+          onItemDroppedFromMap : function (index, mapItemBuffer, dropCallback) {
+            // console.log(C_PropertyWindow.itemDropEvent);
+            // const accepted = C_PropertyWindow.itemDropEvent(index, mapItemBuffer);
+            const accepted = Context.C_PropertyWindow.itemDropEvent(index, mapItemBuffer);
+            dropCallback(accepted);
+          }
         }
       }
     }

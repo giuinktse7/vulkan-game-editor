@@ -137,7 +137,7 @@ public:
     return storage.end();
   }
 
-    std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
+  std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
   std::optional<Position> getCorner(int positiveX, int positiveY, int positiveZ) const noexcept;
 
   bool isMoving() const noexcept;
@@ -148,6 +148,7 @@ public:
   void deselect(const Position pos);
   void deselect(const std::vector<Position> &positions);
   void setSelected(const Position pos, bool selected);
+  void updatePosition(const Position pos);
   // bool deselectAll();
 
   inline std::vector<Position> allPositions() const;

@@ -44,11 +44,11 @@ class ItemPropertyWindow : public QQuickView
 signals:
   void countChanged(int count);
 
-public slots:
-  void itemDropEvent(int index, QByteArray array);
-
 public:
   ItemPropertyWindow(QUrl url);
+
+  Q_INVOKABLE bool itemDropEvent(int index, QByteArray serializedMapItem);
+  Q_INVOKABLE bool testDropEvent(QByteArray serializedMapItem);
 
   QWidget *wrapInWidget(QWidget *parent = nullptr);
 
@@ -60,6 +60,7 @@ public:
 private:
   QUrl _url;
   GuiItemContainer::ItemModel *itemContainerModel;
+  Item *currentItem;
 
   void setCount(uint8_t count);
   void setContainerVisible(bool visible);
@@ -153,7 +154,7 @@ namespace GuiItemContainer
 
     ItemModel(QObject *parent = 0);
 
-    void addItem(Item &&item);
+    bool addItem(Item &&item);
     void setContainer(ContainerItem &&container);
     void reset();
     int capacity();
