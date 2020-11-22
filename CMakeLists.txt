@@ -219,6 +219,7 @@ set(GuiSources
     src/gui/map_tab_widget.h
     src/map_renderer.h
     src/qt/qt_vulkan_info.h
+    src/gui/draggable_item.h
     src/main.h
     src/main.cpp
     src/qt/enum_conversion.cpp
@@ -235,6 +236,7 @@ set(GuiSources
     src/gui/item_property_window.cpp
     src/gui/map_tab_widget.cpp
     src/map_renderer.cpp
+    src/gui/draggable_item.cpp
     src/qt/qt_vulkan_info.cpp)
 
 add_library(gui STATIC ${GuiSources})

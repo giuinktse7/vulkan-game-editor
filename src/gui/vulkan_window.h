@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <unordered_set>
 
 #include <QApplication>
@@ -18,6 +19,7 @@
 #include "../map_view.h"
 #include "../qt/qt_vulkan_info.h"
 #include "../util.h"
+#include "draggable_item.h"
 
 class MainWindow;
 class Item;
@@ -27,89 +29,6 @@ class QWidget;
 class QPoint;
 class QEvent;
 QT_END_NAMESPACE
-
-class ItemDragOperation
-{
-public:
-  static constexpr auto MapItemFormat = "vulkan-game-editor-mimetype:map-item";
-
-  /*
-  Defines the available MimeData for a drag & drop operation on a map tab.
-*/
-  class MimeData : public QMimeData
-  {
-  public:
-    struct MapItem
-    {
-      MapItem();
-      MapItem(MapView *mapView, Tile *tile, Item *item);
-      Item moveFromMap();
-      QByteArray toByteArray() const;
-      static std::optional<MapItem> fromByteArray(QByteArray &byteArray);
-
-      bool operator==(const MapItem &other) const
-      {
-        return mapView == other.mapView && tile == other.tile && item == other.item;
-      }
-
-      MapView *mapView;
-      Tile *tile;
-      Item *item;
-    };
-
-    MimeData(MapView *mapView, Tile *tile, Item *item);
-
-    static const QString mapItemMimeType()
-    {
-      static const QString mimeType = "vulkan-game-editor-mimetype:map-item";
-      return mimeType;
-    }
-
-    bool hasFormat(const QString &mimeType) const override;
-    QStringList formats() const override;
-
-    QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
-
-    MimeData::MapItem mapItem;
-  };
-
-  ItemDragOperation(MapView *mapView, Tile *tile, Item *item, QWindow *parent);
-
-  void setRenderCondition(std::function<bool()> f);
-
-  void start();
-  void finish();
-  bool isDragging() const;
-  bool mouseMoveEvent(QMouseEvent *event);
-  bool sendDropEvent(QMouseEvent *event);
-  QObject *hoveredObject() const;
-
-  ItemDragOperation::MimeData mimeData;
-
-private:
-  void sendDragEnterEvent(QObject *object, QPoint position);
-  void sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event);
-  void sendDragLeaveEvent(QObject *object, QPoint position, QMouseEvent *event);
-  void sendDragMoveEvent(QObject *object, QPoint position, QMouseEvent *event);
-  bool sendDragDropEvent(QObject *object, QPoint position, QMouseEvent *event);
-
-  void setHoveredObject(QObject *object);
-
-  void showCursor();
-  void hideCursor();
-
-  QWindow *_parent;
-  QObject *_hoveredObject;
-
-  QPixmap pixmap;
-
-  std::function<bool()> shouldRender = [] { return true; };
-  std::function<void()> onDropRejected = [] {};
-
-  bool renderingCursor;
-};
-
-Q_DECLARE_METATYPE(ItemDragOperation::MimeData::MapItem);
 
 enum class ShortcutAction
 {
@@ -251,11 +170,5 @@ private:
   // Holds the current scroll amount. (see wheelEvent)
   int scrollAngleBuffer = 0;
 
-  std::optional<ItemDragOperation> dragOperation;
+  std::optional<ItemDrag::DragOperation> dragOperation;
 };
-
-inline QDebug operator<<(QDebug &dbg, const ItemDragOperation::MimeData::MapItem &mapItem)
-{
-  dbg.nospace() << "MapItem { mapView: " << mapItem.mapView << ", tile: " << mapItem.tile << ", item:" << mapItem.item << "}";
-  return dbg.maybeSpace();
-}

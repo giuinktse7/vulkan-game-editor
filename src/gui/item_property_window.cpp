@@ -112,7 +112,7 @@ void ItemPropertyWindow::reloadSource()
 
 bool ItemPropertyWindow::testDropEvent(QByteArray serializedMapItem)
 {
-  auto mapItem = ItemDragOperation::MimeData::MapItem::fromByteArray(serializedMapItem);
+  auto mapItem = ItemDrag::DraggableItem::deserialize(serializedMapItem);
   if (!mapItem)
   {
     VME_LOG("[Warning]: Could not read MapItem from qml QByteArray.");
@@ -122,48 +122,32 @@ bool ItemPropertyWindow::testDropEvent(QByteArray serializedMapItem)
   return true;
 }
 
-bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedMapItem)
+bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggableItem)
 {
   VME_LOG_D("Index: " << index);
-  auto mapItem = ItemDragOperation::MimeData::MapItem::fromByteArray(serializedMapItem);
-  if (!mapItem)
+  auto draggedItem = ItemDrag::DraggableItem::deserialize(serializedDraggableItem);
+  if (!draggedItem)
   {
-    VME_LOG("[Warning]: Could not read MapItem from qml QByteArray.");
+    VME_LOG("[Warning]: Could not read DraggableItem from qml QByteArray.");
     return false;
   }
 
   // Can not add an item to its own container
-  if (mapItem->item == currentItem)
+  if (draggedItem->item() == currentItem)
   {
     VME_LOG_D("Can not add item to itself.");
     return false;
   }
 
-  Item item(mapItem->item->deepCopy());
+  Item item(draggedItem->copy());
   VME_LOG_D("[ItemPropertyWindow::itemDropEvent] Adding to container:" << item.name() << ", (" << item.serverId() << ")");
   return itemContainerModel->addItem(std::move(item));
 }
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>GuiItemContainer>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-// GuiItemContainer::ItemWrapper::ItemWrapper(Item *item)
-//     : item(item)
-// {
-// }
-
-// int GuiItemContainer::ItemWrapper::serverId() const
-// {
-//   return hasItem() ? item->serverId() : -1;
-// }
-
-// bool GuiItemContainer::ItemWrapper::hasItem() const noexcept
-// {
-//   return item != nullptr;
-// }
+void ItemPropertyWindow::startContainerItemDrag(int index)
+{
+  VME_LOG_D("ItemPropertyWindow::startContainerItemDrag");
+}
 
 GuiItemContainer::ItemModel::ItemModel(QObject *parent)
     : QAbstractListModel(parent), _container(std::nullopt) {}

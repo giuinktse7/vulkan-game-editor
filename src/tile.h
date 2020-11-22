@@ -30,6 +30,7 @@ public:
 	{
 		return _items.at(itemIndex).selected;
 	}
+
 	bool hasSelection() const;
 	bool topItemSelected() const;
 	bool allSelected() const;
@@ -41,6 +42,8 @@ public:
 	bool hasTopItem() const;
 	inline Item *ground() const noexcept;
 	inline bool hasGround() const noexcept;
+
+	std::optional<size_t> indexOf(Item *item) const;
 
 	void addItem(Item &&item);
 	void removeItem(size_t index);

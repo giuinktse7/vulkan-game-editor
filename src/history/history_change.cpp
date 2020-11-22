@@ -106,7 +106,46 @@ namespace MapHistory
 
   void SetTile::undo(MapView &mapView)
   {
+
     tile.initEntities();
+    std::unique_ptr<Tile> currentTilePointer = setMapTile(mapView, std::move(tile));
+    Tile *currentTile = currentTilePointer.release();
+
+    tile = std::move(*currentTile);
+
+    // Memory no longer handled by the unique ptr, must delete
+    delete currentTile;
+  }
+
+  MoveToContainer::MoveToContainer(Tile &&tile, Item *item, ContainerItem &container)
+      : SetTile(std::move(tile)), data(PreFirstCommitData{item}), container(container) {}
+
+  void MoveToContainer::commit(MapView &mapView)
+  {
+    if (std::holds_alternative<PreFirstCommitData>(data))
+    {
+      auto i = tile.indexOf(std::get<PreFirstCommitData>(data).item);
+      DEBUG_ASSERT(i, "Should never be empty.");
+
+      Data newData;
+      newData.tileIndex = i.value();
+      newData.containerIndex = container.containerSize();
+
+      data = newData;
+    }
+
+    Tile oldTile = tile.deepCopy();
+
+    container.addItem(tile.dropItem(std::get<Data>(data).tileIndex));
+
+    tile = std::move(oldTile);
+  }
+
+  void MoveToContainer::undo(MapView &mapView)
+  {
+    Data &moveData = std::get<Data>(data);
+
+    container.removeItem(moveData.containerIndex);
     std::unique_ptr<Tile> currentTilePointer = setMapTile(mapView, std::move(tile));
     Tile *currentTile = currentTilePointer.release();
 
@@ -162,6 +201,21 @@ namespace MapHistory
   Move Move::entire(const Tile &tile, Position to)
   {
     return Move(tile.position(), to);
+  }
+
+  std::optional<Move> Move::item(const Tile &from, const Position &to, Item *item)
+  {
+    if (item == from.ground())
+    {
+      return Move(from.position(), to, true);
+    }
+
+    auto index = from.indexOf(item);
+    if (!index)
+      return std::nullopt;
+
+    std::vector<uint16_t> indices{static_cast<uint16_t>(index.value())};
+    return Move(from.position(), to, false, indices);
   }
 
   Move Move::selected(const Tile &tile, Position to)

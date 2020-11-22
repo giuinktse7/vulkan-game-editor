@@ -28,6 +28,9 @@ struct ContainerItem : public ItemWrapper
   bool full() const;
   bool empty() const;
 
+  bool insertItem(Item &&item, size_t index);
+  Item dropItem(size_t index);
+  bool removeItem(size_t index);
   bool addItem(Item &&item);
   const Item &itemAt(size_t index) const;
 

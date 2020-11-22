@@ -121,9 +121,10 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
 
 void VulkanWindow::mapItemDragStartEvent(Tile *tile, Item *item)
 {
-  dragOperation.emplace(mapView.get(), tile, item, this);
-  dragOperation.value().setRenderCondition([this] { return !this->containsMouse(); });
-  dragOperation.value().start();
+  ItemDrag::MapItem mapItem(mapView.get(), tile, item);
+  dragOperation.emplace(ItemDrag::DragOperation::create(std::move(mapItem), this));
+  dragOperation->setRenderCondition([this] { return !this->containsMouse(); });
+  dragOperation->start();
 }
 
 void VulkanWindow::shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event)
@@ -204,8 +205,8 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
       // Only remove the item from the map if it was not dropped back onto the map.
       if (!containsMouse())
       {
-        const auto &mapItem = dragOperation->mimeData.mapItem;
-        mapView->removeItem(*mapItem.tile, mapItem.item);
+        const auto &draggedItem = dragOperation->mimeData.draggableItem;
+        draggedItem->remove();
       }
     }
     else
@@ -306,7 +307,7 @@ std::optional<ShortcutAction> VulkanWindow::getShortcutAction(QKeyEvent *event) 
 
 void VulkanWindow::dropEvent(QDropEvent *event)
 {
-  if (event->mimeData()->hasFormat(ItemDragOperation::MapItemFormat))
+  if (event->mimeData()->hasFormat(ItemDrag::DragOperation::MapItemFormat))
   {
     event->accept();
   }
@@ -549,250 +550,4 @@ void VulkanWindow::Renderer::startNextFrame()
   frame->mouseAction = window.mapView->editorAction.action();
 
   renderer.startNextFrame();
-}
-
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>ItemDragOperation>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-ItemDragOperation::ItemDragOperation(MapView *mapView, Tile *tile, Item *item, QWindow *parent)
-    : _parent(parent),
-      _hoveredObject(QtUtil::qtApp()->widgetAt(QCursor::pos())),
-      mimeData(mapView, tile, item),
-      pixmap(QtUtil::itemPixmap(tile->position(), *item)),
-      renderingCursor(false)
-{
-  // mimeData.setData(mimeData.mapItemMimeType(), mimeData.mapItem);
-
-  auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-  auto pos = widget->mapFromGlobal(_parent->mapToGlobal(QCursor::pos()));
-  sendDragEnterEvent(_hoveredObject, pos);
-}
-
-void ItemDragOperation::start()
-{
-  VME_LOG_D("ItemDragOperation::start()");
-}
-
-void ItemDragOperation::showCursor()
-{
-  if (!renderingCursor)
-  {
-    QApplication::setOverrideCursor(pixmap);
-    renderingCursor = true;
-  }
-}
-
-void ItemDragOperation::hideCursor()
-{
-  if (renderingCursor)
-  {
-    QApplication::restoreOverrideCursor();
-    renderingCursor = false;
-  }
-}
-
-void ItemDragOperation::finish()
-{
-  hideCursor();
-}
-
-void ItemDragOperation::setRenderCondition(std::function<bool()> f)
-{
-  shouldRender = f;
-}
-
-bool ItemDragOperation::mouseMoveEvent(QMouseEvent *event)
-{
-  if (shouldRender())
-  {
-    showCursor();
-  }
-  else
-  {
-    hideCursor();
-  }
-
-  auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-  auto object = static_cast<QObject *>(widget);
-
-  auto pos = widget->mapFromGlobal(_parent->mapToGlobal(event->pos()));
-
-  bool changed = object != _hoveredObject;
-  if (changed)
-  {
-    sendDragLeaveEvent(_hoveredObject, pos, event);
-    sendDragEnterEvent(object, pos, event);
-
-    setHoveredObject(object);
-  }
-  else
-  {
-    sendDragMoveEvent(object, pos, event);
-  }
-
-  return changed;
-}
-
-bool ItemDragOperation::sendDropEvent(QMouseEvent *event)
-{
-  auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-  auto pos = widget->mapFromGlobal(_parent->mapToGlobal(event->pos()));
-
-  bool accepted = sendDragDropEvent(widget, pos, event);
-
-  finish();
-
-  return accepted;
-}
-
-void ItemDragOperation::setHoveredObject(QObject *object)
-{
-  qDebug() << "setHoveredObject: " << _hoveredObject;
-
-  _hoveredObject = object;
-}
-
-QObject *ItemDragOperation::hoveredObject() const
-{
-  return _hoveredObject;
-}
-
-QVariant ItemDragOperation::MimeData::retrieveData(const QString &mimeType, QVariant::Type type) const
-{
-  QVariant data;
-  if (mimeType != mapItemMimeType())
-  {
-    VME_LOG_D("ItemDragOperation does not accept mimeType: " << mimeType);
-    return data;
-  }
-
-  /*
-      The data must be QByteArray. Otherwise QML can't read it.
-      It seems like QML does not perform an implicit conversion from QVariant(X)
-      to QVariant(QByteArray)).
-    */
-  data.setValue(mapItem.toByteArray());
-
-  return data;
-}
-
-void ItemDragOperation::sendDragEnterEvent(QObject *object, QPoint position)
-{
-  if (!object)
-    return;
-
-  QDragEnterEvent dragEnterEvent(position, Qt::DropAction::MoveAction, &mimeData, QApplication::mouseButtons(), QApplication::keyboardModifiers());
-  QApplication::sendEvent(object, &dragEnterEvent);
-}
-
-void ItemDragOperation::sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event)
-{
-  if (!object)
-    return;
-
-  QDragEnterEvent dragEnterEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
-  QApplication::sendEvent(object, &dragEnterEvent);
-}
-
-void ItemDragOperation::sendDragLeaveEvent(QObject *object, QPoint position, QMouseEvent *event)
-{
-  if (!object)
-    return;
-
-  QDragLeaveEvent dragLeaveEvent;
-  QApplication::sendEvent(object, &dragLeaveEvent);
-}
-
-void ItemDragOperation::sendDragMoveEvent(QObject *object, QPoint position, QMouseEvent *event)
-{
-  if (!object)
-    return;
-
-  QDragMoveEvent dragMoveEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
-  QApplication::sendEvent(object, &dragMoveEvent);
-}
-
-bool ItemDragOperation::sendDragDropEvent(QObject *object, QPoint position, QMouseEvent *event)
-{
-  if (!object)
-    return false;
-
-  QDropEvent dropEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
-  // QDropEvent dropEvent(position, Qt::DropAction::MoveAction, nullptr, event->buttons(), event->modifiers());
-  bool accepted = QApplication::sendEvent(object, &dropEvent);
-  return accepted;
-}
-
-ItemDragOperation::MimeData::MapItem::MapItem() : MapItem(nullptr, nullptr, nullptr) {}
-
-ItemDragOperation::MimeData::MapItem::MapItem(MapView *mapView, Tile *tile, Item *item)
-    : mapView(mapView), tile(tile), item(item)
-{
-}
-
-Item ItemDragOperation::MimeData::MapItem::moveFromMap()
-{
-  return mapView->dropItem(tile, item);
-}
-
-QByteArray ItemDragOperation::MimeData::MapItem::toByteArray() const
-{
-  QByteArray byteArray;
-  QDataStream dataStream(&byteArray, QIODevice::WriteOnly);
-
-  dataStream << util::pointerAddress(mapView);
-  dataStream << util::pointerAddress(tile);
-  dataStream << util::pointerAddress(item);
-
-  return byteArray;
-}
-
-std::optional<ItemDragOperation::MimeData::MapItem> ItemDragOperation::MimeData::MapItem::fromByteArray(QByteArray &byteArray)
-{
-  MapItem mapItem;
-  DEBUG_ASSERT(byteArray.size() == sizeof(util::PointerAddress) * 3, "Invalid byte array size.");
-
-  QDataStream dataStream(&byteArray, QIODevice::ReadOnly);
-
-  mapItem.mapView = QtUtil::readPointer<MapView *>(dataStream);
-  mapItem.tile = QtUtil::readPointer<Tile *>(dataStream);
-  mapItem.item = QtUtil::readPointer<Item *>(dataStream);
-
-  if (mapItem.mapView == nullptr || mapItem.tile == nullptr || mapItem.item == nullptr)
-    return std::nullopt;
-
-  return mapItem;
-}
-
-ItemDragOperation::MimeData::MimeData(MapView *mapView, Tile *tile, Item *item)
-    : QMimeData(), mapItem(mapView, tile, item)
-{
-  VME_LOG_D("MimeData mapView: " << mapView);
-}
-
-// QDataStream &ItemDragOperation::MimeData::operator<<(QDataStream &out, const ItemDragOperation::MimeData::RawData &rawData)
-// {
-//   out << rawData.tile;
-//   out << rawData.item;
-//   return out;
-// }
-
-// QDataStream &ItemDragOperation::MimeData::operator>>(QDataStream &in, ItemDragOperation::MimeData::RawData &rawData)
-// {
-// //in >> rawData.tile;
-// //in >> rawData.item;
-//   return in;
-// }
-
-bool ItemDragOperation::MimeData::hasFormat(const QString &mimeType) const
-{
-  return mimeType == mapItemMimeType();
-}
-
-QStringList ItemDragOperation::MimeData::formats() const
-{
-  return QStringList() << mapItemMimeType();
 }

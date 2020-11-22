@@ -59,11 +59,35 @@ namespace MapHistory
   public:
     SetTile(Tile &&tile);
 
-    virtual void commit(MapView &mapView) override;
-    virtual void undo(MapView &mapView) override;
+    void commit(MapView &mapView) override;
+    void undo(MapView &mapView) override;
+
+  protected:
+    Tile tile;
+  };
+
+  class MoveToContainer : public SetTile
+  {
+    MoveToContainer(Tile &&tile, Item *item, ContainerItem &container);
+    void commit(MapView &mapView) override;
+    void undo(MapView &mapView) override;
 
   private:
-    Tile tile;
+    ContainerItem container;
+
+    // Data before the first commit
+    struct PreFirstCommitData
+    {
+      Item *item;
+    };
+
+    struct Data
+    {
+      uint16_t containerIndex;
+      uint16_t tileIndex;
+    };
+
+    std::variant<PreFirstCommitData, Data> data;
   };
 
   class RemoveTile : public ChangeItem
@@ -71,8 +95,8 @@ namespace MapHistory
   public:
     RemoveTile(Position pos);
 
-    virtual void commit(MapView &mapView) override;
-    virtual void undo(MapView &mapView) override;
+    void commit(MapView &mapView) override;
+    void undo(MapView &mapView) override;
 
   private:
     std::variant<Tile, Position> data;
@@ -85,16 +109,17 @@ namespace MapHistory
   class Move : public ChangeItem
   {
   public:
-    Move(Position from, Position to, bool ground, std::vector<uint16_t> &indices);
+    Move(Position from, Position to, bool ground, std::vector<uint16_t> &indices = std::vector<uint16_t>{});
     Move(Position from, Position to);
 
     static Move entire(Position from, Position to);
     static Move entire(const Tile &tile, Position to);
 
     static Move selected(const Tile &tile, Position to);
+    static std::optional<Move> item(const Tile &from, const Position &to, Item *item);
 
-    virtual void commit(MapView &mapView) override;
-    virtual void undo(MapView &mapView) override;
+    void commit(MapView &mapView) override;
+    void undo(MapView &mapView) override;
 
     inline Position fromPosition() const noexcept
     {
@@ -133,8 +158,8 @@ namespace MapHistory
   {
   public:
     MultiMove(Position deltaPos, size_t moveOperations);
-    virtual void commit(MapView &mapView) override;
-    virtual void undo(MapView &mapView) override;
+    void commit(MapView &mapView) override;
+    void undo(MapView &mapView) override;
 
     void add(Move &&move);
 
@@ -150,8 +175,8 @@ namespace MapHistory
   public:
     SelectMultiple(const MapView &mapView, std::vector<Position> &&positions, bool select = true);
 
-    virtual void commit(MapView &mapView) override;
-    virtual void undo(MapView &mapView) override;
+    void commit(MapView &mapView) override;
+    void undo(MapView &mapView) override;
 
   private:
     struct Entry
@@ -184,8 +209,8 @@ namespace MapHistory
     static std::optional<MapHistory::Select> fullTile(const Tile &tile);
     static std::optional<MapHistory::Select> topItem(const Tile &tile);
 
-    virtual void commit(MapView &mapView) override;
-    virtual void undo(MapView &mapView) override;
+    void commit(MapView &mapView) override;
+    void undo(MapView &mapView) override;
 
   private:
     Position position;
@@ -203,8 +228,8 @@ namespace MapHistory
     static std::optional<MapHistory::Deselect> fullTile(const Tile &tile);
     static std::optional<MapHistory::Deselect> topItem(const Tile &tile);
 
-    virtual void commit(MapView &mapView) override;
-    virtual void undo(MapView &mapView) override;
+    void commit(MapView &mapView) override;
+    void undo(MapView &mapView) override;
 
   private:
     Position position;

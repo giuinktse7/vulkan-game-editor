@@ -491,6 +491,19 @@ const std::vector<Item>::const_iterator Tile::findItem(std::function<bool(const 
   return std::find_if(_items.begin(), _items.end(), predicate);
 }
 
+std::optional<size_t> Tile::indexOf(Item *item) const
+{
+  auto found = findItem([item](const Item &_item) { return item == &_item; });
+  if (found != _items.end())
+  {
+    return static_cast<size_t>(found - _items.begin());
+  }
+  else
+  {
+    return std::nullopt;
+  }
+}
+
 void Tile::initEntities()
 {
   if (_ground)

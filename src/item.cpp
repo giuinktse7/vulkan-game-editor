@@ -219,6 +219,15 @@ bool ItemData::Container::isFull() const noexcept
 	return _capacity == _items.size();
 }
 
+bool ItemData::Container::insertItem(Item &&item, size_t index)
+{
+	if (isFull())
+		return false;
+
+	_items.emplace(_items.begin() + index, std::move(item));
+	return true;
+}
+
 bool ItemData::Container::addItem(Item &&item)
 {
 	if (isFull())
@@ -235,6 +244,38 @@ bool ItemData::Container::addItem(int index, Item &&item)
 
 	_items.emplace(_items.begin() + index, std::move(item));
 	return true;
+}
+
+bool ItemData::Container::removeItem(size_t index)
+{
+	if (index > size())
+		return false;
+
+	_items.erase(_items.begin() + index);
+	return true;
+}
+
+bool ItemData::Container::removeItem(Item *item)
+{
+	auto found = std::find_if(_items.begin(),
+														_items.end(),
+														[item](const Item &_item) { return item == &_item; });
+
+	// check that there actually is a 3 in our vector
+	if (found == _items.end())
+	{
+		return false;
+	}
+
+	_items.erase(found);
+}
+
+Item ItemData::Container::dropItem(size_t index)
+{
+	Item item(std::move(_items.at(index)));
+	_items.erase(_items.begin() + index);
+
+	return item;
 }
 
 Item &ItemData::Container::itemAt(size_t index)

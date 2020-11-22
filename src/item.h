@@ -257,8 +257,15 @@ namespace ItemData
 		ItemDataType type() const noexcept override;
 		std::unique_ptr<Item::Data> copy() const override;
 
+		const std::vector<Item>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
+
+		bool insertItem(Item &&item, size_t index);
 		bool addItem(Item &&item);
 		bool addItem(int index, Item &&item);
+		bool removeItem(Item *item);
+		bool removeItem(size_t index);
+
+		Item dropItem(size_t index);
 
 		Item &itemAt(size_t index);
 

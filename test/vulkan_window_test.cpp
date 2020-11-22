@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "../src/gui/vulkan_window.h"
+#include "../src/gui/draggable_item.h"
 #include "../src/map_view.h"
 
 TEST_CASE("vulkan_window.h", "[gui]")
@@ -16,16 +16,18 @@ TEST_CASE("vulkan_window.h", "[gui]")
 
   SECTION("Serialization and Deserialization of ItemDragOperation::MimeData::MapItem preserves the pointers")
   {
-    using MapItem = ItemDragOperation::MimeData::MapItem;
+    using MapItem = ItemDrag::MapItem;
 
     MapItem mapItem;
     mapItem.mapView = &mapView;
     mapItem.tile = &tile;
-    mapItem.item = item;
+    mapItem._item = item;
 
-    auto byteArray = mapItem.toByteArray();
-    MapItem deserializedMapView = MapItem::fromByteArray(byteArray);
+    auto byteArray = mapItem.serialize();
+    auto deserializedDraggableItem = ItemDrag::DraggableItem::deserialize(byteArray);
+    REQUIRE(deserializedDraggableItem);
+    MapItem *deserializedMapView = static_cast<MapItem *>(deserializedDraggableItem.get());
 
-    REQUIRE(mapItem == deserializedMapView);
+    REQUIRE((*deserializedMapView) == mapItem);
   }
 }

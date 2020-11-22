@@ -57,6 +57,21 @@ bool ContainerItem::addItem(Item &&item)
   return container()->addItem(std::move(item));
 }
 
+bool ContainerItem::insertItem(Item &&item, size_t index)
+{
+  return container()->insertItem(std::move(item), index);
+}
+
+Item ContainerItem::dropItem(size_t index)
+{
+  return container()->dropItem(index);
+}
+
+bool ContainerItem::removeItem(size_t index)
+{
+  return container()->removeItem(index);
+}
+
 const Item &ContainerItem::itemAt(size_t index) const
 {
   return container()->itemAt(index);

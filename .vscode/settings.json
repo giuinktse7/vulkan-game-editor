@@ -151,7 +151,9 @@
     "qabstractlistmodel": "cpp",
     "qurl": "cpp",
     "qquickwindow": "cpp",
-    "qdatastream": "cpp"
+    "qdatastream": "cpp",
+    "qdebug": "cpp",
+    "qpoint": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

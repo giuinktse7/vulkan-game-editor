@@ -50,6 +50,8 @@ public:
   Q_INVOKABLE bool itemDropEvent(int index, QByteArray serializedMapItem);
   Q_INVOKABLE bool testDropEvent(QByteArray serializedMapItem);
 
+  Q_INVOKABLE void startContainerItemDrag(int index);
+
   QWidget *wrapInWidget(QWidget *parent = nullptr);
 
   void reloadSource();

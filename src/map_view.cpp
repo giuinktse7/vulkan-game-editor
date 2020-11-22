@@ -155,20 +155,24 @@ void MapView::commitTransaction(TransactionType type, std::function<void()> f)
   history.endTransaction(type);
 }
 
-void MapView::addItem(const Position &pos, uint16_t id)
+void MapView::addItem(const Position &pos, Item &&item)
 {
-  if (!Items::items.validItemType(id) || pos.x < 0 || pos.y < 0)
-    return;
-
   Tile &currentTile = _map->getOrCreateTile(pos);
   Tile newTile = currentTile.deepCopy();
-
-  newTile.addItem(Item(id));
+  newTile.addItem(std::move(item));
 
   Action action(ActionType::SetTile);
   action.addChange(SetTile(std::move(newTile)));
 
   history.commit(std::move(action));
+}
+
+void MapView::addItem(const Position &pos, uint16_t id)
+{
+  if (!Items::items.validItemType(id) || pos.x < 0 || pos.y < 0)
+    return;
+
+  addItem(pos, Item(id));
 }
 
 void MapView::removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices)
@@ -252,6 +256,20 @@ void MapView::removeTile(const Position position)
   Action action(ActionType::RemoveTile);
 
   action.addChange(RemoveTile(position));
+
+  history.commit(std::move(action));
+}
+
+void MapView::moveItem(const Tile &fromTile, const Position toPosition, Item *item)
+{
+  Action action(ActionType::Move);
+  auto move = Move::item(fromTile, toPosition, item);
+  if (!move)
+  {
+    VME_LOG("Warning: tried to move item from tile at position " << fromTile.position() << " but the tile did not contain the item.");
+  }
+
+  action.addChange(std::make_unique<Move>(std::move(move.value())));
 
   history.commit(std::move(action));
 }
@@ -887,8 +905,13 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
             if (this->underMouse() && drag.isMoving())
             {
               waitForDraw([this, &drag] {
-                Position deltaPos = drag.moveDelta.value();
-                moveSelection(deltaPos);
+                if (drag.isMoving())
+                {
+                  commitTransaction(TransactionType::MoveItems, [this, &drag] {
+                    Position toPosition = drag.tile->position() + drag.moveDelta.value();
+                    moveItem(*drag.tile, toPosition, drag.item);
+                  });
+                }
 
                 // drag.reset();
                 editorAction.unlock();
