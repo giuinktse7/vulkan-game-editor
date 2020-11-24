@@ -12,6 +12,7 @@
 #include <QPoint>
 
 #include "../debug.h"
+#include "../position.h"
 
 class QWindow;
 class QObject;
@@ -116,6 +117,7 @@ namespace ItemDrag
       return Type::ContainerItem;
     }
 
+    Position position;
     ItemData::Container *container;
     size_t index;
 
@@ -158,6 +160,9 @@ namespace ItemDrag
 
   class DragOperation
   {
+  private:
+    using Source = MapView *;
+
   public:
     static constexpr auto MapItemFormat = "vulkan-game-editor-mimetype:map-item";
 
@@ -165,9 +170,9 @@ namespace ItemDrag
     DragOperation &operator=(DragOperation &&other) noexcept;
 
     template <typename T, typename std::enable_if<std::is_base_of<DraggableItem, T>::value>::type * = nullptr>
-    static DragOperation create(T &&t, QWindow *parent)
+    static DragOperation create(T &&t, Source source, QWindow *parent)
     {
-      return DragOperation(MimeData::create(std::move(t)), parent);
+      return DragOperation(MimeData::create(std::move(t)), source, parent);
     }
 
     void setRenderCondition(std::function<bool()> f);
@@ -178,11 +183,12 @@ namespace ItemDrag
     bool mouseMoveEvent(QMouseEvent *event);
     bool sendDropEvent(QMouseEvent *event);
     QObject *hoveredObject() const;
+    Source source() const noexcept;
 
     DragOperation::MimeData mimeData;
 
   private:
-    DragOperation(MimeData &&mimeData, QWindow *parent);
+    DragOperation(MimeData &&mimeData, Source source, QWindow *parent);
 
     void sendDragEnterEvent(QObject *object, QPoint position);
     void sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event);
@@ -197,6 +203,7 @@ namespace ItemDrag
 
     QWindow *_parent;
     QObject *_hoveredObject;
+    Source _source;
 
     QPixmap pixmap;
 

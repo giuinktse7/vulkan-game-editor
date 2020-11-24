@@ -6,6 +6,7 @@
 #include <QWidget>
 
 #include "../../vendor/rollbear-visit/visit.hpp"
+#include "../qt/logging.h"
 #include "draggable_item.h"
 #include "mainwindow.h"
 
@@ -18,17 +19,53 @@ namespace ObjectName
   constexpr auto ItemContainerArea = "item_container_area";
 } // namespace ObjectName
 
+PropertyWindowEventFilter::PropertyWindowEventFilter(ItemPropertyWindow *parent)
+    : QtUtil::EventFilter(static_cast<QObject *>(parent)), propertyWindow(parent) {}
+
 bool PropertyWindowEventFilter::eventFilter(QObject *obj, QEvent *event)
 {
   // qDebug() << "PropertyWindowEventFilter:" << event;
-  return false;
+  // return false;
+  switch (event->type())
+  {
+  case QEvent::MouseMove:
+    if (propertyWindow->dragOperation)
+    {
+      auto mouseEvent = static_cast<QMouseEvent *>(event);
+      propertyWindow->dragOperation->mouseMoveEvent(mouseEvent);
+      return false;
+    }
+    break;
+  case QEvent::DragEnter:
+  {
+    VME_LOG_D("Drag enter..");
+    break;
+  }
+  case QEvent::Drop:
+  {
+    auto dropEvent = static_cast<QDropEvent *>(event);
+    qDebug() << "Got drop: " << dropEvent;
+    // auto mouseEvent = QMouseEvent(
+    //     QEvent::MouseButtonRelease,
+    //     dropEvent->posF(),
+    //     Qt::MouseButton::LeftButton,
+    //     dropEvent->mouseButtons(),
+    //     dropEvent->keyboardModifiers());
 
-  // return QObject::eventFilter(obj, event);
+    // eventFilter(obj, &mouseEvent);
+    break;
+  }
+  default:
+    break;
+  }
+
+  return QObject::eventFilter(obj, event);
 }
 
 ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
-    : _url(url), mainWindow(mainWindow)
+    : _url(url), mainWindow(mainWindow), _wrapperWidget(nullptr)
 {
+  VME_LOG_D("ItemPropertyWindow address: " << this);
   installEventFilter(new PropertyWindowEventFilter(this));
   itemContainerModel = new GuiItemContainer::ItemModel();
 
@@ -43,6 +80,40 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
 
   QmlApplicationContext *applicationContext = new QmlApplicationContext();
   engine()->rootContext()->setContextProperty("applicationContext", applicationContext);
+}
+
+bool ItemPropertyWindow::event(QEvent *e)
+{
+  // if (e->type() != QEvent::UpdateRequest)
+  // {
+  //   qDebug() << e;
+  // }
+
+  return QQuickView::event(e);
+}
+
+void ItemPropertyWindow::mouseMoveEvent(QMouseEvent *event)
+{
+  QQuickView::mouseMoveEvent(event);
+
+  // if (dragOperation)
+  // {
+  //   dragOperation->mouseMoveEvent(event);
+  // }
+}
+
+void ItemPropertyWindow::mouseReleaseEvent(QMouseEvent *event)
+{
+  VME_LOG_D("Mouse release");
+  QQuickView::mouseReleaseEvent(event);
+
+  if (dragOperation)
+  {
+    bool accepted = dragOperation->sendDropEvent(event);
+    VME_LOG_D("Drop accepted? " << accepted);
+
+    dragOperation.reset();
+  }
 }
 
 void ItemPropertyWindow::setMapView(MapView &mapView)
@@ -142,10 +213,17 @@ void ItemPropertyWindow::setContainerVisible(bool visible)
 
 QWidget *ItemPropertyWindow::wrapInWidget(QWidget *parent)
 {
-  QWidget *wrapper = QWidget::createWindowContainer(this, parent);
-  wrapper->setObjectName("ItemPropertyWindow wrapper");
+  DEBUG_ASSERT(_wrapperWidget == nullptr, "There is already a wrapper for this window.");
 
-  return wrapper;
+  _wrapperWidget = QWidget::createWindowContainer(this, parent);
+  _wrapperWidget->setObjectName("ItemPropertyWindow wrapper");
+
+  return _wrapperWidget;
+}
+
+QWidget *ItemPropertyWindow::wrapperWidget() const noexcept
+{
+  return _wrapperWidget;
 }
 
 void ItemPropertyWindow::reloadSource()
@@ -247,10 +325,16 @@ void ItemPropertyWindow::startContainerItemDrag(int index)
 {
   VME_LOG_D("ItemPropertyWindow::startContainerItemDrag");
 
-  // ItemDrag::MapItem mapItem(mapView.get(), tile, item);
-  // dragOperation.emplace(ItemDrag::DragOperation::create(std::move(mapItem), this));
-  // dragOperation->setRenderCondition([this] { return !this->containsMouse(); });
-  // dragOperation->start();
+  auto focusedItem = state.focusedAs<FocusedItem>();
+
+  ItemDrag::ContainerItemDrag itemDrag;
+  itemDrag.position = focusedItem.position;
+  itemDrag.container = focusedItem.item->getDataAs<ItemData::Container>();
+  itemDrag.index = index;
+
+  dragOperation.emplace(ItemDrag::DragOperation::create(std::move(itemDrag), state.mapView, this));
+  dragOperation->setRenderCondition([this] { return !state.mapView->underMouse(); });
+  dragOperation->start();
 }
 
 GuiItemContainer::ItemModel::ItemModel(QObject *parent)
@@ -272,6 +356,11 @@ void GuiItemContainer::ItemModel::setContainer(ContainerItem container)
   {
     emit capacityChanged(newCapacity);
   }
+}
+
+int GuiItemContainer::ItemModel::size()
+{
+  return _container ? static_cast<int>(_container->containerSize()) : 0;
 }
 
 int GuiItemContainer::ItemModel::capacity()
@@ -345,4 +434,18 @@ QHash<int, QByteArray> GuiItemContainer::ItemModel::roleNames() const
   roles[ServerIdRole] = "serverId";
 
   return roles;
+}
+
+QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
+{
+  bool success;
+  auto serverId = id.toInt(&success);
+  if (!success)
+  {
+    QPixmap pixmap(32, 32);
+    pixmap.fill(QColor("black").rgba());
+    return pixmap;
+  }
+
+  return QtUtil::itemPixmap(serverId);
 }

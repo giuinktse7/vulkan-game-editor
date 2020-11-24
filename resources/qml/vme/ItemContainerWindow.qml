@@ -62,7 +62,9 @@ Rectangle {
             }
 
             onDragStart : {
-              Context.C_PropertyWindow.startContainerItemDrag();
+              if (itemSlot.index < itemContainer.model.size) {
+                Context.C_PropertyWindow.startContainerItemDrag(itemSlot.index);
+              }
             }
           }
 

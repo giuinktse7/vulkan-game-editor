@@ -122,7 +122,7 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
 void VulkanWindow::mapItemDragStartEvent(Tile *tile, Item *item)
 {
   ItemDrag::MapItem mapItem(mapView.get(), tile, item);
-  dragOperation.emplace(ItemDrag::DragOperation::create(std::move(mapItem), this));
+  dragOperation.emplace(ItemDrag::DragOperation::create(std::move(mapItem), mapView.get(), this));
   dragOperation->setRenderCondition([this] { return !this->containsMouse(); });
   dragOperation->start();
 }
@@ -174,6 +174,7 @@ void VulkanWindow::mousePressEvent(QMouseEvent *event)
 
 void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
+  // VME_LOG_D("VulkanWindow Move: " << event->pos());
   bool mouseInside = containsMouse();
   mapView->setUnderMouse(mouseInside);
 
@@ -323,12 +324,18 @@ bool VulkanWindow::event(QEvent *event)
   switch (event->type())
   {
   case QEvent::Leave:
-  case QEvent::DragLeave:
     mapView->setUnderMouse(false);
     break;
+  case QEvent::DragLeave:
+    mapView->setUnderMouse(false);
+    mapView->dragLeaveEvent();
+    break;
   case QEvent::Enter:
+    mapView->setUnderMouse(true);
+    break;
   case QEvent::DragEnter:
     mapView->setUnderMouse(true);
+    mapView->dragEnterEvent();
     break;
   case QEvent::Drop:
     dropEvent(static_cast<QDropEvent *>(event));

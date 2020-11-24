@@ -19,12 +19,17 @@ namespace GuiItemContainer
   class ItemModel;
 }
 class MainWindow;
+class ItemPropertyWindow;
 
 class PropertyWindowEventFilter : public QtUtil::EventFilter
 {
 public:
-  PropertyWindowEventFilter(QObject *parent) : QtUtil::EventFilter(parent) {}
+  PropertyWindowEventFilter(ItemPropertyWindow *parent);
+
   bool eventFilter(QObject *obj, QEvent *event) override;
+
+private:
+  ItemPropertyWindow *propertyWindow;
 };
 
 class QmlApplicationContext : public QObject
@@ -70,7 +75,15 @@ public:
   void focusGround(Position &position, MapView &mapView);
   void resetFocus();
 
+  QWidget *wrapperWidget() const noexcept;
+
+protected:
+  bool event(QEvent *event);
+  void mouseMoveEvent(QMouseEvent *event) override;
+  void mouseReleaseEvent(QMouseEvent *event) override;
+
 private:
+  friend class PropertyWindowEventFilter;
   void setCount(uint8_t count);
   void setContainerVisible(bool visible);
 
@@ -81,6 +94,7 @@ private:
 
   QUrl _url;
   MainWindow *mainWindow;
+  QWidget *_wrapperWidget;
 
   GuiItemContainer::ItemModel *itemContainerModel;
 
@@ -126,40 +140,16 @@ public:
   ItemTypeImageProvider()
       : QQuickImageProvider(QQuickImageProvider::Pixmap) {}
 
-  QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override
-  {
-    bool success;
-    auto serverId = id.toInt(&success);
-    if (!success)
-    {
-      QPixmap pixmap(32, 32);
-      pixmap.fill(QColor("black").rgba());
-      return pixmap;
-    }
-
-    return QtUtil::itemPixmap(serverId);
-  }
+  QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override;
 };
 
 namespace GuiItemContainer
 {
-  // class ItemWrapper
-  // {
-  // public:
-  //   ItemWrapper(Item *item);
-
-  //   int serverId() const;
-
-  //   bool hasItem() const noexcept;
-
-  // private:
-  //   Item *item;
-  // };
-
   class ItemModel : public QAbstractListModel
   {
     Q_OBJECT
     Q_PROPERTY(int capacity READ capacity NOTIFY capacityChanged)
+    Q_PROPERTY(int size READ size)
 
   public:
     enum ItemModelRole
@@ -173,13 +163,9 @@ namespace GuiItemContainer
     void setContainer(ContainerItem container);
     void reset();
     int capacity();
+    int size();
 
     void refresh();
-
-    ContainerItem *containerItem()
-    {
-      return _container ? &_container.value() : nullptr;
-    }
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 

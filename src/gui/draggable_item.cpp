@@ -16,9 +16,10 @@
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-ItemDrag::DragOperation::DragOperation(ItemDrag::MimeData &&mimeData, QWindow *parent)
+ItemDrag::DragOperation::DragOperation(ItemDrag::MimeData &&mimeData, Source source, QWindow *parent)
     : _parent(parent),
       _hoveredObject(QApplication::widgetAt(QCursor::pos())),
+      _source(source),
       mimeData(std::move(mimeData)),
       pixmap(this->mimeData.draggableItem->pixmap()),
       renderingCursor(false)
@@ -33,6 +34,7 @@ ItemDrag::DragOperation::DragOperation(ItemDrag::MimeData &&mimeData, QWindow *p
 ItemDrag::DragOperation::DragOperation(DragOperation &&other) noexcept
     : _parent(std::move(other._parent)),
       _hoveredObject(std::move(other._hoveredObject)),
+      _source(std::move(other._source)),
       pixmap(std::move(other.pixmap)),
       shouldRender(std::move(other.shouldRender)),
       onDropRejected(std::move(other.onDropRejected)),
@@ -45,6 +47,7 @@ ItemDrag::DragOperation &ItemDrag::DragOperation::operator=(DragOperation &&othe
 {
   _parent = std::move(other._parent);
   _hoveredObject = std::move(other._hoveredObject);
+  _source = std::move(other._source);
   pixmap = std::move(other.pixmap);
   shouldRender = std::move(other.shouldRender);
   onDropRejected = std::move(other.onDropRejected);
@@ -216,6 +219,11 @@ bool ItemDrag::DragOperation::sendDragDropEvent(QObject *object, QPoint position
   // QDropEvent dropEvent(position, Qt::DropAction::MoveAction, nullptr, event->buttons(), event->modifiers());
   bool accepted = QApplication::sendEvent(object, &dropEvent);
   return accepted;
+}
+
+ItemDrag::DragOperation::Source ItemDrag::DragOperation::source() const noexcept
+{
+  return _source;
 }
 
 ItemDrag::MapItem::MapItem() : MapItem(nullptr, nullptr, nullptr) {}
@@ -392,9 +400,9 @@ Item ItemDrag::DraggableItem::copy() const
 
 QDataStream &operator<<(QDataStream &dataStream, const ItemDrag::MapItem &mapItem)
 {
-  dataStream << util::pointerAddress(mapItem.mapView);
-  dataStream << util::pointerAddress(mapItem.tile);
-  dataStream << util::pointerAddress(mapItem.item());
+  dataStream << util::pointerAddress(mapItem.mapView)
+             << util::pointerAddress(mapItem.tile)
+             << util::pointerAddress(mapItem.item());
 
   return dataStream;
 }
@@ -410,14 +418,16 @@ QDataStream &operator>>(QDataStream &dataStream, ItemDrag::MapItem &mapItem)
 
 QDataStream &operator<<(QDataStream &dataStream, const ItemDrag::ContainerItemDrag &containerItem)
 {
-  dataStream << util::pointerAddress(containerItem.container);
-  dataStream << containerItem.index;
+  dataStream << containerItem.position
+             << util::pointerAddress(containerItem.container)
+             << containerItem.index;
 
   return dataStream;
 }
 
 QDataStream &operator>>(QDataStream &dataStream, ItemDrag::ContainerItemDrag &containerItem)
 {
+  dataStream >> containerItem.position;
   containerItem.container = QtUtil::readPointer<ItemData::Container *>(dataStream);
   dataStream >> containerItem.index;
 

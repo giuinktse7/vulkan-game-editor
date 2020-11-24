@@ -42,6 +42,8 @@ public:
 	inline uint16_t mapHeight() const noexcept;
 	inline uint8_t mapDepth() const noexcept;
 
+	void dragEnterEvent();
+	void dragLeaveEvent();
 	void mousePressEvent(VME::MouseEvent event);
 	void mouseMoveEvent(VME::MouseEvent event);
 	void mouseReleaseEvent(VME::MouseEvent event);

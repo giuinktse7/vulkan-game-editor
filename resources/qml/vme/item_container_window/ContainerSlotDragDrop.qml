@@ -48,6 +48,7 @@ Item {
       onPressed : {
         console.log("pressed");
         pressOrigin = Qt.point(mouseX, mouseY);
+        dragging = false;
       }
 
       onReleased : {
@@ -56,11 +57,12 @@ Item {
         dragging = false;
       }
 
-      onPositionChanged : {
-        if (pressed) {
+      onPositionChanged : { // console.log(mouseX, mouseY);
+        console.log("Dragging? " + dragging);
+        if (pressed && !dragging) {
           const dx = pressOrigin.x - mouseX
           const dy = pressOrigin.y - mouseY
-          if (!dragging && Math.sqrt(dx * dx + dy * dy) >= dragStartThreshold) {
+          if (Math.sqrt(dx * dx + dy * dy) >= dragStartThreshold) {
             root.dragStart();
             dragging = true;
           }

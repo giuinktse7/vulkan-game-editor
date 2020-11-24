@@ -97,7 +97,7 @@ void QtItemTypeModel::addItems(std::vector<uint32_t> &&serverIds)
                   serverIds.end());
 
   int size = static_cast<int>(_data.size());
-  beginInsertRows(QModelIndex(), size, size + serverIds.size());
+  beginInsertRows(QModelIndex(), size, size + static_cast<int>(serverIds.size()));
   for (const auto serverId : serverIds)
   {
     _data.emplace_back(ItemTypeModelItem::fromServerId(serverId));

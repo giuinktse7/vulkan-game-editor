@@ -883,6 +883,34 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
   requestDraw();
 }
 
+void MapView::mouseReleaseEvent(VME::MouseEvent event)
+{
+  Position pos = event.pos().toPos(*this);
+  VME_LOG_D("MapView::mouseReleaseEvent: " << pos);
+
+  if (!(event.buttons() & VME::MouseButtons::LeftButton))
+  {
+    endCurrentAction(event.modifiers());
+
+    if (dragRegion.has_value())
+    {
+      endDragging(event.modifiers());
+    }
+  }
+
+  requestDraw();
+}
+
+void MapView::dragEnterEvent()
+{
+  VME_LOG_D("MapView::dragEnterEvent");
+}
+
+void MapView::dragLeaveEvent()
+{
+  VME_LOG_D("MapView::dragLeaveEvent");
+}
+
 void MapView::endCurrentAction(VME::ModifierKeys modifiers)
 {
   std::visit(
@@ -944,24 +972,6 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
 
           [](const auto &arg) {}},
       editorAction.action());
-}
-
-void MapView::mouseReleaseEvent(VME::MouseEvent event)
-{
-  Position pos = event.pos().toPos(*this);
-  VME_LOG_D("MapView::mouseReleaseEvent: " << pos);
-
-  if (!(event.buttons() & VME::MouseButtons::LeftButton))
-  {
-    endCurrentAction(event.modifiers());
-
-    if (dragRegion.has_value())
-    {
-      endDragging(event.modifiers());
-    }
-  }
-
-  requestDraw();
 }
 
 void MapView::waitForDraw(std::function<void()> f)
