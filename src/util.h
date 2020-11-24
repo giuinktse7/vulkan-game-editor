@@ -122,6 +122,22 @@ namespace util
 		return std::vector<T>(cursor, xs.end());
 	}
 
+	template <typename A, typename B>
+	constexpr bool hasDynamicType(B *b)
+	{
+		static_assert(std::is_pointer<A>::value, "Type A must be derived from type B.");
+
+		return typeid(decltype(*std::declval<A>())) == typeid(*b);
+	}
+
+	template <typename A, typename B>
+	constexpr bool hasDynamicType(B &b)
+	{
+		static_assert(std::is_base_of<B, A>::value, "Type A must be derived from type B.");
+
+		return typeid(A) == typeid(b);
+	}
+
 	template <typename T>
 	inline void appendVector(std::vector<T> &&source, std::vector<T> &destination)
 	{

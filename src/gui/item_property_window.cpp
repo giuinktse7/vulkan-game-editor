@@ -265,15 +265,15 @@ void ItemPropertyWindow::refresh()
 bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggableItem)
 {
   VME_LOG_D("Index: " << index);
-  auto draggedItem = ItemDrag::DraggableItem::deserialize(serializedDraggableItem);
-  if (!draggedItem)
+  auto droppedItem = ItemDrag::DraggableItem::deserialize(serializedDraggableItem);
+  if (!droppedItem)
   {
     VME_LOG("[Warning]: Could not read DraggableItem from qml QByteArray.");
     return false;
   }
 
   // Only accept items that can be picked up
-  if (!draggedItem->item()->itemType->hasFlag(AppearanceFlag::Take))
+  if (!droppedItem->item()->itemType->hasFlag(AppearanceFlag::Take))
   {
     return false;
   }
@@ -284,22 +284,24 @@ bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggable
   }
 
   auto &focusedItem = state.focusedAs<FocusedItem>();
-  if (draggedItem->item() == focusedItem.item)
+  if (droppedItem->item() == focusedItem.item)
   {
     VME_LOG_D("Can not add item to itself.");
     return false;
   }
 
-  auto mapItemDrag = dynamic_cast<ItemDrag::MapItem *>(draggedItem.get());
-  if (mapItemDrag)
+  ItemDrag::DraggableItem *droppedItemPtr = droppedItem.get();
+
+  if (util::hasDynamicType<ItemDrag::MapItem *>(droppedItemPtr))
   {
-    if (state.mapView == mapItemDrag->mapView)
+    auto dropped = static_cast<ItemDrag::MapItem *>(droppedItemPtr);
+    if (state.mapView == dropped->mapView)
     {
       auto mapView = state.mapView;
       mapView->history.beginTransaction(TransactionType::MoveItems);
       FocusedItem containerItem = focusedItem;
 
-      mapView->moveToContainer(*mapItemDrag->tile, mapItemDrag->_item, [mapView, containerItem] {
+      mapView->moveToContainer(*dropped->tile, dropped->_item, [mapView, containerItem] {
         Item *item = mapView->getTile(containerItem.position)->itemAt(containerItem.tileIndex);
         return item->getDataAs<ItemData::Container>();
       });
@@ -308,11 +310,18 @@ bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggable
       itemContainerModel->refresh();
     }
   }
+  else if (util::hasDynamicType<ItemDrag::ContainerItemDrag *>(droppedItemPtr))
+  {
+    auto dropped = static_cast<ItemDrag::ContainerItemDrag *>(droppedItemPtr);
+    VME_LOG_D("Received container item drop!");
+  }
   else
   {
     VME_LOG_D("[ItemPropertyWindow::itemDropEvent] What do we do here?");
     return false;
   }
+
+  // auto mapItemDrag2 = static_cast<ItemDrag::MapItem *>(draggedItem.get());
 
   return true;
 
