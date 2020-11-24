@@ -11,6 +11,7 @@
 
 #include "../editor_action.h"
 
+#include "../position.h"
 #include "../qt/enum_conversion.h"
 
 class MainApplication;
@@ -29,6 +30,27 @@ namespace
 
 namespace QtUtil
 {
+  /**
+    * Makes it possible to mix connect syntax like:
+    * QmlBind::connect(countSpinbox, SIGNAL(valueChanged()), [=]{...});
+  */
+  class QmlBind : public QObject
+  {
+    Q_OBJECT
+
+    using F = std::function<void()>;
+
+  public:
+    Q_SLOT void call() { f(); }
+
+    static QMetaObject::Connection connect(QObject *sender, const char *signal, F &&f);
+
+  private:
+    QmlBind(F &&f, QObject *parent = {});
+
+    F f;
+  };
+
   class QtUiUtils : public UIUtils
   {
   public:
@@ -125,4 +147,22 @@ inline QString toQString(T value)
   std::ostringstream s;
   s << value;
   return QString::fromStdString(s.str());
+}
+
+inline QDataStream &operator<<(QDataStream &dataStream, const Position &position)
+{
+  dataStream << position.x;
+  dataStream << position.y;
+  dataStream << position.z;
+
+  return dataStream;
+}
+
+inline QDataStream &operator>>(QDataStream &dataStream, Position &position)
+{
+  dataStream >> position.x;
+  dataStream >> position.y;
+  dataStream >> position.z;
+
+  return dataStream;
 }

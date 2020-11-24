@@ -119,34 +119,6 @@ inline QObject *ItemPropertyWindow::child(const char *name)
   return rootObject()->findChild<QObject *>(name);
 }
 
-/**
- * Makes it possible to mix connect syntax like:
- *   QmlBind::connect(countSpinbox, SIGNAL(valueChanged()), [=]{...});
- */
-class QmlBind : public QObject
-{
-  using F = std::function<void()>;
-  Q_OBJECT
-  F f;
-
-public:
-  Q_SLOT void call() { f(); }
-  static QMetaObject::Connection connect(
-      QObject *sender,
-      const char *signal,
-      F &&f)
-  {
-    if (!sender)
-      return {};
-
-    return QObject::connect(sender, signal, new QmlBind(std::move(f), sender), SLOT(call()));
-  }
-
-private:
-  QmlBind(F &&f, QObject *parent = {}) : QObject(parent),
-                                         f(std::move(f)) {}
-};
-
 // Images
 class ItemTypeImageProvider : public QQuickImageProvider
 {

@@ -40,6 +40,17 @@ namespace
 
 } // namespace
 
+QMetaObject::Connection QtUtil::QmlBind::connect(QObject *sender, const char *signal, F &&f)
+{
+  if (!sender)
+    return {};
+
+  return QObject::connect(sender, signal, new QmlBind(std::move(f), sender), SLOT(call()));
+}
+
+QtUtil::QmlBind::QmlBind(F &&f, QObject *parent)
+    : QObject(parent), f(std::move(f)) {}
+
 ScreenPosition QtUtil::QtUiUtils::mouseScreenPosInView()
 {
   auto pos = window->mapFromGlobal(QCursor::pos());
