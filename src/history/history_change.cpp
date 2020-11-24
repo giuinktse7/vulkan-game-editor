@@ -117,42 +117,38 @@ namespace MapHistory
     delete currentTile;
   }
 
-  MoveToContainer::MoveToContainer(Tile &&tile, Item *item, ContainerItem &container)
-      : SetTile(std::move(tile)), data(PreFirstCommitData{item}), container(container) {}
+  MoveToContainer::MoveToContainer(const Tile &tile, Item *item, std::function<ItemData::Container *()> getContainer)
+      : fromPosition(tile.position()), data(PreFirstCommitData{item}), getContainer(getContainer) {}
 
   void MoveToContainer::commit(MapView &mapView)
   {
+    auto container = getContainer();
+    Tile *tile = mapView.getTile(fromPosition);
+    DEBUG_ASSERT(tile != nullptr, "Tile should never be nullptr here.");
+
     if (std::holds_alternative<PreFirstCommitData>(data))
     {
-      auto i = tile.indexOf(std::get<PreFirstCommitData>(data).item);
+      auto i = tile->indexOf(std::get<PreFirstCommitData>(data).item);
       DEBUG_ASSERT(i, "Should never be empty.");
 
       Data newData;
       newData.tileIndex = i.value();
-      newData.containerIndex = container.containerSize();
+      newData.containerIndex = container->size();
 
       data = newData;
     }
 
-    Tile oldTile = tile.deepCopy();
-
-    container.addItem(tile.dropItem(std::get<Data>(data).tileIndex));
-
-    tile = std::move(oldTile);
+    container->addItem(tile->dropItem(std::get<Data>(data).tileIndex));
+    updateSelection(mapView, tile->position());
   }
 
   void MoveToContainer::undo(MapView &mapView)
   {
+    Tile *tile = mapView.getTile(fromPosition);
     Data &moveData = std::get<Data>(data);
 
-    container.removeItem(moveData.containerIndex);
-    std::unique_ptr<Tile> currentTilePointer = setMapTile(mapView, std::move(tile));
-    Tile *currentTile = currentTilePointer.release();
-
-    tile = std::move(*currentTile);
-
-    // Memory no longer handled by the unique ptr, must delete
-    delete currentTile;
+    tile->insertItem(getContainer()->dropItem(moveData.containerIndex), moveData.tileIndex);
+    updateSelection(mapView, tile->position());
   }
 
   RemoveTile::RemoveTile(Position pos) : data(pos) {}

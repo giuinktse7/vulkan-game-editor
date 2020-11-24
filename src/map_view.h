@@ -101,6 +101,7 @@ public:
 	void zoom(int delta);
 
 	void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
+	void moveToContainer(Tile &tile, Item *item, std::function<ItemData::Container *()> getContainer);
 	void moveSelection(const Position &offset);
 
 	void addItem(const Position &position, uint16_t id);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <optional>
 #include <variant>
 
@@ -66,16 +67,17 @@ namespace MapHistory
     Tile tile;
   };
 
-  class MoveToContainer : public SetTile
+  class MoveToContainer : public ChangeItem
   {
-    MoveToContainer(Tile &&tile, Item *item, ContainerItem &container);
+  public:
+    MoveToContainer(const Tile &tile, Item *item, std::function<ItemData::Container *()> getContainer);
     void commit(MapView &mapView) override;
     void undo(MapView &mapView) override;
 
   private:
-    ContainerItem container;
+    Position fromPosition;
+    std::function<ItemData::Container *()> getContainer;
 
-    // Data before the first commit
     struct PreFirstCommitData
     {
       Item *item;
@@ -246,7 +248,7 @@ namespace MapHistory
   class Change
   {
   public:
-    using DataTypes = std::variant<std::monostate, SetTile, RemoveTile, Select, Deselect, SelectMultiple, std::unique_ptr<ChangeItem>>;
+    using DataTypes = std::variant<std::monostate, SetTile, RemoveTile, Select, Deselect, SelectMultiple, MoveToContainer, std::unique_ptr<ChangeItem>>;
 
     Change(DataTypes data = {}) : data(std::move(data)) {}
 
