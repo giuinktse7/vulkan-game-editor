@@ -1,1 +1,1 @@
-cmake --build ./build && ./build/test/Debug/common_tests.exe
+cmake --build ./build && ./build/test/Debug/vme_tests.exe

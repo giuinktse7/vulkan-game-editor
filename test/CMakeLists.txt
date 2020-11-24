@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 
-add_executable(common_tests main.cpp position_test.cpp map_view_test.cpp
-                            item_test.cpp vulkan_window_test.cpp)
+add_executable(vme_tests main.cpp position_test.cpp map_view_test.cpp
+                         item_test.cpp vulkan_window_test.cpp)
 
 find_package(Catch2 CONFIG REQUIRED)
-target_link_libraries(common_tests PUBLIC Catch2::Catch2)
+target_link_libraries(vme_tests PUBLIC Catch2::Catch2)
 
-target_link_libraries(common_tests PRIVATE common gui)
+target_link_libraries(vme_tests PRIVATE common gui)
 
-add_test(tests common_tests)
+add_test(tests vme_tests)
