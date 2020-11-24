@@ -48,6 +48,8 @@ public:
 
   bool vulkanWindowEvent(QEvent *event);
 
+  MapView *currentMapView() const noexcept;
+
 protected:
   void mousePressEvent(QMouseEvent *event) override;
   bool event(QEvent *event) override;
@@ -68,14 +70,13 @@ private:
 
   QVulkanInstance *vulkanInstance;
 
-  MapView *currentMapView() const noexcept;
-
   uint32_t nextUntitledId();
 
   void keyPressEvent(QKeyEvent *event) override;
 
   void mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos);
   void mapViewSelectionChangedEvent(MapView &mapView);
+  void mapViewUndoRedoEvent(MapView &mapView);
   void mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport);
   void mapTabCloseEvent(int index, QVariant data);
   void mapTabChangedEvent(int index);

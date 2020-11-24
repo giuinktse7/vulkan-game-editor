@@ -171,6 +171,16 @@ void Tile::moveSelected(Tile &other)
   }
 }
 
+Item *Tile::itemAt(size_t index)
+{
+  return index >= _items.size() ? nullptr : &_items.at(index);
+}
+
+void Tile::insertItem(Item &&item, size_t index)
+{
+  _items.emplace(_items.begin() + index, std::move(item));
+}
+
 void Tile::addItem(Item &&item)
 {
   if (item.isGround())
@@ -472,6 +482,7 @@ const Item *Tile::firstSelectedItem() const
 {
   if (_ground && _ground->selected)
     return ground();
+
   for (auto &item : _items)
   {
     if (item.selected)

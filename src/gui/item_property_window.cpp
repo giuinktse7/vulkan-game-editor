@@ -5,7 +5,9 @@
 #include <QQmlProperty>
 #include <QWidget>
 
-#include "vulkan_window.h"
+#include "../../vendor/rollbear-visit/visit.hpp"
+#include "draggable_item.h"
+#include "mainwindow.h"
 
 namespace ObjectName
 {
@@ -24,8 +26,8 @@ bool PropertyWindowEventFilter::eventFilter(QObject *obj, QEvent *event)
   // return QObject::eventFilter(obj, event);
 }
 
-ItemPropertyWindow::ItemPropertyWindow(QUrl url)
-    : _url(url)
+ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
+    : _url(url), mainWindow(mainWindow)
 {
   installEventFilter(new PropertyWindowEventFilter(this));
   itemContainerModel = new GuiItemContainer::ItemModel();
@@ -43,21 +45,63 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url)
   engine()->rootContext()->setContextProperty("applicationContext", applicationContext);
 }
 
-void ItemPropertyWindow::setItem(Item &item)
+void ItemPropertyWindow::setMapView(MapView &mapView)
 {
+  state.mapView = &mapView;
+}
+
+void ItemPropertyWindow::resetMapView()
+{
+  state.mapView = nullptr;
+}
+
+void ItemPropertyWindow::focusGround(Position &position, MapView &mapView)
+{
+  setMapView(mapView);
+
+  setContainerVisible(false);
+  itemContainerModel->reset();
+
+  setCount(1);
+
+  FocusedGround ground;
+  ground.position = position;
+  ground.ground = mapView.getTile(position)->ground();
+
+  DEBUG_ASSERT(ground.ground != nullptr, "Can not focus nullptr ground.");
+
+  state.focusedItem = ground;
+}
+
+void ItemPropertyWindow::focusItem(Item &item, Position &position, MapView &mapView)
+{
+  if (item.isGround())
+  {
+    focusGround(position, mapView);
+    return;
+  }
+
+  setMapView(mapView);
+
+  FocusedItem focusedItem;
+
+  auto index = mapView.getTile(position)->indexOf(&item);
+
+  DEBUG_ASSERT(index.has_value(), "The tile did not have the item.");
+
   bool isContainer = item.isContainer();
   if (isContainer)
   {
-    auto container = ContainerItem::wrap(item);
-    if (container->empty())
+    auto container = ContainerItem::wrap(item).value();
+    if (container.empty())
     {
       std::vector<uint32_t> serverIds{{1987, 2148, 5710, 2673, 2463, 2649}};
 
       for (const auto id : serverIds)
-        container->addItem(Item(id));
+        container.addItem(Item(id));
     }
 
-    itemContainerModel->setContainer(std::move(container.value()));
+    itemContainerModel->setContainer(container);
   }
   else
   {
@@ -66,15 +110,22 @@ void ItemPropertyWindow::setItem(Item &item)
 
   setContainerVisible(isContainer);
   setCount(item.count());
-  currentItem = &item;
+
+  focusedItem.item = &item;
+  focusedItem.tileIndex = index.value();
+  focusedItem.position = position;
+
+  state.focusedItem = focusedItem;
 }
 
-void ItemPropertyWindow::resetItem()
+void ItemPropertyWindow::resetFocus()
 {
   itemContainerModel->reset();
   setContainerVisible(false);
   setCount(1);
-  currentItem = nullptr;
+  state.focusedItem = std::monostate{};
+
+  resetMapView();
 }
 
 void ItemPropertyWindow::setCount(uint8_t count)
@@ -122,6 +173,17 @@ bool ItemPropertyWindow::testDropEvent(QByteArray serializedMapItem)
   return true;
 }
 
+void GuiItemContainer::ItemModel::refresh()
+{
+  beginResetModel();
+  endResetModel();
+}
+
+void ItemPropertyWindow::refresh()
+{
+  itemContainerModel->refresh();
+}
+
 bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggableItem)
 {
   VME_LOG_D("Index: " << index);
@@ -132,27 +194,69 @@ bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggable
     return false;
   }
 
-  // Can not add an item to its own container
-  if (draggedItem->item() == currentItem)
+  // Only accept items that can be picked up
+  if (!draggedItem->item()->itemType->hasFlag(AppearanceFlag::Take))
+  {
+    return false;
+  }
+
+  if (!state.holds<FocusedItem>())
+  {
+    return false;
+  }
+
+  auto &focusedItem = state.focusedAs<FocusedItem>();
+  if (draggedItem->item() == focusedItem.item)
   {
     VME_LOG_D("Can not add item to itself.");
     return false;
   }
 
-  Item item(draggedItem->copy());
-  VME_LOG_D("[ItemPropertyWindow::itemDropEvent] Adding to container:" << item.name() << ", (" << item.serverId() << ")");
-  return itemContainerModel->addItem(std::move(item));
+  auto mapItemDrag = dynamic_cast<ItemDrag::MapItem *>(draggedItem.get());
+  if (mapItemDrag)
+  {
+    if (state.mapView == mapItemDrag->mapView)
+    {
+      auto mapView = state.mapView;
+      mapView->history.beginTransaction(TransactionType::MoveItems);
+      FocusedItem containerItem = focusedItem;
+
+      mapView->moveToContainer(*mapItemDrag->tile, mapItemDrag->_item, [mapView, containerItem] {
+        Item *item = mapView->getTile(containerItem.position)->itemAt(containerItem.tileIndex);
+        return item->getDataAs<ItemData::Container>();
+      });
+
+      mapView->history.endTransaction(TransactionType::MoveItems);
+      itemContainerModel->refresh();
+    }
+  }
+  else
+  {
+    VME_LOG_D("[ItemPropertyWindow::itemDropEvent] What do we do here?");
+    return false;
+  }
+
+  return true;
+
+  // Item item(draggedItem->copy());
+  // VME_LOG_D("[ItemPropertyWindow::itemDropEvent] Adding to container:" << item.name() << ", (" << item.serverId() << ")");
+  // return itemContainerModel->addItem(std::move(item));
 }
 
 void ItemPropertyWindow::startContainerItemDrag(int index)
 {
   VME_LOG_D("ItemPropertyWindow::startContainerItemDrag");
+
+  // ItemDrag::MapItem mapItem(mapView.get(), tile, item);
+  // dragOperation.emplace(ItemDrag::DragOperation::create(std::move(mapItem), this));
+  // dragOperation->setRenderCondition([this] { return !this->containsMouse(); });
+  // dragOperation->start();
 }
 
 GuiItemContainer::ItemModel::ItemModel(QObject *parent)
     : QAbstractListModel(parent), _container(std::nullopt) {}
 
-void GuiItemContainer::ItemModel::setContainer(ContainerItem &&container)
+void GuiItemContainer::ItemModel::setContainer(ContainerItem container)
 {
   int oldCapacity = capacity();
   VME_LOG_D("GuiItemContainer::ItemModel::setContainer capacity: " << container.containerCapacity());

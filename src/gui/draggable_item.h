@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <variant>
 
 #include <QByteArray>
 #include <QDebug>
@@ -10,12 +11,15 @@
 #include <QPixmap>
 #include <QPoint>
 
+#include "../debug.h"
+
 class QWindow;
 class QObject;
 class QMouseEvent;
 class MapView;
 class Tile;
 class Item;
+struct ContainerItem;
 namespace ItemData
 {
   struct Container;
@@ -23,6 +27,8 @@ namespace ItemData
 
 namespace ItemDrag
 {
+  using DropTarget = std::variant<MapView *, std::function<ContainerItem *()>>;
+
   struct DraggableItem
   {
     enum class Type
@@ -38,6 +44,14 @@ namespace ItemDrag
     virtual QPixmap pixmap() const = 0;
     Item copy() const;
 
+    virtual void accept(DropTarget &dropTarget)
+    {
+      DEBUG_ASSERT(!_accepted, "The DraggableItem has already been accepted.");
+      _accepted = true;
+    }
+
+    bool accepted() const noexcept;
+
     static bool validType(int value);
 
     static std::unique_ptr<DraggableItem> deserialize(QByteArray &array);
@@ -51,6 +65,8 @@ namespace ItemDrag
   private:
     template <typename T, typename std::enable_if<std::is_base_of<DraggableItem, T>::value>::type * = nullptr>
     static std::unique_ptr<DraggableItem> moveToHeap(std::optional<T> value);
+
+    bool _accepted = false;
   };
 
   struct MapItem : DraggableItem
@@ -62,6 +78,8 @@ namespace ItemDrag
     {
       return Type::MapItem;
     }
+
+    void accept(DropTarget &dropTarget) override;
 
     Item *item() const override;
     void remove() override;
@@ -83,13 +101,15 @@ namespace ItemDrag
     QDataStream &serializeInto(QDataStream &dataStream) const override;
   };
 
-  struct ContainerItem : DraggableItem
+  struct ContainerItemDrag : DraggableItem
   {
+    void accept(DropTarget &dropTarget) override;
+
     Item *item() const override;
     void remove() override;
     QPixmap pixmap() const override;
 
-    static std::optional<ContainerItem> fromDataStream(QDataStream &dataStream);
+    static std::optional<ContainerItemDrag> fromDataStream(QDataStream &dataStream);
 
     const Type type() const noexcept override
     {
@@ -197,8 +217,8 @@ inline QDebug operator<<(QDebug &dbg, const ItemDrag::MapItem &mapItem)
 QDataStream &operator<<(QDataStream &, const ItemDrag::MapItem &);
 QDataStream &operator>>(QDataStream &, ItemDrag::MapItem &);
 
-QDataStream &operator<<(QDataStream &, const ItemDrag::ContainerItem &);
-QDataStream &operator>>(QDataStream &, ItemDrag::ContainerItem &);
+QDataStream &operator<<(QDataStream &, const ItemDrag::ContainerItemDrag &);
+QDataStream &operator>>(QDataStream &, ItemDrag::ContainerItemDrag &);
 
 QDataStream &operator<<(QDataStream &, const ItemDrag::DraggableItem &);
 QDataStream &operator>>(QDataStream &, ItemDrag::DraggableItem &);

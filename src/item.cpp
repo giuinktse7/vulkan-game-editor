@@ -257,9 +257,10 @@ bool ItemData::Container::removeItem(size_t index)
 
 bool ItemData::Container::removeItem(Item *item)
 {
-	auto found = std::find_if(_items.begin(),
-														_items.end(),
-														[item](const Item &_item) { return item == &_item; });
+	auto found = std::find_if(
+			_items.begin(),
+			_items.end(),
+			[item](const Item &_item) { return item == &_item; });
 
 	// check that there actually is a 3 in our vector
 	if (found == _items.end())
@@ -268,6 +269,7 @@ bool ItemData::Container::removeItem(Item *item)
 	}
 
 	_items.erase(found);
+	return true;
 }
 
 Item ItemData::Container::dropItem(size_t index)

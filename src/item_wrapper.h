@@ -14,12 +14,13 @@ namespace ItemData
 struct ItemWrapper
 {
   ItemWrapper(Item &item);
-  Item &item;
+  Item *item;
 };
 
 struct ContainerItem : public ItemWrapper
 {
   ContainerItem(const ContainerItem &other) noexcept;
+  // ContainerItem &operator=(ContainerItem &&other) noexcept;
 
   static std::optional<ContainerItem> wrap(Item &item);
 

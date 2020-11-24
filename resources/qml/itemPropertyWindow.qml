@@ -82,49 +82,52 @@ ScrollView {
       // }
       // }
 
-      Rectangle {
-        width : 32
-        height : 32
-        border.color : "red"
-        DropArea {
-          id : itemDropArea
-          property string imageUrl : ""
-          x : 0
-          y : 0
-          width : 32
-          height : 32
+      /* 
+       * Example for accepting a QDropEvent in QML
+       */
+      // Rectangle {
+      // width : 32
+      // height : 32
+      // border.color : "red"
+      // DropArea {
+      //     id : itemDropArea
+      //     property string imageUrl : ""
+      //     x : 0
+      //     y : 0
+      //     width : 32
+      //     height : 32
 
 
-          onEntered : (drag) => {
-            drag.accept();
-          }
+      //     onEntered : (drag) => {
+      //       drag.accept();
+      //     }
 
-          onDropped : function (drop) {
-            const mapItemBuffer = drop.getDataAsArrayBuffer("vulkan-game-editor-mimetype:map-item");
-            const accepted = Context.C_PropertyWindow.testDropEvent(mapItemBuffer);
-            if (accepted) {
-              drop.accept();
+      //     onDropped : function (drop) {
+      //       const mapItemBuffer = drop.getDataAsArrayBuffer("vulkan-game-editor-mimetype:map-item");
+      //       const accepted = Context.C_PropertyWindow.testDropEvent(mapItemBuffer);
+      //       if (accepted) {
+      //         drop.accept();
 
-              const serverId = 1987;
-              imageUrl = serverId != -1 ? "image://itemTypes/" + serverId : "";
-            }
-          }
+      //         const serverId = 1987;
+      //         imageUrl = serverId != -1 ? "image://itemTypes/" + serverId : "";
+      //       }
+      //     }
 
-          Rectangle {
-            anchors.fill : parent
-            border.color : "green"
-            border.width : 2
+      //     Rectangle {
+      //       anchors.fill : parent
+      //       border.color : "green"
+      //       border.width : 2
 
-            visible : parent.containsDrag
-          }
-          Image {
-            visible : itemDropArea.imageUrl != ""
-            anchors.fill : parent
-            anchors.verticalCenter : parent.verticalCenter
-            source : itemDropArea.imageUrl
-          }
-        }
-      }
+      //       visible : parent.containsDrag
+      //     }
+      //     Image {
+      //       visible : itemDropArea.imageUrl != ""
+      //       anchors.fill : parent
+      //       anchors.verticalCenter : parent.verticalCenter
+      //       source : itemDropArea.imageUrl
+      //     }
+      // }
+      // }
 
 
       ColumnLayout {

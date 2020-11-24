@@ -2,7 +2,7 @@
 
 #include "item.h"
 
-ItemWrapper::ItemWrapper(Item &item) : item(item) {}
+ItemWrapper::ItemWrapper(Item &item) : item(&item) {}
 
 ContainerItem::ContainerItem(Item &item) : ItemWrapper(item)
 {
@@ -14,7 +14,13 @@ ContainerItem::ContainerItem(Item &item) : ItemWrapper(item)
 }
 
 ContainerItem::ContainerItem(const ContainerItem &other) noexcept
-    : ItemWrapper(other.item) {}
+    : ItemWrapper(*other.item) {}
+
+// ContainerItem &ContainerItem::operator=(ContainerItem &&other) noexcept
+// {
+//   item = std::move(other.item);
+//   return *this;
+// }
 
 std::optional<ContainerItem> ContainerItem::wrap(Item &item)
 {
@@ -29,7 +35,7 @@ std::optional<ContainerItem> ContainerItem::wrap(Item &item)
 
 ItemData::Container *ContainerItem::container() const
 {
-  return dynamic_cast<ItemData::Container *>(item.data());
+  return dynamic_cast<ItemData::Container *>(item->data());
 }
 
 size_t ContainerItem::containerSize() const
@@ -39,7 +45,7 @@ size_t ContainerItem::containerSize() const
 
 size_t ContainerItem::containerCapacity() const
 {
-  return item.itemType->volume;
+  return item->itemType->volume;
 }
 
 bool ContainerItem::full() const

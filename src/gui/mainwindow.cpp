@@ -115,6 +115,11 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
           this,
           &MainWindow::mapViewSelectionChangedEvent);
 
+  connect(widget,
+          &MapViewWidget::undoRedoEvent,
+          this,
+          &MainWindow::mapViewUndoRedoEvent);
+
   if (map->name().empty())
   {
     uint32_t untitledNameId = nextUntitledId();
@@ -166,19 +171,26 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::mapViewSelectionChangedEvent(MapView &mapView)
 {
   VME_LOG_D("mapViewSelectionChangedEvent");
+
   Item *selectedItem = mapView.singleSelectedItem();
   if (selectedItem)
   {
+    auto position = mapView.singleSelectedTile()->position();
     bool showInPropertyWindow = !(QApplication::keyboardModifiers() & Qt::KeyboardModifier::AltModifier);
     if (showInPropertyWindow)
     {
-      propertyWindow->setItem(*selectedItem);
+      propertyWindow->focusItem(*selectedItem, position, mapView);
     }
   }
   else
   {
-    propertyWindow->resetItem();
+    propertyWindow->resetFocus();
   }
+}
+
+void MainWindow::mapViewUndoRedoEvent(MapView &mapView)
+{
+  propertyWindow->refresh();
 }
 
 void MainWindow::mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos)
@@ -296,7 +308,7 @@ void MainWindow::initializeUI()
   connect(mapTabs, &MapTabWidget::mapTabClosed, this, &MainWindow::mapTabCloseEvent);
   connect(mapTabs, &MapTabWidget::currentChanged, this, &MainWindow::mapTabChangedEvent);
 
-  propertyWindow = new ItemPropertyWindow(QUrl("qrc:/vme/qml/itemPropertyWindow.qml"));
+  propertyWindow = new ItemPropertyWindow(QUrl("qrc:/vme/qml/itemPropertyWindow.qml"), this);
   connect(propertyWindow, &ItemPropertyWindow::countChanged, [this](int count) {
     VME_LOG_D("countChanged");
     MapView &mapView = *currentMapView();

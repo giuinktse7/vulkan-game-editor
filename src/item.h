@@ -76,6 +76,9 @@ public:
 	void setItemData(T &&itemData);
 	inline Item::Data *data() const;
 
+	template <typename T, typename std::enable_if<std::is_base_of<Data, T>::value>::type * = nullptr>
+	inline T *getDataAs() const;
+
 	const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes() const noexcept;
 
 	bool operator==(const Item &rhs) const;
@@ -285,6 +288,12 @@ namespace ItemData
 inline Item::Data *Item::data() const
 {
 	return _itemData.get();
+}
+
+template <typename T, typename std::enable_if<std::is_base_of<Item::Data, T>::value>::type *>
+inline T *Item::getDataAs() const
+{
+	return static_cast<T *>(_itemData.get());
 }
 
 template <typename T, typename std::enable_if<std::is_base_of<ItemWrapper, T>::value>::type *>

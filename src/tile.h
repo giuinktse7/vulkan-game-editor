@@ -44,8 +44,10 @@ public:
 	inline bool hasGround() const noexcept;
 
 	std::optional<size_t> indexOf(Item *item) const;
+	Item *itemAt(size_t index);
 
 	void addItem(Item &&item);
+	void insertItem(Item &&item, size_t index);
 	void removeItem(size_t index);
 	void removeItem(Item *item);
 	void removeItem(std::function<bool(const Item &)> predicate);

@@ -203,11 +203,11 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
     if (accepted)
     {
       // Only remove the item from the map if it was not dropped back onto the map.
-      if (!containsMouse())
-      {
-        const auto &draggedItem = dragOperation->mimeData.draggableItem;
-        draggedItem->remove();
-      }
+      // if (!containsMouse())
+      // {
+      //   const auto &draggedItem = dragOperation->mimeData.draggableItem;
+      //   draggedItem->remove();
+      // }
     }
     else
     {

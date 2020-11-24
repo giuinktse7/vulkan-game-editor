@@ -48,6 +48,7 @@ void MapView::undo()
   if (changed)
   {
     requestDraw();
+    undoRedoPerformed.fire();
   }
 }
 
@@ -57,6 +58,7 @@ void MapView::redo()
   if (changed)
   {
     requestDraw();
+    undoRedoPerformed.fire();
   }
 }
 
@@ -488,6 +490,11 @@ MapRegion MapView::mapRegion() const
 const Tile *MapView::getTile(const Position pos) const
 {
   return _map->getTile(pos);
+}
+
+Tile *MapView::getTile(const Position pos)
+{
+  return const_cast<Tile *>(const_cast<const MapView *>(this)->getTile(pos));
 }
 
 Tile &MapView::getOrCreateTile(const Position pos)

@@ -7,8 +7,18 @@
 #include <QQuickView>
 #include <QUrl>
 
+#include <optional>
+
 #include "../item.h"
+#include "../util.h"
+#include "draggable_item.h"
 #include "qt_util.h"
+
+namespace GuiItemContainer
+{
+  class ItemModel;
+}
+class MainWindow;
 
 class PropertyWindowEventFilter : public QtUtil::EventFilter
 {
@@ -16,11 +26,6 @@ public:
   PropertyWindowEventFilter(QObject *parent) : QtUtil::EventFilter(parent) {}
   bool eventFilter(QObject *obj, QEvent *event) override;
 };
-
-namespace GuiItemContainer
-{
-  class ItemModel;
-}
 
 class QmlApplicationContext : public QObject
 {
@@ -45,7 +50,7 @@ signals:
   void countChanged(int count);
 
 public:
-  ItemPropertyWindow(QUrl url);
+  ItemPropertyWindow(QUrl url, MainWindow *mainWindow);
 
   Q_INVOKABLE bool itemDropEvent(int index, QByteArray serializedMapItem);
   Q_INVOKABLE bool testDropEvent(QByteArray serializedMapItem);
@@ -56,14 +61,16 @@ public:
 
   void reloadSource();
 
-  void setItem(Item &item);
-  void resetItem();
+  void refresh();
+
+  void setMapView(MapView &mapView);
+  void resetMapView();
+
+  void focusItem(Item &item, Position &position, MapView &mapView);
+  void focusGround(Position &position, MapView &mapView);
+  void resetFocus();
 
 private:
-  QUrl _url;
-  GuiItemContainer::ItemModel *itemContainerModel;
-  Item *currentItem;
-
   void setCount(uint8_t count);
   void setContainerVisible(bool visible);
 
@@ -71,6 +78,40 @@ private:
    * Returns a child from QML with objectName : name
    */
   inline QObject *child(const char *name);
+
+  QUrl _url;
+  MainWindow *mainWindow;
+
+  GuiItemContainer::ItemModel *itemContainerModel;
+
+  struct FocusedItem
+  {
+    Position position;
+    Item *item;
+    size_t tileIndex;
+  };
+
+  struct FocusedGround
+  {
+    Position position;
+    Item *ground;
+  };
+
+  struct State
+  {
+    MapView *mapView;
+    std::variant<std::monostate, FocusedItem, FocusedGround> focusedItem;
+
+    template <typename T>
+    bool holds();
+
+    template <typename T>
+    T focusedAs();
+  };
+
+  State state;
+
+  std::optional<ItemDrag::DragOperation> dragOperation;
 };
 
 inline QObject *ItemPropertyWindow::child(const char *name)
@@ -157,9 +198,16 @@ namespace GuiItemContainer
     ItemModel(QObject *parent = 0);
 
     bool addItem(Item &&item);
-    void setContainer(ContainerItem &&container);
+    void setContainer(ContainerItem container);
     void reset();
     int capacity();
+
+    void refresh();
+
+    ContainerItem *containerItem()
+    {
+      return _container ? &_container.value() : nullptr;
+    }
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
@@ -175,3 +223,19 @@ namespace GuiItemContainer
     std::optional<ContainerItem> _container;
   };
 } // namespace GuiItemContainer
+
+template <typename T>
+bool ItemPropertyWindow::State::holds()
+{
+  static_assert(util::is_one_of<T, FocusedItem, FocusedGround>::value, "T must be FocusedItem or FocusedGround");
+
+  return std::holds_alternative<T>(focusedItem);
+}
+
+template <typename T>
+T ItemPropertyWindow::State::focusedAs()
+{
+  static_assert(util::is_one_of<T, FocusedItem, FocusedGround>::value, "T must be FocusedItem or FocusedGround");
+
+  return std::get<T>(focusedItem);
+}

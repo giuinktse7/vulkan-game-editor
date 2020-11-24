@@ -37,12 +37,14 @@ public:
   void viewportChanged(const Camera::Viewport &viewport);
   void mapViewDrawRequested();
   void selectionChanged();
+  void undoRedoPerformed();
 
   MapView *mapView;
 
 signals:
   void viewportChangedEvent(const Camera::Viewport &viewport);
   void selectionChangedEvent(MapView &mapView);
+  void undoRedoEvent(MapView &mapView);
 
 private:
   VulkanWindow *vulkanWindow;

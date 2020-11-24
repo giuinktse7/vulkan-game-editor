@@ -63,6 +63,8 @@ public:
 	void commitTransaction(TransactionType groupType, std::function<void()> f);
 
 	const Tile *getTile(const Position pos) const;
+	Tile *MapView::getTile(const Position pos);
+
 	Tile &getOrCreateTile(const Position pos);
 	void insertTile(Tile &&tile);
 	void removeTile(const Position pos);
@@ -202,6 +204,9 @@ public:
 	template <auto MemberFunction, typename T>
 	void onMapItemDragStart(T *instance);
 
+	template <auto MemberFunction, typename T>
+	void onUndoRedo(T *instance);
+
 	EditorAction &editorAction;
 	MapHistory::History history;
 
@@ -224,6 +229,7 @@ private:
 	Nano::Signal<void(const Camera::Viewport &)> viewportChange;
 	Nano::Signal<void(Tile *tile, Item *item)> mapItemDragStart;
 	Nano::Signal<void()> drawRequest;
+	Nano::Signal<void()> undoRedoPerformed;
 
 	/**
  		*	Keeps track of all MapView instances. This is necessary for QT to
@@ -379,6 +385,12 @@ template <auto MemberFunction, typename T>
 void MapView::onMapItemDragStart(T *instance)
 {
 	mapItemDragStart.connect<MemberFunction>(instance);
+}
+
+template <auto MemberFunction, typename T>
+void MapView::onUndoRedo(T *instance)
+{
+	undoRedoPerformed.connect<MemberFunction>(instance);
 }
 
 VME_ENUM_OPERATORS(MapView::ViewOption)

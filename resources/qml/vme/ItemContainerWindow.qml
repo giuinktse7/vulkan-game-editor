@@ -1,6 +1,8 @@
 import QtQuick.Controls 2.15
 import QtQuick 2.15
 import "./item_container_window" as Components
+import Vme.context 1.0 as Context
+
 
 Rectangle {
   id : itemContainer
@@ -57,6 +59,10 @@ Rectangle {
           Components.ContainerSlotDragDrop {
             onItemDroppedFromMap : function (mapItemBuffer, acceptDropCallback) {
               itemContainer.itemDroppedFromMap(itemSlot.index, mapItemBuffer, acceptDropCallback);
+            }
+
+            onDragStart : {
+              Context.C_PropertyWindow.startContainerItemDrag();
             }
           }
 

@@ -30,15 +30,6 @@
 #include "time_point.h"
 #include "util.h"
 
-class X
-{
-public:
-    static void test()
-    {
-        VME_LOG_D("Hey");
-    }
-};
-
 int main(int argc, char *argv[])
 {
     Random::global().setSeed(123);

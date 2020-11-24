@@ -24,11 +24,11 @@ namespace MapHistory
      */
     bool redo();
 
-    void beginTransaction(TransactionType groupType);
-    void endTransaction(TransactionType groupType);
+    void beginTransaction(TransactionType transactionType);
+    void endTransaction(TransactionType transactionType);
 
     bool hasCurrentTransaction() const;
-    bool hasCurrentTransactionType(TransactionType groupType) const;
+    bool hasCurrentTransactionType(TransactionType transactionType) const;
 
   private:
     std::optional<Transaction> currentTransaction;

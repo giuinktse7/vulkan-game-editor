@@ -2,6 +2,8 @@
 
 #include <QWindow>
 
+#include "../../vendor/rollbear-visit/visit.hpp"
+
 #include "../main.h"
 #include "../qt/logging.h"
 #include "../tile.h"
@@ -223,6 +225,27 @@ ItemDrag::MapItem::MapItem(MapView *mapView, Tile *tile, Item *item)
 {
 }
 
+void ItemDrag::MapItem::accept(ItemDrag::DropTarget &dropTarget)
+{
+  VME_LOG_D("ItemDrag::MapItem::accept ???");
+  // rollbear::visit(
+  //     util::overloaded{
+  //         [this](MapView *mapView) {
+  //           // TODO Move from MapView::endCurrentAction to here
+  //         },
+  //         [this](std::function<ContainerItem *()> &getContainer) {
+  //           mapView->commitTransaction(
+  //               TransactionType::MoveItems,
+  //               [this, getContainer] {
+  //                 mapView->moveToContainer(*tile, _item, getContainer);
+  //               });
+  //         },
+  //         [](const auto &arg) {}},
+  //     dropTarget);
+
+  // DraggableItem::accept(dropTarget);
+}
+
 void ItemDrag::MapItem::remove()
 {
   mapView->removeItem(*tile, _item);
@@ -260,29 +283,35 @@ QDataStream &ItemDrag::MapItem::serializeInto(QDataStream &dataStream) const
   return dataStream << (*this);
 }
 
-QPixmap ItemDrag::ContainerItem::pixmap() const
+QPixmap ItemDrag::ContainerItemDrag::pixmap() const
 {
   return QtUtil::itemPixmap(Position(0, 0, 7), container->itemAt(index));
 }
 
-void ItemDrag::ContainerItem::remove()
+void ItemDrag::ContainerItemDrag::remove()
 {
   container->removeItem(item());
 }
 
-Item *ItemDrag::ContainerItem::item() const
+Item *ItemDrag::ContainerItemDrag::item() const
 {
   return &container->itemAt(index);
 }
 
-QDataStream &ItemDrag::ContainerItem::serializeInto(QDataStream &dataStream) const
+void ItemDrag::ContainerItemDrag::accept(ItemDrag::DropTarget &dropTarget)
+{
+  // TODO
+  DraggableItem::accept(dropTarget);
+}
+
+QDataStream &ItemDrag::ContainerItemDrag::serializeInto(QDataStream &dataStream) const
 {
   return dataStream << (*this);
 }
 
-std::optional<ItemDrag::ContainerItem> ItemDrag::ContainerItem::fromDataStream(QDataStream &dataStream)
+std::optional<ItemDrag::ContainerItemDrag> ItemDrag::ContainerItemDrag::fromDataStream(QDataStream &dataStream)
 {
-  ContainerItem containerItem;
+  ContainerItemDrag containerItem;
   dataStream >> containerItem;
 
   if (containerItem.container == nullptr || containerItem.index >= containerItem.container->size())
@@ -321,6 +350,11 @@ QStringList ItemDrag::MimeData::formats() const
   return QStringList() << mapItemMimeType();
 }
 
+bool ItemDrag::DraggableItem::accepted() const noexcept
+{
+  return _accepted;
+}
+
 QByteArray ItemDrag::DraggableItem::serialize() const
 {
   QByteArray byteArray;
@@ -345,7 +379,7 @@ std::unique_ptr<ItemDrag::DraggableItem> ItemDrag::DraggableItem::deserialize(QB
   case DraggableItem::Type::MapItem:
     return moveToHeap(MapItem::fromDataStream(dataStream));
   case DraggableItem::Type::ContainerItem:
-    return moveToHeap(ContainerItem::fromDataStream(dataStream));
+    return moveToHeap(ContainerItemDrag::fromDataStream(dataStream));
   default:
     return std::unique_ptr<DraggableItem>{};
   }
@@ -374,7 +408,7 @@ QDataStream &operator>>(QDataStream &dataStream, ItemDrag::MapItem &mapItem)
   return dataStream;
 }
 
-QDataStream &operator<<(QDataStream &dataStream, const ItemDrag::ContainerItem &containerItem)
+QDataStream &operator<<(QDataStream &dataStream, const ItemDrag::ContainerItemDrag &containerItem)
 {
   dataStream << util::pointerAddress(containerItem.container);
   dataStream << containerItem.index;
@@ -382,7 +416,7 @@ QDataStream &operator<<(QDataStream &dataStream, const ItemDrag::ContainerItem &
   return dataStream;
 }
 
-QDataStream &operator>>(QDataStream &dataStream, ItemDrag::ContainerItem &containerItem)
+QDataStream &operator>>(QDataStream &dataStream, ItemDrag::ContainerItemDrag &containerItem)
 {
   containerItem.container = QtUtil::readPointer<ItemData::Container *>(dataStream);
   dataStream >> containerItem.index;
