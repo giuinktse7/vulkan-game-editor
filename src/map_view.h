@@ -105,7 +105,9 @@ public:
 	void zoom(int delta);
 
 	void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
-	void moveToContainer(Tile &tile, Item *item, std::function<ItemData::Container *()> getContainer);
+	void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerItemMoveInfo &moveInfo);
+
+	void moveFromContainerToContainer(MapHistory::ContainerItemMoveInfo &from, MapHistory::ContainerItemMoveInfo &to);
 	void moveSelection(const Position &offset);
 
 	void addItem(const Position &position, uint16_t id);

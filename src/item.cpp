@@ -290,6 +290,24 @@ const Item &ItemData::Container::itemAt(size_t index) const
 	return _items.at(index);
 }
 
+std::optional<size_t> ItemData::Container::indexOf(Item *item) const
+{
+	auto found = findItem([item](const Item &_item) { return item == &_item; });
+	if (found != _items.end())
+	{
+		return static_cast<size_t>(found - _items.begin());
+	}
+	else
+	{
+		return std::nullopt;
+	}
+}
+
+const std::vector<Item>::const_iterator ItemData::Container::findItem(std::function<bool(const Item &)> predicate) const
+{
+	return std::find_if(_items.begin(), _items.end(), predicate);
+}
+
 const std::vector<Item> &ItemData::Container::items() const noexcept
 {
 	return _items;

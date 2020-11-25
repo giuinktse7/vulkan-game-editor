@@ -117,12 +117,12 @@ namespace MapHistory
     delete currentTile;
   }
 
-  MoveToContainer::MoveToContainer(const Tile &tile, Item *item, std::function<ItemData::Container *()> getContainer)
-      : fromPosition(tile.position()), data(PreFirstCommitData{item}), getContainer(getContainer) {}
+  MoveFromMapToContainer::MoveFromMapToContainer(Tile &tile, Item *item, ContainerItemMoveInfo &moveInfo)
+      : fromPosition(tile.position()), data(PreFirstCommitData{item}), containerData(moveInfo) {}
 
-  void MoveToContainer::commit(MapView &mapView)
+  void MoveFromMapToContainer::commit(MapView &mapView)
   {
-    auto container = getContainer();
+    auto container = containerData.container(mapView);
     Tile *tile = mapView.getTile(fromPosition);
     DEBUG_ASSERT(tile != nullptr, "Tile should never be nullptr here.");
 
@@ -133,22 +133,48 @@ namespace MapHistory
 
       Data newData;
       newData.tileIndex = i.value();
-      newData.containerIndex = container->size();
 
       data = newData;
     }
 
-    container->addItem(tile->dropItem(std::get<Data>(data).tileIndex));
+    container->insertItem(tile->dropItem(std::get<Data>(data).tileIndex), containerData.containerIndex);
     updateSelection(mapView, tile->position());
   }
 
-  void MoveToContainer::undo(MapView &mapView)
+  void MoveFromMapToContainer::undo(MapView &mapView)
   {
     Tile *tile = mapView.getTile(fromPosition);
     Data &moveData = std::get<Data>(data);
 
-    tile->insertItem(getContainer()->dropItem(moveData.containerIndex), moveData.tileIndex);
+    tile->insertItem(containerData.container(mapView)->dropItem(containerData.containerIndex), moveData.tileIndex);
     updateSelection(mapView, tile->position());
+  }
+
+  MoveFromContainerToContainer::MoveFromContainerToContainer(ContainerItemMoveInfo &from, ContainerItemMoveInfo &to)
+      : from(from), to(to) {}
+
+  ContainerMoveData::ContainerMoveData(ContainerItemMoveInfo &moveInfo)
+      : position(moveInfo.tile->position()),
+        tileIndex(moveInfo.tile->indexOf(moveInfo.item).value()),
+        containerIndex(moveInfo.containerIndex) {}
+
+  ItemData::Container *ContainerMoveData::container(MapView &mapView)
+  {
+    return mapView.getTile(position)->itemAt(tileIndex)->getDataAs<ItemData::Container>();
+  }
+
+  void MoveFromContainerToContainer::commit(MapView &mapView)
+  {
+    to.container(mapView)->insertItem(
+        from.container(mapView)->dropItem(from.containerIndex),
+        to.containerIndex);
+  }
+
+  void MoveFromContainerToContainer::undo(MapView &mapView)
+  {
+    from.container(mapView)->insertItem(
+        to.container(mapView)->dropItem(to.containerIndex),
+        from.containerIndex);
   }
 
   RemoveTile::RemoveTile(Position pos) : data(pos) {}

@@ -276,11 +276,19 @@ void MapView::moveItem(const Tile &fromTile, const Position toPosition, Item *it
   history.commit(std::move(action));
 }
 
-void MapView::moveToContainer(Tile &tile, Item *item, std::function<ItemData::Container *()> getContainer)
+void MapView::moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerItemMoveInfo &moveInfo)
 {
   DEBUG_ASSERT(tile.indexOf(item) != -1, "The tile must contain the item");
 
-  auto move = MoveToContainer(tile, item, getContainer);
+  auto move = MoveFromMapToContainer(tile, item, moveInfo);
+  Action action(ActionType::Move, std::move(move));
+
+  history.commit(std::move(action));
+}
+
+void MapView::moveFromContainerToContainer(MapHistory::ContainerItemMoveInfo &from, MapHistory::ContainerItemMoveInfo &to)
+{
+  auto move = MoveFromContainerToContainer(from, to);
   Action action(ActionType::Move, std::move(move));
 
   history.commit(std::move(action));

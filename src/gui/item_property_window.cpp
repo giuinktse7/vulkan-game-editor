@@ -290,23 +290,28 @@ bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggable
     return false;
   }
 
+  auto mapView = state.mapView;
+
   ItemDrag::DraggableItem *droppedItemPtr = droppedItem.get();
 
   if (util::hasDynamicType<ItemDrag::MapItem *>(droppedItemPtr))
   {
     auto dropped = static_cast<ItemDrag::MapItem *>(droppedItemPtr);
-    if (state.mapView == dropped->mapView)
+    if (mapView == dropped->mapView)
     {
-      auto mapView = state.mapView;
-      mapView->history.beginTransaction(TransactionType::MoveItems);
-      FocusedItem containerItem = focusedItem;
+      auto focusedContainer = focusedItem.item->getDataAs<ItemData::Container>();
 
-      mapView->moveToContainer(*dropped->tile, dropped->_item, [mapView, containerItem] {
-        Item *item = mapView->getTile(containerItem.position)->itemAt(containerItem.tileIndex);
-        return item->getDataAs<ItemData::Container>();
-      });
+      mapView->history.beginTransaction(TransactionType::MoveItems);
+
+      MapHistory::ContainerItemMoveInfo moveInfo;
+      moveInfo.tile = mapView->getTile(focusedItem.position);
+      moveInfo.item = focusedItem.item;
+      moveInfo.containerIndex = std::min<size_t>(static_cast<size_t>(index), focusedContainer->size());
+
+      mapView->moveFromMapToContainer(*dropped->tile, dropped->_item, moveInfo);
 
       mapView->history.endTransaction(TransactionType::MoveItems);
+
       itemContainerModel->refresh();
     }
   }
@@ -314,6 +319,37 @@ bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggable
   {
     auto dropped = static_cast<ItemDrag::ContainerItemDrag *>(droppedItemPtr);
     VME_LOG_D("Received container item drop!");
+
+    /*
+     Position position;
+    ItemData::Container *container;
+    size_t index;
+    */
+
+    // moveFromContainerToContainer
+    auto focusedContainer = focusedItem.item->getDataAs<ItemData::Container>();
+
+    // Dropped on the same container slot that the drag started
+    if (dropped->container() == focusedContainer && index == dropped->containerIndex)
+    {
+      return true;
+    }
+
+    MapHistory::ContainerItemMoveInfo from{};
+    from.tile = mapView->getTile(dropped->position);
+    from.item = dropped->_containerItem;
+    from.containerIndex = dropped->containerIndex;
+
+    MapHistory::ContainerItemMoveInfo to{};
+    to.tile = mapView->getTile(focusedItem.position);
+    to.item = focusedItem.item;
+    to.containerIndex = std::min<size_t>(static_cast<size_t>(index), focusedContainer->size() - 1);
+
+    mapView->history.beginTransaction(TransactionType::MoveItems);
+    mapView->moveFromContainerToContainer(from, to);
+    mapView->history.endTransaction(TransactionType::MoveItems);
+
+    itemContainerModel->refresh();
   }
   else
   {
@@ -321,13 +357,7 @@ bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggable
     return false;
   }
 
-  // auto mapItemDrag2 = static_cast<ItemDrag::MapItem *>(draggedItem.get());
-
   return true;
-
-  // Item item(draggedItem->copy());
-  // VME_LOG_D("[ItemPropertyWindow::itemDropEvent] Adding to container:" << item.name() << ", (" << item.serverId() << ")");
-  // return itemContainerModel->addItem(std::move(item));
 }
 
 void ItemPropertyWindow::startContainerItemDrag(int index)
@@ -338,8 +368,8 @@ void ItemPropertyWindow::startContainerItemDrag(int index)
 
   ItemDrag::ContainerItemDrag itemDrag;
   itemDrag.position = focusedItem.position;
-  itemDrag.container = focusedItem.item->getDataAs<ItemData::Container>();
-  itemDrag.index = index;
+  itemDrag._containerItem = focusedItem.item;
+  itemDrag.containerIndex = index;
 
   dragOperation.emplace(ItemDrag::DragOperation::create(std::move(itemDrag), state.mapView, this));
   dragOperation->setRenderCondition([this] { return !state.mapView->underMouse(); });

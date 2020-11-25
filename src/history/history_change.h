@@ -67,16 +67,46 @@ namespace MapHistory
     Tile tile;
   };
 
-  class MoveToContainer : public ChangeItem
+  struct ContainerItemMoveInfo
+  {
+    Tile *tile;
+    Item *item;
+
+    size_t containerIndex;
+  };
+
+  struct ContainerMoveData
+  {
+    ContainerMoveData(ContainerItemMoveInfo &moveInfo);
+
+    Position position;
+    uint16_t tileIndex;
+    uint16_t containerIndex;
+
+    ItemData::Container *container(MapView &mapView);
+  };
+
+  class MoveFromContainerToContainer : public ChangeItem
   {
   public:
-    MoveToContainer(const Tile &tile, Item *item, std::function<ItemData::Container *()> getContainer);
+    MoveFromContainerToContainer(ContainerItemMoveInfo &from, ContainerItemMoveInfo &to);
+    void commit(MapView &mapView) override;
+    void undo(MapView &mapView) override;
+
+    ContainerMoveData from;
+    ContainerMoveData to;
+  };
+
+  class MoveFromMapToContainer : public ChangeItem
+  {
+  public:
+    MoveFromMapToContainer(Tile &tile, Item *item, ContainerItemMoveInfo &moveInfo);
     void commit(MapView &mapView) override;
     void undo(MapView &mapView) override;
 
   private:
     Position fromPosition;
-    std::function<ItemData::Container *()> getContainer;
+    ContainerMoveData containerData;
 
     struct PreFirstCommitData
     {
@@ -85,7 +115,6 @@ namespace MapHistory
 
     struct Data
     {
-      uint16_t containerIndex;
       uint16_t tileIndex;
     };
 
@@ -248,7 +277,16 @@ namespace MapHistory
   class Change
   {
   public:
-    using DataTypes = std::variant<std::monostate, SetTile, RemoveTile, Select, Deselect, SelectMultiple, MoveToContainer, std::unique_ptr<ChangeItem>>;
+    using DataTypes = std::variant<
+        std::monostate,
+        SetTile,
+        RemoveTile,
+        Select,
+        Deselect,
+        SelectMultiple,
+        MoveFromMapToContainer,
+        MoveFromContainerToContainer,
+        std::unique_ptr<ChangeItem>>;
 
     Change(DataTypes data = {}) : data(std::move(data)) {}
 

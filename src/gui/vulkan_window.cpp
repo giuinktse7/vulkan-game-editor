@@ -207,7 +207,6 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
       // if (!containsMouse())
       // {
       //   const auto &draggedItem = dragOperation->mimeData.draggableItem;
-      //   draggedItem->remove();
       // }
     }
     else

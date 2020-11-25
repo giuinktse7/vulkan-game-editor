@@ -57,8 +57,7 @@ Item {
         dragging = false;
       }
 
-      onPositionChanged : { // console.log(mouseX, mouseY);
-        console.log("Dragging? " + dragging);
+      onPositionChanged : {
         if (pressed && !dragging) {
           const dx = pressOrigin.x - mouseX
           const dy = pressOrigin.y - mouseY

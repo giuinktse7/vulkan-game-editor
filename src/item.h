@@ -272,6 +272,8 @@ namespace ItemData
 
 		Item &itemAt(size_t index);
 
+		std::optional<size_t> indexOf(Item *item) const;
+
 		const Item &itemAt(size_t index) const;
 		const std::vector<Item> &items() const noexcept;
 		size_t size() const noexcept;

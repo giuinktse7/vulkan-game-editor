@@ -40,7 +40,6 @@ namespace ItemDrag
     ~DraggableItem() {}
 
     virtual Item *item() const = 0;
-    virtual void remove() = 0;
     virtual const Type type() const noexcept = 0;
     virtual QPixmap pixmap() const = 0;
     Item copy() const;
@@ -83,7 +82,6 @@ namespace ItemDrag
     void accept(DropTarget &dropTarget) override;
 
     Item *item() const override;
-    void remove() override;
     QPixmap pixmap() const override;
 
     Item moveFromMap();
@@ -107,7 +105,6 @@ namespace ItemDrag
     void accept(DropTarget &dropTarget) override;
 
     Item *item() const override;
-    void remove() override;
     QPixmap pixmap() const override;
 
     static std::optional<ContainerItemDrag> fromDataStream(QDataStream &dataStream);
@@ -118,8 +115,11 @@ namespace ItemDrag
     }
 
     Position position;
-    ItemData::Container *container;
-    size_t index;
+    Item *_containerItem;
+
+    size_t containerIndex;
+
+    ItemData::Container *container() const;
 
   protected:
     QDataStream &serializeInto(QDataStream &dataStream) const override;

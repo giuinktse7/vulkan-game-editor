@@ -254,11 +254,6 @@ void ItemDrag::MapItem::accept(ItemDrag::DropTarget &dropTarget)
   // DraggableItem::accept(dropTarget);
 }
 
-void ItemDrag::MapItem::remove()
-{
-  mapView->removeItem(*tile, _item);
-}
-
 Item ItemDrag::MapItem::moveFromMap()
 {
   return mapView->dropItem(tile, _item);
@@ -291,19 +286,19 @@ QDataStream &ItemDrag::MapItem::serializeInto(QDataStream &dataStream) const
   return dataStream << (*this);
 }
 
-QPixmap ItemDrag::ContainerItemDrag::pixmap() const
+ItemData::Container *ItemDrag::ContainerItemDrag::container() const
 {
-  return QtUtil::itemPixmap(Position(0, 0, 7), container->itemAt(index));
+  return _containerItem->getDataAs<ItemData::Container>();
 }
 
-void ItemDrag::ContainerItemDrag::remove()
+QPixmap ItemDrag::ContainerItemDrag::pixmap() const
 {
-  container->removeItem(item());
+  return QtUtil::itemPixmap(Position(0, 0, 7), container()->itemAt(containerIndex));
 }
 
 Item *ItemDrag::ContainerItemDrag::item() const
 {
-  return &container->itemAt(index);
+  return &container()->itemAt(containerIndex);
 }
 
 void ItemDrag::ContainerItemDrag::accept(ItemDrag::DropTarget &dropTarget)
@@ -322,7 +317,9 @@ std::optional<ItemDrag::ContainerItemDrag> ItemDrag::ContainerItemDrag::fromData
   ContainerItemDrag containerItem;
   dataStream >> containerItem;
 
-  if (containerItem.container == nullptr || containerItem.index >= containerItem.container->size())
+  auto container = containerItem.container();
+
+  if (container == nullptr || containerItem.containerIndex >= container->size())
     return std::nullopt;
 
   return containerItem;
@@ -419,8 +416,8 @@ QDataStream &operator>>(QDataStream &dataStream, ItemDrag::MapItem &mapItem)
 QDataStream &operator<<(QDataStream &dataStream, const ItemDrag::ContainerItemDrag &containerItem)
 {
   dataStream << containerItem.position
-             << util::pointerAddress(containerItem.container)
-             << containerItem.index;
+             << util::pointerAddress(containerItem._containerItem)
+             << containerItem.containerIndex;
 
   return dataStream;
 }
@@ -428,8 +425,8 @@ QDataStream &operator<<(QDataStream &dataStream, const ItemDrag::ContainerItemDr
 QDataStream &operator>>(QDataStream &dataStream, ItemDrag::ContainerItemDrag &containerItem)
 {
   dataStream >> containerItem.position;
-  containerItem.container = QtUtil::readPointer<ItemData::Container *>(dataStream);
-  dataStream >> containerItem.index;
+  containerItem._containerItem = QtUtil::readPointer<Item *>(dataStream);
+  dataStream >> containerItem.containerIndex;
 
   return dataStream;
 }
