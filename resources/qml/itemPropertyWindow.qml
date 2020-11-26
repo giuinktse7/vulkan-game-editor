@@ -10,17 +10,8 @@ ScrollView {
   clip : true
   contentHeight : contents.height
 
-  // Items in a ContainerItem
-  property var containerItems
+  property var containers
 
-  // Rectangle {
-  // x : parent.x
-  // y : parent.y
-  // width : parent.width
-  // height : parent.height
-
-  // border.color : "red"
-  // }
 
   ColumnLayout {
     ColumnLayout {
@@ -30,105 +21,6 @@ ScrollView {
       Layout.margins : 16
 
       Layout.preferredWidth : parent.width
-      // Layout.preferredHeight : childrenRect.height
-
-      // Rectangle {
-      // x : parent.x
-      // y : parent.y
-      // width : parent.width
-      // height : parent.height
-
-      // border.color : "green"
-      // }
-
-      // Rectangle {
-      // Layout.alignment : Qt.AlignTop
-      // Layout.fillHeight : false
-
-      // property int preferredHeight : 40
-
-      // Layout.preferredHeight : preferredHeight
-      // Layout.preferredWidth : 40
-
-
-      // border.color : "green"
-
-      // MouseArea {
-      //     property int oldMouseY
-      //     cursorShape : containsMouse || pressed ? Qt.SizeVerCursor : Qt.ArrowCursor
-      //     preventStealing : true
-
-      //     anchors.left : parent.left
-      //     anchors.right : parent.right
-      //     y : parent.y + parent.height - 5 / 2
-      //     width : parent.width
-      //     height : 5
-      //     hoverEnabled : true
-
-      //     onPressed : {
-      //       applicationContext.setCursor(Qt.SizeVerCursor);
-      //       oldMouseY = mouseY;
-      //     }
-      //     onReleased : {
-      //       applicationContext.resetCursor();
-      //     }
-
-      //     onPositionChanged : {
-      //       if (pressed) {
-      //         const newHeight = Math.max(36, Math.min(parent.height + (mouseY - oldMouseY), 80));
-      //         parent.preferredHeight = newHeight;
-      //       }
-      //     }
-      // }
-      // }
-
-      /* 
-       * Example for accepting a QDropEvent in QML
-       */
-      // Rectangle {
-      // width : 32
-      // height : 32
-      // border.color : "red"
-      // DropArea {
-      //     id : itemDropArea
-      //     property string imageUrl : ""
-      //     x : 0
-      //     y : 0
-      //     width : 32
-      //     height : 32
-
-
-      //     onEntered : (drag) => {
-      //       drag.accept();
-      //     }
-
-      //     onDropped : function (drop) {
-      //       const mapItemBuffer = drop.getDataAsArrayBuffer("vulkan-game-editor-mimetype:map-item");
-      //       const accepted = Context.C_PropertyWindow.testDropEvent(mapItemBuffer);
-      //       if (accepted) {
-      //         drop.accept();
-
-      //         const serverId = 1987;
-      //         imageUrl = serverId != -1 ? "image://itemTypes/" + serverId : "";
-      //       }
-      //     }
-
-      //     Rectangle {
-      //       anchors.fill : parent
-      //       border.color : "green"
-      //       border.width : 2
-
-      //       visible : parent.containsDrag
-      //     }
-      //     Image {
-      //       visible : itemDropArea.imageUrl != ""
-      //       anchors.fill : parent
-      //       anchors.verticalCenter : parent.verticalCenter
-      //       source : itemDropArea.imageUrl
-      //     }
-      // }
-      // }
-
 
       ColumnLayout {
         Layout.alignment : Qt.AlignTop
@@ -251,94 +143,59 @@ ScrollView {
         color : "#b7bcc1"
       }
 
-      ColumnLayout {
-        id : itemContainerArea
-        Layout.alignment : Qt.AlignTop
-        Layout.minimumWidth : itemContainerView.fixedWidth
-        visible : false
-
+      TableView {
+        id : containersView
         objectName : "item_container_area"
-        Layout.bottomMargin : 12
-        spacing : 0
+        model : propertyContainer.containers;
+        readonly property int fixedWidth : 36 * 4
 
-        property bool showContainerItems : true
+        // visible : true
+        visible : model.size > 0
 
-        // Header
-        Rectangle {
-          Layout.fillWidth : true
-          Layout.preferredHeight : 16
-          color : "#3d3e40"
+        Layout.alignment : Qt.AlignTop
 
-          Image {
-            anchors.verticalCenter : parent.verticalCenter
-            width : 12
-            height : 12
-            source : {
-              const serverId = 1987;
-              return serverId != -1 ? "image://itemTypes/" + serverId : "";
-            }
-          }
+        Layout.fillWidth : true
+        Layout.minimumWidth : fixedWidth
+        Layout.maximumWidth : fixedWidth
 
-          Text {
-            x : parent.x + 14
-            anchors.verticalCenter : parent.verticalCenter
-            font {
-              pointSize : 8
-              family : Vme.Constants.labelFontFamily
-              // capitalization : Font.AllUppercase
-            }
-            text : "Contents"
-            color : "#ccc"
-          }
+        width : 100
+        implicitHeight : contentItem.height;
 
-          Rectangle {
-            width : 15
-            height : 15
-            border.color : "#3b3d40"
-            anchors.right : parent.right
-            color : "#18191a"
-            Text {
-              anchors.centerIn : parent
-              font {
-                pointSize : 22
-                family : Vme.Constants.labelFontFamily
-                capitalization : Font.AllUppercase
-              }
 
-              text : "-"
-              color : "#ccc"
+        // contentHeight : childrenRect.height
+
+        clip : true
+        // boundsBehavior : Flickable.OvershootBounds
+        // flow : GridView.LeftToRight
+        focus : true
+
+
+        // Rectangle {
+        //   color : "transparent"
+        //   anchors.fill : parent
+        //   border.color : "red"
+        // }
+
+        delegate : Component {
+          Vme.ItemContainerWindow {
+            id : itemContainerView
+
+            required property var itemModel
+            model : {
+              console.log("itemModel: ", itemModel);
+              return itemModel;
             }
 
-            MouseArea {
-              anchors.fill : parent
-
-              onPressed : {
-                itemContainerArea.showContainerItems = !itemContainerArea.showContainerItems;
-              }
+            onItemDroppedFromMap : function (index, mapItemBuffer, dropCallback) {
+              const accepted = Context.C_PropertyWindow.itemDropEvent(index, mapItemBuffer);
+              dropCallback(accepted);
             }
-          }
-        } // Header
 
-
-        Vme.ItemContainerWindow {
-          id : itemContainerView
-          model : propertyContainer.containerItems
-
-          visible : itemContainerArea.showContainerItems
-
-          Layout.alignment : Qt.AlignTop
-
-          Layout.fillWidth : true
-          Layout.maximumWidth : fixedWidth
-          Layout.minimumWidth : fixedWidth
-          Layout.minimumHeight : 36
-          Layout.preferredHeight : preferredHeight
-
-          onItemDroppedFromMap : function (index, mapItemBuffer, dropCallback) {
-            // console.log(C_PropertyWindow.itemDropEvent);
-            // const accepted = C_PropertyWindow.itemDropEvent(index, mapItemBuffer);
-            const accepted = Context.C_PropertyWindow.itemDropEvent(index, mapItemBuffer);
-            dropCallback(accepted);
+            onUpdateLayout : {
+              containersView.forceLayout();
+              // containersView.model.updateLayout(0);
+              // containersView.forceLayout();
+            }
           }
         }
       }

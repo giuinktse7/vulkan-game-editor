@@ -24,8 +24,6 @@ PropertyWindowEventFilter::PropertyWindowEventFilter(ItemPropertyWindow *parent)
 
 bool PropertyWindowEventFilter::eventFilter(QObject *obj, QEvent *event)
 {
-  // qDebug() << "PropertyWindowEventFilter:" << event;
-  // return false;
   switch (event->type())
   {
   case QEvent::MouseMove:
@@ -36,25 +34,6 @@ bool PropertyWindowEventFilter::eventFilter(QObject *obj, QEvent *event)
       return false;
     }
     break;
-  case QEvent::DragEnter:
-  {
-    VME_LOG_D("Drag enter..");
-    break;
-  }
-  case QEvent::Drop:
-  {
-    auto dropEvent = static_cast<QDropEvent *>(event);
-    qDebug() << "Got drop: " << dropEvent;
-    // auto mouseEvent = QMouseEvent(
-    //     QEvent::MouseButtonRelease,
-    //     dropEvent->posF(),
-    //     Qt::MouseButton::LeftButton,
-    //     dropEvent->mouseButtons(),
-    //     dropEvent->keyboardModifiers());
-
-    // eventFilter(obj, &mouseEvent);
-    break;
-  }
   default:
     break;
   }
@@ -67,9 +46,16 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
 {
   VME_LOG_D("ItemPropertyWindow address: " << this);
   installEventFilter(new PropertyWindowEventFilter(this));
-  itemContainerModel = new GuiItemContainer::ItemModel();
 
-  setInitialProperties({{"containerItems", QVariant::fromValue(itemContainerModel)}});
+  containerModel = std::make_unique<GuiItemContainer::ContainerModel>();
+
+  // itemContainerModels.emplace_back(std::make_unique<GuiItemContainer::ItemModel>());
+
+  QVariantMap properties;
+  properties.insert("containers", QVariant::fromValue(containerModel.get()));
+  // properties.insert("containerItems", QVariant::fromValue(itemContainerModels.front().get()));
+
+  setInitialProperties(properties);
 
   qmlRegisterSingletonInstance("Vme.context", 1, 0, "C_PropertyWindow", this);
 
@@ -104,7 +90,6 @@ void ItemPropertyWindow::mouseMoveEvent(QMouseEvent *event)
 
 void ItemPropertyWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-  VME_LOG_D("Mouse release");
   QQuickView::mouseReleaseEvent(event);
 
   if (dragOperation)
@@ -135,7 +120,8 @@ void ItemPropertyWindow::focusGround(Position &position, MapView &mapView)
   setMapView(mapView);
 
   setContainerVisible(false);
-  itemContainerModel->reset();
+  // containerModel.itemContainerModels.front()->reset();
+  containerModel->clear();
 
   setCount(1);
 
@@ -150,6 +136,8 @@ void ItemPropertyWindow::focusGround(Position &position, MapView &mapView)
 
 void ItemPropertyWindow::focusItem(Item &item, Position &position, MapView &mapView)
 {
+  containerModel->clear();
+
   if (item.isGround())
   {
     focusGround(position, mapView);
@@ -165,6 +153,7 @@ void ItemPropertyWindow::focusItem(Item &item, Position &position, MapView &mapV
   DEBUG_ASSERT(index.has_value(), "The tile did not have the item.");
 
   bool isContainer = item.isContainer();
+
   if (isContainer)
   {
     auto container = ContainerItem::wrap(item).value();
@@ -176,11 +165,18 @@ void ItemPropertyWindow::focusItem(Item &item, Position &position, MapView &mapV
         container.addItem(Item(id));
     }
 
-    itemContainerModel->setContainer(container);
+    // itemContainerModels.front()->setContainer(container);
+    containerModel->addContainerItem(container);
+
+    // TODO Just for debugging. Should be removed
+    if (container.itemAt(0).isContainer())
+    {
+      containerModel->addContainerItem(ContainerItem::wrap(container.itemAt(0)).value());
+    }
   }
   else
   {
-    itemContainerModel->reset();
+    // itemContainerModels.front()->reset();
   }
 
   setContainerVisible(isContainer);
@@ -195,7 +191,8 @@ void ItemPropertyWindow::focusItem(Item &item, Position &position, MapView &mapV
 
 void ItemPropertyWindow::resetFocus()
 {
-  itemContainerModel->reset();
+  // itemContainerModels.front()->reset();
+  containerModel->clear();
   setContainerVisible(false);
   setCount(1);
   state.focusedItem = std::monostate{};
@@ -212,7 +209,14 @@ void ItemPropertyWindow::setCount(uint8_t count)
 void ItemPropertyWindow::setContainerVisible(bool visible)
 {
   auto containerArea = child(ObjectName::ItemContainerArea);
-  containerArea->setProperty("visible", visible);
+  if (containerArea)
+  {
+    containerArea->setProperty("visible", visible);
+  }
+  else
+  {
+    VME_LOG_D("Warning: could not find objectName: " << ObjectName::ItemContainerArea);
+  }
 }
 
 QWidget *ItemPropertyWindow::wrapInWidget(QWidget *parent)
@@ -263,7 +267,8 @@ void GuiItemContainer::ItemModel::refresh()
 
 void ItemPropertyWindow::refresh()
 {
-  itemContainerModel->refresh();
+  // itemContainerModels.front()->refresh();
+  containerModel->refresh(0);
 }
 
 bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggableItem)
@@ -316,7 +321,8 @@ bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggable
 
       mapView->history.endTransaction(TransactionType::MoveItems);
 
-      itemContainerModel->refresh();
+      // itemContainerModels.front()->refresh();
+      containerModel->refresh(0);
     }
   }
   else if (util::hasDynamicType<ItemDrag::ContainerItemDrag *>(droppedItemPtr))
@@ -324,13 +330,6 @@ bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggable
     auto dropped = static_cast<ItemDrag::ContainerItemDrag *>(droppedItemPtr);
     VME_LOG_D("Received container item drop!");
 
-    /*
-     Position position;
-    ItemData::Container *container;
-    size_t index;
-    */
-
-    // moveFromContainerToContainer
     auto focusedContainer = focusedItem.item->getDataAs<ItemData::Container>();
 
     // Dropped on the same container slot that the drag started
@@ -353,7 +352,8 @@ bool ItemPropertyWindow::itemDropEvent(int index, QByteArray serializedDraggable
     mapView->moveFromContainerToContainer(from, to);
     mapView->history.endTransaction(TransactionType::MoveItems);
 
-    itemContainerModel->refresh();
+    // itemContainerModels.front()->refresh();
+    containerModel->refresh(0);
   }
   else
   {
@@ -382,6 +382,12 @@ void ItemPropertyWindow::startContainerItemDrag(int index)
 
 GuiItemContainer::ItemModel::ItemModel(QObject *parent)
     : QAbstractListModel(parent), _container(std::nullopt) {}
+
+GuiItemContainer::ItemModel::ItemModel(ContainerItem containerItem, QObject *parent)
+    : QAbstractListModel(parent), _container(std::nullopt)
+{
+  setContainer(containerItem);
+}
 
 void GuiItemContainer::ItemModel::setContainer(ContainerItem container)
 {
@@ -489,4 +495,79 @@ QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, con
   }
 
   return QtUtil::itemPixmap(serverId);
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>ContainerModel>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>
+
+GuiItemContainer::ContainerModel::ContainerModel(QObject *parent)
+    : QAbstractListModel(parent) {}
+
+void GuiItemContainer::ContainerModel::addContainerItem(ContainerItem containerItem)
+{
+  beginInsertRows(QModelIndex(), itemModels.size(), itemModels.size());
+  itemModels.emplace_back(std::make_unique<ItemModel>(containerItem, this));
+  endInsertRows();
+  emit sizeChanged(size());
+}
+
+void GuiItemContainer::ContainerModel::remove(int index)
+{
+  beginRemoveRows(QModelIndex(), index, index);
+  itemModels.erase(itemModels.begin() + index);
+  endRemoveRows();
+  emit sizeChanged(size());
+}
+
+int GuiItemContainer::ContainerModel::rowCount(const QModelIndex &parent) const
+{
+  return itemModels.size();
+}
+
+int GuiItemContainer::ContainerModel::size()
+{
+  return rowCount();
+}
+
+QVariant GuiItemContainer::ContainerModel::data(const QModelIndex &modelIndex, int role) const
+{
+  auto index = modelIndex.row();
+  if (index < 0 || index >= rowCount())
+    return QVariant();
+
+  if (role == to_underlying(Role::ItemModel))
+  {
+    return QVariant::fromValue(itemModels.at(index).get());
+  }
+
+  return QVariant();
+}
+
+void GuiItemContainer::ContainerModel::clear()
+{
+  if (itemModels.empty())
+    return;
+
+  beginResetModel();
+  itemModels.clear();
+  endResetModel();
+  emit sizeChanged(size());
+}
+
+void GuiItemContainer::ContainerModel::refresh(int index)
+{
+  itemModels.at(index)->refresh();
+  auto modelIndex = createIndex(index, 0);
+  dataChanged(modelIndex, modelIndex);
+}
+
+QHash<int, QByteArray> GuiItemContainer::ContainerModel::roleNames() const
+{
+  QHash<int, QByteArray> roles;
+  roles[to_underlying(Role::ItemModel)] = "itemModel";
+
+  return roles;
 }

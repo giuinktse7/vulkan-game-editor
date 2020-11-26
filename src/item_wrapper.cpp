@@ -82,3 +82,8 @@ const Item &ContainerItem::itemAt(size_t index) const
 {
   return container()->itemAt(index);
 }
+
+Item &ContainerItem::itemAt(size_t index)
+{
+  return container()->itemAt(index);
+}

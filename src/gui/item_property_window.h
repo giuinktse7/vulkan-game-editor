@@ -7,6 +7,7 @@
 #include <QQuickView>
 #include <QUrl>
 
+#include <memory>
 #include <optional>
 
 #include "../item.h"
@@ -16,8 +17,10 @@
 
 namespace GuiItemContainer
 {
+  class ContainerModel;
   class ItemModel;
-}
+} // namespace GuiItemContainer
+
 class MainWindow;
 class ItemPropertyWindow;
 
@@ -96,7 +99,8 @@ private:
   MainWindow *mainWindow;
   QWidget *_wrapperWidget;
 
-  GuiItemContainer::ItemModel *itemContainerModel;
+  // std::vector<std::unique_ptr<GuiItemContainer::ItemModel>> itemContainerModels;
+  std::unique_ptr<GuiItemContainer::ContainerModel> containerModel;
 
   struct FocusedItem
   {
@@ -145,6 +149,40 @@ public:
 
 namespace GuiItemContainer
 {
+  class ContainerModel : public QAbstractListModel
+  {
+    Q_OBJECT
+    Q_PROPERTY(int size READ size NOTIFY sizeChanged)
+
+  public:
+    enum class Role
+    {
+      ItemModel = Qt::UserRole + 1
+    };
+
+    ContainerModel(QObject *parent = 0);
+
+    void clear();
+    void refresh(int index);
+
+    void addContainerItem(ContainerItem containerItem);
+    void remove(int index);
+
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int size();
+
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+
+  signals:
+    void sizeChanged(int size);
+
+  protected:
+    QHash<int, QByteArray> roleNames() const;
+
+  private:
+    std::vector<std::unique_ptr<ItemModel>> itemModels;
+  };
+
   class ItemModel : public QAbstractListModel
   {
     Q_OBJECT
@@ -158,6 +196,7 @@ namespace GuiItemContainer
     };
 
     ItemModel(QObject *parent = 0);
+    ItemModel(ContainerItem containerItem, QObject *parent = 0);
 
     bool addItem(Item &&item);
     void setContainer(ContainerItem container);

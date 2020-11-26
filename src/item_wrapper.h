@@ -34,6 +34,7 @@ struct ContainerItem : public ItemWrapper
   bool removeItem(size_t index);
   bool addItem(Item &&item);
   const Item &itemAt(size_t index) const;
+  Item &itemAt(size_t index);
 
   ItemData::Container *container() const;
 

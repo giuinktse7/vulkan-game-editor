@@ -6,8 +6,10 @@ Item {
   width : 32
   height : 32
 
+  signal dragStart();
+  signal rightClick();
   signal itemDroppedFromMap(var mapItemBuffer, var dropCallback);
-    signal dragStart();
+
 
     DropArea {
       anchors.fill : parent
@@ -38,6 +40,7 @@ Item {
     }
 
     MouseArea {
+      acceptedButtons : Qt.LeftButton | Qt.RightButton
       anchors.fill : parent
       propagateComposedEvents : true
       property point pressOrigin
@@ -46,22 +49,28 @@ Item {
 
 
       onPressed : {
-        console.log("pressed");
-        pressOrigin = Qt.point(mouseX, mouseY);
-        dragging = false;
+        if (mouse.button & Qt.LeftButton) {
+          pressOrigin = Qt.point(mouseX, mouseY);
+          dragging = false;
+          console.log("Press");
+        } else if (mouse.button & Qt.RightButton) {
+          rightClick();
+        }
       }
 
       onReleased : {
-        console.log("released");
         pressOrigin = Qt.point(0, 0);
         dragging = false;
       }
 
       onPositionChanged : {
-        if (pressed && !dragging) {
+        if (
+          (pressedButtons & Qt.LeftButton) && !dragging
+        ) {
           const dx = pressOrigin.x - mouseX
           const dy = pressOrigin.y - mouseY
           if (Math.sqrt(dx * dx + dy * dy) >= dragStartThreshold) {
+            console.log("dragstart");
             root.dragStart();
             dragging = true;
           }

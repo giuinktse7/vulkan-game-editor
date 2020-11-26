@@ -1,158 +1,290 @@
 import QtQuick.Controls 2.15
 import QtQuick 2.15
 import "./item_container_window" as Components
+import "./" as Vme
 import Vme.context 1.0 as Context
 
+Item {
+  id: itemContainer;
 
-Rectangle {
-  id : itemContainer
+  required property var model;
+  required property int index;
 
-  signal itemDroppedFromMap(int index, var mapItemBuffer, var dropCallback)
+  readonly property int headerHeight : 16;
 
-    property var model
+  readonly property int fixedWidth : 36 * 4;
+  readonly property int minHeight : headerHeight + 36;
 
+  property double maxHeight: itemContainerView.cellHeight * Math.ceil(model.capacity / 4) + header.height;
 
-    readonly property int fixedWidth : 36 * 4
-    readonly property int minHeight : 36
-    property int maxHeight : {
-      return itemContainerView.cellHeight * Math.ceil(model.capacity / 4);
+  property double visibleHeight: itemContainerView.cellHeight * Math.ceil(model.capacity / 4) + header.height;
+
+  property int currentHeight: Math.round(gridWrapper.visible ? Math.min(visibleHeight,maxHeight) : header.height);
+
+  property bool showContainerItems: true;
+
+  implicitWidth: fixedWidth;
+  implicitHeight: currentHeight;
+
+  onImplicitHeightChanged: {
+    updateLayout();
+  }
+
+  // Header
+  Rectangle {
+    id: header
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    height: itemContainer.headerHeight
+    color: "#3d3e40"
+
+    Image {
+      anchors.verticalCenter: parent.verticalCenter
+      width: 12
+      height: 12
+      source: {
+        const serverId = 1987
+        return serverId != -1 ? "image://itemTypes/" + serverId : ""
+      }
     }
 
-    // property int maxHeight : itemContainerView.cellHeight * 2
-    property int preferredHeight : maxHeight
+    Text {
+      x: parent.x + 14
+      anchors.verticalCenter: parent.verticalCenter
+      font {
+        pointSize: 8
+        family: Vme.Constants.labelFontFamily
+        // capitalization : Font.AllUppercase
+      }
+      text: "Contents"
+      color: "#ccc"
+    }
 
-    width : fixedWidth
+    Rectangle {
+      width: 15
+      height: 15
+      border.color: "#3b3d40"
+      anchors.right: parent.right
+      color: "#18191a"
+      Text {
+        anchors.centerIn: parent
+        font {
+          pointSize: 22
+          family: Vme.Constants.labelFontFamily
+          capitalization: Font.AllUppercase
+        }
 
-    color : "#777"
+        text: "-"
+        color: "#ccc"
+      }
 
-    Component {
-      id : itemDelegate
+      MouseArea {
+        anchors.fill: parent
 
-      Rectangle {
-        id : itemSlot
-
-        required property int serverId
-        required property int index
-
-        // width : itemContainerView.cellWidth
-        // height : itemContainerView.cellHeight
-        width : 36
-        height : 36
-
-
-        color : "transparent"
-
-        Rectangle {
-          width : itemContainerView.cellWidth - 4
-          height : itemContainerView.cellHeight - 4
-
-          anchors.centerIn : parent
-          color : "#333"
-
-          Image {
-            anchors.fill : parent
-            source : {
-              return serverId != -1 ? "image://itemTypes/" + serverId : "";
-            }
-          }
-
-          Components.ContainerSlotDragDrop {
-            onItemDroppedFromMap : function (mapItemBuffer, acceptDropCallback) {
-              itemContainer.itemDroppedFromMap(itemSlot.index, mapItemBuffer, acceptDropCallback);
-            }
-
-            onDragStart : {
-              if (itemSlot.index < itemContainer.model.size) {
-                Context.C_PropertyWindow.startContainerItemDrag(itemSlot.index);
-              }
-            }
-          }
-
-          // MouseArea {
-          // anchors.fill : parent
-          // onPressed : {
-          //     console.log("Pressed: " + itemSlot.index);
-          // }
-          // }
+        onPressed: {
+          // itemContainerView.parent.height = 0;
+          itemContainer.showContainerItems = !itemContainer.showContainerItems
         }
       }
-    } // Component: itemDelegate
+    }
+  }
+
+  Component {
+    id: itemDelegate
+
+    Rectangle {
+      id: itemSlot
+
+      required property int serverId
+      required property int index
+
+      // width : itemContainerView.cellWidth
+      // height : itemContainerView.cellHeight
+      width: 36
+      height: 36
+
+      color: "transparent"
+
+      Rectangle {
+        width: itemContainerView.cellWidth - 4
+        height: itemContainerView.cellHeight - 4
+
+        anchors.centerIn: parent
+        color: "#333"
+
+        Image {
+          anchors.fill: parent
+          source: {
+            console.log(itemSlot.serverId);
+            return itemSlot.serverId != -1 ? "image://itemTypes/" + itemSlot.serverId : ""
+          }
+        }
+
+        Components.ContainerSlotDragDrop {
+          onItemDroppedFromMap: function (mapItemBuffer, acceptDropCallback) {
+            itemContainer.itemDroppedFromMap(itemSlot.index, mapItemBuffer,
+                                             acceptDropCallback)
+          }
+
+          onDragStart: {
+            if (itemSlot.index < itemContainer.model.size) {
+              Context.C_PropertyWindow.startContainerItemDrag(itemSlot.index)
+            }
+          }
+
+          onRightClick: {
+            console.log("rclick")
+          }
+        }
+
+      }
+    }
+  } // Component: itemDelegate
+
+  Rectangle {
+    id: gridWrapper
+    color: "#777"
+
+    anchors.top: header.bottom
+    anchors.bottom: parent.bottom
+
+    width: parent.width
+
+    visible: itemContainer.showContainerItems
 
     GridView {
-      id : itemContainerView
-      model: parent.model
+      id: itemContainerView
+      model: itemContainer.model
 
-      anchors.centerIn : parent
+      property int maxRows: model.capacity
 
-      width : parent.width
-      // height : Math.min(parent.height, cellHeight * Math.ceil(model.rowCount() / 4))
-      height : {
-        return Math.min(parent.height, cellHeight * 2);
-      }
-      cellWidth : 36
-      cellHeight : 36
+      anchors.fill: parent
+
+      cellWidth: 36
+      cellHeight: 36
       // contentHeight : 36 * Math.ceil(model.rowCount() / 4)
-      contentHeight : 36 * 2
-      clip : true
+      contentHeight: 36 * 2
+      clip: true
       // boundsBehavior : Flickable.StopAtBounds
-      boundsBehavior : Flickable.OvershootBounds
-      flow : GridView.LeftToRight
-      snapMode : ListView.NoSnap
+      boundsBehavior: Flickable.OvershootBounds
+      flow: GridView.LeftToRight
+      snapMode: ListView.NoSnap
 
-      delegate : itemDelegate
-      focus : true
+      delegate: itemDelegate
+      focus: true
 
-      ScrollBar.vertical : ScrollBar {
-        visible : itemContainerView.height < itemContainerView.contentHeight
-        policy : ScrollBar.AlwaysOn
-        parent : itemContainerView.parent
-        anchors.top : itemContainerView.top
-        anchors.left : itemContainerView.right
-        anchors.bottom : itemContainerView.bottom
+      ScrollBar.vertical: ScrollBar {
+        visible: itemContainer.currentHeight < itemContainer.maxHeight
+        policy: ScrollBar.AlwaysOn
+        parent: itemContainerView.parent
+        anchors.top: itemContainerView.top
+        anchors.left: itemContainerView.right
+        anchors.bottom: itemContainerView.bottom
 
-        contentItem : Rectangle {
-          implicitWidth : 10
-          implicitHeight : 64
-          radius : 0
-          color : parent.pressed ? "#606060" : "#cdcdcd"
+        contentItem: Rectangle {
+          implicitWidth: 10
+          implicitHeight: 64
+          radius: 0
+          color: parent.pressed ? "#606060" : "#cdcdcd"
 
           Behavior on color {
             ColorAnimation {
-              duration : 250
+              duration: 250
             }
           }
         }
       }
+
       // ScrollBar
 
       // Vertical resize
+      // MouseArea {
+      // id : bottomMouseArea
+      // property int oldMouseY
+      // property int startHeight
+      // cursorShape : containsMouse || pressed ? Qt.SizeVerCursor : Qt.ArrowCursor
+      // preventStealing : true
+
+      // y : parent.y + parent.height - 5 / 2;
+
+      // Rectangle {
+      //     anchors.fill : parent
+      //     color : "red";
+      // }
+
+      // width : itemContainer.width
+      // height : 5
+      // hoverEnabled : true
+
+      // onPressed : {
+      //     applicationContext.setCursor(Qt.SizeVerCursor);
+      //     oldMouseY = mouseY;
+      //     startHeight = itemContainer.visibleHeight;
+      // }
+      // onReleased : {
+      //     applicationContext.resetCursor();
+      // }
+
+      // onPositionChanged : {
+      //     if (pressed) {
+      //       const deltaY = (mouseY - oldMouseY);
+      //       const newHeight = Math.max(itemContainer.minHeight, Math.min(startHeight + deltaY, itemContainer.maxHeight));
+      //       itemContainer.visibleHeight = newHeight;
+      //     }
+      // }
+      // }
       MouseArea {
+        id: bottomMouseArea
         property int oldMouseY
-        cursorShape : containsMouse || pressed ? Qt.SizeVerCursor : Qt.ArrowCursor
-        preventStealing : true
+        property int startHeight
+        property bool resizing : false;
+        cursorShape: containsMouse
+                     || pressed ? Qt.SizeVerCursor : Qt.ArrowCursor
+        preventStealing: true
+        propagateComposedEvents: true
 
-        anchors.left : parent.left
-        anchors.right : parent.right
-        y : parent.y + parent.height - 5 / 2
-        width : parent.width
-        height : 5
-        hoverEnabled : true
+        // Rectangle {
+        //   anchors.fill: parent
+        //   color: "red"
+        // }
 
-        onPressed : {
-          applicationContext.setCursor(Qt.SizeVerCursor);
-          oldMouseY = mouseY;
+        anchors.fill: parent
+        hoverEnabled: true
+
+        onPressed: {
+          if ((mouseY > height - 5)) {
+            oldMouseY = mouseY
+            startHeight = itemContainer.visibleHeight
+            resizing = true;
+            applicationContext.setCursor(Qt.SizeVerCursor)
+          } else {
+            mouse.accepted = false;
+          }
         }
-        onReleased : {
-          applicationContext.resetCursor();
+        
+        onReleased: {
+          if (resizing) {
+            applicationContext.resetCursor()
+            resizing = false;
+          }
         }
 
-        onPositionChanged : {
-          if (pressed) {
-            const newHeight = Math.max(itemContainer.minHeight, Math.min(itemContainer.height + (mouseY - oldMouseY), itemContainer.maxHeight));
-            itemContainer.preferredHeight = newHeight;
+        onPositionChanged: {
+          cursorShape = ((mouseY > height - 5) || resizing) ? Qt.SizeVerCursor : Qt.ArrowCursor;
+
+          if (resizing) {
+            const deltaY = (mouseY - oldMouseY)
+            const newHeight = Math.max(itemContainer.minHeight,
+                                       Math.min(startHeight + deltaY,
+                                                itemContainer.maxHeight))
+            itemContainer.visibleHeight = newHeight
           }
         }
       }
-
     } // GridView
-  } // Rectangle
+  }
+
+  signal itemDroppedFromMap(int index, var mapItemBuffer, var dropCallback);
+  signal updateLayout();
+} // Rectangle
