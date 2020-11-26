@@ -181,7 +181,7 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
   mouseState.buttons = event->buttons();
   mapView->mouseMoveEvent(QtUtil::vmeMouseEvent(event));
 
-  // Handle external drag operation
+  // Update drag
   if (dragOperation)
   {
     dragOperation->mouseMoveEvent(event);
@@ -305,11 +305,75 @@ std::optional<ShortcutAction> VulkanWindow::getShortcutAction(QKeyEvent *event) 
   return shortcut != shortcuts.end() ? std::optional<ShortcutAction>(shortcut->second) : std::nullopt;
 }
 
+void VulkanWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+  auto eventMimeData = event->mimeData();
+  if (eventMimeData->hasFormat(ItemDrag::DraggableItemFormat))
+  {
+    DEBUG_ASSERT(util::hasDynamicType<ItemDrag::MimeData *>(eventMimeData), "Incorrect MimeData type.");
+
+    auto mimeData = static_cast<const ItemDrag::MimeData *>(eventMimeData);
+    mapView->overlay().draggedItem = mimeData->draggableItem->item();
+  }
+}
+
+void VulkanWindow::dragMoveEvent(QDragMoveEvent *event)
+{
+  // TODO Only draw when game position changes
+  mapView->requestDraw();
+}
+
+void VulkanWindow::dragLeaveEvent(QDragLeaveEvent *event)
+{
+  mapView->overlay().draggedItem = nullptr;
+}
+
 void VulkanWindow::dropEvent(QDropEvent *event)
 {
-  if (event->mimeData()->hasFormat(ItemDrag::DragOperation::MapItemFormat))
+  auto eventMimeData = event->mimeData();
+  if (!eventMimeData->hasFormat(ItemDrag::DraggableItemFormat))
   {
+    event->ignore();
+    return;
+  }
+
+  DEBUG_ASSERT(util::hasDynamicType<ItemDrag::MimeData *>(eventMimeData), "Incorrect MimeData type.");
+  auto mimeData = static_cast<const ItemDrag::MimeData *>(eventMimeData);
+
+  mapView->overlay().draggedItem = nullptr;
+
+  ItemDropEvent dropEvent{};
+
+  auto droppedItem = mimeData->draggableItem.get();
+
+  if (util::hasDynamicType<ItemDrag::MapItem *>(droppedItem))
+  {
+    VME_LOG_D("dropEvent: MapItem");
     event->accept();
+  }
+  else if (util::hasDynamicType<ItemDrag::ContainerItemDrag *>(droppedItem))
+  {
+    VME_LOG_D("dropEvent: ContainerItemDrag");
+    event->accept();
+    auto containerDrag = static_cast<ItemDrag::ContainerItemDrag *>(droppedItem);
+
+    mapView->history.beginTransaction(TransactionType::MoveItems);
+
+    MapHistory::ContainerItemMoveInfo moveInfo;
+    moveInfo.containerIndex = containerDrag->containerIndex;
+    moveInfo.item = containerDrag->_containerItem;
+    moveInfo.tile = mapView->getTile(containerDrag->position);
+
+    auto &tile = mapView->getOrCreateTile(mapView->mouseGamePos());
+
+    mapView->moveFromContainerToMap(moveInfo, tile);
+
+    mapView->history.endTransaction(TransactionType::MoveItems);
+  }
+  else
+  {
+    event->ignore();
+    return;
   }
 }
 
@@ -322,23 +386,34 @@ bool VulkanWindow::event(QEvent *event)
 
   switch (event->type())
   {
-  case QEvent::Leave:
-    mapView->setUnderMouse(false);
-    break;
-  case QEvent::DragLeave:
-    mapView->setUnderMouse(false);
-    mapView->dragLeaveEvent();
-    break;
   case QEvent::Enter:
     mapView->setUnderMouse(true);
     break;
+
   case QEvent::DragEnter:
+    dragEnterEvent(static_cast<QDragEnterEvent *>(event));
     mapView->setUnderMouse(true);
     mapView->dragEnterEvent();
     break;
+
+  case QEvent::DragMove:
+    dragMoveEvent(static_cast<QDragMoveEvent *>(event));
+    break;
+
+  case QEvent::Leave:
+    mapView->setUnderMouse(false);
+    break;
+
+  case QEvent::DragLeave:
+    dragLeaveEvent(static_cast<QDragLeaveEvent *>(event));
+    mapView->setUnderMouse(false);
+    mapView->dragLeaveEvent();
+    break;
+
   case QEvent::Drop:
     dropEvent(static_cast<QDropEvent *>(event));
     break;
+
   case QEvent::ShortcutOverride:
   {
     QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
@@ -350,6 +425,7 @@ bool VulkanWindow::event(QEvent *event)
     }
     break;
   }
+
   default:
     event->ignore();
     break;

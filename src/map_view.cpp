@@ -286,6 +286,14 @@ void MapView::moveFromMapToContainer(Tile &tile, Item *item, MapHistory::Contain
   history.commit(std::move(action));
 }
 
+void MapView::moveFromContainerToMap(MapHistory::ContainerItemMoveInfo &moveInfo, Tile &tile)
+{
+  auto move = MoveFromContainerToMap(moveInfo, tile);
+  Action action(ActionType::Move, std::move(move));
+
+  history.commit(std::move(action));
+}
+
 void MapView::moveFromContainerToContainer(MapHistory::ContainerItemMoveInfo &from, MapHistory::ContainerItemMoveInfo &to)
 {
   auto move = MoveFromContainerToContainer(from, to);
@@ -909,14 +917,18 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
   requestDraw();
 }
 
+void MapView::itemDropEvent(const ItemDropEvent &event)
+{
+}
+
 void MapView::dragEnterEvent()
 {
-  VME_LOG_D("MapView::dragEnterEvent");
+  // VME_LOG_D("MapView::dragEnterEvent");
 }
 
 void MapView::dragLeaveEvent()
 {
-  VME_LOG_D("MapView::dragLeaveEvent");
+  // VME_LOG_D("MapView::dragLeaveEvent");
 }
 
 void MapView::endCurrentAction(VME::ModifierKeys modifiers)

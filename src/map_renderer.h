@@ -304,6 +304,7 @@ private:
 	void drawCurrentAction();
 	void drawPreviewItem(uint32_t serverId, Position pos);
 	void drawMovingSelection();
+	void drawMapOverlay();
 	void drawRectangle(const Texture &texture, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
 	void drawSolidRectangle(const SolidColor color, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
 

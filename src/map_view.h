@@ -20,13 +20,26 @@
 
 class MapHistory::ChangeItem;
 
+class MapView;
+
+struct ItemDropEvent
+{
+	MapView *mapView;
+};
+
 class MapView : public Nano::Observer<>
 {
+
 public:
 	enum ViewOption
 	{
 		None = 0,
 		ShadeLowerFloors = 1 << 0
+	};
+
+	struct Overlay
+	{
+		Item *draggedItem = nullptr;
 	};
 
 	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action);
@@ -47,6 +60,7 @@ public:
 	void mousePressEvent(VME::MouseEvent event);
 	void mouseMoveEvent(VME::MouseEvent event);
 	void mouseReleaseEvent(VME::MouseEvent event);
+	void itemDropEvent(const ItemDropEvent &event);
 
 	/*
 		Escape the current action (for example when pressing the ESC key)
@@ -105,9 +119,11 @@ public:
 	void zoom(int delta);
 
 	void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
-	void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerItemMoveInfo &moveInfo);
 
+	void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerItemMoveInfo &moveInfo);
+	void moveFromContainerToMap(MapHistory::ContainerItemMoveInfo &moveInfo, Tile &tile);
 	void moveFromContainerToContainer(MapHistory::ContainerItemMoveInfo &from, MapHistory::ContainerItemMoveInfo &to);
+
 	void moveSelection(const Position &offset);
 
 	void addItem(const Position &position, uint16_t id);
@@ -199,6 +215,8 @@ public:
 
 	inline static bool isInstance(MapView *pointer);
 
+	Overlay &overlay() noexcept;
+
 	template <auto MemberFunction, typename T>
 	void onViewportChanged(T *instance);
 
@@ -256,6 +274,8 @@ private:
 	bool canRender = false;
 
 	Position _previousMouseGamePos;
+
+	Overlay _overlay;
 
 	bool _prevUnderMouse = false;
 	bool _underMouse = false;
@@ -325,6 +345,11 @@ inline Position MapView::mouseGamePos() const
 inline WorldPosition MapView::mouseWorldPos() const
 {
 	return mousePos().worldPos(*this);
+}
+
+inline MapView::Overlay &MapView::overlay() noexcept
+{
+	return _overlay;
 }
 
 template <typename T>

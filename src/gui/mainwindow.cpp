@@ -170,7 +170,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::mapViewSelectionChangedEvent(MapView &mapView)
 {
-  VME_LOG_D("mapViewSelectionChangedEvent");
+  // VME_LOG_D("mapViewSelectionChangedEvent");
 
   Item *selectedItem = mapView.singleSelectedItem();
   if (selectedItem)

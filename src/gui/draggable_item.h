@@ -28,7 +28,7 @@ namespace ItemData
 
 namespace ItemDrag
 {
-  using DropTarget = std::variant<MapView *, std::function<ContainerItem *()>>;
+  static constexpr auto DraggableItemFormat = "vulkan-game-editor-mimetype:map-item";
 
   struct DraggableItem
   {
@@ -43,12 +43,6 @@ namespace ItemDrag
     virtual const Type type() const noexcept = 0;
     virtual QPixmap pixmap() const = 0;
     Item copy() const;
-
-    virtual void accept(DropTarget &dropTarget)
-    {
-      DEBUG_ASSERT(!_accepted, "The DraggableItem has already been accepted.");
-      _accepted = true;
-    }
 
     bool accepted() const noexcept;
 
@@ -79,8 +73,6 @@ namespace ItemDrag
       return Type::MapItem;
     }
 
-    void accept(DropTarget &dropTarget) override;
-
     Item *item() const override;
     QPixmap pixmap() const override;
 
@@ -102,8 +94,6 @@ namespace ItemDrag
 
   struct ContainerItemDrag : DraggableItem
   {
-    void accept(DropTarget &dropTarget) override;
-
     Item *item() const override;
     QPixmap pixmap() const override;
 
@@ -141,12 +131,6 @@ namespace ItemDrag
       return result;
     }
 
-    static const QString mapItemMimeType()
-    {
-      static const QString mimeType = "vulkan-game-editor-mimetype:map-item";
-      return mimeType;
-    }
-
     bool hasFormat(const QString &mimeType) const override;
     QStringList formats() const override;
 
@@ -164,8 +148,6 @@ namespace ItemDrag
     using Source = MapView *;
 
   public:
-    static constexpr auto MapItemFormat = "vulkan-game-editor-mimetype:map-item";
-
     DragOperation(DragOperation &&other) noexcept;
     DragOperation &operator=(DragOperation &&other) noexcept;
 

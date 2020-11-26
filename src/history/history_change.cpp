@@ -150,6 +150,21 @@ namespace MapHistory
     updateSelection(mapView, tile->position());
   }
 
+  MoveFromContainerToMap::MoveFromContainerToMap(ContainerItemMoveInfo &moveInfo, Tile &tile)
+      : containerData(moveInfo), toPosition(tile.position()) {}
+
+  void MoveFromContainerToMap::commit(MapView &mapView)
+  {
+    auto item = containerData.container(mapView)->dropItem(containerData.containerIndex);
+    mapView.getTile(toPosition)->addItem(std::move(item));
+  }
+
+  void MoveFromContainerToMap::undo(MapView &mapView)
+  {
+    auto item = mapView.getTile(toPosition)->dropItem(static_cast<size_t>(0));
+    containerData.container(mapView)->insertItem(std::move(item), containerData.containerIndex);
+  }
+
   MoveFromContainerToContainer::MoveFromContainerToContainer(ContainerItemMoveInfo &from, ContainerItemMoveInfo &to)
       : from(from), to(to) {}
 

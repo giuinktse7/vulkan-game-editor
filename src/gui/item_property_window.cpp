@@ -111,6 +111,10 @@ void ItemPropertyWindow::mouseReleaseEvent(QMouseEvent *event)
   {
     bool accepted = dragOperation->sendDropEvent(event);
     VME_LOG_D("Drop accepted? " << accepted);
+    if (accepted)
+    {
+      refresh();
+    }
 
     dragOperation.reset();
   }
@@ -382,12 +386,10 @@ GuiItemContainer::ItemModel::ItemModel(QObject *parent)
 void GuiItemContainer::ItemModel::setContainer(ContainerItem container)
 {
   int oldCapacity = capacity();
-  VME_LOG_D("GuiItemContainer::ItemModel::setContainer capacity: " << container.containerCapacity());
-  // beginInsertRows(QModelIndex(), 0, container.containerCapacity() - 1);
+  // VME_LOG_D("GuiItemContainer::ItemModel::setContainer capacity: " << container.containerCapacity());
   beginResetModel();
   _container.emplace(std::move(container));
   endResetModel();
-  // endInsertRows();
 
   int newCapacity = capacity();
 

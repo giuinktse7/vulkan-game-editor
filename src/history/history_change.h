@@ -121,6 +121,18 @@ namespace MapHistory
     std::variant<PreFirstCommitData, Data> data;
   };
 
+  class MoveFromContainerToMap : public ChangeItem
+  {
+  public:
+    MoveFromContainerToMap(ContainerItemMoveInfo &moveInfo, Tile &tile);
+    void commit(MapView &mapView) override;
+    void undo(MapView &mapView) override;
+
+  private:
+    Position toPosition;
+    ContainerMoveData containerData;
+  };
+
   class RemoveTile : public ChangeItem
   {
   public:
@@ -285,6 +297,7 @@ namespace MapHistory
         Deselect,
         SelectMultiple,
         MoveFromMapToContainer,
+        MoveFromContainerToMap,
         MoveFromContainerToContainer,
         std::unique_ptr<ChangeItem>>;
 

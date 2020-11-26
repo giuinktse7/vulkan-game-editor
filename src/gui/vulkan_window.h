@@ -127,6 +127,10 @@ private:
   void keyPressEvent(QKeyEvent *event) override;
   void keyReleaseEvent(QKeyEvent *event) override;
   void wheelEvent(QWheelEvent *event) override;
+
+  void dragEnterEvent(QDragEnterEvent *event);
+  void dragMoveEvent(QDragMoveEvent *event);
+  void dragLeaveEvent(QDragLeaveEvent *event);
   void dropEvent(QDropEvent *event);
 
   void shortcutPressedEvent(ShortcutAction action, QKeyEvent *event = nullptr);

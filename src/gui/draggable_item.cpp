@@ -136,7 +136,7 @@ bool ItemDrag::DragOperation::sendDropEvent(QMouseEvent *event)
 
 void ItemDrag::DragOperation::setHoveredObject(QObject *object)
 {
-  qDebug() << "setHoveredObject: " << _hoveredObject;
+  // qDebug() << "setHoveredObject: " << _hoveredObject;
 
   _hoveredObject = object;
 }
@@ -158,7 +158,7 @@ ItemDrag::MimeData &ItemDrag::MimeData::operator=(MimeData &&other) noexcept
 QVariant ItemDrag::MimeData::retrieveData(const QString &mimeType, QVariant::Type type) const
 {
   QVariant data;
-  if (mimeType != ItemDrag::DragOperation::MapItemFormat)
+  if (mimeType != ItemDrag::DraggableItemFormat)
   {
     VME_LOG_D("ItemDrag::DragOperation does not accept mimeType: " << mimeType);
     return data;
@@ -233,27 +233,6 @@ ItemDrag::MapItem::MapItem(MapView *mapView, Tile *tile, Item *item)
 {
 }
 
-void ItemDrag::MapItem::accept(ItemDrag::DropTarget &dropTarget)
-{
-  VME_LOG_D("ItemDrag::MapItem::accept ???");
-  // rollbear::visit(
-  //     util::overloaded{
-  //         [this](MapView *mapView) {
-  //           // TODO Move from MapView::endCurrentAction to here
-  //         },
-  //         [this](std::function<ContainerItem *()> &getContainer) {
-  //           mapView->commitTransaction(
-  //               TransactionType::MoveItems,
-  //               [this, getContainer] {
-  //                 mapView->moveToContainer(*tile, _item, getContainer);
-  //               });
-  //         },
-  //         [](const auto &arg) {}},
-  //     dropTarget);
-
-  // DraggableItem::accept(dropTarget);
-}
-
 Item ItemDrag::MapItem::moveFromMap()
 {
   return mapView->dropItem(tile, _item);
@@ -301,12 +280,6 @@ Item *ItemDrag::ContainerItemDrag::item() const
   return &container()->itemAt(containerIndex);
 }
 
-void ItemDrag::ContainerItemDrag::accept(ItemDrag::DropTarget &dropTarget)
-{
-  // TODO
-  DraggableItem::accept(dropTarget);
-}
-
 QDataStream &ItemDrag::ContainerItemDrag::serializeInto(QDataStream &dataStream) const
 {
   return dataStream << (*this);
@@ -331,28 +304,14 @@ ItemDrag::MimeData::MimeData(std::unique_ptr<DraggableItem> &&draggableItem)
   VME_LOG_D("ItemDrag::MimeData::MimeData");
 }
 
-// QDataStream &ItemDrag::DragOperation::MimeData::operator<<(QDataStream &out, const ItemDrag::DragOperation::MimeData::RawData &rawData)
-// {
-//   out << rawData.tile;
-//   out << rawData.item;
-//   return out;
-// }
-
-// QDataStream &ItemDrag::DragOperation::MimeData::operator>>(QDataStream &in, ItemDrag::DragOperation::MimeData::RawData &rawData)
-// {
-// //in >> rawData.tile;
-// //in >> rawData.item;
-//   return in;
-// }
-
 bool ItemDrag::MimeData::hasFormat(const QString &mimeType) const
 {
-  return mimeType == mapItemMimeType();
+  return mimeType == DraggableItemFormat;
 }
 
 QStringList ItemDrag::MimeData::formats() const
 {
-  return QStringList() << mapItemMimeType();
+  return QStringList() << DraggableItemFormat;
 }
 
 bool ItemDrag::DraggableItem::accepted() const noexcept

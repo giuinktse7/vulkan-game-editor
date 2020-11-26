@@ -177,6 +177,7 @@ void MapRenderer::startNextFrame()
 
   drawMap();
   drawCurrentAction();
+  drawMapOverlay();
 
   vulkanInfo.vkCmdEndRenderPass(_currentFrame->commandBuffer);
 
@@ -384,6 +385,23 @@ void MapRenderer::drawMovingSelection()
         drawTile(tileLocation, ItemDrawFlags::DrawSelected, moveDelta);
       }
     }
+  }
+}
+
+void MapRenderer::drawMapOverlay()
+{
+  auto &overlay = mapView->overlay();
+  if (overlay.draggedItem)
+  {
+    auto item = overlay.draggedItem;
+    DrawInfo::Object info{};
+    info.appearance = item->itemType->appearance;
+    info.position = mapView->mouseGamePos();
+    info.color = colors::Default;
+    info.textureInfo = item->itemType->getTextureInfo();
+    info.descriptorSet = objectDescriptorSet(info);
+
+    drawItem(info);
   }
 }
 
