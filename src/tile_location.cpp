@@ -74,16 +74,16 @@ void TileLocation::removeTile()
 
 std::unique_ptr<Tile> TileLocation::dropTile()
 {
-  std::unique_ptr<Tile> result = std::move(_tile);
+  observable_unique_ptr<Tile> result = std::move(_tile);
   _tile.reset();
-  return result;
+  return std::move(result.pointer);
 }
 
 std::unique_ptr<Tile> TileLocation::replaceTile(Tile &&newTile)
 {
   DEBUG_ASSERT(!_tile || (newTile.position() == _tile->position()), "The new tile must have the same position as the old tile.");
 
-  std::unique_ptr<Tile> old = std::move(_tile);
+  std::unique_ptr<Tile> old = _tile.drop();
   _tile = std::make_unique<Tile>(std::move(newTile));
-  return old;
+  return std::move(old);
 }

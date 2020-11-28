@@ -1,6 +1,7 @@
 #pragma once
 
 #include "position.h"
+#include "signal.h"
 #include "tile.h"
 
 class Tile;
@@ -16,8 +17,7 @@ public:
 	TileLocation &operator=(const TileLocation &) = delete;
 
 	TileLocation(TileLocation &&other) noexcept;
-	TileLocation &operator=(TileLocation&& other) noexcept;
-
+	TileLocation &operator=(TileLocation &&other) noexcept;
 
 	std::unique_ptr<Tile> replaceTile(Tile &&tile);
 
@@ -57,6 +57,6 @@ public:
 	}
 
 protected:
-	std::unique_ptr<Tile> _tile{};
+	observable_unique_ptr<Tile> _tile{};
 	Position _position;
 };

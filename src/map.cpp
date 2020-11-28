@@ -101,7 +101,19 @@ MapRegion Map::getRegion(Position from, Position to) const noexcept
 
 Tile &Map::getOrCreateTile(const Position &pos)
 {
-  return getOrCreateTile(pos.x, pos.y, pos.z);
+  DEBUG_ASSERT(root.isRoot(), "Only root nodes can create a tile.");
+  auto &leaf = root.getLeafWithCreate(pos.x, pos.y);
+
+  DEBUG_ASSERT(leaf.isLeaf(), "The node must be a leaf node.");
+
+  auto &location = leaf.getOrCreateTileLocation(pos);
+
+  if (!location.tile())
+  {
+    location.setTile(std::make_unique<Tile>(location));
+  }
+
+  return *location.tile();
 }
 
 std::unique_ptr<Tile> Map::replaceTile(Tile &&tile)
@@ -193,6 +205,17 @@ Tile *Map::getTile(const Position pos) const
   return floor->getTileLocation(pos.x, pos.y).tile();
 }
 
+bool Map::hasTile(const Position pos) const
+{
+  auto leaf = root.getLeafUnsafe(pos.x, pos.y);
+  if (!leaf)
+    return false;
+
+  Floor *floor = leaf->floor(pos.z);
+
+  return floor->getTileLocation(pos.x, pos.y).tile() != nullptr;
+}
+
 Item *Map::getTopItem(const Position pos)
 {
   return const_cast<Item *>(const_cast<const Map *>(this)->getTopItem(pos));
@@ -206,24 +229,6 @@ const Item *Map::getTopItem(const Position pos) const
     return nullptr;
 
   return tile->getTopItem();
-}
-
-Tile &Map::getOrCreateTile(int x, int y, int z)
-{
-  DEBUG_ASSERT(root.isRoot(), "Only root nodes can create a tile.");
-  auto &leaf = root.getLeafWithCreate(x, y);
-
-  DEBUG_ASSERT(leaf.isLeaf(), "The node must be a leaf node.");
-
-  Floor &floor = leaf.getOrCreateFloor(x, y, z);
-  TileLocation &location = floor.getTileLocation(x, y);
-
-  if (!location.tile())
-  {
-    location.setTile(std::make_unique<Tile>(location));
-  }
-
-  return *location.tile();
 }
 
 TileLocation *Map::getTileLocation(const Position &pos) const

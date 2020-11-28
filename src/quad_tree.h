@@ -64,7 +64,9 @@ namespace quadtree
 			void setFloor(size_t index, std::unique_ptr<Floor> &&value);
 
 			std::unique_ptr<Node> &nodePtr(size_t index);
+			std::unique_ptr<Node> &getOrCreateNodePtr(size_t index, NodeType type);
 			std::unique_ptr<Floor> &floorPtr(size_t index);
+			Floor &getOrCreateFloor(const Position &pos);
 
 			Node *node(size_t index) const;
 			Floor *floor(size_t index) const;
@@ -79,14 +81,11 @@ namespace quadtree
 		};
 
 		Node(NodeType nodeType);
-		Node(NodeType nodeType, int level);
 
 		Node(Node &&other) noexcept;
 		Node &operator=(Node &&other) noexcept;
 
 		void clear();
-
-		int level = -1;
 
 		Node(const Node &) = delete;
 		Node &operator=(const Node &) = delete;
@@ -96,11 +95,10 @@ namespace quadtree
 		Node *getLeafUnsafe(int x, int y) const;
 		TileLocation *getTile(int x, int y, int z) const;
 
-		Floor &getOrCreateFloor(Position pos);
-		Floor &getOrCreateFloor(int x, int y, int z);
+		Floor &getOrCreateFloor(const Position &pos);
 		Floor *floor(uint32_t z) const;
 
-		TileLocation &getOrCreateTileLocation(Position pos);
+		TileLocation &getOrCreateTileLocation(const Position &pos);
 
 		inline bool isLeaf() const noexcept;
 		inline bool isRoot() const noexcept;
@@ -111,6 +109,9 @@ namespace quadtree
 	protected:
 		NodeType nodeType = NodeType::Root;
 		Children children;
+
+	private:
+		static constexpr std::array<NodeType, 2> NodeTypeCreationMapping{{NodeType::Leaf, NodeType::Node}};
 	};
 }; // namespace quadtree
 

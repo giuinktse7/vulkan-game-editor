@@ -22,20 +22,12 @@ Node::Node(Node::NodeType nodeType)
   // cout << "Construct node" << endl;
 }
 
-Node::Node(Node::NodeType nodeType, int level)
-    : level(level), nodeType(nodeType), children(nodeType)
-{
-  // cout << "Construct node" << endl;
-}
-
 Node::Node(Node &&other) noexcept
-    : level(std::move(other.level)),
-      nodeType(std::move(other.nodeType)),
+    : nodeType(std::move(other.nodeType)),
       children(std::move(other.children)) {}
 
 Node &Node::operator=(Node &&other) noexcept
 {
-  level = std::move(other.level);
   nodeType = std::move(other.nodeType);
   children = std::move(other.children);
 
@@ -49,33 +41,16 @@ void Node::clear()
   children.reset();
 }
 
-Floor &Node::getOrCreateFloor(Position pos)
-{
-  return getOrCreateFloor(pos.x, pos.y, pos.z);
-}
-
-Floor &Node::getOrCreateFloor(int x, int y, int z)
+Floor &Node::getOrCreateFloor(const Position &pos)
 {
   DEBUG_ASSERT(isLeaf(), "Only leaf nodes can create a floor.");
 
-  if (!children.floor(z))
-  {
-    children.setFloor(z, std::make_unique<Floor>(x, y, z));
-  }
-
-  return *children.floor(z);
+  return children.getOrCreateFloor(pos);
 }
 
-TileLocation &Node::getOrCreateTileLocation(Position pos)
+TileLocation &Node::getOrCreateTileLocation(const Position &pos)
 {
-  DEBUG_ASSERT(isLeaf(), "Only leaf nodes can create a tile location.");
-
-  if (!children.floor(pos.z))
-  {
-    children.setFloor(pos.z, std::make_unique<Floor>(pos.x, pos.y, pos.z));
-  }
-
-  return children.floor(pos.z)->getTileLocation(pos.x, pos.y);
+  return getOrCreateFloor(pos).getTileLocation(pos.x, pos.y);
 }
 
 TileLocation *Node::getTile(int x, int y, int z) const
@@ -126,11 +101,9 @@ Node &Node::getLeafWithCreate(int x, int y)
   uint32_t currentX = x;
   uint32_t currentY = y;
 
-  uint8_t level = QuadTreeDepth;
+  int level = static_cast<int>(QuadTreeDepth);
 
-  Node *leaf = nullptr;
-
-  while (!leaf)
+  while (level >= 0)
   {
     /*  The index is given by the bytes YYXX.
         XX is given by the two MSB in currentX, and YY by the two MSB in currentY.
@@ -138,36 +111,36 @@ Node &Node::getLeafWithCreate(int x, int y)
     uint32_t index = ((currentX & 0xC000) >> 14) | ((currentY & 0xC000) >> 12);
     // cout << "index: " << index << endl;
 
-    std::unique_ptr<Node> &child = node->children.nodePtr(index);
-    if (child)
-    {
-      if (child->isLeaf())
-      {
-        leaf = child.get();
-        break;
-      }
-    }
-    else
-    {
-      if (level == 0)
-      {
-        child = make_unique<Node>(Node::NodeType::Leaf, 0);
-        leaf = child.get();
-        break;
-      }
-      else
-      {
-        child = make_unique<Node>(Node::NodeType::Node, level);
-      }
-    }
-
-    node = child.get();
+    // The NodeTypeCreationMapping array avoids a branch based on the node type
+    NodeType newNodeType = NodeTypeCreationMapping[static_cast<size_t>(level != 0)];
+    node = node->children.getOrCreateNodePtr(index, newNodeType).get();
     currentX <<= 2;
     currentY <<= 2;
     --level;
+    // if (child)
+    // {
+    //   if (child->isLeaf())
+    //   {
+    //     leaf = child.get();
+    //     break;
+    //   }
+    // }
+    // else
+    // {
+    //   if (level == 0)
+    //   {
+    //     child = make_unique<Node>(Node::NodeType::Leaf, 0);
+    //     leaf = child.get();
+    //     break;
+    //   }
+    //   else
+    //   {
+    //     child = make_unique<Node>(Node::NodeType::Node, level);
+    //   }
+    // }
   }
 
-  return *leaf;
+  return *node;
 }
 
 Floor::Floor(int x, int y, int z)
@@ -344,22 +317,34 @@ void Node::Children::setFloor(size_t index, std::unique_ptr<Floor> &&value)
 
 std::unique_ptr<Node> &Node::Children::nodePtr(size_t index)
 {
-  if (index >= Amount || _type == NodeType::Leaf)
-  {
-    ABORT_PROGRAM("Bad union access.");
-  }
+  DEBUG_ASSERT(index < Amount && _type != NodeType::Leaf, "Bad union access.");
 
   return nodes[index];
 }
 
+std::unique_ptr<Node> &Node::Children::getOrCreateNodePtr(size_t index, NodeType type)
+{
+  auto &node = nodes[index];
+  if (!node)
+    node = std::make_unique<Node>(type);
+
+  return node;
+}
+
 std::unique_ptr<Floor> &Node::Children::floorPtr(size_t index)
 {
-  if (index >= Amount || _type != NodeType::Leaf)
-  {
-    ABORT_PROGRAM("Bad union access.");
-  }
+  DEBUG_ASSERT(index < Amount && _type == NodeType::Leaf, "Bad union access.");
 
   return floors[index];
+}
+
+Floor &Node::Children::getOrCreateFloor(const Position &pos)
+{
+  auto &floor = floors[pos.z];
+  if (!floor)
+    floor = std::make_unique<Floor>(pos.x, pos.y, pos.z);
+
+  return *floor;
 }
 
 Node *Node::Children::node(size_t index) const

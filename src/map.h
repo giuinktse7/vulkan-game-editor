@@ -43,11 +43,13 @@ public:
 	MapIterator end() const;
 
 	Tile &getOrCreateTile(const Position &pos);
+	TileLocation &getOrCreateTileLocation(const Position &pos);
 
 	MapRegion getRegion(Position from, Position to) const noexcept;
 
 	TileLocation *getTileLocation(int x, int y, int z) const;
 	TileLocation *getTileLocation(const Position &pos) const;
+	bool hasTile(const Position pos) const;
 	Tile *getTile(const Position pos) const;
 	const Item *getTopItem(const Position pos) const;
 	Item *getTopItem(const Position pos);
@@ -114,9 +116,8 @@ private:
 		was present.
 	*/
 	std::unique_ptr<Tile> replaceTile(Tile &&tile);
+	std::unique_ptr<Tile> setOrReplaceTile(Tile &&tile);
 
-	Tile &getOrCreateTile(int x, int y, int z);
-	TileLocation &getOrCreateTileLocation(const Position &pos);
 	void removeTile(const Position pos);
 
 	void moveSelectedItems(const Position source, const Position destination);
