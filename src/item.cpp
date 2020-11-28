@@ -126,7 +126,12 @@ bool Item::isGround() const noexcept
 
 void Item::setAttribute(ItemAttribute &&attribute)
 {
-	_attributes.emplace(attribute.type(), std::move(attribute));
+	if (!_attributes)
+	{
+		_attributes.emplace();
+	}
+
+	_attributes->emplace(attribute.type(), std::move(attribute));
 }
 
 void Item::setActionId(uint16_t id)
@@ -161,8 +166,13 @@ void Item::setDescription(std::string &&description)
 
 ItemAttribute &Item::getOrCreateAttribute(const ItemAttribute_t attributeType)
 {
-	_attributes.try_emplace(attributeType, attributeType);
-	return _attributes.at(attributeType);
+	if (!_attributes)
+	{
+		_attributes.emplace();
+	}
+
+	_attributes->try_emplace(attributeType, attributeType);
+	return _attributes->at(attributeType);
 }
 
 void Item::registerEntity()

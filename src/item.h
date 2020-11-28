@@ -79,7 +79,7 @@ public:
 	template <typename T, typename std::enable_if<std::is_base_of<Data, T>::value>::type * = nullptr>
 	inline T *getDataAs() const;
 
-	const std::unordered_map<ItemAttribute_t, ItemAttribute> &attributes() const noexcept;
+	const std::unordered_map<ItemAttribute_t, ItemAttribute> *attributes() const noexcept;
 
 	bool operator==(const Item &rhs) const;
 
@@ -100,8 +100,7 @@ private:
 
 	const uint32_t getPatternIndex(const Position &pos) const;
 
-	std::unordered_map<ItemAttribute_t, ItemAttribute> _attributes;
-	std::unique_ptr<Item::Data> _itemData;
+	std::optional<std::unordered_map<ItemAttribute_t, ItemAttribute>> _attributes;
 	// Subtype is either fluid type, count, subtype, or charges.
 	uint8_t _subtype = 1;
 };
@@ -158,7 +157,7 @@ inline void Item::setCharges(uint8_t charges) noexcept
 
 inline bool Item::hasAttributes() const noexcept
 {
-	return _attributes.size() > 0;
+	return _attributes && _attributes->size() > 0;
 }
 
 inline const int Item::getTopOrder() const noexcept
@@ -166,9 +165,9 @@ inline const int Item::getTopOrder() const noexcept
 	return itemType->stackOrderIndex;
 }
 
-inline const std::unordered_map<ItemAttribute_t, ItemAttribute> &Item::attributes() const noexcept
+inline const std::unordered_map<ItemAttribute_t, ItemAttribute> *Item::attributes() const noexcept
 {
-	return _attributes;
+	return &_attributes.value();
 }
 
 inline ItemDataType Item::itemDataType() const

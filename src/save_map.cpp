@@ -213,7 +213,7 @@ void SaveMap::Serializer::serializeItemAttributes(const Item &item)
     if (item.hasAttributes())
     {
       buffer.writeU8(static_cast<uint8_t>(NodeAttribute::AttributeMap));
-      serializeItemAttributeMap(item.attributes());
+      serializeItemAttributeMap(*item.attributes());
     }
   }
 }
