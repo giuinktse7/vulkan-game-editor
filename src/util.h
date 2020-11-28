@@ -269,7 +269,7 @@ namespace util
 namespace vme
 {
 	using MapSize = util::Volume<uint16_t, uint16_t, uint8_t>;
-}
+} // namespace vme
 
 //>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>

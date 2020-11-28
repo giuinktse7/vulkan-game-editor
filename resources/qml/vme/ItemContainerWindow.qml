@@ -7,6 +7,8 @@ import Vme.context 1.0 as Context
 Item {
   id: itemContainer;
 
+  signal updateLayout();
+
   required property var model;
   required property int index;
 
@@ -15,9 +17,12 @@ Item {
   readonly property int fixedWidth : 36 * 4;
   readonly property int minHeight : headerHeight + 36;
 
-  property double maxHeight: itemContainerView.cellHeight * Math.ceil(model.capacity / 4) + header.height;
+  property int capacity : {
+    return model ? model.capacity : 0;
+  }
 
-  property double visibleHeight: itemContainerView.cellHeight * Math.ceil(model.capacity / 4) + header.height;
+  property double maxHeight: itemContainerView.cellHeight * Math.ceil(capacity / 4) + header.height;
+  property double visibleHeight: itemContainerView.cellHeight * Math.ceil(capacity / 4) + header.height;
 
   property int currentHeight: Math.round(gridWrapper.visible ? Math.min(visibleHeight,maxHeight) : header.height);
 
@@ -122,9 +127,12 @@ Item {
         }
 
         Components.ContainerSlotDragDrop {
-          onItemDroppedFromMap: function (mapItemBuffer, acceptDropCallback) {
-            itemContainer.itemDroppedFromMap(itemSlot.index, mapItemBuffer,
-                                             acceptDropCallback)
+          onItemDroppedFromMap: function (mapItemBuffer, dropCallback) {
+            const accepted = itemContainer.model.itemDropEvent(itemSlot.index, mapItemBuffer);
+            dropCallback(accepted);
+
+            // itemContainer.itemDroppedFromMap(itemSlot.index, mapItemBuffer,
+                                            //  acceptDropCallback)
           }
 
           onDragStart: {
@@ -134,7 +142,9 @@ Item {
           }
 
           onRightClick: {
-            console.log("rclick")
+            itemContainer.model.containerItemClicked(itemSlot.index);
+            itemContainer.updateLayout();
+            // Context.C_PropertyWindow.containerItemClicked(itemSlot.index);
           }
         }
 
@@ -157,7 +167,7 @@ Item {
       id: itemContainerView
       model: itemContainer.model
 
-      property int maxRows: model.capacity
+      property int maxRows: itemContainer.capacity
 
       anchors.fill: parent
 
@@ -285,6 +295,4 @@ Item {
     } // GridView
   }
 
-  signal itemDroppedFromMap(int index, var mapItemBuffer, var dropCallback);
-  signal updateLayout();
 } // Rectangle

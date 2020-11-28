@@ -104,12 +104,14 @@ namespace ItemDrag
       return Type::ContainerItem;
     }
 
+    MapView *mapView;
     Position position;
-    Item *_containerItem;
 
-    size_t containerIndex;
+    uint16_t tileIndex;
+    std::vector<uint16_t> containerIndices;
 
     ItemData::Container *container() const;
+    Item &draggedItem() const;
 
   protected:
     QDataStream &serializeInto(QDataStream &dataStream) const override;

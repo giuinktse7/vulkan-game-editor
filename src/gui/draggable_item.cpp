@@ -267,17 +267,31 @@ QDataStream &ItemDrag::MapItem::serializeInto(QDataStream &dataStream) const
 
 ItemData::Container *ItemDrag::ContainerItemDrag::container() const
 {
-  return _containerItem->getDataAs<ItemData::Container>();
+  auto current = mapView->getTile(position)->itemAt(tileIndex);
+  ;
+
+  for (auto it = containerIndices.begin(); it != containerIndices.end() - 1; ++it)
+  {
+    uint16_t index = *it;
+    current = &current->getDataAs<ItemData::Container>()->itemAt(index);
+  }
+
+  return current->getDataAs<ItemData::Container>();
+}
+
+Item &ItemDrag::ContainerItemDrag::draggedItem() const
+{
+  return container()->itemAt(containerIndices.back());
 }
 
 QPixmap ItemDrag::ContainerItemDrag::pixmap() const
 {
-  return QtUtil::itemPixmap(Position(0, 0, 7), container()->itemAt(containerIndex));
+  return QtUtil::itemPixmap(Position(0, 0, 7), draggedItem());
 }
 
 Item *ItemDrag::ContainerItemDrag::item() const
 {
-  return &container()->itemAt(containerIndex);
+  return &draggedItem();
 }
 
 QDataStream &ItemDrag::ContainerItemDrag::serializeInto(QDataStream &dataStream) const
@@ -292,8 +306,7 @@ std::optional<ItemDrag::ContainerItemDrag> ItemDrag::ContainerItemDrag::fromData
 
   auto container = containerItem.container();
 
-  if (container == nullptr || containerItem.containerIndex >= container->size())
-    return std::nullopt;
+  DEBUG_ASSERT(container != nullptr && containerItem.containerIndices.back() < container->size(), "Something is wrong.");
 
   return containerItem;
 }
@@ -374,18 +387,35 @@ QDataStream &operator>>(QDataStream &dataStream, ItemDrag::MapItem &mapItem)
 
 QDataStream &operator<<(QDataStream &dataStream, const ItemDrag::ContainerItemDrag &containerItem)
 {
-  dataStream << containerItem.position
-             << util::pointerAddress(containerItem._containerItem)
-             << containerItem.containerIndex;
+  dataStream << util::pointerAddress(containerItem.mapView)
+             << containerItem.position
+             << containerItem.tileIndex
+             << containerItem.containerIndices.size();
+
+  for (uint16_t index : containerItem.containerIndices)
+  {
+    dataStream << index;
+  }
 
   return dataStream;
 }
 
 QDataStream &operator>>(QDataStream &dataStream, ItemDrag::ContainerItemDrag &containerItem)
 {
+  containerItem.mapView = QtUtil::readPointer<MapView *>(dataStream);
   dataStream >> containerItem.position;
-  containerItem._containerItem = QtUtil::readPointer<Item *>(dataStream);
-  dataStream >> containerItem.containerIndex;
+  dataStream >> containerItem.tileIndex;
+  size_t indicesSize;
+  dataStream >> indicesSize;
+
+  containerItem.containerIndices.reserve(indicesSize);
+
+  for (size_t i = 0; i < indicesSize; ++i)
+  {
+    uint16_t index;
+    dataStream >> index;
+    containerItem.containerIndices.emplace_back(index);
+  }
 
   return dataStream;
 }

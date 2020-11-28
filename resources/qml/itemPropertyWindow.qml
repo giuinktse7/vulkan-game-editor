@@ -181,16 +181,8 @@ ScrollView {
             id : itemContainerView
 
             required property var itemModel
-            model : {
-              console.log("itemModel: ", itemModel);
-              return itemModel;
-            }
-
-            onItemDroppedFromMap : function (index, mapItemBuffer, dropCallback) {
-              const accepted = Context.C_PropertyWindow.itemDropEvent(index, mapItemBuffer);
-              dropCallback(accepted);
-            }
-
+            model : itemModel
+            
             onUpdateLayout : {
               containersView.forceLayout();
               // containersView.model.updateLayout(0);
