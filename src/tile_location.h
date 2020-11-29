@@ -20,6 +20,7 @@ public:
 	TileLocation &operator=(TileLocation &&other) noexcept;
 
 	std::unique_ptr<Tile> replaceTile(Tile &&tile);
+	void swapTile(std::unique_ptr<Tile> &&tile);
 
 	Tile *tile() const;
 	Item *ground() const;
