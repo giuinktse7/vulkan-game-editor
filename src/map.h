@@ -54,6 +54,11 @@ public:
 	const Item *getTopItem(const Position pos) const;
 	Item *getTopItem(const Position pos);
 
+	/*
+		Remove and release ownership of the tile
+	*/
+	std::unique_ptr<Tile> dropTile(const Position pos);
+
 	bool isTileEmpty(const Position pos) const;
 
 	void addItem(const Position position, uint32_t serverId);
@@ -121,10 +126,6 @@ private:
 	void removeTile(const Position pos);
 
 	void moveSelectedItems(const Position source, const Position destination);
-	/*
-		Remove and release ownership of the tile
-	*/
-	std::unique_ptr<Tile> dropTile(const Position pos);
 
 	/*
 		Remove and release ownership of the item

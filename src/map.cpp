@@ -169,18 +169,10 @@ Item Map::dropItem(Tile *tile, Item *item)
 
 std::unique_ptr<Tile> Map::dropTile(const Position pos)
 {
-  auto leaf = root.getLeafUnsafe(pos.x, pos.y);
-  if (leaf)
+  auto location = getTileLocation(pos);
+  if (location && location->hasTile())
   {
-    Floor *floor = leaf->floor(pos.z);
-    if (floor)
-    {
-      auto &loc = floor->getTileLocation(pos.x, pos.y);
-      if (loc.hasTile())
-      {
-        return loc.dropTile();
-      }
-    }
+    return location->dropTile();
   }
 
   return {};
