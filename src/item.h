@@ -11,6 +11,7 @@
 #include "item_wrapper.h"
 #include "items.h"
 #include "position.h"
+#include "signal.h"
 
 class Tile;
 
@@ -30,8 +31,21 @@ class Item : public ecs::OptionalEntity
 public:
 	struct Data
 	{
+		Data() : _item(nullptr) {}
+		Data(Item *item) : _item(item) {}
 		virtual ItemDataType type() const noexcept = 0;
-		virtual std::unique_ptr<Data> copy() const = 0;
+		virtual std::unique_ptr<Item::Data> copy() const = 0;
+
+		Item *item() const noexcept { return _item; }
+
+		virtual void setItem(Item *item)
+		{
+			_item = item;
+		}
+
+	protected:
+		// The item that the data belongs to
+		Item *_item;
 	};
 
 	Item(ItemTypeId serverId);
@@ -72,11 +86,14 @@ public:
 	inline void setCount(uint8_t count) noexcept;
 	inline void setCharges(uint8_t charges) noexcept;
 
-	template <typename T, typename std::enable_if<std::is_base_of<Data, T>::value>::type * = nullptr>
+	ItemData::Container *getOrCreateContainer();
+
+	template <class T>
 	void setItemData(T &&itemData);
+	void setItemData(ItemData::Container &&container);
 	inline Item::Data *data() const;
 
-	template <typename T, typename std::enable_if<std::is_base_of<Data, T>::value>::type * = nullptr>
+	template <typename T, typename std::enable_if<std::is_base_of<Item::Data, T>::value>::type * = nullptr>
 	inline T *getDataAs() const;
 
 	const std::unordered_map<ItemAttribute_t, ItemAttribute> *attributes() const noexcept;
@@ -100,7 +117,8 @@ private:
 
 	const uint32_t getPatternIndex(const Position &pos) const;
 
-	std::optional<std::unordered_map<ItemAttribute_t, ItemAttribute>> _attributes;
+	std::unique_ptr<std::unordered_map<ItemAttribute_t, ItemAttribute>> _attributes;
+	std::unique_ptr<Item::Data> _itemData;
 	// Subtype is either fluid type, count, subtype, or charges.
 	uint8_t _subtype = 1;
 };
@@ -167,7 +185,7 @@ inline const int Item::getTopOrder() const noexcept
 
 inline const std::unordered_map<ItemAttribute_t, ItemAttribute> *Item::attributes() const noexcept
 {
-	return &_attributes.value();
+	return _attributes.get();
 }
 
 inline ItemDataType Item::itemDataType() const
@@ -180,18 +198,30 @@ inline bool Item::operator==(const Item &rhs) const
 	return itemType == rhs.itemType && _attributes == rhs._attributes && _subtype == rhs._subtype;
 }
 
-template <typename T, typename std::enable_if<std::is_base_of<Item::Data, T>::value>::type *>
+template <class T>
 inline void Item::setItemData(T &&itemData)
 {
-	// TODO Maybe weird
+	static_assert(std::is_base_of<Item::Data, T>::value, "Bad type.");
+
 	_itemData = std::make_unique<T>(std::move(itemData));
 }
 
-//>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>
-//>>>>>Properties>>>>
-//>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>
+inline Item::Data *Item::data() const
+{
+	return _itemData.get();
+}
+
+template <typename T, typename std::enable_if<std::is_base_of<Item::Data, T>::value>::type *>
+inline T *Item::getDataAs() const
+{
+	return static_cast<T *>(_itemData.get());
+}
+
+template <typename T, typename std::enable_if<std::is_base_of<ItemWrapper, T>::value>::type *>
+T Item::as()
+{
+	return T(*this);
+}
 
 inline bool Item::isContainer() const noexcept
 {
@@ -250,14 +280,36 @@ namespace ItemData
 
 	struct Container : public Item::Data
 	{
+	public:
+		struct HistoryParent
+		{
+		};
+
+		struct TileParent
+		{
+			Position position;
+			MapView *mapView;
+		};
+
+		using Parent = std::variant<std::monostate, HistoryParent, TileParent, Container *>;
+
+	public:
 		Container(uint16_t capacity) : _capacity(capacity) {}
+		Container(uint16_t capacity, Item *item) : Item::Data(item), _capacity(capacity) {}
+		Container(uint16_t capacity, Item *item, Parent parent) : Item::Data(item), _capacity(capacity) {}
 		Container(uint16_t capacity, const std::vector<Item> &items);
+		~Container();
 
 		Container(Container &&other) noexcept;
 		Container &operator=(Container &&other) noexcept;
 
 		ItemDataType type() const noexcept override;
 		std::unique_ptr<Item::Data> copy() const override;
+		void setItem(Item *item) override
+		{
+			_item = item;
+			_parent = std::monostate{};
+		}
 
 		const std::vector<Item>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
 
@@ -277,28 +329,37 @@ namespace ItemData
 		const std::vector<Item> &items() const noexcept;
 		size_t size() const noexcept;
 		bool isFull() const noexcept;
+		bool empty() const noexcept;
 
 		uint16_t capacity() const noexcept;
 		uint16_t volume() const noexcept;
 
 		std::vector<Item> _items;
+
 		uint16_t _capacity;
+
+		std::vector<Parent> parents()
+		{
+			std::vector<Parent> result{_parent};
+			while (std::holds_alternative<Container *>(result.back()))
+			{
+				result.emplace_back(std::get<Container *>(result.back())->_parent);
+			}
+
+			return result;
+		}
+
+		void setParent(MapView *mapView, Position position)
+		{
+			_parent = TileParent{position, mapView};
+		}
+
+		void setParent(Container *container)
+		{
+			_parent = container;
+		}
+
+	private:
+		Parent _parent;
 	};
 } // namespace ItemData
-
-inline Item::Data *Item::data() const
-{
-	return _itemData.get();
-}
-
-template <typename T, typename std::enable_if<std::is_base_of<Item::Data, T>::value>::type *>
-inline T *Item::getDataAs() const
-{
-	return static_cast<T *>(_itemData.get());
-}
-
-template <typename T, typename std::enable_if<std::is_base_of<ItemWrapper, T>::value>::type *>
-T Item::as()
-{
-	return T(*this);
-}

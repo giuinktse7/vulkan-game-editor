@@ -36,6 +36,11 @@ Item::Item(Item &&other) noexcept
 {
 	// Necessary because the move does not remove the entity id of 'other'
 	other.entityId.reset();
+
+	if (_itemData)
+	{
+		_itemData->setItem(this);
+	}
 }
 
 Item &Item::operator=(Item &&other) noexcept
@@ -49,6 +54,11 @@ Item &Item::operator=(Item &&other) noexcept
 
 	// Necessary because the move does not remove the entity id of 'other'
 	other.entityId.reset();
+
+	if (_itemData)
+	{
+		_itemData->setItem(this);
+	}
 
 	return *this;
 }
@@ -66,11 +76,18 @@ Item::~Item()
 Item Item::deepCopy() const
 {
 	Item item(this->itemType->id);
-	item._attributes = this->_attributes;
+
+	if (_attributes)
+	{
+		auto attributeCopy = *_attributes.get();
+		item._attributes = std::make_unique<std::unordered_map<ItemAttribute_t, ItemAttribute>>(std::move(attributeCopy));
+	}
+
 	item._subtype = this->_subtype;
 	if (_itemData)
 	{
 		item._itemData = _itemData->copy();
+		item._itemData->setItem(nullptr);
 	}
 	item.selected = this->selected;
 
@@ -128,7 +145,7 @@ void Item::setAttribute(ItemAttribute &&attribute)
 {
 	if (!_attributes)
 	{
-		_attributes.emplace();
+		_attributes = std::make_unique<std::unordered_map<ItemAttribute_t, ItemAttribute>>();
 	}
 
 	_attributes->emplace(attribute.type(), std::move(attribute));
@@ -168,11 +185,27 @@ ItemAttribute &Item::getOrCreateAttribute(const ItemAttribute_t attributeType)
 {
 	if (!_attributes)
 	{
-		_attributes.emplace();
+		_attributes = std::make_unique<std::unordered_map<ItemAttribute_t, ItemAttribute>>();
 	}
 
 	_attributes->try_emplace(attributeType, attributeType);
 	return _attributes->at(attributeType);
+}
+
+void Item::setItemData(ItemData::Container &&container)
+{
+	_itemData = std::make_unique<ItemData::Container>(std::move(container));
+}
+
+ItemData::Container *Item::getOrCreateContainer()
+{
+	DEBUG_ASSERT(isContainer(), "Must be container.");
+	if (itemDataType() != ItemDataType::Container)
+	{
+		_itemData = std::make_unique<ItemData::Container>(itemType->volume, this);
+	}
+
+	return getDataAs<ItemData::Container>();
 }
 
 void Item::registerEntity()
@@ -195,6 +228,7 @@ void Item::registerEntity()
 //>>>>>>>>>>>>>>>>>>>>>
 
 ItemData::Container::Container(uint16_t capacity, const std::vector<Item> &items)
+		: _capacity(capacity)
 {
 	DEBUG_ASSERT(capacity >= items.size(), "Too many items.");
 
@@ -205,7 +239,13 @@ ItemData::Container::Container(uint16_t capacity, const std::vector<Item> &items
 }
 
 ItemData::Container::Container(Container &&other) noexcept
-		: _items(std::move(other._items)), _capacity(std::move(other._capacity)) {}
+		: _items(std::move(other._items)), _capacity(std::move(other._capacity))
+{
+}
+
+ItemData::Container::~Container()
+{
+}
 
 ItemData::Container &ItemData::Container::operator=(Container &&other) noexcept
 {
@@ -229,6 +269,11 @@ bool ItemData::Container::isFull() const noexcept
 	return _capacity == _items.size();
 }
 
+bool ItemData::Container::empty() const noexcept
+{
+	return _items.empty();
+}
+
 bool ItemData::Container::insertItem(Item &&item, size_t index)
 {
 	if (isFull())
@@ -243,7 +288,24 @@ bool ItemData::Container::addItem(Item &&item)
 	if (isFull())
 		return false;
 
+	bool isContainer = item.isContainer();
+
 	_items.emplace_back(std::move(item));
+	if (isContainer)
+	{
+		auto &item = _items.back();
+		if (item.itemDataType() != ItemDataType::Container)
+		{
+			item.setItemData(ItemData::Container(item.itemType->volume, &item, this));
+		}
+		else
+		{
+			auto container = item.getDataAs<ItemData::Container>();
+			container->setItem(&item);
+			container->setParent(this);
+		}
+	}
+
 	return true;
 }
 
