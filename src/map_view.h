@@ -122,7 +122,7 @@ public:
 
 	void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerItemMoveInfo &moveInfo);
 	void moveFromContainerToMap(MapHistory::ContainerItemMoveInfo &moveInfo, Tile &tile);
-	void moveFromContainerToContainer(MapHistory::ContainerItemMoveInfo &from, MapHistory::ContainerItemMoveInfo &to);
+	void moveFromContainerToContainer(MapHistory::ContainerMoveData2 &from, MapHistory::ContainerMoveData2 &to);
 
 	void moveSelection(const Position &offset);
 

@@ -40,6 +40,7 @@ namespace MapHistory
 
     Map *getMap(MapView &mapView) const noexcept;
     std::unique_ptr<Tile> setMapTile(MapView &mapView, Tile &&tile);
+    void swapMapTile(MapView &mapView, std::unique_ptr<Tile> &&tile);
     std::unique_ptr<Tile> removeMapTile(MapView &mapView, const Position position);
     void updateSelection(MapView &mapView, const Position &position);
 
@@ -64,7 +65,7 @@ namespace MapHistory
     void undo(MapView &mapView) override;
 
   protected:
-    Tile tile;
+    std::variant<std::unique_ptr<Tile>, Position> data;
   };
 
   struct ContainerItemMoveInfo
@@ -86,15 +87,43 @@ namespace MapHistory
     ItemData::Container *container(MapView &mapView);
   };
 
+  // class MoveFromContainerToContainer : public ChangeItem
+  // {
+  // public:
+  //   MoveFromContainerToContainer(ContainerItemMoveInfo &from, ContainerItemMoveInfo &to);
+  //   void commit(MapView &mapView) override;
+  //   void undo(MapView &mapView) override;
+
+  //   ContainerMoveData from;
+  //   ContainerMoveData to;
+  // };
+
+  struct ContainerMoveData2
+  {
+    ContainerMoveData2(Position position, uint16_t tileIndex, const std::vector<uint16_t> &indices);
+    ContainerMoveData2(Position position, uint16_t tileIndex, std::vector<uint16_t> &&indices);
+
+    Position position;
+    uint16_t tileIndex;
+    /*
+      The last index is the index of the item in the final container.
+    */
+    std::vector<uint16_t> indices;
+
+    uint16_t containerIndex() const;
+
+    ItemData::Container *container(MapView &mapView);
+  };
+
   class MoveFromContainerToContainer : public ChangeItem
   {
   public:
-    MoveFromContainerToContainer(ContainerItemMoveInfo &from, ContainerItemMoveInfo &to);
+    MoveFromContainerToContainer(ContainerMoveData2 &from, ContainerMoveData2 &to);
     void commit(MapView &mapView) override;
     void undo(MapView &mapView) override;
 
-    ContainerMoveData from;
-    ContainerMoveData to;
+    ContainerMoveData2 from;
+    ContainerMoveData2 to;
   };
 
   class MoveFromMapToContainer : public ChangeItem

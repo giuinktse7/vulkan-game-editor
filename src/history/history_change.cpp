@@ -15,11 +15,33 @@ namespace MapHistory
     mapView.selection().updatePosition(position);
   }
 
+  void ChangeItem::swapMapTile(MapView &mapView, std::unique_ptr<Tile> &&tile)
+  {
+    const Position position = tile->position();
+    bool selected = tile->hasSelection();
+
+    TileLocation &location = getMap(mapView)->getOrCreateTileLocation(position);
+    auto locationTile = location.tile();
+    if (locationTile)
+    {
+      locationTile->destroyEntities();
+      location.swapTile(std::move(tile));
+    }
+    else
+    {
+      location.setTile(std::move(tile));
+      tile.reset();
+    }
+
+    mapView.selection().setSelected(position, selected);
+  }
+
   std::unique_ptr<Tile> ChangeItem::setMapTile(MapView &mapView, Tile &&tile)
   {
     const Position position = tile.position();
+    bool selected = tile.hasSelection();
 
-    TileLocation &location = getMap(mapView)->getOrCreateTileLocation(tile.position());
+    TileLocation &location = getMap(mapView)->getOrCreateTileLocation(position);
     std::unique_ptr<Tile> oldTilePointer = location.replaceTile(std::move(tile));
     if (oldTilePointer)
     {
@@ -27,7 +49,8 @@ namespace MapHistory
       oldTilePointer->destroyEntities();
     }
 
-    updateSelection(mapView, position);
+    // updateSelection(mapView, position);
+    mapView.selection().setSelected(position, selected);
 
     return oldTilePointer;
   }
@@ -91,30 +114,44 @@ namespace MapHistory
         data);
   }
 
-  SetTile::SetTile(Tile &&tile) : tile(std::move(tile)) {}
+  SetTile::SetTile(Tile &&tile)
+      : data(std::make_unique<Tile>(std::move(tile))) {}
 
   void SetTile::commit(MapView &mapView)
   {
-    std::unique_ptr<Tile> currentTilePtr = setMapTile(mapView, std::move(tile));
-    Tile *currentTile = currentTilePtr.release();
-
-    tile = std::move(*currentTile);
-
-    // Memory no longer handled by the unique ptr, must delete
-    delete currentTile;
+    auto &tile = std::get<std::unique_ptr<Tile>>(data);
+    const Position position = tile->position();
+    swapMapTile(mapView, std::move(tile));
+    if (!tile)
+    {
+      data = position;
+    }
   }
 
   void SetTile::undo(MapView &mapView)
   {
+    if (std::holds_alternative<Position>(data))
+    {
+      data = getMap(mapView)->dropTile(std::get<Position>(data));
+    }
+    else
+    {
+      auto &tile = std::get<std::unique_ptr<Tile>>(data);
+      if (tile)
+        tile->initEntities();
 
-    tile.initEntities();
-    std::unique_ptr<Tile> currentTilePointer = setMapTile(mapView, std::move(tile));
-    Tile *currentTile = currentTilePointer.release();
+      swapMapTile(mapView, std::move(tile));
+    }
+  }
 
-    tile = std::move(*currentTile);
+  ContainerMoveData::ContainerMoveData(ContainerItemMoveInfo &moveInfo)
+      : position(moveInfo.tile->position()),
+        tileIndex(moveInfo.tile->indexOf(moveInfo.item).value()),
+        containerIndex(moveInfo.containerIndex) {}
 
-    // Memory no longer handled by the unique ptr, must delete
-    delete currentTile;
+  ItemData::Container *ContainerMoveData::container(MapView &mapView)
+  {
+    return mapView.getTile(position)->itemAt(tileIndex)->getDataAs<ItemData::Container>();
   }
 
   MoveFromMapToContainer::MoveFromMapToContainer(Tile &tile, Item *item, ContainerItemMoveInfo &moveInfo)
@@ -165,31 +202,51 @@ namespace MapHistory
     containerData.container(mapView)->insertItem(std::move(item), containerData.containerIndex);
   }
 
-  MoveFromContainerToContainer::MoveFromContainerToContainer(ContainerItemMoveInfo &from, ContainerItemMoveInfo &to)
-      : from(from), to(to) {}
+  ContainerMoveData2::ContainerMoveData2(Position position, uint16_t tileIndex, const std::vector<uint16_t> &indices)
+      : position(position), tileIndex(tileIndex), indices(indices) {}
 
-  ContainerMoveData::ContainerMoveData(ContainerItemMoveInfo &moveInfo)
-      : position(moveInfo.tile->position()),
-        tileIndex(moveInfo.tile->indexOf(moveInfo.item).value()),
-        containerIndex(moveInfo.containerIndex) {}
+  ContainerMoveData2::ContainerMoveData2(Position position, uint16_t tileIndex, std::vector<uint16_t> &&indices)
+      : position(position), tileIndex(tileIndex), indices(std::move(indices)) {}
 
-  ItemData::Container *ContainerMoveData::container(MapView &mapView)
+  ItemData::Container *ContainerMoveData2::container(MapView &mapView)
   {
-    return mapView.getTile(position)->itemAt(tileIndex)->getDataAs<ItemData::Container>();
+    auto tile = mapView.getTile(position);
+    DEBUG_ASSERT(tile != nullptr, "No tile.");
+
+    auto current = tile->itemAt(tileIndex);
+
+    // Skip final container index (it's an index to the item being moved)
+    for (auto it = indices.begin(); it < indices.end() - 1; ++it)
+    {
+      uint16_t index = *it;
+      current = &current->getDataAs<ItemData::Container>()->itemAt(index);
+    }
+
+    return current->getDataAs<ItemData::Container>();
   }
+
+  uint16_t ContainerMoveData2::containerIndex() const
+  {
+    return indices.back();
+  }
+
+  MoveFromContainerToContainer::MoveFromContainerToContainer(ContainerMoveData2 &from, ContainerMoveData2 &to)
+      : from(from), to(to) {}
 
   void MoveFromContainerToContainer::commit(MapView &mapView)
   {
-    to.container(mapView)->insertItem(
-        from.container(mapView)->dropItem(from.containerIndex),
-        to.containerIndex);
+    auto m = this;
+    auto k = to.container(mapView);
+    k->insertItem(
+        from.container(mapView)->dropItem(from.containerIndex()),
+        to.containerIndex());
   }
 
   void MoveFromContainerToContainer::undo(MapView &mapView)
   {
     from.container(mapView)->insertItem(
-        to.container(mapView)->dropItem(to.containerIndex),
-        from.containerIndex);
+        to.container(mapView)->dropItem(to.containerIndex()),
+        from.containerIndex());
   }
 
   RemoveTile::RemoveTile(Position pos) : data(pos) {}

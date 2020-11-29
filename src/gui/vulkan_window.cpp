@@ -359,9 +359,10 @@ void VulkanWindow::dropEvent(QDropEvent *event)
 
     mapView->history.beginTransaction(TransactionType::MoveItems);
 
+    // TODO Update to use new move data
     MapHistory::ContainerItemMoveInfo moveInfo;
-    moveInfo.containerIndex = containerDrag->containerIndex;
-    moveInfo.item = containerDrag->_containerItem;
+    moveInfo.containerIndex = containerDrag->containerIndices.back();
+    moveInfo.item = &containerDrag->container()->itemAt(moveInfo.containerIndex);
     moveInfo.tile = mapView->getTile(containerDrag->position);
 
     auto &tile = mapView->getOrCreateTile(mapView->mouseGamePos());

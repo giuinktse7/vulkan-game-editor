@@ -45,8 +45,8 @@ namespace GuiItemContainer
     int capacity();
     int size();
 
-    ContainerItem *container() noexcept;
-    const ContainerItem *container() const noexcept;
+    ItemData::Container *container() noexcept;
+    const ItemData::Container *GuiItemContainer::ItemModel::container() const noexcept;
 
     void refresh();
 
@@ -81,7 +81,6 @@ namespace GuiItemContainer
     void refresh(int index);
     void refresh(ItemModel *model);
 
-    // void addContainerItem(ContainerItem containerItem);
     void addItemModel(ItemModel *model);
     void remove(int index);
     void remove(ItemModel *model);
@@ -112,13 +111,14 @@ namespace GuiItemContainer
 
   struct ContainerNode : public Nano::Observer<>
   {
-    ContainerNode(ContainerItem container, ContainerTreeSignals *_signals);
-    ContainerNode(ContainerItem container, ContainerNode *parent);
+    ContainerNode(ItemData::Container *container, ContainerTreeSignals *_signals);
+    ContainerNode(ItemData::Container *container, ContainerNode *parent);
     ~ContainerNode();
 
-    void containerDestroyedEvent();
-
+    virtual std::unique_ptr<ContainerNode> createChildNode(int index) = 0;
     virtual bool isRoot() const noexcept = 0;
+
+    std::vector<uint16_t> indices() const;
 
     ItemModel *model();
 
@@ -131,7 +131,7 @@ namespace GuiItemContainer
 
     void itemDropEvent(int index, ItemDrag::DraggableItem *droppedItem);
 
-    ContainerItem container;
+    ItemData::Container *container;
     std::unordered_map<int, std::unique_ptr<ContainerNode>> children;
 
   protected:
@@ -147,21 +147,25 @@ namespace GuiItemContainer
 
     struct Root : public ContainerNode
     {
-      Root(Position mapPosition, uint16_t tileIndex, ContainerItem container, ContainerTreeSignals *_signals);
+      Root(MapView *mapView, Position mapPosition, uint16_t tileIndex, ItemData::Container *container, ContainerTreeSignals *_signals);
 
-      virtual bool isRoot() const noexcept { return true; }
+      std::unique_ptr<ContainerNode> createChildNode(int index) override;
+      bool isRoot() const noexcept override { return true; }
 
     private:
+      friend struct ContainerNode;
       Position mapPosition;
+      MapView *mapView;
       uint16_t tileIndex;
     };
 
     struct Node : public ContainerNode
     {
-      Node(ContainerItem container, ContainerNode *parent, uint16_t parentIndex)
+      Node(ItemData::Container *container, ContainerNode *parent, uint16_t parentIndex)
           : ContainerNode(container, parent), parentContainerIndex(parentIndex) {}
 
-      virtual bool isRoot() const noexcept { return false; }
+      std::unique_ptr<ContainerNode> createChildNode(int index) override;
+      bool isRoot() const noexcept { return false; }
 
       uint16_t parentContainerIndex;
       ContainerNode *parent;
@@ -169,7 +173,7 @@ namespace GuiItemContainer
 
     const Item *rootItem() const;
 
-    void setRootContainer(Position position, uint16_t tileIndex, ContainerItem item);
+    void setRootContainer(MapView *mapView, Position position, uint16_t tileIndex, ItemData::Container *item);
     bool hasRoot() const noexcept;
 
     void clear();
@@ -177,7 +181,6 @@ namespace GuiItemContainer
     void modelAddedEvent(ItemModel *model);
     void modelRemovedEvent(ItemModel *model);
 
-    // void onContainerItemDrop(ContainerNode *node, int index);
     template <auto MemberFunction, typename T>
     void onContainerItemDrop(T *instance);
 

@@ -294,7 +294,7 @@ void MapView::moveFromContainerToMap(MapHistory::ContainerItemMoveInfo &moveInfo
   history.commit(std::move(action));
 }
 
-void MapView::moveFromContainerToContainer(MapHistory::ContainerItemMoveInfo &from, MapHistory::ContainerItemMoveInfo &to)
+void MapView::moveFromContainerToContainer(MapHistory::ContainerMoveData2 &from, MapHistory::ContainerMoveData2 &to)
 {
   auto move = MoveFromContainerToContainer(from, to);
   Action action(ActionType::Move, std::move(move));
@@ -1160,6 +1160,7 @@ void MapView::perfTest()
   VME_LOG("Testing fillregion..");
   TimePoint start;
   Position from(0, 0, 7);
+  // Position to(400, 400, 7);
   Position to(2000, 2000, 7);
 
   fillRegion(from, to, 4526);
