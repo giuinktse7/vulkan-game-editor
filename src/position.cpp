@@ -2,8 +2,8 @@
 
 #include "map_view.h"
 
-Position::Position() : BasePosition(0, 0), z(0) {}
-Position::Position(Position::value_type x, Position::value_type y, int z) : BasePosition(x, y), z(z) {}
+Position::Position() : x(0),y(0), z(0) {}
+Position::Position(Position::value_type x, Position::value_type y, int z) : x(x), y(y), z(z) {}
 
 void Position::move(Position::value_type x, Position::value_type y, int z)
 {

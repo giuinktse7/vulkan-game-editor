@@ -37,18 +37,20 @@ struct BasePosition
 	T y;
 };
 
-struct Position : public BasePosition<int32_t>
+struct Position
 {
 	using value_type = int32_t;
 	static std::vector<Position> bresenHams(Position from, Position to);
 	static uint32_t tilesInRegion(const Position &from, const Position &to);
 
 	Position();
-	Position(value_type x, value_type y, int z);
+	Position(value_type x, value_type y, value_type z);
 
-	int z;
+	value_type x;
+	value_type y;
+	value_type z;
 
-	void move(value_type x, value_type y, int z);
+	void move(value_type x, value_type y, value_type z);
 
 	WorldPosition worldPos() const noexcept;
 
@@ -206,7 +208,7 @@ inline bool operator!=(const BasePosition<T> &pos1, const BasePosition<T> &pos2)
 template <typename Pos>
 struct Region2D
 {
-	static_assert(is_base_of_template<BasePosition, Pos>::value, "Pos must derive from BasePosition");
+	static_assert(is_base_of_template<BasePosition, Pos>::value || std::is_same<Position, Pos>::value, "Pos must derive from BasePosition");
 	Region2D(Pos from, Pos to)
 			: _from(from),
 				_to(to),
