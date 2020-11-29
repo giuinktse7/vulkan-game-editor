@@ -408,16 +408,29 @@ void MapView::fillRegion(const Position &from, const Position &to, uint32_t serv
 
   for (const auto &pos : MapArea(from, to))
   {
-    const Tile &currentTile = _map->getOrCreateTile(pos);
+    auto location = _map->getTileLocation(pos);
 
-    Tile newTile(currentTile.deepCopy());
-    newTile.addItem(Item(serverId));
+    if (location && location->hasTile())
+    {
+      Tile newTile(location->tile()->deepCopy());
+      newTile.addItem(Item(serverId));
 
-    // action.addChange(SetTile(std::move(newTile)));
-    action.changes.emplace_back(SetTile(std::move(newTile)));
+      action.changes.emplace_back<SetTile>(std::move(newTile));
+    }
+    else
+    {
+      Tile newTile(pos);
+      newTile.addItem(Item(serverId));
+
+      action.changes.emplace_back<SetTile>(std::move(newTile));
+    }
   }
 
-  action.shrinkToFit();
+  /*
+    shrinkToFit appears to reallocate. All tiles are used when filling,
+    so there is no advantage to shrinking here.
+  */
+  // action.shrinkToFit();
 
   history.commit(std::move(action));
 
