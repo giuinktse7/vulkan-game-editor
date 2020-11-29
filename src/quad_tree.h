@@ -64,7 +64,7 @@ namespace quadtree
 			void setFloor(size_t index, std::unique_ptr<Floor> &&value);
 
 			std::unique_ptr<Node> &nodePtr(size_t index);
-			std::unique_ptr<Node> &getOrCreateNodePtr(size_t index, NodeType type);
+			Node *getOrCreateNode(size_t index, NodeType type);
 			std::unique_ptr<Floor> &floorPtr(size_t index);
 			Floor &getOrCreateFloor(const Position &pos);
 
@@ -72,7 +72,9 @@ namespace quadtree
 			Floor *floor(size_t index) const;
 
 		private:
+			friend class Node;
 			NodeType _type;
+
 			union
 			{
 				std::unique_ptr<Node> nodes[Amount];

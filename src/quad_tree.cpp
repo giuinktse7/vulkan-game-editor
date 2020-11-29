@@ -103,42 +103,23 @@ Node &Node::getLeafWithCreate(int x, int y)
 
   int level = static_cast<int>(QuadTreeDepth);
 
-  while (level >= 0)
+  while (level > 0)
   {
     /*  The index is given by the bytes YYXX.
         XX is given by the two MSB in currentX, and YY by the two MSB in currentY.
     */
     uint32_t index = ((currentX & 0xC000) >> 14) | ((currentY & 0xC000) >> 12);
-    // cout << "index: " << index << endl;
 
     // The NodeTypeCreationMapping array avoids a branch based on the node type
-    NodeType newNodeType = NodeTypeCreationMapping[static_cast<size_t>(level != 0)];
-    node = node->children.getOrCreateNodePtr(index, newNodeType).get();
+    node = node->children.getOrCreateNode(index, NodeType::Node);
     currentX <<= 2;
     currentY <<= 2;
     --level;
-    // if (child)
-    // {
-    //   if (child->isLeaf())
-    //   {
-    //     leaf = child.get();
-    //     break;
-    //   }
-    // }
-    // else
-    // {
-    //   if (level == 0)
-    //   {
-    //     child = make_unique<Node>(Node::NodeType::Leaf, 0);
-    //     leaf = child.get();
-    //     break;
-    //   }
-    //   else
-    //   {
-    //     child = make_unique<Node>(Node::NodeType::Node, level);
-    //   }
-    // }
   }
+
+  uint32_t index = ((currentX & 0xC000) >> 14) | ((currentY & 0xC000) >> 12);
+
+  node = node->children.getOrCreateNode(index, NodeType::Leaf);
 
   return *node;
 }
@@ -322,13 +303,13 @@ std::unique_ptr<Node> &Node::Children::nodePtr(size_t index)
   return nodes[index];
 }
 
-std::unique_ptr<Node> &Node::Children::getOrCreateNodePtr(size_t index, NodeType type)
+Node *Node::Children::getOrCreateNode(size_t index, NodeType type)
 {
   auto &node = nodes[index];
   if (!node)
     node = std::make_unique<Node>(type);
 
-  return node;
+  return node.get();
 }
 
 std::unique_ptr<Floor> &Node::Children::floorPtr(size_t index)
