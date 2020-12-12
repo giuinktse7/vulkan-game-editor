@@ -1,7 +1,6 @@
 import QtQuick.Controls 2.15
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
-import QtGraphicalEffects 1.15
 import "./spinbox" as Components
 
 Control {
@@ -11,9 +10,9 @@ Control {
   property int to : 100
   property bool editable : true
 
-  property RegExpValidator validator : RegExpValidator { // regExp : /(?:^[1-9][0-9]?$|^100$)?/
-    regExp : /(?:^[1-9][0-9]?[0-9]?$)?/
-  }
+  // property var validator : RegularExpressionValidator {
+  //   regularExpression : /(?:^[1-9][0-9]?[0-9]?$)?/
+  // }
 
   function setValue(value) {
     vmeSpinBox.value = Math.max(Math.min(value, vmeSpinBox.to), vmeSpinBox.from);
@@ -33,20 +32,20 @@ Control {
   }
 
   // Drop shadow for the input field
-  DropShadow {
-    anchors.fill : childContainer
-    visible : input.focus
-    transparentBorder : true
-    horizontalOffset : 0
-    verticalOffset : 0
-    spread : 0.5
-    source : childContainer
-    radius : 8
-    samples : 17
-    // color : "#2196F37F"
-    // color : "#2196F348"
-    color : "#1F2196F3"
-  }
+  // DropShadow {
+  //   anchors.fill : childContainer
+  //   visible : input.focus
+  //   transparentBorder : true
+  //   horizontalOffset : 0
+  //   verticalOffset : 0
+  //   spread : 0.5
+  //   source : childContainer
+  //   radius : 8
+  //   samples : 17
+  //   // color : "#2196F37F"
+  //   // color : "#2196F348"
+  //   color : "#1F2196F3"
+  // }
 
   Rectangle {
     id : childContainer
@@ -112,7 +111,7 @@ Control {
         verticalAlignment : Qt.AlignVCenter
 
         readOnly : !vmeSpinBox.editable
-        validator : vmeSpinBox.validator
+        // validator : vmeSpinBox.validator
         inputMethodHints : Qt.ImhFormattedNumbersOnly
 
       }
@@ -137,4 +136,4 @@ Control {
     // }
   }
 
-} // background : Rectangle {// implicitWidth : 100// border.color : "red"// }}
+}

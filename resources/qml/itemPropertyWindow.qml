@@ -1,19 +1,54 @@
-import QtQuick.Controls 2.15
+// import QtQuick.Controls 2.15
+import QtQuick.Controls 2.0
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import "./vme" as Vme
 import Vme.context 1.0 as Context
 
+//   ColumnLayout{
+//     spacing: 2
+
+//     Rectangle {
+//         Layout.alignment: Qt.AlignCenter
+//         color: "red"
+//         Layout.preferredWidth: 40
+//         Layout.preferredHeight: 40
+//     }
+
+//     Rectangle {
+//         Layout.alignment: Qt.AlignRight
+//         color: "green"
+//         Layout.preferredWidth: 40
+//         Layout.preferredHeight: 70
+//     }
+
+//     Rectangle {
+//         Layout.alignment: Qt.AlignBottom
+//         Layout.fillHeight: true
+//         color: "blue"
+//         Layout.preferredWidth: 70
+//         Layout.preferredHeight: 40
+//     }
+// }
+
 ScrollView {
+  anchors.fill: parent
   id : propertyContainer
-  anchors.fill : parent
   clip : true
   contentHeight : contents.height
 
   property var containers
 
+    Rectangle {
+          color : "transparent"
+          anchors.fill : parent
+          border.color : "red"
+        }
 
-  ColumnLayout {
+
+  // ColumnLayout {
+    // anchors.left: parent.left
+    // anchors.right: parent.right
     ColumnLayout {
       id : contents
       Layout.alignment : Qt.AlignTop
@@ -149,7 +184,6 @@ ScrollView {
         model : propertyContainer.containers;
         readonly property int fixedWidth : 36 * 4
 
-        // visible : true
         visible : model.size > 0
 
         Layout.alignment : Qt.AlignTop
@@ -185,13 +219,11 @@ ScrollView {
             
             onUpdateLayout : {
               containersView.forceLayout();
-              // containersView.model.updateLayout(0);
-              // containersView.forceLayout();
             }
           }
         }
       }
-    }
+    // }
 
   }
 }
