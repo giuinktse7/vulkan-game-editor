@@ -147,7 +147,7 @@ namespace MapHistory
   ContainerMoveData::ContainerMoveData(ContainerItemMoveInfo &moveInfo)
       : position(moveInfo.tile->position()),
         tileIndex(moveInfo.tile->indexOf(moveInfo.item).value()),
-        containerIndex(moveInfo.containerIndex) {}
+        containerIndex(static_cast<uint16_t>(moveInfo.containerIndex)) {}
 
   ItemData::Container *ContainerMoveData::container(MapView &mapView)
   {
@@ -187,19 +187,19 @@ namespace MapHistory
     updateSelection(mapView, tile->position());
   }
 
-  MoveFromContainerToMap::MoveFromContainerToMap(ContainerItemMoveInfo &moveInfo, Tile &tile)
-      : containerData(moveInfo), toPosition(tile.position()) {}
+  MoveFromContainerToMap::MoveFromContainerToMap(ContainerMoveData2 &from, Tile &tile)
+      : from(from), toPosition(tile.position()) {}
 
   void MoveFromContainerToMap::commit(MapView &mapView)
   {
-    auto item = containerData.container(mapView)->dropItem(containerData.containerIndex);
+    auto item = from.container(mapView)->dropItem(from.containerIndex());
     mapView.getTile(toPosition)->addItem(std::move(item));
   }
 
   void MoveFromContainerToMap::undo(MapView &mapView)
   {
     auto item = mapView.getTile(toPosition)->dropItem(static_cast<size_t>(0));
-    containerData.container(mapView)->insertItem(std::move(item), containerData.containerIndex);
+    from.container(mapView)->insertItem(std::move(item), from.containerIndex());
   }
 
   ContainerMoveData2::ContainerMoveData2(Position position, uint16_t tileIndex, const std::vector<uint16_t> &indices)
@@ -274,12 +274,16 @@ namespace MapHistory
     data = pos;
   }
 
+  Move::Move(Position from, Position to)
+      : moveData(Move::Entire{}), undoData{Tile(from), Tile(to)} {}
+
   Move::Move(Position from, Position to, bool ground, std::vector<uint16_t> &indices)
       : moveData(Move::Partial(ground, std::move(indices))),
         undoData{Tile(from), Tile(to)} {}
 
-  Move::Move(Position from, Position to)
-      : moveData(Move::Entire{}), undoData{Tile(from), Tile(to)} {}
+  Move::Move(Position from, Position to, bool ground)
+      : moveData(Move::Partial(ground, std::vector<uint16_t>{})),
+        undoData{Tile(from), Tile(to)} {}
 
   Move::Partial::Partial(bool ground, std::vector<uint16_t> indices)
       : indices(indices), ground(ground) {}

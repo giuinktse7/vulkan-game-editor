@@ -110,6 +110,7 @@ namespace ItemDrag
     uint16_t tileIndex;
     std::vector<uint16_t> containerIndices;
 
+    ItemData::Container *container();
     ItemData::Container *container() const;
     Item &draggedItem() const;
 
@@ -136,7 +137,7 @@ namespace ItemDrag
     bool hasFormat(const QString &mimeType) const override;
     QStringList formats() const override;
 
-    QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
+    QVariant retrieveData(const QString &mimeType, QMetaType type) const override;
 
     std::unique_ptr<DraggableItem> draggableItem;
 
@@ -169,7 +170,7 @@ namespace ItemDrag
     QObject *hoveredObject() const;
     Source source() const noexcept;
 
-    DragOperation::MimeData mimeData;
+    ItemDrag::MimeData mimeData;
 
   private:
     DragOperation(MimeData &&mimeData, Source source, QWindow *parent);

@@ -153,13 +153,13 @@ namespace MapHistory
   class MoveFromContainerToMap : public ChangeItem
   {
   public:
-    MoveFromContainerToMap(ContainerItemMoveInfo &moveInfo, Tile &tile);
+    MoveFromContainerToMap(ContainerMoveData2 &from, Tile &tile);
     void commit(MapView &mapView) override;
     void undo(MapView &mapView) override;
 
   private:
     Position toPosition;
-    ContainerMoveData containerData;
+    ContainerMoveData2 from;
   };
 
   class RemoveTile : public ChangeItem
@@ -181,8 +181,9 @@ namespace MapHistory
   class Move : public ChangeItem
   {
   public:
-    Move(Position from, Position to, bool ground, std::vector<uint16_t> &indices = std::vector<uint16_t>{});
     Move(Position from, Position to);
+    Move(Position from, Position to, bool ground);
+    Move(Position from, Position to, bool ground, std::vector<uint16_t> &indices);
 
     static Move entire(Position from, Position to);
     static Move entire(const Tile &tile, Position to);

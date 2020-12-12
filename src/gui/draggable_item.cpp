@@ -1,5 +1,6 @@
 #include "draggable_item.h"
 
+#include <QCursor>
 #include <QWindow>
 
 #include "../../vendor/rollbear-visit/visit.hpp"
@@ -66,7 +67,7 @@ void ItemDrag::DragOperation::showCursor()
 {
   if (!renderingCursor)
   {
-    QApplication::setOverrideCursor(pixmap);
+    QApplication::setOverrideCursor(QCursor(pixmap));
     renderingCursor = true;
   }
 }
@@ -155,7 +156,7 @@ ItemDrag::MimeData &ItemDrag::MimeData::operator=(MimeData &&other) noexcept
   return *this;
 }
 
-QVariant ItemDrag::MimeData::retrieveData(const QString &mimeType, QVariant::Type type) const
+QVariant ItemDrag::MimeData::retrieveData(const QString &mimeType, QMetaType type) const
 {
   QVariant data;
   if (mimeType != ItemDrag::DraggableItemFormat)
@@ -265,10 +266,14 @@ QDataStream &ItemDrag::MapItem::serializeInto(QDataStream &dataStream) const
   return dataStream << (*this);
 }
 
+ItemData::Container *ItemDrag::ContainerItemDrag::container()
+{
+  return const_cast<ItemData::Container *>(const_cast<const ItemDrag::ContainerItemDrag *>(this)->container());
+}
+
 ItemData::Container *ItemDrag::ContainerItemDrag::container() const
 {
   auto current = mapView->getTile(position)->itemAt(tileIndex);
-  ;
 
   for (auto it = containerIndices.begin(); it != containerIndices.end() - 1; ++it)
   {

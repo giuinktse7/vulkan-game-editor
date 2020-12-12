@@ -68,12 +68,6 @@ namespace MapHistory
     }
 
     template <typename T>
-    bool ofType() const
-    {
-      return std::holds_alternative<T>(data);
-    }
-
-    template <typename T>
     bool isType(Change &change) const
     {
       return dynamic_cast<T *>(&change) != nullptr;

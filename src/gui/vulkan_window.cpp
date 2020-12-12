@@ -359,15 +359,11 @@ void VulkanWindow::dropEvent(QDropEvent *event)
 
     mapView->history.beginTransaction(TransactionType::MoveItems);
 
-    // TODO Update to use new move data
-    MapHistory::ContainerItemMoveInfo moveInfo;
-    moveInfo.containerIndex = containerDrag->containerIndices.back();
-    moveInfo.item = &containerDrag->container()->itemAt(moveInfo.containerIndex);
-    moveInfo.tile = mapView->getTile(containerDrag->position);
+    MapHistory::ContainerMoveData2 move(containerDrag->position, containerDrag->tileIndex, std::move(containerDrag->containerIndices));
 
     auto &tile = mapView->getOrCreateTile(mapView->mouseGamePos());
 
-    mapView->moveFromContainerToMap(moveInfo, tile);
+    mapView->moveFromContainerToMap(move, tile);
 
     mapView->history.endTransaction(TransactionType::MoveItems);
   }
@@ -489,15 +485,15 @@ void VulkanWindow::showContextMenu(QPoint position)
   // widget->setStyleSheet("background-color:green;");
 
   QAction *cut = new QAction(tr("Cut"), menu);
-  cut->setShortcut(Qt::CTRL + Qt::Key_X);
+  cut->setShortcut(Qt::CTRL | Qt::Key_X);
   menu->addAction(cut);
 
   QAction *copy = new QAction(tr("Copy"), menu);
-  copy->setShortcut(Qt::CTRL + Qt::Key_C);
+  copy->setShortcut(Qt::CTRL | Qt::Key_C);
   menu->addAction(copy);
 
   QAction *paste = new QAction(tr("Paste"), menu);
-  paste->setShortcut(Qt::CTRL + Qt::Key_V);
+  paste->setShortcut(Qt::CTRL | Qt::Key_V);
   menu->addAction(paste);
 
   QAction *del = new QAction(tr("Delete"), menu);

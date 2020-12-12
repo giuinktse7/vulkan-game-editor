@@ -286,7 +286,7 @@ void MapView::moveFromMapToContainer(Tile &tile, Item *item, MapHistory::Contain
   history.commit(std::move(action));
 }
 
-void MapView::moveFromContainerToMap(MapHistory::ContainerItemMoveInfo &moveInfo, Tile &tile)
+void MapView::moveFromContainerToMap(MapHistory::ContainerMoveData2 &moveInfo, Tile &tile)
 {
   auto move = MoveFromContainerToMap(moveInfo, tile);
   Action action(ActionType::Move, std::move(move));
@@ -516,7 +516,7 @@ MapRegion MapView::mapRegion() const
   return _map->getRegion(from, to);
 }
 
-const Tile *MapView::getTile(const Position pos) const
+Tile *MapView::getTile(const Position pos) const
 {
   return _map->getTile(pos);
 }
