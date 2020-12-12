@@ -47,22 +47,19 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
   VME_LOG_D("ItemPropertyWindow address: " << this);
   installEventFilter(new PropertyWindowEventFilter(this));
 
-  // itemContainerModels.emplace_back(std::make_unique<GuiItemContainer::ItemModel>());
-
   containerTree.onContainerItemDrop<&ItemPropertyWindow::itemDropEvent>(this);
 
   QVariantMap properties;
   properties.insert("containers", QVariant::fromValue(&containerTree.containerModel));
-  // properties.insert("containerItems", QVariant::fromValue(itemContainerModels.front().get()));
 
   setInitialProperties(properties);
 
   qmlRegisterSingletonInstance("Vme.context", 1, 0, "C_PropertyWindow", this);
 
-  // engine()->rootContext()->setContextProperty("contextPropertyWindow", this);
   engine()->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
 
   setSource(_url);
+  VME_LOG_D("After ItemPropertyWindow::setSource");
 
   QmlApplicationContext *applicationContext = new QmlApplicationContext();
   engine()->rootContext()->setContextProperty("applicationContext", applicationContext);
@@ -275,7 +272,7 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode
     return false;
   }
 
-  auto mapView = state.mapView;
+  MapView *mapView = state.mapView;
 
   if (util::hasDynamicType<ItemDrag::MapItem *>(droppedItem))
   {
@@ -288,7 +285,8 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode
 
       // TODO Create a history move action that moves into a container nested within another (possibly multiple) containers.
       MapHistory::ContainerItemMoveInfo moveInfo;
-      moveInfo.tile = mapView->getTile(focusedItem.position);
+      Tile *_tile = mapView->getTile(focusedItem.position);
+      moveInfo.tile = _tile;
       moveInfo.item = container->item();
       moveInfo.containerIndex = std::min<size_t>(static_cast<size_t>(index), container->size());
 
@@ -416,7 +414,7 @@ int GuiItemContainer::ItemModel::capacity()
   return static_cast<int>(treeNode->container->capacity());
 }
 
-const ItemData::Container *GuiItemContainer::ItemModel::container() const noexcept
+ItemData::Container *GuiItemContainer::ItemModel::container() const noexcept
 {
   return treeNode->container;
 }

@@ -46,7 +46,7 @@ namespace GuiItemContainer
     int size();
 
     ItemData::Container *container() noexcept;
-    const ItemData::Container *GuiItemContainer::ItemModel::container() const noexcept;
+    ItemData::Container *container() const noexcept;
 
     void refresh();
 
@@ -297,7 +297,7 @@ private:
     bool holds();
 
     template <typename T>
-    T focusedAs();
+    T &focusedAs();
   };
 
   State state;
@@ -329,7 +329,7 @@ bool ItemPropertyWindow::State::holds()
 }
 
 template <typename T>
-T ItemPropertyWindow::State::focusedAs()
+T &ItemPropertyWindow::State::focusedAs()
 {
   static_assert(util::is_one_of<T, FocusedItem, FocusedGround>::value, "T must be FocusedItem or FocusedGround");
 

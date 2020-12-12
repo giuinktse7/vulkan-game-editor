@@ -429,15 +429,15 @@ QMenuBar *MainWindow::createMenuBar()
   {
     auto fileMenu = menuBar->addMenu(tr("File"));
 
-    auto newMap = new MenuAction(tr("New Map"), Qt::CTRL + Qt::Key_N, this);
+    auto newMap = new MenuAction(tr("New Map"), Qt::CTRL | Qt::Key_N, this);
     connect(newMap, &QWidgetAction::triggered, [this] { this->addMapTab(); });
     fileMenu->addAction(newMap);
 
-    auto saveMap = new MenuAction(tr("Save"), Qt::CTRL + Qt::Key_S, this);
+    auto saveMap = new MenuAction(tr("Save"), Qt::CTRL | Qt::Key_S, this);
     connect(saveMap, &QWidgetAction::triggered, [this] { SaveMap::saveMap(*(currentMapView()->map())); });
     fileMenu->addAction(saveMap);
 
-    auto closeMap = new MenuAction(tr("Close"), Qt::CTRL + Qt::Key_W, this);
+    auto closeMap = new MenuAction(tr("Close"), Qt::CTRL | Qt::Key_W, this);
     connect(closeMap, &QWidgetAction::triggered, mapTabs, &MapTabWidget::removeCurrentTab);
     fileMenu->addAction(closeMap);
   }
@@ -446,21 +446,21 @@ QMenuBar *MainWindow::createMenuBar()
   {
     auto editMenu = menuBar->addMenu(tr("Edit"));
 
-    auto undo = new MenuAction(tr("Undo"), Qt::CTRL + Qt::Key_Z, this);
+    auto undo = new MenuAction(tr("Undo"), Qt::CTRL | Qt::Key_Z, this);
     editMenu->addAction(undo);
 
-    auto redo = new MenuAction(tr("Redo"), Qt::CTRL + Qt::SHIFT + Qt::Key_Z, this);
+    auto redo = new MenuAction(tr("Redo"), Qt::CTRL | Qt::SHIFT | Qt::Key_Z, this);
     editMenu->addAction(redo);
 
     editMenu->addSeparator();
 
-    auto cut = new MenuAction(tr("Cut"), Qt::CTRL + Qt::Key_X, this);
+    auto cut = new MenuAction(tr("Cut"), Qt::CTRL | Qt::Key_X, this);
     editMenu->addAction(cut);
 
-    auto copy = new MenuAction(tr("Copy"), Qt::CTRL + Qt::Key_C, this);
+    auto copy = new MenuAction(tr("Copy"), Qt::CTRL | Qt::Key_C, this);
     editMenu->addAction(copy);
 
-    auto paste = new MenuAction(tr("Paste"), Qt::CTRL + Qt::Key_V, this);
+    auto paste = new MenuAction(tr("Paste"), Qt::CTRL | Qt::Key_V, this);
     editMenu->addAction(paste);
   }
 
@@ -468,7 +468,7 @@ QMenuBar *MainWindow::createMenuBar()
   {
     auto mapMenu = menuBar->addMenu(tr("Map"));
 
-    auto editTowns = new MenuAction(tr("Edit Towns"), Qt::CTRL + Qt::Key_T, this);
+    auto editTowns = new MenuAction(tr("Edit Towns"), Qt::CTRL | Qt::Key_T, this);
     mapMenu->addAction(editTowns);
   }
 
@@ -476,10 +476,10 @@ QMenuBar *MainWindow::createMenuBar()
   {
     auto viewMenu = menuBar->addMenu(tr("View"));
 
-    auto zoomIn = new MenuAction(tr("Zoom in"), Qt::CTRL + Qt::Key_Plus, this);
+    auto zoomIn = new MenuAction(tr("Zoom in"), Qt::CTRL | Qt::Key_Plus, this);
     viewMenu->addAction(zoomIn);
 
-    auto zoomOut = new MenuAction(tr("Zoom out"), Qt::CTRL + Qt::Key_Minus, this);
+    auto zoomOut = new MenuAction(tr("Zoom out"), Qt::CTRL | Qt::Key_Minus, this);
     viewMenu->addAction(zoomOut);
   }
 

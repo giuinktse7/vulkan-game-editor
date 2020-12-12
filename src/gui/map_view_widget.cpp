@@ -8,7 +8,6 @@
 #include <QStyleOptionSlider>
 
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QScreen>
 #include <QWidget>
 

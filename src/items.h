@@ -62,7 +62,7 @@ public:
   ItemType *getNextValidItemType(uint32_t serverId);
   ItemType *getPreviousValidItemType(uint32_t serverId);
 
-  const OTB::VersionInfo Items::otbVersionInfo() const;
+  const OTB::VersionInfo otbVersionInfo() const;
 
 private:
   class OtbReader

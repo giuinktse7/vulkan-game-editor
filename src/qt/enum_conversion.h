@@ -9,6 +9,8 @@ conversion. This should reduce branching, resulting in faster conversion.
 #include <array>
 #include <type_traits>
 
+#include "../util.h"
+
 namespace VME
 {
   enum ModifierKeys;
