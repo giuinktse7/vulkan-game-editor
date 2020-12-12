@@ -92,7 +92,7 @@ class MapTabWidget : public QTabWidget
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
-    void enterEvent(QEvent *event) override;
+    void enterEvent(QEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
     bool event(QEvent *event) override;
 
@@ -251,5 +251,5 @@ public:
   bool hasFormat(const QString &mimeType) const override;
   QStringList formats() const override;
 
-  QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
+  QVariant retrieveData(const QString &mimeType, QMetaType type) const override;
 };

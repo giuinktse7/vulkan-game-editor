@@ -13,7 +13,7 @@ An action is an event that can occur and can be undone/redone.
 ## Dependencies
 
 - [**Vulkan SDK**](https://vulkan.lunarg.com/) Low-level 3D graphics and computing API.
-- [**QT5 (`Qt::Core`, `Qt::Widgets`, `Qt::Qml`, `Qt::Quick` and`Qt::Svg`)**](https://www.qt.io/download-open-source) Cross-plaftorm GUI framework.
+- [**Qt6 (`Qt::Core`, `Qt::Widgets`, `Qt::Qml`, `Qt::Quick` and`Qt::Svg`)**](https://www.qt.io/download-open-source) Cross-plaftorm GUI framework.
 
   **NOTE**: The QT framework requires around 8 GB of disk space per target architecture (For example `msvc2019` or `msvc2019_64`).
 
@@ -47,13 +47,27 @@ To build the project, first install the required [Dependencies](#dependencies).
 
 1. Download and install [CMake](https://cmake.org/download/).
 2. Empty the `build/` folder.
-3. Set the environment variable `LIB` to the Windows libpath. Its default path is
+3. **Environment Variables**
+
+   - Add the Qt6 bin folder to the `PATH` environment variable:
 
    ```sh
-   C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64
+     <your Qt6 install path>/6.0.0/msvc2019_64/bin
    ```
 
-   Select the last folder based on the architecture you are building for (for example x86 or x64).
+   - Set the environment variable `LIB` to the Windows libpath. Its default path is
+
+     ```sh
+     C:/Program Files (x86)/Windows Kits/10/Lib/10.0.19041.0/um/x64
+     ```
+
+     Select the last folder based on the architecture you are building for (for example x86 or x64).
+
+   - Set the environment variable `Qt6_CMAKE_FOLDER` to
+
+     ```sh
+     <your Qt6 install path>/6.0.0/msvc2019_64/lib/cmake/Qt6
+     ```
 
 4. In `./build`, run (for example)
 
@@ -83,9 +97,9 @@ To run the test suite `vme_tests`, run `./runtest` in the project root.
 There are four targets:
 
 - **main** (Executable): The `main` target is the executable of the application. This target links the `common` and `gui` libraries statically.
-- **common** (Library): The `common` target contains all code that **is not** related to GUI (i.e. everything except QT5-reliant code).
-- **gui** (Library): The `gui` target contains all code that **is** related to GUI (i.e. all code that is QT5-reliant).
+- **common** (Library): The `common` target contains all code that **is not** related to GUI (i.e. everything except Qt6-reliant code).
+- **gui** (Library): The `gui` target contains all code that **is** related to GUI (i.e. all code that is Qt6-reliant).
 
 - **vme_tests** (Executable): Contains tests for the `common` and `gui` libraries (See [Run tests using CMake](#run-tests-using-cmake)).
 
-The main purpose of having the `common` and `gui` library separate from the `main` target was to enable running unit tests against the code. It also ensures that there is no coupling introduced between core editor functionality and QT5 (`common` does not have QT5 as a dependency).
+The main purpose of having the `common` and `gui` library separate from the `main` target was to enable running unit tests against the code. It also ensures that there is no coupling introduced between core editor functionality and Qt6 (`common` does not have Qt6 as a dependency).

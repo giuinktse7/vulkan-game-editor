@@ -33,7 +33,7 @@ QWidget *MenuAction::createWidget(QWidget *parent)
   widget->setProperty("class", "menu-item");
 
   QHBoxLayout *layout = new QHBoxLayout(parent);
-  layout->setMargin(0);
+  // layout->setMargin(0);
 
   QLabel *left = new QLabel(this->text, widget);
   layout->addWidget(left);

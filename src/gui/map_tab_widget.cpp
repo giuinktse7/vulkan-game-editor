@@ -26,7 +26,6 @@
 #include <QStylePainter>
 
 #include <QApplication>
-#include <QDesktopWidget>
 
 #include "../logger.h"
 #include "../qt/logging.h"
@@ -169,7 +168,7 @@ MapTabWidget::MapTabBar::MapTabBar(MapTabWidget *parent)
     setLayout(l);
     l->addWidget(scrollBar);
     l->insertWidget(0, scrollBar, 1, Qt::AlignLeft | Qt::AlignBottom);
-    l->setMargin(0);
+    // l->setMargin(0);
     l->setSpacing(0);
 
     scrollBar->hide();
@@ -467,7 +466,7 @@ void MapTabWidget::MapTabBar::mouseReleaseEvent(QMouseEvent *event)
     dragStartPosition.reset();
 }
 
-void MapTabWidget::MapTabBar::enterEvent(QEvent *event)
+void MapTabWidget::MapTabBar::enterEvent(QEnterEvent *event)
 {
     updateScrollBarVisibility();
 }
@@ -490,7 +489,7 @@ void MapTabWidget::MapTabBar::dragEnterEvent(QDragEnterEvent *event)
     if (event->mimeData()->hasFormat(MapTabMimeData::integerMimeType()))
     {
         event->acceptProposedAction();
-        setDragHoveredIndex(tabAt(event->pos()));
+        setDragHoveredIndex(tabAt(event->position().toPoint()));
     }
 }
 
@@ -503,7 +502,7 @@ void MapTabWidget::MapTabBar::dragMoveEvent(QDragMoveEvent *event)
         if (!drag)
             return;
 
-        auto pos = event->pos();
+        auto pos = event->position().toPoint();
 
         if (tabOverflow())
         {
@@ -570,7 +569,7 @@ void MapTabWidget::MapTabBar::dropEvent(QDropEvent *event)
     auto mimeData = static_cast<const MapTabMimeData *>(event->mimeData());
 
     int srcIndex = mimeData->getInt();
-    int cursorTabIndex = tabAt(event->pos());
+    int cursorTabIndex = tabAt(event->position().toPoint());
 
     // Moved internally
     if (this == event->source())
@@ -666,7 +665,7 @@ SvgWidget::SvgWidget(const QString &file, QWidget *parent) : QFrame(parent)
         svg = new QSvgWidget(file);
         svg->setObjectName("my-svg");
         auto layout = new QHBoxLayout(svg);
-        layout->setMargin(0);
+        // layout->setMargin(0);
         layout->setSpacing(0);
     }
 
@@ -675,7 +674,7 @@ SvgWidget::SvgWidget(const QString &file, QWidget *parent) : QFrame(parent)
     // setLayout(layout);
 
     auto layout = new QGridLayout(this);
-    layout->setMargin(0);
+    // layout->setMargin(0);
     layout->addWidget(svg, 0, 0, 1, 1);
     layout->setSizeConstraint(QLayout::SetFixedSize);
 }
@@ -723,16 +722,9 @@ QStringList MapTabMimeData::formats() const
     return formats;
 }
 
-QVariant MapTabMimeData::retrieveData(const QString &mimeType, QVariant::Type type) const
+QVariant MapTabMimeData::retrieveData(const QString &mimeType, QMetaType type) const
 {
     if (mimeType == integerMimeType())
-    {
-        QDataStream buffer(data(mimeType));
-        int x;
-        buffer >> x;
-        return x;
-    }
-    else if (QMimeData::hasFormat(mimeType))
     {
         return QMimeData::retrieveData(mimeType, type);
     }

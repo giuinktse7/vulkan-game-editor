@@ -153,7 +153,8 @@
     "qquickwindow": "cpp",
     "qdatastream": "cpp",
     "qdebug": "cpp",
-    "qpoint": "cpp"
+    "qpoint": "cpp",
+    "qwindow": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

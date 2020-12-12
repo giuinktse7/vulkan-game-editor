@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.16.0)
 
 #[[
 Build instructions:
@@ -20,7 +20,8 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_PREFIX_PATH ${QT_CMAKE_FOLDER})
+set(CMAKE_PREFIX_PATH
+    "D:/Programs/cpp/libraries/Qt6/6.0.0/msvc2019_64/lib/cmake")
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-format-style='file';-std=c++17")
 
 # set(ARCH "-target x86_64-w64-mingw32") set(CMAKE_ASM_FLAGS "${ARCH}")
@@ -33,6 +34,9 @@ project(
 
 enable_testing()
 add_subdirectory("test")
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # QT Specific
 set(CMAKE_AUTOMOC ON)
@@ -50,8 +54,8 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_signal_slot.hpp")
 
 find_package(
-  Qt5
-  COMPONENTS Core Widgets Qml Quick Svg
+  Qt6
+  COMPONENTS Core Widgets Qml Quick SvgWidgets
   REQUIRED)
 
 set(CommonSources
@@ -248,7 +252,8 @@ target_compile_features(gui PUBLIC cxx_std_17)
 target_compile_features(gui PRIVATE cxx_std_17)
 
 # QT
-target_link_libraries(gui PUBLIC Qt::Core Qt::Widgets Qt::Qml Qt::Quick Qt::Svg)
+target_link_libraries(gui PUBLIC Qt6::Core Qt6::Widgets Qt6::Qml Qt6::Quick
+                                 Qt6::SvgWidgets)
 # End QT
 
 # set(Src)
