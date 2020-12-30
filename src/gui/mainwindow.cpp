@@ -507,7 +507,7 @@ QMenuBar *MainWindow::createMenuBar()
     auto reloadMenu = menuBar->addMenu(tr("Reload"));
 
     QAction *reloadStyles = new QAction(tr("Reload styles"), this);
-    connect(reloadStyles, &QAction::triggered, [=] { QtUtil::qtApp()->loadStyleSheet("default"); });
+    connect(reloadStyles, &QAction::triggered, [=] { QtUtil::qtApp()->loadStyleSheet(":/vme/style/qss/default.qss"); });
     reloadMenu->addAction(reloadStyles);
 
     QAction *reloadPropertyQml = new QAction(tr("Reload Properties QML"), this);
