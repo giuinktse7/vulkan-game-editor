@@ -88,12 +88,11 @@ QTabBar::tab {
     border-right: 1px solid #fff;
     min-width: 8ex;
 
-    padding-top: 8px;
-    padding-bottom: 9px;
+    /* padding-top: 8px; */
+    /* padding-bottom: 9px; */
     padding-left: 17px;
     padding-right: 0px;
     margin: 0px;
-
 }
 
 QTabBar::tab:top {
