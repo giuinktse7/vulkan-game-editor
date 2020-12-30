@@ -26,6 +26,7 @@ class QMouseEvent;
 class QSize;
 class QDrag;
 class QPropertyAnimation;
+class QStylePainter;
 class MapView;
 
 class OpacityAnimation : public QObject
@@ -110,6 +111,50 @@ class MapTabWidget : public QTabWidget
     void paintEvent(QPaintEvent *event) override;
 
   private:
+    void removedTabEvent(int removedIndex);
+
+    void setHoveredIndex(int index);
+    void setDragHoveredIndex(int index);
+
+    void updateScrollBarVisibility();
+
+    QPoint mapToScrolled(const QPoint pos) const;
+
+    QWidget *getActiveWidget();
+
+    inline bool dragPending() const
+    {
+      return dragStartPosition.has_value();
+    }
+
+    /*
+      point A point relative to the TabBar
+    */
+    bool intersectsCloseButton(QPoint point) const;
+    bool intersectsCloseButton(QPoint point, int tabIndex) const;
+
+    /*
+    relativePoint A point relative to the TabBar
+    */
+    bool withinWidget(QPoint relativePoint) const;
+
+    MapTabWidget *parentWidget() const;
+
+    /*
+      Moves the tab at srcIndex to the tab at destIndex. Differs from moveTab
+      in that moveTab move srcIndex->destIndex AND destIndex->srcIndex, whereas
+      insertMoveTab only moves srcIndex->destIndex.
+    */
+    bool insertMoveTab(int srcIndex, int destIndex);
+
+    void createScrollVisibilityTimer(time_t millis);
+
+    void dragPanEvent();
+
+    bool tabOverflow() const;
+
+    void drawText(QStylePainter *painter, QStyleOptionTab &tab);
+
     std::optional<QPoint> dragStartPosition;
     int closePendingIndex = -1;
 
@@ -144,49 +189,7 @@ class MapTabWidget : public QTabWidget
 
     bool debug = false;
 
-    void removedTabEvent(int removedIndex);
-
-    void setHoveredIndex(int index);
-    void setDragHoveredIndex(int index);
-
-    void updateScrollBarVisibility();
-
-    QPoint mapToScrolled(const QPoint pos) const;
-
-    QWidget *getActiveWidget();
-
     QDrag *drag = nullptr;
-
-    inline bool dragPending() const
-    {
-      return dragStartPosition.has_value();
-    }
-
-    /*
-      point A point relative to the TabBar
-    */
-    bool intersectsCloseButton(QPoint point) const;
-    bool intersectsCloseButton(QPoint point, int tabIndex) const;
-
-    /*
-    relativePoint A point relative to the TabBar
-    */
-    bool withinWidget(QPoint relativePoint) const;
-
-    MapTabWidget *parentWidget() const;
-
-    /*
-      Moves the tab at srcIndex to the tab at destIndex. Differs from moveTab
-      in that moveTab move srcIndex->destIndex AND destIndex->srcIndex, whereas
-      insertMoveTab only moves srcIndex->destIndex.
-    */
-    bool insertMoveTab(int srcIndex, int destIndex);
-
-    void createScrollVisibilityTimer(time_t millis);
-
-    void dragPanEvent();
-
-    bool tabOverflow() const;
   };
 
 public:

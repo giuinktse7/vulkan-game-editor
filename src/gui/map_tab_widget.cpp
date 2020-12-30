@@ -42,6 +42,10 @@ namespace
     constexpr int DragScrollRefreshRateMs = 1000 / 60;
 
     constexpr auto CloseImagePath = ":/vme/images/close.svg";
+
+    QColor TabBarTabDragHoverColor("#CEDCEC");
+    QColor TabBarTabBackgroundColor("#FFECECEC");
+
 } // namespace
 
 MapTabWidget::MapTabWidget(QWidget *parent)
@@ -164,11 +168,13 @@ MapTabWidget::MapTabBar::MapTabBar(MapTabWidget *parent)
         this->update();
     });
 
-    auto l = new QHBoxLayout;
+    auto l = new QVBoxLayout;
+    l->setAlignment(Qt::AlignBottom);
+    l->setContentsMargins(QMargins(0, 0, 0, 0));
     setLayout(l);
-    l->addWidget(scrollBar);
+
+    // l->addWidget(scrollBar);
     l->insertWidget(0, scrollBar, 1, Qt::AlignLeft | Qt::AlignBottom);
-    // l->setMargin(0);
     l->setSpacing(0);
 
     scrollBar->hide();
@@ -651,6 +657,99 @@ bool MapTabWidget::MapTabBar::event(QEvent *event)
     return QTabBar::event(event);
 }
 
+void MapTabWidget::MapTabBar::showEvent(QShowEvent *event)
+{
+    hasBeenShown = true;
+    event->ignore();
+    QTabBar::showEvent(event);
+}
+
+void MapTabWidget::MapTabBar::initCloseButton(int index)
+{
+    SvgWidget *svg = new SvgWidget(CloseImagePath);
+
+    setTabButton(index, QTabBar::ButtonPosition::RightSide, svg);
+
+    // Close button rendering is handled in MapTabBar
+    setCloseButtonVisible(index, false);
+}
+
+bool MapTabWidget::MapTabBar::tabOverflow() const
+{
+    return !(count() == 0 || tabRect(count() - 1).right() <= rect().right());
+}
+
+void MapTabWidget::MapTabBar::paintEvent(QPaintEvent *event)
+{
+    QStylePainter painter(this);
+
+    for (int i = 0; i < count(); ++i)
+    {
+        QStyleOptionTab tab;
+        initStyleOption(&tab, i);
+
+        if (this->scrollOffset > 0)
+        {
+            tab.rect.moveLeft(tab.rect.x() - scrollOffset);
+        }
+
+        // Don't bother drawing a tab if the entire tab is outside of the visible tab bar.
+        if ((tab.rect.right() < 0 || tab.rect.left() > width()))
+            continue;
+
+        if (i == currentIndex())
+        {
+            // painter.fillRect(tab.rect, "blue");
+            // painter.fillRect(tab.rect, QColor("white"));
+            // painter.fillRect(tab.rect, QColor("red"));
+
+            painter.fillRect(tab.rect, QColor(255, 255, 255, 255));
+        }
+        else if (dragHoverIndex.has_value() && i == dragHoverIndex.value())
+        {
+            painter.fillRect(tab.rect, TabBarTabDragHoverColor);
+        }
+        else
+        {
+            painter.fillRect(tab.rect, TabBarTabBackgroundColor);
+        }
+
+        painter.drawControl(QStyle::CE_TabBarTabShape, tab);
+        drawText(&painter, tab);
+
+        if (i == hoveredIndex || i == currentIndex())
+        {
+            int rightMargin = 5;
+            painter.drawImage(tab.rect.right() - closeButtonImage->width() - rightMargin, tab.rect.height() / 2 - closeButtonImage->height() / 2 + 1, *closeButtonImage);
+        }
+    }
+
+    if (dragHoverIndex.has_value() && dragHoverIndex.value() == -1 && currentIndex() != count() - 1)
+    {
+        QRect last = tabRect(count() - 1);
+        QRect highlightRect = QRect(last.right(), last.top(), rect().right() - last.right(), height());
+
+        painter.fillRect(highlightRect, TabBarTabDragHoverColor);
+    }
+
+    // painter.drawRect(layout()->contentsRect());
+}
+
+void MapTabWidget::MapTabBar::drawText(QStylePainter *painter, QStyleOptionTab &tab)
+{
+    // !Potential QT Bug!
+    // It would be better if we could use 'QStyle::CE_TabBarTabLabel', but it
+    // does not appear respect the tab rectangle (latest checked: 2020-12-30)
+    // // painter.drawControl(QStyle::CE_TabBarTabLabel, tab);
+
+    const int leftTextMargin = 12;
+
+    QRect textRect(tab.rect);
+    textRect.moveLeft(textRect.left() + leftTextMargin);
+
+    painter->drawItemText(textRect, Qt::AlignVCenter, tab.palette, true, tab.text);
+}
+
 /*
 ********************************************************
 ********************************************************
@@ -732,84 +831,6 @@ QVariant MapTabMimeData::retrieveData(const QString &mimeType, QMetaType type) c
     {
         VME_LOG("Unknown mimeType in retrieveData: " << mimeType);
         ABORT_PROGRAM("Unknown mimeType in retrieveData.");
-    }
-}
-
-void MapTabWidget::MapTabBar::showEvent(QShowEvent *event)
-{
-    hasBeenShown = true;
-    event->ignore();
-    QTabBar::showEvent(event);
-}
-
-void MapTabWidget::MapTabBar::initCloseButton(int index)
-{
-    SvgWidget *svg = new SvgWidget(CloseImagePath);
-
-    setTabButton(index, QTabBar::ButtonPosition::RightSide, svg);
-
-    // Close button rendering is handled in MapTabBar
-    setCloseButtonVisible(index, false);
-}
-
-bool MapTabWidget::MapTabBar::tabOverflow() const
-{
-    return !(count() == 0 || tabRect(count() - 1).right() <= rect().right());
-}
-
-void MapTabWidget::MapTabBar::paintEvent(QPaintEvent *event)
-{
-    QStylePainter painter(this);
-
-    QColor dragHoverColor("#CEDCEC");
-
-    for (int i = 0; i < count(); ++i)
-    {
-        QStyleOptionTab tab;
-        initStyleOption(&tab, i);
-
-        if (this->scrollOffset > 0)
-        {
-            tab.rect.moveLeft(tab.rect.x() - scrollOffset);
-        }
-
-        // Don't bother drawing a tab if the entire tab is outside of the visible tab bar.
-        if ((tab.rect.right() < 0 || tab.rect.left() > width()))
-            continue;
-
-        if (i == currentIndex())
-        {
-            // painter.fillRect(tab.rect, "blue");
-            // painter.fillRect(tab.rect, QColor("white"));
-            // painter.fillRect(tab.rect, QColor("red"));
-            painter.fillRect(tab.rect, QColor(255, 255, 255, 255));
-        }
-        else if (dragHoverIndex.has_value() && i == dragHoverIndex.value())
-        {
-            painter.fillRect(tab.rect, dragHoverColor);
-        }
-        else
-        {
-            // painter.fillRect(tab.rect, QColor("red"));
-            painter.fillRect(tab.rect, QColor("#FFECECEC"));
-        }
-
-        painter.drawControl(QStyle::CE_TabBarTabShape, tab);
-        painter.drawControl(QStyle::CE_TabBarTabLabel, tab);
-        if (i == hoveredIndex || i == currentIndex())
-        {
-            int rightMargin = 5;
-
-            painter.drawImage(tab.rect.right() - closeButtonImage->width() - rightMargin, tab.rect.height() / 2 - closeButtonImage->height() / 2 + 1, *closeButtonImage);
-        }
-    }
-
-    if (dragHoverIndex.has_value() && dragHoverIndex.value() == -1 && currentIndex() != count() - 1)
-    {
-        QRect last = tabRect(count() - 1);
-        QRect highlightRect = QRect(last.right(), last.top(), rect().right() - last.right(), height());
-
-        painter.fillRect(highlightRect, dragHoverColor);
     }
 }
 
