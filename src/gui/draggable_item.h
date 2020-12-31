@@ -13,6 +13,7 @@
 
 #include "../debug.h"
 #include "../position.h"
+#include "../signal.h"
 
 class QWindow;
 class QObject;
@@ -151,6 +152,13 @@ namespace ItemDrag
     using Source = MapView *;
 
   public:
+    enum class DropResult
+    {
+      Accepted,
+      Rejected,
+      NoTarget
+    };
+
     DragOperation(DragOperation &&other) noexcept;
     DragOperation &operator=(DragOperation &&other) noexcept;
 
@@ -163,12 +171,14 @@ namespace ItemDrag
     void setRenderCondition(std::function<bool()> f);
 
     void start();
-    void finish();
     bool isDragging() const;
     bool mouseMoveEvent(QMouseEvent *event);
     bool sendDropEvent(QMouseEvent *event);
     QObject *hoveredObject() const;
     Source source() const noexcept;
+
+    template <auto MemberFunction, typename T>
+    void onDragFinished(T *instance);
 
     ItemDrag::MimeData mimeData;
 
@@ -179,7 +189,6 @@ namespace ItemDrag
     void sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event);
     void sendDragLeaveEvent(QObject *object, QPoint position, QMouseEvent *event);
     void sendDragMoveEvent(QObject *object, QPoint position, QMouseEvent *event);
-    bool sendDragDropEvent(QObject *object, QPoint position, QMouseEvent *event);
 
     void setHoveredObject(QObject *object);
 
@@ -193,9 +202,10 @@ namespace ItemDrag
     QPixmap pixmap;
 
     std::function<bool()> shouldRender = [] { return true; };
-    std::function<void()> onDropRejected = [] {};
 
     bool renderingCursor;
+
+    Nano::Signal<void(DropResult)> dragFinished;
   };
 
 } // namespace ItemDrag
@@ -219,6 +229,12 @@ template <typename T, typename std::enable_if<std::is_base_of<ItemDrag::Draggabl
 static std::unique_ptr<ItemDrag::DraggableItem> ItemDrag::DraggableItem::moveToHeap(std::optional<T> value)
 {
   return value ? std::make_unique<T>(value.value()) : std::unique_ptr<DraggableItem>{};
+}
+
+template <auto MemberFunction, typename T>
+void ItemDrag::DragOperation::onDragFinished(T *instance)
+{
+  dragFinished.connect<MemberFunction>(instance);
 }
 
 // Q_DECLARE_METATYPE(DragOperation::MapItem);

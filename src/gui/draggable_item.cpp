@@ -38,7 +38,6 @@ ItemDrag::DragOperation::DragOperation(DragOperation &&other) noexcept
       _source(std::move(other._source)),
       pixmap(std::move(other.pixmap)),
       shouldRender(std::move(other.shouldRender)),
-      onDropRejected(std::move(other.onDropRejected)),
       renderingCursor(std::move(other.renderingCursor)),
       mimeData(std::move(other.mimeData))
 {
@@ -51,7 +50,6 @@ ItemDrag::DragOperation &ItemDrag::DragOperation::operator=(DragOperation &&othe
   _source = std::move(other._source);
   pixmap = std::move(other.pixmap);
   shouldRender = std::move(other.shouldRender);
-  onDropRejected = std::move(other.onDropRejected);
   renderingCursor = std::move(other.renderingCursor);
   mimeData = std::move(other.mimeData);
 
@@ -79,11 +77,6 @@ void ItemDrag::DragOperation::hideCursor()
     QApplication::restoreOverrideCursor();
     renderingCursor = false;
   }
-}
-
-void ItemDrag::DragOperation::finish()
-{
-  hideCursor();
 }
 
 void ItemDrag::DragOperation::setRenderCondition(std::function<bool()> f)
@@ -123,14 +116,23 @@ bool ItemDrag::DragOperation::mouseMoveEvent(QMouseEvent *event)
   return changed;
 }
 
-bool ItemDrag::DragOperation::sendDropEvent(QMouseEvent *event)
+bool ItemDrag::DragOperation::sendDropEvent(QMouseEvent *mouseEvent)
 {
+  hideCursor();
+
   auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-  auto pos = widget->mapFromGlobal(_parent->mapToGlobal(event->pos()));
+  if (!widget)
+  {
+    dragFinished.fire(DropResult::NoTarget);
+    return false;
+  }
 
-  bool accepted = sendDragDropEvent(widget, pos, event);
+  auto pos = widget->mapFromGlobal(_parent->mapToGlobal(mouseEvent->pos()));
 
-  finish();
+  QDropEvent dropEvent(pos, Qt::DropAction::MoveAction, &mimeData, mouseEvent->buttons(), mouseEvent->modifiers());
+  bool accepted = QApplication::sendEvent(widget, &dropEvent);
+
+  dragFinished.fire(accepted ? DropResult::Accepted : DropResult::Rejected);
 
   return accepted;
 }
@@ -209,17 +211,6 @@ void ItemDrag::DragOperation::sendDragMoveEvent(QObject *object, QPoint position
 
   QDragMoveEvent dragMoveEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
   QApplication::sendEvent(object, &dragMoveEvent);
-}
-
-bool ItemDrag::DragOperation::sendDragDropEvent(QObject *object, QPoint position, QMouseEvent *event)
-{
-  if (!object)
-    return false;
-
-  QDropEvent dropEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
-  // QDropEvent dropEvent(position, Qt::DropAction::MoveAction, nullptr, event->buttons(), event->modifiers());
-  bool accepted = QApplication::sendEvent(object, &dropEvent);
-  return accepted;
 }
 
 ItemDrag::DragOperation::Source ItemDrag::DragOperation::source() const noexcept
