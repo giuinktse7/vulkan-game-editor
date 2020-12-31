@@ -129,13 +129,13 @@ namespace MapHistory
   class MoveFromMapToContainer : public ChangeItem
   {
   public:
-    MoveFromMapToContainer(Tile &tile, Item *item, ContainerItemMoveInfo &moveInfo);
+    MoveFromMapToContainer(Tile &tile, Item *item, ContainerMoveData2 &to);
     void commit(MapView &mapView) override;
     void undo(MapView &mapView) override;
 
   private:
     Position fromPosition;
-    ContainerMoveData containerData;
+    ContainerMoveData2 to;
 
     struct PreFirstCommitData
     {

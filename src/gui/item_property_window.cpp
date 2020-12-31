@@ -48,6 +48,7 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
   installEventFilter(new PropertyWindowEventFilter(this));
 
   containerTree.onContainerItemDrop<&ItemPropertyWindow::itemDropEvent>(this);
+  containerTree.onContainerItemDragStart<&ItemPropertyWindow::startContainerItemDrag>(this);
 
   QVariantMap properties;
   properties.insert("containers", QVariant::fromValue(&containerTree.containerModel));
@@ -85,13 +86,13 @@ void ItemPropertyWindow::mouseMoveEvent(QMouseEvent *event)
   // }
 }
 
-void ItemPropertyWindow::mouseReleaseEvent(QMouseEvent *event)
+void ItemPropertyWindow::mouseReleaseEvent(QMouseEvent *mouseEvent)
 {
-  QQuickView::mouseReleaseEvent(event);
+  QQuickView::mouseReleaseEvent(mouseEvent);
 
   if (dragOperation)
   {
-    bool accepted = dragOperation->sendDropEvent(event);
+    bool accepted = dragOperation->sendDropEvent(mouseEvent);
     VME_LOG_D("Drop accepted? " << accepted);
     if (accepted)
     {
@@ -150,7 +151,7 @@ void ItemPropertyWindow::focusItem(Item &item, Position &position, MapView &mapV
 
   auto maybeTileIndex = mapView.getTile(position)->indexOf(&item);
   DEBUG_ASSERT(maybeTileIndex.has_value(), "The tile did not have the item.");
-  auto tileIndex = maybeTileIndex.value();
+  auto tileIndex = static_cast<uint16_t>(maybeTileIndex.value());
 
   bool isContainer = item.isContainer();
 
@@ -244,7 +245,7 @@ void ItemPropertyWindow::reloadSource()
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 
-void GuiItemContainer::ItemModel::refresh()
+void GuiItemContainer::ContainerModel::refresh()
 {
   beginResetModel();
   endResetModel();
@@ -252,7 +253,6 @@ void GuiItemContainer::ItemModel::refresh()
 
 void ItemPropertyWindow::refresh()
 {
-  // itemContainerModels.front()->refresh();
   if (containerTree.hasRoot())
   {
     auto containerArea = child(ObjectName::ItemContainerArea);
@@ -265,6 +265,7 @@ void ItemPropertyWindow::refresh()
 
 bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode, int index, const ItemDrag::DraggableItem *droppedItem)
 {
+  using DragSource = ItemDrag::DraggableItem::Type;
   auto &focusedItem = state.focusedAs<FocusedItem>();
   if (droppedItem->item() == focusedItem.item)
   {
@@ -274,35 +275,38 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode
 
   MapView *mapView = state.mapView;
 
-  if (util::hasDynamicType<ItemDrag::MapItem *>(droppedItem))
+  DragSource source = droppedItem->type();
+  switch (source)
+  {
+  case DragSource::MapItem:
   {
     auto dropped = static_cast<const ItemDrag::MapItem *>(droppedItem);
-    if (mapView == dropped->mapView)
+
+    if (!(mapView == dropped->mapView))
     {
-      auto container = treeNode->container;
-
-      mapView->history.beginTransaction(TransactionType::MoveItems);
-
-      // TODO Create a history move action that moves into a container nested within another (possibly multiple) containers.
-      MapHistory::ContainerItemMoveInfo moveInfo;
-      Tile *_tile = mapView->getTile(focusedItem.position);
-      moveInfo.tile = _tile;
-      moveInfo.item = container->item();
-      moveInfo.containerIndex = std::min<size_t>(static_cast<size_t>(index), container->size());
-
-      mapView->moveFromMapToContainer(*dropped->tile, dropped->_item, moveInfo);
-
-      mapView->history.endTransaction(TransactionType::MoveItems);
-
-      // itemContainerModels.front()->refresh();
-
-      containerTree.containerModel.refresh(treeNode->model());
+      ABORT_PROGRAM("Drag between different MapViews is not implemented.");
     }
+
+    auto container = treeNode->container;
+
+    mapView->history.beginTransaction(TransactionType::MoveItems);
+
+    MapHistory::ContainerMoveData2 to(
+        focusedItem.position,
+        static_cast<uint16_t>(focusedItem.tileIndex),
+        treeNode->indexChain(index));
+
+    mapView->moveFromMapToContainer(*dropped->tile, dropped->_item, to);
+
+    mapView->history.endTransaction(TransactionType::MoveItems);
+
+    // containerTree.containerModel.refresh(treeNode->model());
+    treeNode->model()->refresh();
+    break;
   }
-  else if (util::hasDynamicType<ItemDrag::ContainerItemDrag *>(droppedItem))
+  case DragSource::ContainerItem:
   {
     auto dropped = static_cast<const ItemDrag::ContainerItemDrag *>(droppedItem);
-    VME_LOG_D("Received container item drop!");
 
     if (dropped->mapView != state.mapView)
     {
@@ -324,17 +328,23 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode
 
     MapHistory::ContainerMoveData2 to(
         focusedItem.position,
-        static_cast<uint16_t>(focusedItem.tileIndex), treeNode->indices());
+        static_cast<uint16_t>(focusedItem.tileIndex), treeNode->indexChain(index));
 
     mapView->history.beginTransaction(TransactionType::MoveItems);
     mapView->moveFromContainerToContainer(from, to);
     mapView->history.endTransaction(TransactionType::MoveItems);
 
-    // itemContainerModels.front()->refresh();
-    containerTree.containerModel.refresh(0);
+    // Update child indices
+    if (dropped->container() == targetContainer)
+    {
+      treeNode->itemMoved(dropped->containerIndices.back(), index);
+    }
+
+    // containerTree.containerModel.refresh(0);
+    treeNode->model()->refresh();
+    break;
   }
-  else
-  {
+  default:
     VME_LOG_D("[ItemPropertyWindow::itemDropEvent] What do we do here?");
     return false;
   }
@@ -342,25 +352,26 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode
   return true;
 }
 
-void ItemPropertyWindow::startContainerItemDrag(int index)
+void ItemPropertyWindow::startContainerItemDrag(GuiItemContainer::ContainerNode *treeNode, int index)
 {
   VME_LOG_D("ItemPropertyWindow::startContainerItemDrag");
 
-  auto focusedItem = state.focusedAs<FocusedItem>();
+  const auto &focusedItem = state.focusedAs<FocusedItem>();
 
   ItemDrag::ContainerItemDrag itemDrag;
   itemDrag.mapView = state.mapView;
   itemDrag.position = focusedItem.position;
-  // TODO Use correct indices
-  itemDrag.containerIndices = std::vector<uint16_t>{static_cast<uint16_t>(index)};
-  itemDrag.tileIndex = focusedItem.tileIndex;
+
+  itemDrag.containerIndices = treeNode->indexChain(index);
+  itemDrag.tileIndex = static_cast<uint16_t>(focusedItem.tileIndex);
 
   dragOperation.emplace(ItemDrag::DragOperation::create(std::move(itemDrag), state.mapView, this));
   dragOperation->setRenderCondition([this] { return !state.mapView->underMouse(); });
   dragOperation->start();
+  dragOperation->onDragFinished<&GuiItemContainer::ContainerNode::onDragFinished>(treeNode);
 }
 
-GuiItemContainer::ItemModel::ItemModel(ContainerNode *treeNode, QObject *parent)
+GuiItemContainer::ContainerModel::ContainerModel(ContainerNode *treeNode, QObject *parent)
     : QAbstractListModel(parent), treeNode(treeNode)
 {
   // TODO: Maybe this reset is not necessary?
@@ -368,7 +379,7 @@ GuiItemContainer::ItemModel::ItemModel(ContainerNode *treeNode, QObject *parent)
   endResetModel();
 }
 
-void GuiItemContainer::ItemModel::containerItemClicked(int index)
+void GuiItemContainer::ContainerModel::containerItemClicked(int index)
 {
   auto k = container();
   VME_LOG_D("containerItemClicked. Item id: " << container()->item()->serverId() << ", index: " << index);
@@ -378,7 +389,12 @@ void GuiItemContainer::ItemModel::containerItemClicked(int index)
   }
 }
 
-bool GuiItemContainer::ItemModel::itemDropEvent(int index, QByteArray serializedDraggableItem)
+void GuiItemContainer::ContainerModel::itemDragStartEvent(int index)
+{
+  treeNode->itemDragStartEvent(index);
+}
+
+bool GuiItemContainer::ContainerModel::itemDropEvent(int index, QByteArray serializedDraggableItem)
 {
   VME_LOG_D("Index: " << index);
   auto droppedItem = ItemDrag::DraggableItem::deserialize(serializedDraggableItem);
@@ -404,51 +420,55 @@ bool GuiItemContainer::ItemModel::itemDropEvent(int index, QByteArray serialized
   return true;
 }
 
-int GuiItemContainer::ItemModel::size()
+int GuiItemContainer::ContainerModel::size()
 {
   return static_cast<int>(treeNode->container->size());
 }
 
-int GuiItemContainer::ItemModel::capacity()
+int GuiItemContainer::ContainerModel::capacity()
 {
   return static_cast<int>(treeNode->container->capacity());
 }
 
-ItemData::Container *GuiItemContainer::ItemModel::container() const noexcept
+ItemData::Container *GuiItemContainer::ContainerModel::container() const noexcept
 {
   return treeNode->container;
 }
 
-ItemData::Container *GuiItemContainer::ItemModel::container() noexcept
+ItemData::Container *GuiItemContainer::ContainerModel::container() noexcept
 {
-  return const_cast<ItemData::Container *>(const_cast<const GuiItemContainer::ItemModel *>(this)->container());
+  return const_cast<ItemData::Container *>(const_cast<const GuiItemContainer::ContainerModel *>(this)->container());
 }
 
-bool GuiItemContainer::ItemModel::addItem(Item &&item)
+bool GuiItemContainer::ContainerModel::addItem(Item &&item)
 {
   if (container()->isFull())
     return false;
 
   int size = static_cast<int>(container()->size());
 
-  ItemModel::createIndex(size, 0);
-  ;
+  // ContainerModel::createIndex(size, 0);
 
   // beginInsertRows(QModelIndex(), size, size + 1);
   bool added = container()->addItem(std::move(item));
   // endInsertRows();
 
-  dataChanged(ItemModel::createIndex(size, 0), ItemModel::createIndex(size + 1, 0));
-
+  emit dataChanged(ContainerModel::createIndex(size, 0), ContainerModel::createIndex(size + 1, 0));
   return added;
 }
 
-int GuiItemContainer::ItemModel::rowCount(const QModelIndex &parent) const
+void GuiItemContainer::ContainerModel::indexChanged(int index)
+{
+  auto modelIndex = ContainerModel::createIndex(index, 0);
+  emit dataChanged(modelIndex, modelIndex);
+}
+
+int GuiItemContainer::ContainerModel::rowCount(const QModelIndex &parent) const
 {
   return container()->capacity();
 }
 
-QVariant GuiItemContainer::ItemModel::data(const QModelIndex &modelIndex, int role) const
+QVariant GuiItemContainer::ContainerModel::data(const QModelIndex &modelIndex, int role) const
 {
   auto index = modelIndex.row();
   if (index < 0 || index >= rowCount())
@@ -469,7 +489,7 @@ QVariant GuiItemContainer::ItemModel::data(const QModelIndex &modelIndex, int ro
   return QVariant();
 }
 
-QHash<int, QByteArray> GuiItemContainer::ItemModel::roleNames() const
+QHash<int, QByteArray> GuiItemContainer::ContainerModel::roleNames() const
 {
   QHash<int, QByteArray> roles;
   roles[ServerIdRole] = "serverId";
@@ -491,24 +511,24 @@ QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, con
   return QtUtil::itemPixmap(serverId);
 }
 
-//>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>ContainerModel>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>ContainerListModel>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-GuiItemContainer::ContainerModel::ContainerModel(QObject *parent)
+GuiItemContainer::ContainerListModel::ContainerListModel(QObject *parent)
     : QAbstractListModel(parent) {}
 
-std::vector<GuiItemContainer::ItemModel *>::iterator GuiItemContainer::ContainerModel::find(const ItemModel *model)
+std::vector<GuiItemContainer::ContainerModel *>::iterator GuiItemContainer::ContainerListModel::find(const ContainerModel *model)
 {
   return std::find_if(
       itemModels.begin(),
       itemModels.end(),
-      [model](const ItemModel *_model) { return model == _model; });
+      [model](const ContainerModel *_model) { return model == _model; });
 }
 
-void GuiItemContainer::ContainerModel::addItemModel(ItemModel *model)
+void GuiItemContainer::ContainerListModel::addItemModel(ContainerModel *model)
 {
   auto modelSize = static_cast<int>(itemModels.size());
   beginInsertRows(QModelIndex(), modelSize, modelSize);
@@ -517,12 +537,12 @@ void GuiItemContainer::ContainerModel::addItemModel(ItemModel *model)
   emit sizeChanged(size());
 }
 
-void GuiItemContainer::ContainerModel::remove(ItemModel *model)
+void GuiItemContainer::ContainerListModel::remove(ContainerModel *model)
 {
   auto found = std::remove_if(
       itemModels.begin(),
       itemModels.end(),
-      [model](const ItemModel *_model) { return model == _model; });
+      [model](const ContainerModel *_model) { return model == _model; });
 
   if (found == itemModels.end())
   {
@@ -533,7 +553,7 @@ void GuiItemContainer::ContainerModel::remove(ItemModel *model)
   itemModels.erase(found);
 }
 
-void GuiItemContainer::ContainerModel::refresh(ItemModel *model)
+void GuiItemContainer::ContainerListModel::refresh(ContainerModel *model)
 {
   auto found = find(model);
   DEBUG_ASSERT(found != itemModels.end(), "model was not present.");
@@ -541,7 +561,7 @@ void GuiItemContainer::ContainerModel::refresh(ItemModel *model)
   (*found)->refresh();
 }
 
-void GuiItemContainer::ContainerModel::remove(int index)
+void GuiItemContainer::ContainerListModel::remove(int index)
 {
   beginRemoveRows(QModelIndex(), index, index);
   itemModels.erase(itemModels.begin() + index);
@@ -549,17 +569,17 @@ void GuiItemContainer::ContainerModel::remove(int index)
   emit sizeChanged(size());
 }
 
-int GuiItemContainer::ContainerModel::rowCount(const QModelIndex &parent) const
+int GuiItemContainer::ContainerListModel::rowCount(const QModelIndex &parent) const
 {
   return static_cast<int>(itemModels.size());
 }
 
-int GuiItemContainer::ContainerModel::size()
+int GuiItemContainer::ContainerListModel::size()
 {
   return rowCount();
 }
 
-QVariant GuiItemContainer::ContainerModel::data(const QModelIndex &modelIndex, int role) const
+QVariant GuiItemContainer::ContainerListModel::data(const QModelIndex &modelIndex, int role) const
 {
   auto index = modelIndex.row();
   if (index < 0 || index >= rowCount())
@@ -573,7 +593,7 @@ QVariant GuiItemContainer::ContainerModel::data(const QModelIndex &modelIndex, i
   return QVariant();
 }
 
-void GuiItemContainer::ContainerModel::clear()
+void GuiItemContainer::ContainerListModel::clear()
 {
   if (itemModels.empty())
     return;
@@ -584,14 +604,14 @@ void GuiItemContainer::ContainerModel::clear()
   emit sizeChanged(size());
 }
 
-void GuiItemContainer::ContainerModel::refresh(int index)
+void GuiItemContainer::ContainerListModel::refresh(int index)
 {
   itemModels.at(index)->refresh();
   auto modelIndex = createIndex(index, 0);
   dataChanged(modelIndex, modelIndex);
 }
 
-QHash<int, QByteArray> GuiItemContainer::ContainerModel::roleNames() const
+QHash<int, QByteArray> GuiItemContainer::ContainerListModel::roleNames() const
 {
   QHash<int, QByteArray> roles;
   roles[to_underlying(Role::ItemModel)] = "itemModel";
@@ -621,7 +641,10 @@ GuiItemContainer::ContainerTree::Root::Root(
     : ContainerNode(container, _signals),
       mapPosition(mapPosition),
       mapView(mapView),
-      tileIndex(tileIndex) {}
+      tileIndex(tileIndex)
+{
+  VME_LOG_D("Root: " << this);
+}
 
 std::unique_ptr<GuiItemContainer::ContainerNode> GuiItemContainer::ContainerTree::Root::createChildNode(int index)
 {
@@ -631,6 +654,12 @@ std::unique_ptr<GuiItemContainer::ContainerNode> GuiItemContainer::ContainerTree
   childContainer->setParent(mapView, mapPosition);
 
   return std::make_unique<ContainerTree::Node>(childContainer, this, index);
+}
+
+GuiItemContainer::ContainerTree::Node::Node(ItemData::Container *container, ContainerNode *parent, uint16_t parentIndex)
+    : ContainerNode(container, parent), parent(parent), indexInParentContainer(parentIndex)
+{
+  VME_LOG_D("Node() with parent: " << parent);
 }
 
 std::unique_ptr<GuiItemContainer::ContainerNode> GuiItemContainer::ContainerTree::Node::createChildNode(int index)
@@ -665,12 +694,12 @@ void ContainterTree::clear()
   containerModel.clear();
 }
 
-void ContainterTree::modelAddedEvent(ItemModel *model)
+void ContainterTree::modelAddedEvent(ContainerModel *model)
 {
   containerModel.addItemModel(model);
 }
 
-void ContainterTree::modelRemovedEvent(ItemModel *model)
+void ContainterTree::modelRemovedEvent(ContainerModel *model)
 {
   containerModel.remove(model);
 }
@@ -693,24 +722,111 @@ GuiItemContainer::ContainerNode::~ContainerNode()
   }
 }
 
-std::vector<uint16_t> GuiItemContainer::ContainerNode::indices() const
+void GuiItemContainer::ContainerNode::onDragFinished(ItemDrag::DragOperation::DropResult result)
+{
+  std::string s;
+  using DropResult = ItemDrag::DragOperation::DropResult;
+
+  if (result == DropResult::Accepted)
+  {
+    // TODO
+    // It would be faster to only refresh the changed indices. But this should
+    // not make a significant difference in performance, because the model will
+    // have at most ~25 items (max capacity of the largest container item).
+    _model->refresh();
+  }
+  switch (result)
+  {
+  case DropResult::Accepted:
+    s = "Accepted";
+    break;
+  case DropResult::Rejected:
+    s = "Rejected";
+    break;
+  case DropResult::NoTarget:
+    s = "NoTarget";
+    break;
+  }
+
+  VME_LOG_D("GuiItemContainer::ContainerNode::onDragFinished: " << s);
+}
+
+void GuiItemContainer::ContainerTree::Node::setIndexInParent(int index)
+{
+  indexInParentContainer = index;
+}
+
+void GuiItemContainer::ContainerTree::Root::setIndexInParent(int index)
+{
+  ABORT_PROGRAM("Can not be used on a Root node.");
+}
+
+void GuiItemContainer::ContainerNode::itemMoved(int fromIndex, int toIndex)
+{
+  if (children.empty())
+    return;
+
+  std::vector<int> incIndices;
+  std::vector<int> decIndices;
+
+  for (const auto &[i, _] : children)
+  {
+    if (fromIndex < i && i <= toIndex)
+    {
+      decIndices.push_back(i);
+    }
+    else if (toIndex <= i && i < fromIndex)
+    {
+      incIndices.push_back(i);
+    }
+  }
+
+  for (int i : incIndices)
+  {
+    int newIndex = i + 1;
+
+    auto mapNode = children.extract(i);
+    mapNode.key() = newIndex;
+    children.insert(std::move(mapNode));
+
+    children.at(newIndex)->setIndexInParent(newIndex);
+  }
+
+  for (int i : decIndices)
+  {
+    int newIndex = i - 1;
+
+    auto mapNode = children.extract(i);
+    mapNode.key() = newIndex;
+    children.insert(std::move(mapNode));
+
+    children.at(newIndex)->setIndexInParent(newIndex);
+  }
+}
+
+std::vector<uint16_t> GuiItemContainer::ContainerNode::indexChain() const
+{
+  return indexChain(0);
+}
+
+std::vector<uint16_t> GuiItemContainer::ContainerNode::indexChain(int index) const
 {
   std::vector<uint16_t> result;
+  result.emplace_back(index);
+
   auto current = this;
   while (!current->isRoot())
   {
     auto node = static_cast<const ContainerTree::Node *>(this);
-    result.emplace_back(node->parentContainerIndex);
+    result.emplace_back(node->indexInParentContainer);
     current = node->parent;
   }
-
-  result.emplace_back(static_cast<const ContainerTree::Root *>(this)->tileIndex);
 
   std::reverse(result.begin(), result.end());
   return result;
 }
 
-GuiItemContainer::ItemModel *GuiItemContainer::ContainerNode::model()
+GuiItemContainer::ContainerModel *GuiItemContainer::ContainerNode::model()
 {
   return _model.has_value() ? &(*_model) : nullptr;
 }
@@ -765,10 +881,18 @@ void GuiItemContainer::ContainerNode::toggleChild(int index)
   child->second->toggle();
 }
 
+void GuiItemContainer::ContainerNode::itemDragStartEvent(int index)
+{
+  _signals->itemDragStarted.fire(this, index);
+}
+
 void GuiItemContainer::ContainerNode::itemDropEvent(int index, ItemDrag::DraggableItem *droppedItem)
 {
   // TODO Maybe use fire_accumulate here to see if drop was accepted.
   //Drop **should** always be accepted for now, but that might change in the future.
+
+  // Index must be in [0, size - 1]
+  index = std::min(index, std::max(_model->size() - 1, 0));
 
   _signals->itemDropped.fire(this, index, droppedItem);
 }

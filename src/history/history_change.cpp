@@ -144,22 +144,29 @@ namespace MapHistory
     }
   }
 
-  ContainerMoveData::ContainerMoveData(ContainerItemMoveInfo &moveInfo)
-      : position(moveInfo.tile->position()),
-        tileIndex(moveInfo.tile->indexOf(moveInfo.item).value()),
-        containerIndex(static_cast<uint16_t>(moveInfo.containerIndex)) {}
+  // ContainerMoveData::ContainerMoveData(ContainerItemMoveInfo &containerInfo)
+  //     : position(containerInfo.tile->position()),
+  //       tileIndex(containerInfo.tile->indexOf(containerInfo.item).value()),
+  //       containerIndex(static_cast<uint16_t>(containerInfo.containerIndex)) {}
+
+  ContainerMoveData::ContainerMoveData(ContainerItemMoveInfo &containerInfo)
+  {
+    position = containerInfo.tile->position();
+    tileIndex = containerInfo.tile->indexOf(containerInfo.item).value();
+    containerIndex = static_cast<uint16_t>(containerInfo.containerIndex);
+  }
 
   ItemData::Container *ContainerMoveData::container(MapView &mapView)
   {
     return mapView.getTile(position)->itemAt(tileIndex)->getDataAs<ItemData::Container>();
   }
 
-  MoveFromMapToContainer::MoveFromMapToContainer(Tile &tile, Item *item, ContainerItemMoveInfo &moveInfo)
-      : fromPosition(tile.position()), data(PreFirstCommitData{item}), containerData(moveInfo) {}
+  MoveFromMapToContainer::MoveFromMapToContainer(Tile &tile, Item *item, ContainerMoveData2 &to)
+      : fromPosition(tile.position()), data(PreFirstCommitData{item}), to(to) {}
 
   void MoveFromMapToContainer::commit(MapView &mapView)
   {
-    auto container = containerData.container(mapView);
+    auto container = to.container(mapView);
     Tile *tile = mapView.getTile(fromPosition);
     DEBUG_ASSERT(tile != nullptr, "Tile should never be nullptr here.");
 
@@ -174,7 +181,7 @@ namespace MapHistory
       data = newData;
     }
 
-    container->insertItem(tile->dropItem(std::get<Data>(data).tileIndex), containerData.containerIndex);
+    container->insertItem(tile->dropItem(std::get<Data>(data).tileIndex), to.containerIndex());
     updateSelection(mapView, tile->position());
   }
 
@@ -183,7 +190,7 @@ namespace MapHistory
     Tile *tile = mapView.getTile(fromPosition);
     Data &moveData = std::get<Data>(data);
 
-    tile->insertItem(containerData.container(mapView)->dropItem(containerData.containerIndex), moveData.tileIndex);
+    tile->insertItem(to.container(mapView)->dropItem(to.containerIndex()), moveData.tileIndex);
     updateSelection(mapView, tile->position());
   }
 

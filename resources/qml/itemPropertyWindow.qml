@@ -81,7 +81,8 @@ ScrollView {
           Layout.preferredHeight : 30
 
           objectName : "count_spinbox"
-          onValueChanged : { // C_PropertyWindow.countChanged(value);
+          onValueChanged : {
+            Context.C_PropertyWindow.countChanged(value);
           }
         }
       }

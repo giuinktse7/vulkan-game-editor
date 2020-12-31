@@ -79,7 +79,7 @@ public:
 	void commitTransaction(TransactionType groupType, std::function<void()> f);
 
 	Tile *getTile(const Position pos) const;
-	Tile *MapView::getTile(const Position pos);
+	Tile *getTile(const Position pos);
 
 	Tile &getOrCreateTile(const Position pos);
 	void insertTile(Tile &&tile);
@@ -120,7 +120,7 @@ public:
 
 	void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
 
-	void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerItemMoveInfo &moveInfo);
+	void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerMoveData2 &containerInfo);
 	void moveFromContainerToMap(MapHistory::ContainerMoveData2 &moveInfo, Tile &tile);
 	void moveFromContainerToContainer(MapHistory::ContainerMoveData2 &from, MapHistory::ContainerMoveData2 &to);
 

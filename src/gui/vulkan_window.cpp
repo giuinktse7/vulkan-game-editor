@@ -201,18 +201,13 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
   if (dragOperation)
   {
     bool accepted = dragOperation->sendDropEvent(event);
-    if (accepted)
-    {
-      // Only remove the item from the map if it was not dropped back onto the map.
-      // if (!containsMouse())
-      // {
-      //   const auto &draggedItem = dragOperation->mimeData.draggableItem;
-      // }
-    }
-    else
+    if (!accepted)
     {
       mapView->editorAction.as<MouseAction::DragDropItem>()->moveDelta.emplace(PositionConstants::Zero);
     }
+
+    mapView->editorAction.unlock();
+    mapView->editorAction.setPrevious();
 
     dragOperation.reset();
   }

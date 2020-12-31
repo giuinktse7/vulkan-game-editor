@@ -121,7 +121,7 @@ Item {
         Image {
           anchors.fill: parent
           source: {
-            console.log(itemSlot.serverId);
+            // console.log(itemSlot.serverId);
             return itemSlot.serverId != -1 ? "image://itemTypes/" + itemSlot.serverId : ""
           }
         }
@@ -130,21 +130,17 @@ Item {
           onItemDroppedFromMap: function (mapItemBuffer, dropCallback) {
             const accepted = itemContainer.model.itemDropEvent(itemSlot.index, mapItemBuffer);
             dropCallback(accepted);
-
-            // itemContainer.itemDroppedFromMap(itemSlot.index, mapItemBuffer,
-                                            //  acceptDropCallback)
           }
 
           onDragStart: {
             if (itemSlot.index < itemContainer.model.size) {
-              Context.C_PropertyWindow.startContainerItemDrag(itemSlot.index)
+              itemContainer.model.itemDragStartEvent(itemSlot.index);
             }
           }
 
           onRightClick: {
             itemContainer.model.containerItemClicked(itemSlot.index);
             itemContainer.updateLayout();
-            // Context.C_PropertyWindow.containerItemClicked(itemSlot.index);
           }
         }
 

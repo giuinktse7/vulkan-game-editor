@@ -338,6 +338,8 @@ void MainWindow::initializeUI()
   itemPalette->setMinimumWidth(240);
   itemPalette->setMaximumWidth(600);
 
+  itemPalette->addItem(2148);
+
   itemPalette->addItem(103);
   itemPalette->addItems(1533, 1542);
   itemPalette->addItems(5315, 5331);
