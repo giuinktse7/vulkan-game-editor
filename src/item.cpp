@@ -77,6 +77,8 @@ Item Item::deepCopy() const
 {
 	Item item(this->itemType->id);
 
+	item.entityId = entityId;
+
 	if (_attributes)
 	{
 		auto attributeCopy = *_attributes.get();
@@ -211,11 +213,10 @@ ItemData::Container *Item::getOrCreateContainer()
 void Item::registerEntity()
 {
 	DEBUG_ASSERT(!entityId.has_value(), "Attempted to register an entity that already has an entity id.");
+	ecs::EntityId entityId = assignNewEntityId();
 
 	if (itemType->hasAnimation())
 	{
-		ecs::EntityId entityId = assignNewEntityId();
-
 		auto animation = itemType->appearance->getSpriteInfo().animation();
 		g_ecs.addComponent(entityId, ItemAnimationComponent(animation));
 	}

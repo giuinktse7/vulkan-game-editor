@@ -10,14 +10,13 @@
 #include <vector>
 
 #include "const.h"
-#include "otb.h"
-
 #include "graphics/texture_atlas.h"
-#include "position.h"
-
-#include "time_point.h"
-
 #include "item_type.h"
+#include "otb.h"
+#include "position.h"
+#include "signal.h"
+#include "time_point.h"
+#include "tracked_item.h"
 
 /* Amount of cached texture atlas pointers that an ItemType can store.
   If the appearance of an ItemType has more than this amount of texture atlases,
@@ -25,6 +24,7 @@
   amount of texture atlases.
 */
 
+class Item;
 enum class ItemTypes_t;
 
 class Items
@@ -32,11 +32,20 @@ class Items
 public:
   static Items items;
 
+  // Used to track (observe) items and be notified if the address of an item
+  // with a given entity ID changes. The key is an entity ID.
+  std::unordered_map<uint32_t, Nano::Signal<void(Item *)>> itemSignals;
+
   uint32_t highestClientId = 0;
   uint32_t highestServerId = 0;
 
   static void loadFromOtb(const std::filesystem::path path);
   static void loadFromXml(const std::filesystem::path path);
+
+  template <auto MemberFunction, typename T>
+  ItemEntityIdDisconnect trackItem(uint32_t entityId, T *instance);
+
+  void itemMoved(Item *item);
 
   /**
    * Load item types that are not present in the items.otb.
@@ -120,6 +129,35 @@ private:
 
   OTB::VersionInfo _otbVersionInfo;
 };
+
+template <auto MemberFunction, typename T>
+ItemEntityIdDisconnect Items::trackItem(uint32_t entityId, T *instance)
+{
+  auto outerFound = itemSignals.find(entityId);
+  if (outerFound == itemSignals.end())
+  {
+    itemSignals.try_emplace(entityId);
+    outerFound = itemSignals.find(entityId);
+  }
+
+  auto itemMoveSignals = &itemSignals;
+
+  std::function<void()> disconnect = [itemMoveSignals, instance, entityId]() {
+    auto found = itemMoveSignals->find(entityId);
+    if (found != itemMoveSignals->end())
+    {
+      found->second.disconnect<MemberFunction>(instance);
+      if (found->second.is_empty())
+      {
+        itemMoveSignals->erase(entityId);
+      }
+    }
+  };
+
+  outerFound->second.connect<MemberFunction>(instance);
+
+  return ItemEntityIdDisconnect(disconnect);
+}
 
 inline std::ostringstream stringify(const itemproperty_t &property)
 {

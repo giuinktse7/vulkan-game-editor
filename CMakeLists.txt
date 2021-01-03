@@ -93,6 +93,7 @@ set(CommonSources
     src/graphics/vulkan_helpers.h
     src/item.h
     src/item_wrapper.h
+    src/tracked_item.h
     src/items.h
     src/item_attribute.h
     src/item_type.h
@@ -164,6 +165,7 @@ set(CommonSources
     src/graphics/vulkan_debug.cpp
     src/item.cpp
     src/item_wrapper.cpp
+    src/tracked_item.cpp
     src/items.cpp
     src/item_attribute.cpp
     src/item_type.cpp

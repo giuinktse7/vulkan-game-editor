@@ -154,7 +154,8 @@
     "qdatastream": "cpp",
     "qdebug": "cpp",
     "qpoint": "cpp",
-    "qwindow": "cpp"
+    "qwindow": "cpp",
+    "bit": "cpp"
   },
   "files.exclude": {
     "**/.git": true,
