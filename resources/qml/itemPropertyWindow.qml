@@ -5,45 +5,20 @@ import QtQuick.Layouts 1.15
 import "./vme" as Vme
 import Vme.context 1.0 as Context
 
-//   ColumnLayout{
-//     spacing: 2
-
-//     Rectangle {
-//         Layout.alignment: Qt.AlignCenter
-//         color: "red"
-//         Layout.preferredWidth: 40
-//         Layout.preferredHeight: 40
-//     }
-
-//     Rectangle {
-//         Layout.alignment: Qt.AlignRight
-//         color: "green"
-//         Layout.preferredWidth: 40
-//         Layout.preferredHeight: 70
-//     }
-
-//     Rectangle {
-//         Layout.alignment: Qt.AlignBottom
-//         Layout.fillHeight: true
-//         color: "blue"
-//         Layout.preferredWidth: 70
-//         Layout.preferredHeight: 40
-//     }
-// }
-
 ScrollView {
   anchors.fill: parent
   id : propertyContainer
   clip : true
   contentHeight : contents.height
+  padding: 14
 
   property var containers
 
-    Rectangle {
-          color : "transparent"
-          anchors.fill : parent
-          border.color : "red"
-        }
+    // Rectangle {
+    //       color : "transparent"
+    //       anchors.fill : parent
+    //       border.color : "red"
+    //     }
 
 
   // ColumnLayout {
