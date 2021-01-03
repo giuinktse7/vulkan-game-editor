@@ -2,6 +2,8 @@
 
 #include "debug.h"
 #include "file.h"
+#include "items.h"
+#include "otb.h"
 
 namespace
 {

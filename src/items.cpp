@@ -13,6 +13,7 @@
 #include "version.h"
 
 #include "graphics/appearances.h"
+#include "item.h"
 #include "item_type.h"
 
 Items Items::items;
@@ -121,6 +122,20 @@ void Items::loadFromXml(const std::filesystem::path path)
 	}
 
 	VME_LOG("Loaded items.xml in " << start.elapsedMillis() << " ms.");
+}
+
+void Items::itemMoved(Item *item)
+{
+	if (!item->isEntity())
+		return;
+
+	auto entityId = item->getEntityId().value();
+
+	auto found = itemSignals.find(entityId);
+	if (found != itemSignals.end())
+	{
+		found->second.fire(item);
+	}
 }
 
 bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)

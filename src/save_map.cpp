@@ -6,6 +6,7 @@
 
 #include "debug.h"
 #include "definitions.h"
+#include "items.h"
 #include "tile.h"
 #include "version.h"
 

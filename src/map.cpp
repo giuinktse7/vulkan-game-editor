@@ -6,6 +6,7 @@
 #include "ecs/ecs.h"
 #include "ecs/item_animation.h"
 #include "graphics/appearances.h"
+#include "items.h"
 #include "tile_location.h"
 
 #include <stack>

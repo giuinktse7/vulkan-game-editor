@@ -46,7 +46,7 @@ public:
 	std::optional<size_t> indexOf(Item *item) const;
 	Item *itemAt(size_t index);
 
-	void addItem(Item &&item);
+	Item *addItem(Item &&item);
 	void insertItem(Item &&item, size_t index);
 	void removeItem(size_t index);
 	void removeItem(Item *item);
@@ -57,6 +57,7 @@ public:
 	std::unique_ptr<Item> dropGround();
 	void setGround(std::unique_ptr<Item> ground);
 	void moveItems(Tile &other);
+	void moveItemsWithBroadcast(Tile &other);
 	void moveSelected(Tile &other);
 
 	const std::vector<Item>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
@@ -139,8 +140,8 @@ public:
 private:
 	friend class MapView;
 
-	void replaceGround(Item &&ground);
-	void replaceItem(size_t index, Item &&item);
+	Item *replaceGround(Item &&ground);
+	Item *replaceItem(size_t index, Item &&item);
 
 	std::vector<Item> _items;
 	Position _position;

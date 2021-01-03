@@ -5,6 +5,7 @@
 #include "ecs/ecs.h"
 #include "ecs/item_animation.h"
 #include "tile_location.h"
+#include "items.h"
 
 Tile::Tile(TileLocation &tileLocation)
     : _position(tileLocation.position()), _flags(0), _selectionCount(0) {}

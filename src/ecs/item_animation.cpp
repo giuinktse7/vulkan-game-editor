@@ -3,10 +3,10 @@
 #include <chrono>
 #include <numeric>
 
-#include "../type_trait.h"
 #include "../debug.h"
 #include "../logger.h"
 #include "../random.h"
+#include "../type_trait.h"
 
 constexpr TypeList<ItemAnimationComponent> requiredComponents;
 
@@ -122,6 +122,9 @@ void ItemAnimationSystem::update()
 {
   TimePoint currentTime = TimePoint::now();
 
+  // TODO
+  // Only visible entities need to have their animtions updated. There's no
+  // system in place for this yet (2021-01-01).
   for (const auto &entity : entities)
   {
     auto &animation = *g_ecs.getComponent<ItemAnimationComponent>(entity);

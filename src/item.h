@@ -8,8 +8,8 @@
 #include "graphics/texture.h"
 #include "graphics/texture_atlas.h"
 #include "item_attribute.h"
+#include "item_type.h"
 #include "item_wrapper.h"
-#include "items.h"
 #include "position.h"
 #include "signal.h"
 
