@@ -123,23 +123,22 @@ void ItemPropertyWindow::focusGround(Position &position, MapView &mapView)
 
   setCount(1);
 
-  FocusedGround ground;
-  ground.position = position;
-  ground.ground = mapView.getTile(position)->ground();
+  Item *groundItem = mapView.getTile(position)->ground();
+  DEBUG_ASSERT(groundItem != nullptr, "Can not focus nullptr ground.");
 
-  DEBUG_ASSERT(ground.ground != nullptr, "Can not focus nullptr ground.");
+  FocusedGround ground(position, groundItem);
 
-  state.focusedItem = ground;
+  state.focusedItem.emplace<FocusedGround>(position, groundItem);
 }
 
-void ItemPropertyWindow::focusItem(Item &item, Position &position, MapView &mapView)
+void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapView)
 {
-  if (item.isGround())
+  if (item->isGround())
   {
     focusGround(position, mapView);
     return;
   }
-  else if (state.holds<FocusedItem>() && &item == state.focusedAs<FocusedItem>().item)
+  else if (state.holds<FocusedItem>() && item == state.focusedAs<FocusedItem>().item())
   {
     // The item is already focused
     return;
@@ -147,23 +146,21 @@ void ItemPropertyWindow::focusItem(Item &item, Position &position, MapView &mapV
 
   setMapView(mapView);
 
-  FocusedItem focusedItem;
-
-  auto maybeTileIndex = mapView.getTile(position)->indexOf(&item);
+  auto maybeTileIndex = mapView.getTile(position)->indexOf(item);
   DEBUG_ASSERT(maybeTileIndex.has_value(), "The tile did not have the item.");
   auto tileIndex = static_cast<uint16_t>(maybeTileIndex.value());
 
-  bool isContainer = item.isContainer();
+  bool isContainer = item->isContainer();
 
   if (isContainer)
   {
-    if (containerTree.rootItem() == &item)
+    if (containerTree.rootItem() == item)
     {
       // This is already the focused item.
       return;
     }
 
-    ItemData::Container *container = item.getOrCreateContainer();
+    ItemData::Container *container = item->getOrCreateContainer();
     container->setParent(&mapView, position);
 
     if (container->empty())
@@ -174,17 +171,13 @@ void ItemPropertyWindow::focusItem(Item &item, Position &position, MapView &mapV
         container->addItem(Item(id));
     }
 
-    containerTree.setRootContainer(&mapView, position, tileIndex, container);
+    containerTree.setRootContainer(&mapView, position, tileIndex, item);
   }
 
   setContainerVisible(isContainer);
-  setCount(item.count());
+  setCount(item->count());
 
-  focusedItem.item = &item;
-  focusedItem.tileIndex = tileIndex;
-  focusedItem.position = position;
-
-  state.focusedItem = focusedItem;
+  state.focusedItem.emplace<FocusedItem>(position, item, tileIndex);
 }
 
 void ItemPropertyWindow::resetFocus()
@@ -245,12 +238,6 @@ void ItemPropertyWindow::reloadSource()
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 
-void GuiItemContainer::ContainerModel::refresh()
-{
-  beginResetModel();
-  endResetModel();
-}
-
 void ItemPropertyWindow::refresh()
 {
   if (containerTree.hasRoot())
@@ -263,11 +250,11 @@ void ItemPropertyWindow::refresh()
   }
 }
 
-bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode, int index, const ItemDrag::DraggableItem *droppedItem)
+bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *containerNode, int index, const ItemDrag::DraggableItem *droppedItem)
 {
   using DragSource = ItemDrag::DraggableItem::Type;
   auto &focusedItem = state.focusedAs<FocusedItem>();
-  if (droppedItem->item() == focusedItem.item)
+  if (droppedItem->item() == focusedItem.item())
   {
     VME_LOG_D("Can not add item to itself.");
     return false;
@@ -287,21 +274,20 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode
       ABORT_PROGRAM("Drag between different MapViews is not implemented.");
     }
 
-    auto container = treeNode->container;
+    auto container = containerNode->container();
 
     mapView->history.beginTransaction(TransactionType::MoveItems);
 
     MapHistory::ContainerMoveData2 to(
         focusedItem.position,
         static_cast<uint16_t>(focusedItem.tileIndex),
-        treeNode->indexChain(index));
+        containerNode->indexChain(index));
 
     mapView->moveFromMapToContainer(*dropped->tile, dropped->_item, to);
 
     mapView->history.endTransaction(TransactionType::MoveItems);
 
-    // containerTree.containerModel.refresh(treeNode->model());
-    treeNode->model()->refresh();
+    containerNode->model()->refresh();
     break;
   }
   case DragSource::ContainerItem:
@@ -313,7 +299,7 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode
       ABORT_PROGRAM("Drag between different MapViews is not implemented.");
     }
 
-    auto targetContainer = treeNode->container;
+    auto targetContainer = containerNode->container();
 
     // Dropped on the same container slot that the drag started
     if (dropped->container() == targetContainer && index == dropped->containerIndices.back())
@@ -328,7 +314,7 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode
 
     MapHistory::ContainerMoveData2 to(
         focusedItem.position,
-        static_cast<uint16_t>(focusedItem.tileIndex), treeNode->indexChain(index));
+        static_cast<uint16_t>(focusedItem.tileIndex), containerNode->indexChain(index));
 
     mapView->history.beginTransaction(TransactionType::MoveItems);
     mapView->moveFromContainerToContainer(from, to);
@@ -337,11 +323,11 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *treeNode
     // Update child indices
     if (dropped->container() == targetContainer)
     {
-      treeNode->itemMoved(dropped->containerIndices.back(), index);
+      containerNode->itemMoved(dropped->containerIndices.back(), index);
     }
 
     // containerTree.containerModel.refresh(0);
-    treeNode->model()->refresh();
+    containerNode->model()->refresh();
     break;
   }
   default:
@@ -375,6 +361,12 @@ GuiItemContainer::ContainerModel::ContainerModel(ContainerNode *treeNode, QObjec
     : QAbstractListModel(parent), treeNode(treeNode)
 {
   // TODO: Maybe this reset is not necessary?
+  beginResetModel();
+  endResetModel();
+}
+
+void GuiItemContainer::ContainerModel::refresh()
+{
   beginResetModel();
   endResetModel();
 }
@@ -422,17 +414,17 @@ bool GuiItemContainer::ContainerModel::itemDropEvent(int index, QByteArray seria
 
 int GuiItemContainer::ContainerModel::size()
 {
-  return static_cast<int>(treeNode->container->size());
+  return static_cast<int>(treeNode->container()->size());
 }
 
 int GuiItemContainer::ContainerModel::capacity()
 {
-  return static_cast<int>(treeNode->container->capacity());
+  return static_cast<int>(treeNode->container()->capacity());
 }
 
 ItemData::Container *GuiItemContainer::ContainerModel::container() const noexcept
 {
-  return treeNode->container;
+  return treeNode->container();
 }
 
 ItemData::Container *GuiItemContainer::ContainerModel::container() noexcept
@@ -636,9 +628,9 @@ GuiItemContainer::ContainerTree::Root::Root(
     MapView *mapView,
     Position mapPosition,
     uint16_t tileIndex,
-    ItemData::Container *container,
+    Item *containerItem,
     ContainerTreeSignals *_signals)
-    : ContainerNode(container, _signals),
+    : ContainerNode(containerItem, _signals),
       mapPosition(mapPosition),
       mapView(mapView),
       tileIndex(tileIndex)
@@ -646,35 +638,45 @@ GuiItemContainer::ContainerTree::Root::Root(
   VME_LOG_D("Root: " << this);
 }
 
+Item *GuiItemContainer::ContainerNode::containerItem() const
+{
+  return trackedContainerItem.item();
+}
+
+ItemData::Container *GuiItemContainer::ContainerNode::container()
+{
+  return trackedContainerItem.item()->getOrCreateContainer();
+}
+
 std::unique_ptr<GuiItemContainer::ContainerNode> GuiItemContainer::ContainerTree::Root::createChildNode(int index)
 {
-  auto childItem = &container->itemAt(index);
+  auto childItem = &container()->itemAt(index);
 
   auto childContainer = childItem->getOrCreateContainer();
   childContainer->setParent(mapView, mapPosition);
 
-  return std::make_unique<ContainerTree::Node>(childContainer, this, index);
+  return std::make_unique<ContainerTree::Node>(childItem, this, index);
 }
 
-GuiItemContainer::ContainerTree::Node::Node(ItemData::Container *container, ContainerNode *parent, uint16_t parentIndex)
-    : ContainerNode(container, parent), parent(parent), indexInParentContainer(parentIndex)
+GuiItemContainer::ContainerTree::Node::Node(Item *containerItem, ContainerNode *parent, uint16_t parentIndex)
+    : ContainerNode(containerItem, parent), parent(parent), indexInParentContainer(parentIndex)
 {
   VME_LOG_D("Node() with parent: " << parent);
 }
 
 std::unique_ptr<GuiItemContainer::ContainerNode> GuiItemContainer::ContainerTree::Node::createChildNode(int index)
 {
-  auto childItem = &container->itemAt(index);
+  auto childItem = &container()->itemAt(index);
 
   auto childContainer = childItem->getOrCreateContainer();
-  childContainer->setParent(parent->container);
+  childContainer->setParent(parent->container());
 
-  return std::make_unique<ContainerTree::Node>(childContainer, this, index);
+  return std::make_unique<ContainerTree::Node>(childItem, this, index);
 }
 
 const Item *ContainterTree::rootItem() const
 {
-  return root ? root->container->item() : nullptr;
+  return root ? root->containerItem() : nullptr;
 }
 
 bool ContainterTree::hasRoot() const noexcept
@@ -682,9 +684,9 @@ bool ContainterTree::hasRoot() const noexcept
   return root.has_value();
 }
 
-void ContainterTree::setRootContainer(MapView *mapView, Position position, uint16_t tileIndex, ItemData::Container *item)
+void ContainterTree::setRootContainer(MapView *mapView, Position position, uint16_t tileIndex, Item *containerItem)
 {
-  root.emplace(mapView, position, tileIndex, item, &_signals);
+  root.emplace(mapView, position, tileIndex, containerItem, &_signals);
   root->open();
 }
 
@@ -704,13 +706,13 @@ void ContainterTree::modelRemovedEvent(ContainerModel *model)
   containerModel.remove(model);
 }
 
-GuiItemContainer::ContainerNode::ContainerNode(ItemData::Container *container, ContainerTreeSignals *_signals)
-    : container(container), _signals(_signals)
+GuiItemContainer::ContainerNode::ContainerNode(Item *containerItem, ContainerTreeSignals *_signals)
+    : trackedContainerItem(containerItem), _signals(_signals)
 {
 }
 
-GuiItemContainer::ContainerNode::ContainerNode(ItemData::Container *container, ContainerNode *parent)
-    : container(container), _signals(parent->_signals)
+GuiItemContainer::ContainerNode::ContainerNode(Item *containerItem, ContainerNode *parent)
+    : trackedContainerItem(containerItem), _signals(parent->_signals)
 {
 }
 
@@ -759,6 +761,18 @@ void GuiItemContainer::ContainerTree::Node::setIndexInParent(int index)
 void GuiItemContainer::ContainerTree::Root::setIndexInParent(int index)
 {
   ABORT_PROGRAM("Can not be used on a Root node.");
+}
+
+void GuiItemContainer::ContainerNode::itemInserted(int index)
+{
+  if (children.empty())
+    return;
+}
+
+void GuiItemContainer::ContainerNode::itemRemoved(int index)
+{
+  if (children.empty())
+    return;
 }
 
 void GuiItemContainer::ContainerNode::itemMoved(int fromIndex, int toIndex)
@@ -862,7 +876,7 @@ void GuiItemContainer::ContainerNode::toggle()
 void GuiItemContainer::ContainerNode::openChild(int index)
 {
   DEBUG_ASSERT(children.find(index) == children.end(), "The child is already opened.");
-  auto &child = container->itemAt(index);
+  auto &child = container()->itemAt(index);
 
   DEBUG_ASSERT(child.isContainer(), "Must be container.");
   auto node = createChildNode(index);

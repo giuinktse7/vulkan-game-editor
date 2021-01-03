@@ -3,6 +3,7 @@
 #include "../vendor/rollbear-visit/visit.hpp"
 #include "const.h"
 #include "time_point.h"
+#include "items.h"
 
 using namespace MapHistory;
 

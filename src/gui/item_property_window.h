@@ -12,7 +12,9 @@
 #include <unordered_map>
 
 #include "../item.h"
+#include "../items.h"
 #include "../signal.h"
+#include "../tracked_item.h"
 #include "../util.h"
 #include "draggable_item.h"
 #include "qt_util.h"
@@ -115,8 +117,8 @@ namespace GuiItemContainer
 
   struct ContainerNode : public Nano::Observer<>
   {
-    ContainerNode(ItemData::Container *container, ContainerTreeSignals *_signals);
-    ContainerNode(ItemData::Container *container, ContainerNode *parent);
+    ContainerNode(Item *containerItem, ContainerTreeSignals *_signals);
+    ContainerNode(Item *containerItem, ContainerNode *parent);
     ~ContainerNode();
 
     virtual void setIndexInParent(int index) = 0;
@@ -131,6 +133,8 @@ namespace GuiItemContainer
       the indexInParentContainer of the children might need to be updated.
     */
     void itemMoved(int fromIndex, int toIndex);
+    void itemInserted(int index);
+    void itemRemoved(int index);
 
     std::vector<uint16_t> indexChain(int index) const;
     std::vector<uint16_t> indexChain() const;
@@ -146,8 +150,10 @@ namespace GuiItemContainer
 
     void itemDropEvent(int index, ItemDrag::DraggableItem *droppedItem);
     void itemDragStartEvent(int index);
+    ItemData::Container *container();
+    Item *containerItem() const;
 
-    ItemData::Container *container;
+    // ItemData::Container *container;
     std::unordered_map<int, std::unique_ptr<ContainerNode>> children;
 
   protected:
@@ -155,6 +161,9 @@ namespace GuiItemContainer
     std::optional<ContainerModel> _model;
 
     bool opened = false;
+
+  private:
+    TrackedItem trackedContainerItem;
   };
 
   struct ContainerTree
@@ -163,7 +172,7 @@ namespace GuiItemContainer
 
     struct Root : public ContainerNode
     {
-      Root(MapView *mapView, Position mapPosition, uint16_t tileIndex, ItemData::Container *container, ContainerTreeSignals *_signals);
+      Root(MapView *mapView, Position mapPosition, uint16_t tileIndex, Item *containerItem, ContainerTreeSignals *_signals);
 
       void setIndexInParent(int index) override;
 
@@ -179,7 +188,7 @@ namespace GuiItemContainer
 
     struct Node : public ContainerNode
     {
-      Node(ItemData::Container *container, ContainerNode *parent, uint16_t parentIndex);
+      Node(Item *containerItem, ContainerNode *parent, uint16_t parentIndex);
 
       void setIndexInParent(int index) override;
 
@@ -192,7 +201,7 @@ namespace GuiItemContainer
 
     const Item *rootItem() const;
 
-    void setRootContainer(MapView *mapView, Position position, uint16_t tileIndex, ItemData::Container *item);
+    void setRootContainer(MapView *mapView, Position position, uint16_t tileIndex, Item *containerItem);
     bool hasRoot() const noexcept;
 
     void clear();
@@ -269,7 +278,7 @@ public:
   void setMapView(MapView &mapView);
   void resetMapView();
 
-  void focusItem(Item &item, Position &position, MapView &mapView);
+  void focusItem(Item *item, Position &position, MapView &mapView);
   void focusGround(Position &position, MapView &mapView);
   void resetFocus();
 
@@ -298,15 +307,39 @@ private:
 
   struct FocusedItem
   {
+    FocusedItem(Position position, Item *item, size_t tileIndex)
+        : position(position), trackedItem(item), tileIndex(tileIndex) {}
+
+    FocusedItem(const FocusedItem &other) = default;
+    FocusedItem &operator=(const FocusedItem &other) = default;
+    FocusedItem(FocusedItem &&other) = default;
+
+    Item *item() const noexcept
+    {
+      return trackedItem.item();
+    }
+
     Position position;
-    Item *item;
+    TrackedItem trackedItem;
     size_t tileIndex;
   };
 
   struct FocusedGround
   {
+    FocusedGround(Position position, Item *ground)
+        : position(position), trackedGround(ground) {}
+
+    FocusedGround(const FocusedGround &other) = default;
+    FocusedGround &operator=(const FocusedGround &other) = default;
+    FocusedGround(FocusedGround &&other) = default;
+
+    Item *item() const noexcept
+    {
+      return trackedGround.item();
+    }
+
     Position position;
-    Item *ground;
+    TrackedItem trackedGround;
   };
 
   struct State
