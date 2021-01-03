@@ -545,6 +545,8 @@ namespace vme
 
       void markAsRecent(CachedNode *cached, Leaf *leaf) const;
 
+      Position findOnlyPosition() const;
+
       void initializeCache();
 
       static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData, HeapNode *parent);

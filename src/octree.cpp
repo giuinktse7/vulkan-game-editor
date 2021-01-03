@@ -1,6 +1,7 @@
 #include "octree.h"
 
 #include "debug.h"
+#include "time_point.h"
 
 namespace vme
 {
@@ -283,6 +284,8 @@ namespace vme
 
         if (_size == 1)
           _single = pos;
+        else if (_size == 2)
+          _single.reset();
       }
 
       if (bboxChanged)
@@ -307,7 +310,17 @@ namespace vme
         --_size;
 
         if (_size == 1)
-          _single = pos;
+        {
+          // the findOnlyPosition() call takes ~8 microseconds on my machine (Release mode). Could
+          // cause lag if this happens many times in a single frame (e.g. if
+          // an item is moved many times in a single transaction)
+          // Performance could be improved for this case by caching two positions
+          // p1 and p2 instead of one (_single). Then, when going from 2 -> 1 items
+          // simply set p1 to whichever of p1 and p2 that was not removed.
+          _single = findOnlyPosition();
+        }
+        else if (_size == 0)
+          _single.reset();
       }
 
       if (bboxChanged)
@@ -315,6 +328,19 @@ namespace vme
 
       // VME_LOG_D("Size after remove: " << size());
       return changed;
+    }
+
+    Position Tree::findOnlyPosition() const
+    {
+      DEBUG_ASSERT(_size == 1, "Impossible to find >only< position if there is more than one position in the tree.");
+
+      if (_single.has_value())
+        return *_single;
+
+      VME_LOG_D("Had to use findOnlyPosition()");
+
+      auto res = *begin();
+      return res;
     }
 
     std::optional<Position> Tree::onlyPosition() const

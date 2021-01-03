@@ -46,6 +46,7 @@ public:
 
 	time_t elapsedMillis() const;
 	time_t elapsedMicros() const;
+	time_t elapsedNanos() const;
 	time_t elapsedMillis(TimePoint start) const;
 
 private:

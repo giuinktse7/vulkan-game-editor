@@ -31,6 +31,12 @@ time_t TimePoint::elapsedMicros() const
     return duration_cast<microseconds>(now - this->timePoint).count();
 }
 
+time_t TimePoint::elapsedNanos() const
+{
+    auto now = steady_clock::now();
+    return duration_cast<nanoseconds>(now - this->timePoint).count();
+}
+
 TimePoint TimePoint::sinceStart()
 {
     return applicationStartTime;

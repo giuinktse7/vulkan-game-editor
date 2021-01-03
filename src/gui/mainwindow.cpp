@@ -179,7 +179,7 @@ void MainWindow::mapViewSelectionChangedEvent(MapView &mapView)
     bool showInPropertyWindow = !(QApplication::keyboardModifiers() & Qt::KeyboardModifier::AltModifier);
     if (showInPropertyWindow)
     {
-      propertyWindow->focusItem(*selectedItem, position, mapView);
+      propertyWindow->focusItem(selectedItem, position, mapView);
     }
   }
   else
@@ -315,6 +315,7 @@ void MainWindow::initializeUI()
     if (mapView.singleTileSelected())
     {
       const Position pos = mapView.selection().onlyPosition().value();
+      VME_LOG_D("countChanged, selected tile pos: " << pos);
       const Tile *tile = mapView.getTile(pos);
 
       if (tile->firstSelectedItem()->count() != count)

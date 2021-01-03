@@ -380,8 +380,11 @@ namespace MapHistory
             }},
         moveData);
 
-    updateSelection(mapView, fromPos);
+    // toPos being the first call improves performance (slightly). If toPos is no longer selected,
+    // it is possible that selection size becomes 0. If so, caching the only selected
+    // position becomes a much faster operation.
     updateSelection(mapView, toPos);
+    updateSelection(mapView, fromPos);
   }
 
   void Move::undo(MapView &mapView)
