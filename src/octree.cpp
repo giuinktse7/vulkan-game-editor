@@ -356,7 +356,7 @@ namespace vme
       auto maybeCached = fromCache(position);
       if (!maybeCached)
         return nullptr;
-      const auto [cached, node] = maybeCached.value();
+      const auto& [cached, node] = maybeCached.value();
       auto leaf = node->leaf(position);
       markAsRecent(cached, leaf);
       return leaf;
