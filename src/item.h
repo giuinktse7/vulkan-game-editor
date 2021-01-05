@@ -195,7 +195,8 @@ inline ItemDataType Item::itemDataType() const
 
 inline bool Item::operator==(const Item &rhs) const
 {
-	return itemType == rhs.itemType && _attributes == rhs._attributes && _subtype == rhs._subtype;
+    return itemType == rhs.itemType && _subtype == rhs._subtype &&
+           util::unique_ptr_value_equals(_attributes, rhs._attributes);
 }
 
 template <class T>

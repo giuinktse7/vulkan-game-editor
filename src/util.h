@@ -40,6 +40,12 @@ namespace util
 {
 	std::string unicodePath(std::filesystem::path path);
 
+    template <typename T>
+    bool unique_ptr_value_equals(const std::unique_ptr<T> &lhs, const std::unique_ptr<T> &rhs)
+    {
+        return !lhs ? !rhs : rhs && *lhs == *rhs;
+    }
+
 	template <typename T>
 	decltype(auto) pointerAddress(T *pointer)
 	{
