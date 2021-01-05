@@ -24,7 +24,7 @@ namespace MapHistory
     auto locationTile = location.tile();
     if (locationTile)
     {
-      locationTile->destroyEntities();
+      // locationTile->destroyEntities();
       location.swapTile(std::move(tile));
     }
     else
@@ -137,28 +137,11 @@ namespace MapHistory
     else
     {
       auto &tile = std::get<std::unique_ptr<Tile>>(data);
-      if (tile)
-        tile->initEntities();
+      // if (tile)
+      // tile->initEntities();
 
       swapMapTile(mapView, std::move(tile));
     }
-  }
-
-  // ContainerMoveData::ContainerMoveData(ContainerItemMoveInfo &containerInfo)
-  //     : position(containerInfo.tile->position()),
-  //       tileIndex(containerInfo.tile->indexOf(containerInfo.item).value()),
-  //       containerIndex(static_cast<uint16_t>(containerInfo.containerIndex)) {}
-
-  ContainerMoveData::ContainerMoveData(ContainerItemMoveInfo &containerInfo)
-  {
-    position = containerInfo.tile->position();
-    tileIndex = containerInfo.tile->indexOf(containerInfo.item).value();
-    containerIndex = static_cast<uint16_t>(containerInfo.containerIndex);
-  }
-
-  ItemData::Container *ContainerMoveData::container(MapView &mapView)
-  {
-    return mapView.getTile(position)->itemAt(tileIndex)->getDataAs<ItemData::Container>();
   }
 
   MoveFromMapToContainer::MoveFromMapToContainer(Tile &tile, Item *item, ContainerMoveData2 &to)
