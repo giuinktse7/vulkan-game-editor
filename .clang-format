@@ -1,0 +1,24 @@
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+ColumnLimit: 0
+BreakBeforeBraces: Allman
+AllowShortIfStatementsOnASingleLine: Never
+IndentCaseLabels: true
+AllowShortFunctionsOnASingleLine: Empty
+AccessModifierOffset: -2
+NamespaceIndentation: All
+SpaceBeforeCtorInitializerColon: true
+ConstructorInitializerIndentWidth: 4
+BreakBeforeInheritanceComma: false
+BreakInheritanceList: AfterColon
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+AllowShortLambdasOnASingleLine: All
+AlwaysBreakTemplateDeclarations: Yes
+BinPackParameters: false
+ExperimentalAutoDetectBinPacking: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+PenaltyReturnTypeOnItsOwnLine: 1000000

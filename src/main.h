@@ -26,7 +26,7 @@ namespace MainUtils
 
 class MainApplication : public QApplication
 {
-public:
+  public:
     MainApplication(int &argc, char **argv);
 
     void initializeUI();
@@ -35,14 +35,14 @@ public:
 
     MainWindow mainWindow;
 
-public slots:
+  public slots:
     void onApplicationStateChanged(Qt::ApplicationState state);
     void onFocusWindowChanged(QWindow *window);
     void onFocusWidgetChanged(QWidget *widget);
 
     void loadStyleSheet(const QString &path);
 
-private:
+  private:
     QVulkanInstance vulkanInstance;
 
     QWindow *focusedWindow = nullptr;

@@ -11,7 +11,7 @@ struct ItemEntityIdDisconnect
 
     ~ItemEntityIdDisconnect();
 
-private:
+  private:
     std::function<void()> f;
 };
 
@@ -27,7 +27,7 @@ struct TrackedItem
         onChangeCallback = std::bind(MemberFunction, instance, std::placeholders::_1);
     }
 
-private:
+  private:
     void updateItem(Item *item);
 
     Item *_item;

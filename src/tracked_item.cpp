@@ -30,7 +30,8 @@ ItemEntityIdDisconnect::ItemEntityIdDisconnect()
 {
 }
 
-ItemEntityIdDisconnect::ItemEntityIdDisconnect(std::function<void()> f) : f(f)
+ItemEntityIdDisconnect::ItemEntityIdDisconnect(std::function<void()> f)
+    : f(f)
 {
 }
 

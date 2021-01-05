@@ -9,38 +9,38 @@
 */
 class Random
 {
-public:
-	Random(uint32_t seed);
-	Random();
+  public:
+    Random(uint32_t seed);
+    Random();
 
-	Random(const Random &other) = delete;
-	Random &operator=(const Random &other) = delete;
+    Random(const Random &other) = delete;
+    Random &operator=(const Random &other) = delete;
 
-	/*
+    /*
 		Random double in range [0, 1].
 	*/
-	double nextDouble();
+    double nextDouble();
 
-	/*
+    /*
 		Random int in range [from, to).
 	*/
-	template <typename T, typename A = int>
-	T nextInt(A from, A to)
-	{
-		double r = nextDouble();
-		A maxValue = std::max(from, to - 1);
+    template <typename T, typename A = int>
+    T nextInt(A from, A to)
+    {
+        double r = nextDouble();
+        A maxValue = std::max(from, to - 1);
 
-		return static_cast<T>(std::round(from + r * (maxValue - from)));
-	}
+        return static_cast<T>(std::round(from + r * (maxValue - from)));
+    }
 
-	void setSeed(uint32_t seed);
+    void setSeed(uint32_t seed);
 
-	static Random &global();
+    static Random &global();
 
-private:
-	std::mt19937 randomEngine;
+  private:
+    std::mt19937 randomEngine;
 
-	std::uniform_real_distribution<double> distribution;
+    std::uniform_real_distribution<double> distribution;
 
-	void initialize(uint32_t seed);
+    void initialize(uint32_t seed);
 };

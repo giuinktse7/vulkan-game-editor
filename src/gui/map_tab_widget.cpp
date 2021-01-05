@@ -638,20 +638,20 @@ bool MapTabWidget::MapTabBar::event(QEvent *event)
 {
     switch (event->type())
     {
-    case QEvent::HoverLeave:
-    {
-        // VME_LOG_D("HoverLeave. hoveredIndex: " << hoveredIndex << ", currentIndex: " << currentIndex());
-        if (hoveredIndex != currentIndex())
+        case QEvent::HoverLeave:
         {
-            setCloseButtonVisible(hoveredIndex, false);
+            // VME_LOG_D("HoverLeave. hoveredIndex: " << hoveredIndex << ", currentIndex: " << currentIndex());
+            if (hoveredIndex != currentIndex())
+            {
+                setCloseButtonVisible(hoveredIndex, false);
+            }
+
+            setHoveredIndex(-1);
         }
 
-        setHoveredIndex(-1);
-    }
-
-    break;
-    default:
         break;
+        default:
+            break;
     }
 
     return QTabBar::event(event);
@@ -757,7 +757,8 @@ void MapTabWidget::MapTabBar::drawText(QStylePainter *painter, QStyleOptionTab &
 ********************************************************
 ********************************************************
 */
-SvgWidget::SvgWidget(const QString &file, QWidget *parent) : QFrame(parent)
+SvgWidget::SvgWidget(const QString &file, QWidget *parent)
+    : QFrame(parent)
 {
     setFrameStyle(QFrame::NoFrame);
     {
@@ -787,7 +788,8 @@ bool SvgWidget::event(QEvent *event)
     return QFrame::event(event);
 }
 
-MapTabMimeData::MapTabMimeData() : QMimeData()
+MapTabMimeData::MapTabMimeData()
+    : QMimeData()
 {
 }
 
@@ -834,7 +836,8 @@ QVariant MapTabMimeData::retrieveData(const QString &mimeType, QMetaType type) c
     }
 }
 
-OpacityAnimation::OpacityAnimation() : widget(nullptr) {}
+OpacityAnimation::OpacityAnimation()
+    : widget(nullptr) {}
 
 OpacityAnimation::OpacityAnimation(QWidget *widget)
     : widget(widget)
@@ -854,14 +857,14 @@ OpacityAnimation::OpacityAnimation(QWidget *widget)
 
         switch (state)
         {
-        case AnimationState::Hiding:
-            widget->hide();
-            break;
-        case AnimationState::Showing:
-            emit postShow();
-            break;
-        default:
-            break;
+            case AnimationState::Hiding:
+                widget->hide();
+                break;
+            case AnimationState::Showing:
+                emit postShow();
+                break;
+            default:
+                break;
         }
     });
 }
@@ -870,36 +873,36 @@ void OpacityAnimation::showWidget()
 {
     switch (animationState)
     {
-    case AnimationState::None:
-    {
-        if (!widget->isHidden())
-            return;
+        case AnimationState::None:
+        {
+            if (!widget->isHidden())
+                return;
 
-        emit preShow();
-        widget->show();
-        animationState = AnimationState::Showing;
-        animation->setDuration(forward.duration);
-        animation->setStartValue(forward.startValue);
-        animation->setEndValue(forward.endValue);
-        animation->start();
-        break;
-    }
-    case AnimationState::Showing:
-    {
-        break;
-    }
-    case AnimationState::Hiding:
-    {
-        animationState = AnimationState::Showing;
-        animation->pause();
+            emit preShow();
+            widget->show();
+            animationState = AnimationState::Showing;
+            animation->setDuration(forward.duration);
+            animation->setStartValue(forward.startValue);
+            animation->setEndValue(forward.endValue);
+            animation->start();
+            break;
+        }
+        case AnimationState::Showing:
+        {
+            break;
+        }
+        case AnimationState::Hiding:
+        {
+            animationState = AnimationState::Showing;
+            animation->pause();
 
-        animation->setDuration(forward.duration);
-        animation->setStartValue(forward.startValue);
-        animation->setEndValue(forward.endValue);
+            animation->setDuration(forward.duration);
+            animation->setStartValue(forward.startValue);
+            animation->setEndValue(forward.endValue);
 
-        animation->resume();
-        break;
-    }
+            animation->resume();
+            break;
+        }
     }
 }
 
@@ -907,34 +910,34 @@ void OpacityAnimation::hideWidget()
 {
     switch (animationState)
     {
-    case AnimationState::None:
-    {
-        if (widget->isHidden())
-            return;
+        case AnimationState::None:
+        {
+            if (widget->isHidden())
+                return;
 
-        animationState = AnimationState::Hiding;
-        animation->setDuration(backward.duration);
-        animation->setStartValue(backward.startValue);
-        animation->setEndValue(backward.endValue);
-        animation->start();
-        break;
-    }
-    case AnimationState::Showing:
-    {
-        animationState = AnimationState::Hiding;
-        animation->pause();
+            animationState = AnimationState::Hiding;
+            animation->setDuration(backward.duration);
+            animation->setStartValue(backward.startValue);
+            animation->setEndValue(backward.endValue);
+            animation->start();
+            break;
+        }
+        case AnimationState::Showing:
+        {
+            animationState = AnimationState::Hiding;
+            animation->pause();
 
-        animation->setDuration(backward.duration);
-        animation->setStartValue(backward.startValue);
-        animation->setEndValue(backward.endValue);
+            animation->setDuration(backward.duration);
+            animation->setStartValue(backward.startValue);
+            animation->setEndValue(backward.endValue);
 
-        animation->resume();
+            animation->resume();
 
-        break;
-    }
-    case AnimationState::Hiding:
-    {
-        break;
-    }
+            break;
+        }
+        case AnimationState::Hiding:
+        {
+            break;
+        }
     }
 }

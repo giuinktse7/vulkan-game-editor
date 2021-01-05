@@ -14,113 +14,114 @@ class Item;
 namespace VME
 {
 
-  enum MouseButtons
-  {
-    NoButton = 0,
-    LeftButton = 1 << 0,
-    RightButton = 1 << 1,
-    MiddleButton = 1 << 2,
-    BackButton = 1 << 3,
-    ExtraButton1 = 1 << 4,
-    ExtraButton2 = 1 << 5,
-    ExtraButton3 = 1 << 6,
-    ExtraButton4 = 1 << 7
-  };
-  using MouseButton = MouseButtons;
-  VME_ENUM_OPERATORS(MouseButtons)
-
-  enum ModifierKeys
-  {
-    None = 0,
-    Shift = 1 << 0,
-    Ctrl = 1 << 1,
-    Alt = 1 << 2,
-  };
-  VME_ENUM_OPERATORS(ModifierKeys)
-
-  struct MouseEvent
-  {
-    MouseEvent(ScreenPosition pos, MouseButtons buttons, ModifierKeys modifiers) : _pos(pos), _buttons(buttons), _modifiers(modifiers) {}
-    inline MouseButtons buttons() const noexcept
+    enum MouseButtons
     {
-      return _buttons;
-    }
+        NoButton = 0,
+        LeftButton = 1 << 0,
+        RightButton = 1 << 1,
+        MiddleButton = 1 << 2,
+        BackButton = 1 << 3,
+        ExtraButton1 = 1 << 4,
+        ExtraButton2 = 1 << 5,
+        ExtraButton3 = 1 << 6,
+        ExtraButton4 = 1 << 7
+    };
+    using MouseButton = MouseButtons;
+    VME_ENUM_OPERATORS(MouseButtons)
 
-    inline ModifierKeys modifiers() const noexcept
+    enum ModifierKeys
     {
-      return _modifiers;
-    }
+        None = 0,
+        Shift = 1 << 0,
+        Ctrl = 1 << 1,
+        Alt = 1 << 2,
+    };
+    VME_ENUM_OPERATORS(ModifierKeys)
 
-    inline ScreenPosition pos() const noexcept
+    struct MouseEvent
     {
-      return _pos;
-    }
+        MouseEvent(ScreenPosition pos, MouseButtons buttons, ModifierKeys modifiers)
+            : _pos(pos), _buttons(buttons), _modifiers(modifiers) {}
+        inline MouseButtons buttons() const noexcept
+        {
+            return _buttons;
+        }
 
-  private:
-    ScreenPosition _pos;
+        inline ModifierKeys modifiers() const noexcept
+        {
+            return _modifiers;
+        }
 
-    MouseButtons _buttons;
-    ModifierKeys _modifiers;
-  };
+        inline ScreenPosition pos() const noexcept
+        {
+            return _pos;
+        }
+
+      private:
+        ScreenPosition _pos;
+
+        MouseButtons _buttons;
+        ModifierKeys _modifiers;
+    };
 } // namespace VME
 
 struct MouseAction
 {
-  struct None
-  {
-  };
+    struct None
+    {
+    };
 
-  struct MoveAction
-  {
-    std::optional<Position> moveOrigin = {};
-    std::optional<Position> moveDelta = {};
+    struct MoveAction
+    {
+        std::optional<Position> moveOrigin = {};
+        std::optional<Position> moveDelta = {};
 
-    bool isMoving() const;
+        bool isMoving() const;
 
-    void setMoveOrigin(const Position &origin);
-    void reset();
-  };
+        void setMoveOrigin(const Position &origin);
+        void reset();
+    };
 
-  struct RawItem
-  {
-    uint32_t serverId = 100;
-    /*
+    struct RawItem
+    {
+        uint32_t serverId = 100;
+        /*
       If true, the raw item is currently being drag in an area. Once released,
       each position of the area has an item of serverId added.
     */
-    bool area = false;
+        bool area = false;
 
-    /**
+        /**
      * If true, this action erases rather than adds items
      */
-    bool erase = false;
-  };
+        bool erase = false;
+    };
 
-  struct Select : public MoveAction
-  {
-    void updateMoveDelta(const Selection &selection, const Position &currentPosition);
+    struct Select : public MoveAction
+    {
+        void updateMoveDelta(const Selection &selection, const Position &currentPosition);
 
-    bool area = false;
-  };
+        bool area = false;
+    };
 
-  struct DragDropItem : public MoveAction
-  {
-    DragDropItem(Tile *tile, Item *item);
+    struct DragDropItem : public MoveAction
+    {
+        DragDropItem(Tile *tile, Item *item);
 
-    void updateMoveDelta(const Position &currentPosition);
+        void updateMoveDelta(const Position &currentPosition);
 
-    Tile *tile;
-    Item *item;
-  };
+        Tile *tile;
+        Item *item;
+    };
 
-  struct Pan
-  {
-    std::optional<WorldPosition> cameraOrigin;
-    std::optional<ScreenPosition> mouseOrigin;
+    struct Pan
+    {
+        std::optional<WorldPosition> cameraOrigin;
+        std::optional<ScreenPosition> mouseOrigin;
 
-    bool active() const;
-    void stop();
-  };
+        bool active() const;
+        void stop();
+    };
 };
 
 using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select, MouseAction::Pan, MouseAction::DragDropItem>;
@@ -133,12 +134,12 @@ using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, Mous
  * */
 class UIUtils
 {
-public:
-  virtual ~UIUtils() = default;
+  public:
+    virtual ~UIUtils() = default;
 
-  virtual ScreenPosition mouseScreenPosInView() = 0;
-  virtual VME::ModifierKeys modifiers() const = 0;
-  virtual void waitForDraw(std::function<void()> f) = 0;
+    virtual ScreenPosition mouseScreenPosInView() = 0;
+    virtual VME::ModifierKeys modifiers() const = 0;
+    virtual void waitForDraw(std::function<void()> f) = 0;
 };
 
 /*
@@ -146,107 +147,107 @@ public:
 */
 class EditorAction
 {
-public:
-  inline MouseAction_t &action() noexcept
-  {
-    return _action;
-  };
+  public:
+    inline MouseAction_t &action() noexcept
+    {
+        return _action;
+    };
 
-  inline void setPrevious()
-  {
-    DEBUG_ASSERT(!_locked, "The action is locked.");
+    inline void setPrevious()
+    {
+        DEBUG_ASSERT(!_locked, "The action is locked.");
 
-    _action = _previousAction.action;
-    _locked = _previousAction.locked;
+        _action = _previousAction.action;
+        _locked = _previousAction.locked;
 
-    _previousAction = {MouseAction::None{}, false};
+        _previousAction = {MouseAction::None{}, false};
 
-    actionChanged.fire(_action);
-  }
+        actionChanged.fire(_action);
+    }
 
-  inline const MouseAction_t &previous() const noexcept
-  {
-    return _previousAction.action;
-  }
-  /**
+    inline const MouseAction_t &previous() const noexcept
+    {
+        return _previousAction.action;
+    }
+    /**
    * @return true if the set was successful.
    */
-  bool setIfUnlocked(const MouseAction_t action)
-  {
-    if (_locked)
-      return false;
+    bool setIfUnlocked(const MouseAction_t action)
+    {
+        if (_locked)
+            return false;
 
-    set(action);
-    return true;
-  }
+        set(action);
+        return true;
+    }
 
-  void set(const MouseAction_t action)
-  {
-    DEBUG_ASSERT(!_locked, "The action is locked.");
-    _previousAction = {_action, _locked};
-    _action = action;
+    void set(const MouseAction_t action)
+    {
+        DEBUG_ASSERT(!_locked, "The action is locked.");
+        _previousAction = {_action, _locked};
+        _action = action;
 
-    actionChanged.fire(_action);
-  }
+        actionChanged.fire(_action);
+    }
 
-  void setRawItem(uint32_t serverId) noexcept
-  {
-    set(MouseAction::RawItem{serverId});
-  }
+    void setRawItem(uint32_t serverId) noexcept
+    {
+        set(MouseAction::RawItem{serverId});
+    }
 
-  void reset() noexcept
-  {
-    unlock();
-    set(MouseAction::Select{});
-  }
+    void reset() noexcept
+    {
+        unlock();
+        set(MouseAction::Select{});
+    }
 
-  template <typename T>
-  T *as()
-  {
-    return std::get_if<T>(&_action);
-  }
+    template <typename T>
+    T *as()
+    {
+        return std::get_if<T>(&_action);
+    }
 
-  template <typename T>
-  bool is()
-  {
-    return std::holds_alternative<T>(_action);
-  }
+    template <typename T>
+    bool is()
+    {
+        return std::holds_alternative<T>(_action);
+    }
 
-  template <auto MemberFunction, typename T>
-  void onActionChanged(T *instance)
-  {
-    actionChanged.connect<MemberFunction>(instance);
-  }
+    template <auto MemberFunction, typename T>
+    void onActionChanged(T *instance)
+    {
+        actionChanged.connect<MemberFunction>(instance);
+    }
 
-  inline void lock() noexcept;
-  inline void unlock() noexcept;
-  inline bool locked() const noexcept;
+    inline void lock() noexcept;
+    inline void unlock() noexcept;
+    inline bool locked() const noexcept;
 
-private:
-  Nano::Signal<void(const MouseAction_t &)> actionChanged;
+  private:
+    Nano::Signal<void(const MouseAction_t &)> actionChanged;
 
-  struct MouseActionState
-  {
-    MouseAction_t action;
-    bool locked;
-  };
+    struct MouseActionState
+    {
+        MouseAction_t action;
+        bool locked;
+    };
 
-  MouseActionState _previousAction = {MouseAction::Select{}, false};
-  MouseAction_t _action = MouseAction::Select{};
-  bool _locked = false;
+    MouseActionState _previousAction = {MouseAction::Select{}, false};
+    MouseAction_t _action = MouseAction::Select{};
+    bool _locked = false;
 };
 
 inline void EditorAction::lock() noexcept
 {
-  _locked = true;
+    _locked = true;
 }
 
 inline void EditorAction::unlock() noexcept
 {
-  _locked = false;
+    _locked = false;
 }
 
 inline bool EditorAction::locked() const noexcept
 {
-  return _locked;
+    return _locked;
 }

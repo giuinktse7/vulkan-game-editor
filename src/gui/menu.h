@@ -13,19 +13,19 @@ class QKeySequence;
 
 class MenuAction : public QWidgetAction
 {
-  Q_OBJECT
-public:
-  class MenuActionWidget : public QWidget
-  {
+    Q_OBJECT
   public:
-    MenuActionWidget(QWidget *parent = nullptr);
-  };
+    class MenuActionWidget : public QWidget
+    {
+      public:
+        MenuActionWidget(QWidget *parent = nullptr);
+    };
 
-  MenuAction(const QString &text, QObject *parent = nullptr);
-  MenuAction(const QString &text, const QKeySequence &shortcut, QObject *parent = nullptr);
-  ~MenuAction();
-  QWidget *createWidget(QWidget *parent);
+    MenuAction(const QString &text, QObject *parent = nullptr);
+    MenuAction(const QString &text, const QKeySequence &shortcut, QObject *parent = nullptr);
+    ~MenuAction();
+    QWidget *createWidget(QWidget *parent);
 
-private:
-  QString text;
+  private:
+    QString text;
 };

@@ -267,16 +267,16 @@ SpriteAnimation SpriteAnimation::fromProtobufData(proto::SpriteAnimation animati
 
     switch (animation.loop_type())
     {
-    case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_PINGPONG:
-        anim.loopType = AnimationLoopType::PingPong;
-        break;
-    case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_COUNTED:
-        anim.loopType = AnimationLoopType::Counted;
-        break;
-    case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_INFINITE:
-    default:
-        anim.loopType = AnimationLoopType::Infinite;
-        break;
+        case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_PINGPONG:
+            anim.loopType = AnimationLoopType::PingPong;
+            break;
+        case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_COUNTED:
+            anim.loopType = AnimationLoopType::Counted;
+            break;
+        case proto::ANIMATION_LOOP_TYPE::ANIMATION_LOOP_TYPE_INFINITE:
+        default:
+            anim.loopType = AnimationLoopType::Infinite;
+            break;
     }
 
     for (auto phase : animation.sprite_phase())
@@ -434,34 +434,33 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
         {
             switch (flags.default_action().action())
             {
-
-            case proto::PLAYER_ACTION::PLAYER_ACTION_LOOK:
-                flagData.defaultAction = AppearancePlayerDefaultAction::Look;
-                break;
-            case proto::PLAYER_ACTION::PLAYER_ACTION_USE:
-                flagData.defaultAction = AppearancePlayerDefaultAction::Use;
-                break;
-            case proto::PLAYER_ACTION::PLAYER_ACTION_OPEN:
-                flagData.defaultAction = AppearancePlayerDefaultAction::Open;
-                break;
-            case proto::PLAYER_ACTION::PLAYER_ACTION_AUTOWALK_HIGHLIGHT:
-                flagData.defaultAction = AppearancePlayerDefaultAction::AutowalkHighlight;
-                break;
-            case proto::PLAYER_ACTION::PLAYER_ACTION_NONE:
-            default:
-                flagData.defaultAction = AppearancePlayerDefaultAction::None;
-                break;
+                case proto::PLAYER_ACTION::PLAYER_ACTION_LOOK:
+                    flagData.defaultAction = AppearancePlayerDefaultAction::Look;
+                    break;
+                case proto::PLAYER_ACTION::PLAYER_ACTION_USE:
+                    flagData.defaultAction = AppearancePlayerDefaultAction::Use;
+                    break;
+                case proto::PLAYER_ACTION::PLAYER_ACTION_OPEN:
+                    flagData.defaultAction = AppearancePlayerDefaultAction::Open;
+                    break;
+                case proto::PLAYER_ACTION::PLAYER_ACTION_AUTOWALK_HIGHLIGHT:
+                    flagData.defaultAction = AppearancePlayerDefaultAction::AutowalkHighlight;
+                    break;
+                case proto::PLAYER_ACTION::PLAYER_ACTION_NONE:
+                default:
+                    flagData.defaultAction = AppearancePlayerDefaultAction::None;
+                    break;
             }
         }
         if (hasFlag(AppearanceFlag::Market))
         {
-#define MAP_MARKET_FLAG(src, dst)                   \
-    if (1)                                          \
-    {                                               \
-    case proto::ITEM_CATEGORY::ITEM_CATEGORY_##src: \
-        flagData.market.category = dst;             \
-        break;                                      \
-    }                                               \
+#define MAP_MARKET_FLAG(src, dst)                       \
+    if (1)                                              \
+    {                                                   \
+        case proto::ITEM_CATEGORY::ITEM_CATEGORY_##src: \
+            flagData.market.category = dst;             \
+            break;                                      \
+    }                                                   \
     else
 
             switch (flags.market().category())
@@ -490,9 +489,9 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
                 MAP_MARKET_FLAG(PREMIUM_SCROLLS, AppearanceItemCategory::PremiumScrolls);
                 MAP_MARKET_FLAG(TIBIA_COINS, AppearanceItemCategory::TibiaCoins);
                 MAP_MARKET_FLAG(CREATURE_PRODUCTS, AppearanceItemCategory::CreatureProducts);
-            default:
-                ABORT_PROGRAM("Unknown appearance flag market category: " + std::to_string(flags.market().category()));
-                break;
+                default:
+                    ABORT_PROGRAM("Unknown appearance flag market category: " + std::to_string(flags.market().category()));
+                    break;
             }
 
 #undef MAP_MARKET_FLAG

@@ -18,41 +18,41 @@ class QWheelEvent;
 
 class QtScrollBar : public QScrollBar
 {
-public:
-  QtScrollBar(Qt::Orientation orientation, QWidget *parent = nullptr);
-  void mousePressEvent(QMouseEvent *e) override;
-  void mouseMoveEvent(QMouseEvent *e) override;
+  public:
+    QtScrollBar(Qt::Orientation orientation, QWidget *parent = nullptr);
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
 
-  void initStyleOption(QStyleOptionSlider *option) const;
+    void initStyleOption(QStyleOptionSlider *option) const;
 
-  void addValue(int value);
+    void addValue(int value);
 };
 
 class MapViewWidget : public QWidget, public Nano::Observer<>
 {
-  Q_OBJECT
-public:
-  MapViewWidget(VulkanWindow *window, QWidget *parent = nullptr);
+    Q_OBJECT
+  public:
+    MapViewWidget(VulkanWindow *window, QWidget *parent = nullptr);
 
-  void viewportChanged(const Camera::Viewport &viewport);
-  void mapViewDrawRequested();
-  void selectionChanged();
-  void undoRedoPerformed();
+    void viewportChanged(const Camera::Viewport &viewport);
+    void mapViewDrawRequested();
+    void selectionChanged();
+    void undoRedoPerformed();
 
-  MapView *mapView;
+    MapView *mapView;
 
-signals:
-  void viewportChangedEvent(const Camera::Viewport &viewport);
-  void selectionChangedEvent(MapView &mapView);
-  void undoRedoEvent(MapView &mapView);
+  signals:
+    void viewportChangedEvent(const Camera::Viewport &viewport);
+    void selectionChangedEvent(MapView &mapView);
+    void undoRedoEvent(MapView &mapView);
 
-private:
-  VulkanWindow *vulkanWindow;
+  private:
+    VulkanWindow *vulkanWindow;
 
-  QtScrollBar *hbar;
-  QtScrollBar *vbar;
+    QtScrollBar *hbar;
+    QtScrollBar *vbar;
 
-  void onWindowKeyPress(QKeyEvent *event);
-  void setMapViewX(int value);
-  void setMapViewY(int value);
+    void onWindowKeyPress(QKeyEvent *event);
+    void setMapViewX(int value);
+    void setMapViewY(int value);
 };

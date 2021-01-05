@@ -131,7 +131,6 @@ set(CommonSources
     src/creature.h
     src/town.h
     src/type_trait.h
-    src/ui_mainwindow.h
     src/util.h
     src/version.h
     src/octree.h

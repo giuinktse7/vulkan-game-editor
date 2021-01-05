@@ -15,867 +15,890 @@
 #include "util.h"
 
 // HeapNode macro
-#define DECLARE_NODE(name, amount)                                                \
-  class name : public BaseNode<amount>                                            \
-  {                                                                               \
-  public:                                                                         \
-    name(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent); \
-                                                                                  \
-    HeapNode *getOrCreateChild(const Position pos) override;                      \
-    std::string show() const override;                                            \
-                                                                                  \
-  private:                                                                        \
-    Position midPoint;                                                            \
-    SplitDelta splitDelta;                                                        \
-                                                                                  \
-    uint16_t getIndex(const Position &pos) const override;                        \
-  }
+#define DECLARE_NODE(name, amount)                                                    \
+    class name : public BaseNode<amount>                                              \
+    {                                                                                 \
+      public:                                                                         \
+        name(const Position midPoint, const SplitDelta splitDelta, HeapNode *parent); \
+                                                                                      \
+        HeapNode *getOrCreateChild(const Position pos) override;                      \
+        std::string show() const override;                                            \
+                                                                                      \
+      private:                                                                        \
+        Position midPoint;                                                            \
+        SplitDelta splitDelta;                                                        \
+                                                                                      \
+        uint16_t getIndex(const Position &pos) const override;                        \
+    }
 
 enum SplitDimension
 {
-  X = 1 << 2,
-  Y = 1 << 1,
-  Z = 1 << 0,
+    X = 1 << 2,
+    Y = 1 << 1,
+    Z = 1 << 0,
 };
 VME_ENUM_OPERATORS(SplitDimension)
 
 namespace vme
 {
-  namespace octree
-  {
-    class Tree;
-    class Leaf;
-
-    struct Cube
+    namespace octree
     {
-      uint32_t width;
-      uint32_t height;
-      uint32_t depth;
-    };
+        class Tree;
+        class Leaf;
 
-    struct SplitDelta
-    {
-      uint32_t x;
-      uint32_t y;
-      uint32_t z;
-    };
+        struct Cube
+        {
+            uint32_t width;
+            uint32_t height;
+            uint32_t depth;
+        };
 
-    constexpr struct SplitSize
-    {
-      uint32_t x = 0;
-      uint32_t y = 0;
-      uint32_t z = 0;
-    } cacheSplitCounts;
+        struct SplitDelta
+        {
+            uint32_t x;
+            uint32_t y;
+            uint32_t z;
+        };
 
-    struct CacheInitInfo
-    {
-      uint16_t count = 1;
+        constexpr struct SplitSize
+        {
+            uint32_t x = 0;
+            uint32_t y = 0;
+            uint32_t z = 0;
+        } cacheSplitCounts;
 
-      // -1 means uninitialized
-      int32_t endXIndex = -1;
-      int32_t endYIndex = -1;
-      int32_t endZIndex = -1;
+        struct CacheInitInfo
+        {
+            uint16_t count = 1;
 
-      uint16_t amountToInitialize = 1;
-    };
+            // -1 means uninitialized
+            int32_t endXIndex = -1;
+            int32_t endYIndex = -1;
+            int32_t endZIndex = -1;
 
-    struct BoundingBox
-    {
-      using value_type = Position::value_type;
+            uint16_t amountToInitialize = 1;
+        };
 
-      BoundingBox(Position min, Position max)
-          : _min(min), _max(max) {}
+        struct BoundingBox
+        {
+            using value_type = Position::value_type;
 
-      const Position min() const noexcept;
-      const Position max() const noexcept;
+            BoundingBox(Position min, Position max)
+                : _min(min), _max(max) {}
 
-      value_type minX() const noexcept;
-      value_type minY() const noexcept;
-      value_type minZ() const noexcept;
+            const Position min() const noexcept;
+            const Position max() const noexcept;
 
-      value_type maxX() const noexcept;
-      value_type maxY() const noexcept;
-      value_type maxZ() const noexcept;
+            value_type minX() const noexcept;
+            value_type minY() const noexcept;
+            value_type minZ() const noexcept;
 
-      void setMinX(value_type value) noexcept;
-      void setMinY(value_type value) noexcept;
-      void setMinZ(value_type value) noexcept;
+            value_type maxX() const noexcept;
+            value_type maxY() const noexcept;
+            value_type maxZ() const noexcept;
 
-      void setMaxX(value_type value) noexcept;
-      void setMaxY(value_type value) noexcept;
-      void setMaxZ(value_type value) noexcept;
+            void setMinX(value_type value) noexcept;
+            void setMinY(value_type value) noexcept;
+            void setMinZ(value_type value) noexcept;
 
-      /*
+            void setMaxX(value_type value) noexcept;
+            void setMaxY(value_type value) noexcept;
+            void setMaxZ(value_type value) noexcept;
+
+            /*
         Returns true if the bounding box changed.
       */
-      bool include(BoundingBox box);
-      /*
+            bool include(BoundingBox box);
+            /*
         Returns true if the bounding box changed.
       */
-      bool include(const Position pos);
+            bool include(const Position pos);
 
-      bool contains(const BoundingBox &other) const noexcept;
+            bool contains(const BoundingBox &other) const noexcept;
 
-    private:
-      Position _min;
-      Position _max;
-    };
+          private:
+            Position _min;
+            Position _max;
+        };
 
-    static constexpr Cube ChunkSize = {64, 64, 8};
-    constexpr uint32_t DefaultMaxCacheSplitCount = 4;
+        static constexpr Cube ChunkSize = {64, 64, 8};
+        constexpr uint32_t DefaultMaxCacheSplitCount = 4;
 
-    constexpr CacheInitInfo computeCacheStuff(const vme::MapSize mapSize, const uint32_t maxCacheSplitCount = DefaultMaxCacheSplitCount)
-    {
-      SplitSize splitCounts;
-      splitCounts.x = std::min(mapSize.width() / ChunkSize.width - 1, maxCacheSplitCount);
-      splitCounts.y = std::min(mapSize.height() / ChunkSize.height - 1, maxCacheSplitCount);
-      splitCounts.z = std::max(std::min(mapSize.depth() / ChunkSize.depth - 1, maxCacheSplitCount), static_cast<uint32_t>(0));
-
-      CacheInitInfo cacheInfo;
-      // There are one or zero chunks
-      if (splitCounts.x == 0 && splitCounts.y == 0 && splitCounts.z == 0)
-      {
-        cacheInfo.count = 0;
-        cacheInfo.amountToInitialize = 0;
-        return cacheInfo;
-      }
-
-      int remainingDimensions = 3;
-
-      do
-      {
-        int dimensions = 0;
-
-        if (splitCounts.x > 0)
+        constexpr CacheInitInfo computeCacheStuff(const vme::MapSize mapSize, const uint32_t maxCacheSplitCount = DefaultMaxCacheSplitCount)
         {
-          ++dimensions;
-          --splitCounts.x;
+            SplitSize splitCounts;
+            splitCounts.x = std::min(mapSize.width() / ChunkSize.width - 1, maxCacheSplitCount);
+            splitCounts.y = std::min(mapSize.height() / ChunkSize.height - 1, maxCacheSplitCount);
+            splitCounts.z = std::max(std::min(mapSize.depth() / ChunkSize.depth - 1, maxCacheSplitCount), static_cast<uint32_t>(0));
+
+            CacheInitInfo cacheInfo;
+            // There are one or zero chunks
+            if (splitCounts.x == 0 && splitCounts.y == 0 && splitCounts.z == 0)
+            {
+                cacheInfo.count = 0;
+                cacheInfo.amountToInitialize = 0;
+                return cacheInfo;
+            }
+
+            int remainingDimensions = 3;
+
+            do
+            {
+                int dimensions = 0;
+
+                if (splitCounts.x > 0)
+                {
+                    ++dimensions;
+                    --splitCounts.x;
+                }
+
+                if (splitCounts.y > 0)
+                {
+                    ++dimensions;
+                    --splitCounts.y;
+                }
+
+                if (splitCounts.z > 0)
+                {
+                    ++dimensions;
+                    --splitCounts.z;
+                }
+
+                cacheInfo.count *= util::power(2, dimensions);
+
+                if (splitCounts.x == 0 && cacheInfo.endXIndex == -1)
+                    cacheInfo.endXIndex = cacheInfo.count;
+
+                if (splitCounts.y == 0 && cacheInfo.endYIndex == -1)
+                    cacheInfo.endYIndex = cacheInfo.count;
+
+                if (splitCounts.z == 0 && cacheInfo.endZIndex == -1)
+                    cacheInfo.endZIndex = cacheInfo.count;
+
+            } while (splitCounts.x > 0 || splitCounts.y > 0 || splitCounts.z > 0);
+
+            if (cacheInfo.endXIndex != cacheInfo.count)
+                --remainingDimensions;
+            if (cacheInfo.endYIndex != cacheInfo.count)
+                --remainingDimensions;
+            if (cacheInfo.endZIndex != cacheInfo.count)
+                --remainingDimensions;
+
+            cacheInfo.amountToInitialize = cacheInfo.count / util::power(2, remainingDimensions);
+            return cacheInfo;
         }
 
-        if (splitCounts.y > 0)
+        class HeapNode
         {
-          ++dimensions;
-          --splitCounts.y;
-        }
+          public:
+            HeapNode(HeapNode *parent)
+                : parent(parent) {}
+            virtual ~HeapNode() = default;
+            virtual bool isLeaf() const;
+            virtual bool isCachedNode() const noexcept
+            {
+                return false;
+            }
 
-        if (splitCounts.z > 0)
+            virtual void clear() = 0;
+
+            virtual bool empty() const noexcept;
+
+            Leaf *leaf(const Position pos) const;
+            Leaf *getOrCreateLeaf(const Position pos);
+
+            virtual std::string show() const;
+
+            virtual HeapNode *child(int pattern) const;
+            virtual HeapNode *child(const Position pos) const;
+            virtual HeapNode *getOrCreateChild(const Position pos);
+
+            virtual int childCount() const noexcept = 0;
+
+            virtual bool contains(const Position pos) const;
+
+            virtual uint16_t getIndex(const Position &pos) const = 0;
+
+            virtual void updateBoundingBox()
+            {
+                VME_LOG_D("Warning: Called updateBoundingBox of virtual HeapNode.");
+            }
+
+            bool hasBoundingBox() const;
+
+            const std::optional<BoundingBox> boundingBox() const;
+
+            HeapNode *parent;
+            std::variant<std::monostate, BoundingBox> _boundingBox;
+        };
+
+        class Leaf : public HeapNode
         {
-          ++dimensions;
-          --splitCounts.z;
-        }
+          public:
+            struct UpdateResult
+            {
+                bool change = false;
+                bool bboxChange = false;
 
-        cacheInfo.count *= util::power(2, dimensions);
+                template <size_t I>
+                auto get() const
+                {
+                    if constexpr (I == 0)
+                        return change;
+                    else if constexpr (I == 1)
+                        return bboxChange;
+                    else
+                        static_assert(I >= 0 && I < 1);
+                }
+            };
 
-        if (splitCounts.x == 0 && cacheInfo.endXIndex == -1)
-          cacheInfo.endXIndex = cacheInfo.count;
+            Leaf(const Position pos, HeapNode *parent);
+            bool isLeaf() const override;
 
-        if (splitCounts.y == 0 && cacheInfo.endYIndex == -1)
-          cacheInfo.endYIndex = cacheInfo.count;
+            int childCount() const noexcept override;
 
-        if (splitCounts.z == 0 && cacheInfo.endZIndex == -1)
-          cacheInfo.endZIndex = cacheInfo.count;
+            bool empty() const noexcept override;
 
-      } while (splitCounts.x > 0 || splitCounts.y > 0 || splitCounts.z > 0);
+            void clear() override;
 
-      if (cacheInfo.endXIndex != cacheInfo.count)
-        --remainingDimensions;
-      if (cacheInfo.endYIndex != cacheInfo.count)
-        --remainingDimensions;
-      if (cacheInfo.endZIndex != cacheInfo.count)
-        --remainingDimensions;
+            bool size() const noexcept;
+            uint32_t count() const noexcept;
 
-      cacheInfo.amountToInitialize = cacheInfo.count / util::power(2, remainingDimensions);
-      return cacheInfo;
-    }
-
-    class HeapNode
-    {
-    public:
-      HeapNode(HeapNode *parent) : parent(parent) {}
-      virtual ~HeapNode() = default;
-      virtual bool isLeaf() const;
-      virtual bool isCachedNode() const noexcept
-      {
-        return false;
-      }
-
-      virtual void clear() = 0;
-
-      virtual bool empty() const noexcept;
-
-      Leaf *leaf(const Position pos) const;
-      Leaf *getOrCreateLeaf(const Position pos);
-
-      virtual std::string show() const;
-
-      virtual HeapNode *child(int pattern) const;
-      virtual HeapNode *child(const Position pos) const;
-      virtual HeapNode *getOrCreateChild(const Position pos);
-
-      virtual int childCount() const noexcept = 0;
-
-      virtual bool contains(const Position pos) const;
-
-      virtual uint16_t getIndex(const Position &pos) const = 0;
-
-      virtual void updateBoundingBox()
-      {
-        VME_LOG_D("Warning: Called updateBoundingBox of virtual HeapNode.");
-      }
-
-      bool hasBoundingBox() const;
-
-      const std::optional<BoundingBox> boundingBox() const;
-
-      HeapNode *parent;
-      std::variant<std::monostate, BoundingBox> _boundingBox;
-    };
-
-    class Leaf : public HeapNode
-    {
-    public:
-      struct UpdateResult
-      {
-        bool change = false;
-        bool bboxChange = false;
-
-        template <size_t I>
-        auto get() const
-        {
-          if constexpr (I == 0)
-            return change;
-          else if constexpr (I == 1)
-            return bboxChange;
-          else
-            static_assert(I >= 0 && I < 1);
-        }
-      };
-
-      Leaf(const Position pos, HeapNode *parent);
-      bool isLeaf() const override;
-
-      int childCount() const noexcept override;
-
-      bool empty() const noexcept override;
-
-      void clear() override;
-
-      bool size() const noexcept;
-      uint32_t count() const noexcept;
-
-      /*
+            /*
         Returns true if the leaf has the position 'pos'.
       */
-      bool contains(const Position pos) const override;
+            bool contains(const Position pos) const override;
 
-      UpdateResult add(const Position pos);
-      UpdateResult remove(const Position pos);
+            UpdateResult add(const Position pos);
+            UpdateResult remove(const Position pos);
 
-      bool encloses(const Position pos) const;
+            bool encloses(const Position pos) const;
 
-      uint16_t getIndex(const Position &pos) const override;
+            uint16_t getIndex(const Position &pos) const override;
 
-      std::string show() const override;
+            std::string show() const override;
 
-      Position min() const noexcept;
-      Position max() const noexcept;
+            Position min() const noexcept;
+            Position max() const noexcept;
 
-      std::array<bool, ChunkSize.width *ChunkSize.height *ChunkSize.depth> values = {false};
+            std::array<bool, ChunkSize.width *ChunkSize.height *ChunkSize.depth> values = {false};
 
-      Position position;
+            Position position;
 
-    private:
-      uint32_t _count = 0;
-      struct Indices
-      {
-        int x = -1;
-        int y = -1;
-        int z = -1;
+          private:
+            uint32_t _count = 0;
+            struct Indices
+            {
+                int x = -1;
+                int y = -1;
+                int z = -1;
 
 #ifdef _DEBUG_VME
-        bool validIndices() const noexcept
-        {
-          if (x == -1 || y == -1 || z == -1)
-          {
-            return x == -1 && y == -1 && z == -1;
-          }
+                bool validIndices() const noexcept
+                {
+                    if (x == -1 || y == -1 || z == -1)
+                    {
+                        return x == -1 && y == -1 && z == -1;
+                    }
 
-          return true;
-        }
+                    return true;
+                }
 #endif
 
-        bool empty() const
-        {
-          DEBUG_ASSERT(validIndices(), "Invalid octree indices!");
-          return x == -1 || y == -1 || z == -1;
-        }
-      };
-      /*
+                bool empty() const
+                {
+                    DEBUG_ASSERT(validIndices(), "Invalid octree indices!");
+                    return x == -1 || y == -1 || z == -1;
+                }
+            };
+            /*
         Important: Indices hold indices into xs, ys, and zs. To get a position 
         based on low/high, use min() and max().
       */
-      Indices low;
-      Indices high;
+            Indices low;
+            Indices high;
 
-      uint16_t xs[ChunkSize.width] = {0};
-      uint16_t ys[ChunkSize.height] = {0};
-      uint16_t zs[ChunkSize.depth] = {0};
+            uint16_t xs[ChunkSize.width] = {0};
+            uint16_t ys[ChunkSize.height] = {0};
+            uint16_t zs[ChunkSize.depth] = {0};
 
-      /*
+            /*
         Returns true if the bounding box changed.
       */
-      bool addToBoundingBox(const Position pos);
+            bool addToBoundingBox(const Position pos);
 
-      /*
+            /*
         Returns true if the bounding box changed.
       */
-      bool removeFromBoundingBox(const Position pos);
-    };
+            bool removeFromBoundingBox(const Position pos);
+        };
 
-    template <size_t ChildCount>
-    class BaseNode : public HeapNode
-    {
-    public:
-      BaseNode(HeapNode *parent) : HeapNode(parent) {}
+        template <size_t ChildCount>
+        class BaseNode : public HeapNode
+        {
+          public:
+            BaseNode(HeapNode *parent)
+                : HeapNode(parent) {}
 
-      HeapNode *child(int pattern) const override;
-      HeapNode *child(const Position pos) const override;
-      bool isLeaf() const override;
-      void clear() override;
-      int childCount() const noexcept override;
+            HeapNode *child(int pattern) const override;
+            HeapNode *child(const Position pos) const override;
+            bool isLeaf() const override;
+            void clear() override;
+            int childCount() const noexcept override;
 
-      void updateBoundingBox() override;
+            void updateBoundingBox() override;
 
-    protected:
-      std::array<std::unique_ptr<HeapNode>, ChildCount> children;
-    };
+          protected:
+            std::array<std::unique_ptr<HeapNode>, ChildCount> children;
+        };
 
-    DECLARE_NODE(NodeX, 2);
-    DECLARE_NODE(NodeY, 2);
-    DECLARE_NODE(NodeZ, 2);
+        DECLARE_NODE(NodeX, 2);
+        DECLARE_NODE(NodeY, 2);
+        DECLARE_NODE(NodeZ, 2);
 
-    DECLARE_NODE(NodeXY, 4);
-    DECLARE_NODE(NodeXZ, 4);
-    DECLARE_NODE(NodeYZ, 4);
+        DECLARE_NODE(NodeXY, 4);
+        DECLARE_NODE(NodeXZ, 4);
+        DECLARE_NODE(NodeYZ, 4);
 
-    DECLARE_NODE(NodeXYZ, 8);
+        DECLARE_NODE(NodeXYZ, 8);
 
-    class CachedNode : public HeapNode
-    {
-    public:
-      CachedNode(HeapNode *parent = nullptr);
-      void setParent(HeapNode *parent);
-      bool isCachedNode() const noexcept override;
-      int childCount() const noexcept override;
+        class CachedNode : public HeapNode
+        {
+          public:
+            CachedNode(HeapNode *parent = nullptr);
+            void setParent(HeapNode *parent);
+            bool isCachedNode() const noexcept override;
+            int childCount() const noexcept override;
 
-      bool addBoundingBox(BoundingBox boundingBox);
+            bool addBoundingBox(BoundingBox boundingBox);
 
-      uint16_t childOffset(const int pattern) const;
+            uint16_t childOffset(const int pattern) const;
 
-      void updateBoundingBoxCached(const Tree &tree);
+            void updateBoundingBoxCached(const Tree &tree);
 
-      void clear() override;
+            void clear() override;
 
-      int32_t childCacheOffset = -1;
-      uint16_t cacheIndex = 0;
-      uint8_t _childCount = 0;
+            int32_t childCacheOffset = -1;
+            uint16_t cacheIndex = 0;
+            uint8_t _childCount = 0;
 
-      // void setIndex(size_t index);
-      void setChildCacheOffset(size_t offset);
-      uint16_t getIndex(const Position &pos) const override;
-    };
+            // void setIndex(size_t index);
+            void setChildCacheOffset(size_t offset);
+            uint16_t getIndex(const Position &pos) const override;
+        };
 
-    struct TraversalState
-    {
-      TraversalState(vme::MapSize mapSize, CacheInitInfo cacheInfo);
-      Position pos;
+        struct TraversalState
+        {
+            TraversalState(vme::MapSize mapSize, CacheInitInfo cacheInfo);
+            Position pos;
 
-      int update(uint16_t index, const Position position);
+            int update(uint16_t index, const Position position);
 
-      uint32_t dx;
-      uint32_t dy;
-      uint32_t dz;
+            uint32_t dx;
+            uint32_t dy;
+            uint32_t dz;
 
-      CacheInitInfo cacheInfo;
+            CacheInitInfo cacheInfo;
 
-      std::string show() const;
-    };
+            std::string show() const;
+        };
 
-    class Node;
-    class Tree
-    {
-    public:
-      static Tree create(const MapSize mapSize);
-      Tree(vme::MapSize mapSize, CacheInitInfo cacheInfo);
+        class Node;
+        class Tree
+        {
+          public:
+            static Tree create(const MapSize mapSize);
+            Tree(vme::MapSize mapSize, CacheInitInfo cacheInfo);
 
-      class leafIterator
-      {
-      public:
-        using ValueType = Leaf *;
-        using Reference = const ValueType &;
-        using Pointer = Leaf *;
-        using IteratorCategory = std::forward_iterator_tag;
+            class leafIterator
+            {
+              public:
+                using ValueType = Leaf *;
+                using Reference = const ValueType &;
+                using Pointer = Leaf *;
+                using IteratorCategory = std::forward_iterator_tag;
 
-        leafIterator();
-        leafIterator(const Tree *tree);
-        static leafIterator end();
+                leafIterator();
+                leafIterator(const Tree *tree);
+                static leafIterator end();
 
-        leafIterator &operator++();
-        leafIterator operator++(int junk);
+                leafIterator &operator++();
+                leafIterator operator++(int junk);
 
-        const Leaf *operator*() const { return value; }
-        const Leaf *operator->() const { return value; }
+                const Leaf *operator*() const
+                {
+                    return value;
+                }
+                const Leaf *operator->() const
+                {
+                    return value;
+                }
 
-        bool operator==(const leafIterator &rhs) const;
-        bool operator!=(const leafIterator &rhs) const { return !(*this == rhs); }
+                bool operator==(const leafIterator &rhs) const;
+                bool operator!=(const leafIterator &rhs) const
+                {
+                    return !(*this == rhs);
+                }
 
-        bool finished() const noexcept;
+                bool finished() const noexcept;
 
-      private:
-        const Tree *tree;
+              private:
+                const Tree *tree;
 
-        std::queue<const HeapNode *> nodes;
+                std::queue<const HeapNode *> nodes;
 
-        const Leaf *value;
+                const Leaf *value;
 
-        bool isEnd = false;
+                bool isEnd = false;
 
-        void nextLeaf();
-      };
+                void nextLeaf();
+            };
 
-      class iterator
-      {
-      public:
-        using ValueType = Position;
-        using Reference = Position &;
-        using Pointer = Position *;
-        using IteratorCategory = std::forward_iterator_tag;
+            class iterator
+            {
+              public:
+                using ValueType = Position;
+                using Reference = Position &;
+                using Pointer = Position *;
+                using IteratorCategory = std::forward_iterator_tag;
 
-        iterator(const Tree *tree);
-        static iterator end();
+                iterator(const Tree *tree);
+                static iterator end();
 
-        iterator &operator++();
-        iterator operator++(int junk);
+                iterator &operator++();
+                iterator operator++(int junk);
 
-        Reference operator*() { return value; }
-        Pointer operator->() { return &value; }
+                Reference operator*()
+                {
+                    return value;
+                }
+                Pointer operator->()
+                {
+                    return &value;
+                }
 
-        bool operator==(const iterator &rhs) const;
-        bool operator!=(const iterator &rhs) const { return !(*this == rhs); }
+                bool operator==(const iterator &rhs) const;
+                bool operator!=(const iterator &rhs) const
+                {
+                    return !(*this == rhs);
+                }
 
-      private:
-        leafIterator leafIterator;
+              private:
+                leafIterator leafIterator;
 
-        Position value;
+                Position value;
 
-        Position topLeft;
-        Position bottomRight;
+                Position topLeft;
+                Position bottomRight;
 
-        bool isEnd = false;
+                bool isEnd = false;
 
-        void nextValue();
+                void nextValue();
 
-        const Leaf *currentLeaf() const;
+                const Leaf *currentLeaf() const;
 
-        iterator();
-      };
+                iterator();
+            };
 
-      iterator begin() const
-      {
-        return iterator(this);
-      }
+            iterator begin() const
+            {
+                return iterator(this);
+            }
 
-      iterator end() const
-      {
-        return iterator::end();
-      }
+            iterator end() const
+            {
+                return iterator::end();
+            }
 
-      uint32_t width;
-      uint32_t height;
-      uint16_t floors;
+            uint32_t width;
+            uint32_t height;
+            uint16_t floors;
 
-      bool add(const Position pos);
-      bool remove(const Position pos);
+            bool add(const Position pos);
+            bool remove(const Position pos);
 
-      /*
+            /*
         Clear all positions from the tree.
       */
-      bool clear();
+            bool clear();
 
-      bool contains(const Position pos) const;
-      long size() const noexcept;
-      bool empty() const noexcept;
+            bool contains(const Position pos) const;
+            long size() const noexcept;
+            bool empty() const noexcept;
 
-      const std::optional<BoundingBox> boundingBox() const noexcept;
+            const std::optional<BoundingBox> boundingBox() const noexcept;
 
-      std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
+            std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
 
-      /**
+            /**
        * Returns the only position if the tree, ONLY if the tree only has a single
        * position.
        */
-      std::optional<Position> onlyPosition() const;
+            std::optional<Position> onlyPosition() const;
 
-    private:
-      friend class CachedNode;
-      long _size = 0;
+          private:
+            friend class CachedNode;
+            long _size = 0;
 
-      // Should not change
-      TraversalState initialState;
+            // Should not change
+            TraversalState initialState;
 
-      CacheInitInfo cacheInfo;
-      CachedNode root;
+            CacheInitInfo cacheInfo;
+            CachedNode root;
 
-      mutable std::pair<CachedNode *, Leaf *> mostRecentLeaf;
-      mutable std::vector<CachedNode> cachedNodes;
+            mutable std::pair<CachedNode *, Leaf *> mostRecentLeaf;
+            mutable std::vector<CachedNode> cachedNodes;
 
-      std::vector<std::unique_ptr<HeapNode>> cachedHeapNodes;
+            std::vector<std::unique_ptr<HeapNode>> cachedHeapNodes;
 
-      /*
+            /*
         Indices into `cachedNodes` that have been accessed at some point. Used
         to implement a more efficient clear().
       */
-      std::vector<uint16_t> usedCacheIndices;
-      std::vector<uint16_t> usedHeapCacheIndices;
+            std::vector<uint16_t> usedCacheIndices;
+            std::vector<uint16_t> usedHeapCacheIndices;
 
-      // Provides fast access to a position if there is only one position in the tree.
-      std::optional<Position> _single;
+            // Provides fast access to a position if there is only one position in the tree.
+            std::optional<Position> _single;
 
-      HeapNode *getChild(int index, const HeapNode *node) const;
+            HeapNode *getChild(int index, const HeapNode *node) const;
 
-      void markAsRecent(CachedNode *cached, Leaf *leaf) const;
+            void markAsRecent(CachedNode *cached, Leaf *leaf) const;
 
-      Position findOnlyPosition() const;
+            Position findOnlyPosition() const;
 
-      void initializeCache();
+            void initializeCache();
 
-      static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData, HeapNode *parent);
+            static std::unique_ptr<HeapNode> heapNodeFromSplitPattern(int pattern, const Position &pos, SplitDelta splitData, HeapNode *parent);
 
-      const CachedNode *getCachedNode(const Position position) const;
+            const CachedNode *getCachedNode(const Position position) const;
 
-      std::optional<std::pair<CachedNode *, HeapNode *>> fromCache(const Position position) const;
-      std::pair<CachedNode *, HeapNode *> getOrCreateFromCache(const Position position);
-      Leaf *getLeaf(const Position position) const;
-      std::pair<CachedNode *, Leaf *> getOrCreateLeaf(const Position position);
+            std::optional<std::pair<CachedNode *, HeapNode *>> fromCache(const Position position) const;
+            std::pair<CachedNode *, HeapNode *> getOrCreateFromCache(const Position position);
+            Leaf *getLeaf(const Position position) const;
+            std::pair<CachedNode *, Leaf *> getOrCreateLeaf(const Position position);
 
-    }; // End of Tree
+        }; // End of Tree
 
-    inline int Leaf::childCount() const noexcept
-    {
-      return 0;
-    }
-
-    inline bool Leaf::isLeaf() const
-    {
-      return true;
-    }
-
-    inline bool Leaf::size() const noexcept
-    {
-      return _count;
-    }
-
-    inline void Leaf::clear()
-    {
-      VME_LOG_D("Clear");
-      values.fill(false);
-    }
-
-    inline bool Leaf::empty() const noexcept
-    {
-      return _count == 0;
-    }
-
-    inline Position Leaf::min() const noexcept
-    {
-      return position + Position(low.x, low.y, low.z);
-    }
-
-    inline Position Leaf::max() const noexcept
-    {
-      return position + Position(high.x, high.y, high.z);
-    }
-
-    template <size_t ChildCount>
-    int BaseNode<ChildCount>::childCount() const noexcept
-    {
-      return ChildCount;
-    }
-
-    template <size_t ChildCount>
-    inline bool BaseNode<ChildCount>::isLeaf() const
-    {
-      return false;
-    }
-
-    template <size_t ChildCount>
-    inline HeapNode *BaseNode<ChildCount>::child(int index) const
-    {
-      DEBUG_ASSERT(index < ChildCount, "Bad pattern.");
-      auto child = children[index].get();
-      return child;
-    }
-
-    template <size_t ChildCount>
-    inline HeapNode *BaseNode<ChildCount>::child(const Position pos) const
-    {
-      return children[getIndex(pos)].get();
-    }
-
-    template <size_t ChildCount>
-    inline void BaseNode<ChildCount>::updateBoundingBox()
-    {
-      // VME_LOG_D("updateBoundingBox before: " << boundingBox);
-      bool changed = false;
-      _boundingBox = {};
-      for (const std::unique_ptr<HeapNode> &node : children)
-      {
-        if (node && node->hasBoundingBox())
+        inline int Leaf::childCount() const noexcept
         {
-          auto nodeBbox = node->boundingBox().value();
-          if (!boundingBox())
-          {
-            _boundingBox = nodeBbox;
-            changed = true;
-          }
-          else
-          {
-            BoundingBox &box = std::get<BoundingBox>(_boundingBox);
-            changed = changed || box.include(nodeBbox);
-          }
+            return 0;
         }
-      }
-      // VME_LOG_D("updateBoundingBox after: " << boundingBox);
 
-      if (!parent->isCachedNode() && changed)
-        parent->updateBoundingBox();
-    }
+        inline bool Leaf::isLeaf() const
+        {
+            return true;
+        }
 
-    template <size_t ChildCount>
-    void BaseNode<ChildCount>::clear()
-    {
-      for (auto &c : children)
-      {
-        if (c)
-          c->clear();
-      }
-    }
+        inline bool Leaf::size() const noexcept
+        {
+            return _count;
+        }
 
-    inline std::optional<Position> Tree::getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept
-    {
-      if (!root.boundingBox())
-        return std::nullopt;
+        inline void Leaf::clear()
+        {
+            VME_LOG_D("Clear");
+            values.fill(false);
+        }
 
-      auto &bbox = root.boundingBox().value();
-      return Position(
-          positiveX ? bbox.maxX() : bbox.minX(),
-          positiveY ? bbox.maxY() : bbox.minY(),
-          positiveZ ? bbox.maxZ() : bbox.minZ());
-    }
+        inline bool Leaf::empty() const noexcept
+        {
+            return _count == 0;
+        }
 
-    inline long Tree::size() const noexcept
-    {
-      return _size;
-    }
+        inline Position Leaf::min() const noexcept
+        {
+            return position + Position(low.x, low.y, low.z);
+        }
 
-    inline bool Tree::empty() const noexcept
-    {
-      return _size == 0;
-    }
+        inline Position Leaf::max() const noexcept
+        {
+            return position + Position(high.x, high.y, high.z);
+        }
 
-    inline const Position BoundingBox::min() const noexcept
-    {
-      return _min;
-    }
-    inline const Position BoundingBox::max() const noexcept
-    {
-      return _max;
-    }
+        template <size_t ChildCount>
+        int BaseNode<ChildCount>::childCount() const noexcept
+        {
+            return ChildCount;
+        }
 
-    inline BoundingBox::value_type BoundingBox::minX() const noexcept
-    {
-      return _min.x;
-    }
+        template <size_t ChildCount>
+        inline bool BaseNode<ChildCount>::isLeaf() const
+        {
+            return false;
+        }
 
-    inline BoundingBox::value_type BoundingBox::minY() const noexcept
-    {
-      return _min.y;
-    }
+        template <size_t ChildCount>
+        inline HeapNode *BaseNode<ChildCount>::child(int index) const
+        {
+            DEBUG_ASSERT(index < ChildCount, "Bad pattern.");
+            auto child = children[index].get();
+            return child;
+        }
 
-    inline BoundingBox::value_type BoundingBox::minZ() const noexcept
-    {
-      return _min.z;
-    }
+        template <size_t ChildCount>
+        inline HeapNode *BaseNode<ChildCount>::child(const Position pos) const
+        {
+            return children[getIndex(pos)].get();
+        }
 
-    inline BoundingBox::value_type BoundingBox::maxX() const noexcept
-    {
-      return _max.x;
-    }
+        template <size_t ChildCount>
+        inline void BaseNode<ChildCount>::updateBoundingBox()
+        {
+            // VME_LOG_D("updateBoundingBox before: " << boundingBox);
+            bool changed = false;
+            _boundingBox = {};
+            for (const std::unique_ptr<HeapNode> &node : children)
+            {
+                if (node && node->hasBoundingBox())
+                {
+                    auto nodeBbox = node->boundingBox().value();
+                    if (!boundingBox())
+                    {
+                        _boundingBox = nodeBbox;
+                        changed = true;
+                    }
+                    else
+                    {
+                        BoundingBox &box = std::get<BoundingBox>(_boundingBox);
+                        changed = changed || box.include(nodeBbox);
+                    }
+                }
+            }
+            // VME_LOG_D("updateBoundingBox after: " << boundingBox);
 
-    inline BoundingBox::value_type BoundingBox::maxY() const noexcept
-    {
-      return _max.y;
-    }
+            if (!parent->isCachedNode() && changed)
+                parent->updateBoundingBox();
+        }
 
-    inline BoundingBox::value_type BoundingBox::maxZ() const noexcept
-    {
-      return _max.z;
-    }
+        template <size_t ChildCount>
+        void BaseNode<ChildCount>::clear()
+        {
+            for (auto &c : children)
+            {
+                if (c)
+                    c->clear();
+            }
+        }
 
-    inline void BoundingBox::setMinX(value_type value) noexcept
-    {
-      _min.x = value;
-    }
+        inline std::optional<Position> Tree::getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept
+        {
+            if (!root.boundingBox())
+                return std::nullopt;
 
-    inline void BoundingBox::setMinY(value_type value) noexcept
-    {
-      _min.y = value;
-    }
+            auto &bbox = root.boundingBox().value();
+            return Position(
+                positiveX ? bbox.maxX() : bbox.minX(),
+                positiveY ? bbox.maxY() : bbox.minY(),
+                positiveZ ? bbox.maxZ() : bbox.minZ());
+        }
 
-    inline void BoundingBox::setMinZ(value_type value) noexcept
-    {
-      _min.z = value;
-    }
+        inline long Tree::size() const noexcept
+        {
+            return _size;
+        }
 
-    inline void BoundingBox::setMaxX(value_type value) noexcept
-    {
-      _max.x = value;
-    }
+        inline bool Tree::empty() const noexcept
+        {
+            return _size == 0;
+        }
 
-    inline void BoundingBox::setMaxY(value_type value) noexcept
-    {
-      _max.y = value;
-    }
+        inline const Position BoundingBox::min() const noexcept
+        {
+            return _min;
+        }
+        inline const Position BoundingBox::max() const noexcept
+        {
+            return _max;
+        }
 
-    inline void BoundingBox::setMaxZ(value_type value) noexcept
-    {
-      _max.z = value;
-    }
+        inline BoundingBox::value_type BoundingBox::minX() const noexcept
+        {
+            return _min.x;
+        }
 
-    // inline BoundingBox::value_type Tree::minX() const noexcept
-    // {
-    //   return boundingBox().minX();
-    // }
-    // inline BoundingBox::value_type Tree::minY() const noexcept
-    // {
-    //   return boundingBox().minY();
-    // }
-    // inline BoundingBox::value_type Tree::minZ() const noexcept
-    // {
-    //   return boundingBox().minZ();
-    // }
-    // inline BoundingBox::value_type Tree::maxX() const noexcept
-    // {
-    //   return boundingBox().maxX();
-    // }
-    // inline BoundingBox::value_type Tree::maxY() const noexcept
-    // {
-    //   return boundingBox().maxY();
-    // }
-    // inline BoundingBox::value_type Tree::maxZ() const noexcept
-    // {
-    //   return boundingBox().maxZ();
-    // }
+        inline BoundingBox::value_type BoundingBox::minY() const noexcept
+        {
+            return _min.y;
+        }
 
-    // inline Position Tree::min() const noexcept
-    // {
-    //   return boundingBox().min();
-    // }
+        inline BoundingBox::value_type BoundingBox::minZ() const noexcept
+        {
+            return _min.z;
+        }
 
-    // inline Position Tree::max() const noexcept
-    // {
-    //   return boundingBox().max();
-    // }
+        inline BoundingBox::value_type BoundingBox::maxX() const noexcept
+        {
+            return _max.x;
+        }
 
-    inline std::unique_ptr<HeapNode> Tree::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta, HeapNode *parent)
-    {
-      switch (pattern)
-      {
-      case 0: // If no more splits are possible, this cached node is a leaf node.
-        return std::make_unique<Leaf>(midPoint, parent);
-      case 0b1:
-        return std::make_unique<NodeZ>(midPoint, splitDelta, parent);
-      case 0b10:
-        return std::make_unique<NodeY>(midPoint, splitDelta, parent);
-      case 0b11:
-        return std::make_unique<NodeYZ>(midPoint, splitDelta, parent);
-      case 0b100:
-        return std::make_unique<NodeX>(midPoint, splitDelta, parent);
-      case 0b101:
-        return std::make_unique<NodeXZ>(midPoint, splitDelta, parent);
-      case 0b110:
-        return std::make_unique<NodeXY>(midPoint, splitDelta, parent);
-      case 0b111:
-        return std::make_unique<NodeXYZ>(midPoint, splitDelta, parent);
-      default:
-        return {};
-      }
-    }
+        inline BoundingBox::value_type BoundingBox::maxY() const noexcept
+        {
+            return _max.y;
+        }
 
-    inline bool HeapNode::isLeaf() const
-    {
-      return false;
-    };
+        inline BoundingBox::value_type BoundingBox::maxZ() const noexcept
+        {
+            return _max.z;
+        }
 
-    inline std::string HeapNode::show() const
-    {
-      return "Unknown";
-    }
+        inline void BoundingBox::setMinX(value_type value) noexcept
+        {
+            _min.x = value;
+        }
 
-    inline HeapNode *HeapNode::child(int pattern) const
-    {
-      return nullptr;
-    }
+        inline void BoundingBox::setMinY(value_type value) noexcept
+        {
+            _min.y = value;
+        }
 
-    inline HeapNode *HeapNode::child(const Position pos) const
-    {
-      return nullptr;
-    };
+        inline void BoundingBox::setMinZ(value_type value) noexcept
+        {
+            _min.z = value;
+        }
 
-    inline HeapNode *HeapNode::getOrCreateChild(const Position pos)
-    {
-      return nullptr;
-    }
+        inline void BoundingBox::setMaxX(value_type value) noexcept
+        {
+            _max.x = value;
+        }
 
-    inline bool HeapNode::hasBoundingBox() const
-    {
-      return std::holds_alternative<BoundingBox>(_boundingBox);
-    }
+        inline void BoundingBox::setMaxY(value_type value) noexcept
+        {
+            _max.y = value;
+        }
 
-    inline const std::optional<BoundingBox> HeapNode::boundingBox() const
-    {
-      return std::holds_alternative<BoundingBox>(_boundingBox) ? std::optional<BoundingBox>(std::get<BoundingBox>(_boundingBox)) : std::nullopt;
-    }
+        inline void BoundingBox::setMaxZ(value_type value) noexcept
+        {
+            _max.z = value;
+        }
 
-    inline bool HeapNode::empty() const noexcept
-    {
-      return std::holds_alternative<std::monostate>(_boundingBox);
-    }
+        // inline BoundingBox::value_type Tree::minX() const noexcept
+        // {
+        //   return boundingBox().minX();
+        // }
+        // inline BoundingBox::value_type Tree::minY() const noexcept
+        // {
+        //   return boundingBox().minY();
+        // }
+        // inline BoundingBox::value_type Tree::minZ() const noexcept
+        // {
+        //   return boundingBox().minZ();
+        // }
+        // inline BoundingBox::value_type Tree::maxX() const noexcept
+        // {
+        //   return boundingBox().maxX();
+        // }
+        // inline BoundingBox::value_type Tree::maxY() const noexcept
+        // {
+        //   return boundingBox().maxY();
+        // }
+        // inline BoundingBox::value_type Tree::maxZ() const noexcept
+        // {
+        //   return boundingBox().maxZ();
+        // }
 
-    inline uint32_t Leaf::count() const noexcept { return _count; }
+        // inline Position Tree::min() const noexcept
+        // {
+        //   return boundingBox().min();
+        // }
 
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>BoundingBox>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    inline bool operator==(const BoundingBox &l, const BoundingBox &r) noexcept
-    {
-      return l.min() == r.min() && l.max() == r.max();
-    }
+        // inline Position Tree::max() const noexcept
+        // {
+        //   return boundingBox().max();
+        // }
 
-    inline bool operator!=(const BoundingBox &l, const BoundingBox &r) noexcept
-    {
-      return !(l == r);
-    }
+        inline std::unique_ptr<HeapNode> Tree::heapNodeFromSplitPattern(int pattern, const Position &midPoint, SplitDelta splitDelta, HeapNode *parent)
+        {
+            switch (pattern)
+            {
+                case 0: // If no more splits are possible, this cached node is a leaf node.
+                    return std::make_unique<Leaf>(midPoint, parent);
+                case 0b1:
+                    return std::make_unique<NodeZ>(midPoint, splitDelta, parent);
+                case 0b10:
+                    return std::make_unique<NodeY>(midPoint, splitDelta, parent);
+                case 0b11:
+                    return std::make_unique<NodeYZ>(midPoint, splitDelta, parent);
+                case 0b100:
+                    return std::make_unique<NodeX>(midPoint, splitDelta, parent);
+                case 0b101:
+                    return std::make_unique<NodeXZ>(midPoint, splitDelta, parent);
+                case 0b110:
+                    return std::make_unique<NodeXY>(midPoint, splitDelta, parent);
+                case 0b111:
+                    return std::make_unique<NodeXYZ>(midPoint, splitDelta, parent);
+                default:
+                    return {};
+            }
+        }
 
-    inline std::ostream &operator<<(std::ostream &os, const BoundingBox &bbox)
-    {
-      os << "{ min: " << bbox.min() << ", max: " << bbox.max() << " }";
-      return os;
-    }
+        inline bool HeapNode::isLeaf() const
+        {
+            return false;
+        };
 
-  } // namespace octree
+        inline std::string HeapNode::show() const
+        {
+            return "Unknown";
+        }
+
+        inline HeapNode *HeapNode::child(int pattern) const
+        {
+            return nullptr;
+        }
+
+        inline HeapNode *HeapNode::child(const Position pos) const
+        {
+            return nullptr;
+        };
+
+        inline HeapNode *HeapNode::getOrCreateChild(const Position pos)
+        {
+            return nullptr;
+        }
+
+        inline bool HeapNode::hasBoundingBox() const
+        {
+            return std::holds_alternative<BoundingBox>(_boundingBox);
+        }
+
+        inline const std::optional<BoundingBox> HeapNode::boundingBox() const
+        {
+            return std::holds_alternative<BoundingBox>(_boundingBox) ? std::optional<BoundingBox>(std::get<BoundingBox>(_boundingBox)) : std::nullopt;
+        }
+
+        inline bool HeapNode::empty() const noexcept
+        {
+            return std::holds_alternative<std::monostate>(_boundingBox);
+        }
+
+        inline uint32_t Leaf::count() const noexcept
+        {
+            return _count;
+        }
+
+        //>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        //>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        //>>>>>>>>>BoundingBox>>>>>>>
+        //>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        //>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        inline bool operator==(const BoundingBox &l, const BoundingBox &r) noexcept
+        {
+            return l.min() == r.min() && l.max() == r.max();
+        }
+
+        inline bool operator!=(const BoundingBox &l, const BoundingBox &r) noexcept
+        {
+            return !(l == r);
+        }
+
+        inline std::ostream &operator<<(std::ostream &os, const BoundingBox &bbox)
+        {
+            os << "{ min: " << bbox.min() << ", max: " << bbox.max() << " }";
+            return os;
+        }
+
+    } // namespace octree
 
 } // namespace vme
 

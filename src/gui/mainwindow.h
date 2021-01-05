@@ -33,65 +33,66 @@ class ItemPropertyWindow;
 
 class MainWindow : public QWidget, public Nano::Observer<>
 {
-  Q_OBJECT
+    Q_OBJECT
 
-public:
-  MainWindow(QWidget *parent = nullptr);
+  public:
+    MainWindow(QWidget *parent = nullptr);
 
-  void setVulkanInstance(QVulkanInstance *instance);
-  void initializeUI();
+    void setVulkanInstance(QVulkanInstance *instance);
+    void initializeUI();
 
-  void addMapTab();
-  void addMapTab(std::shared_ptr<Map> map);
+    void addMapTab();
+    void addMapTab(std::shared_ptr<Map> map);
 
-  EditorAction editorAction;
+    EditorAction editorAction;
 
-  bool vulkanWindowEvent(QEvent *event);
+    bool vulkanWindowEvent(QEvent *event);
 
-  MapView *currentMapView() const noexcept;
+    MapView *currentMapView() const noexcept;
 
-protected:
-  void mousePressEvent(QMouseEvent *event) override;
-  bool event(QEvent *event) override;
+  protected:
+    void mousePressEvent(QMouseEvent *event) override;
+    bool event(QEvent *event) override;
 
-private:
-  // UI
-  MapTabWidget *mapTabs;
-  ItemPropertyWindow *propertyWindow;
+  private:
+    // UI
+    MapTabWidget *mapTabs;
+    ItemPropertyWindow *propertyWindow;
 
-  BorderLayout *rootLayout;
+    BorderLayout *rootLayout;
 
-  QLabel *positionStatus;
-  QLabel *zoomStatus;
-  QLabel *topItemInfo;
+    QLabel *positionStatus;
+    QLabel *zoomStatus;
+    QLabel *topItemInfo;
 
-  uint32_t highestUntitledId = 0;
-  std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> untitledIds;
+    uint32_t highestUntitledId = 0;
+    std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> untitledIds;
 
-  QVulkanInstance *vulkanInstance;
+    QVulkanInstance *vulkanInstance;
 
-  uint32_t nextUntitledId();
+    uint32_t nextUntitledId();
 
-  void keyPressEvent(QKeyEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
-  void mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos);
-  void mapViewSelectionChangedEvent(MapView &mapView);
-  void mapViewUndoRedoEvent(MapView &mapView);
-  void mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport);
-  void mapTabCloseEvent(int index, QVariant data);
-  void mapTabChangedEvent(int index);
+    void mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos);
+    void mapViewSelectionChangedEvent(MapView &mapView);
+    void mapViewUndoRedoEvent(MapView &mapView);
+    void mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport);
+    void mapTabCloseEvent(int index, QVariant data);
+    void mapTabChangedEvent(int index);
 
-  void editorActionChangedEvent(const MouseAction_t &action);
+    void editorActionChangedEvent(const MouseAction_t &action);
 
-  QMenuBar *createMenuBar();
-  ItemList *createItemPalette();
+    QMenuBar *createMenuBar();
+    ItemList *createItemPalette();
 
-  // void updatePositionText();
+    // void updatePositionText();
 };
 
 class ItemListEventFilter : public QtUtil::EventFilter
 {
-public:
-  ItemListEventFilter(QObject *parent) : QtUtil::EventFilter(parent) {}
-  bool eventFilter(QObject *obj, QEvent *event) override;
+  public:
+    ItemListEventFilter(QObject *parent)
+        : QtUtil::EventFilter(parent) {}
+    bool eventFilter(QObject *obj, QEvent *event) override;
 };

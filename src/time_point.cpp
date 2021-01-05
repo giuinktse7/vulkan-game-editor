@@ -5,9 +5,7 @@ using namespace std::chrono;
 TimePoint applicationStartTime;
 
 TimePoint::TimePoint(steady_clock::time_point timePoint)
-    : timePoint(timePoint)
-{
-}
+    : timePoint(timePoint) {}
 
 TimePoint TimePoint::now()
 {

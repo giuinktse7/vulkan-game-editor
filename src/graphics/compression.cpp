@@ -1,11 +1,11 @@
 #include "compression.h"
 
+#include <cassert>
 #include <stdexcept>
+
 #include "../file.h"
 #include "../logger.h"
 #include "../util.h"
-
-#include <cassert>
 
 #pragma warning(push)
 #pragma warning(disable : 26812)

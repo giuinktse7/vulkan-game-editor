@@ -24,51 +24,51 @@ class MapView;
 
 struct ItemDropEvent
 {
-	MapView *mapView;
+    MapView *mapView;
 };
 
 class MapView : public Nano::Observer<>
 {
 
-public:
-	enum ViewOption
-	{
-		None = 0,
-		ShadeLowerFloors = 1 << 0
-	};
+  public:
+    enum ViewOption
+    {
+        None = 0,
+        ShadeLowerFloors = 1 << 0
+    };
 
-	struct Overlay
-	{
-		Item *draggedItem = nullptr;
-	};
+    struct Overlay
+    {
+        Item *draggedItem = nullptr;
+    };
 
-	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action);
-	MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::shared_ptr<Map> map);
-	~MapView();
+    MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action);
+    MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::shared_ptr<Map> map);
+    ~MapView();
 
-	// Only for testing
-	void perfTest();
+    // Only for testing
+    void perfTest();
 
-	inline const Map *map() const noexcept;
+    inline const Map *map() const noexcept;
 
-	inline uint16_t mapWidth() const noexcept;
-	inline uint16_t mapHeight() const noexcept;
-	inline uint8_t mapDepth() const noexcept;
+    inline uint16_t mapWidth() const noexcept;
+    inline uint16_t mapHeight() const noexcept;
+    inline uint8_t mapDepth() const noexcept;
 
-	void dragEnterEvent();
-	void dragLeaveEvent();
-	void mousePressEvent(VME::MouseEvent event);
-	void mouseMoveEvent(VME::MouseEvent event);
-	void mouseReleaseEvent(VME::MouseEvent event);
-	void itemDropEvent(const ItemDropEvent &event);
+    void dragEnterEvent();
+    void dragLeaveEvent();
+    void mousePressEvent(VME::MouseEvent event);
+    void mouseMoveEvent(VME::MouseEvent event);
+    void mouseReleaseEvent(VME::MouseEvent event);
+    void itemDropEvent(const ItemDropEvent &event);
 
-	/*
+    /*
 		Escape the current action (for example when pressing the ESC key)
 	*/
-	void escapeEvent();
-	void requestDraw();
+    void escapeEvent();
+    void requestDraw();
 
-	/**
+    /**
 	 * Shorthand method for comitting actions within a group. Equivalent to:
 	 * 
 	 * history.startGroup(groupType);
@@ -76,350 +76,350 @@ public:
    * history.endGroup(groupType);
 	 *
 	 */
-	void commitTransaction(TransactionType groupType, std::function<void()> f);
+    void commitTransaction(TransactionType groupType, std::function<void()> f);
 
-	Tile *getTile(const Position pos) const;
-	Tile *getTile(const Position pos);
+    Tile *getTile(const Position pos) const;
+    Tile *getTile(const Position pos);
 
-	Tile &getOrCreateTile(const Position pos);
-	void insertTile(Tile &&tile);
-	void removeTile(const Position pos);
-	void modifyTile(const Position pos, std::function<void(Tile &)> f);
+    Tile &getOrCreateTile(const Position pos);
+    void insertTile(Tile &&tile);
+    void removeTile(const Position pos);
+    void modifyTile(const Position pos, std::function<void(Tile &)> f);
 
-	void selectTopItem(const Tile &tile);
-	void selectTopItem(const Position pos);
-	void deselectTopItem(const Tile &tile);
+    void selectTopItem(const Tile &tile);
+    void selectTopItem(const Position pos);
+    void deselectTopItem(const Tile &tile);
 
-	void selectTile(const Tile &tile);
-	void selectTile(const Position &pos);
+    void selectTile(const Tile &tile);
+    void selectTile(const Position &pos);
 
-	void deselectTile(const Tile &tile);
-	void deselectTile(const Position &pos);
+    void deselectTile(const Tile &tile);
+    void deselectTile(const Position &pos);
 
-	void clearSelection();
+    void clearSelection();
 
-	void setUnderMouse(bool underMouse);
+    void setUnderMouse(bool underMouse);
 
-	void setX(WorldPosition::value_type x);
-	void setY(WorldPosition::value_type y);
+    void setX(WorldPosition::value_type x);
+    void setY(WorldPosition::value_type y);
 
-	void floorUp();
-	void floorDown();
-	void setFloor(int floor);
+    void floorUp();
+    void floorDown();
+    void setFloor(int floor);
 
-	void translateX(WorldPosition::value_type x);
-	void translateY(WorldPosition::value_type y);
-	void translateCamera(WorldPosition delta);
-	void translateZ(int z);
-	/**
+    void translateX(WorldPosition::value_type x);
+    void translateY(WorldPosition::value_type y);
+    void translateCamera(WorldPosition delta);
+    void translateZ(int z);
+    /**
 	 * Runs f once after the next draw.
 	 */
-	void waitForDraw(std::function<void()> f);
+    void waitForDraw(std::function<void()> f);
 
-	void zoom(int delta);
+    void zoom(int delta);
 
-	void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
+    void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
 
-	void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerMoveData2 &containerInfo);
-	void moveFromContainerToMap(MapHistory::ContainerMoveData2 &moveInfo, Tile &tile);
-	void moveFromContainerToContainer(MapHistory::ContainerMoveData2 &from, MapHistory::ContainerMoveData2 &to);
+    void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerMoveData2 &containerInfo);
+    void moveFromContainerToMap(MapHistory::ContainerMoveData2 &moveInfo, Tile &tile);
+    void moveFromContainerToContainer(MapHistory::ContainerMoveData2 &from, MapHistory::ContainerMoveData2 &to);
 
-	void moveSelection(const Position &offset);
+    void moveSelection(const Position &offset);
 
-	void addItem(const Position &position, uint16_t id);
-	void addItem(const Position &pos, Item &&item);
+    void addItem(const Position &position, uint16_t id);
+    void addItem(const Position &pos, Item &&item);
 
-	/* Note: The indices must be in descending order (std::greater), because
+    /* Note: The indices must be in descending order (std::greater), because
 		otherwise the wrong items could be removed.
 	*/
-	void removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices);
-	void removeSelectedItems(const Tile &tile);
-	void removeItems(const Tile &tile, std::function<bool(const Item &)> p);
-	void removeItem(Tile &tile, Item *item);
-	void removeItem(Tile &tile, std::function<bool(const Item &)> p);
+    void removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices);
+    void removeSelectedItems(const Tile &tile);
+    void removeItems(const Tile &tile, std::function<bool(const Item &)> p);
+    void removeItem(Tile &tile, Item *item);
+    void removeItem(Tile &tile, std::function<bool(const Item &)> p);
 
-	void zoomOut();
-	void zoomIn();
-	void resetZoom();
+    void zoomOut();
+    void zoomIn();
+    void resetZoom();
 
-	void setViewportSize(int width, int height);
+    void setViewportSize(int width, int height);
 
-	void undo();
-	void redo();
+    void undo();
+    void redo();
 
-	void toggleViewOption(ViewOption option);
-	void setViewOption(ViewOption option, bool value);
-	inline ViewOption viewOptions() const noexcept;
-	inline bool hasOption(ViewOption option) const noexcept;
+    void toggleViewOption(ViewOption option);
+    void setViewOption(ViewOption option, bool value);
+    inline ViewOption viewOptions() const noexcept;
+    inline bool hasOption(ViewOption option) const noexcept;
 
-	MapRegion mapRegion() const;
+    MapRegion mapRegion() const;
 
-	inline uint32_t x() const noexcept;
-	inline uint32_t y() const noexcept;
-	inline int z() const noexcept;
-	/* Synonym for z() */
-	inline int floor() const noexcept;
+    inline uint32_t x() const noexcept;
+    inline uint32_t y() const noexcept;
+    inline int z() const noexcept;
+    /* Synonym for z() */
+    inline int floor() const noexcept;
 
-	void deleteSelectedItems();
+    void deleteSelectedItems();
 
-	void setDragStart(WorldPosition position);
-	void setDragEnd(WorldPosition position);
-	void endDragging(VME::ModifierKeys modifiers);
+    void setDragStart(WorldPosition position);
+    void setDragEnd(WorldPosition position);
+    void endDragging(VME::ModifierKeys modifiers);
 
-	void startItemDrag(Tile *tile, Item *item);
+    void startItemDrag(Tile *tile, Item *item);
 
-	Item dropItem(Tile *tile, Item *item);
+    Item dropItem(Tile *tile, Item *item);
 
-	bool singleTileSelected() const;
-	const Tile *singleSelectedTile() const;
-	Tile *singleSelectedTile();
-	bool singleItemSelected() const;
+    bool singleTileSelected() const;
+    const Tile *singleSelectedTile() const;
+    Tile *singleSelectedTile();
+    bool singleItemSelected() const;
 
-	/**
+    /**
 	 * Returns the only selected item if there is **exactly one** selected item.
 	 * Returns nullptr otherwise.
 	 */
-	const Item *singleSelectedItem() const;
-	/**
+    const Item *singleSelectedItem() const;
+    /**
 	 * Returns the only selected item if there is **exactly one** selected item.
 	 * Returns nullptr otherwise.
 	 */
-	Item *singleSelectedItem();
+    Item *singleSelectedItem();
 
-	bool isDragging() const;
-	bool hasSelection() const;
-	bool draggingWithSubtract() const;
-	bool inDragRegion(Position pos) const;
-	inline bool underMouse() const noexcept;
-	inline bool prevUnderMouse() const noexcept;
+    bool isDragging() const;
+    bool hasSelection() const;
+    bool draggingWithSubtract() const;
+    bool inDragRegion(Position pos) const;
+    inline bool underMouse() const noexcept;
+    inline bool prevUnderMouse() const noexcept;
 
-	bool isEmpty(const Position position) const;
+    bool isEmpty(const Position position) const;
 
-	Position cameraPosition() const noexcept;
-	inline Position mouseGamePos() const;
-	inline WorldPosition mouseWorldPos() const;
-	/*
+    Position cameraPosition() const noexcept;
+    inline Position mouseGamePos() const;
+    inline WorldPosition mouseWorldPos() const;
+    /*
 		Return the position on the map for the 'point'.
 		A point (0, 0) corresponds to the map position (0, 0, mapViewZ).
 	*/
-	template <typename T>
-	Position toPosition(util::Point<T> point) const;
+    template <typename T>
+    Position toPosition(util::Point<T> point) const;
 
-	Selection &selection();
-	const Camera::Viewport &getViewport() const noexcept;
-	util::Rectangle<int> getGameBoundingRect() const;
-	std::optional<std::pair<WorldPosition, WorldPosition>> getDragPoints() const;
-	float getZoomFactor() const noexcept;
+    Selection &selection();
+    const Camera::Viewport &getViewport() const noexcept;
+    util::Rectangle<int> getGameBoundingRect() const;
+    std::optional<std::pair<WorldPosition, WorldPosition>> getDragPoints() const;
+    float getZoomFactor() const noexcept;
 
-	inline ScreenPosition mousePos() const;
+    inline ScreenPosition mousePos() const;
 
-	inline static bool isInstance(MapView *pointer);
+    inline static bool isInstance(MapView *pointer);
 
-	Overlay &overlay() noexcept;
+    Overlay &overlay() noexcept;
 
-	template <auto MemberFunction, typename T>
-	void onViewportChanged(T *instance);
+    template <auto MemberFunction, typename T>
+    void onViewportChanged(T *instance);
 
-	template <auto MemberFunction, typename T>
-	void onDrawRequested(T *instance);
+    template <auto MemberFunction, typename T>
+    void onDrawRequested(T *instance);
 
-	template <auto MemberFunction, typename T>
-	void onMapItemDragStart(T *instance);
+    template <auto MemberFunction, typename T>
+    void onMapItemDragStart(T *instance);
 
-	template <auto MemberFunction, typename T>
-	void onUndoRedo(T *instance);
+    template <auto MemberFunction, typename T>
+    void onUndoRedo(T *instance);
 
-	EditorAction &editorAction;
-	MapHistory::History history;
+    EditorAction &editorAction;
+    MapHistory::History history;
 
-	std::optional<Region2D<WorldPosition>> dragRegion;
+    std::optional<Region2D<WorldPosition>> dragRegion;
 
-private:
-	friend class MapHistory::ChangeItem;
+  private:
+    friend class MapHistory::ChangeItem;
 
-	Tile deepCopyTile(const Position position) const;
+    Tile deepCopyTile(const Position position) const;
 
-	void selectRegion(const Position &from, const Position &to);
-	void removeItemsInRegion(const Position &from, const Position &to, std::function<bool(const Item &)> predicate);
-	void fillRegion(const Position &from, const Position &to, uint32_t serverId);
-	void endCurrentAction(VME::ModifierKeys modifiers);
+    void selectRegion(const Position &from, const Position &to);
+    void removeItemsInRegion(const Position &from, const Position &to, std::function<bool(const Item &)> predicate);
+    void fillRegion(const Position &from, const Position &to, uint32_t serverId);
+    void endCurrentAction(VME::ModifierKeys modifiers);
 
-	void cameraViewportChangedEvent();
+    void cameraViewportChangedEvent();
 
-	void setPanOffset(MouseAction::Pan &action, const ScreenPosition &offset);
+    void setPanOffset(MouseAction::Pan &action, const ScreenPosition &offset);
 
-	Nano::Signal<void(const Camera::Viewport &)> viewportChange;
-	Nano::Signal<void(Tile *tile, Item *item)> mapItemDragStart;
-	Nano::Signal<void()> drawRequest;
-	Nano::Signal<void()> undoRedoPerformed;
+    Nano::Signal<void(const Camera::Viewport &)> viewportChange;
+    Nano::Signal<void(Tile *tile, Item *item)> mapItemDragStart;
+    Nano::Signal<void()> drawRequest;
+    Nano::Signal<void()> undoRedoPerformed;
 
-	/**
+    /**
  		*	Keeps track of all MapView instances. This is necessary for QT to
 		* validate MapView pointers in a QVariant.
 		*
 		* See:
 		* QtUtil::associatedMapView
 	*/
-	static std::unordered_set<MapView *> instances;
+    static std::unordered_set<MapView *> instances;
 
-	std::shared_ptr<Map> _map;
-	Selection _selection;
+    std::shared_ptr<Map> _map;
+    Selection _selection;
 
-	std::unique_ptr<UIUtils> uiUtils;
+    std::unique_ptr<UIUtils> uiUtils;
 
-	Camera camera;
+    Camera camera;
 
-	ViewOption _viewOptions = ViewOption::None;
+    ViewOption _viewOptions = ViewOption::None;
 
-	bool canRender = false;
+    bool canRender = false;
 
-	Position _previousMouseGamePos;
+    Position _previousMouseGamePos;
 
-	Overlay _overlay;
+    Overlay _overlay;
 
-	bool _prevUnderMouse = false;
-	bool _underMouse = false;
+    bool _prevUnderMouse = false;
+    bool _underMouse = false;
 };
 
 inline const Map *MapView::map() const noexcept
 {
-	return _map.get();
+    return _map.get();
 }
 
 inline uint16_t MapView::mapWidth() const noexcept
 {
-	return _map->width();
+    return _map->width();
 }
 
 inline uint16_t MapView::mapHeight() const noexcept
 {
-	return _map->height();
+    return _map->height();
 }
 
 inline uint8_t MapView::mapDepth() const noexcept
 {
-	return _map->depth();
+    return _map->depth();
 }
 
 inline Selection &MapView::selection()
 {
-	return _selection;
+    return _selection;
 }
 
 inline Tile MapView::deepCopyTile(const Position position) const
 {
-	return _map->getTile(position)->deepCopy();
+    return _map->getTile(position)->deepCopy();
 }
 
 inline bool MapView::isInstance(MapView *pointer)
 {
-	return instances.find(pointer) != instances.end();
+    return instances.find(pointer) != instances.end();
 }
 
 inline std::ostream &operator<<(std::ostream &os, const util::Rectangle<int> &rect)
 {
-	os << "{ x1=" << rect.x1 << ", y1=" << rect.y1 << ", x2=" << rect.x2 << ", y2=" << rect.y2 << "}";
-	return os;
+    os << "{ x1=" << rect.x1 << ", y1=" << rect.y1 << ", x2=" << rect.x2 << ", y2=" << rect.y2 << "}";
+    return os;
 }
 
 inline const Camera::Viewport &MapView::getViewport() const noexcept
 {
-	return camera.viewport();
+    return camera.viewport();
 }
 
 inline Position MapView::cameraPosition() const noexcept
 {
-	return camera.position();
+    return camera.position();
 }
 
 inline ScreenPosition MapView::mousePos() const
 {
-	return uiUtils->mouseScreenPosInView();
+    return uiUtils->mouseScreenPosInView();
 }
 
 inline Position MapView::mouseGamePos() const
 {
-	return mousePos().toPos(*this);
+    return mousePos().toPos(*this);
 }
 
 inline WorldPosition MapView::mouseWorldPos() const
 {
-	return mousePos().worldPos(*this);
+    return mousePos().worldPos(*this);
 }
 
 inline MapView::Overlay &MapView::overlay() noexcept
 {
-	return _overlay;
+    return _overlay;
 }
 
 template <typename T>
 inline Position MapView::toPosition(util::Point<T> point) const
 {
-	return ScreenPosition(point.x(), point.y()).toPos(*this);
+    return ScreenPosition(point.x(), point.y()).toPos(*this);
 }
 
 inline uint32_t MapView::x() const noexcept
 {
-	return static_cast<uint32_t>(camera.worldPosition().x);
+    return static_cast<uint32_t>(camera.worldPosition().x);
 }
 
 inline uint32_t MapView::y() const noexcept
 {
-	return static_cast<uint32_t>(camera.worldPosition().y);
+    return static_cast<uint32_t>(camera.worldPosition().y);
 }
 
 inline int MapView::z() const noexcept
 {
-	return camera.z();
+    return camera.z();
 }
 
 inline int MapView::floor() const noexcept
 {
-	return z();
+    return z();
 }
 
 inline bool MapView::underMouse() const noexcept
 {
-	return _underMouse;
+    return _underMouse;
 }
 
 inline bool MapView::prevUnderMouse() const noexcept
 {
-	return _prevUnderMouse;
+    return _prevUnderMouse;
 }
 
 inline MapView::ViewOption MapView::viewOptions() const noexcept
 {
-	return _viewOptions;
+    return _viewOptions;
 }
 
 inline bool MapView::hasOption(ViewOption option) const noexcept
 {
-	return _viewOptions & option;
+    return _viewOptions & option;
 }
 
 template <auto MemberFunction, typename T>
 void MapView::onViewportChanged(T *instance)
 {
-	viewportChange.connect<MemberFunction>(instance);
+    viewportChange.connect<MemberFunction>(instance);
 }
 
 template <auto MemberFunction, typename T>
 void MapView::onDrawRequested(T *instance)
 {
-	drawRequest.connect<MemberFunction>(instance);
+    drawRequest.connect<MemberFunction>(instance);
 }
 
 template <auto MemberFunction, typename T>
 void MapView::onMapItemDragStart(T *instance)
 {
-	mapItemDragStart.connect<MemberFunction>(instance);
+    mapItemDragStart.connect<MemberFunction>(instance);
 }
 
 template <auto MemberFunction, typename T>
 void MapView::onUndoRedo(T *instance)
 {
-	undoRedoPerformed.connect<MemberFunction>(instance);
+    undoRedoPerformed.connect<MemberFunction>(instance);
 }
 
 VME_ENUM_OPERATORS(MapView::ViewOption)

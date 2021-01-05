@@ -34,35 +34,35 @@ constexpr float MinCameraZoom = 0.1f;
 */
 constexpr std::pair<float, float> computeSingleStepParameters()
 {
-  int t = DefaultSingleStepSize;
-  int a = MinCameraZoom;
-  int s = MinimumStepSizeInPixels;
+    int t = DefaultSingleStepSize;
+    int a = MinCameraZoom;
+    int s = MinimumStepSizeInPixels;
 
-  float m = (a * t - s) / (a - 1);
-  float k = t - m;
+    float m = (a * t - s) / (a - 1);
+    float k = t - m;
 
-  return {k, m};
+    return {k, m};
 }
 
 constexpr std::pair<float, float> singleStepParams = computeSingleStepParameters();
 
 int computeSingleStep(float zoom)
 {
-  const auto [k, m] = singleStepParams;
-  double step = k * zoom + m;
+    const auto [k, m] = singleStepParams;
+    double step = k * zoom + m;
 
-  // Scale zoomed out step
-  if (zoom > 1)
-  {
-    const double k = 0.2;
-    double scaledStep = step * (3 * (zoom - 1) + (std::exp(k * zoom) - std::exp(k) + 1));
+    // Scale zoomed out step
+    if (zoom > 1)
+    {
+        const double k = 0.2;
+        double scaledStep = step * (3 * (zoom - 1) + (std::exp(k * zoom) - std::exp(k) + 1));
 
-    return static_cast<int>(std::round(scaledStep));
-  }
-  else
-  {
-    return static_cast<int>(std::round(step));
-  }
+        return static_cast<int>(std::round(scaledStep));
+    }
+    else
+    {
+        return static_cast<int>(std::round(step));
+    }
 }
 MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
     : QWidget(parent),
@@ -71,113 +71,113 @@ MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
       hbar(new QtScrollBar(Qt::Horizontal)),
       vbar(new QtScrollBar(Qt::Vertical))
 {
-  mapView->onViewportChanged<&MapViewWidget::viewportChanged>(this);
-  mapView->onDrawRequested<&MapViewWidget::mapViewDrawRequested>(this);
-  mapView->selection().onChanged<&MapViewWidget::selectionChanged>(this);
-  mapView->onUndoRedo<&MapViewWidget::undoRedoPerformed>(this);
+    mapView->onViewportChanged<&MapViewWidget::viewportChanged>(this);
+    mapView->onDrawRequested<&MapViewWidget::mapViewDrawRequested>(this);
+    mapView->selection().onChanged<&MapViewWidget::selectionChanged>(this);
+    mapView->onUndoRedo<&MapViewWidget::undoRedoPerformed>(this);
 
-  {
-    auto l = new BorderLayout;
-    l->addWidget(hbar, BorderLayout::Position::South);
-    l->addWidget(vbar, BorderLayout::Position::East);
+    {
+        auto l = new BorderLayout;
+        l->addWidget(hbar, BorderLayout::Position::South);
+        l->addWidget(vbar, BorderLayout::Position::East);
 
-    auto wrappedMapWindow = window->wrapInWidget();
+        auto wrappedMapWindow = window->wrapInWidget();
 
-    l->addWidget(wrappedMapWindow, BorderLayout::Position::Center);
+        l->addWidget(wrappedMapWindow, BorderLayout::Position::Center);
 
-    setLayout(l);
-  }
+        setLayout(l);
+    }
 
-  const Map *map = mapView->map();
-  uint16_t width = map->width();
-  uint16_t height = map->width();
+    const Map *map = mapView->map();
+    uint16_t width = map->width();
+    uint16_t height = map->width();
 
-  int maxX = width * MapTileSize / MinimumStepSizeInPixels;
-  int maxY = height * MapTileSize / MinimumStepSizeInPixels;
+    int maxX = width * MapTileSize / MinimumStepSizeInPixels;
+    int maxY = height * MapTileSize / MinimumStepSizeInPixels;
 
-  hbar->setMinimum(0);
-  hbar->setMaximum(maxX);
-  hbar->setSingleStep(MapTileSize);
+    hbar->setMinimum(0);
+    hbar->setMaximum(maxX);
+    hbar->setSingleStep(MapTileSize);
 
-  vbar->setMinimum(0);
-  vbar->setMaximum(maxY);
-  vbar->setSingleStep(MapTileSize);
+    vbar->setMinimum(0);
+    vbar->setMaximum(maxY);
+    vbar->setSingleStep(MapTileSize);
 
-  connect(vulkanWindow, &VulkanWindow::keyPressedEvent, this, &MapViewWidget::onWindowKeyPress);
+    connect(vulkanWindow, &VulkanWindow::keyPressedEvent, this, &MapViewWidget::onWindowKeyPress);
 
-  connect(hbar, &QScrollBar::valueChanged, this, &MapViewWidget::setMapViewX);
-  connect(vbar, &QScrollBar::valueChanged, this, &MapViewWidget::setMapViewY);
+    connect(hbar, &QScrollBar::valueChanged, this, &MapViewWidget::setMapViewX);
+    connect(vbar, &QScrollBar::valueChanged, this, &MapViewWidget::setMapViewY);
 }
 
 void MapViewWidget::setMapViewX(int value)
 {
-  auto *mapView = vulkanWindow->getMapView();
-  if (mapView->cameraPosition().x != value)
-  {
-    mapView->setX(value);
-  }
+    auto *mapView = vulkanWindow->getMapView();
+    if (mapView->cameraPosition().x != value)
+    {
+        mapView->setX(value);
+    }
 }
 
 void MapViewWidget::setMapViewY(int value)
 {
-  auto *mapView = vulkanWindow->getMapView();
-  if (mapView->cameraPosition().y != value)
-  {
-    mapView->setY(value);
-  }
+    auto *mapView = vulkanWindow->getMapView();
+    if (mapView->cameraPosition().y != value)
+    {
+        mapView->setY(value);
+    }
 }
 
 void MapViewWidget::onWindowKeyPress(QKeyEvent *event)
 {
-  switch (event->key())
-  {
-  case Qt::Key_Left:
-    hbar->setValue(hbar->value() - hbar->singleStep());
-    break;
-  case Qt::Key_Right:
-    hbar->setValue(hbar->value() + hbar->singleStep());
-    break;
-  case Qt::Key_Up:
-    vbar->setValue(vbar->value() - vbar->singleStep());
-    break;
-  case Qt::Key_Down:
-    vbar->setValue(vbar->value() + vbar->singleStep());
-    break;
-  default:
-    event->ignore();
-    break;
-  }
+    switch (event->key())
+    {
+        case Qt::Key_Left:
+            hbar->setValue(hbar->value() - hbar->singleStep());
+            break;
+        case Qt::Key_Right:
+            hbar->setValue(hbar->value() + hbar->singleStep());
+            break;
+        case Qt::Key_Up:
+            vbar->setValue(vbar->value() - vbar->singleStep());
+            break;
+        case Qt::Key_Down:
+            vbar->setValue(vbar->value() + vbar->singleStep());
+            break;
+        default:
+            event->ignore();
+            break;
+    }
 }
 
 void MapViewWidget::viewportChanged(const Camera::Viewport &viewport)
 {
-  hbar->setValue(viewport.x);
-  vbar->setValue(viewport.y);
+    hbar->setValue(viewport.x);
+    vbar->setValue(viewport.y);
 
-  hbar->setPageStep(viewport.width);
-  vbar->setPageStep(viewport.height);
+    hbar->setPageStep(viewport.width);
+    vbar->setPageStep(viewport.height);
 
-  int singleStep = computeSingleStep(1 / viewport.zoom);
+    int singleStep = computeSingleStep(1 / viewport.zoom);
 
-  hbar->setSingleStep(singleStep);
-  vbar->setSingleStep(singleStep);
+    hbar->setSingleStep(singleStep);
+    vbar->setSingleStep(singleStep);
 
-  emit viewportChangedEvent(viewport);
+    emit viewportChangedEvent(viewport);
 }
 
 void MapViewWidget::mapViewDrawRequested()
 {
-  vulkanWindow->requestUpdate();
+    vulkanWindow->requestUpdate();
 }
 
 void MapViewWidget::selectionChanged()
 {
-  emit selectionChangedEvent(*mapView);
+    emit selectionChangedEvent(*mapView);
 }
 
 void MapViewWidget::undoRedoPerformed()
 {
-  emit undoRedoEvent(*mapView);
+    emit undoRedoEvent(*mapView);
 }
 
 /*
@@ -193,79 +193,79 @@ QtScrollBar::QtScrollBar(Qt::Orientation orientation, QWidget *parent)
 
 void QtScrollBar::mousePressEvent(QMouseEvent *e)
 {
-  QStyleOptionSlider opt;
-  initStyleOption(&opt);
-  QStyle::SubControl subControl = style()->hitTestComplexControl(QStyle::CC_ScrollBar, &opt, e->pos(), this);
-  bool scrollbarJump = subControl == QStyle::SC_ScrollBarAddPage || subControl == QStyle::SC_ScrollBarSubPage;
+    QStyleOptionSlider opt;
+    initStyleOption(&opt);
+    QStyle::SubControl subControl = style()->hitTestComplexControl(QStyle::CC_ScrollBar, &opt, e->pos(), this);
+    bool scrollbarJump = subControl == QStyle::SC_ScrollBarAddPage || subControl == QStyle::SC_ScrollBarSubPage;
 
-  if (!scrollbarJump)
-  {
-    QScrollBar::mousePressEvent(e);
-    e->accept();
-    VME_LOG_D("Accepted");
-    return;
-  }
+    if (!scrollbarJump)
+    {
+        QScrollBar::mousePressEvent(e);
+        e->accept();
+        VME_LOG_D("Accepted");
+        return;
+    }
 
-  QRect grooveRect = style()->subControlRect(QStyle::CC_ScrollBar, &opt,
-                                             QStyle::SC_ScrollBarGroove, this);
-  QRect sliderRect = style()->subControlRect(QStyle::CC_ScrollBar, &opt,
-                                             QStyle::SC_ScrollBarSlider, this);
+    QRect grooveRect = style()->subControlRect(QStyle::CC_ScrollBar, &opt,
+                                               QStyle::SC_ScrollBarGroove, this);
+    QRect sliderRect = style()->subControlRect(QStyle::CC_ScrollBar, &opt,
+                                               QStyle::SC_ScrollBarSlider, this);
 
-  int sliderMin, sliderMax, sliderLength, pos;
-  if (orientation() == Qt::Horizontal)
-  {
-    pos = e->pos().x();
-    sliderLength = sliderRect.width();
-    sliderMin = grooveRect.x();
-    sliderMax = grooveRect.right() - sliderLength + 1;
-    if (layoutDirection() == Qt::RightToLeft)
-      opt.upsideDown = !opt.upsideDown;
-  }
-  else // Qt::Vertical
-  {
-    pos = e->pos().y();
-    sliderLength = sliderRect.height();
-    sliderMin = grooveRect.y();
-    sliderMax = grooveRect.bottom() - sliderLength + 1;
-  }
+    int sliderMin, sliderMax, sliderLength, pos;
+    if (orientation() == Qt::Horizontal)
+    {
+        pos = e->pos().x();
+        sliderLength = sliderRect.width();
+        sliderMin = grooveRect.x();
+        sliderMax = grooveRect.right() - sliderLength + 1;
+        if (layoutDirection() == Qt::RightToLeft)
+            opt.upsideDown = !opt.upsideDown;
+    }
+    else // Qt::Vertical
+    {
+        pos = e->pos().y();
+        sliderLength = sliderRect.height();
+        sliderMin = grooveRect.y();
+        sliderMax = grooveRect.bottom() - sliderLength + 1;
+    }
 
-  // Place the new scrollbar in the center of the click
-  pos -= sliderLength / 2;
+    // Place the new scrollbar in the center of the click
+    pos -= sliderLength / 2;
 
-  if (pos < sliderMin)
-  {
-    setValue(minimum());
-  }
-  else if (pos > sliderMax)
-  {
-    setValue(maximum());
-  }
-  else
-  {
-    int value = QStyle::sliderValueFromPosition(minimum(), maximum(), pos - sliderMin,
-                                                sliderMax - sliderMin, opt.upsideDown);
-    setValue(value);
-  }
+    if (pos < sliderMin)
+    {
+        setValue(minimum());
+    }
+    else if (pos > sliderMax)
+    {
+        setValue(maximum());
+    }
+    else
+    {
+        int value = QStyle::sliderValueFromPosition(minimum(), maximum(), pos - sliderMin,
+                                                    sliderMax - sliderMin, opt.upsideDown);
+        setValue(value);
+    }
 
-  /*
+    /*
     After changing the scroll bar position, process the event again. Now, the scroll bar is below the mouse.
     This lets the user drag the scroll bar directly without having to press again.
   */
-  e->ignore();
-  mousePressEvent(e);
+    e->ignore();
+    mousePressEvent(e);
 }
 
 void QtScrollBar::mouseMoveEvent(QMouseEvent *e)
 {
-  QScrollBar::mouseMoveEvent(e);
+    QScrollBar::mouseMoveEvent(e);
 }
 
 void QtScrollBar::initStyleOption(QStyleOptionSlider *option) const
 {
-  QScrollBar::initStyleOption(option);
+    QScrollBar::initStyleOption(option);
 }
 
 void QtScrollBar::addValue(int value)
 {
-  setValue(this->value() + value);
+    setValue(this->value() + value);
 }

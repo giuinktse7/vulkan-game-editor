@@ -7,45 +7,44 @@
 #include <QObject>
 #include <QString>
 
-MenuAction::MenuActionWidget::MenuActionWidget(QWidget *parent) : QWidget(parent)
+MenuAction::MenuActionWidget::MenuActionWidget(QWidget *parent)
+    : QWidget(parent)
 {
-  setMouseTracking(true);
+    setMouseTracking(true);
 }
 
 MenuAction::MenuAction(const QString &text, const QKeySequence &shortcut, QObject *parent)
     : QWidgetAction(parent),
       text(text)
 {
-  setShortcut(shortcut);
+    setShortcut(shortcut);
 }
 
 MenuAction::MenuAction(const QString &text, QObject *parent)
     : QWidgetAction(parent),
-      text(text)
-{
-}
+      text(text) {}
 
 MenuAction::~MenuAction() {}
 
 QWidget *MenuAction::createWidget(QWidget *parent)
 {
-  QWidget *widget = new MenuActionWidget(parent);
-  widget->setProperty("class", "menu-item");
+    QWidget *widget = new MenuActionWidget(parent);
+    widget->setProperty("class", "menu-item");
 
-  QHBoxLayout *layout = new QHBoxLayout(parent);
-  // layout->setMargin(0);
+    QHBoxLayout *layout = new QHBoxLayout(parent);
+    // layout->setMargin(0);
 
-  QLabel *left = new QLabel(this->text, widget);
-  layout->addWidget(left);
+    QLabel *left = new QLabel(this->text, widget);
+    layout->addWidget(left);
 
-  if (!shortcut().isEmpty())
-  {
-    QLabel *right = new QLabel(this->shortcut().toString(), widget);
-    right->setAlignment(Qt::AlignRight);
-    layout->addWidget(right);
-  }
+    if (!shortcut().isEmpty())
+    {
+        QLabel *right = new QLabel(this->shortcut().toString(), widget);
+        right->setAlignment(Qt::AlignRight);
+        layout->addWidget(right);
+    }
 
-  widget->setLayout(layout);
+    widget->setLayout(layout);
 
-  return widget;
+    return widget;
 }

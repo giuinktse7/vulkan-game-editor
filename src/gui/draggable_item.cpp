@@ -11,11 +11,11 @@
 #include "../util.h"
 #include "qt_util.h"
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>ItemDrag::DragOperation>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ItemDrag::DragOperation::DragOperation(ItemDrag::MimeData &&mimeData, Source source, QWindow *parent)
     : _parent(parent),
@@ -25,11 +25,11 @@ ItemDrag::DragOperation::DragOperation(ItemDrag::MimeData &&mimeData, Source sou
       pixmap(this->mimeData.draggableItem->pixmap()),
       renderingCursor(false)
 {
-  if (_hoveredObject)
-  {
-    auto pos = static_cast<QWidget *>(_hoveredObject)->mapFromGlobal(QCursor::pos());
-    sendDragEnterEvent(_hoveredObject, pos);
-  }
+    if (_hoveredObject)
+    {
+        auto pos = static_cast<QWidget *>(_hoveredObject)->mapFromGlobal(QCursor::pos());
+        sendDragEnterEvent(_hoveredObject, pos);
+    }
 }
 
 ItemDrag::DragOperation::DragOperation(DragOperation &&other) noexcept
@@ -45,108 +45,108 @@ ItemDrag::DragOperation::DragOperation(DragOperation &&other) noexcept
 
 ItemDrag::DragOperation &ItemDrag::DragOperation::operator=(DragOperation &&other) noexcept
 {
-  _parent = std::move(other._parent);
-  _hoveredObject = std::move(other._hoveredObject);
-  _source = std::move(other._source);
-  pixmap = std::move(other.pixmap);
-  shouldRender = std::move(other.shouldRender);
-  renderingCursor = std::move(other.renderingCursor);
-  mimeData = std::move(other.mimeData);
+    _parent = std::move(other._parent);
+    _hoveredObject = std::move(other._hoveredObject);
+    _source = std::move(other._source);
+    pixmap = std::move(other.pixmap);
+    shouldRender = std::move(other.shouldRender);
+    renderingCursor = std::move(other.renderingCursor);
+    mimeData = std::move(other.mimeData);
 
-  return *this;
+    return *this;
 }
 
 void ItemDrag::DragOperation::start()
 {
-  VME_LOG_D("ItemDrag::DragOperation::start()");
+    VME_LOG_D("ItemDrag::DragOperation::start()");
 }
 
 void ItemDrag::DragOperation::showCursor()
 {
-  if (!renderingCursor)
-  {
-    QApplication::setOverrideCursor(QCursor(pixmap));
-    renderingCursor = true;
-  }
+    if (!renderingCursor)
+    {
+        QApplication::setOverrideCursor(QCursor(pixmap));
+        renderingCursor = true;
+    }
 }
 
 void ItemDrag::DragOperation::hideCursor()
 {
-  if (renderingCursor)
-  {
-    QApplication::restoreOverrideCursor();
-    renderingCursor = false;
-  }
+    if (renderingCursor)
+    {
+        QApplication::restoreOverrideCursor();
+        renderingCursor = false;
+    }
 }
 
 void ItemDrag::DragOperation::setRenderCondition(std::function<bool()> f)
 {
-  shouldRender = f;
+    shouldRender = f;
 }
 
 bool ItemDrag::DragOperation::mouseMoveEvent(QMouseEvent *event)
 {
-  if (shouldRender())
-  {
-    showCursor();
-  }
-  else
-  {
-    hideCursor();
-  }
+    if (shouldRender())
+    {
+        showCursor();
+    }
+    else
+    {
+        hideCursor();
+    }
 
-  auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-  auto object = static_cast<QObject *>(widget);
+    auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
+    auto object = static_cast<QObject *>(widget);
 
-  auto pos = widget->mapFromGlobal(_parent->mapToGlobal(event->pos()));
+    auto pos = widget->mapFromGlobal(_parent->mapToGlobal(event->pos()));
 
-  bool changed = object != _hoveredObject;
-  if (changed)
-  {
-    sendDragLeaveEvent(_hoveredObject, pos, event);
-    sendDragEnterEvent(object, pos, event);
+    bool changed = object != _hoveredObject;
+    if (changed)
+    {
+        sendDragLeaveEvent(_hoveredObject, pos, event);
+        sendDragEnterEvent(object, pos, event);
 
-    setHoveredObject(object);
-  }
-  else
-  {
-    sendDragMoveEvent(object, pos, event);
-  }
+        setHoveredObject(object);
+    }
+    else
+    {
+        sendDragMoveEvent(object, pos, event);
+    }
 
-  return changed;
+    return changed;
 }
 
 bool ItemDrag::DragOperation::sendDropEvent(QMouseEvent *mouseEvent)
 {
-  hideCursor();
+    hideCursor();
 
-  auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-  if (!widget)
-  {
-    dragFinished.fire(DropResult::NoTarget);
-    return false;
-  }
+    auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
+    if (!widget)
+    {
+        dragFinished.fire(DropResult::NoTarget);
+        return false;
+    }
 
-  auto pos = widget->mapFromGlobal(_parent->mapToGlobal(mouseEvent->pos()));
+    auto pos = widget->mapFromGlobal(_parent->mapToGlobal(mouseEvent->pos()));
 
-  QDropEvent dropEvent(pos, Qt::DropAction::MoveAction, &mimeData, mouseEvent->buttons(), mouseEvent->modifiers());
-  bool accepted = QApplication::sendEvent(widget, &dropEvent);
+    QDropEvent dropEvent(pos, Qt::DropAction::MoveAction, &mimeData, mouseEvent->buttons(), mouseEvent->modifiers());
+    bool accepted = QApplication::sendEvent(widget, &dropEvent);
 
-  dragFinished.fire(accepted ? DropResult::Accepted : DropResult::Rejected);
+    dragFinished.fire(accepted ? DropResult::Accepted : DropResult::Rejected);
 
-  return accepted;
+    return accepted;
 }
 
 void ItemDrag::DragOperation::setHoveredObject(QObject *object)
 {
-  // qDebug() << "setHoveredObject: " << _hoveredObject;
+    // qDebug() << "setHoveredObject: " << _hoveredObject;
 
-  _hoveredObject = object;
+    _hoveredObject = object;
 }
 
 QObject *ItemDrag::DragOperation::hoveredObject() const
 {
-  return _hoveredObject;
+    return _hoveredObject;
 }
 
 ItemDrag::MimeData::MimeData(MimeData &&other) noexcept
@@ -154,71 +154,72 @@ ItemDrag::MimeData::MimeData(MimeData &&other) noexcept
 
 ItemDrag::MimeData &ItemDrag::MimeData::operator=(MimeData &&other) noexcept
 {
-  draggableItem = std::move(other.draggableItem);
-  return *this;
+    draggableItem = std::move(other.draggableItem);
+    return *this;
 }
 
 QVariant ItemDrag::MimeData::retrieveData(const QString &mimeType, QMetaType type) const
 {
-  QVariant data;
-  if (mimeType != ItemDrag::DraggableItemFormat)
-  {
-    VME_LOG_D("ItemDrag::DragOperation does not accept mimeType: " << mimeType);
-    return data;
-  }
+    QVariant data;
+    if (mimeType != ItemDrag::DraggableItemFormat)
+    {
+        VME_LOG_D("ItemDrag::DragOperation does not accept mimeType: " << mimeType);
+        return data;
+    }
 
-  /*
+    /*
       The data must be QByteArray. Otherwise QML can't read it.
       It seems like QML does not perform an implicit conversion from QVariant(X)
       to QVariant(QByteArray)).
     */
-  data.setValue(draggableItem->serialize());
+    data.setValue(draggableItem->serialize());
 
-  return data;
+    return data;
 }
 
 void ItemDrag::DragOperation::sendDragEnterEvent(QObject *object, QPoint position)
 {
-  if (!object)
-    return;
+    if (!object)
+        return;
 
-  QDragEnterEvent dragEnterEvent(position, Qt::DropAction::MoveAction, &mimeData, QApplication::mouseButtons(), QApplication::keyboardModifiers());
-  QApplication::sendEvent(object, &dragEnterEvent);
+    QDragEnterEvent dragEnterEvent(position, Qt::DropAction::MoveAction, &mimeData, QApplication::mouseButtons(), QApplication::keyboardModifiers());
+    QApplication::sendEvent(object, &dragEnterEvent);
 }
 
 void ItemDrag::DragOperation::sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event)
 {
-  if (!object)
-    return;
+    if (!object)
+        return;
 
-  QDragEnterEvent dragEnterEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
-  QApplication::sendEvent(object, &dragEnterEvent);
+    QDragEnterEvent dragEnterEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
+    QApplication::sendEvent(object, &dragEnterEvent);
 }
 
 void ItemDrag::DragOperation::sendDragLeaveEvent(QObject *object, QPoint position, QMouseEvent *event)
 {
-  if (!object)
-    return;
+    if (!object)
+        return;
 
-  QDragLeaveEvent dragLeaveEvent;
-  QApplication::sendEvent(object, &dragLeaveEvent);
+    QDragLeaveEvent dragLeaveEvent;
+    QApplication::sendEvent(object, &dragLeaveEvent);
 }
 
 void ItemDrag::DragOperation::sendDragMoveEvent(QObject *object, QPoint position, QMouseEvent *event)
 {
-  if (!object)
-    return;
+    if (!object)
+        return;
 
-  QDragMoveEvent dragMoveEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
-  QApplication::sendEvent(object, &dragMoveEvent);
+    QDragMoveEvent dragMoveEvent(position, Qt::DropAction::MoveAction, &mimeData, event->buttons(), event->modifiers());
+    QApplication::sendEvent(object, &dragMoveEvent);
 }
 
 ItemDrag::DragOperation::Source ItemDrag::DragOperation::source() const noexcept
 {
-  return _source;
+    return _source;
 }
 
-ItemDrag::MapItem::MapItem() : MapItem(nullptr, nullptr, nullptr) {}
+ItemDrag::MapItem::MapItem()
+    : MapItem(nullptr, nullptr, nullptr) {}
 
 ItemDrag::MapItem::MapItem(MapView *mapView, Tile *tile, Item *item)
     : mapView(mapView), tile(tile), _item(item)
@@ -227,193 +228,193 @@ ItemDrag::MapItem::MapItem(MapView *mapView, Tile *tile, Item *item)
 
 Item ItemDrag::MapItem::moveFromMap()
 {
-  return mapView->dropItem(tile, _item);
+    return mapView->dropItem(tile, _item);
 }
 
 std::optional<ItemDrag::MapItem> ItemDrag::MapItem::fromDataStream(QDataStream &dataStream)
 {
-  MapItem mapItem;
+    MapItem mapItem;
 
-  dataStream >> mapItem;
+    dataStream >> mapItem;
 
-  if (mapItem.mapView == nullptr || mapItem.tile == nullptr || mapItem._item == nullptr)
-    return std::nullopt;
+    if (mapItem.mapView == nullptr || mapItem.tile == nullptr || mapItem._item == nullptr)
+        return std::nullopt;
 
-  return mapItem;
+    return mapItem;
 }
 
 Item *ItemDrag::MapItem::item() const
 {
-  return _item;
+    return _item;
 }
 
 QPixmap ItemDrag::MapItem::pixmap() const
 {
-  return QtUtil::itemPixmap(tile->position(), *_item);
+    return QtUtil::itemPixmap(tile->position(), *_item);
 }
 
 QDataStream &ItemDrag::MapItem::serializeInto(QDataStream &dataStream) const
 {
-  return dataStream << (*this);
+    return dataStream << (*this);
 }
 
 ItemData::Container *ItemDrag::ContainerItemDrag::container()
 {
-  return const_cast<ItemData::Container *>(const_cast<const ItemDrag::ContainerItemDrag *>(this)->container());
+    return const_cast<ItemData::Container *>(const_cast<const ItemDrag::ContainerItemDrag *>(this)->container());
 }
 
 ItemData::Container *ItemDrag::ContainerItemDrag::container() const
 {
-  auto current = mapView->getTile(position)->itemAt(tileIndex);
+    auto current = mapView->getTile(position)->itemAt(tileIndex);
 
-  DEBUG_ASSERT(current != nullptr, "Cannot be nullptr.");
+    DEBUG_ASSERT(current != nullptr, "Cannot be nullptr.");
 
-  for (auto it = containerIndices.begin(); it != containerIndices.end() - 1; ++it)
-  {
-    uint16_t index = *it;
-    current = &current->getDataAs<ItemData::Container>()->itemAt(index);
-  }
+    for (auto it = containerIndices.begin(); it != containerIndices.end() - 1; ++it)
+    {
+        uint16_t index = *it;
+        current = &current->getDataAs<ItemData::Container>()->itemAt(index);
+    }
 
-  return current->getDataAs<ItemData::Container>();
+    return current->getDataAs<ItemData::Container>();
 }
 
 Item &ItemDrag::ContainerItemDrag::draggedItem() const
 {
-  return container()->itemAt(containerIndices.back());
+    return container()->itemAt(containerIndices.back());
 }
 
 QPixmap ItemDrag::ContainerItemDrag::pixmap() const
 {
-  return QtUtil::itemPixmap(Position(0, 0, 7), draggedItem());
+    return QtUtil::itemPixmap(Position(0, 0, 7), draggedItem());
 }
 
 Item *ItemDrag::ContainerItemDrag::item() const
 {
-  return &draggedItem();
+    return &draggedItem();
 }
 
 QDataStream &ItemDrag::ContainerItemDrag::serializeInto(QDataStream &dataStream) const
 {
-  return dataStream << (*this);
+    return dataStream << (*this);
 }
 
 std::optional<ItemDrag::ContainerItemDrag> ItemDrag::ContainerItemDrag::fromDataStream(QDataStream &dataStream)
 {
-  ContainerItemDrag containerItem;
-  dataStream >> containerItem;
+    ContainerItemDrag containerItem;
+    dataStream >> containerItem;
 
-  auto container = containerItem.container();
+    auto container = containerItem.container();
 
-  DEBUG_ASSERT(container != nullptr && containerItem.containerIndices.back() < container->size(), "Something is wrong.");
+    DEBUG_ASSERT(container != nullptr && containerItem.containerIndices.back() < container->size(), "Something is wrong.");
 
-  return containerItem;
+    return containerItem;
 }
 
 ItemDrag::MimeData::MimeData(std::unique_ptr<DraggableItem> &&draggableItem)
     : QMimeData(), draggableItem(std::move(draggableItem))
 {
-  VME_LOG_D("ItemDrag::MimeData::MimeData");
+    VME_LOG_D("ItemDrag::MimeData::MimeData");
 }
 
 bool ItemDrag::MimeData::hasFormat(const QString &mimeType) const
 {
-  return mimeType == DraggableItemFormat;
+    return mimeType == DraggableItemFormat;
 }
 
 QStringList ItemDrag::MimeData::formats() const
 {
-  return QStringList() << DraggableItemFormat;
+    return QStringList() << DraggableItemFormat;
 }
 
 bool ItemDrag::DraggableItem::accepted() const noexcept
 {
-  return _accepted;
+    return _accepted;
 }
 
 QByteArray ItemDrag::DraggableItem::serialize() const
 {
-  QByteArray byteArray;
-  QDataStream dataStream(&byteArray, QIODevice::WriteOnly);
+    QByteArray byteArray;
+    QDataStream dataStream(&byteArray, QIODevice::WriteOnly);
 
-  int metaType = to_underlying(type());
+    int metaType = to_underlying(type());
 
-  dataStream << metaType;
-  serializeInto(dataStream);
+    dataStream << metaType;
+    serializeInto(dataStream);
 
-  return byteArray;
+    return byteArray;
 }
 
 std::unique_ptr<ItemDrag::DraggableItem> ItemDrag::DraggableItem::deserialize(QByteArray &array)
 {
-  QDataStream dataStream(&array, QIODevice::ReadOnly);
-  int metaType;
-  dataStream >> metaType;
+    QDataStream dataStream(&array, QIODevice::ReadOnly);
+    int metaType;
+    dataStream >> metaType;
 
-  switch (static_cast<DraggableItem::Type>(metaType))
-  {
-  case DraggableItem::Type::MapItem:
-    return moveToHeap(MapItem::fromDataStream(dataStream));
-  case DraggableItem::Type::ContainerItem:
-    return moveToHeap(ContainerItemDrag::fromDataStream(dataStream));
-  default:
-    return std::unique_ptr<DraggableItem>{};
-  }
+    switch (static_cast<DraggableItem::Type>(metaType))
+    {
+        case DraggableItem::Type::MapItem:
+            return moveToHeap(MapItem::fromDataStream(dataStream));
+        case DraggableItem::Type::ContainerItem:
+            return moveToHeap(ContainerItemDrag::fromDataStream(dataStream));
+        default:
+            return std::unique_ptr<DraggableItem>{};
+    }
 }
 
 Item ItemDrag::DraggableItem::copy() const
 {
-  return item()->deepCopy();
+    return item()->deepCopy();
 }
 
 QDataStream &operator<<(QDataStream &dataStream, const ItemDrag::MapItem &mapItem)
 {
-  dataStream << util::pointerAddress(mapItem.mapView)
-             << util::pointerAddress(mapItem.tile)
-             << util::pointerAddress(mapItem.item());
+    dataStream << util::pointerAddress(mapItem.mapView)
+               << util::pointerAddress(mapItem.tile)
+               << util::pointerAddress(mapItem.item());
 
-  return dataStream;
+    return dataStream;
 }
 
 QDataStream &operator>>(QDataStream &dataStream, ItemDrag::MapItem &mapItem)
 {
-  mapItem.mapView = QtUtil::readPointer<MapView *>(dataStream);
-  mapItem.tile = QtUtil::readPointer<Tile *>(dataStream);
-  mapItem._item = QtUtil::readPointer<Item *>(dataStream);
+    mapItem.mapView = QtUtil::readPointer<MapView *>(dataStream);
+    mapItem.tile = QtUtil::readPointer<Tile *>(dataStream);
+    mapItem._item = QtUtil::readPointer<Item *>(dataStream);
 
-  return dataStream;
+    return dataStream;
 }
 
 QDataStream &operator<<(QDataStream &dataStream, const ItemDrag::ContainerItemDrag &containerItem)
 {
-  dataStream << util::pointerAddress(containerItem.mapView)
-             << containerItem.position
-             << containerItem.tileIndex
-             << containerItem.containerIndices.size();
+    dataStream << util::pointerAddress(containerItem.mapView)
+               << containerItem.position
+               << containerItem.tileIndex
+               << containerItem.containerIndices.size();
 
-  for (uint16_t index : containerItem.containerIndices)
-  {
-    dataStream << index;
-  }
+    for (uint16_t index : containerItem.containerIndices)
+    {
+        dataStream << index;
+    }
 
-  return dataStream;
+    return dataStream;
 }
 
 QDataStream &operator>>(QDataStream &dataStream, ItemDrag::ContainerItemDrag &containerItem)
 {
-  containerItem.mapView = QtUtil::readPointer<MapView *>(dataStream);
-  dataStream >> containerItem.position;
-  dataStream >> containerItem.tileIndex;
-  size_t indicesSize;
-  dataStream >> indicesSize;
+    containerItem.mapView = QtUtil::readPointer<MapView *>(dataStream);
+    dataStream >> containerItem.position;
+    dataStream >> containerItem.tileIndex;
+    size_t indicesSize;
+    dataStream >> indicesSize;
 
-  containerItem.containerIndices.reserve(indicesSize);
+    containerItem.containerIndices.reserve(indicesSize);
 
-  for (size_t i = 0; i < indicesSize; ++i)
-  {
-    uint16_t index;
-    dataStream >> index;
-    containerItem.containerIndices.emplace_back(index);
-  }
+    for (size_t i = 0; i < indicesSize; ++i)
+    {
+        uint16_t index;
+        dataStream >> index;
+        containerItem.containerIndices.emplace_back(index);
+    }
 
-  return dataStream;
+    return dataStream;
 }

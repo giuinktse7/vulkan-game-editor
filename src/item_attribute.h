@@ -9,101 +9,101 @@
 
 enum class ItemAttribute_t
 {
-  UniqueId = 1,
-  ActionId = 2,
-  Text = 3,
-  Description = 4
+    UniqueId = 1,
+    ActionId = 2,
+    Text = 3,
+    Description = 4
 };
 
 class ItemAttribute
 {
-public:
-  using ValueType = std::variant<bool, int, double, std::string>;
-  ItemAttribute(ItemAttribute_t type);
+  public:
+    using ValueType = std::variant<bool, int, double, std::string>;
+    ItemAttribute(ItemAttribute_t type);
 
-  // ItemAttribute(ItemAttribute &&other) noexcept;
-  // ItemAttribute &operator=(ItemAttribute &&other) noexcept;
+    // ItemAttribute(ItemAttribute &&other) noexcept;
+    // ItemAttribute &operator=(ItemAttribute &&other) noexcept;
 
-  static std::string attributeTypeToString(const ItemAttribute_t attributeType);
-  static std::optional<ItemAttribute_t> parseAttributeString(const std::string &attributeString);
+    static std::string attributeTypeToString(const ItemAttribute_t attributeType);
+    static std::optional<ItemAttribute_t> parseAttributeString(const std::string &attributeString);
 
-  template <typename T>
-  inline bool holds() const;
+    template <typename T>
+    inline bool holds() const;
 
-  template <typename T>
-  inline std::optional<T> get() const;
+    template <typename T>
+    inline std::optional<T> get() const;
 
-  template <typename T>
-  inline T as() const;
+    template <typename T>
+    inline T as() const;
 
-  bool operator==(const ItemAttribute &rhs) const;
-  bool operator!=(const ItemAttribute &rhs) const;
+    bool operator==(const ItemAttribute &rhs) const;
+    bool operator!=(const ItemAttribute &rhs) const;
 
-  inline ItemAttribute_t type() const noexcept;
-  inline ValueType value() const noexcept;
+    inline ItemAttribute_t type() const noexcept;
+    inline ValueType value() const noexcept;
 
-  void setBool(bool value);
-  void setInt(int value);
-  void setDouble(double value);
-  void setString(const std::string &value);
-  void setString(std::string &&value);
+    void setBool(bool value);
+    void setInt(int value);
+    void setDouble(double value);
+    void setString(const std::string &value);
+    void setString(std::string &&value);
 
-private:
-  ItemAttribute_t _type;
+  private:
+    ItemAttribute_t _type;
 
-  ValueType _value;
+    ValueType _value;
 };
 
 inline ItemAttribute_t ItemAttribute::type() const noexcept
 {
-  return _type;
+    return _type;
 }
 
 inline ItemAttribute::ValueType ItemAttribute::value() const noexcept
 {
-  return _value;
+    return _value;
 }
 
 template <typename T>
 inline bool ItemAttribute::holds() const
 {
-  return std::holds_alternative<T>(_value);
+    return std::holds_alternative<T>(_value);
 }
 
 template <typename T>
 inline std::optional<T> ItemAttribute::get() const
 {
-  if (std::holds_alternative<T>(_value))
-  {
-    return std::get<T>(_value);
-  }
-  else
-  {
-    return {};
-  }
+    if (std::holds_alternative<T>(_value))
+    {
+        return std::get<T>(_value);
+    }
+    else
+    {
+        return {};
+    }
 }
 
 template <typename T>
 inline T ItemAttribute::as() const
 {
-  return std::get<T>(_value);
+    return std::get<T>(_value);
 }
 
 template <typename T, typename... Ts>
 inline std::ostream &operator<<(std::ostream &os, const std::variant<T, Ts...> &v)
 {
-  std::visit([&os](auto &&arg) { os << arg; }, v);
-  return os;
+    std::visit([&os](auto &&arg) { os << arg; }, v);
+    return os;
 }
 
 inline std::ostream &operator<<(std::ostream &os, const ItemAttribute &attribute)
 {
-  os << "{ type: " << attribute.type() << ", value: " << attribute.value() << "}";
-  return os;
+    os << "{ type: " << attribute.type() << ", value: " << attribute.value() << "}";
+    return os;
 }
 
 inline std::ostream &operator<<(std::ostream &os, ItemAttribute_t type)
 {
-  os << ItemAttribute::attributeTypeToString(type);
-  return os;
+    os << ItemAttribute::attributeTypeToString(type);
+    return os;
 }

@@ -24,196 +24,193 @@ class Item;
 struct ContainerItem;
 namespace ItemData
 {
-  struct Container;
+    struct Container;
 }
 
 namespace ItemDrag
 {
-  static constexpr auto DraggableItemFormat = "vulkan-game-editor-mimetype:map-item";
+    static constexpr auto DraggableItemFormat = "vulkan-game-editor-mimetype:map-item";
 
-  struct DraggableItem
-  {
-    enum class Type
+    struct DraggableItem
     {
-      MapItem,
-      ContainerItem
+        enum class Type
+        {
+            MapItem,
+            ContainerItem
+        };
+        ~DraggableItem() {}
+
+        virtual Item *item() const = 0;
+        virtual const Type type() const noexcept = 0;
+        virtual QPixmap pixmap() const = 0;
+        Item copy() const;
+
+        bool accepted() const noexcept;
+
+        static bool validType(int value);
+
+        static std::unique_ptr<DraggableItem> deserialize(QByteArray &array);
+
+        QByteArray serialize() const;
+        virtual QDataStream &serializeInto(QDataStream &dataStream) const = 0;
+
+      private:
+        template <typename T, typename std::enable_if<std::is_base_of<DraggableItem, T>::value>::type * = nullptr>
+        static std::unique_ptr<DraggableItem> moveToHeap(std::optional<T> value);
+
+        bool _accepted = false;
     };
-    ~DraggableItem() {}
 
-    virtual Item *item() const = 0;
-    virtual const Type type() const noexcept = 0;
-    virtual QPixmap pixmap() const = 0;
-    Item copy() const;
-
-    bool accepted() const noexcept;
-
-    static bool validType(int value);
-
-    static std::unique_ptr<DraggableItem> deserialize(QByteArray &array);
-
-    QByteArray serialize() const;
-    virtual QDataStream &serializeInto(QDataStream &dataStream) const = 0;
-
-    // protected:
-    // virtual std::unique_ptr<DraggableItem> moveToHeap() = 0;
-  protected:
-  private:
-    template <typename T, typename std::enable_if<std::is_base_of<DraggableItem, T>::value>::type * = nullptr>
-    static std::unique_ptr<DraggableItem> moveToHeap(std::optional<T> value);
-
-    bool _accepted = false;
-  };
-
-  struct MapItem : DraggableItem
-  {
-    MapItem();
-    MapItem(MapView *mapView, Tile *tile, Item *item);
-
-    const Type type() const noexcept override
+    struct MapItem : DraggableItem
     {
-      return Type::MapItem;
-    }
+        MapItem();
+        MapItem(MapView *mapView, Tile *tile, Item *item);
 
-    Item *item() const override;
-    QPixmap pixmap() const override;
+        const Type type() const noexcept override
+        {
+            return Type::MapItem;
+        }
 
-    Item moveFromMap();
-    static std::optional<MapItem> fromDataStream(QDataStream &dataStream);
+        Item *item() const override;
+        QPixmap pixmap() const override;
 
-    bool operator==(const MapItem &other) const
+        Item moveFromMap();
+        static std::optional<MapItem> fromDataStream(QDataStream &dataStream);
+
+        bool operator==(const MapItem &other) const
+        {
+            return mapView == other.mapView && tile == other.tile && _item == other._item;
+        }
+
+        MapView *mapView;
+        Tile *tile;
+        Item *_item;
+
+      protected:
+        QDataStream &serializeInto(QDataStream &dataStream) const override;
+    };
+
+    struct ContainerItemDrag : DraggableItem
     {
-      return mapView == other.mapView && tile == other.tile && _item == other._item;
-    }
+        Item *item() const override;
+        QPixmap pixmap() const override;
 
-    MapView *mapView;
-    Tile *tile;
-    Item *_item;
+        static std::optional<ContainerItemDrag> fromDataStream(QDataStream &dataStream);
 
-  protected:
-    QDataStream &serializeInto(QDataStream &dataStream) const override;
-  };
+        const Type type() const noexcept override
+        {
+            return Type::ContainerItem;
+        }
 
-  struct ContainerItemDrag : DraggableItem
-  {
-    Item *item() const override;
-    QPixmap pixmap() const override;
+        MapView *mapView;
+        Position position;
 
-    static std::optional<ContainerItemDrag> fromDataStream(QDataStream &dataStream);
+        uint16_t tileIndex;
+        std::vector<uint16_t> containerIndices;
 
-    const Type type() const noexcept override
-    {
-      return Type::ContainerItem;
-    }
+        ItemData::Container *container();
+        ItemData::Container *container() const;
+        Item &draggedItem() const;
 
-    MapView *mapView;
-    Position position;
+      protected:
+        QDataStream &serializeInto(QDataStream &dataStream) const override;
+    };
 
-    uint16_t tileIndex;
-    std::vector<uint16_t> containerIndices;
-
-    ItemData::Container *container();
-    ItemData::Container *container() const;
-    Item &draggedItem() const;
-
-  protected:
-    QDataStream &serializeInto(QDataStream &dataStream) const override;
-  };
-
-  /*
+    /*
   Defines the available MimeData for a drag & drop operation on a map tab.
 */
-  class MimeData : public QMimeData
-  {
-  public:
-    MimeData(MimeData &&other) noexcept;
-    MimeData &operator=(MimeData &&other) noexcept;
-
-    template <typename T, typename std::enable_if<std::is_base_of<DraggableItem, T>::value>::type * = nullptr>
-    static MimeData create(T &&t)
+    class MimeData : public QMimeData
     {
-      auto result = MimeData(std::make_unique<T>(std::move(t)));
-      return result;
-    }
+      public:
+        MimeData(MimeData &&other) noexcept;
+        MimeData &operator=(MimeData &&other) noexcept;
 
-    bool hasFormat(const QString &mimeType) const override;
-    QStringList formats() const override;
+        template <typename T, typename std::enable_if<std::is_base_of<DraggableItem, T>::value>::type * = nullptr>
+        static MimeData create(T &&t)
+        {
+            auto result = MimeData(std::make_unique<T>(std::move(t)));
+            return result;
+        }
 
-    QVariant retrieveData(const QString &mimeType, QMetaType type) const override;
+        bool hasFormat(const QString &mimeType) const override;
+        QStringList formats() const override;
 
-    std::unique_ptr<DraggableItem> draggableItem;
+        QVariant retrieveData(const QString &mimeType, QMetaType type) const override;
 
-  private:
-    MimeData(std::unique_ptr<DraggableItem> &&draggableItem);
-  };
+        std::unique_ptr<DraggableItem> draggableItem;
 
-  class DragOperation
-  {
-  private:
-    using Source = MapView *;
-
-  public:
-    enum class DropResult
-    {
-      Accepted,
-      Rejected,
-      NoTarget
+      private:
+        MimeData(std::unique_ptr<DraggableItem> &&draggableItem);
     };
 
-    DragOperation(DragOperation &&other) noexcept;
-    DragOperation &operator=(DragOperation &&other) noexcept;
-
-    template <typename T, typename std::enable_if<std::is_base_of<DraggableItem, T>::value>::type * = nullptr>
-    static DragOperation create(T &&t, Source source, QWindow *parent)
+    class DragOperation
     {
-      return DragOperation(MimeData::create(std::move(t)), source, parent);
-    }
+      private:
+        using Source = MapView *;
 
-    void setRenderCondition(std::function<bool()> f);
+      public:
+        enum class DropResult
+        {
+            Accepted,
+            Rejected,
+            NoTarget
+        };
 
-    void start();
-    bool isDragging() const;
-    bool mouseMoveEvent(QMouseEvent *event);
-    bool sendDropEvent(QMouseEvent *event);
-    QObject *hoveredObject() const;
-    Source source() const noexcept;
+        DragOperation(DragOperation &&other) noexcept;
+        DragOperation &operator=(DragOperation &&other) noexcept;
 
-    template <auto MemberFunction, typename T>
-    void onDragFinished(T *instance);
+        template <typename T, typename std::enable_if<std::is_base_of<DraggableItem, T>::value>::type * = nullptr>
+        static DragOperation create(T &&t, Source source, QWindow *parent)
+        {
+            return DragOperation(MimeData::create(std::move(t)), source, parent);
+        }
 
-    ItemDrag::MimeData mimeData;
+        void setRenderCondition(std::function<bool()> f);
 
-  private:
-    DragOperation(MimeData &&mimeData, Source source, QWindow *parent);
+        void start();
+        bool isDragging() const;
+        bool mouseMoveEvent(QMouseEvent *event);
+        bool sendDropEvent(QMouseEvent *event);
+        QObject *hoveredObject() const;
+        Source source() const noexcept;
 
-    void sendDragEnterEvent(QObject *object, QPoint position);
-    void sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event);
-    void sendDragLeaveEvent(QObject *object, QPoint position, QMouseEvent *event);
-    void sendDragMoveEvent(QObject *object, QPoint position, QMouseEvent *event);
+        template <auto MemberFunction, typename T>
+        void onDragFinished(T *instance);
 
-    void setHoveredObject(QObject *object);
+        ItemDrag::MimeData mimeData;
 
-    void showCursor();
-    void hideCursor();
+      private:
+        DragOperation(MimeData &&mimeData, Source source, QWindow *parent);
 
-    QWindow *_parent;
-    QObject *_hoveredObject;
-    Source _source;
+        void sendDragEnterEvent(QObject *object, QPoint position);
+        void sendDragEnterEvent(QObject *object, QPoint position, QMouseEvent *event);
+        void sendDragLeaveEvent(QObject *object, QPoint position, QMouseEvent *event);
+        void sendDragMoveEvent(QObject *object, QPoint position, QMouseEvent *event);
 
-    QPixmap pixmap;
+        void setHoveredObject(QObject *object);
 
-    std::function<bool()> shouldRender = [] { return true; };
+        void showCursor();
+        void hideCursor();
 
-    bool renderingCursor;
+        QWindow *_parent;
+        QObject *_hoveredObject;
+        Source _source;
 
-    Nano::Signal<void(DropResult)> dragFinished;
-  };
+        QPixmap pixmap;
+
+        std::function<bool()> shouldRender = [] { return true; };
+
+        bool renderingCursor;
+
+        Nano::Signal<void(DropResult)> dragFinished;
+    };
 
 } // namespace ItemDrag
 
 inline QDebug operator<<(QDebug &dbg, const ItemDrag::MapItem &mapItem)
 {
-  dbg.nospace() << "MapItem { mapView: " << mapItem.mapView << ", tile: " << mapItem.tile << ", item:" << mapItem._item << "}";
-  return dbg.maybeSpace();
+    dbg.nospace() << "MapItem { mapView: " << mapItem.mapView << ", tile: " << mapItem.tile << ", item:" << mapItem._item << "}";
+    return dbg.maybeSpace();
 }
 
 QDataStream &operator<<(QDataStream &, const ItemDrag::MapItem &);
@@ -228,13 +225,13 @@ QDataStream &operator>>(QDataStream &, ItemDrag::DraggableItem &);
 template <typename T, typename std::enable_if<std::is_base_of<ItemDrag::DraggableItem, T>::value>::type *>
 static std::unique_ptr<ItemDrag::DraggableItem> ItemDrag::DraggableItem::moveToHeap(std::optional<T> value)
 {
-  return value ? std::make_unique<T>(value.value()) : std::unique_ptr<DraggableItem>{};
+    return value ? std::make_unique<T>(value.value()) : std::unique_ptr<DraggableItem>{};
 }
 
 template <auto MemberFunction, typename T>
 void ItemDrag::DragOperation::onDragFinished(T *instance)
 {
-  dragFinished.connect<MemberFunction>(instance);
+    dragFinished.connect<MemberFunction>(instance);
 }
 
 // Q_DECLARE_METATYPE(DragOperation::MapItem);

@@ -17,131 +17,132 @@ class EditorHistory;
 
 enum class TransactionType
 {
-  RawItemAction,
-  Selection,
-  AddMapItem,
-  RemoveMapItem,
-  MoveItems,
-  ModifyItem
+    RawItemAction,
+    Selection,
+    AddMapItem,
+    RemoveMapItem,
+    MoveItems,
+    ModifyItem
 };
 
 namespace MapHistory
 {
-  class Action
-  {
-  public:
-    Action(ActionType actionType) : actionType(actionType), committed(false) {}
-    Action(ActionType actionType, Change::DataTypes &&change);
-
-    Action(const Action &other) = delete;
-    Action &operator=(const Action &other) = delete;
-
-    Action(Action &&other) noexcept
-        : changes(std::move(other.changes)),
-          actionType(other.actionType),
-          committed(other.committed) {}
-
-    void reserve(size_t size);
-    void shrinkToFit();
-
-    std::vector<Change> changes;
-
-    void addChange(Change::DataTypes &&change)
+    class Action
     {
-      changes.emplace_back(std::move(change));
-    }
+      public:
+        Action(ActionType actionType)
+            : actionType(actionType), committed(false) {}
+        Action(ActionType actionType, Change::DataTypes &&change);
 
-    void commit(MapView &mapView);
-    void markAsCommitted();
+        Action(const Action &other) = delete;
+        Action &operator=(const Action &other) = delete;
 
-    void undo(MapView &mapView);
-    void redo(MapView &mapView);
+        Action(Action &&other) noexcept
+            : changes(std::move(other.changes)),
+              actionType(other.actionType),
+              committed(other.committed) {}
 
-    bool isCommitted() const
-    {
-      return committed;
-    }
+        void reserve(size_t size);
+        void shrinkToFit();
 
-    MapHistory::ActionType getType() const
-    {
-      return actionType;
-    }
+        std::vector<Change> changes;
 
-    template <typename T>
-    bool isType(Change &change) const
-    {
-      return dynamic_cast<T *>(&change) != nullptr;
-    }
+        void addChange(Change::DataTypes &&change)
+        {
+            changes.emplace_back(std::move(change));
+        }
 
-  private:
-    friend class MapHistory::History;
+        void commit(MapView &mapView);
+        void markAsCommitted();
 
-    MapHistory::ActionType actionType;
-    bool committed;
-  };
+        void undo(MapView &mapView);
+        void redo(MapView &mapView);
 
-  /*
+        bool isCommitted() const
+        {
+            return committed;
+        }
+
+        MapHistory::ActionType getType() const
+        {
+            return actionType;
+        }
+
+        template <typename T>
+        bool isType(Change &change) const
+        {
+            return dynamic_cast<T *>(&change) != nullptr;
+        }
+
+      private:
+        friend class MapHistory::History;
+
+        MapHistory::ActionType actionType;
+        bool committed;
+    };
+
+    /*
   Represents a group of actions. One undo command will undo all the actions in
   the group.
 */
-  class Transaction
-  {
-  public:
-    Transaction(TransactionType type);
-    void addAction(MapHistory::Action &&action);
-
-    Transaction(Transaction &&other) noexcept;
-    Transaction &operator=(Transaction &&other);
-
-    void commit(MapView &mapView);
-
-    void redo(MapView &mapView);
-    void undo(MapView &mapView);
-
-    inline bool empty() const noexcept
+    class Transaction
     {
-      return actions.empty();
-    }
+      public:
+        Transaction(TransactionType type);
+        void addAction(MapHistory::Action &&action);
 
-    TransactionType type;
+        Transaction(Transaction &&other) noexcept;
+        Transaction &operator=(Transaction &&other);
 
-  private:
-    friend class MapHistory::History;
-    std::vector<MapHistory::Action> actions;
-  };
+        void commit(MapView &mapView);
+
+        void redo(MapView &mapView);
+        void undo(MapView &mapView);
+
+        inline bool empty() const noexcept
+        {
+            return actions.empty();
+        }
+
+        TransactionType type;
+
+      private:
+        friend class MapHistory::History;
+        std::vector<MapHistory::Action> actions;
+    };
 } // namespace MapHistory
 
 inline std::ostringstream stringify(const TransactionType &type)
 {
-  std::ostringstream s;
+    std::ostringstream s;
 
-  switch (type)
-  {
-  case TransactionType::Selection:
-    s << "TransactionType::Selection";
-    break;
-  case TransactionType::AddMapItem:
-    s << "TransactionType::AddMapItem";
-    break;
-  case TransactionType::RemoveMapItem:
-    s << "TransactionType::RemoveMapItem";
-    break;
-  case TransactionType::MoveItems:
-    s << "TransactionType::MoveItems";
-    break;
-  case TransactionType::RawItemAction:
-    s << "TransactionType::RawItemAction";
-    break;
-  default:
-    s << "Unknown TransactionType: " << to_underlying(type);
-    break;
-  }
+    switch (type)
+    {
+        case TransactionType::Selection:
+            s << "TransactionType::Selection";
+            break;
+        case TransactionType::AddMapItem:
+            s << "TransactionType::AddMapItem";
+            break;
+        case TransactionType::RemoveMapItem:
+            s << "TransactionType::RemoveMapItem";
+            break;
+        case TransactionType::MoveItems:
+            s << "TransactionType::MoveItems";
+            break;
+        case TransactionType::RawItemAction:
+            s << "TransactionType::RawItemAction";
+            break;
+        default:
+            s << "Unknown TransactionType: " << to_underlying(type);
+            break;
+    }
 
-  return s;
+    return s;
 }
 
 inline std::ostream &operator<<(std::ostream &os, const TransactionType &type)
 {
-  os << stringify(type).str();
-  return os;
+    os << stringify(type).str();
+    return os;
 }

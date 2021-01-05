@@ -12,40 +12,39 @@
 
 #include "vulkan_window.h"
 
-#include "../items.h"
-#include "../map_view.h"
-
 #include "../definitions.h"
+#include "../items.h"
 #include "../logger.h"
+#include "../map_view.h"
 #include "../qt/logging.h"
 
 namespace
 {
-  std::unique_ptr<QPixmap> blackSquare;
+    std::unique_ptr<QPixmap> blackSquare;
 
-  QPixmap blackSquarePixmap()
-  {
-    if (!blackSquare)
+    QPixmap blackSquarePixmap()
     {
-      QImage image(32, 32, QImage::Format::Format_ARGB32);
-      image.fill(QColor(0, 0, 0, 255));
+        if (!blackSquare)
+        {
+            QImage image(32, 32, QImage::Format::Format_ARGB32);
+            image.fill(QColor(0, 0, 0, 255));
 
-      QPixmap pixmap = QPixmap::fromImage(image);
+            QPixmap pixmap = QPixmap::fromImage(image);
 
-      blackSquare = std::make_unique<QPixmap>(std::move(pixmap));
+            blackSquare = std::make_unique<QPixmap>(std::move(pixmap));
+        }
+
+        return *blackSquare;
     }
-
-    return *blackSquare;
-  }
 
 } // namespace
 
 QMetaObject::Connection QtUtil::QmlBind::connect(QObject *sender, const char *signal, F &&f)
 {
-  if (!sender)
-    return {};
+    if (!sender)
+        return {};
 
-  return QObject::connect(sender, signal, new QmlBind(std::move(f), sender), SLOT(call()));
+    return QObject::connect(sender, signal, new QmlBind(std::move(f), sender), SLOT(call()));
 }
 
 QtUtil::QmlBind::QmlBind(F &&f, QObject *parent)
@@ -53,122 +52,122 @@ QtUtil::QmlBind::QmlBind(F &&f, QObject *parent)
 
 ScreenPosition QtUtil::QtUiUtils::mouseScreenPosInView()
 {
-  auto pos = window->mapFromGlobal(QCursor::pos());
-  return ScreenPosition(pos.x(), pos.y());
+    auto pos = window->mapFromGlobal(QCursor::pos());
+    return ScreenPosition(pos.x(), pos.y());
 }
 
 VME::ModifierKeys QtUtil::QtUiUtils::modifiers() const
 {
-  return enum_conversion::vmeModifierKeys(QApplication::keyboardModifiers());
+    return enum_conversion::vmeModifierKeys(QApplication::keyboardModifiers());
 }
 
 void QtUtil::QtUiUtils::waitForDraw(std::function<void()> f)
 {
-  window->waitingForDraw.emplace(f);
+    window->waitingForDraw.emplace(f);
 }
 
 QPixmap QtUtil::itemPixmap(uint32_t serverId)
 {
-  if (!Items::items.validItemType(serverId))
-  {
-    return blackSquarePixmap();
-  }
+    if (!Items::items.validItemType(serverId))
+    {
+        return blackSquarePixmap();
+    }
 
-  ItemType *t = Items::items.getItemTypeByServerId(serverId);
-  auto info = t->getTextureInfo(TextureInfo::CoordinateType::Unnormalized);
+    ItemType *t = Items::items.getItemTypeByServerId(serverId);
+    auto info = t->getTextureInfo(TextureInfo::CoordinateType::Unnormalized);
 
-  return itemPixmap(info);
+    return itemPixmap(info);
 }
 
 QPixmap QtUtil::itemPixmap(const Position &pos, const Item &item)
 {
-  auto info = item.getTextureInfo(pos, TextureInfo::CoordinateType::Unnormalized);
-  return itemPixmap(info);
+    auto info = item.getTextureInfo(pos, TextureInfo::CoordinateType::Unnormalized);
+    return itemPixmap(info);
 }
 
 QPixmap QtUtil::itemPixmap(const TextureInfo &info)
 {
-  TextureAtlas *atlas = info.atlas;
+    TextureAtlas *atlas = info.atlas;
 
-  const uint8_t *pixelData = atlas->getOrCreateTexture().pixels().data();
+    const uint8_t *pixelData = atlas->getOrCreateTexture().pixels().data();
 
-  QRect textureRegion(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
+    QRect textureRegion(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
 
-  QImage sprite = QImage(pixelData, 12 * 32, 12 * 32, 384 * 4, QImage::Format::Format_ARGB32)
-                      .copy(textureRegion)
-                      .mirrored();
+    QImage sprite = QImage(pixelData, 12 * 32, 12 * 32, 384 * 4, QImage::Format::Format_ARGB32)
+                        .copy(textureRegion)
+                        .mirrored();
 
-  if (atlas->spriteWidth == 32 && atlas->spriteHeight == 32)
-  {
-    return QPixmap::fromImage(sprite);
-  }
-  else
-  {
-    return QPixmap::fromImage(sprite.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-  }
+    if (atlas->spriteWidth == 32 && atlas->spriteHeight == 32)
+    {
+        return QPixmap::fromImage(sprite);
+    }
+    else
+    {
+        return QPixmap::fromImage(sprite.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
 }
 
 MainApplication *QtUtil::qtApp()
 {
-  return (MainApplication *)(QApplication::instance());
+    return (MainApplication *)(QApplication::instance());
 }
 
 std::optional<int> QtUtil::ScrollState::scroll(QWheelEvent *event)
 {
-  // The relative amount that the wheel was rotated, in eighths of a degree.
-  const int deltaY = event->angleDelta().y();
-  amountBuffer += deltaY;
+    // The relative amount that the wheel was rotated, in eighths of a degree.
+    const int deltaY = event->angleDelta().y();
+    amountBuffer += deltaY;
 
-  if (std::abs(amountBuffer) < minRotationDelta)
-    return {};
+    if (std::abs(amountBuffer) < minRotationDelta)
+        return {};
 
-  int result = amountBuffer / QtMinimumWheelDelta;
-  amountBuffer = amountBuffer % QtMinimumWheelDelta;
+    int result = amountBuffer / QtMinimumWheelDelta;
+    amountBuffer = amountBuffer % QtMinimumWheelDelta;
 
-  return result;
+    return result;
 }
 
 MapView *QtUtil::associatedMapView(QWidget *widget)
 {
-  if (!widget)
-    return nullptr;
-  QVariant prop = widget->property(QtUtil::PropertyName::MapView);
-  if (prop.isNull())
-    return nullptr;
+    if (!widget)
+        return nullptr;
+    QVariant prop = widget->property(QtUtil::PropertyName::MapView);
+    if (prop.isNull())
+        return nullptr;
 
-  MapView *mapView = static_cast<MapView *>(prop.value<void *>());
+    MapView *mapView = static_cast<MapView *>(prop.value<void *>());
 #ifdef _DEBUG_VME
-  bool isInstance = MapView::isInstance(mapView);
+    bool isInstance = MapView::isInstance(mapView);
 
-  std::ostringstream msg;
-  msg << "The property QtUtil::PropertyName::MapView for widget " << widget << " must contain a MapView pointer.";
-  DEBUG_ASSERT(isInstance, msg.str());
+    std::ostringstream msg;
+    msg << "The property QtUtil::PropertyName::MapView for widget " << widget << " must contain a MapView pointer.";
+    DEBUG_ASSERT(isInstance, msg.str());
 
-  return mapView;
+    return mapView;
 #else
-  return MapView::isInstance(mapView) ? mapView : nullptr;
+    return MapView::isInstance(mapView) ? mapView : nullptr;
 #endif
 }
 
 VulkanWindow *QtUtil::associatedVulkanWindow(QWidget *widget)
 {
-  if (!widget)
-    return nullptr;
-  QVariant prop = widget->property(QtUtil::PropertyName::VulkanWindow);
-  if (prop.isNull())
-    return nullptr;
+    if (!widget)
+        return nullptr;
+    QVariant prop = widget->property(QtUtil::PropertyName::VulkanWindow);
+    if (prop.isNull())
+        return nullptr;
 
-  VulkanWindow *vulkanWindow = static_cast<VulkanWindow *>(prop.value<void *>());
+    VulkanWindow *vulkanWindow = static_cast<VulkanWindow *>(prop.value<void *>());
 #ifdef _DEBUG_VME
-  bool isInstance = VulkanWindow::isInstance(vulkanWindow);
+    bool isInstance = VulkanWindow::isInstance(vulkanWindow);
 
-  std::ostringstream msg;
-  msg << "The property QtUtil::PropertyName::MapView for widget " << widget << " must contain a MapView pointer.";
-  DEBUG_ASSERT(isInstance, msg.str());
+    std::ostringstream msg;
+    msg << "The property QtUtil::PropertyName::MapView for widget " << widget << " must contain a MapView pointer.";
+    DEBUG_ASSERT(isInstance, msg.str());
 
-  return vulkanWindow;
+    return vulkanWindow;
 #else
-  return VulkanWindow::isInstance(vulkanWindow) ? vulkanWindow : nullptr;
+    return VulkanWindow::isInstance(vulkanWindow) ? vulkanWindow : nullptr;
 #endif
-  return vulkanWindow;
+    return vulkanWindow;
 }

@@ -4,5 +4,5 @@
 
 TEST_CASE("map_view.h", "[core][map view]")
 {
-  // SECTION("")
+    // SECTION("")
 }
