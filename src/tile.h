@@ -31,6 +31,8 @@ public:
 		return _items.at(itemIndex).selected;
 	}
 
+	void movedInMap();
+
 	bool hasSelection() const;
 	bool topItemSelected() const;
 	bool allSelected() const;

@@ -4,8 +4,8 @@
 
 #include "ecs/ecs.h"
 #include "ecs/item_animation.h"
-#include "tile_location.h"
 #include "items.h"
+#include "tile_location.h"
 
 Tile::Tile(TileLocation &tileLocation)
     : _position(tileLocation.position()), _flags(0), _selectionCount(0) {}
@@ -146,6 +146,18 @@ void Tile::moveItems(Tile &other)
   _selectionCount = (_ground && _ground->selected) ? 1 : 0;
 }
 
+void Tile::moveItemsWithBroadcast(Tile &other)
+{
+  for (auto &item : _items)
+  {
+    Item *newItem = other.addItem(std::move(item));
+    Items::items.itemMoved(newItem);
+  }
+  _items.clear();
+
+  _selectionCount = (_ground && _ground->selected) ? 1 : 0;
+}
+
 void Tile::moveSelected(Tile &other)
 {
   if (_ground && _ground->selected)
@@ -182,12 +194,11 @@ void Tile::insertItem(Item &&item, size_t index)
   _items.emplace(_items.begin() + index, std::move(item));
 }
 
-void Tile::addItem(Item &&item)
+Item *Tile::addItem(Item &&item)
 {
   if (item.isGround())
   {
-    replaceGround(std::move(item));
-    return;
+    return replaceGround(std::move(item));
   }
 
   ItemType &itemType = *item.itemType;
@@ -198,8 +209,8 @@ void Tile::addItem(Item &&item)
     if (item.selected)
       ++_selectionCount;
 
-    _items.emplace(_items.end(), std::move(item));
-    return;
+    Item *newItem = &(*_items.emplace(_items.end(), std::move(item)));
+    return newItem;
   }
 
   bool replace = false;
@@ -219,18 +230,17 @@ void Tile::addItem(Item &&item)
     {
       // Replace the current item at cursor with the new item
       size_t index = static_cast<size_t>(cursor - _items.begin());
-      replaceItem(index, std::move(item));
-      return;
+      return replaceItem(index, std::move(item));
     }
   }
 
   if (item.selected)
     ++_selectionCount;
 
-  _items.emplace(cursor, std::move(item));
+  return &(*_items.emplace(cursor, std::move(item)));
 }
 
-void Tile::replaceGround(Item &&ground)
+Item *Tile::replaceGround(Item &&ground)
 {
   bool currentSelected = _ground && _ground->selected;
 
@@ -240,9 +250,10 @@ void Tile::replaceGround(Item &&ground)
     ++_selectionCount;
 
   _ground = std::make_unique<Item>(std::move(ground));
+  return &(*_ground);
 }
 
-void Tile::replaceItem(size_t index, Item &&item)
+Item *Tile::replaceItem(size_t index, Item &&item)
 {
   bool s1 = _items.at(index).selected;
   bool s2 = item.selected;
@@ -252,6 +263,8 @@ void Tile::replaceItem(size_t index, Item &&item)
     --_selectionCount;
   else if (!s1 && s2)
     ++_selectionCount;
+
+  return &_items.at(index);
 }
 
 void Tile::setGround(std::unique_ptr<Item> ground)
@@ -532,4 +545,17 @@ void Tile::destroyEntities()
 
   for (auto &item : _items)
     item.destroyEntity();
+}
+
+void Tile::movedInMap()
+{
+  if (_ground)
+  {
+    Items::items.itemMoved(&(*_ground));
+  }
+
+  for (Item &item : _items)
+  {
+    Items::items.itemMoved(&item);
+  }
 }

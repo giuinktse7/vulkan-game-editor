@@ -33,6 +33,8 @@ namespace MapHistory
       tile.reset();
     }
 
+    location.tile()->movedInMap();
+
     mapView.selection().setSelected(position, selected);
   }
 
@@ -159,7 +161,7 @@ namespace MapHistory
       DEBUG_ASSERT(i, "Should never be empty.");
 
       Data newData;
-      newData.tileIndex = i.value();
+      newData.tileIndex = static_cast<uint16_t>(i.value());
 
       data = newData;
     }
@@ -225,17 +227,15 @@ namespace MapHistory
 
   void MoveFromContainerToContainer::commit(MapView &mapView)
   {
-    auto m = this;
-    auto k = to.container(mapView);
-    k->insertItem(
-        from.container(mapView)->dropItem(from.containerIndex()),
+    to.container(mapView)->insertItemTracked(
+        from.container(mapView)->dropItemTracked(from.containerIndex()),
         to.containerIndex());
   }
 
   void MoveFromContainerToContainer::undo(MapView &mapView)
   {
-    from.container(mapView)->insertItem(
-        to.container(mapView)->dropItem(to.containerIndex()),
+    from.container(mapView)->insertItemTracked(
+        to.container(mapView)->dropItemTracked(to.containerIndex()),
         from.containerIndex());
   }
 
@@ -347,7 +347,7 @@ namespace MapHistory
               }
               else
               {
-                from.moveItems(to);
+                from.moveItemsWithBroadcast(to);
               }
             },
 

@@ -76,17 +76,6 @@ namespace MapHistory
     size_t containerIndex;
   };
 
-  struct ContainerMoveData
-  {
-    ContainerMoveData(ContainerItemMoveInfo &moveInfo);
-
-    Position position;
-    uint16_t tileIndex;
-    uint16_t containerIndex;
-
-    ItemData::Container *container(MapView &mapView);
-  };
-
   // class MoveFromContainerToContainer : public ChangeItem
   // {
   // public:

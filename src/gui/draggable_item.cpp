@@ -266,6 +266,8 @@ ItemData::Container *ItemDrag::ContainerItemDrag::container() const
 {
   auto current = mapView->getTile(position)->itemAt(tileIndex);
 
+  DEBUG_ASSERT(current != nullptr, "Cannot be nullptr.");
+
   for (auto it = containerIndices.begin(); it != containerIndices.end() - 1; ++it)
   {
     uint16_t index = *it;
