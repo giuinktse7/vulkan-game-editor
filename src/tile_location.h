@@ -58,6 +58,6 @@ public:
 	}
 
 protected:
-	observable_unique_ptr<Tile> _tile{};
+	std::unique_ptr<Tile> _tile{};
 	Position _position;
 };
