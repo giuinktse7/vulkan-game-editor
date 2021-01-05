@@ -138,10 +138,21 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
     focusGround(position, mapView);
     return;
   }
-  else if (state.holds<FocusedItem>() && item == state.focusedAs<FocusedItem>().item())
+  else if (state.holds<FocusedItem>())
   {
-    // The item is already focused
-    return;
+    auto &focusedItem = state.focusedAs<FocusedItem>();
+    if (item == focusedItem.item())
+    {
+      // The item is already focused, update it
+      focusedItem.position = position;
+
+      auto maybeTileIndex = mapView.getTile(position)->indexOf(item);
+      DEBUG_ASSERT(maybeTileIndex.has_value(), "The tile did not have the item.");
+
+      focusedItem.tileIndex = static_cast<uint16_t>(maybeTileIndex.value());
+
+      return;
+    }
   }
 
   setMapView(mapView);
