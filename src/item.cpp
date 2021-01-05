@@ -275,12 +275,25 @@ bool ItemData::Container::empty() const noexcept
 	return _items.empty();
 }
 
+bool ItemData::Container::insertItemTracked(Item &&item, size_t index)
+{
+	if (isFull())
+		return false;
+
+	auto itemLocation = _items.emplace(_items.begin() + index, std::move(item));
+	while (itemLocation != _items.end())
+	{
+		Items::items.itemMoved(&(*itemLocation));
+		++itemLocation;
+	}
+}
+
 bool ItemData::Container::insertItem(Item &&item, size_t index)
 {
 	if (isFull())
 		return false;
 
-	_items.emplace(_items.begin() + index, std::move(item));
+	auto itemLocation = _items.emplace(_items.begin() + index, std::move(item));
 	return true;
 }
 
@@ -343,6 +356,20 @@ bool ItemData::Container::removeItem(Item *item)
 
 	_items.erase(found);
 	return true;
+}
+
+Item ItemData::Container::dropItemTracked(size_t index)
+{
+	Item item(std::move(_items.at(index)));
+
+	auto itemLocation = _items.erase(_items.begin() + index);
+	while (itemLocation != _items.end())
+	{
+		Items::items.itemMoved(&(*itemLocation));
+		++itemLocation;
+	}
+
+	return item;
 }
 
 Item ItemData::Container::dropItem(size_t index)

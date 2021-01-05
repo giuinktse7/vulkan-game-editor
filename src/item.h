@@ -313,6 +313,9 @@ namespace ItemData
 
 		const std::vector<Item>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
 
+		bool insertItemTracked(Item &&item, size_t index);
+		Item dropItemTracked(size_t index);
+
 		bool insertItem(Item &&item, size_t index);
 		bool addItem(Item &&item);
 		bool addItem(int index, Item &&item);
