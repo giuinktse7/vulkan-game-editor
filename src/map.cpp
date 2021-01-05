@@ -236,7 +236,10 @@ TileLocation *Map::getTileLocation(int x, int y, int z) const
   if (leaf)
   {
     Floor *floor = leaf->floor(z);
-    return &floor->getTileLocation(x, y);
+    if (floor)
+    {
+      return &floor->getTileLocation(x, y);
+    }
   }
 
   return nullptr;
