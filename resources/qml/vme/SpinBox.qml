@@ -10,10 +10,6 @@ Control {
   property int to : 100
   property bool editable : true
 
-  // property var validator : RegularExpressionValidator {
-  //   regularExpression : /(?:^[1-9][0-9]?[0-9]?$)?/
-  // }
-
   function setValue(value) {
     vmeSpinBox.value = Math.max(Math.min(value, vmeSpinBox.to), vmeSpinBox.from);
   }
@@ -84,6 +80,8 @@ Control {
         selectByMouse : true
         z : 2
         text : vmeSpinBox.valueAsText()
+
+        validator: RegularExpressionValidator { regularExpression: /(?:^[1-9][0-9]?[0-9]?$)?/ }
 
         onTextChanged : {
           if (text !== "") {
