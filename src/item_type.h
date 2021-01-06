@@ -144,6 +144,18 @@ enum class StackableSpriteType : uint8_t
     EightIds
 };
 
+enum class StackSizeOffset
+{
+    One = 0,
+    Two = 1,
+    Three = 2,
+    Four = 3,
+    Five = 4,
+    Ten = 5,
+    TwentyFive = 6,
+    Fifty = 7
+};
+
 class ItemType
 {
   public:
@@ -180,10 +192,12 @@ class ItemType
     void cacheTextureAtlases();
 
     const uint32_t getPatternIndex(const Position &pos) const;
+    const uint32_t getPatternIndexForSubtype(uint8_t subtype) const;
 
     const TextureInfo getTextureInfo(TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
     const TextureInfo getTextureInfo(uint32_t spriteId, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
     const TextureInfo getTextureInfo(const Position &pos, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
+    const TextureInfo getTextureInfoForSubtype(uint8_t subtype, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
 
     const SpriteInfo &getSpriteInfo(size_t frameGroup) const;
     const SpriteInfo &getSpriteInfo() const;

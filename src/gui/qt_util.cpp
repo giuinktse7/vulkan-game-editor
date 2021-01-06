@@ -66,7 +66,7 @@ void QtUtil::QtUiUtils::waitForDraw(std::function<void()> f)
     window->waitingForDraw.emplace(f);
 }
 
-QPixmap QtUtil::itemPixmap(uint32_t serverId)
+QPixmap QtUtil::itemPixmap(uint32_t serverId, uint8_t subtype)
 {
     if (!Items::items.validItemType(serverId))
     {
@@ -74,7 +74,8 @@ QPixmap QtUtil::itemPixmap(uint32_t serverId)
     }
 
     ItemType *t = Items::items.getItemTypeByServerId(serverId);
-    auto info = t->getTextureInfo(TextureInfo::CoordinateType::Unnormalized);
+    auto info = subtype == 0 ? t->getTextureInfo(TextureInfo::CoordinateType::Unnormalized)
+                             : t->getTextureInfoForSubtype(subtype, TextureInfo::CoordinateType::Unnormalized);
 
     return itemPixmap(info);
 }

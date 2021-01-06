@@ -7,21 +7,6 @@
 #include "sprite_info.h"
 #include "util.h"
 
-namespace
-{
-    enum class StackSizeOffset
-    {
-        One = 0,
-        Two = 1,
-        Three = 2,
-        Four = 3,
-        Five = 4,
-        Ten = 5,
-        TwentyFive = 6,
-        Fifty = 7
-    };
-}
-
 Item::Item(ItemTypeId itemTypeId)
     : itemType(Items::items.getItemTypeByServerId(itemTypeId))
 {

@@ -19,6 +19,24 @@ const uint32_t ItemType::getPatternIndex(const Position &pos) const
     return spriteIndex;
 }
 
+const uint32_t ItemType::getPatternIndexForSubtype(uint8_t subtype) const
+{
+    // TODO Handle isFluidContainer(), isSplash(), and charges != 0
+    if (!stackable)
+        return 0;
+
+    if (subtype <= 5)
+        return subtype - 1;
+    else if (subtype < 10)
+        return to_underlying(StackSizeOffset::Five);
+    else if (subtype < 25)
+        return to_underlying(StackSizeOffset::Ten);
+    else if (subtype < 50)
+        return to_underlying(StackSizeOffset::TwentyFive);
+    else
+        return to_underlying(StackSizeOffset::Fifty);
+}
+
 const TextureInfo ItemType::getTextureInfo(TextureInfo::CoordinateType coordinateType) const
 {
     uint32_t spriteId = appearance->getFirstSpriteId();
@@ -42,6 +60,16 @@ const TextureInfo ItemType::getTextureInfo(uint32_t spriteId, TextureInfo::Coord
     info.window = info.atlas->getTextureWindow(spriteId, coordinateType);
 
     return info;
+}
+
+const TextureInfo ItemType::getTextureInfoForSubtype(uint8_t subtype, TextureInfo::CoordinateType coordinateType) const
+{
+    const SpriteInfo &spriteInfo = appearance->getSpriteInfo();
+
+    uint32_t spriteIndex = getPatternIndexForSubtype(subtype);
+    uint32_t spriteId = spriteInfo.spriteIds.at(spriteIndex);
+
+    return getTextureInfo(spriteId, coordinateType);
 }
 
 std::vector<TextureAtlas *> ItemType::getTextureAtlases() const

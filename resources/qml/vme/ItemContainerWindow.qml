@@ -106,6 +106,7 @@ Item {
       id: itemSlot
 
       required property int serverId
+      required property int subtype
       required property int index
 
       // width : itemContainerView.cellWidth
@@ -126,7 +127,7 @@ Item {
           anchors.fill: parent
           source: {
             // console.log(itemSlot.serverId);
-            return itemSlot.serverId != -1 ? "image://itemTypes/" + itemSlot.serverId : ""
+            return itemSlot.serverId != -1 ? "image://itemTypes/" + itemSlot.serverId + ":" + itemSlot.subtype : ""
           }
         }
 

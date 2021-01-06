@@ -168,6 +168,17 @@ QVariant ContainerModel::data(const QModelIndex &modelIndex, int role) const
             return container()->itemAt(index).serverId();
         }
     }
+    else if (role == SubtypeRole)
+    {
+        if (index >= container()->size())
+        {
+            return -1;
+        }
+        else
+        {
+            return container()->itemAt(index).subtype();
+        }
+    }
 
     return QVariant();
 }
@@ -176,6 +187,7 @@ QHash<int, QByteArray> ContainerModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[ServerIdRole] = "serverId";
+    roles[SubtypeRole] = "subtype";
 
     return roles;
 }

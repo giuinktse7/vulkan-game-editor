@@ -25,7 +25,8 @@ namespace PropertiesUI
 
         enum ContainerModelRole
         {
-            ServerIdRole = Qt::UserRole + 1
+            ServerIdRole = Qt::UserRole + 1,
+            SubtypeRole = Qt::UserRole + 2
         };
 
         ContainerModel(ContainerNode *treeNode, QObject *parent = 0);
