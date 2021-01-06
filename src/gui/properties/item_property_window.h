@@ -11,14 +11,14 @@
 #include <optional>
 #include <unordered_map>
 
-#include "../item.h"
-#include "../items.h"
-#include "../signal.h"
-#include "../tracked_item.h"
-#include "../util.h"
-#include "draggable_item.h"
-#include "properties/property_container_tree.h"
-#include "qt_util.h"
+#include "../../item.h"
+#include "../../items.h"
+#include "../../signal.h"
+#include "../../tracked_item.h"
+#include "../../util.h"
+#include "../draggable_item.h"
+#include "../qt_util.h"
+#include "property_container_tree.h"
 
 class MainWindow;
 class ItemPropertyWindow;

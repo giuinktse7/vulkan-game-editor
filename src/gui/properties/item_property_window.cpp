@@ -5,10 +5,10 @@
 #include <QQmlProperty>
 #include <QWidget>
 
-#include "../../vendor/rollbear-visit/visit.hpp"
-#include "../qt/logging.h"
-#include "draggable_item.h"
-#include "mainwindow.h"
+#include "../../../vendor/rollbear-visit/visit.hpp"
+#include "../../qt/logging.h"
+#include "../draggable_item.h"
+#include "../mainwindow.h"
 
 namespace ObjectName
 {
@@ -18,28 +18,6 @@ namespace ObjectName
 
     constexpr auto ItemContainerArea = "item_container_area";
 } // namespace ObjectName
-
-PropertyWindowEventFilter::PropertyWindowEventFilter(ItemPropertyWindow *parent)
-    : QtUtil::EventFilter(static_cast<QObject *>(parent)), propertyWindow(parent) {}
-
-bool PropertyWindowEventFilter::eventFilter(QObject *obj, QEvent *event)
-{
-    switch (event->type())
-    {
-        case QEvent::MouseMove:
-            if (propertyWindow->dragOperation)
-            {
-                auto mouseEvent = static_cast<QMouseEvent *>(event);
-                propertyWindow->dragOperation->mouseMoveEvent(mouseEvent);
-                return false;
-            }
-            break;
-        default:
-            break;
-    }
-
-    return QObject::eventFilter(obj, event);
-}
 
 ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
     : _url(url), mainWindow(mainWindow), _wrapperWidget(nullptr)
@@ -393,8 +371,36 @@ void ItemPropertyWindow::startContainerItemDrag(PropertiesUI::ContainerNode *tre
 
 QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
 {
-    bool success;
-    auto serverId = id.toInt(&success);
+    //id is either 'serverId' or 'serverId:subtype'.
+    auto parts = id.split(':');
+
+    uint32_t serverId;
+    uint8_t subtype = 0;
+
+    bool success = false;
+
+    // No subtype if only one part
+    if (parts.size() == 1)
+    {
+
+        serverId = parts.at(0).toInt(&success);
+    }
+    else
+    {
+        DEBUG_ASSERT(parts.size() == 2, "Must have 2 parts here; a serverId and a subtype");
+        bool ok;
+        serverId = parts.at(0).toInt(&ok);
+        if (ok)
+        {
+            int parsedSubtype = parts.at(1).toInt(&success);
+            if (success)
+            {
+                DEBUG_ASSERT(0 <= subtype && subtype <= UINT8_MAX, "Subtype out of bounds.");
+                subtype = static_cast<uint8_t>(parsedSubtype);
+            }
+        }
+    }
+
     if (!success)
     {
         QPixmap pixmap(32, 32);
@@ -402,5 +408,33 @@ QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, con
         return pixmap;
     }
 
-    return QtUtil::itemPixmap(serverId);
+    return QtUtil::itemPixmap(serverId, subtype);
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>PropertyWindowEventFilter>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+PropertyWindowEventFilter::PropertyWindowEventFilter(ItemPropertyWindow *parent)
+    : QtUtil::EventFilter(static_cast<QObject *>(parent)), propertyWindow(parent) {}
+
+bool PropertyWindowEventFilter::eventFilter(QObject *obj, QEvent *event)
+{
+    switch (event->type())
+    {
+        case QEvent::MouseMove:
+            if (propertyWindow->dragOperation)
+            {
+                auto mouseEvent = static_cast<QMouseEvent *>(event);
+                propertyWindow->dragOperation->mouseMoveEvent(mouseEvent);
+                return false;
+            }
+            break;
+        default:
+            break;
+    }
+
+    return QObject::eventFilter(obj, event);
 }
