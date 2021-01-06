@@ -341,6 +341,11 @@ void MainWindow::initializeUI()
 
     itemPalette->addItem(2148);
 
+    // Containers
+    itemPalette->addItem(2000);
+    itemPalette->addItem(2595);
+    itemPalette->addItem(1987);
+
     itemPalette->addItem(103);
     itemPalette->addItems(1533, 1542);
     itemPalette->addItems(5315, 5331);

@@ -232,6 +232,9 @@ set(GuiSources
     src/map_renderer.h
     src/qt/qt_vulkan_info.h
     src/gui/draggable_item.h
+    src/gui/properties/property_container_tree.h
+    src/gui/properties/container_model.h
+    src/gui/properties/container_list_model.h
     src/main.h
     src/main.cpp
     src/qt/enum_conversion.cpp
@@ -249,6 +252,9 @@ set(GuiSources
     src/gui/map_tab_widget.cpp
     src/map_renderer.cpp
     src/gui/draggable_item.cpp
+    src/gui/properties/property_container_tree.cpp
+    src/gui/properties/container_model.cpp
+    src/gui/properties/container_list_model.cpp
     src/qt/qt_vulkan_info.cpp)
 
 add_library(gui STATIC ${GuiSources})

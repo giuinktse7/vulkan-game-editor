@@ -46,24 +46,28 @@ Item {
 
     Image {
       anchors.verticalCenter: parent.verticalCenter
-      width: 12
-      height: 12
+      width: 13
+      height: 13
       source: {
-        const serverId = 1987
-        return serverId != -1 ? "image://itemTypes/" + serverId : ""
+        const serverId = model.containerServerId;
+        return serverId != -1 ? "image://itemTypes/" + serverId : "";
       }
     }
 
     Text {
-      x: parent.x + 14
+      x: parent.x + 15
       anchors.verticalCenter: parent.verticalCenter
       font {
         pointSize: 8
-        family: Vme.Constants.labelFontFamily
-        // capitalization : Font.AllUppercase
+        weight: Font.Bold
+        // family: Vme.Constants.labelFontFamily
+        family: "Verdana"
+         capitalization : Font.Capitalize
       }
-      text: "Contents"
-      color: "#ccc"
+      renderType: Text.NativeRendering
+      antialiasing: false
+      text: model.containerName
+      color: "#909090"
     }
 
     Rectangle {
