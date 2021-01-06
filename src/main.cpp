@@ -17,7 +17,6 @@
 #include "config.h"
 #include "ecs/ecs.h"
 #include "graphics/appearances.h"
-#include "gui/borderless_window.h"
 #include "gui/map_tab_widget.h"
 #include "gui/map_view_widget.h"
 #include "gui/vulkan_window.h"
@@ -144,7 +143,8 @@ void TemporaryTest::loadAllTexturesIntoMemory()
     VME_LOG_D("loadTextures() ms: " << start.elapsedMillis());
 }
 
-MainApplication::MainApplication(int &argc, char **argv) : QApplication(argc, argv)
+MainApplication::MainApplication(int &argc, char **argv)
+    : QApplication(argc, argv)
 {
     connect(this, &QApplication::applicationStateChanged, this, &MainApplication::onApplicationStateChanged);
     connect(this, &QApplication::focusWindowChanged, this, &MainApplication::onFocusWindowChanged);

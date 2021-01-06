@@ -9,7 +9,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "../creature.h"
 #include "../file.h"
 #include "../logger.h"
 #include "../time_point.h"
@@ -55,7 +54,7 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
     TimePoint startOutfits;
     for (int i = 0; i < parsed.outfit_size(); ++i)
     {
-        Creatures::addCreatureType(parsed.outfit(i));
+        Creatures::addCreatureType(parseCreatureType(parsed.outfit(i)));
     }
     auto outfitsMs = startOutfits.elapsedMillis();
 
@@ -231,13 +230,9 @@ size_t Appearances::objectCount()
     return Appearances::_objects.size();
 }
 
-SpriteInfo SpriteInfo::fromProtobufData(proto::SpriteInfo spriteInfo)
+SpriteInfo Appearances::parseSpriteInfo(const proto::SpriteInfo &spriteInfo)
 {
-    SpriteInfo info{};
-    if (spriteInfo.has_animation())
-    {
-        info._animation = std::make_unique<SpriteAnimation>(SpriteAnimation::fromProtobufData(spriteInfo.animation()));
-    }
+    SpriteInfo info = spriteInfo.has_animation() ? SpriteInfo(Appearances::parseSpriteAnimation(spriteInfo.animation())) : SpriteInfo();
     info.boundingSquare = spriteInfo.bounding_square();
     info.isOpaque = spriteInfo.bounding_square();
     info.layers = spriteInfo.layers();
@@ -259,7 +254,7 @@ SpriteAnimation *SpriteInfo::animation() const
     return _animation.get();
 }
 
-SpriteAnimation SpriteAnimation::fromProtobufData(proto::SpriteAnimation animation)
+SpriteAnimation Appearances::parseSpriteAnimation(const proto::SpriteAnimation &animation)
 {
     SpriteAnimation anim{};
     anim.defaultStartPhase = animation.default_start_phase();
@@ -300,6 +295,23 @@ SpriteAnimation SpriteAnimation::fromProtobufData(proto::SpriteAnimation animati
     return anim;
 }
 
+CreatureType Appearances::parseCreatureType(const proto::Appearance &appearance)
+{
+    std::vector<FrameGroup> frameGroups;
+    frameGroups.reserve(appearance.frame_group_size());
+    for (int i = 0; i < appearance.frame_group_size(); ++i)
+    {
+        const auto frameGroup = appearance.frame_group().at(i);
+        const auto &spriteInfo = frameGroup.sprite_info();
+
+        frameGroups.emplace_back<FrameGroup>({static_cast<FixedFrameGroup>(frameGroup.fixed_frame_group()),
+                                              static_cast<uint32_t>(frameGroup.id()),
+                                              Appearances::parseSpriteInfo(spriteInfo)});
+    }
+
+    return CreatureType(appearance.id(), std::move(frameGroups));
+}
+
 /*
     Constructs an Appearance from protobuf Appearance data.
 */
@@ -321,7 +333,7 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
         auto group = protobufAppearance.frame_group(0);
         frameGroups.emplace_back(static_cast<FixedFrameGroup>(group.fixed_frame_group()),
                                  static_cast<uint32_t>(group.id()),
-                                 SpriteInfo::fromProtobufData(spriteInfo));
+                                 Appearances::parseSpriteInfo(spriteInfo));
     }
     else
     {

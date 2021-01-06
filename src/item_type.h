@@ -2,12 +2,25 @@
 
 #include <array>
 
-#include "const.h"
-#include "graphics/appearances.h"
+#include "graphics/appearance_types.h"
 #include "graphics/texture_atlas.h"
+#include "position.h"
+#include "sprite_info.h"
 
 #pragma warning(push)
 #pragma warning(disable : 26812)
+
+class ObjectAppearance;
+struct SpriteAnimation;
+
+enum class ItemDataType
+{
+    Normal,
+    Teleport,
+    HouseDoor,
+    Depot,
+    Container
+};
 
 enum FloorChange
 {
@@ -172,6 +185,9 @@ class ItemType
     const TextureInfo getTextureInfo(uint32_t spriteId, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
     const TextureInfo getTextureInfo(const Position &pos, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
 
+    const SpriteInfo &getSpriteInfo(size_t frameGroup) const;
+    const SpriteInfo &getSpriteInfo() const;
+
     // For debugging purposes
     std::vector<TextureAtlas *> getTextureAtlases() const;
 
@@ -201,8 +217,8 @@ class ItemType
 
     bool usesSubType() const noexcept;
     bool isStackable() const noexcept;
-    inline bool isGroundBorder() const noexcept;
-    inline bool hasFlag(AppearanceFlag flag) const noexcept;
+    bool isGroundBorder() const noexcept;
+    bool hasFlag(AppearanceFlag flag) const noexcept;
 
     /*
     The items.otb may report a client ID that is incorrect. One such example
@@ -211,13 +227,16 @@ class ItemType
     If the client ID is incorrect, it is set to 0.
   */
     inline bool isValid() const noexcept;
-    inline bool hasAnimation() const noexcept;
-    inline SpriteAnimation *animation() const noexcept;
+    bool hasAnimation() const noexcept;
+    SpriteAnimation *animation() const noexcept;
 
     std::string getPluralName() const;
 
-    inline int getElevation() const noexcept;
+    int getElevation() const noexcept;
     bool hasElevation() const noexcept;
+
+    uint32_t speed() const noexcept;
+    ItemSlot inventorySlot() const noexcept;
 
     std::string editorsuffix;
     std::string name;
@@ -315,9 +334,6 @@ class ItemType
 
     ObjectAppearance *appearance = nullptr;
 
-    inline uint32_t speed() const noexcept;
-    inline ItemSlot inventorySlot() const noexcept;
-
   private:
     static constexpr size_t CachedTextureAtlasAmount = 5;
 
@@ -325,21 +341,6 @@ class ItemType
 
     void cacheTextureAtlas(uint32_t spriteId);
 };
-
-inline uint32_t ItemType::speed() const noexcept
-{
-    return isGroundTile() ? appearance->flagData.groundSpeed : 0;
-}
-
-inline ItemSlot ItemType::inventorySlot() const noexcept
-{
-    return appearance->flagData.itemSlot;
-}
-
-inline bool ItemType::hasFlag(AppearanceFlag flag) const noexcept
-{
-    return appearance->hasFlag(flag);
-}
 
 inline bool ItemType::isGroundBorder() const noexcept
 {
@@ -349,26 +350,6 @@ inline bool ItemType::isGroundBorder() const noexcept
 inline bool ItemType::isValid() const noexcept
 {
     return clientId != 0;
-}
-
-inline bool ItemType::hasAnimation() const noexcept
-{
-    return appearance->getSpriteInfo().hasAnimation();
-}
-
-inline SpriteAnimation *ItemType::animation() const noexcept
-{
-    return appearance->getSpriteInfo().animation();
-}
-
-inline int ItemType::getElevation() const noexcept
-{
-    return appearance->flagData.elevation;
-}
-
-inline bool ItemType::hasElevation() const noexcept
-{
-    return appearance->hasFlag(AppearanceFlag::Height);
 }
 
 inline TextureAtlas *ItemType::getFirstTextureAtlas() const noexcept

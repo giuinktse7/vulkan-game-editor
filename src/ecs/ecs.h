@@ -1,6 +1,5 @@
 #pragma once
 
-#include <bitset>
 #include <memory>
 #include <optional>
 #include <queue>
@@ -12,80 +11,12 @@
 #include "../debug.h"
 #include "../util.h"
 #include "component_array.h"
+#include "ecs_system.h"
 #include "entity.h"
 
 class ECS;
 
 extern ECS g_ecs;
-
-constexpr size_t MaxEntityComponents = 32;
-
-namespace ecs
-{
-    using ComponentBitset = std::bitset<MaxEntityComponents>;
-
-    class Entity
-    {
-      public:
-        virtual ~Entity()
-        {
-            destroyEntity();
-        }
-
-        template <typename T>
-        bool hasComponent() const;
-        template <typename T>
-        T *getComponent() const;
-        template <typename T>
-        T *addComponent(T component) const;
-
-        EntityId assignNewEntityId();
-        void markForDestruction();
-
-        virtual std::optional<EntityId> getEntityId() const = 0;
-
-        virtual bool isEntity() const = 0;
-
-        virtual void setEntityId(EntityId id) = 0;
-
-        virtual void destroyEntity() {}
-    };
-
-    class OptionalEntity : public Entity
-    {
-      public:
-        std::optional<ecs::EntityId> getEntityId() const override;
-        bool isEntity() const override;
-
-        void setEntityId(ecs::EntityId id) override;
-
-        void destroyEntity() override;
-
-        std::optional<EntityId> entityId;
-    };
-
-    class System
-    {
-      public:
-        void clear()
-        {
-            entities.clear();
-        }
-
-        virtual ~System()
-        {
-            //Empty
-        }
-
-      protected:
-        friend class ::ECS;
-
-        virtual std::vector<const char *> getRequiredComponents() const = 0;
-
-        ecs::ComponentBitset componentBitset;
-        std::unordered_set<EntityId> entities;
-    };
-} // namespace ecs
 
 class ECS
 {

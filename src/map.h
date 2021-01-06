@@ -10,10 +10,8 @@
 
 #include "debug.h"
 
-#include "item.h"
 #include "position.h"
 #include "quad_tree.h"
-#include "tile.h"
 #include "tile_location.h"
 #include "util.h"
 

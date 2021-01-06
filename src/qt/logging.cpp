@@ -1,11 +1,10 @@
-#include "../graphics/appearances.h"
+#include "logging.h"
 
 #include <sstream>
 
 #include <QPoint>
 #include <QPointF>
 #include <QRect>
-#include <QString>
 
 std::ostream &operator<<(std::ostream &os, QPoint point)
 {

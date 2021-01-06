@@ -7,6 +7,7 @@
 #include "../logger.h"
 #include "../random.h"
 #include "../type_trait.h"
+#include "ecs.h"
 
 constexpr TypeList<ItemAnimationComponent> requiredComponents;
 

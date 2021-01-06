@@ -171,7 +171,7 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
             return;
         }
 
-        ItemData::Container *container = item->getOrCreateContainer();
+        Container *container = item->getOrCreateContainer();
         container->setParent(&mapView, position);
 
         if (container->empty())
@@ -433,14 +433,14 @@ int GuiItemContainer::ContainerModel::capacity()
     return static_cast<int>(treeNode->container()->capacity());
 }
 
-ItemData::Container *GuiItemContainer::ContainerModel::container() const noexcept
+Container *GuiItemContainer::ContainerModel::container() const noexcept
 {
     return treeNode->container();
 }
 
-ItemData::Container *GuiItemContainer::ContainerModel::container() noexcept
+Container *GuiItemContainer::ContainerModel::container() noexcept
 {
-    return const_cast<ItemData::Container *>(const_cast<const GuiItemContainer::ContainerModel *>(this)->container());
+    return const_cast<Container *>(const_cast<const GuiItemContainer::ContainerModel *>(this)->container());
 }
 
 bool GuiItemContainer::ContainerModel::addItem(Item &&item)
@@ -654,7 +654,7 @@ Item *GuiItemContainer::ContainerNode::containerItem() const
     return trackedContainerItem.item();
 }
 
-ItemData::Container *GuiItemContainer::ContainerNode::container()
+Container *GuiItemContainer::ContainerNode::container()
 {
     return trackedContainerItem.item()->getOrCreateContainer();
 }

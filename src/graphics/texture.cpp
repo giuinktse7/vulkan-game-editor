@@ -98,3 +98,8 @@ std::vector<uint8_t> Texture::copyPixels() const
     std::vector<uint8_t> copy = _pixels;
     return copy;
 }
+
+glm::vec4 TextureWindow::asVec4() const noexcept
+{
+    return glm::vec4(x0, y0, x1, y1);
+}

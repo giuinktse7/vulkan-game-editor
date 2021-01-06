@@ -11,7 +11,7 @@ ContainerItem::ContainerItem(Item &item)
     assert(item.isContainer());
     if (item.itemDataType() != ItemDataType::Container)
     {
-        item.setItemData(ItemData::Container(item.itemType->volume));
+        item.setItemData(Container(item.itemType->volume));
     }
 }
 
@@ -35,9 +35,9 @@ std::optional<ContainerItem> ContainerItem::wrap(Item &item)
     return container;
 }
 
-ItemData::Container *ContainerItem::container() const
+Container *ContainerItem::container() const
 {
-    return dynamic_cast<ItemData::Container *>(item->data());
+    return dynamic_cast<Container *>(item->data());
 }
 
 size_t ContainerItem::containerSize() const

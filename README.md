@@ -103,3 +103,7 @@ There are four targets:
 - **vme_tests** (Executable): Contains tests for the `common` and `gui` libraries (See [Run tests using CMake](#run-tests-using-cmake)).
 
 The main purpose of having the `common` and `gui` library separate from the `main` target was to enable running unit tests against the code. It also ensures that there is no coupling introduced between core editor functionality and Qt6 (`common` does not have Qt6 as a dependency).
+
+## Investigate build performance
+
+[VS Build Insights](https://devblogs.microsoft.com/cppblog/introducing-c-build-insights/)

@@ -1,16 +1,15 @@
 #include "map_renderer.h"
 
+#include <glm/vec2.hpp>
 #include <stdexcept>
 #include <variant>
 
-#include "file.h"
-#include "position.h"
-
-#include "graphics/appearances.h"
-
 #include "debug.h"
 #include "ecs/ecs.h"
+#include "file.h"
+#include "graphics/appearances.h"
 #include "logger.h"
+#include "position.h"
 #include "util.h"
 
 /** Order of members matter for this struct due to alignment requirements in the 
@@ -714,7 +713,7 @@ VkDescriptorSet MapRenderer::objectDescriptorSet(const DrawInfo::Base &info)
 
 void MapRenderer::updateUniformBuffer()
 {
-    glm::mat4 projection = vulkanInfo.projectionMatrix(*mapView);
+    glm::mat4 projection = vulkanInfo.projectionMatrix(mapView);
     // const auto p = projection;
     // std::ostringstream s;
     // VME_LOG_D("Next:");

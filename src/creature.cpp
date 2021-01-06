@@ -4,25 +4,15 @@
 
 vme_unordered_map<uint32_t, CreatureType> Creatures::_creatureTypes;
 
-void Creatures::addCreatureType(const tibia::protobuf::appearances::Appearance &appearance)
+CreatureType::CreatureType(uint32_t id, std::vector<FrameGroup> &&frameGroups)
+    : _id(id), _frameGroups(std::move(frameGroups)) {}
+
+void Creatures::addCreatureType(CreatureType &&creatureType)
 {
-    Creatures::_creatureTypes.emplace(appearance.id(), appearance);
+    uint32_t id = creatureType.id();
 
-    _creatureTypes.at(appearance.id()).cacheTextureAtlases();
-}
-
-CreatureType::CreatureType(const tibia::protobuf::appearances::Appearance &appearance)
-    : _id(appearance.id())
-{
-    for (int i = 0; i < appearance.frame_group_size(); ++i)
-    {
-        const auto frameGroup = appearance.frame_group().at(i);
-        const auto &spriteInfo = frameGroup.sprite_info();
-
-        _frameGroups.emplace_back<FrameGroup>({static_cast<FixedFrameGroup>(frameGroup.fixed_frame_group()),
-                                               static_cast<uint32_t>(frameGroup.id()),
-                                               SpriteInfo::fromProtobufData(spriteInfo)});
-    }
+    _creatureTypes.emplace(id, std::move(creatureType));
+    _creatureTypes.at(id).cacheTextureAtlases();
 }
 
 const FrameGroup &CreatureType::frameGroup(size_t index) const

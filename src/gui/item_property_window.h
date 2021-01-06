@@ -48,8 +48,8 @@ namespace GuiItemContainer
         int capacity();
         int size();
 
-        ItemData::Container *container() noexcept;
-        ItemData::Container *container() const noexcept;
+        Container *container() noexcept;
+        Container *container() const noexcept;
 
         void refresh();
 
@@ -150,10 +150,10 @@ namespace GuiItemContainer
 
         void itemDropEvent(int index, ItemDrag::DraggableItem *droppedItem);
         void itemDragStartEvent(int index);
-        ItemData::Container *container();
+        Container *container();
         Item *containerItem() const;
 
-        // ItemData::Container *container;
+        // Container *container;
         std::unordered_map<int, std::unique_ptr<ContainerNode>> children;
 
       protected:

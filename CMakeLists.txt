@@ -71,11 +71,13 @@ set(CommonSources
     src/definitions.h
     src/ecs/component_array.h
     src/ecs/ecs.h
+    src/ecs/ecs_system.h
     src/ecs/entity.h
     src/ecs/item_animation.h
     src/file.h
     src/editor_action.h
     src/graphics/appearances.h
+    src/graphics/appearance_types.h
     src/graphics/buffer.h
     src/graphics/compression.h
     src/graphics/device_manager.h
@@ -92,11 +94,13 @@ set(CommonSources
     src/graphics/vulkan_debug.h
     src/graphics/vulkan_helpers.h
     src/item.h
+    src/item_data.h
     src/item_wrapper.h
     src/tracked_item.h
     src/items.h
     src/item_attribute.h
     src/item_type.h
+    src/sprite_info.h
     src/logger.h
     ../vendor/lzma/7zTypes.h
     ../vendor/lzma/Alloc.h
@@ -148,6 +152,7 @@ set(CommonSources
     src/camera.cpp
     src/otbm.cpp
     src/ecs/ecs.cpp
+    src/ecs/entity.cpp
     src/ecs/item_animation.cpp
     src/file.cpp
     src/editor_action.cpp
@@ -163,11 +168,13 @@ set(CommonSources
     src/graphics/texture_atlas.cpp
     src/graphics/vulkan_debug.cpp
     src/item.cpp
+    src/item_data.cpp
     src/item_wrapper.cpp
     src/tracked_item.cpp
     src/items.cpp
     src/item_attribute.cpp
     src/item_type.cpp
+    src/sprite_info.cpp
     src/logger.cpp
     src/map.cpp
     src/save_map.cpp
@@ -211,7 +218,7 @@ set(GuiSources
     src/qt/enum_conversion.h
     src/qt/logging.h
     src/gui/gui.h
-    src/gui/borderless_window.h
+    # src/gui/borderless_window.h
     src/gui/border_layout.h
     src/gui/split_widget.h
     src/gui/item_list.h
@@ -229,7 +236,7 @@ set(GuiSources
     src/main.cpp
     src/qt/enum_conversion.cpp
     src/qt/logging.cpp
-    src/gui/borderless_window.cpp
+    # src/gui/borderless_window.cpp
     src/gui/border_layout.cpp
     src/gui/split_widget.cpp
     src/gui/item_list.cpp

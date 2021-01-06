@@ -2,6 +2,7 @@
 
 #include "ecs/ecs.h"
 #include "ecs/item_animation.h"
+#include "graphics/appearances.h"
 
 const uint32_t ItemType::getPatternIndex(const Position &pos) const
 {
@@ -127,6 +128,51 @@ std::vector<const TextureAtlas *> ItemType::atlases() const
     }
 
     return result;
+}
+
+const SpriteInfo &ItemType::getSpriteInfo(size_t frameGroup) const
+{
+    return appearance->getSpriteInfo(frameGroup);
+}
+
+const SpriteInfo &ItemType::getSpriteInfo() const
+{
+    return appearance->getSpriteInfo();
+}
+
+uint32_t ItemType::speed() const noexcept
+{
+    return isGroundTile() ? appearance->flagData.groundSpeed : 0;
+}
+
+ItemSlot ItemType::inventorySlot() const noexcept
+{
+    return appearance->flagData.itemSlot;
+}
+
+bool ItemType::hasFlag(AppearanceFlag flag) const noexcept
+{
+    return appearance->hasFlag(flag);
+}
+
+bool ItemType::hasAnimation() const noexcept
+{
+    return appearance->getSpriteInfo().hasAnimation();
+}
+
+SpriteAnimation *ItemType::animation() const noexcept
+{
+    return appearance->getSpriteInfo().animation();
+}
+
+int ItemType::getElevation() const noexcept
+{
+    return appearance->flagData.elevation;
+}
+
+bool ItemType::hasElevation() const noexcept
+{
+    return appearance->hasFlag(AppearanceFlag::Height);
 }
 
 // std::vector<TextureAtlas> atlases()

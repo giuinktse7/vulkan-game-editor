@@ -258,12 +258,12 @@ QDataStream &ItemDrag::MapItem::serializeInto(QDataStream &dataStream) const
     return dataStream << (*this);
 }
 
-ItemData::Container *ItemDrag::ContainerItemDrag::container()
+Container *ItemDrag::ContainerItemDrag::container()
 {
-    return const_cast<ItemData::Container *>(const_cast<const ItemDrag::ContainerItemDrag *>(this)->container());
+    return const_cast<Container *>(const_cast<const ItemDrag::ContainerItemDrag *>(this)->container());
 }
 
-ItemData::Container *ItemDrag::ContainerItemDrag::container() const
+Container *ItemDrag::ContainerItemDrag::container() const
 {
     auto current = mapView->getTile(position)->itemAt(tileIndex);
 
@@ -272,10 +272,10 @@ ItemData::Container *ItemDrag::ContainerItemDrag::container() const
     for (auto it = containerIndices.begin(); it != containerIndices.end() - 1; ++it)
     {
         uint16_t index = *it;
-        current = &current->getDataAs<ItemData::Container>()->itemAt(index);
+        current = &current->getDataAs<Container>()->itemAt(index);
     }
 
-    return current->getDataAs<ItemData::Container>();
+    return current->getDataAs<Container>();
 }
 
 Item &ItemDrag::ContainerItemDrag::draggedItem() const

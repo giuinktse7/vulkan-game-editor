@@ -102,7 +102,7 @@ namespace MapHistory
 
         uint16_t containerIndex() const;
 
-        ItemData::Container *container(MapView &mapView);
+        Container *container(MapView &mapView);
     };
 
     class MoveFromContainerToContainer : public ChangeItem

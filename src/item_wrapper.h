@@ -6,10 +6,7 @@
 #include <optional>
 
 class Item;
-namespace ItemData
-{
-    struct Container;
-}
+struct Container;
 
 struct ItemWrapper
 {
@@ -36,7 +33,7 @@ struct ContainerItem : public ItemWrapper
     const Item &itemAt(size_t index) const;
     Item &itemAt(size_t index);
 
-    ItemData::Container *container() const;
+    Container *container() const;
 
   private:
     ContainerItem(Item &item);

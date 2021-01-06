@@ -22,10 +22,7 @@ class MapView;
 class Tile;
 class Item;
 struct ContainerItem;
-namespace ItemData
-{
-    struct Container;
-}
+struct Container;
 
 namespace ItemDrag
 {
@@ -108,8 +105,8 @@ namespace ItemDrag
         uint16_t tileIndex;
         std::vector<uint16_t> containerIndices;
 
-        ItemData::Container *container();
-        ItemData::Container *container() const;
+        Container *container();
+        Container *container() const;
         Item &draggedItem() const;
 
       protected:

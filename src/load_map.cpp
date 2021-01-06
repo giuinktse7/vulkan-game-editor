@@ -593,7 +593,7 @@ std::optional<std::string> OTBM::OTBM1Deserializer::deserializeItemAttributes(It
             case OTBM::NodeAttribute::TeleportDestination:
             {
                 Position destination = buffer.readPosition();
-                ItemData::Teleport data(destination);
+                Teleport data(destination);
 
                 item.setItemData(std::move(data));
                 break;
@@ -601,7 +601,7 @@ std::optional<std::string> OTBM::OTBM1Deserializer::deserializeItemAttributes(It
             case OTBM::NodeAttribute::HouseDoorId:
             {
                 uint8_t doorId = buffer.nextU8();
-                ItemData::HouseDoor data(doorId);
+                HouseDoor data(doorId);
 
                 item.setItemData(std::move(data));
                 break;
@@ -609,7 +609,7 @@ std::optional<std::string> OTBM::OTBM1Deserializer::deserializeItemAttributes(It
             case OTBM::NodeAttribute::DepotId:
             {
                 uint16_t depotId = buffer.nextU16();
-                ItemData::Depot data(depotId);
+                Depot data(depotId);
 
                 item.setItemData(std::move(data));
                 break;

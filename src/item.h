@@ -1,56 +1,24 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include <optional>
 #include <unordered_map>
 
-#include "ecs/ecs.h"
+#include "ecs/entity.h"
 #include "graphics/texture_atlas.h"
 #include "item_attribute.h"
+#include "item_data.h"
 #include "item_type.h"
 #include "item_wrapper.h"
 #include "position.h"
 
 class Tile;
-
-enum class ItemDataType
-{
-    Normal,
-    Teleport,
-    HouseDoor,
-    Depot,
-    Container
-};
+struct Container;
 
 class Item : public ecs::OptionalEntity
 {
     using ItemTypeId = uint32_t;
 
   public:
-    struct Data
-    {
-        Data() : _item(nullptr) {}
-
-        Data(Item *item) : _item(item) {}
-
-        virtual ItemDataType type() const noexcept = 0;
-        virtual std::unique_ptr<Item::Data> copy() const = 0;
-
-        Item *item() const noexcept
-        {
-            return _item;
-        }
-
-        virtual void setItem(Item *item)
-        {
-            _item = item;
-        }
-
-      protected:
-        // The item that the data belongs to
-        Item *_item;
-    };
-
     Item(ItemTypeId serverId);
     ~Item();
 
@@ -91,14 +59,14 @@ class Item : public ecs::OptionalEntity
     inline void setCount(uint8_t count) noexcept;
     inline void setCharges(uint8_t charges) noexcept;
 
-    ItemData::Container *getOrCreateContainer();
+    Container *getOrCreateContainer();
 
     template <class T>
     void setItemData(T &&itemData);
-    void setItemData(ItemData::Container &&container);
-    inline Item::Data *data() const;
+    void setItemData(Container &&container);
+    inline ItemData *data() const;
 
-    template <typename T, typename std::enable_if<std::is_base_of<Item::Data, T>::value>::type * = nullptr>
+    template <typename T>
     inline T *getDataAs() const;
 
     const std::unordered_map<ItemAttribute_t, ItemAttribute> *attributes() const noexcept;
@@ -123,7 +91,7 @@ class Item : public ecs::OptionalEntity
     const uint32_t getPatternIndex(const Position &pos) const;
 
     std::unique_ptr<std::unordered_map<ItemAttribute_t, ItemAttribute>> _attributes;
-    std::unique_ptr<Item::Data> _itemData;
+    std::unique_ptr<ItemData> _itemData;
     // Subtype is either fluid type, count, subtype, or charges.
     uint8_t _subtype = 1;
 };
@@ -207,17 +175,12 @@ inline bool Item::operator==(const Item &rhs) const
 template <class T>
 inline void Item::setItemData(T &&itemData)
 {
-    static_assert(std::is_base_of<Item::Data, T>::value, "Bad type.");
+    static_assert(std::is_base_of<ItemData, T>::value, "Bad type.");
 
     _itemData = std::make_unique<T>(std::move(itemData));
 }
 
-inline Item::Data *Item::data() const
-{
-    return _itemData.get();
-}
-
-template <typename T, typename std::enable_if<std::is_base_of<Item::Data, T>::value>::type *>
+template <typename T>
 inline T *Item::getDataAs() const
 {
     return static_cast<T *>(_itemData.get());
@@ -233,144 +196,3 @@ inline bool Item::isContainer() const noexcept
 {
     return itemType->isContainer();
 }
-
-namespace ItemData
-{
-    struct Teleport : public Item::Data
-    {
-        Teleport(const Position destination) : destination(destination) {}
-        ItemDataType type() const noexcept override
-        {
-            return ItemDataType::Teleport;
-        }
-
-        std::unique_ptr<Item::Data> copy() const override
-        {
-            return std::make_unique<Teleport>(destination);
-        }
-
-        Position destination;
-    };
-
-    struct HouseDoor : public Item::Data
-    {
-        HouseDoor(uint8_t doorId) : doorId(doorId) {}
-
-        ItemDataType type() const noexcept override
-        {
-            return ItemDataType::HouseDoor;
-        }
-
-        std::unique_ptr<Item::Data> copy() const override
-        {
-            return std::make_unique<HouseDoor>(doorId);
-        }
-
-        uint8_t doorId;
-    };
-
-    struct Depot : public Item::Data
-    {
-        Depot(uint16_t depotId) : depotId(depotId) {}
-
-        ItemDataType type() const noexcept override
-        {
-            return ItemDataType::Depot;
-        }
-
-        std::unique_ptr<Item::Data> copy() const override
-        {
-            return std::make_unique<Depot>(depotId);
-        }
-
-        uint16_t depotId;
-    };
-
-    struct Container : public Item::Data
-    {
-      public:
-        struct HistoryParent
-        {
-        };
-
-        struct TileParent
-        {
-            Position position;
-            MapView *mapView;
-        };
-
-        using Parent = std::variant<std::monostate, HistoryParent, TileParent, Container *>;
-
-      public:
-        Container(uint16_t capacity) : _capacity(capacity) {}
-        Container(uint16_t capacity, Item *item) : Item::Data(item), _capacity(capacity) {}
-        Container(uint16_t capacity, Item *item, Parent parent) : Item::Data(item), _capacity(capacity) {}
-        Container(uint16_t capacity, const std::vector<Item> &items);
-        ~Container();
-
-        Container(Container &&other) noexcept;
-        Container &operator=(Container &&other) noexcept;
-
-        ItemDataType type() const noexcept override;
-        std::unique_ptr<Item::Data> copy() const override;
-        void setItem(Item *item) override
-        {
-            _item = item;
-            _parent = std::monostate{};
-        }
-
-        const std::vector<Item>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
-
-        bool insertItemTracked(Item &&item, size_t index);
-        Item dropItemTracked(size_t index);
-
-        bool insertItem(Item &&item, size_t index);
-        bool addItem(Item &&item);
-        bool addItem(int index, Item &&item);
-        bool removeItem(Item *item);
-        bool removeItem(size_t index);
-
-        Item dropItem(size_t index);
-
-        Item &itemAt(size_t index);
-
-        std::optional<size_t> indexOf(Item *item) const;
-
-        const Item &itemAt(size_t index) const;
-        const std::vector<Item> &items() const noexcept;
-        size_t size() const noexcept;
-        bool isFull() const noexcept;
-        bool empty() const noexcept;
-
-        uint16_t capacity() const noexcept;
-        uint16_t volume() const noexcept;
-
-        std::vector<Item> _items;
-
-        uint16_t _capacity;
-
-        std::vector<Parent> parents()
-        {
-            std::vector<Parent> result{_parent};
-            while (std::holds_alternative<Container *>(result.back()))
-            {
-                result.emplace_back(std::get<Container *>(result.back())->_parent);
-            }
-
-            return result;
-        }
-
-        void setParent(MapView *mapView, Position position)
-        {
-            _parent = TileParent{position, mapView};
-        }
-
-        void setParent(Container *container)
-        {
-            _parent = container;
-        }
-
-      private:
-        Parent _parent;
-    };
-} // namespace ItemData

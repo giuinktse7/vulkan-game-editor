@@ -8,11 +8,10 @@
 #include <algorithm>
 #include <iostream>
 
-#include "compression.h"
-
 #include "../debug.h"
 #include "../file.h"
 #include "../logger.h"
+#include "compression.h"
 
 namespace
 {

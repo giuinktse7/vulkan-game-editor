@@ -4,6 +4,7 @@
 #include <QVulkanWindow>
 
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/mat4x4.hpp>
 
 #include "../graphics/vulkan_helpers.h"
 
@@ -26,12 +27,12 @@ class QtVulkanInfo : public VulkanInfo
     void frameReady() override;
     void requestUpdate() override;
 
-    glm::mat4 projectionMatrix(MapView &mapView) const override
+    glm::mat4 projectionMatrix(MapView *mapView) const override
     {
         QMatrix4x4 projection = clipCorrectionMatrix; // adjust for Vulkan-OpenGL clip space differences
         const util::Size sz = vulkanSwapChainImageSize();
         QRectF rect;
-        const Camera::Viewport &viewport = mapView.getViewport();
+        const Camera::Viewport &viewport = mapView->getViewport();
         rect.setX(static_cast<qreal>(viewport.x));
         rect.setY(static_cast<qreal>(viewport.y));
         rect.setWidth(sz.width() / viewport.zoom);

@@ -16,7 +16,7 @@ class CreatureType;
 class Creatures
 {
   public:
-    static void addCreatureType(const tibia::protobuf::appearances::Appearance &appearance);
+    static void addCreatureType(CreatureType &&creatureType);
     static inline const CreatureType *creatureType(uint32_t id);
 
   private:
@@ -32,7 +32,7 @@ class Creatures
 class CreatureType
 {
   public:
-    CreatureType(const tibia::protobuf::appearances::Appearance &appearance);
+    CreatureType(uint32_t id, std::vector<FrameGroup> &&frameGroups);
 
     void cacheTextureAtlases();
 

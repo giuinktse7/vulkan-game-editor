@@ -6,14 +6,14 @@
 
 #include <vulkan/vulkan.h>
 
-#include <glm/glm.hpp>
+#include <glm/mat4x4.hpp>
 
 #include "buffer.h"
 
 #include "../debug.h"
 #include "../util.h"
 
-#include "../map_view.h"
+class MapView;
 
 class RenderTarget
 {
@@ -24,7 +24,7 @@ class RenderTarget
     virtual util::Size vulkanSwapChainImageSize() const = 0;
     virtual int maxConcurrentFrameCount() const = 0;
 
-    virtual glm::mat4 projectionMatrix(MapView &mapView) const = 0;
+    virtual glm::mat4 projectionMatrix(MapView *mapView) const = 0;
 };
 
 class VulkanInfo : public RenderTarget

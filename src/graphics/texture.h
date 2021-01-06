@@ -1,10 +1,10 @@
 #pragma once
 
 #include <filesystem>
-#include <glm/glm.hpp>
 #include <string>
 #include <vector>
 
+#include <glm/vec4.hpp>
 #include <memory>
 
 enum class SolidColor : uint32_t
@@ -55,11 +55,6 @@ class Texture
     uint32_t _width;
     uint32_t _height;
 };
-
-inline glm::vec4 TextureWindow::asVec4() const noexcept
-{
-    return glm::vec4(x0, y0, x1, y1);
-}
 
 inline int Texture::width() const noexcept
 {
