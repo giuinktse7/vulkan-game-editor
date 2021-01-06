@@ -174,13 +174,25 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
         Container *container = item->getOrCreateContainer();
         container->setParent(&mapView, position);
 
-        if (container->empty())
+        // DEBUG CODE, REMOVE
+        if (container->empty() && item->serverId() == 2000)
         {
-            std::vector<uint32_t> serverIds{{1987, 2148, 5710, 2673, 2463, 2649}};
+            container->addItem(Item(2595));
+            auto &parcel = container->itemAt(0);
 
-            for (const auto id : serverIds)
-                container->addItem(Item(id));
+            auto bag = Item(1987);
+            bag.getOrCreateContainer();
+
+            parcel.getOrCreateContainer()->addItem(std::move(bag));
         }
+
+        // if (container->empty())
+        // {
+        //     std::vector<uint32_t> serverIds{{1987, 2148, 5710, 2673, 2463, 2649}};
+
+        //     for (const auto id : serverIds)
+        //         container->addItem(Item(id));
+        // }
 
         containerTree.setRootContainer(&mapView, position, tileIndex, item);
     }
@@ -298,6 +310,8 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *containe
 
             mapView->history.endTransaction(TransactionType::MoveItems);
 
+            containerNode->itemInserted(index);
+
             containerNode->model()->refresh();
             break;
         }
@@ -335,9 +349,14 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *containe
             if (dropped->container() == targetContainer)
             {
                 containerNode->itemMoved(dropped->containerIndices.back(), index);
+                containerNode->draggedIndex.reset();
+            }
+            else
+            {
+
+                containerNode->itemInserted(index);
             }
 
-            // containerTree.containerModel.refresh(0);
             containerNode->model()->refresh();
             break;
         }
@@ -361,6 +380,9 @@ void ItemPropertyWindow::startContainerItemDrag(GuiItemContainer::ContainerNode 
 
     itemDrag.containerIndices = treeNode->indexChain(index);
     itemDrag.tileIndex = static_cast<uint16_t>(focusedItem.tileIndex);
+    // Add treeNode in itemdrag. Needed to update container indices.
+
+    treeNode->draggedIndex.emplace(index);
 
     dragOperation.emplace(ItemDrag::DragOperation::create(std::move(itemDrag), state.mapView, this));
     dragOperation->setRenderCondition([this] { return !state.mapView->underMouse(); });
@@ -384,8 +406,11 @@ void GuiItemContainer::ContainerModel::refresh()
 
 void GuiItemContainer::ContainerModel::containerItemClicked(int index)
 {
-    auto k = container();
-    VME_LOG_D("containerItemClicked. Item id: " << container()->item()->serverId() << ", index: " << index);
+    if (index >= size())
+        return;
+
+    VME_LOG_D("containerItemClicked. Item id: " << containerItem()->serverId() << ", index: " << index);
+
     if (container()->itemAt(index).isContainer())
     {
         treeNode->toggleChild(index);
@@ -431,6 +456,11 @@ int GuiItemContainer::ContainerModel::size()
 int GuiItemContainer::ContainerModel::capacity()
 {
     return static_cast<int>(treeNode->container()->capacity());
+}
+
+Item *GuiItemContainer::ContainerModel::containerItem() const noexcept
+{
+    return treeNode->containerItem();
 }
 
 Container *GuiItemContainer::ContainerModel::container() const noexcept
@@ -641,10 +671,7 @@ GuiItemContainer::ContainerTree::Root::Root(
     uint16_t tileIndex,
     Item *containerItem,
     ContainerTreeSignals *_signals)
-    : ContainerNode(containerItem, _signals),
-      mapPosition(mapPosition),
-      mapView(mapView),
-      tileIndex(tileIndex)
+    : ContainerNode(containerItem, _signals), mapPosition(mapPosition), mapView(mapView), tileIndex(tileIndex)
 {
     VME_LOG_D("Root: " << this);
 }
@@ -720,11 +747,13 @@ void ContainterTree::modelRemovedEvent(ContainerModel *model)
 GuiItemContainer::ContainerNode::ContainerNode(Item *containerItem, ContainerTreeSignals *_signals)
     : trackedContainerItem(containerItem), _signals(_signals)
 {
+    trackedContainerItem.onChanged<&GuiItemContainer::ContainerNode::updateChildContainerPointers>(this);
 }
 
 GuiItemContainer::ContainerNode::ContainerNode(Item *containerItem, ContainerNode *parent)
     : trackedContainerItem(containerItem), _signals(parent->_signals)
 {
+    trackedContainerItem.onChanged<&GuiItemContainer::ContainerNode::updateChildContainerPointers>(this);
 }
 
 GuiItemContainer::ContainerNode::~ContainerNode()
@@ -737,7 +766,6 @@ GuiItemContainer::ContainerNode::~ContainerNode()
 
 void GuiItemContainer::ContainerNode::onDragFinished(ItemDrag::DragOperation::DropResult result)
 {
-    std::string s;
     using DropResult = ItemDrag::DragOperation::DropResult;
 
     if (result == DropResult::Accepted)
@@ -747,26 +775,19 @@ void GuiItemContainer::ContainerNode::onDragFinished(ItemDrag::DragOperation::Dr
         // not make a significant difference in performance, because the model will
         // have at most ~25 items (max capacity of the largest container item).
         _model->refresh();
-    }
-    switch (result)
-    {
-        case DropResult::Accepted:
-            s = "Accepted";
-            break;
-        case DropResult::Rejected:
-            s = "Rejected";
-            break;
-        case DropResult::NoTarget:
-            s = "NoTarget";
-            break;
-    }
 
-    VME_LOG_D("GuiItemContainer::ContainerNode::onDragFinished: " << s);
+        if (draggedIndex.has_value())
+        {
+            int index = draggedIndex.value();
+            itemRemoved(index);
+        }
+    }
 }
 
 void GuiItemContainer::ContainerTree::Node::setIndexInParent(int index)
 {
     indexInParentContainer = index;
+    Items::items.itemMoved(&parent->container()->itemAt(index));
 }
 
 void GuiItemContainer::ContainerTree::Root::setIndexInParent(int index)
@@ -778,29 +799,12 @@ void GuiItemContainer::ContainerNode::itemInserted(int index)
 {
     if (children.empty())
         return;
-}
-
-void GuiItemContainer::ContainerNode::itemRemoved(int index)
-{
-    if (children.empty())
-        return;
-}
-
-void GuiItemContainer::ContainerNode::itemMoved(int fromIndex, int toIndex)
-{
-    if (children.empty())
-        return;
 
     std::vector<int> incIndices;
-    std::vector<int> decIndices;
 
     for (const auto &[i, _] : children)
     {
-        if (fromIndex < i && i <= toIndex)
-        {
-            decIndices.push_back(i);
-        }
-        else if (toIndex <= i && i < fromIndex)
+        if (i >= index)
         {
             incIndices.push_back(i);
         }
@@ -816,6 +820,23 @@ void GuiItemContainer::ContainerNode::itemMoved(int fromIndex, int toIndex)
 
         children.at(newIndex)->setIndexInParent(newIndex);
     }
+}
+
+void GuiItemContainer::ContainerNode::itemRemoved(int index)
+{
+    if (children.empty())
+        return;
+
+    std::vector<int> incIndices;
+    std::vector<int> decIndices;
+
+    for (const auto &[i, _] : children)
+    {
+        if (i >= index)
+        {
+            decIndices.push_back(i);
+        }
+    }
 
     for (int i : decIndices)
     {
@@ -826,6 +847,55 @@ void GuiItemContainer::ContainerNode::itemMoved(int fromIndex, int toIndex)
         children.insert(std::move(mapNode));
 
         children.at(newIndex)->setIndexInParent(newIndex);
+    }
+}
+
+void GuiItemContainer::ContainerNode::itemMoved(int fromIndex, int toIndex)
+{
+    if (children.empty())
+        return;
+
+    std::vector<std::pair<int, int>> changes;
+
+    for (const auto &[i, _] : children)
+    {
+        int newIndex;
+        if (i == fromIndex)
+        {
+            newIndex = toIndex;
+        }
+        else if (fromIndex < i && i <= toIndex)
+        {
+            newIndex = i - 1;
+        }
+        else if (toIndex <= i && i < fromIndex)
+        {
+            newIndex = i + 1;
+        }
+        else
+        {
+            continue;
+        }
+
+        changes.emplace_back(std::make_pair(i, newIndex));
+    }
+
+    for (const auto [fromIndex, toIndex] : changes)
+    {
+        auto mapNode = children.extract(fromIndex);
+        mapNode.key() = toIndex;
+        children.insert(std::move(mapNode));
+
+        children.at(toIndex)->setIndexInParent(toIndex);
+    }
+}
+
+void GuiItemContainer::ContainerNode::updateChildContainerPointers(Item *trackedItem)
+{
+    for (auto &entry : children)
+    {
+        auto &i = container()->itemAt(entry.first);
+        Items::items.itemMoved(&i);
     }
 }
 
@@ -842,7 +912,7 @@ std::vector<uint16_t> GuiItemContainer::ContainerNode::indexChain(int index) con
     auto current = this;
     while (!current->isRoot())
     {
-        auto node = static_cast<const ContainerTree::Node *>(this);
+        auto node = static_cast<const ContainerTree::Node *>(current);
         result.emplace_back(node->indexInParentContainer);
         current = node->parent;
     }
@@ -892,6 +962,8 @@ void GuiItemContainer::ContainerNode::openChild(int index)
     DEBUG_ASSERT(child.isContainer(), "Must be container.");
     auto node = createChildNode(index);
     children.emplace(index, std::move(node));
+    auto &c = *children.at(index);
+    ContainerTree::Node *d = dynamic_cast<ContainerTree::Node *>(&c);
     children.at(index)->open();
 }
 

@@ -50,6 +50,7 @@ namespace GuiItemContainer
 
         Container *container() noexcept;
         Container *container() const noexcept;
+        Item *containerItem() const noexcept;
 
         void refresh();
 
@@ -155,6 +156,7 @@ namespace GuiItemContainer
 
         // Container *container;
         std::unordered_map<int, std::unique_ptr<ContainerNode>> children;
+        std::optional<int> draggedIndex;
 
       protected:
         ContainerTreeSignals *_signals;
@@ -163,6 +165,7 @@ namespace GuiItemContainer
         bool opened = false;
 
       private:
+        void updateChildContainerPointers(Item *trackedItem);
         TrackedItem trackedContainerItem;
     };
 
