@@ -120,9 +120,9 @@ class MapView : public Nano::Observer<>
 
     void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
 
-    void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerMoveData2 &containerInfo);
-    void moveFromContainerToMap(MapHistory::ContainerMoveData2 &moveInfo, Tile &tile);
-    void moveFromContainerToContainer(MapHistory::ContainerMoveData2 &from, MapHistory::ContainerMoveData2 &to);
+    void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerLocation &containerInfo);
+    void moveFromContainerToMap(MapHistory::ContainerLocation &moveInfo, Tile &tile);
+    void moveFromContainerToContainer(MapHistory::ContainerLocation &from, MapHistory::ContainerLocation &to);
 
     void moveSelection(const Position &offset);
 

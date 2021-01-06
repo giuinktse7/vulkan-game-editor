@@ -289,7 +289,7 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *containe
 
             mapView->history.beginTransaction(TransactionType::MoveItems);
 
-            MapHistory::ContainerMoveData2 to(
+            MapHistory::ContainerLocation to(
                 focusedItem.position,
                 static_cast<uint16_t>(focusedItem.tileIndex),
                 containerNode->indexChain(index));
@@ -318,12 +318,12 @@ bool ItemPropertyWindow::itemDropEvent(GuiItemContainer::ContainerNode *containe
                 return true;
             }
 
-            MapHistory::ContainerMoveData2 from(
+            MapHistory::ContainerLocation from(
                 dropped->position,
                 dropped->tileIndex,
                 dropped->containerIndices);
 
-            MapHistory::ContainerMoveData2 to(
+            MapHistory::ContainerLocation to(
                 focusedItem.position,
                 static_cast<uint16_t>(focusedItem.tileIndex), containerNode->indexChain(index));
 

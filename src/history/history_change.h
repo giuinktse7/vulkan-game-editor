@@ -88,10 +88,10 @@ namespace MapHistory
     //   ContainerMoveData to;
     // };
 
-    struct ContainerMoveData2
+    struct ContainerLocation
     {
-        ContainerMoveData2(Position position, uint16_t tileIndex, const std::vector<uint16_t> &indices);
-        ContainerMoveData2(Position position, uint16_t tileIndex, std::vector<uint16_t> &&indices);
+        ContainerLocation(Position position, uint16_t tileIndex, const std::vector<uint16_t> &indices);
+        ContainerLocation(Position position, uint16_t tileIndex, std::vector<uint16_t> &&indices);
 
         Position position;
         uint16_t tileIndex;
@@ -108,24 +108,24 @@ namespace MapHistory
     class MoveFromContainerToContainer : public ChangeItem
     {
       public:
-        MoveFromContainerToContainer(ContainerMoveData2 &from, ContainerMoveData2 &to);
+        MoveFromContainerToContainer(ContainerLocation &from, ContainerLocation &to);
         void commit(MapView &mapView) override;
         void undo(MapView &mapView) override;
 
-        ContainerMoveData2 from;
-        ContainerMoveData2 to;
+        ContainerLocation from;
+        ContainerLocation to;
     };
 
     class MoveFromMapToContainer : public ChangeItem
     {
       public:
-        MoveFromMapToContainer(Tile &tile, Item *item, ContainerMoveData2 &to);
+        MoveFromMapToContainer(Tile &tile, Item *item, ContainerLocation &to);
         void commit(MapView &mapView) override;
         void undo(MapView &mapView) override;
 
       private:
         Position fromPosition;
-        ContainerMoveData2 to;
+        ContainerLocation to;
 
         struct PreFirstCommitData
         {
@@ -143,13 +143,13 @@ namespace MapHistory
     class MoveFromContainerToMap : public ChangeItem
     {
       public:
-        MoveFromContainerToMap(ContainerMoveData2 &from, Tile &tile);
+        MoveFromContainerToMap(ContainerLocation &from, Tile &tile);
         void commit(MapView &mapView) override;
         void undo(MapView &mapView) override;
 
       private:
         Position toPosition;
-        ContainerMoveData2 from;
+        ContainerLocation from;
     };
 
     class RemoveTile : public ChangeItem

@@ -354,7 +354,7 @@ void VulkanWindow::dropEvent(QDropEvent *event)
 
         mapView->history.beginTransaction(TransactionType::MoveItems);
 
-        MapHistory::ContainerMoveData2 move(containerDrag->position, containerDrag->tileIndex, std::move(containerDrag->containerIndices));
+        MapHistory::ContainerLocation move(containerDrag->position, containerDrag->tileIndex, std::move(containerDrag->containerIndices));
 
         auto &tile = mapView->getOrCreateTile(mapView->mouseGamePos());
 

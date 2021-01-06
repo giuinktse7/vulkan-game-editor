@@ -277,7 +277,7 @@ void MapView::moveItem(const Tile &fromTile, const Position toPosition, Item *it
     history.commit(std::move(action));
 }
 
-void MapView::moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerMoveData2 &containerInfo)
+void MapView::moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerLocation &containerInfo)
 {
     DEBUG_ASSERT(tile.indexOf(item) != -1, "The tile must contain the item");
 
@@ -287,7 +287,7 @@ void MapView::moveFromMapToContainer(Tile &tile, Item *item, MapHistory::Contain
     history.commit(std::move(action));
 }
 
-void MapView::moveFromContainerToMap(MapHistory::ContainerMoveData2 &moveInfo, Tile &tile)
+void MapView::moveFromContainerToMap(MapHistory::ContainerLocation &moveInfo, Tile &tile)
 {
     auto move = MoveFromContainerToMap(moveInfo, tile);
     Action action(ActionType::Move, std::move(move));
@@ -295,7 +295,7 @@ void MapView::moveFromContainerToMap(MapHistory::ContainerMoveData2 &moveInfo, T
     history.commit(std::move(action));
 }
 
-void MapView::moveFromContainerToContainer(MapHistory::ContainerMoveData2 &from, MapHistory::ContainerMoveData2 &to)
+void MapView::moveFromContainerToContainer(MapHistory::ContainerLocation &from, MapHistory::ContainerLocation &to)
 {
     auto move = MoveFromContainerToContainer(from, to);
     Action action(ActionType::Move, std::move(move));

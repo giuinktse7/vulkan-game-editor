@@ -146,7 +146,7 @@ namespace MapHistory
         }
     }
 
-    MoveFromMapToContainer::MoveFromMapToContainer(Tile &tile, Item *item, ContainerMoveData2 &to)
+    MoveFromMapToContainer::MoveFromMapToContainer(Tile &tile, Item *item, ContainerLocation &to)
         : fromPosition(tile.position()), data(PreFirstCommitData{item}), to(to) {}
 
     void MoveFromMapToContainer::commit(MapView &mapView)
@@ -179,7 +179,7 @@ namespace MapHistory
         updateSelection(mapView, tile->position());
     }
 
-    MoveFromContainerToMap::MoveFromContainerToMap(ContainerMoveData2 &from, Tile &tile)
+    MoveFromContainerToMap::MoveFromContainerToMap(ContainerLocation &from, Tile &tile)
         : from(from), toPosition(tile.position()) {}
 
     void MoveFromContainerToMap::commit(MapView &mapView)
@@ -194,13 +194,13 @@ namespace MapHistory
         from.container(mapView)->insertItem(std::move(item), from.containerIndex());
     }
 
-    ContainerMoveData2::ContainerMoveData2(Position position, uint16_t tileIndex, const std::vector<uint16_t> &indices)
+    ContainerLocation::ContainerLocation(Position position, uint16_t tileIndex, const std::vector<uint16_t> &indices)
         : position(position), tileIndex(tileIndex), indices(indices) {}
 
-    ContainerMoveData2::ContainerMoveData2(Position position, uint16_t tileIndex, std::vector<uint16_t> &&indices)
+    ContainerLocation::ContainerLocation(Position position, uint16_t tileIndex, std::vector<uint16_t> &&indices)
         : position(position), tileIndex(tileIndex), indices(std::move(indices)) {}
 
-    Container *ContainerMoveData2::container(MapView &mapView)
+    Container *ContainerLocation::container(MapView &mapView)
     {
         auto tile = mapView.getTile(position);
         DEBUG_ASSERT(tile != nullptr, "No tile.");
@@ -217,12 +217,12 @@ namespace MapHistory
         return current->getDataAs<Container>();
     }
 
-    uint16_t ContainerMoveData2::containerIndex() const
+    uint16_t ContainerLocation::containerIndex() const
     {
         return indices.back();
     }
 
-    MoveFromContainerToContainer::MoveFromContainerToContainer(ContainerMoveData2 &from, ContainerMoveData2 &to)
+    MoveFromContainerToContainer::MoveFromContainerToContainer(ContainerLocation &from, ContainerLocation &to)
         : from(from), to(to) {}
 
     void MoveFromContainerToContainer::commit(MapView &mapView)
