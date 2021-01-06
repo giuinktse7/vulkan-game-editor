@@ -6,10 +6,9 @@
 class Item;
 
 TrackedItem::TrackedItem(Item *item)
-    : disconnect(Items::items.trackItem<&TrackedItem::updateItem>(item->getEntityId().value(), this))
-{
-    _item = item;
-}
+    : _entityId(item->getEntityId().value()),
+      disconnect(Items::items.trackItem<&TrackedItem::updateItem>(_entityId, this)),
+      _item(item) {}
 
 Item *TrackedItem::item() const noexcept
 {
