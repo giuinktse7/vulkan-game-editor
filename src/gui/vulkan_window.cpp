@@ -146,7 +146,7 @@ void VulkanWindow::mousePressEvent(QMouseEvent *event)
 {
     bool mouseInside = containsMouse();
     mapView->setUnderMouse(mouseInside);
-    VME_LOG_D("VulkanWindow::mousePressEvent");
+    // VME_LOG_D("VulkanWindow::mousePressEvent");
     mouseState.buttons = event->buttons();
 
     switch (event->button())

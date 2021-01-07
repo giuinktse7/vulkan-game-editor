@@ -310,12 +310,10 @@ void MainWindow::initializeUI()
 
     propertyWindow = new ItemPropertyWindow(QUrl("qrc:/vme/qml/itemPropertyWindow.qml"), this);
     connect(propertyWindow, &ItemPropertyWindow::countChanged, [this](int count) {
-        VME_LOG_D("countChanged");
         MapView &mapView = *currentMapView();
         if (mapView.singleTileSelected())
         {
             const Position pos = mapView.selection().onlyPosition().value();
-            VME_LOG_D("countChanged, selected tile pos: " << pos);
             const Tile *tile = mapView.getTile(pos);
 
             if (tile->firstSelectedItem()->count() != count)
