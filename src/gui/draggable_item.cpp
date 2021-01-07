@@ -285,7 +285,8 @@ Item &ItemDrag::ContainerItemDrag::draggedItem() const
 
 QPixmap ItemDrag::ContainerItemDrag::pixmap() const
 {
-    return QtUtil::itemPixmap(Position(0, 0, 7), draggedItem());
+    const auto &item = draggedItem();
+    return QtUtil::itemPixmap(item.serverId(), item.subtype());
 }
 
 Item *ItemDrag::ContainerItemDrag::item() const

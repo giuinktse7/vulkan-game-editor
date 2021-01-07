@@ -397,7 +397,7 @@ void MapRenderer::drawMapOverlay()
         info.appearance = item->itemType->appearance;
         info.position = mapView->mouseGamePos();
         info.color = colors::Default;
-        info.textureInfo = item->itemType->getTextureInfo();
+        info.textureInfo = item->itemType->getTextureInfoForSubtype(item->subtype());
         info.descriptorSet = objectDescriptorSet(info);
 
         drawItem(info);
