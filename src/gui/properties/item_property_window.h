@@ -85,7 +85,7 @@ class ItemPropertyWindow : public QQuickView
     void resetMapView();
 
     void focusItem(Item *item, Position &position, MapView &mapView);
-    void focusGround(Position &position, MapView &mapView);
+    void focusGround(Item *item, Position &position, MapView &mapView);
     void resetFocus();
 
     QWidget *wrapperWidget() const noexcept;
@@ -97,6 +97,13 @@ class ItemPropertyWindow : public QQuickView
 
   private:
     friend class PropertyWindowEventFilter;
+
+    void setQmlObjectActive(QObject *qmlObject, bool enabled);
+
+    void show();
+    void hide();
+
+    void initializeProperties();
     void setCount(uint8_t count);
     void setContainerVisible(bool visible);
 

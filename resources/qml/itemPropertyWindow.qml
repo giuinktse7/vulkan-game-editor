@@ -8,6 +8,8 @@ import Vme.context 1.0 as Context
 ScrollView {
   anchors.fill: parent
   id : propertyContainer
+
+  visible: false
   clip : true
   contentHeight : contents.height
   padding: 14
@@ -31,36 +33,6 @@ ScrollView {
       Layout.margins : 16
 
       Layout.preferredWidth : parent.width
-
-      ColumnLayout {
-        Layout.alignment : Qt.AlignTop
-        Layout.bottomMargin : 12
-
-        Text {
-          font {
-            pointSize : 7
-            family : Vme.Constants.labelFontFamily
-            capitalization : Font.AllUppercase
-          }
-          text : "Count"
-          color : "#b7bcc1"
-        }
-
-        Vme.SpinBox {
-          Layout.alignment : Qt.AlignTop
-
-          Layout.minimumWidth : 100
-          Layout.preferredWidth : 100
-          Layout.maximumWidth : 150
-          Layout.minimumHeight : 30
-          Layout.preferredHeight : 30
-
-          objectName : "count_spinbox"
-          onValueChanged : {
-            Context.C_PropertyWindow.countChanged(value);
-          }
-        }
-      }
 
       ColumnLayout {
         Layout.alignment : Qt.AlignTop
@@ -126,33 +98,63 @@ ScrollView {
         }
       }
 
-      Text {
-        font {
-          pointSize : 7
-          family : Vme.Constants.labelFontFamily
-          capitalization : Font.AllUppercase
+       ColumnLayout {
+        Layout.alignment : Qt.AlignTop
+        Layout.bottomMargin : 12
+
+        Text {
+          font {
+            pointSize : 7
+            family : Vme.Constants.labelFontFamily
+            capitalization : Font.AllUppercase
+          }
+          text : "Count"
+          color : "#b7bcc1"
         }
-        text : "Text 1"
-        color : "#b7bcc1"
-      }
-      Text {
-        font {
-          pointSize : 7
-          family : Vme.Constants.labelFontFamily
-          capitalization : Font.AllUppercase
+
+        Vme.SpinBox {
+          Layout.alignment : Qt.AlignTop
+
+          Layout.minimumWidth : 100
+          Layout.preferredWidth : 100
+          Layout.maximumWidth : 150
+          Layout.minimumHeight : 30
+          Layout.preferredHeight : 30
+
+          objectName : "count_spinbox"
+          onEditingFinished : {
+            Context.C_PropertyWindow.countChanged(value);
+          }
         }
-        text : "Text 2"
-        color : "#b7bcc1"
       }
-      Text {
-        font {
-          pointSize : 7
-          family : Vme.Constants.labelFontFamily
-          capitalization : Font.AllUppercase
-        }
-        text : "Text 3"
-        color : "#b7bcc1"
-      }
+
+      // Text {
+      //   font {
+      //     pointSize : 7
+      //     family : Vme.Constants.labelFontFamily
+      //     capitalization : Font.AllUppercase
+      //   }
+      //   text : "Text 1"
+      //   color : "#b7bcc1"
+      // }
+      // Text {
+      //   font {
+      //     pointSize : 7
+      //     family : Vme.Constants.labelFontFamily
+      //     capitalization : Font.AllUppercase
+      //   }
+      //   text : "Text 2"
+      //   color : "#b7bcc1"
+      // }
+      // Text {
+      //   font {
+      //     pointSize : 7
+      //     family : Vme.Constants.labelFontFamily
+      //     capitalization : Font.AllUppercase
+      //   }
+      //   text : "Text 3"
+      //   color : "#b7bcc1"
+      // }
 
       TableView {
         id : containersView

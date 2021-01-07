@@ -126,7 +126,7 @@ namespace PropertiesUI
         template <auto MemberFunction, typename T>
         void onContainerItemDragStart(T *instance);
 
-        ContainerListModel containerModel;
+        ContainerListModel containerListModel;
 
       private:
         ContainerSignals _signals;

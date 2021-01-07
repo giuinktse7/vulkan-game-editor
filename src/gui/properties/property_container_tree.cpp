@@ -84,17 +84,17 @@ void ContainterTree::setRootContainer(MapView *mapView, Position position, uint1
 void ContainterTree::clear()
 {
     root.reset();
-    containerModel.clear();
+    containerListModel.clear();
 }
 
 void ContainterTree::modelAddedEvent(ContainerModel *model)
 {
-    containerModel.addItemModel(model);
+    containerListModel.addItemModel(model);
 }
 
 void ContainterTree::modelRemovedEvent(ContainerModel *model)
 {
-    containerModel.remove(model);
+    containerListModel.remove(model);
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>

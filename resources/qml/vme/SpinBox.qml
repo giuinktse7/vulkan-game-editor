@@ -10,6 +10,8 @@ Control {
   property int to : 100
   property bool editable : true
 
+  signal editingFinished();
+
   function setValue(value) {
     vmeSpinBox.value = Math.max(Math.min(value, vmeSpinBox.to), vmeSpinBox.from);
   }
@@ -87,17 +89,17 @@ Control {
           if (text !== "") {
             if (parseInt(text) != vmeSpinBox.value) {
               vmeSpinBox.setValue(parseInt(text));
-              // text = vmeSpinBox.textFromValue(vmeSpinBox.value, vmeSpinBox.locale);
             }
           }
         }
-
 
         onEditingFinished : {
           if (text === "") {
             vmeSpinBox.setValue(1);
             text = vmeSpinBox.valueAsText();
           }
+
+          vmeSpinBox.editingFinished();
         }
 
         font : vmeSpinBox.font

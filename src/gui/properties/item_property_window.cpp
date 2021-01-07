@@ -29,7 +29,7 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
     containerTree.onContainerItemDragStart<&ItemPropertyWindow::startContainerItemDrag>(this);
 
     QVariantMap properties;
-    properties.insert("containers", QVariant::fromValue(&containerTree.containerModel));
+    properties.insert("containers", QVariant::fromValue(&containerTree.containerListModel));
 
     setInitialProperties(properties);
 
@@ -42,6 +42,47 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
 
     QmlApplicationContext *applicationContext = new QmlApplicationContext();
     engine()->rootContext()->setContextProperty("applicationContext", applicationContext);
+}
+
+void ItemPropertyWindow::show()
+{
+    setQmlObjectActive(rootObject(), true);
+}
+
+void ItemPropertyWindow::hide()
+{
+    setQmlObjectActive(rootObject(), false);
+}
+
+void ItemPropertyWindow::initializeProperties()
+{
+    show();
+    std::visit(
+        util::overloaded{
+            [this](const FocusedItem &focusedItem) {
+                auto item = focusedItem.item();
+                auto itemtype = item->itemType;
+
+                setContainerVisible(item->isContainer());
+
+                auto countSpinBox = child(ObjectName::CountSpinBox);
+                setQmlObjectActive(countSpinBox->parent(), itemtype->stackable);
+
+                if (itemtype->stackable)
+                {
+                    countSpinBox->setProperty("value", item->count());
+                }
+            },
+            [this](const FocusedGround &item) {
+                auto countSpinBox = child(ObjectName::CountSpinBox);
+                setQmlObjectActive(countSpinBox->parent(), false);
+
+                setContainerVisible(false);
+            },
+            [](const auto &arg) {
+                ABORT_PROGRAM("This should never happen.");
+            }},
+        state.focusedItem);
 }
 
 bool ItemPropertyWindow::event(QEvent *e)
@@ -91,29 +132,36 @@ void ItemPropertyWindow::resetMapView()
     state.mapView = nullptr;
 }
 
-void ItemPropertyWindow::focusGround(Position &position, MapView &mapView)
+void ItemPropertyWindow::focusGround(Item *item, Position &position, MapView &mapView)
 {
+    if (state.holds<FocusedGround>())
+    {
+        auto &focusedGround = state.focusedAs<FocusedGround>();
+        if (focusedGround.item() == item)
+        {
+            // Ground already focused
+            return;
+        }
+    }
+
+    resetFocus();
+
     setMapView(mapView);
 
-    setContainerVisible(false);
-    // containerModel.itemContainerModels.front()->reset();
-    containerTree.clear();
+    DEBUG_ASSERT(item != nullptr, "Can not focus nullptr ground.");
+    DEBUG_ASSERT(mapView.getTile(position)->ground() == item, "This should never happen.");
 
-    setCount(1);
+    FocusedGround ground(position, item);
 
-    Item *groundItem = mapView.getTile(position)->ground();
-    DEBUG_ASSERT(groundItem != nullptr, "Can not focus nullptr ground.");
-
-    FocusedGround ground(position, groundItem);
-
-    state.focusedItem.emplace<FocusedGround>(position, groundItem);
+    state.focusedItem.emplace<FocusedGround>(position, item);
+    initializeProperties();
 }
 
 void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapView)
 {
     if (item->isGround())
     {
-        focusGround(position, mapView);
+        focusGround(item, position, mapView);
         return;
     }
     else if (state.holds<FocusedItem>())
@@ -133,6 +181,8 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
         }
     }
 
+    resetFocus();
+
     setMapView(mapView);
 
     auto maybeTileIndex = mapView.getTile(position)->indexOf(item);
@@ -143,11 +193,11 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
 
     if (isContainer)
     {
-        if (containerTree.rootItem() == item)
-        {
-            // This is already the focused item.
-            return;
-        }
+        // if (containerTree.rootItem() == item)
+        // {
+        //     // This is already the focused item.
+        //     return;
+        // }
 
         Container *container = item->getOrCreateContainer();
         container->setParent(&mapView, position);
@@ -175,19 +225,23 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
         containerTree.setRootContainer(&mapView, position, tileIndex, item);
     }
 
-    setContainerVisible(isContainer);
-    setCount(item->count());
-
     state.focusedItem.emplace<FocusedItem>(position, item, tileIndex);
+    initializeProperties();
+}
+
+void ItemPropertyWindow::setQmlObjectActive(QObject *qmlObject, bool enabled)
+{
+    qmlObject->setProperty("visible", enabled);
+    qmlObject->setProperty("enabled", enabled);
 }
 
 void ItemPropertyWindow::resetFocus()
 {
-    // itemContainerModels.front()->reset();
+    state.focusedItem = std::monostate{};
     containerTree.clear();
+    hide();
     setContainerVisible(false);
     setCount(1);
-    state.focusedItem = std::monostate{};
 
     resetMapView();
 }
@@ -203,7 +257,7 @@ void ItemPropertyWindow::setContainerVisible(bool visible)
     auto containerArea = child(ObjectName::ItemContainerArea);
     if (containerArea)
     {
-        containerArea->setProperty("visible", visible);
+        setQmlObjectActive(containerArea, visible);
     }
     else
     {
@@ -246,7 +300,7 @@ void ItemPropertyWindow::refresh()
         auto containerArea = child(ObjectName::ItemContainerArea);
         if (containerArea->property("visible").toBool())
         {
-            containerTree.containerModel.refresh(0);
+            containerTree.containerListModel.refresh(0);
         }
     }
 }
@@ -382,7 +436,6 @@ QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, con
     // No subtype if only one part
     if (parts.size() == 1)
     {
-
         serverId = parts.at(0).toInt(&success);
     }
     else

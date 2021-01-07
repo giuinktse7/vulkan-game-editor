@@ -10,7 +10,6 @@ Item {
   signal rightClick();
   signal itemDroppedFromMap(var mapItemBuffer, var dropCallback);
 
-
     DropArea {
       anchors.fill : parent
       id : itemDropArea
