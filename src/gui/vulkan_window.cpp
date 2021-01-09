@@ -14,6 +14,7 @@
 #include <QQuickView>
 #include <QWidget>
 
+#include "../item_location.h"
 #include "../logger.h"
 #include "../main.h"
 #include "../map_renderer.h"
@@ -354,7 +355,7 @@ void VulkanWindow::dropEvent(QDropEvent *event)
 
         mapView->history.beginTransaction(TransactionType::MoveItems);
 
-        MapHistory::ContainerLocation move(containerDrag->position, containerDrag->tileIndex, std::move(containerDrag->containerIndices));
+        ContainerLocation move(containerDrag->position, containerDrag->tileIndex, std::move(containerDrag->containerIndices));
 
         auto &tile = mapView->getOrCreateTile(mapView->mouseGamePos());
 

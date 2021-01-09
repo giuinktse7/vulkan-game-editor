@@ -22,6 +22,8 @@
 #include "../save_map.h"
 #include "../util.h"
 #include "border_layout.h"
+#include "itempalette/item_palette_model.h"
+#include "itempalette/item_palette_window.h"
 #include "map_tab_widget.h"
 #include "map_view_widget.h"
 #include "menu.h"
@@ -157,7 +159,8 @@ MainWindow::MainWindow(QWidget *parent)
       rootLayout(new BorderLayout),
       positionStatus(new QLabel),
       zoomStatus(new QLabel),
-      topItemInfo(new QLabel)
+      topItemInfo(new QLabel),
+      paletteWindow(new ItemPaletteWindow(this))
 {
 
     // editorAction.onActionChanged<&MainWindow::editorActionChangedEvent>(this);
@@ -332,49 +335,58 @@ void MainWindow::initializeUI()
     Splitter *splitter = new Splitter();
     rootLayout->addWidget(splitter, BorderLayout::Position::Center);
 
-    auto itemPalette = createItemPalette();
-    itemPalette->setMinimumWidth(240);
-    itemPalette->setMaximumWidth(600);
+    initializePaletteWindow();
+    paletteWindow->tilesetListView()->addItems(4526, 4626);
 
-    itemPalette->addItem(2148);
+    // itemPalette->setMinimumWidth(240);
+    // itemPalette->setMaximumWidth(600);
 
-    // Containers
-    itemPalette->addItem(2000);
-    itemPalette->addItem(2595);
-    itemPalette->addItem(1987);
+    // itemPalette->addItem(2148);
 
-    itemPalette->addItem(103);
-    itemPalette->addItems(1533, 1542);
-    itemPalette->addItems(5315, 5331);
+    // // Containers
+    // itemPalette->addItem(2000);
+    // itemPalette->addItem(2595);
+    // itemPalette->addItem(1987);
 
-    itemPalette->addItem(1038);
-    itemPalette->addItems(1036, 1038);
-    itemPalette->addItem(1040);
-    itemPalette->addItem(405);
+    // itemPalette->addItem(103);
+    // itemPalette->addItems(1533, 1542);
+    // itemPalette->addItems(5315, 5331);
 
-    // Flat roof
-    {
-        itemPalette->addItem(920);
-        // Borders
-        itemPalette->addItem(921);
-        itemPalette->addItem(6565);
-        itemPalette->addItem(6564);
-        itemPalette->addItem(922);
-        itemPalette->addItem(5051);
-        itemPalette->addItem(5053);
-        itemPalette->addItem(5045);
-        itemPalette->addItem(5047);
-        itemPalette->addItem(923);
-        itemPalette->addItem(5048);
-        itemPalette->addItem(5050);
-        itemPalette->addItem(5054);
-        itemPalette->addItem(924);
-    }
+    // itemPalette->addItem(1038);
+    // itemPalette->addItems(1036, 1038);
+    // itemPalette->addItem(1040);
+    // itemPalette->addItem(405);
 
-    itemPalette->addItem(4526);
+    // // Flat roof
+    // {
+    //     itemPalette->addItem(920);
+    //     // Borders
+    //     itemPalette->addItem(921);
+    //     itemPalette->addItem(6565);
+    //     itemPalette->addItem(6564);
+    //     itemPalette->addItem(922);
+    //     itemPalette->addItem(5051);
+    //     itemPalette->addItem(5053);
+    //     itemPalette->addItem(5045);
+    //     itemPalette->addItem(5047);
+    //     itemPalette->addItem(923);
+    //     itemPalette->addItem(5048);
+    //     itemPalette->addItem(5050);
+    //     itemPalette->addItem(5054);
+    //     itemPalette->addItem(924);
+    // }
 
-    splitter->addWidget(itemPalette);
-    splitter->setStretchFactor(0, 0);
+    // itemPalette->addItem(4526);
+
+    splitter->addWidget(paletteWindow);
+
+    // {
+    //     auto container = paletteWindow->wrapInWidget();
+    //     VME_LOG_D("paletteWindow container: " << container);
+    //     container->setMinimumWidth(32);
+    //     splitter->addWidget(container);
+    //     splitter->setStretchFactor(0, 1);
+    // }
 
     splitter->addWidget(mapTabs);
     splitter->setStretchFactor(1, 1);
@@ -407,23 +419,21 @@ void MainWindow::initializeUI()
     setLayout(rootLayout);
 }
 
-ItemList *MainWindow::createItemPalette()
+void MainWindow::initializePaletteWindow()
 {
-    ItemList *itemList = new ItemList;
-    itemList->installEventFilter(new ItemListEventFilter(this));
-    itemList->setItemDelegate(new Delegate(this));
+    paletteWindow = new ItemPaletteWindow(this);
+    auto itemListView = paletteWindow->tilesetListView();
+    itemListView->installEventFilter(new ItemListEventFilter(this));
 
-    std::vector<ItemTypeModelItem> data;
+    std::vector<ItemPaletteUI::ModelItem> data;
 
-    connect(itemList, &QListView::clicked, [this, itemList](QModelIndex index) {
-        auto value = itemList->itemAtIndex(index);
+    connect(itemListView, &QListView::clicked, [this, itemListView](QModelIndex index) {
+        auto value = itemListView->itemAtIndex(index);
 
         MouseAction::RawItem action;
         action.serverId = value.itemType->id;
         editorAction.setIfUnlocked(action);
     });
-
-    return itemList;
 }
 
 QMenuBar *MainWindow::createMenuBar()

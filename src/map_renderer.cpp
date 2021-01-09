@@ -9,6 +9,7 @@
 #include "file.h"
 #include "graphics/appearances.h"
 #include "logger.h"
+#include "map_view.h"
 #include "position.h"
 #include "util.h"
 

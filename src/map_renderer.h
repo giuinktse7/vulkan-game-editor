@@ -20,10 +20,11 @@
 #include "items.h"
 
 #include "editor_action.h"
-#include "map_view.h"
 #include "util.h"
 
 #include "map.h"
+
+class MapView;
 
 namespace colors
 {

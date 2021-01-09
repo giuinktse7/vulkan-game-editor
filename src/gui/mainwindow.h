@@ -22,9 +22,10 @@ QT_END_NAMESPACE
 
 class MapTabWidget;
 class ItemPropertyWindow;
+class ItemPaletteWindow;
+class TilesetListView;
 
 #include "gui.h"
-#include "item_list.h"
 #include "qt_util.h"
 #include "signal.h"
 #include "vulkan_window.h"
@@ -44,32 +45,17 @@ class MainWindow : public QWidget, public Nano::Observer<>
     void addMapTab();
     void addMapTab(std::shared_ptr<Map> map);
 
-    EditorAction editorAction;
-
     bool vulkanWindowEvent(QEvent *event);
 
     MapView *currentMapView() const noexcept;
+
+    EditorAction editorAction;
 
   protected:
     void mousePressEvent(QMouseEvent *event) override;
     bool event(QEvent *event) override;
 
   private:
-    // UI
-    MapTabWidget *mapTabs;
-    ItemPropertyWindow *propertyWindow;
-
-    BorderLayout *rootLayout;
-
-    QLabel *positionStatus;
-    QLabel *zoomStatus;
-    QLabel *topItemInfo;
-
-    uint32_t highestUntitledId = 0;
-    std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> untitledIds;
-
-    QVulkanInstance *vulkanInstance;
-
     uint32_t nextUntitledId();
 
     void keyPressEvent(QKeyEvent *event) override;
@@ -84,7 +70,22 @@ class MainWindow : public QWidget, public Nano::Observer<>
     void editorActionChangedEvent(const MouseAction_t &action);
 
     QMenuBar *createMenuBar();
-    ItemList *createItemPalette();
+    void initializePaletteWindow();
+
+    MapTabWidget *mapTabs;
+    ItemPropertyWindow *propertyWindow;
+    ItemPaletteWindow *paletteWindow;
+
+    BorderLayout *rootLayout;
+
+    QLabel *positionStatus;
+    QLabel *zoomStatus;
+    QLabel *topItemInfo;
+
+    uint32_t highestUntitledId = 0;
+    std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> untitledIds;
+
+    QVulkanInstance *vulkanInstance;
 
     // void updatePositionText();
 };

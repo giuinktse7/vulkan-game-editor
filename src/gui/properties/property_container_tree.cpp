@@ -24,10 +24,10 @@ PropertiesUI::ContainerTree::Root::Root(
     uint16_t tileIndex,
     Item *containerItem,
     ContainerSignals *_signals)
-    : ContainerNode(containerItem, _signals), mapPosition(mapPosition), mapView(mapView), tileIndex(tileIndex)
-{
-    VME_LOG_D("Root: " << this);
-}
+    : ContainerNode(containerItem, _signals),
+      mapPosition(mapPosition),
+      mapView(mapView),
+      tileIndex(tileIndex) {}
 
 Item *ContainerNode::containerItem() const
 {
