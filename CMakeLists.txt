@@ -64,6 +64,7 @@ set(CommonSources
     src/history/history.h
     src/history/history_action.h
     src/history/history_change.h
+    src/history/item_mutation.h
     src/camera.h
     src/const.h
     src/otbm.h
@@ -97,6 +98,7 @@ set(CommonSources
     src/item_data.h
     src/item_wrapper.h
     src/tracked_item.h
+    src/item_location.h
     src/items.h
     src/item_attribute.h
     src/item_type.h
@@ -149,6 +151,7 @@ set(CommonSources
     src/history/history.cpp
     src/history/history_action.cpp
     src/history/history_change.cpp
+    src/history/item_mutation.cpp
     src/camera.cpp
     src/otbm.cpp
     src/ecs/ecs.cpp
@@ -171,6 +174,7 @@ set(CommonSources
     src/item_data.cpp
     src/item_wrapper.cpp
     src/tracked_item.cpp
+    src/item_location.cpp
     src/items.cpp
     src/item_attribute.cpp
     src/item_type.cpp
@@ -221,7 +225,6 @@ set(GuiSources
     # src/gui/borderless_window.h
     src/gui/border_layout.h
     src/gui/split_widget.h
-    src/gui/item_list.h
     src/gui/mainwindow.h
     src/gui/map_view_widget.h
     src/gui/menu.h
@@ -235,6 +238,8 @@ set(GuiSources
     src/gui/properties/property_container_tree.h
     src/gui/properties/container_model.h
     src/gui/properties/container_list_model.h
+    src/gui/itempalette/item_palette_window.h
+    src/gui/itempalette/item_palette_model.h
     src/main.h
     src/main.cpp
     src/qt/enum_conversion.cpp
@@ -242,7 +247,6 @@ set(GuiSources
     # src/gui/borderless_window.cpp
     src/gui/border_layout.cpp
     src/gui/split_widget.cpp
-    src/gui/item_list.cpp
     src/gui/mainwindow.cpp
     src/gui/map_view_widget.cpp
     src/gui/menu.cpp
@@ -255,6 +259,8 @@ set(GuiSources
     src/gui/properties/property_container_tree.cpp
     src/gui/properties/container_model.cpp
     src/gui/properties/container_list_model.cpp
+    src/gui/itempalette/item_palette_window.cpp
+    src/gui/itempalette/item_palette_model.cpp
     src/qt/qt_vulkan_info.cpp)
 
 add_library(gui STATIC ${GuiSources})

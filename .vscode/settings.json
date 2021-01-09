@@ -155,7 +155,8 @@
     "qdebug": "cpp",
     "qpoint": "cpp",
     "qwindow": "cpp",
-    "bit": "cpp"
+    "bit": "cpp",
+    "qabstractitemdelegate": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

@@ -9,14 +9,14 @@
 
 #include "camera.h"
 #include "editor_action.h"
+#include "history/history.h"
+#include "history/history_action.h"
+#include "item_location.h"
 #include "map.h"
 #include "position.h"
 #include "selection.h"
 #include "signal.h"
 #include "util.h"
-
-#include "history/history.h"
-#include "history/history_action.h"
 
 class MapHistory::ChangeItem;
 
@@ -78,6 +78,9 @@ class MapView : public Nano::Observer<>
 	 */
     void commitTransaction(TransactionType groupType, std::function<void()> f);
 
+    void beginTransaction(TransactionType transactionType);
+    void endTransaction(TransactionType transactionType);
+
     Tile *getTile(const Position pos) const;
     Tile *getTile(const Position pos);
 
@@ -120,9 +123,11 @@ class MapView : public Nano::Observer<>
 
     void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
 
-    void moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerLocation &containerInfo);
-    void moveFromContainerToMap(MapHistory::ContainerLocation &moveInfo, Tile &tile);
-    void moveFromContainerToContainer(MapHistory::ContainerLocation &from, MapHistory::ContainerLocation &to);
+    void setItemCount(ItemLocation itemLocation, uint8_t count);
+
+    void moveFromMapToContainer(Tile &tile, Item *item, ContainerLocation &containerInfo);
+    void moveFromContainerToMap(ContainerLocation &moveInfo, Tile &tile);
+    void moveFromContainerToContainer(ContainerLocation &from, ContainerLocation &to);
 
     void moveSelection(const Position &offset);
 

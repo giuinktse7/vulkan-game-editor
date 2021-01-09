@@ -22,6 +22,7 @@
 
 class MainWindow;
 class ItemPropertyWindow;
+struct ItemLocation;
 
 namespace PropertiesUI
 {
@@ -67,7 +68,7 @@ class ItemPropertyWindow : public QQuickView
 {
     Q_OBJECT
   signals:
-    void countChanged(int count);
+    void countChanged(ItemLocation &itemLocation, int count, bool shouldCommit = false);
 
   public:
     ItemPropertyWindow(QUrl url, MainWindow *mainWindow);
@@ -75,14 +76,13 @@ class ItemPropertyWindow : public QQuickView
     void startContainerItemDrag(PropertiesUI::ContainerNode *treeNode, int index);
     bool itemDropEvent(PropertiesUI::ContainerNode *treeNode, int index, const ItemDrag::DraggableItem *droppedItem);
 
+    Q_INVOKABLE void setFocusedItemCount(int count, bool shouldCommit = false);
+
     QWidget *wrapInWidget(QWidget *parent = nullptr);
 
     void reloadSource();
 
     void refresh();
-
-    void setMapView(MapView &mapView);
-    void resetMapView();
 
     void focusItem(Item *item, Position &position, MapView &mapView);
     void focusGround(Item *item, Position &position, MapView &mapView);
@@ -97,6 +97,12 @@ class ItemPropertyWindow : public QQuickView
 
   private:
     friend class PropertyWindowEventFilter;
+
+    void setMapView(MapView &mapView);
+    void resetMapView();
+
+    void setSelectedPosition(const Position &pos);
+    void resetSelectedPosition();
 
     void setQmlObjectActive(QObject *qmlObject, bool enabled);
 
@@ -120,8 +126,8 @@ class ItemPropertyWindow : public QQuickView
 
     struct FocusedItem
     {
-        FocusedItem(Position position, Item *item, size_t tileIndex)
-            : position(position), trackedItem(item), tileIndex(tileIndex) {}
+        FocusedItem(Item *item, size_t tileIndex)
+            : trackedItem(item), tileIndex(tileIndex), latestCommittedCount(item->count()) {}
 
         FocusedItem(const FocusedItem &other) = default;
         FocusedItem &operator=(const FocusedItem &other) = default;
@@ -132,15 +138,16 @@ class ItemPropertyWindow : public QQuickView
             return trackedItem.item();
         }
 
-        Position position;
         TrackedItem trackedItem;
         size_t tileIndex;
+
+        uint8_t latestCommittedCount;
     };
 
     struct FocusedGround
     {
         FocusedGround(Position position, Item *ground)
-            : position(position), trackedGround(ground) {}
+            : trackedGround(ground) {}
 
         FocusedGround(const FocusedGround &other) = default;
         FocusedGround &operator=(const FocusedGround &other) = default;
@@ -151,7 +158,6 @@ class ItemPropertyWindow : public QQuickView
             return trackedGround.item();
         }
 
-        Position position;
         TrackedItem trackedGround;
     };
 
@@ -159,6 +165,8 @@ class ItemPropertyWindow : public QQuickView
     {
         MapView *mapView;
         std::variant<std::monostate, FocusedItem, FocusedGround> focusedItem;
+
+        Position selectedPosition;
 
         template <typename T>
         bool holds();

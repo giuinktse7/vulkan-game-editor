@@ -45,12 +45,7 @@ namespace MapHistory
         void reserve(size_t size);
         void shrinkToFit();
 
-        std::vector<Change> changes;
-
-        void addChange(Change::DataTypes &&change)
-        {
-            changes.emplace_back(std::move(change));
-        }
+        void addChange(Change::DataTypes &&change);
 
         void commit(MapView &mapView);
         void markAsCommitted();
@@ -58,21 +53,14 @@ namespace MapHistory
         void undo(MapView &mapView);
         void redo(MapView &mapView);
 
-        bool isCommitted() const
-        {
-            return committed;
-        }
+        bool isCommitted() const;
 
-        MapHistory::ActionType getType() const
-        {
-            return actionType;
-        }
+        MapHistory::ActionType getType() const;
 
         template <typename T>
-        bool isType(Change &change) const
-        {
-            return dynamic_cast<T *>(&change) != nullptr;
-        }
+        bool isType(Change &change) const;
+
+        std::vector<Change> changes;
 
       private:
         friend class MapHistory::History;
@@ -111,6 +99,12 @@ namespace MapHistory
         std::vector<MapHistory::Action> actions;
     };
 } // namespace MapHistory
+
+template <typename T>
+bool MapHistory::Action::isType(Change &change) const
+{
+    return dynamic_cast<T *>(&change) != nullptr;
+}
 
 inline std::ostringstream stringify(const TransactionType &type)
 {

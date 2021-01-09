@@ -4,7 +4,6 @@
 
 namespace MapHistory
 {
-
     Map *ChangeItem::getMap(MapView &mapView) const noexcept
     {
         return mapView._map.get();
@@ -192,34 +191,6 @@ namespace MapHistory
     {
         auto item = mapView.getTile(toPosition)->dropItem(static_cast<size_t>(0));
         from.container(mapView)->insertItem(std::move(item), from.containerIndex());
-    }
-
-    ContainerLocation::ContainerLocation(Position position, uint16_t tileIndex, const std::vector<uint16_t> &indices)
-        : position(position), tileIndex(tileIndex), indices(indices) {}
-
-    ContainerLocation::ContainerLocation(Position position, uint16_t tileIndex, std::vector<uint16_t> &&indices)
-        : position(position), tileIndex(tileIndex), indices(std::move(indices)) {}
-
-    Container *ContainerLocation::container(MapView &mapView)
-    {
-        auto tile = mapView.getTile(position);
-        DEBUG_ASSERT(tile != nullptr, "No tile.");
-
-        auto current = tile->itemAt(tileIndex);
-
-        // Skip final container index (it's an index to the item being moved)
-        for (auto it = indices.begin(); it < indices.end() - 1; ++it)
-        {
-            uint16_t index = *it;
-            current = &current->getDataAs<Container>()->itemAt(index);
-        }
-
-        return current->getDataAs<Container>();
-    }
-
-    uint16_t ContainerLocation::containerIndex() const
-    {
-        return indices.back();
     }
 
     MoveFromContainerToContainer::MoveFromContainerToContainer(ContainerLocation &from, ContainerLocation &to)
@@ -747,6 +718,32 @@ namespace MapHistory
             tile->setGroundSelected(true);
 
         updateSelection(mapView, position);
+    }
+
+    ModifyItem::ModifyItem(ItemLocation &&location, ItemMutation::Mutation &&mutation)
+        : location(std::move(location)), mutation(std::move(mutation)) {}
+
+    ModifyItem::ModifyItem(ItemLocation &&location, const ItemMutation::Mutation &mutation)
+        : location(std::move(location)), mutation(mutation) {}
+
+    void ModifyItem::commit(MapView &mapView)
+    {
+        auto item = location.item(mapView);
+        std::visit(
+            [item](ItemMutation::BaseMutation &itemMutation) {
+                itemMutation.commit(item);
+            },
+            mutation);
+    }
+
+    void ModifyItem::undo(MapView &mapView)
+    {
+        auto item = location.item(mapView);
+        std::visit(
+            [item](ItemMutation::BaseMutation &itemMutation) {
+                itemMutation.undo(item);
+            },
+            mutation);
     }
 
     void Action::markAsCommitted()

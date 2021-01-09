@@ -64,6 +64,21 @@ namespace MapHistory
         addChange(std::move(change));
     }
 
+    void Action::addChange(Change::DataTypes &&change)
+    {
+        changes.emplace_back(std::move(change));
+    }
+
+    bool Action::isCommitted() const
+    {
+        return committed;
+    }
+
+    MapHistory::ActionType Action::getType() const
+    {
+        return actionType;
+    }
+
     void Action::reserve(size_t size)
     {
         changes.reserve(size);

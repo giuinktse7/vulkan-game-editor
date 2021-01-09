@@ -16,6 +16,7 @@
 #include <QWidget>
 #include <QtWidgets>
 
+#include "../item_location.h"
 #include "../main.h"
 #include "../qt/logging.h"
 #include "../save_map.h"
@@ -309,22 +310,20 @@ void MainWindow::initializeUI()
     connect(mapTabs, &MapTabWidget::currentChanged, this, &MainWindow::mapTabChangedEvent);
 
     propertyWindow = new ItemPropertyWindow(QUrl("qrc:/vme/qml/itemPropertyWindow.qml"), this);
-    connect(propertyWindow, &ItemPropertyWindow::countChanged, [this](int count) {
+    connect(propertyWindow, &ItemPropertyWindow::countChanged, [this](ItemLocation &itemLocation, int count, bool shouldCommit) {
         MapView &mapView = *currentMapView();
-        if (mapView.singleTileSelected())
+        if (shouldCommit)
         {
-            const Position pos = mapView.selection().onlyPosition().value();
-            const Tile *tile = mapView.getTile(pos);
-
-            if (tile->firstSelectedItem()->count() != count)
-            {
-                mapView.commitTransaction(TransactionType::ModifyItem, [&mapView, &pos, count] {
-                    mapView.modifyTile(pos, [count](Tile &tile) { tile.firstSelectedItem()->setCount(count); });
-                });
-
-                mapView.requestDraw();
-            }
+            mapView.beginTransaction(TransactionType::ModifyItem);
+            mapView.setItemCount(itemLocation, count);
+            mapView.endTransaction(TransactionType::ModifyItem);
         }
+        else
+        {
+            itemLocation.item(mapView)->setCount(count);
+        }
+
+        mapView.requestDraw();
     });
 
     QMenuBar *menu = createMenuBar();

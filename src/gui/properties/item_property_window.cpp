@@ -6,6 +6,7 @@
 #include <QWidget>
 
 #include "../../../vendor/rollbear-visit/visit.hpp"
+#include "../../item_location.h"
 #include "../../qt/logging.h"
 #include "../draggable_item.h"
 #include "../mainwindow.h"
@@ -127,6 +128,16 @@ void ItemPropertyWindow::setMapView(MapView &mapView)
     state.mapView = &mapView;
 }
 
+void ItemPropertyWindow::setSelectedPosition(const Position &pos)
+{
+    state.selectedPosition = pos;
+}
+
+void ItemPropertyWindow::resetSelectedPosition()
+{
+    state.selectedPosition = PositionConstants::Zero;
+}
+
 void ItemPropertyWindow::resetMapView()
 {
     state.mapView = nullptr;
@@ -157,6 +168,30 @@ void ItemPropertyWindow::focusGround(Item *item, Position &position, MapView &ma
     initializeProperties();
 }
 
+void ItemPropertyWindow::setFocusedItemCount(int count, bool shouldCommit)
+{
+    DEBUG_ASSERT(state.holds<FocusedItem>(), "Only a FocusedItem has a count property.");
+    auto &focusedItem = state.focusedAs<FocusedItem>();
+
+    ItemLocation location(state.selectedPosition, static_cast<uint16_t>(focusedItem.tileIndex));
+
+    if (count == focusedItem.latestCommittedCount)
+    {
+        // Do not commit if the count is the same as when the item was first focused.
+        emit countChanged(location, count, false);
+    }
+    else
+    {
+        // Necessary to make sure that the correct "old" count is stored in MapView history
+        if (shouldCommit)
+        {
+            focusedItem.item()->setCount(focusedItem.latestCommittedCount);
+            focusedItem.latestCommittedCount = count;
+        }
+        emit countChanged(location, count, shouldCommit);
+    }
+}
+
 void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapView)
 {
     if (item->isGround())
@@ -170,12 +205,13 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
         if (item == focusedItem.item())
         {
             // The item is already focused, update it
-            focusedItem.position = position;
+            setSelectedPosition(position);
 
             auto maybeTileIndex = mapView.getTile(position)->indexOf(item);
             DEBUG_ASSERT(maybeTileIndex.has_value(), "The tile did not have the item.");
 
             focusedItem.tileIndex = static_cast<uint16_t>(maybeTileIndex.value());
+            focusedItem.latestCommittedCount = item->count();
 
             return;
         }
@@ -183,6 +219,7 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
 
     resetFocus();
 
+    setSelectedPosition(position);
     setMapView(mapView);
 
     auto maybeTileIndex = mapView.getTile(position)->indexOf(item);
@@ -225,7 +262,8 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
         containerTree.setRootContainer(&mapView, position, tileIndex, item);
     }
 
-    state.focusedItem.emplace<FocusedItem>(position, item, tileIndex);
+    state.focusedItem.emplace<FocusedItem>(item, tileIndex);
+    state.focusedAs<FocusedItem>().latestCommittedCount = item->count();
     initializeProperties();
 }
 
@@ -238,6 +276,10 @@ void ItemPropertyWindow::setQmlObjectActive(QObject *qmlObject, bool enabled)
 void ItemPropertyWindow::resetFocus()
 {
     state.focusedItem = std::monostate{};
+
+    resetSelectedPosition();
+    resetMapView();
+
     containerTree.clear();
     hide();
     setContainerVisible(false);
@@ -333,8 +375,8 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
 
             mapView->history.beginTransaction(TransactionType::MoveItems);
 
-            MapHistory::ContainerLocation to(
-                focusedItem.position,
+            ContainerLocation to(
+                state.selectedPosition,
                 static_cast<uint16_t>(focusedItem.tileIndex),
                 containerNode->indexChain(index));
 
@@ -365,14 +407,15 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
                 return true;
             }
 
-            MapHistory::ContainerLocation from(
+            ContainerLocation from(
                 dropped->position,
                 dropped->tileIndex,
                 dropped->containerIndices);
 
-            MapHistory::ContainerLocation to(
-                focusedItem.position,
-                static_cast<uint16_t>(focusedItem.tileIndex), containerNode->indexChain(index));
+            ContainerLocation to(
+                state.selectedPosition,
+                static_cast<uint16_t>(focusedItem.tileIndex),
+                containerNode->indexChain(index));
 
             mapView->history.beginTransaction(TransactionType::MoveItems);
             mapView->moveFromContainerToContainer(from, to);
@@ -409,7 +452,7 @@ void ItemPropertyWindow::startContainerItemDrag(PropertiesUI::ContainerNode *tre
 
     ItemDrag::ContainerItemDrag itemDrag;
     itemDrag.mapView = state.mapView;
-    itemDrag.position = focusedItem.position;
+    itemDrag.position = state.selectedPosition;
 
     itemDrag.containerIndices = treeNode->indexChain(index);
     itemDrag.tileIndex = static_cast<uint16_t>(focusedItem.tileIndex);

@@ -158,6 +158,16 @@ void MapView::commitTransaction(TransactionType type, std::function<void()> f)
     history.endTransaction(type);
 }
 
+void MapView::beginTransaction(TransactionType transactionType)
+{
+    history.beginTransaction(transactionType);
+}
+
+void MapView::endTransaction(TransactionType transactionType)
+{
+    history.endTransaction(transactionType);
+}
+
 void MapView::addItem(const Position &pos, Item &&item)
 {
     Tile &currentTile = _map->getOrCreateTile(pos);
@@ -277,7 +287,16 @@ void MapView::moveItem(const Tile &fromTile, const Position toPosition, Item *it
     history.commit(std::move(action));
 }
 
-void MapView::moveFromMapToContainer(Tile &tile, Item *item, MapHistory::ContainerLocation &containerInfo)
+void MapView::setItemCount(ItemLocation itemLocation, uint8_t count)
+{
+    Action action(
+        ActionType::ModifyItem,
+        MapHistory::ModifyItem(std::move(itemLocation), ItemMutation::SetCount(count)));
+
+    history.commit(std::move(action));
+}
+
+void MapView::moveFromMapToContainer(Tile &tile, Item *item, ContainerLocation &containerInfo)
 {
     DEBUG_ASSERT(tile.indexOf(item) != -1, "The tile must contain the item");
 
@@ -287,7 +306,7 @@ void MapView::moveFromMapToContainer(Tile &tile, Item *item, MapHistory::Contain
     history.commit(std::move(action));
 }
 
-void MapView::moveFromContainerToMap(MapHistory::ContainerLocation &moveInfo, Tile &tile)
+void MapView::moveFromContainerToMap(ContainerLocation &moveInfo, Tile &tile)
 {
     auto move = MoveFromContainerToMap(moveInfo, tile);
     Action action(ActionType::Move, std::move(move));
@@ -295,7 +314,7 @@ void MapView::moveFromContainerToMap(MapHistory::ContainerLocation &moveInfo, Ti
     history.commit(std::move(action));
 }
 
-void MapView::moveFromContainerToContainer(MapHistory::ContainerLocation &from, MapHistory::ContainerLocation &to)
+void MapView::moveFromContainerToContainer(ContainerLocation &from, ContainerLocation &to)
 {
     auto move = MoveFromContainerToContainer(from, to);
     Action action(ActionType::Move, std::move(move));

@@ -4,7 +4,9 @@
 #include <optional>
 #include <variant>
 
+#include "../item_location.h"
 #include "../tile.h"
+#include "item_mutation.h"
 
 class MapView;
 class Map;
@@ -18,10 +20,11 @@ namespace MapHistory
         Selection,
         ModifyTile,
         SetTile,
-        Move,
         RemoveTile,
         CutTile,
-        PasteTile
+        PasteTile,
+        Move,
+        ModifyItem
     };
 
     class Change;
@@ -69,40 +72,26 @@ namespace MapHistory
         std::variant<std::unique_ptr<Tile>, Position> data;
     };
 
+    class ModifyItem : public ChangeItem
+    {
+      public:
+        ModifyItem(ItemLocation &&location, ItemMutation::Mutation &&mutation);
+        ModifyItem(ItemLocation &&location, const ItemMutation::Mutation &mutation);
+
+        void commit(MapView &mapView) override;
+        void undo(MapView &mapView) override;
+
+      private:
+        ItemLocation location;
+        ItemMutation::Mutation mutation;
+    };
+
     struct ContainerItemMoveInfo
     {
         Tile *tile;
         Item *item;
 
         size_t containerIndex;
-    };
-
-    // class MoveFromContainerToContainer : public ChangeItem
-    // {
-    // public:
-    //   MoveFromContainerToContainer(ContainerItemMoveInfo &from, ContainerItemMoveInfo &to);
-    //   void commit(MapView &mapView) override;
-    //   void undo(MapView &mapView) override;
-
-    //   ContainerMoveData from;
-    //   ContainerMoveData to;
-    // };
-
-    struct ContainerLocation
-    {
-        ContainerLocation(Position position, uint16_t tileIndex, const std::vector<uint16_t> &indices);
-        ContainerLocation(Position position, uint16_t tileIndex, std::vector<uint16_t> &&indices);
-
-        Position position;
-        uint16_t tileIndex;
-        /*
-      The last index is the index of the item in the final container.
-    */
-        std::vector<uint16_t> indices;
-
-        uint16_t containerIndex() const;
-
-        Container *container(MapView &mapView);
     };
 
     class MoveFromContainerToContainer : public ChangeItem
@@ -319,6 +308,7 @@ namespace MapHistory
             MoveFromMapToContainer,
             MoveFromContainerToMap,
             MoveFromContainerToContainer,
+            ModifyItem,
             std::unique_ptr<ChangeItem>>;
 
         Change(DataTypes data = {})

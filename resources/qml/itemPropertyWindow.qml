@@ -7,7 +7,7 @@ import Vme.context 1.0 as Context
 
 ScrollView {
   anchors.fill: parent
-  id : propertyContainer
+  id: propertyContainer
 
   visible: false
   clip : true
@@ -122,8 +122,15 @@ ScrollView {
           Layout.preferredHeight : 30
 
           objectName : "count_spinbox"
-          onEditingFinished : {
-            Context.C_PropertyWindow.countChanged(value);
+
+          onValueChanged: {
+            if (visible) {
+              Context.C_PropertyWindow.setFocusedItemCount(value);
+            }
+          }
+
+          onEditingFinished: {
+            Context.C_PropertyWindow.setFocusedItemCount(value, true);
           }
         }
       }
