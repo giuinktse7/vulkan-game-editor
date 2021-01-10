@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 
-add_executable(vme_tests main.cpp position_test.cpp map_view_test.cpp
-                         item_test.cpp vulkan_window_test.cpp)
+add_executable(
+  vme_tests main.cpp position_test.cpp map_view_test.cpp item_test.cpp
+            vulkan_window_test.cpp tracked_item_test.cpp)
 
 find_package(Catch2 CONFIG REQUIRED)
 target_link_libraries(vme_tests PUBLIC Catch2::Catch2)

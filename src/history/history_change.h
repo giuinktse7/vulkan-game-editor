@@ -96,6 +96,14 @@ namespace MapHistory
 
     class MoveFromContainerToContainer : public ChangeItem
     {
+        enum class Relationship
+        {
+            FromIsParent,
+            FromIsChild,
+            SameContainer,
+            None
+        };
+
       public:
         MoveFromContainerToContainer(ContainerLocation &from, ContainerLocation &to);
         void commit(MapView &mapView) override;
@@ -103,6 +111,18 @@ namespace MapHistory
 
         ContainerLocation from;
         ContainerLocation to;
+
+      private:
+        Relationship fromToRelationship();
+
+        // Used when updating index, if there is a relation between from and to that requires it.
+        struct IndexUpdate
+        {
+            uint8_t index;
+            int8_t delta;
+        };
+
+        std::optional<IndexUpdate> indexUpdate;
     };
 
     class MoveFromMapToContainer : public ChangeItem

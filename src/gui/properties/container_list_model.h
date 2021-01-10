@@ -22,6 +22,7 @@ namespace PropertiesUI
         void clear();
         void refresh(int index);
         void refresh(ContainerModel *model);
+        void refreshAll();
 
         void addItemModel(ContainerModel *model);
         void remove(int index);

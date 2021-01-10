@@ -342,7 +342,7 @@ void ItemPropertyWindow::refresh()
         auto containerArea = child(ObjectName::ItemContainerArea);
         if (containerArea->property("visible").toBool())
         {
-            containerTree.containerListModel.refresh(0);
+            containerTree.containerListModel.refreshAll();
         }
     }
 }
@@ -399,6 +399,7 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
             }
 
             auto targetContainer = containerNode->container();
+            bool movedWithinSameContainer = dropped->container() == targetContainer;
 
             // Dropped on the same container slot that the drag started
             if (dropped->container() == targetContainer && index == dropped->containerIndices.back())
@@ -422,7 +423,7 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
             mapView->history.endTransaction(TransactionType::MoveItems);
 
             // Update child indices
-            if (dropped->container() == targetContainer)
+            if (movedWithinSameContainer)
             {
                 containerNode->itemMoved(dropped->containerIndices.back(), index);
                 containerNode->draggedIndex.reset();

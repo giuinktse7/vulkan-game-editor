@@ -101,6 +101,15 @@ void ContainerListModel::refresh(int index)
     dataChanged(modelIndex, modelIndex);
 }
 
+void ContainerListModel::refreshAll()
+{
+    for (auto &itemModel : itemModels)
+    {
+        // TODO Maybe check if the container is visible here? Hidden containers do not need to be refreshed.
+        itemModel->refresh();
+    }
+}
+
 QHash<int, QByteArray> ContainerListModel::roleNames() const
 {
     QHash<int, QByteArray> roles;

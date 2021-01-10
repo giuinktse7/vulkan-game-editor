@@ -194,13 +194,58 @@ namespace MapHistory
     }
 
     MoveFromContainerToContainer::MoveFromContainerToContainer(ContainerLocation &from, ContainerLocation &to)
-        : from(from), to(to) {}
+        : from(from), to(to)
+    {
+        auto relationship = fromToRelationship();
+        switch (relationship)
+        {
+            case Relationship::None:
+                break;
+            case Relationship::SameContainer:
+                break;
+            case Relationship::FromIsChild:
+            {
+                int k = to.indices.size() - 1;
+                int indexInParent = from.indices.at(k);
+                int targetIndex = to.indices.back();
+
+                if (targetIndex <= indexInParent)
+                {
+                    DEBUG_ASSERT(indexInParent < UINT8_MAX, "indexInParent too big.");
+                    indexUpdate = {static_cast<uint8_t>(k), 1};
+                }
+
+                break;
+            }
+            case Relationship::FromIsParent:
+            {
+                int indexInParent = to.indices.at(from.indices.size() - 1);
+                int sourceIndex = from.indices.back();
+
+                DEBUG_ASSERT(indexInParent != sourceIndex, "indexInParent != sourceIndex, This should (probably?) never happen.");
+
+                if (sourceIndex < indexInParent)
+                {
+                    DEBUG_ASSERT(indexInParent < UINT8_MAX, "indexInParent too big.");
+
+                    indexUpdate = {static_cast<uint8_t>(indexInParent), (int8_t)-1};
+                }
+            }
+        }
+    }
 
     void MoveFromContainerToContainer::commit(MapView &mapView)
     {
         to.container(mapView)->insertItemTracked(
             from.container(mapView)->dropItemTracked(from.containerIndex()),
             to.containerIndex());
+
+        if (indexUpdate)
+        {
+            auto &update = indexUpdate.value();
+            auto &location = from.indices.size() > to.indices.size() ? from : to;
+            location.indices.at(update.index) += update.delta;
+        }
     }
 
     void MoveFromContainerToContainer::undo(MapView &mapView)
@@ -208,6 +253,37 @@ namespace MapHistory
         from.container(mapView)->insertItemTracked(
             to.container(mapView)->dropItemTracked(to.containerIndex()),
             from.containerIndex());
+
+        if (indexUpdate)
+        {
+            auto &update = indexUpdate.value();
+            auto &location = from.indices.size() > to.indices.size() ? from : to;
+            location.indices.at(update.index) -= update.delta;
+        }
+    }
+
+    MoveFromContainerToContainer::Relationship MoveFromContainerToContainer::fromToRelationship()
+    {
+        if (from.position != to.position || from.tileIndex != to.tileIndex)
+            return Relationship::None;
+
+        auto fromSize = from.indices.size();
+        auto toSize = to.indices.size();
+
+        // Last index will be the index of the item in the final container (of either from or to, or both if it was a move within the same container)
+        int end = static_cast<int>(std::min(fromSize, toSize) - 1);
+        for (int i = 0; i < end; ++i)
+        {
+            if (from.indices.at(i) != to.indices.at(i))
+                return Relationship::None;
+        }
+
+        if (fromSize == toSize)
+            return Relationship::SameContainer;
+        else if (fromSize > toSize)
+            return Relationship::FromIsChild;
+        else
+            return Relationship::FromIsParent;
     }
 
     RemoveTile::RemoveTile(Position pos)
