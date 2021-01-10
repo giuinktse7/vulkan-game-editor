@@ -205,7 +205,8 @@ namespace MapHistory
                 break;
             case Relationship::FromIsChild:
             {
-                int k = to.indices.size() - 1;
+                // TODO Need better name for this temporary variable
+                size_t k = to.indices.size() - 1;
                 int indexInParent = from.indices.at(k);
                 int targetIndex = to.indices.back();
 
