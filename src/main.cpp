@@ -30,34 +30,6 @@
 #include "tracked_item.h"
 #include "util.h"
 
-struct Test
-{
-    void onChanged(Item *item)
-    {
-        VME_LOG_D(item);
-    }
-};
-
-void testItemTrack()
-{
-    Item item(2554);
-
-    Test test;
-
-    auto tracked = TrackedItem(&item);
-    tracked.onChanged<&Test::onChanged>(&test);
-
-    VME_LOG_D("Before: " << tracked.item());
-
-    Item i2 = item.deepCopy();
-
-    Items::items.itemMoved(&i2);
-
-    VME_LOG_D("After: " << tracked.item());
-
-    auto k = Items::items.itemSignals.size();
-}
-
 int main(int argc, char *argv[])
 {
     Random::global().setSeed(123);
@@ -75,9 +47,6 @@ int main(int argc, char *argv[])
 
     Config config = configResult.unwrap();
     config.loadOrTerminate();
-
-    // testItemTrack();
-    // auto k = Items::items.itemSignals.size();
 
     std::filesystem::path mapPath = "C:/Users/giuin/Desktop/Untitled-1.otbm";
 
