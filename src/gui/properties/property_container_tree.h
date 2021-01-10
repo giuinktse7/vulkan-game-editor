@@ -67,7 +67,8 @@ namespace PropertiesUI
         bool opened = false;
 
       private:
-        void updateChildContainerPointers(Item *trackedItem);
+        void trackedItemChanged(Item *trackedItem);
+
         TrackedItem trackedContainerItem;
     };
 

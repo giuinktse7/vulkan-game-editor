@@ -36,6 +36,10 @@ class Items
     // with a given entity ID changes. The key is an entity ID.
     std::unordered_map<uint32_t, Nano::Signal<void(Item *)>> itemSignals;
 
+    // Used to track changes in a container (insert/remove item).
+    // The key is an entity ID for the container item.
+    std::unordered_map<uint32_t, Nano::Signal<void(ContainerChange)>> containerSignals;
+
     uint32_t highestClientId = 0;
     uint32_t highestServerId = 0;
 
@@ -45,7 +49,11 @@ class Items
     template <auto MemberFunction, typename T>
     ItemEntityIdDisconnect trackItem(uint32_t entityId, T *instance);
 
+    template <auto MemberFunction, typename T>
+    ItemEntityIdDisconnect trackContainer(uint32_t entityId, T *instance);
+
     void itemMoved(Item *item);
+    void containerChanged(Item *containerItem, const ContainerChange &containerChange);
 
     /**
    * Load item types that are not present in the items.otb.
@@ -150,6 +158,35 @@ ItemEntityIdDisconnect Items::trackItem(uint32_t entityId, T *instance)
             if (found->second.is_empty())
             {
                 itemMoveSignals->erase(entityId);
+            }
+        }
+    };
+
+    outerFound->second.connect<MemberFunction>(instance);
+
+    return ItemEntityIdDisconnect(disconnect);
+}
+
+template <auto MemberFunction, typename T>
+ItemEntityIdDisconnect Items::trackContainer(uint32_t entityId, T *instance)
+{
+    auto outerFound = containerSignals.find(entityId);
+    if (outerFound == containerSignals.end())
+    {
+        containerSignals.try_emplace(entityId);
+        outerFound = containerSignals.find(entityId);
+    }
+
+    auto containerMoveSignals = &containerSignals;
+
+    std::function<void()> disconnect = [containerMoveSignals, instance, entityId]() {
+        auto found = containerMoveSignals->find(entityId);
+        if (found != containerMoveSignals->end())
+        {
+            found->second.disconnect<MemberFunction>(instance);
+            if (found->second.is_empty())
+            {
+                containerMoveSignals->erase(entityId);
             }
         }
     };

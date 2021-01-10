@@ -25,6 +25,18 @@ void TrackedItem::updateItem(Item *item)
     }
 }
 
+TrackedContainer::TrackedContainer(Item *item)
+    : TrackedItem(item),
+      containerDisconnect(Items::items.trackContainer<&TrackedContainer::updateContainer>(_entityId, this)) {}
+
+void TrackedContainer::updateContainer(ContainerChange change)
+{
+    if (onContainerChangeCallback)
+    {
+        onContainerChangeCallback(change);
+    }
+}
+
 ItemEntityIdDisconnect::ItemEntityIdDisconnect()
 {
 }

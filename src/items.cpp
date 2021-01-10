@@ -138,6 +138,19 @@ void Items::itemMoved(Item *item)
     }
 }
 
+void Items::containerChanged(Item *containerItem, const ContainerChange &containerChange)
+{
+    DEBUG_ASSERT(containerItem->isEntity(), "Must be an entity.");
+
+    auto entityId = containerItem->getEntityId().value();
+
+    auto found = containerSignals.find(entityId);
+    if (found != containerSignals.end())
+    {
+        found->second.fire(containerChange);
+    }
+}
+
 bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 {
     if (!Items::items.validItemType(id) || reservedForFluid(id, DefaultVersion))

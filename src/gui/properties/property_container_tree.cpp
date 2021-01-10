@@ -106,13 +106,13 @@ void ContainterTree::modelRemovedEvent(ContainerModel *model)
 ContainerNode::ContainerNode(Item *containerItem, ContainerSignals *_signals)
     : trackedContainerItem(containerItem), _signals(_signals)
 {
-    trackedContainerItem.onChanged<&ContainerNode::updateChildContainerPointers>(this);
+    trackedContainerItem.onChanged<&ContainerNode::trackedItemChanged>(this);
 }
 
 ContainerNode::ContainerNode(Item *containerItem, ContainerNode *parent)
     : trackedContainerItem(containerItem), _signals(parent->_signals)
 {
-    trackedContainerItem.onChanged<&ContainerNode::updateChildContainerPointers>(this);
+    trackedContainerItem.onChanged<&ContainerNode::trackedItemChanged>(this);
 }
 
 ContainerNode::~ContainerNode()
@@ -247,14 +247,14 @@ void ContainerNode::itemMoved(int fromIndex, int toIndex)
         children.at(toIndex)->setIndexInParent(toIndex);
     }
 }
-
-void ContainerNode::updateChildContainerPointers(Item *trackedItem)
+void ContainerNode::trackedItemChanged(Item *trackedItem)
 {
-    for (auto &entry : children)
-    {
-        auto &i = container()->itemAt(entry.first);
-        Items::items.itemMoved(&i);
-    }
+
+    // for (auto &entry : children)
+    // {
+    //     auto &i = container()->itemAt(entry.first);
+    //     Items::items.itemMoved(&i);
+    // }
 }
 
 std::vector<uint16_t> ContainerNode::indexChain() const

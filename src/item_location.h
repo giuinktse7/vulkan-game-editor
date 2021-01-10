@@ -28,8 +28,8 @@ struct ContainerLocation
     Position position;
     uint16_t tileIndex;
     /*
-          The last index is the index of the item in the final container.
-        */
+        The last index is the index of the item in the final container.
+    */
     std::vector<uint16_t> indices;
 
     uint16_t containerIndex() const;

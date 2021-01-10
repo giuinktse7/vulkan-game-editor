@@ -132,7 +132,11 @@ bool Container::removeItem(Item *item)
 
 Item Container::dropItemTracked(size_t index)
 {
+    DEBUG_ASSERT(index <= UINT8_MAX, "index too large.");
+
     Item item(std::move(_items.at(index)));
+
+    Items::items.containerChanged(this->item(), ContainerChange::removed(static_cast<uint8_t>(index)));
 
     auto itemLocation = _items.erase(_items.begin() + index);
     while (itemLocation != _items.end())
