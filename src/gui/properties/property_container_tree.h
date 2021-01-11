@@ -68,8 +68,9 @@ namespace PropertiesUI
 
       private:
         void trackedItemChanged(Item *trackedItem);
+        void trackedContainerChanged(ContainerChange change);
 
-        TrackedItem trackedContainerItem;
+        TrackedContainer trackedContainerItem;
     };
 
     struct ContainerTree

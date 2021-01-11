@@ -107,12 +107,14 @@ ContainerNode::ContainerNode(Item *containerItem, ContainerSignals *_signals)
     : trackedContainerItem(containerItem), _signals(_signals)
 {
     trackedContainerItem.onChanged<&ContainerNode::trackedItemChanged>(this);
+    trackedContainerItem.onContainerChanged<&ContainerNode::trackedContainerChanged>(this);
 }
 
 ContainerNode::ContainerNode(Item *containerItem, ContainerNode *parent)
     : trackedContainerItem(containerItem), _signals(parent->_signals)
 {
     trackedContainerItem.onChanged<&ContainerNode::trackedItemChanged>(this);
+    trackedContainerItem.onContainerChanged<&ContainerNode::trackedContainerChanged>(this);
 }
 
 ContainerNode::~ContainerNode()
@@ -133,13 +135,13 @@ void ContainerNode::onDragFinished(ItemDrag::DragOperation::DropResult result)
         // It would be faster to only refresh the changed indices. But this should
         // not make a significant difference in performance, because the model will
         // have at most ~25 items (max capacity of the largest container item).
-        _model->refresh();
+        // _model->refresh();
 
-        if (draggedIndex.has_value())
-        {
-            int index = draggedIndex.value();
-            itemRemoved(index);
-        }
+        // if (draggedIndex.has_value())
+        // {
+        //     int index = draggedIndex.value();
+        //     itemRemoved(index);
+        // }
     }
 }
 
@@ -185,6 +187,12 @@ void ContainerNode::itemRemoved(int index)
 {
     if (children.empty())
         return;
+
+    auto found = children.find(index);
+    if (found != children.end())
+    {
+        children.erase(found);
+    }
 
     std::vector<int> indices;
 
@@ -249,12 +257,31 @@ void ContainerNode::itemMoved(int fromIndex, int toIndex)
 }
 void ContainerNode::trackedItemChanged(Item *trackedItem)
 {
-
+    VME_LOG_D("trackedItemChanged for: " << containerItem()->name());
     // for (auto &entry : children)
     // {
     //     auto &i = container()->itemAt(entry.first);
     //     Items::items.itemMoved(&i);
     // }
+}
+
+void ContainerNode::trackedContainerChanged(ContainerChange change)
+{
+    VME_LOG_D("trackedContainerChanged for " << containerItem()->name() << ":" << change);
+    switch (change.type)
+    {
+        case ContainerChangeType::Insert:
+            itemInserted(change.index);
+            break;
+        case ContainerChangeType::Remove:
+            itemRemoved(change.index);
+            break;
+        case ContainerChangeType::MoveInSameContainer:
+            itemMoved(change.index, change.toIndex);
+            break;
+    }
+
+    _model->refresh();
 }
 
 std::vector<uint16_t> ContainerNode::indexChain() const
