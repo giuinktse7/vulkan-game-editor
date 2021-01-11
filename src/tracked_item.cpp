@@ -37,6 +37,27 @@ void TrackedContainer::updateContainer(ContainerChange change)
     }
 }
 
+ContainerChange::ContainerChange(ContainerChangeType type, uint8_t index)
+    : type(type), index(index) {}
+
+ContainerChange::ContainerChange(ContainerChangeType type, uint8_t fromIndex, uint8_t toIndex)
+    : type(type), index(fromIndex), toIndex(toIndex) {}
+
+ContainerChange ContainerChange::inserted(uint8_t index)
+{
+    return ContainerChange(ContainerChangeType::Insert, index);
+}
+
+ContainerChange ContainerChange::removed(uint8_t index)
+{
+    return ContainerChange(ContainerChangeType::Remove, index);
+}
+
+ContainerChange ContainerChange::moveInSameContainer(uint8_t fromIndex, uint8_t toIndex)
+{
+    return ContainerChange(ContainerChangeType::MoveInSameContainer, fromIndex, toIndex);
+}
+
 ItemEntityIdDisconnect::ItemEntityIdDisconnect()
 {
 }

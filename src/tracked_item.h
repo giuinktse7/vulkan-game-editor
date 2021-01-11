@@ -1,32 +1,32 @@
 #pragma once
 
 #include <functional>
+#include <ostream>
 
 class Item;
 
 enum class ContainerChangeType
 {
     Insert,
-    Remove
+    Remove,
+    MoveInSameContainer
 };
 
 struct ContainerChange
 {
-    static ContainerChange inserted(uint8_t index)
-    {
-        return ContainerChange(ContainerChangeType::Insert, index);
-    }
-    static ContainerChange removed(uint8_t index)
-    {
-        return ContainerChange(ContainerChangeType::Remove, index);
-    }
+    static ContainerChange inserted(uint8_t index);
+    static ContainerChange removed(uint8_t index);
+    static ContainerChange moveInSameContainer(uint8_t fromIndex, uint8_t toIndex);
 
     ContainerChangeType type;
     uint8_t index;
 
+    // Only applicable for move in same container
+    uint8_t toIndex;
+
   private:
-    ContainerChange(ContainerChangeType type, uint8_t index)
-        : type(type), index(index) {}
+    ContainerChange(ContainerChangeType type, uint8_t index);
+    ContainerChange(ContainerChangeType type, uint8_t fromIndex, uint8_t toIndex);
 };
 
 struct ItemEntityIdDisconnect
@@ -83,4 +83,28 @@ struct TrackedContainer : TrackedItem
 inline uint32_t TrackedItem::entityId() const noexcept
 {
     return _entityId;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const ContainerChangeType &type)
+{
+    switch (type)
+    {
+        case ContainerChangeType::Insert:
+            os << "ContainerChangeType::Insert";
+            break;
+        case ContainerChangeType::Remove:
+            os << "ContainerChangeType::Remove";
+            break;
+        default:
+            os << "Unknown ContainerChangeType";
+            break;
+    }
+
+    return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const ContainerChange &change)
+{
+    os << "{ type:" << change.type << ", index: " << static_cast<int>(change.index) << " }";
+    return os;
 }
