@@ -165,7 +165,7 @@ namespace MapHistory
             data = newData;
         }
 
-        container->insertItem(tile->dropItem(std::get<Data>(data).tileIndex), to.containerIndex());
+        container->insertItemTracked(tile->dropItem(std::get<Data>(data).tileIndex), to.containerIndex());
         updateSelection(mapView, tile->position());
     }
 
@@ -174,7 +174,7 @@ namespace MapHistory
         Tile *tile = mapView.getTile(fromPosition);
         Data &moveData = std::get<Data>(data);
 
-        tile->insertItem(to.container(mapView)->dropItem(to.containerIndex()), moveData.tileIndex);
+        tile->insertItem(to.container(mapView)->dropItemTracked(to.containerIndex()), moveData.tileIndex);
         updateSelection(mapView, tile->position());
     }
 
@@ -202,64 +202,78 @@ namespace MapHistory
             case Relationship::None:
                 break;
             case Relationship::SameContainer:
+                sameContainer = true;
                 break;
             case Relationship::FromIsChild:
             {
-                // TODO Need better name for this temporary variable
-                size_t k = to.indices.size() - 1;
-                int indexInParent = from.indices.at(k);
-                int targetIndex = to.indices.back();
+                size_t updateIndex = to.indices.size() - 1;
+                int itemContainerIndex = from.indices.at(updateIndex);
+                int divergingContainerIndex = to.indices.back();
 
-                if (targetIndex <= indexInParent)
+                if (divergingContainerIndex <= itemContainerIndex)
                 {
-                    DEBUG_ASSERT(indexInParent < UINT8_MAX, "indexInParent too big.");
-                    indexUpdate = {static_cast<uint8_t>(k), 1};
+                    DEBUG_ASSERT(updateIndex < UINT8_MAX, "updateIndex is too big.");
+                    indexUpdate = {static_cast<uint8_t>(updateIndex), 1};
                 }
 
                 break;
             }
             case Relationship::FromIsParent:
             {
-                int indexInParent = to.indices.at(from.indices.size() - 1);
-                int sourceIndex = from.indices.back();
+                int updateIndex = from.indices.size() - 1;
+                int divergingContainerIndex = to.indices.at(updateIndex);
+                int itemContainerIndex = from.indices.back();
 
-                DEBUG_ASSERT(indexInParent != sourceIndex, "indexInParent != sourceIndex, This should (probably?) never happen.");
-
-                if (sourceIndex < indexInParent)
+                if (itemContainerIndex < divergingContainerIndex)
                 {
-                    DEBUG_ASSERT(indexInParent < UINT8_MAX, "indexInParent too big.");
+                    DEBUG_ASSERT(updateIndex < UINT8_MAX, "updateIndex is too big.");
 
-                    indexUpdate = {static_cast<uint8_t>(indexInParent), (int8_t)-1};
+                    indexUpdate = {static_cast<uint8_t>(updateIndex), (int8_t)-1};
                 }
+                break;
             }
         }
     }
 
     void MoveFromContainerToContainer::commit(MapView &mapView)
     {
-        to.container(mapView)->insertItemTracked(
-            from.container(mapView)->dropItemTracked(from.containerIndex()),
-            to.containerIndex());
-
-        if (indexUpdate)
+        if (sameContainer)
         {
-            auto &update = indexUpdate.value();
-            auto &location = from.indices.size() > to.indices.size() ? from : to;
-            location.indices.at(update.index) += update.delta;
+            from.container(mapView)->moveItemTracked(from.containerIndex(), to.containerIndex());
+        }
+        else
+        {
+            to.container(mapView)->insertItemTracked(
+                from.container(mapView)->dropItemTracked(from.containerIndex()),
+                to.containerIndex());
+
+            if (indexUpdate)
+            {
+                auto &update = indexUpdate.value();
+                auto &location = from.indices.size() > to.indices.size() ? from : to;
+                location.indices.at(update.index) += update.delta;
+            }
         }
     }
 
     void MoveFromContainerToContainer::undo(MapView &mapView)
     {
-        from.container(mapView)->insertItemTracked(
-            to.container(mapView)->dropItemTracked(to.containerIndex()),
-            from.containerIndex());
-
-        if (indexUpdate)
+        if (sameContainer)
         {
-            auto &update = indexUpdate.value();
-            auto &location = from.indices.size() > to.indices.size() ? from : to;
-            location.indices.at(update.index) -= update.delta;
+            from.container(mapView)->moveItemTracked(to.containerIndex(), from.containerIndex());
+        }
+        else
+        {
+            from.container(mapView)->insertItemTracked(
+                to.container(mapView)->dropItemTracked(to.containerIndex()),
+                from.containerIndex());
+
+            if (indexUpdate)
+            {
+                auto &update = indexUpdate.value();
+                auto &location = from.indices.size() > to.indices.size() ? from : to;
+                location.indices.at(update.index) -= update.delta;
+            }
         }
     }
 

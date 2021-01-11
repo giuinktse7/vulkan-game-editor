@@ -122,6 +122,8 @@ namespace MapHistory
             int8_t delta;
         };
 
+        bool sameContainer = false;
+
         std::optional<IndexUpdate> indexUpdate;
     };
 
