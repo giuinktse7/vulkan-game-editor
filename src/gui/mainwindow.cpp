@@ -337,6 +337,7 @@ void MainWindow::initializeUI()
 
     initializePaletteWindow();
     paletteWindow->tilesetListView()->addItems(4526, 4626);
+    // paletteWindow->tilesetListView()->addItems(100, 40000);
 
     // itemPalette->setMinimumWidth(240);
     // itemPalette->setMaximumWidth(600);

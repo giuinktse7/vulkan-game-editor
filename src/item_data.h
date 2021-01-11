@@ -125,6 +125,7 @@ struct Container : public ItemData
 
     bool insertItemTracked(Item &&item, size_t index);
     Item dropItemTracked(size_t index);
+    void moveItemTracked(size_t fromIndex, size_t toIndex);
 
     bool insertItem(Item &&item, size_t index);
     bool addItem(Item &&item);
@@ -133,6 +134,8 @@ struct Container : public ItemData
     bool removeItem(size_t index);
 
     Item dropItem(size_t index);
+
+    void moveItem(size_t fromIndex, size_t toIndex);
 
     Item &itemAt(size_t index);
 

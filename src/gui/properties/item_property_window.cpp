@@ -373,20 +373,18 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
 
             auto container = containerNode->container();
 
-            mapView->history.beginTransaction(TransactionType::MoveItems);
-
             ContainerLocation to(
                 state.selectedPosition,
                 static_cast<uint16_t>(focusedItem.tileIndex),
                 containerNode->indexChain(index));
 
+            mapView->history.beginTransaction(TransactionType::MoveItems);
             mapView->moveFromMapToContainer(*dropped->tile, dropped->_item, to);
-
             mapView->history.endTransaction(TransactionType::MoveItems);
 
-            containerNode->itemInserted(index);
+            // containerNode->itemInserted(index);
 
-            containerNode->model()->refresh();
+            // containerNode->model()->refresh();
             break;
         }
         case DragSource::ContainerItem:
@@ -431,10 +429,10 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
             else
             {
 
-                containerNode->itemInserted(index);
+                // containerNode->itemInserted(index);
             }
 
-            containerNode->model()->refresh();
+            // containerNode->model()->refresh();
             break;
         }
         default:

@@ -196,7 +196,10 @@ Container *Item::getOrCreateContainer()
         _itemData = std::make_unique<Container>(itemType->volume, this);
     }
 
-    return getDataAs<Container>();
+    auto container = getDataAs<Container>();
+    container->setItem(this);
+
+    return container;
 }
 
 void Item::registerEntity()

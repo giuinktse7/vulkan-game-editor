@@ -41,6 +41,7 @@ Container *ContainerLocation::container(MapView &mapView)
     // Skip final container index (it's an index to the item being moved)
     for (auto it = indices.begin(); it < indices.end() - 1; ++it)
     {
+        DEBUG_ASSERT(current->isContainer(), "Must be container");
         uint16_t index = *it;
         current = &current->getDataAs<Container>()->itemAt(index);
     }

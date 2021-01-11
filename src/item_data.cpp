@@ -54,6 +54,9 @@ bool Container::insertItemTracked(Item &&item, size_t index)
         return false;
 
     auto itemLocation = _items.emplace(_items.begin() + index, std::move(item));
+
+    Items::items.containerChanged(this->item(), ContainerChange::inserted(static_cast<uint8_t>(index)));
+
     while (itemLocation != _items.end())
     {
         Items::items.itemMoved(&(*itemLocation));
@@ -136,9 +139,10 @@ Item Container::dropItemTracked(size_t index)
 
     Item item(std::move(_items.at(index)));
 
+    auto itemLocation = _items.erase(_items.begin() + index);
+
     Items::items.containerChanged(this->item(), ContainerChange::removed(static_cast<uint8_t>(index)));
 
-    auto itemLocation = _items.erase(_items.begin() + index);
     while (itemLocation != _items.end())
     {
         Items::items.itemMoved(&(*itemLocation));
@@ -148,12 +152,42 @@ Item Container::dropItemTracked(size_t index)
     return item;
 }
 
+void Container::moveItemTracked(size_t fromIndex, size_t toIndex)
+{
+    DEBUG_ASSERT(fromIndex <= UINT8_MAX, "fromIndex too large.");
+    DEBUG_ASSERT(toIndex <= UINT8_MAX, "toIndex too large.");
+
+    util::moveByRotate(_items, fromIndex, toIndex);
+
+    Items::items.containerChanged(this->item(), ContainerChange::moveInSameContainer(static_cast<uint8_t>(fromIndex), static_cast<uint8_t>(toIndex)));
+
+    auto from = std::min(fromIndex, toIndex);
+    auto to = std::max(fromIndex, toIndex);
+
+    auto fromIt = _items.begin() + from;
+    auto toIt = _items.begin() + to;
+
+    while (fromIt != toIt)
+    {
+        Items::items.itemMoved(&(*fromIt));
+        ++fromIt;
+    }
+}
+
 Item Container::dropItem(size_t index)
 {
     Item item(std::move(_items.at(index)));
     _items.erase(_items.begin() + index);
 
     return item;
+}
+
+void Container::moveItem(size_t fromIndex, size_t toIndex)
+{
+    DEBUG_ASSERT(fromIndex <= UINT8_MAX, "fromIndex too large.");
+    DEBUG_ASSERT(toIndex <= UINT8_MAX, "toIndex too large.");
+
+    util::moveByRotate(_items, fromIndex, toIndex);
 }
 
 Item &Container::itemAt(size_t index)

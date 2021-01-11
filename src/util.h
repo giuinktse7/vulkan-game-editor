@@ -38,6 +38,31 @@ inline constexpr auto to_underlying(E e) noexcept
 
 namespace util
 {
+    // See https://stackoverflow.com/a/65203019/7157626
+    template <class ContiguousContainer>
+    void moveByRotate(ContiguousContainer &v, size_t fromIndex, size_t toIndex)
+    {
+        DEBUG_ASSERT(fromIndex < v.size(), "Index out of bounds.");
+        DEBUG_ASSERT(toIndex < v.size(), "Index out of bounds.");
+
+        const auto from = v.begin() + fromIndex;
+        const auto to = v.begin() + toIndex;
+        if (fromIndex < toIndex)
+        {
+            // We're rotating the element toward the back, so we want the new
+            // front of our range to be the element just after the "from" iterator
+            // (thereby making our "from" iterator the new end of the range).
+            std::rotate(from, from + 1, to + 1);
+        }
+        else if (toIndex < fromIndex)
+        {
+            // We're rotating the element toward the front,
+            // so we want the new front of the range to be the "from" iterator.
+            std::rotate(to, from, from + 1);
+        }
+        // else the indices were equal, no rotate necessary
+    }
+
     std::string unicodePath(std::filesystem::path path);
 
     template <typename T>
