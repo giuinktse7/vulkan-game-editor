@@ -24,7 +24,7 @@ class TilesetListView : public QListView
     Brush *brushAtIndex(QModelIndex index) const;
 
     void setTileset(Tileset *tileset);
-    void scrollTo(int index);
+    void selectAndScrollTo(int index);
 
     Tileset *tileset() const noexcept;
 

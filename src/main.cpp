@@ -15,7 +15,6 @@
 #include <QStyleFactory>
 
 #include "config.h"
-#include "ecs/ecs.h"
 #include "graphics/appearances.h"
 #include "gui/map_tab_widget.h"
 #include "gui/map_view_widget.h"
@@ -23,6 +22,7 @@
 #include "item_wrapper.h"
 #include "items.h"
 #include "load_map.h"
+#include "logger.h"
 #include "minimap.h"
 #include "qt/logging.h"
 #include "random.h"

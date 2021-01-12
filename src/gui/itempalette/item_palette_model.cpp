@@ -10,12 +10,23 @@
 using TilesetModel = ItemPaletteUI::TilesetModel;
 // using ModelItem = ItemPaletteUI::ModelItem;
 using ItemDelegate = ItemPaletteUI::ItemDelegate;
+using HighlightAnimation = ItemPaletteUI::HighlightAnimation;
+
+TilesetModel::TilesetModel(QObject *parent)
+    : QAbstractListModel(parent), highlightAnimation(this)
+{
+}
 
 void TilesetModel::setTileset(Tileset *tileset)
 {
     beginResetModel();
     _tileset = tileset;
     endResetModel();
+}
+
+void TilesetModel::highlightIndex(const QModelIndex &modelIndex)
+{
+    highlightAnimation.runOnIndex(modelIndex);
 }
 
 int TilesetModel::rowCount(const QModelIndex &parent) const
@@ -38,63 +49,8 @@ void TilesetModel::clear()
     setTileset(nullptr);
 }
 
-// void TilesetModel::addItem(uint32_t serverId)
-// {
-//     if (Items::items.validItemType(serverId))
-//     {
-//         int size = static_cast<int>(_data.size());
-//         beginInsertRows(QModelIndex(), size, size + 1);
-//         _data.emplace_back(ModelItem::fromServerId(serverId));
-//         endInsertRows();
-//     }
-// }
-
-// void TilesetModel::addItems(uint32_t from, uint32_t to)
-// {
-//     DEBUG_ASSERT(from < to, "Bad range.");
-
-//     std::vector<uint32_t> ids;
-
-//     // Assume that most IDs in the range are valid
-//     ids.reserve(to - from);
-
-//     for (uint32_t serverId = from; serverId < to; ++serverId)
-//     {
-//         // TODO Include corpses. Filtering out corpses is temporary for testing.
-//         // if (Items::items.validItemType(serverId))
-//         if (Items::items.validItemType(serverId) && !Items::items.getItemTypeByServerId(serverId)->isCorpse())
-//         // if (Items::items.validItemType(serverId) && Items::items.getItemTypeByServerId(serverId)->isGroundTile())
-//         {
-//             ids.emplace_back(serverId);
-//         }
-//     }
-
-//     ids.shrink_to_fit();
-//     VME_LOG("Added " << ids.size() << " items");
-//     addItems(std::move(ids));
-// }
-
-// void TilesetModel::addItems(std::vector<uint32_t> &&serverIds)
-// {
-//     serverIds.erase(std::remove_if(serverIds.begin(),
-//                                    serverIds.end(),
-//                                    [](uint32_t serverId) {
-//                                        return !Items::items.validItemType(serverId);
-//                                    }),
-//                     serverIds.end());
-
-//     int size = static_cast<int>(_data.size());
-//     beginInsertRows(QModelIndex(), size, size + static_cast<int>(serverIds.size()));
-//     for (const auto serverId : serverIds)
-//     {
-//         _data.emplace_back(ModelItem::fromServerId(serverId));
-//     }
-//     endInsertRows();
-// }
-
 QVariant TilesetModel::data(const QModelIndex &index, int role) const
 {
-    // VME_LOG_D("data(" << index.row() << ", " << role << ")");
     if (index.row() < 0 || index.row() >= _tileset->size())
         return QVariant();
 
@@ -103,12 +59,29 @@ QVariant TilesetModel::data(const QModelIndex &index, int role) const
         Brush *brush = _tileset->get(index.row());
         return GuiImageCache::get(brush->iconServerId());
     }
+    else if (role == TilesetModel::HighlightRole)
+    {
+        if (QPersistentModelIndex(index) == highlightAnimation.index)
+        {
+            return highlightAnimation.currentValue();
+        }
+    }
 
     return QVariant();
 }
 
 ItemDelegate::ItemDelegate(QObject *parent)
-    : QAbstractItemDelegate(parent) {}
+    : QAbstractItemDelegate(parent), color("#2196F3")
+{
+    highlightBorderPen.setWidth(4);
+    setHighlightPenOpacity(1.0f);
+}
+
+void ItemDelegate::setHighlightPenOpacity(float opacity) const
+{
+    color.setAlphaF(opacity);
+    highlightBorderPen.setColor(color);
+}
 
 void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
@@ -116,10 +89,53 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     // painter->drawText(40, option.rect.y() + 18, QString::number(data.itemType->id));
     // painter->drawPixmap(4, option.rect.y(), data.pixmap);
     // qDebug() << "Delegate::paint: " << option.rect;
+
     painter->drawPixmap(option.rect.x(), option.rect.y(), qvariant_cast<QPixmap>(index.data(Qt::DisplayRole)));
+
+    bool ok;
+    int highlightOpacity = index.data(TilesetModel::HighlightRole).toInt(&ok);
+    if (ok && highlightOpacity > 0)
+    {
+        // VME_LOG_D("paint highlight: " << highlightOpacity);
+        painter->save();
+        setHighlightPenOpacity(highlightOpacity / 100.0f);
+        painter->setPen(highlightBorderPen);
+
+        painter->drawRect(QRect(option.rect.x(), option.rect.y(), 32, 32));
+        painter->restore();
+    }
 }
 
 QSize ItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     return QSize(32, 32);
+}
+
+HighlightAnimation::HighlightAnimation(TilesetModel *model, QObject *parent)
+    : model(model)
+{
+    setKeyValueAt(0, 0);
+    setKeyValueAt(0.25f, 100);
+    setKeyValueAt(0.5f, 0);
+    setKeyValueAt(0.75f, 100);
+    setKeyValueAt(1.0f, 0);
+
+    // setStartValue(100);
+    // setEndValue(0);
+
+    setDuration(2000);
+    connect(this, &HighlightAnimation::valueChanged, [=](const QVariant &value) {
+        model->dataChanged(index, index, QList{TilesetModel::HighlightRole});
+    });
+}
+
+void HighlightAnimation::runOnIndex(const QModelIndex &modelIndex)
+{
+    if (state() == State::Running)
+    {
+        stop();
+    }
+    index = QPersistentModelIndex(modelIndex);
+
+    start();
 }

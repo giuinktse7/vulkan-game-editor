@@ -142,12 +142,29 @@ TilesetListView::TilesetListView(QWidget *parent)
     setItemDelegate(new ItemPaletteUI::ItemDelegate(this));
     setSpacing(1);
 
+    setSelectionBehavior(QAbstractItemView::SelectRows);
+
     _model = new TilesetModel(this);
     setModel(_model);
 
     installEventFilter(new TilesetListEventFilter(this));
 
-    setSelectionRectVisible(true);
+    auto modelPtr = _model;
+    connect(selectionModel(), &QItemSelectionModel::selectionChanged, [modelPtr](const QItemSelection &selected, const QItemSelection &deselected) {
+        auto selectionIndices = selected.indexes();
+        if (!selectionIndices.empty())
+        {
+            modelPtr->highlightIndex(selectionIndices.front());
+        }
+
+        auto deselectionIndices = selected.indexes();
+        if (!deselectionIndices.empty())
+        {
+            modelPtr->setData(deselectionIndices.front(), -1, TilesetModel::HighlightRole);
+        }
+    });
+
+    // setSelectionRectVisible(true);
 
     QPalette stylePalette = palette();
     stylePalette.setColor(QPalette::Base, "#000000");
@@ -174,9 +191,11 @@ void TilesetListView::clear() noexcept
     _model->clear();
 }
 
-void TilesetListView::scrollTo(int index)
+void TilesetListView::selectAndScrollTo(int index)
 {
-    QListView::scrollTo(_model->index(index));
+    QModelIndex modelIndex = _model->index(index);
+    scrollTo(modelIndex);
+    setCurrentIndex(modelIndex);
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -241,7 +260,7 @@ void PaletteWidget::selectBrush(Brush *brush)
         ABORT_PROGRAM("The brush was not present in the current tileset.");
     }
 
-    _tilesetListView->scrollTo(index);
+    _tilesetListView->selectAndScrollTo(index);
 }
 
 Tileset *PaletteWidget::tileset() const noexcept
