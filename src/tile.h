@@ -116,9 +116,6 @@ class Tile
     inline Creature *creature() const noexcept;
     inline bool hasCreature() const noexcept;
 
-    void initEntities();
-    void destroyEntities();
-
     inline Position position() const noexcept
     {
         return _position;

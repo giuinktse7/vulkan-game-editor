@@ -1,34 +1,37 @@
 #include "item.h"
 
-#include "ecs/ecs.h"
-#include "ecs/item_animation.h"
+#include "graphics/appearances.h"
 #include "item_data.h"
 #include "items.h"
 #include "sprite_info.h"
 #include "util.h"
 
 Item::Item(ItemTypeId itemTypeId)
-    : itemType(Items::items.getItemTypeByServerId(itemTypeId))
+    : itemType(Items::items.getItemTypeByServerId(itemTypeId)),
+      _guid(Items::items.createItemGid())
 {
-    registerEntity();
+    if (itemType->hasAnimation())
+    {
+        _animation = std::make_shared<ItemAnimation>(itemType->getSpriteInfo().animation());
+    }
 }
 
 Item::Item(const Item &other)
-    : itemType(other.itemType)
+    : itemType(other.itemType), _animation(other._animation), _guid(other._guid)
 {
-    entityId = other.entityId;
+    Items::items.guidRefCreated(_guid);
 }
 
 Item::Item(Item &&other) noexcept
-    : ecs::OptionalEntity(std::move(other)),
-      itemType(other.itemType),
+    : itemType(other.itemType),
       selected(other.selected),
       _attributes(std::move(other._attributes)),
       _subtype(other._subtype),
-      _itemData(std::move(other._itemData))
+      _itemData(std::move(other._itemData)),
+      _guid(other._guid),
+      _animation(std::move(other._animation))
 {
-    // Necessary because the move does not remove the entity id of 'other'
-    other.entityId.reset();
+    Items::items.guidRefCreated(_guid);
 
     if (_itemData)
     {
@@ -38,15 +41,15 @@ Item::Item(Item &&other) noexcept
 
 Item &Item::operator=(Item &&other) noexcept
 {
-    entityId = std::move(other.entityId);
     itemType = other.itemType;
     _attributes = std::move(other._attributes);
     _subtype = other._subtype;
     _itemData = std::move(other._itemData);
     selected = other.selected;
+    _animation = std::move(other._animation);
+    _guid = other._guid;
 
-    // Necessary because the move does not remove the entity id of 'other'
-    other.entityId.reset();
+    Items::items.guidRefCreated(_guid);
 
     if (_itemData)
     {
@@ -58,13 +61,12 @@ Item &Item::operator=(Item &&other) noexcept
 
 Item::~Item()
 {
-    auto entityId = getEntityId();
-    if (entityId.has_value())
-    {
-        g_ecs.destroy(entityId.value());
-        // Logger::debug() << "Destroying item " << std::to_string(this->getId()) << "(" << this->name() << "), entity
-        // id: " << entityId.value() << std::endl;
-    }
+    Items::items.guidRefDestroyed(_guid);
+}
+
+uint32_t Item::guid() const noexcept
+{
+    return _guid;
 }
 
 Item Item::deepCopy() const
@@ -94,11 +96,9 @@ const TextureInfo Item::getTextureInfo(const Position &pos, TextureInfo::Coordin
 
     uint32_t offset = getPatternIndex(pos);
     const SpriteInfo &spriteInfo = itemType->getSpriteInfo(0);
-    if (spriteInfo.hasAnimation() && isEntity())
+    if (spriteInfo.hasAnimation() && _animation)
     {
-        auto entityId = getEntityId().value();
-        auto c = g_ecs.getComponent<ItemAnimationComponent>(entityId);
-        offset += c->state.phaseIndex * spriteInfo.patternSize;
+        offset += _animation->state.phaseIndex * spriteInfo.patternSize;
     }
 
     uint32_t spriteId = spriteInfo.spriteIds.at(offset);
@@ -134,6 +134,14 @@ const uint32_t Item::getPatternIndex(const Position &pos) const
 bool Item::isGround() const noexcept
 {
     return itemType->isGroundTile();
+}
+
+void Item::animate() const
+{
+    if (_animation)
+    {
+        _animation->update();
+    }
 }
 
 void Item::setAttribute(ItemAttribute &&attribute)
@@ -206,17 +214,9 @@ Container *Item::getOrCreateContainer()
     return container;
 }
 
-void Item::registerEntity()
+ItemAnimation *Item::animation() const noexcept
 {
-    DEBUG_ASSERT(!entityId.has_value(), "Attempted to register an entity that already has an entity id.");
-    ecs::EntityId entityId = assignNewEntityId();
-
-    if (itemType->hasAnimation())
-    {
-        auto animation = itemType->getSpriteInfo().animation();
-        VME_LOG_D("Add animation component for entity ID " << entityId);
-        g_ecs.addComponent(entityId, ItemAnimationComponent(animation));
-    }
+    return _animation.get();
 }
 
 ItemData *Item::data() const

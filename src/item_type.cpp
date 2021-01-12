@@ -1,7 +1,5 @@
 #include "item_type.h"
 
-#include "ecs/ecs.h"
-#include "ecs/item_animation.h"
 #include "graphics/appearances.h"
 
 const uint32_t ItemType::getPatternIndex(const Position &pos) const

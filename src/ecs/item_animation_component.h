@@ -2,47 +2,9 @@
 
 #include <variant>
 
+#include "../item_animation.h"
 #include "../time_point.h"
 #include "ecs_system.h"
-
-enum class AnimationLoopType
-{
-    PingPong = -1,
-    Infinite = 0,
-    Counted = 1
-};
-
-struct SpritePhase
-{
-    uint32_t minDuration;
-    uint32_t maxDuration;
-};
-
-struct SpriteAnimation
-{
-    uint32_t defaultStartPhase;
-    bool synchronized;
-    /*
-    If true, the animation can start in any phase.
-  */
-    bool randomStartPhase;
-    AnimationLoopType loopType;
-
-    // Amount of times to loop. Only relevant if the loopType is AnimationLoopType::Counted.
-    uint32_t loopCount;
-    std::vector<SpritePhase> phases;
-
-    friend struct SpriteInfo;
-};
-
-namespace item_animation
-{
-    enum class AnimationDirection
-    {
-        Forward,
-        Backward
-    };
-}
 
 struct ItemAnimationComponent;
 

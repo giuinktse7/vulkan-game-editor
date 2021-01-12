@@ -1,4 +1,4 @@
-#include "item_animation.h"
+#include "item_animation_component.h"
 
 #include <chrono>
 #include <numeric>

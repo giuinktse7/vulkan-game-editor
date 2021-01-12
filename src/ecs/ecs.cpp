@@ -1,7 +1,6 @@
 #include "ecs.h"
 
 #include "../logger.h"
-#include "item_animation.h"
 
 ECS g_ecs;
 

@@ -13,7 +13,7 @@
 - [ ] Animations
 
       - [ ] Implement rendering for animations through MapView::requestUpdate().
-      - [ ] Only update visible animations.
+      - [x] Only update visible animations.
       - [ ] Do not render animations when zoomed out further than a certain level.
 
 ## Editing functionality

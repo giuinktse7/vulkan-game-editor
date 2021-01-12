@@ -74,7 +74,8 @@ set(CommonSources
     src/ecs/ecs.h
     src/ecs/ecs_system.h
     src/ecs/entity.h
-    src/ecs/item_animation.h
+    src/ecs/item_animation_component.h
+    src/item_animation.h
     src/file.h
     src/editor_action.h
     src/graphics/appearances.h
@@ -160,7 +161,8 @@ set(CommonSources
     src/otbm.cpp
     src/ecs/ecs.cpp
     src/ecs/entity.cpp
-    src/ecs/item_animation.cpp
+    src/ecs/item_animation_component.cpp
+    src/item_animation.cpp
     src/file.cpp
     src/editor_action.cpp
     src/graphics/appearances.cpp

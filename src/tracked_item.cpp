@@ -6,8 +6,8 @@
 class Item;
 
 TrackedItem::TrackedItem(Item *item)
-    : _entityId(item->getEntityId().value()),
-      disconnect(Items::items.trackItem<&TrackedItem::updateItem>(_entityId, this)),
+    : _guid(item->guid()),
+      disconnect(Items::items.trackItem<&TrackedItem::updateItem>(_guid, this)),
       _item(item) {}
 
 Item *TrackedItem::item() const noexcept
@@ -27,7 +27,7 @@ void TrackedItem::updateItem(Item *item)
 
 TrackedContainer::TrackedContainer(Item *item)
     : TrackedItem(item),
-      containerDisconnect(Items::items.trackContainer<&TrackedContainer::updateContainer>(_entityId, this)) {}
+      containerDisconnect(Items::items.trackContainer<&TrackedContainer::updateContainer>(_guid, this)) {}
 
 void TrackedContainer::updateContainer(ContainerChange change)
 {
@@ -58,16 +58,16 @@ ContainerChange ContainerChange::moveInSameContainer(uint8_t fromIndex, uint8_t 
     return ContainerChange(ContainerChangeType::MoveInSameContainer, fromIndex, toIndex);
 }
 
-ItemEntityIdDisconnect::ItemEntityIdDisconnect()
+ItemGuidDisconnect::ItemGuidDisconnect()
 {
 }
 
-ItemEntityIdDisconnect::ItemEntityIdDisconnect(std::function<void()> f)
+ItemGuidDisconnect::ItemGuidDisconnect(std::function<void()> f)
     : f(f)
 {
 }
 
-ItemEntityIdDisconnect::~ItemEntityIdDisconnect()
+ItemGuidDisconnect::~ItemGuidDisconnect()
 {
     if (f)
     {

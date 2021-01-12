@@ -2,8 +2,6 @@
 
 #include <numeric>
 
-#include "ecs/ecs.h"
-#include "ecs/item_animation.h"
 #include "items.h"
 #include "tile_location.h"
 
@@ -527,24 +525,6 @@ std::optional<size_t> Tile::indexOf(Item *item) const
     {
         return std::nullopt;
     }
-}
-
-void Tile::initEntities()
-{
-    if (_ground)
-        _ground->registerEntity();
-
-    for (auto &item : _items)
-        item.registerEntity();
-}
-
-void Tile::destroyEntities()
-{
-    if (_ground)
-        _ground->destroyEntity();
-
-    for (auto &item : _items)
-        item.destroyEntity();
 }
 
 void Tile::movedInMap()

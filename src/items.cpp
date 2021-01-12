@@ -20,6 +20,7 @@ Items Items::items;
 
 namespace
 {
+    constexpr size_t InitialMaxGuids = static_cast<size_t>(util::power(2, 14));
     constexpr uint32_t ReservedItemCount = 40000;
 
     constexpr ClientVersion DefaultVersion = ClientVersion::CLIENT_VERSION_1098;
@@ -34,7 +35,7 @@ namespace
         }
         // TODO What is the version range for fluids in [30000, 30100]?
         // else if (id > 30000 && id < 30100) {}
-        // Fluids in current version, might change in the future
+        // Fluids in current version (?), might change in the future
         else if (40000 < id && id < 40100)
         {
             return true;
@@ -46,10 +47,49 @@ namespace
     }
 } // namespace
 
-using std::string;
-
 Items::Items()
+    : guidRefCounts(InitialMaxGuids)
 {
+}
+
+uint32_t Items::createItemGid()
+{
+    uint32_t id;
+    if (freedItemGuids.empty())
+    {
+        id = nextItemGuid++;
+    }
+    else
+    {
+        id = freedItemGuids.front();
+        freedItemGuids.pop();
+    }
+
+    if (guidRefCounts.size() <= id)
+    {
+        guidRefCounts.resize(guidRefCounts.size() * 4);
+    }
+
+    guidRefCounts.at(id) = 1;
+
+    return id;
+}
+
+void Items::guidRefCreated(uint32_t id)
+{
+    uint16_t &refCount = guidRefCounts.at(id);
+    DEBUG_ASSERT(refCount != 0, "There is no UUID " + id);
+    ++refCount;
+}
+
+void Items::guidRefDestroyed(uint32_t id)
+{
+    uint16_t &refCount = guidRefCounts.at(id);
+    --refCount;
+    if (refCount == 0)
+    {
+        freedItemGuids.emplace(id);
+    }
 }
 
 ItemType *Items::getItemTypeByServerId(uint32_t serverId)
@@ -126,12 +166,7 @@ void Items::loadFromXml(const std::filesystem::path path)
 
 void Items::itemMoved(Item *item)
 {
-    if (!item->isEntity())
-        return;
-
-    auto entityId = item->getEntityId().value();
-
-    auto found = itemSignals.find(entityId);
+    auto found = itemSignals.find(item->guid());
     if (found != itemSignals.end())
     {
         found->second.fire(item);
@@ -140,11 +175,7 @@ void Items::itemMoved(Item *item)
 
 void Items::containerChanged(Item *containerItem, const ContainerChange &containerChange)
 {
-    DEBUG_ASSERT(containerItem->isEntity(), "Must be an entity.");
-
-    auto entityId = containerItem->getEntityId().value();
-
-    auto found = containerSignals.find(entityId);
+    auto found = containerSignals.find(containerItem->guid());
     if (found != containerSignals.end())
     {
         found->second.fire(containerChange);
@@ -716,6 +747,12 @@ void Items::OtbReader::readNodes()
 
         [[maybe_unused]] uint8_t endToken = nextU8();
         DEBUG_ASSERT(endToken == EndNode, "Expected end token when parsing items.otb.");
+
+        if (itemType->id == 28713)
+        {
+            VME_LOG("Appearance for " << 28713 << ":");
+            VME_LOG(*itemType->appearance);
+        }
 
     } while (!nodeEnd());
 }

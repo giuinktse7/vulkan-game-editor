@@ -29,12 +29,12 @@ struct ContainerChange
     ContainerChange(ContainerChangeType type, uint8_t fromIndex, uint8_t toIndex);
 };
 
-struct ItemEntityIdDisconnect
+struct ItemGuidDisconnect
 {
-    ItemEntityIdDisconnect();
-    ItemEntityIdDisconnect(std::function<void()> f);
+    ItemGuidDisconnect();
+    ItemGuidDisconnect(std::function<void()> f);
 
-    ~ItemEntityIdDisconnect();
+    ~ItemGuidDisconnect();
 
   private:
     std::function<void()> f;
@@ -52,15 +52,15 @@ struct TrackedItem
         onChangeCallback = std::bind(MemberFunction, instance, std::placeholders::_1);
     }
 
-    inline uint32_t entityId() const noexcept;
+    inline uint32_t guid() const noexcept;
 
   protected:
     void updateItem(Item *item);
 
-    uint32_t _entityId;
+    uint32_t _guid;
     Item *_item;
 
-    ItemEntityIdDisconnect disconnect;
+    ItemGuidDisconnect disconnect;
     std::function<void(Item *)> onChangeCallback;
 };
 
@@ -76,13 +76,13 @@ struct TrackedContainer : TrackedItem
 
   private:
     void updateContainer(ContainerChange change);
-    ItemEntityIdDisconnect containerDisconnect;
+    ItemGuidDisconnect containerDisconnect;
     std::function<void(ContainerChange)> onContainerChangeCallback;
 };
 
-inline uint32_t TrackedItem::entityId() const noexcept
+inline uint32_t TrackedItem::guid() const noexcept
 {
-    return _entityId;
+    return _guid;
 }
 
 inline std::ostream &operator<<(std::ostream &os, const ContainerChangeType &type)

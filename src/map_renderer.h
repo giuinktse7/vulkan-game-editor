@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <unordered_map>
+#include <unordered_set>
 
 #include "graphics/buffer.h"
 #include "graphics/texture.h"

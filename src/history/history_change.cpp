@@ -44,13 +44,7 @@ namespace MapHistory
 
         TileLocation &location = getMap(mapView)->getOrCreateTileLocation(position);
         std::unique_ptr<Tile> oldTilePointer = location.replaceTile(std::move(tile));
-        if (oldTilePointer)
-        {
-            // Destroy the ECS entities of the old tile
-            oldTilePointer->destroyEntities();
-        }
 
-        // updateSelection(mapView, position);
         mapView.selection().setSelected(position, selected);
 
         return oldTilePointer;
@@ -65,8 +59,6 @@ namespace MapHistory
         {
             mapView.selection().deselect(oldTile->position());
         }
-
-        oldTile->destroyEntities();
 
         return map->dropTile(position);
     }
@@ -321,7 +313,6 @@ namespace MapHistory
         Tile &tile = std::get<Tile>(data);
         Position pos = tile.position();
 
-        tile.initEntities();
         setMapTile(mapView, std::move(tile));
 
         data = pos;

@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../ecs/item_animation.h"
 #include "../position.h"
 #include "../tile_location.h"
 #include "history_change.h"

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "ecs/item_animation.h"
 #include <memory>
 #include <vector>
+
+#include "item_animation.h"
 
 struct SpriteInfo
 {
@@ -27,6 +28,7 @@ struct SpriteInfo
   private:
     friend class ObjectAppearance;
 
+    // TODO Investigate: Why unique_ptr? Can it not just be "SpriteAnimation _animation;"?
     std::unique_ptr<SpriteAnimation> _animation;
 };
 

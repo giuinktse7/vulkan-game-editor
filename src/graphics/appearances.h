@@ -20,7 +20,6 @@
 #include "../const.h"
 #include "../creature.h"
 #include "../debug.h"
-#include "../ecs/item_animation.h"
 #include "../position.h"
 #include "../sprite_info.h"
 #include "../util.h"

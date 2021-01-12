@@ -1,14 +1,11 @@
 #include "config.h"
 
-#include <fstream>
-#include <nlohmann/json.hpp>
-#include <sstream>
-
-#include "ecs/ecs.h"
-#include "ecs/item_animation.h"
 #include "graphics/appearances.h"
 #include "items.h"
 #include "util.h"
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include <sstream>
 
 namespace
 {
@@ -82,8 +79,8 @@ std::optional<Config::Error> Config::load()
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    g_ecs.registerComponent<ItemAnimationComponent>();
-    g_ecs.registerSystem<ItemAnimationSystem>();
+    // g_ecs.registerComponent<ItemAnimationComponent>();
+    // g_ecs.registerSystem<ItemAnimationSystem>();
 
     Appearances::loadTextureAtlases(_dataFolder / CatalogContentFile, _assetFolder);
     Appearances::loadAppearanceData(_dataFolder / AppearancesFile);

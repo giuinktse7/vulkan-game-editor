@@ -3,8 +3,8 @@
 #include <optional>
 #include <unordered_map>
 
-#include "ecs/entity.h"
 #include "graphics/texture_atlas.h"
+#include "item_animation.h"
 #include "item_attribute.h"
 #include "item_data.h"
 #include "item_type.h"
@@ -14,7 +14,7 @@
 class Tile;
 struct Container;
 
-class Item : public ecs::OptionalEntity
+class Item
 {
     using ItemTypeId = uint32_t;
 
@@ -72,6 +72,11 @@ class Item : public ecs::OptionalEntity
 
     bool operator==(const Item &rhs) const;
 
+    ItemAnimation *animation() const noexcept;
+    void animate() const;
+
+    uint32_t guid() const noexcept;
+
     // Wrapper converters for convenient _itemData access
     template <typename T, typename std::enable_if<std::is_base_of<ItemWrapper, T>::value>::type * = nullptr>
     T as();
@@ -82,8 +87,6 @@ class Item : public ecs::OptionalEntity
   protected:
     friend class Tile;
 
-    void registerEntity();
-
   private:
     Item(const Item &other);
 
@@ -91,10 +94,14 @@ class Item : public ecs::OptionalEntity
 
     const uint32_t getPatternIndex(const Position &pos) const;
 
+    mutable std::shared_ptr<ItemAnimation> _animation = nullptr;
+
     std::unique_ptr<std::unordered_map<ItemAttribute_t, ItemAttribute>> _attributes;
     std::unique_ptr<ItemData> _itemData;
     // Subtype is either fluid type, count, subtype, or charges.
     uint8_t _subtype = 1;
+
+    uint32_t _guid;
 };
 
 inline uint32_t Item::serverId() const noexcept

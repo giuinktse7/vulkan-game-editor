@@ -3,8 +3,6 @@
 #include <iostream>
 
 #include "debug.h"
-#include "ecs/ecs.h"
-#include "ecs/item_animation.h"
 #include "graphics/appearances.h"
 #include "items.h"
 #include "tile_location.h"
@@ -444,11 +442,6 @@ void Map::createItemAt(Position pos, uint16_t id)
     Item item(id);
 
     const SpriteInfo &spriteInfo = item.itemType->appearance->getSpriteInfo();
-    if (spriteInfo.hasAnimation())
-    {
-        ecs::EntityId entityId = item.assignNewEntityId();
-        g_ecs.addComponent(entityId, ItemAnimationComponent(spriteInfo.animation()));
-    }
 
     getOrCreateTile(pos).addItem(std::move(item));
 }

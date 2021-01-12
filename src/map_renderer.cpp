@@ -7,7 +7,6 @@
 #include "brushes/brush.h"
 #include "brushes/raw_brush.h"
 #include "debug.h"
-#include "ecs/ecs.h"
 #include "file.h"
 #include "graphics/appearances.h"
 #include "logger.h"
@@ -169,8 +168,6 @@ void MapRenderer::startNextFrame()
 {
     // VME_LOG_D("index: " << _currentFrame->currentFrameIndex);
     // VME_LOG("Start next frame");
-    g_ecs.getSystem<ItemAnimationSystem>().update();
-
     updateUniformBuffer();
 
     beginRenderPass();
@@ -463,6 +460,7 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, con
     {
         if (shouldDrawItem(position, *groundPtr, flags, filter))
         {
+            groundPtr->animate();
             auto info = itemDrawInfo(*groundPtr, position, flags);
             drawItem(info);
         }
@@ -473,6 +471,8 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, con
     {
         if (!shouldDrawItem(position, item, flags, filter))
             continue;
+
+        item.animate();
 
         auto info = itemDrawInfo(item, position, flags);
         info.drawOffset = drawOffset;

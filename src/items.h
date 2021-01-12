@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <memory>
 #include <pugixml.hpp>
+#include <queue>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -43,14 +44,18 @@ class Items
     uint32_t highestClientId = 0;
     uint32_t highestServerId = 0;
 
+    uint32_t createItemGid();
+    void guidRefDestroyed(uint32_t id);
+    void guidRefCreated(uint32_t id);
+
     static void loadFromOtb(const std::filesystem::path path);
     static void loadFromXml(const std::filesystem::path path);
 
     template <auto MemberFunction, typename T>
-    ItemEntityIdDisconnect trackItem(uint32_t entityId, T *instance);
+    ItemGuidDisconnect trackItem(uint32_t itemGuid, T *instance);
 
     template <auto MemberFunction, typename T>
-    ItemEntityIdDisconnect trackContainer(uint32_t entityId, T *instance);
+    ItemGuidDisconnect trackContainer(uint32_t itemGuid, T *instance);
 
     void itemMoved(Item *item);
     void containerChanged(Item *containerItem, const ContainerChange &containerChange);
@@ -123,6 +128,7 @@ class Items
     };
 
     Items();
+
     using ServerID = uint32_t;
     using ClientID = uint32_t;
 
@@ -136,64 +142,69 @@ class Items
     std::unordered_multimap<std::string, ServerID> nameToItems;
 
     OTB::VersionInfo _otbVersionInfo;
+
+    uint32_t nextItemGuid = 0;
+    std::queue<uint32_t> freedItemGuids;
+
+    std::vector<uint16_t> guidRefCounts;
 };
 
 template <auto MemberFunction, typename T>
-ItemEntityIdDisconnect Items::trackItem(uint32_t entityId, T *instance)
+ItemGuidDisconnect Items::trackItem(uint32_t itemGuid, T *instance)
 {
-    auto outerFound = itemSignals.find(entityId);
+    auto outerFound = itemSignals.find(itemGuid);
     if (outerFound == itemSignals.end())
     {
-        itemSignals.try_emplace(entityId);
-        outerFound = itemSignals.find(entityId);
+        itemSignals.try_emplace(itemGuid);
+        outerFound = itemSignals.find(itemGuid);
     }
 
     auto itemMoveSignals = &itemSignals;
 
-    std::function<void()> disconnect = [itemMoveSignals, instance, entityId]() {
-        auto found = itemMoveSignals->find(entityId);
+    std::function<void()> disconnect = [itemMoveSignals, instance, itemGuid]() {
+        auto found = itemMoveSignals->find(itemGuid);
         if (found != itemMoveSignals->end())
         {
             found->second.disconnect<MemberFunction>(instance);
             if (found->second.is_empty())
             {
-                itemMoveSignals->erase(entityId);
+                itemMoveSignals->erase(itemGuid);
             }
         }
     };
 
     outerFound->second.connect<MemberFunction>(instance);
 
-    return ItemEntityIdDisconnect(disconnect);
+    return ItemGuidDisconnect(disconnect);
 }
 
 template <auto MemberFunction, typename T>
-ItemEntityIdDisconnect Items::trackContainer(uint32_t entityId, T *instance)
+ItemGuidDisconnect Items::trackContainer(uint32_t itemGuid, T *instance)
 {
-    auto outerFound = containerSignals.find(entityId);
+    auto outerFound = containerSignals.find(itemGuid);
     if (outerFound == containerSignals.end())
     {
-        containerSignals.try_emplace(entityId);
-        outerFound = containerSignals.find(entityId);
+        containerSignals.try_emplace(itemGuid);
+        outerFound = containerSignals.find(itemGuid);
     }
 
     auto containerMoveSignals = &containerSignals;
 
-    std::function<void()> disconnect = [containerMoveSignals, instance, entityId]() {
-        auto found = containerMoveSignals->find(entityId);
+    std::function<void()> disconnect = [containerMoveSignals, instance, itemGuid]() {
+        auto found = containerMoveSignals->find(itemGuid);
         if (found != containerMoveSignals->end())
         {
             found->second.disconnect<MemberFunction>(instance);
             if (found->second.is_empty())
             {
-                containerMoveSignals->erase(entityId);
+                containerMoveSignals->erase(itemGuid);
             }
         }
     };
 
     outerFound->second.connect<MemberFunction>(instance);
 
-    return ItemEntityIdDisconnect(disconnect);
+    return ItemGuidDisconnect(disconnect);
 }
 
 inline std::ostringstream stringify(const itemproperty_t &property)
