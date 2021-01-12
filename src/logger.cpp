@@ -13,6 +13,7 @@ constexpr std::string_view ErrorString = "[ERROR] ";
 #ifdef QT_CORE_LIB
 QString INFO_STRING = QStringLiteral("[Info] ");
 QString DEBUG_STRING = QStringLiteral("[Debug] ");
+QString ERROR_STRING = QStringLiteral("[Error] ");
 
 // void Logger::info(const char *s)
 // {
@@ -29,6 +30,11 @@ void Logger::debug(std::ostringstream &s)
     qDebug().noquote() << DEBUG_STRING << QString(s.str().c_str());
 }
 
+void Logger::error(std::ostringstream &s)
+{
+    qDebug().noquote() << ERROR_STRING << QString(s.str().c_str());
+}
+
 Logger::MainLogger Logger::info()
 {
     qDebug() << QString(std::string(DebugString).c_str());
@@ -43,6 +49,11 @@ void Logger::info(std::ostringstream &s)
 void Logger::debug(std::ostringstream &s)
 {
     Logger::debug() << s.str() << std::endl;
+}
+
+void Logger::error(std::ostringstream &s)
+{
+    Logger::error() << s.str() << std::endl;
 }
 
 Logger::MainLogger &Logger::info()

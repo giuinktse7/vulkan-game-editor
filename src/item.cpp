@@ -13,6 +13,12 @@ Item::Item(ItemTypeId itemTypeId)
     registerEntity();
 }
 
+Item::Item(const Item &other)
+    : itemType(other.itemType)
+{
+    entityId = other.entityId;
+}
+
 Item::Item(Item &&other) noexcept
     : ecs::OptionalEntity(std::move(other)),
       itemType(other.itemType),
@@ -63,15 +69,12 @@ Item::~Item()
 
 Item Item::deepCopy() const
 {
-    Item item(this->itemType->id);
-
-    item.entityId = entityId;
+    Item item(*this);
 
     if (_attributes)
     {
         auto attributeCopy = *_attributes.get();
-        item._attributes =
-            std::make_unique<std::unordered_map<ItemAttribute_t, ItemAttribute>>(std::move(attributeCopy));
+        item._attributes = std::make_unique<std::unordered_map<ItemAttribute_t, ItemAttribute>>(std::move(attributeCopy));
     }
 
     item._subtype = this->_subtype;
@@ -93,7 +96,8 @@ const TextureInfo Item::getTextureInfo(const Position &pos, TextureInfo::Coordin
     const SpriteInfo &spriteInfo = itemType->getSpriteInfo(0);
     if (spriteInfo.hasAnimation() && isEntity())
     {
-        auto c = g_ecs.getComponent<ItemAnimationComponent>(getEntityId().value());
+        auto entityId = getEntityId().value();
+        auto c = g_ecs.getComponent<ItemAnimationComponent>(entityId);
         offset += c->state.phaseIndex * spriteInfo.patternSize;
     }
 
@@ -210,6 +214,7 @@ void Item::registerEntity()
     if (itemType->hasAnimation())
     {
         auto animation = itemType->getSpriteInfo().animation();
+        VME_LOG_D("Add animation component for entity ID " << entityId);
         g_ecs.addComponent(entityId, ItemAnimationComponent(animation));
     }
 }

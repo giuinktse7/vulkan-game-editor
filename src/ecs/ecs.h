@@ -114,14 +114,14 @@ class ECS
         return getComponent<T>(entity);
     }
 
-    template <typename T>
-    void removeComponent(ecs::EntityId entity)
-    {
-        ComponentArray<T> *array = getComponentArray<T>();
-        array->removeComponent(entity);
+    // template <typename T>
+    // void removeComponent(ecs::EntityId entity)
+    // {
+    //     ComponentArray<T> *array = getComponentArray<T>();
+    //     array->removeComponent(entity);
 
-        unsetEntityComponentBit<T>(entity);
-    }
+    //     unsetEntityComponentBit<T>(entity);
+    // }
 
     template <typename T>
     bool systemRequiresComponent(ecs::System &system)

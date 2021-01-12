@@ -119,6 +119,8 @@ MainApplication::MainApplication(int &argc, char **argv)
     connect(this, &QApplication::focusWindowChanged, this, &MainApplication::onFocusWindowChanged);
     connect(this, &QApplication::focusChanged, this, &MainApplication::onFocusWidgetChanged);
 
+    QApplication::setEffectEnabled(Qt::UI_AnimateCombo, false);
+
     loadStyleSheet(":/vme/style/qss/default.qss");
 
     vulkanInstance.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
@@ -179,10 +181,8 @@ void MainApplication::initializeUI()
 {
     mainWindow.initializeUI();
 
-    // uint32_t grassTuft = 6217;
-
     // mainWindow.editorAction.setRawItem(2148);
-    mainWindow.editorAction.setRawItem(1987);
+    // mainWindow.editorAction.setRawBrush(1987);
 }
 
 void MainUtils::printOutfitAtlases(std::vector<uint32_t> outfitIds)

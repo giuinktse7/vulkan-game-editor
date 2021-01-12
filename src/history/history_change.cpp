@@ -220,7 +220,7 @@ namespace MapHistory
             }
             case Relationship::FromIsParent:
             {
-                int updateIndex = from.indices.size() - 1;
+                size_t updateIndex = from.indices.size() - 1;
                 int divergingContainerIndex = to.indices.at(updateIndex);
                 int itemContainerIndex = from.indices.back();
 

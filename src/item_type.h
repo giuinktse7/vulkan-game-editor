@@ -12,6 +12,7 @@
 
 class ObjectAppearance;
 struct SpriteAnimation;
+class RawBrush;
 
 enum class ItemDataType
 {
@@ -347,6 +348,8 @@ class ItemType
     bool isAnimation = false;
 
     ObjectAppearance *appearance = nullptr;
+
+    RawBrush *rawBrush;
 
   private:
     static constexpr size_t CachedTextureAtlasAmount = 5;

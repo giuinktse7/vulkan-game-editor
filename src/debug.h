@@ -35,6 +35,8 @@ class GeneralDebugException : public std::exception
         throw GeneralDebugException(s.str().c_str());                                                       \
     } while (false)
 
+#define NOT_IMPLEMENTED_ABORT() ABORT_PROGRAM("Not implemented yet.");
+
 #ifdef _DEBUG_VME
 #define DEBUG_ASSERT(exp, msg)  \
     do                          \

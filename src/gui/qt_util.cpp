@@ -18,6 +18,34 @@
 #include "../map_view.h"
 #include "../qt/logging.h"
 
+vme_unordered_map<uint32_t, QPixmap> GuiImageCache::serverIdToPixmap;
+
+namespace
+{
+    constexpr int InitialImageCacheCapacity = 30000;
+}
+
+void GuiImageCache::initialize()
+{
+    serverIdToPixmap.reserve(InitialImageCacheCapacity);
+}
+
+void GuiImageCache::cachePixmapForServerId(uint32_t serverId)
+{
+    get(serverId);
+}
+
+const QPixmap &GuiImageCache::get(uint32_t serverId)
+{
+    auto found = serverIdToPixmap.find(serverId);
+    if (found == serverIdToPixmap.end())
+    {
+        serverIdToPixmap.try_emplace(serverId, QtUtil::itemPixmap(serverId));
+    }
+
+    return serverIdToPixmap.at(serverId);
+}
+
 namespace
 {
     std::unique_ptr<QPixmap> blackSquare;

@@ -62,8 +62,13 @@ namespace MapHistory
 
     void History::beginTransaction(TransactionType type)
     {
-        DEBUG_ASSERT(currentTransaction.has_value() == false, "The previous transaction was not ended.");
-        // VME_LOG_D("History::beginTransaction: " << type);
+        // DEBUG_ASSERT(currentTransaction.has_value() == false, "The previous transaction was not ended.");
+        // Temporary silencing of assertion, should use ^
+        if (currentTransaction.has_value())
+        {
+            VME_LOG_ERROR("Current transaction " << currentTransaction.value().type << " was not finished! Replacing with " << type << ".");
+            endTransaction(currentTransaction.value().type);
+        }
 
         currentTransaction.emplace(type);
     }

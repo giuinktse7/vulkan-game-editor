@@ -22,7 +22,6 @@ class Item : public ecs::OptionalEntity
     Item(ItemTypeId serverId);
     ~Item();
 
-    Item(const Item &other) = delete;
     Item &operator=(const Item &other) = delete;
 
     Item(Item &&other) noexcept;
@@ -86,6 +85,8 @@ class Item : public ecs::OptionalEntity
     void registerEntity();
 
   private:
+    Item(const Item &other);
+
     ItemAttribute &getOrCreateAttribute(const ItemAttribute_t attributeType);
 
     const uint32_t getPatternIndex(const Position &pos) const;

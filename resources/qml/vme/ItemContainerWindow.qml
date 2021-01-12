@@ -49,6 +49,8 @@ Item {
       width: 13
       height: 13
       source: {
+        if (model === null) return "";
+
         const serverId = model.containerServerId;
         return serverId != -1 ? "image://itemTypes/" + serverId : "";
       }
@@ -66,7 +68,10 @@ Item {
       }
       renderType: Text.NativeRendering
       antialiasing: false
-      text: model.containerName
+      text: {
+        return model === null ? "" : model.containerName;
+      }
+      
       color: "#909090"
     }
 

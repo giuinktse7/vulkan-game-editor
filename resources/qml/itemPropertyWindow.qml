@@ -203,7 +203,7 @@ ScrollView {
             model : itemModel
             
             onUpdateLayout : {
-              containersView.forceLayout();
+              // containersView.forceLayout();
             }
           }
         }

@@ -16,6 +16,7 @@
 #include <QWidget>
 #include <QtWidgets>
 
+#include "../graphics/appearance_types.h"
 #include "../item_location.h"
 #include "../main.h"
 #include "../qt/logging.h"
@@ -31,40 +32,6 @@
 #include "qt_util.h"
 #include "split_widget.h"
 #include "vulkan_window.h"
-
-bool ItemListEventFilter::eventFilter(QObject *object, QEvent *event)
-{
-    switch (event->type())
-    {
-        case QEvent::KeyPress:
-        {
-            // VME_LOG_D("Focused widget: " << QApplication::focusWidget());
-            auto keyEvent = static_cast<QKeyEvent *>(event);
-            auto key = keyEvent->key();
-            switch (key)
-            {
-                case Qt::Key_I:
-                case Qt::Key_Space:
-                {
-                    auto widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-                    auto vulkanWindow = QtUtil::associatedVulkanWindow(widget);
-                    if (vulkanWindow)
-                    {
-                        QApplication::sendEvent(vulkanWindow, event);
-                    }
-
-                    return false;
-                    break;
-                }
-            }
-            break;
-        }
-        default:
-            break;
-    }
-
-    return QObject::eventFilter(object, event);
-}
 
 uint32_t MainWindow::nextUntitledId()
 {
@@ -160,7 +127,7 @@ MainWindow::MainWindow(QWidget *parent)
       positionStatus(new QLabel),
       zoomStatus(new QLabel),
       topItemInfo(new QLabel),
-      paletteWindow(new ItemPaletteWindow(this))
+      _paletteWindow(nullptr)
 {
 
     // editorAction.onActionChanged<&MainWindow::editorActionChangedEvent>(this);
@@ -294,10 +261,9 @@ MapView *MainWindow::currentMapView() const noexcept
     return mapTabs->currentMapView();
 }
 
-MapView *getMapViewOnCursor()
+bool MainWindow::selectBrush(Brush *brush) noexcept
 {
-    QWidget *widget = QtUtil::qtApp()->widgetAt(QCursor::pos());
-    return QtUtil::associatedMapView(widget);
+    return _paletteWindow->selectBrush(brush);
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>
@@ -336,66 +302,15 @@ void MainWindow::initializeUI()
     rootLayout->addWidget(splitter, BorderLayout::Position::Center);
 
     initializePaletteWindow();
-    paletteWindow->tilesetListView()->addItems(4526, 4626);
-    // paletteWindow->tilesetListView()->addItems(100, 40000);
 
-    // itemPalette->setMinimumWidth(240);
-    // itemPalette->setMaximumWidth(600);
-
-    // itemPalette->addItem(2148);
-
-    // // Containers
-    // itemPalette->addItem(2000);
-    // itemPalette->addItem(2595);
-    // itemPalette->addItem(1987);
-
-    // itemPalette->addItem(103);
-    // itemPalette->addItems(1533, 1542);
-    // itemPalette->addItems(5315, 5331);
-
-    // itemPalette->addItem(1038);
-    // itemPalette->addItems(1036, 1038);
-    // itemPalette->addItem(1040);
-    // itemPalette->addItem(405);
-
-    // // Flat roof
-    // {
-    //     itemPalette->addItem(920);
-    //     // Borders
-    //     itemPalette->addItem(921);
-    //     itemPalette->addItem(6565);
-    //     itemPalette->addItem(6564);
-    //     itemPalette->addItem(922);
-    //     itemPalette->addItem(5051);
-    //     itemPalette->addItem(5053);
-    //     itemPalette->addItem(5045);
-    //     itemPalette->addItem(5047);
-    //     itemPalette->addItem(923);
-    //     itemPalette->addItem(5048);
-    //     itemPalette->addItem(5050);
-    //     itemPalette->addItem(5054);
-    //     itemPalette->addItem(924);
-    // }
-
-    // itemPalette->addItem(4526);
-
-    splitter->addWidget(paletteWindow);
-
-    // {
-    //     auto container = paletteWindow->wrapInWidget();
-    //     VME_LOG_D("paletteWindow container: " << container);
-    //     container->setMinimumWidth(32);
-    //     splitter->addWidget(container);
-    //     splitter->setStretchFactor(0, 1);
-    // }
-
+    splitter->addWidget(_paletteWindow);
     splitter->addWidget(mapTabs);
     splitter->setStretchFactor(1, 1);
 
     {
         auto container = propertyWindow->wrapInWidget();
-        VME_LOG_D("propertyWindow container: " << container);
         container->setMinimumWidth(200);
+
         splitter->addWidget(container);
         splitter->setStretchFactor(2, 0);
     }
@@ -422,19 +337,83 @@ void MainWindow::initializeUI()
 
 void MainWindow::initializePaletteWindow()
 {
-    paletteWindow = new ItemPaletteWindow(this);
-    auto itemListView = paletteWindow->tilesetListView();
-    itemListView->installEventFilter(new ItemListEventFilter(this));
+    GuiImageCache::initialize();
 
-    std::vector<ItemPaletteUI::ModelItem> data;
+    _paletteWindow = new ItemPaletteWindow(&editorAction, this);
 
-    connect(itemListView, &QListView::clicked, [this, itemListView](QModelIndex index) {
-        auto value = itemListView->itemAtIndex(index);
+    ItemPalette &palette = ItemPalettes::createPalette("Raw Palette");
 
-        MouseAction::RawItem action;
-        action.serverId = value.itemType->id;
-        editorAction.setIfUnlocked(action);
+    Tileset *groundTileset = palette.createTileset("Grounds");
+    Tileset *borderTileset = palette.createTileset("Borders");
+    Tileset *unsightTileset = palette.createTileset("Sight-blocking");
+    Tileset *containerTileset = palette.createTileset("Containers");
+    Tileset *pickuableTileset = palette.createTileset("Pickupables");
+    Tileset *equipmentTileset = palette.createTileset("Equipment");
+    Tileset *otherTileset = palette.createTileset("Other");
+
+    int from = 100;
+    int to = 40000;
+
+#ifdef _DEBUG_VME
+    from = 100;
+    to = 500;
+#endif
+
+    for (int i = from; i < to; ++i)
+    {
+        ItemType *itemType = Items::items.getItemTypeByServerId(i);
+        if (!itemType || !itemType->isValid())
+            continue;
+
+        if (itemType->hasFlag(AppearanceFlag::Corpse) || itemType->hasFlag(AppearanceFlag::PlayerCorpse))
+        {
+            // Skip corpses
+            continue;
+        }
+        else if (itemType->hasFlag(AppearanceFlag::Ground))
+        {
+            groundTileset->addRawBrush(i);
+        }
+        else if (itemType->hasFlag(AppearanceFlag::GroundBorder))
+        {
+            borderTileset->addRawBrush(i);
+        }
+
+        else if (itemType->hasFlag(AppearanceFlag::Container))
+        {
+            containerTileset->addRawBrush(i);
+        }
+        else if (itemType->hasFlag(AppearanceFlag::Take))
+        {
+            if (itemType->hasFlag(AppearanceFlag::Clothes))
+            {
+                equipmentTileset->addRawBrush(i);
+            }
+            else
+            {
+                pickuableTileset->addRawBrush(i);
+            }
+        }
+        else if (itemType->hasFlag(AppearanceFlag::Unsight))
+        {
+            unsightTileset->addRawBrush(i);
+        }
+        else
+        {
+            otherTileset->addRawBrush(i);
+        }
+
+        GuiImageCache::cachePixmapForServerId(i);
+    }
+
+    _paletteWindow->addPalette(ItemPalettes::getByName("Raw Palette"));
+
+    connect(_paletteWindow, &ItemPaletteWindow::brushSelectionEvent, [this](Brush *brush) {
+        editorAction.setIfUnlocked(MouseAction::MapBrush(brush));
     });
+
+    Brush *testBrush = Brush::getOrCreateRawBrush(446);
+    _paletteWindow->selectBrush(testBrush);
 }
 
 QMenuBar *MainWindow::createMenuBar()

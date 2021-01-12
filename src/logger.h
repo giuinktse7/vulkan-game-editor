@@ -29,6 +29,7 @@ namespace Logger
     void info(std::string &s);
     void info(std::ostringstream &s);
     void debug(std::ostringstream &s);
+    void error(std::ostringstream &s);
 
     void debug(const char *s);
     void debug(std::string s);
@@ -46,6 +47,15 @@ namespace Logger
         std::ostringstream __s__; \
         __s__ << expr;            \
         Logger::info(__s__);      \
+    } while (false)
+
+#define VME_LOG_ERROR(expr)       \
+    do                            \
+    {                             \
+                                  \
+        std::ostringstream __s__; \
+        __s__ << expr;            \
+        Logger::error(__s__);     \
     } while (false)
 
 #ifdef _DEBUG_VME

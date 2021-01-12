@@ -703,6 +703,11 @@ void Items::OtbReader::readNodes()
         {
             items.addItemTypeAppearanceData(*itemType, flags);
         }
+        else
+        {
+            // No matching Appearance for this item type.
+            itemType->clientId = 0;
+        }
 
         if (itemType->name.size() == 0 && name.size() != 0)
         {

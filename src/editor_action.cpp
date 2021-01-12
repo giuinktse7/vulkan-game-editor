@@ -1,7 +1,26 @@
 #include "editor_action.h"
 
+#include "brushes/brush.h"
+#include "brushes/raw_brush.h"
 #include "debug.h"
+#include "items.h"
 #include "selection.h"
+
+MouseAction::MapBrush::MapBrush(Brush *brush)
+    : brush(brush) {}
+
+MouseAction::MapBrush::MapBrush(uint32_t serverId)
+    : brush(Brush::getOrCreateRawBrush(serverId)) {}
+
+void EditorAction::setRawBrush(uint32_t serverId) noexcept
+{
+    set(MouseAction::MapBrush(serverId));
+}
+
+void EditorAction::setBrush(Brush *brush) noexcept
+{
+    set(MouseAction::MapBrush(brush));
+}
 
 bool MouseAction::MoveAction::isMoving() const
 {

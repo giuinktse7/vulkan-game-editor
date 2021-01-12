@@ -49,6 +49,8 @@ class MainWindow : public QWidget, public Nano::Observer<>
 
     MapView *currentMapView() const noexcept;
 
+    bool selectBrush(Brush *brush) noexcept;
+
     EditorAction editorAction;
 
   protected:
@@ -74,7 +76,7 @@ class MainWindow : public QWidget, public Nano::Observer<>
 
     MapTabWidget *mapTabs;
     ItemPropertyWindow *propertyWindow;
-    ItemPaletteWindow *paletteWindow;
+    ItemPaletteWindow *_paletteWindow;
 
     BorderLayout *rootLayout;
 
@@ -88,12 +90,4 @@ class MainWindow : public QWidget, public Nano::Observer<>
     QVulkanInstance *vulkanInstance;
 
     // void updatePositionText();
-};
-
-class ItemListEventFilter : public QtUtil::EventFilter
-{
-  public:
-    ItemListEventFilter(QObject *parent)
-        : QtUtil::EventFilter(parent) {}
-    bool eventFilter(QObject *obj, QEvent *event) override;
 };

@@ -156,7 +156,9 @@
     "qpoint": "cpp",
     "qwindow": "cpp",
     "bit": "cpp",
-    "qabstractitemdelegate": "cpp"
+    "qabstractitemdelegate": "cpp",
+    "qvboxlayout": "cpp",
+    "qpalette": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

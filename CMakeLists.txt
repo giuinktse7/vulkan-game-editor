@@ -136,10 +136,14 @@ set(CommonSources
     src/time_point.h
     src/creature.h
     src/town.h
+    src/item_palette.h
+    src/tileset.h
     src/type_trait.h
     src/util.h
     src/version.h
     src/octree.h
+    src/brushes/brush.h
+    src/brushes/raw_brush.h
     ../vendor/lzma/Alloc.c
     ../vendor/lzma/LzFind.c
     ../vendor/lzma/LzFindMt.c
@@ -195,8 +199,12 @@ set(CommonSources
     src/time_point.cpp
     src/creature.cpp
     src/town.cpp
+    src/item_palette.cpp
+    src/tileset.cpp
     src/util.cpp
-    src/octree.cpp)
+    src/octree.cpp
+    src/brushes/brush.cpp
+    src/brushes/raw_brush.cpp)
 
 add_library(common STATIC ${CommonSources})
 

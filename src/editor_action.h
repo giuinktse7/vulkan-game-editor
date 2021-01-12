@@ -10,6 +10,7 @@
 class Selection;
 class Tile;
 class Item;
+class Brush;
 
 namespace VME
 {
@@ -82,9 +83,11 @@ struct MouseAction
         void reset();
     };
 
-    struct RawItem
+    struct MapBrush
     {
-        uint32_t serverId = 100;
+        MapBrush(uint32_t serverId);
+        MapBrush(Brush *brush);
+        Brush *brush;
         /*
       If true, the raw item is currently being drag in an area. Once released,
       each position of the area has an item of serverId added.
@@ -124,7 +127,7 @@ struct MouseAction
     };
 };
 
-using MouseAction_t = std::variant<MouseAction::None, MouseAction::RawItem, MouseAction::Select, MouseAction::Pan, MouseAction::DragDropItem>;
+using MouseAction_t = std::variant<MouseAction::None, MouseAction::MapBrush, MouseAction::Select, MouseAction::Pan, MouseAction::DragDropItem>;
 
 /**
  * Utility class for sending UI information to a MapView.
@@ -190,10 +193,8 @@ class EditorAction
         actionChanged.fire(_action);
     }
 
-    void setRawItem(uint32_t serverId) noexcept
-    {
-        set(MouseAction::RawItem{serverId});
-    }
+    void setRawBrush(uint32_t serverId) noexcept;
+    void setBrush(Brush *brush) noexcept;
 
     void reset() noexcept
     {

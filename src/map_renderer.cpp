@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <variant>
 
+#include "brushes/brush.h"
+#include "brushes/raw_brush.h"
 #include "debug.h"
 #include "ecs/ecs.h"
 #include "file.h"
@@ -231,10 +233,10 @@ void MapRenderer::drawMap()
     {
         auto [from, to] = mapView->getDragPoints().value();
         Region2D dragRegion(from.toPos(view.floor()), to.toPos(view.floor()));
-        uint32_t serverId = std::get<MouseAction::RawItem>(mapView->editorAction.action()).serverId;
+        Brush *brush = std::get<MouseAction::MapBrush>(mapView->editorAction.action()).brush;
 
-        filter = [serverId, &dragRegion](const Position pos, const Item &item) {
-            return !(item.serverId() == serverId && dragRegion.contains(pos));
+        filter = [brush, &dragRegion](const Position pos, const Item &item) {
+            return !(brush->erasesItem(item.serverId()) && dragRegion.contains(pos));
         };
     }
     else if (mapView->editorAction.is<MouseAction::DragDropItem>())
@@ -291,7 +293,7 @@ void MapRenderer::drawCurrentAction()
                 }
             },
 
-            [this](const MouseAction::RawItem &action) {
+            [this](const MouseAction::MapBrush &action) {
                 Position pos = mapView->mouseGamePos();
 
                 if (action.area)
@@ -303,23 +305,54 @@ void MapRenderer::drawCurrentAction()
                         const auto [from, to] = mapView->getDragPoints().value();
                         drawSolidRectangle(SolidColor::Red, from, to, 0.2f);
 
-                        drawOverlayItemType(action.serverId, to);
+                        if (action.brush->type() == BrushType::RawItem)
+                        {
+                            auto rawBrush = static_cast<RawBrush *>(action.brush);
+                            drawOverlayItemType(rawBrush->serverId(), to);
+                        }
+                        else
+                        {
+                            // TODO
+                            NOT_IMPLEMENTED_ABORT();
+                        }
                     }
                     else
                     {
-                        auto [from, to] = mapView->getDragPoints().value();
-                        int floor = mapView->floor();
-                        auto area = MapArea(from.toPos(floor), to.toPos(floor));
 
-                        for (auto &pos : area)
-                            drawPreviewItem(action.serverId, pos);
+                        if (action.brush->type() == BrushType::RawItem)
+                        {
+                            auto rawBrush = static_cast<RawBrush *>(action.brush);
+                            uint32_t serverId = rawBrush->serverId();
+                            auto [from, to] = mapView->getDragPoints().value();
+                            int floor = mapView->floor();
+                            auto area = MapArea(from.toPos(floor), to.toPos(floor));
+
+                            for (auto &pos : area)
+                                drawPreviewItem(serverId, pos);
+                        }
+                        else
+                        {
+                            // TODO
+                            NOT_IMPLEMENTED_ABORT();
+                        }
                     }
                 }
                 else
                 {
                     if (mapView->underMouse())
                     {
-                        drawPreviewItem(action.serverId, pos);
+                        if (action.brush->type() == BrushType::RawItem)
+                        {
+                            auto rawBrush = static_cast<RawBrush *>(action.brush);
+                            uint32_t serverId = rawBrush->serverId();
+
+                            drawPreviewItem(serverId, pos);
+                        }
+                        else
+                        {
+                            // TODO
+                            NOT_IMPLEMENTED_ABORT();
+                        }
                     }
                 }
             },

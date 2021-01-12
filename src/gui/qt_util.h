@@ -1,7 +1,5 @@
 #pragma once
 
-#include <optional>
-
 #include <QApplication>
 #include <QDataStream>
 #include <QMouseEvent>
@@ -9,10 +7,13 @@
 #include <QString>
 #include <QWidget>
 
+#include <optional>
+
 #include "../editor_action.h"
 
 #include "../position.h"
 #include "../qt/enum_conversion.h"
+#include "../util.h"
 
 class MainApplication;
 
@@ -27,6 +28,15 @@ namespace
     constexpr int QtMinimumWheelDelta = 8;
     constexpr int DefaultMinimumAngleDelta = 15;
 } // namespace
+
+struct GuiImageCache
+{
+    static void initialize();
+    static const QPixmap &get(uint32_t serverId);
+    static void cachePixmapForServerId(uint32_t serverId);
+
+    static vme_unordered_map<uint32_t, QPixmap> serverIdToPixmap;
+};
 
 namespace QtUtil
 {

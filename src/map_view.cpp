@@ -1,6 +1,8 @@
 #include "map_view.h"
 
 #include "../vendor/rollbear-visit/visit.hpp"
+#include "brushes/brush.h"
+#include "brushes/raw_brush.h"
 #include "const.h"
 #include "items.h"
 #include "time_point.h"
@@ -555,10 +557,10 @@ bool MapView::draggingWithSubtract() const
 {
     if (!isDragging())
         return false;
-    auto action = editorAction.as<MouseAction::RawItem>();
+    auto brush = editorAction.as<MouseAction::MapBrush>();
     auto modifiers = uiUtils->modifiers();
 
-    return action && (modifiers & VME::ModifierKeys::Shift) && (modifiers & VME::ModifierKeys::Ctrl);
+    return brush && (modifiers & VME::ModifierKeys::Shift) && (modifiers & VME::ModifierKeys::Ctrl);
 }
 
 bool MapView::hasSelection() const
@@ -678,22 +680,31 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
                 }
             },
 
-            [this, modifiers, from, to](MouseAction::RawItem &action) {
-                if (action.area)
+            [this, modifiers, from, to](MouseAction::MapBrush &brush) {
+                if (brush.area)
                 {
                     if (modifiers & VME::ModifierKeys::Ctrl)
                     {
-                        const auto predicate = [action](const Item &item) {
-                            return item.serverId() == action.serverId;
+                        const auto predicate = [brush](const Item &item) {
+                            return brush.brush->erasesItem(item.serverId());
                         };
                         removeItemsInRegion(from, to, predicate);
                     }
                     else
                     {
-                        fillRegion(from, to, action.serverId);
+                        if (brush.brush->type() == BrushType::RawItem)
+                        {
+                            auto rawBrush = static_cast<RawBrush *>(brush.brush);
+                            fillRegion(from, to, rawBrush->serverId());
+                        }
+                        else
+                        {
+                            // TODO Handle cases other than RawItem
+                            NOT_IMPLEMENTED_ABORT();
+                        }
                     }
 
-                    action.area = false;
+                    brush.area = false;
                 }
             },
 
@@ -796,7 +807,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                     }
                 },
 
-                [this, pos, event](MouseAction::RawItem &action) {
+                [this, pos, event](MouseAction::MapBrush &action) {
                     commitTransaction(TransactionType::Selection, [this] { clearSelection(); });
 
                     editorAction.lock();
@@ -812,7 +823,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                         if (tile)
                         {
                             removeItems(*tile, [action](const Item &item) {
-                                return item.serverId() == action.serverId;
+                                return action.brush->erasesItem(item.serverId());
                             });
                         }
                     }
@@ -820,7 +831,16 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                     {
                         if (!action.area)
                         {
-                            addItem(pos, action.serverId);
+                            if (action.brush->type() == BrushType::RawItem)
+                            {
+                                auto rawBrush = static_cast<RawBrush *>(action.brush);
+                                addItem(pos, rawBrush->serverId());
+                            }
+                            else
+                            {
+                                // TODO
+                                NOT_IMPLEMENTED_ABORT();
+                            }
                         }
                     }
                 },
@@ -893,7 +913,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                     }
                 },
 
-                [this, pos, &event, newTile](const MouseAction::RawItem &action) {
+                [this, pos, &event, newTile](const MouseAction::MapBrush &action) {
                     if (!newTile || action.area)
                     {
                         return;
@@ -905,15 +925,24 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                         if (tile)
                         {
                             removeItems(*tile, [action](const Item &item) {
-                                return item.serverId() == action.serverId;
+                                return action.brush->erasesItem(item.serverId());
                             });
                         }
                     }
                     else
                     {
-                        DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::RawItemAction), "Incorrect transaction type.");
-                        for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
-                            addItem(position, action.serverId);
+                        if (action.brush->type() == BrushType::RawItem)
+                        {
+                            uint32_t rawBrushServerId = static_cast<RawBrush *>(action.brush)->serverId();
+                            DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::RawItemAction), "Incorrect transaction type.");
+                            for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
+                                addItem(position, rawBrushServerId);
+                        }
+                        else
+                        {
+                            // TODO
+                            NOT_IMPLEMENTED_ABORT();
+                        }
                     }
                 },
 
@@ -973,7 +1002,7 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
                 editorAction.unlock();
             },
 
-            [this, modifiers](MouseAction::RawItem &action) {
+            [this, modifiers](MouseAction::MapBrush &action) {
                 if (history.hasCurrentTransactionType(TransactionType::RawItemAction))
                 {
                     history.endTransaction(TransactionType::RawItemAction);

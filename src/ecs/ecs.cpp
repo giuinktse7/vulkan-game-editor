@@ -15,6 +15,7 @@ ecs::EntityId ECS::createEntity()
     else
     {
         id = entityIdQueue.front();
+        VME_LOG_D("Recycled entity id: " << id);
         entityIdQueue.pop();
     }
 

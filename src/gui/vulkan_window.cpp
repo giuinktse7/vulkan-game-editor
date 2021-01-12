@@ -14,6 +14,7 @@
 #include <QQuickView>
 #include <QWidget>
 
+#include "../brushes/brush.h"
 #include "../item_location.h"
 #include "../logger.h"
 #include "../main.h"
@@ -87,7 +88,12 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
             const Item *topItem = mapView->map()->getTopItem(mapView->mouseGamePos());
             if (topItem && !mapView->editorAction.locked())
             {
-                mapView->editorAction.setRawItem(topItem->serverId());
+                bool success = mainWindow->selectBrush(Brush::getOrCreateRawBrush(topItem->serverId()));
+                // If the brush was not found in any tileset in any palette
+                if (!success)
+                {
+                    mapView->editorAction.setRawBrush(topItem->serverId());
+                }
                 mapView->requestDraw();
             }
             break;
@@ -252,10 +258,10 @@ void VulkanWindow::keyReleaseEvent(QKeyEvent *e)
     {
         case Qt::Key_Control:
         {
-            auto rawItem = mapView->editorAction.as<MouseAction::RawItem>();
-            if (rawItem)
+            auto brush = mapView->editorAction.as<MouseAction::MapBrush>();
+            if (brush)
             {
-                rawItem->erase = false;
+                brush->erase = false;
             }
         }
     }
@@ -274,10 +280,10 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
             break;
         case Qt::Key_Control:
         {
-            auto rawItemAction = mapView->editorAction.as<MouseAction::RawItem>();
-            if (rawItemAction)
+            auto brush = mapView->editorAction.as<MouseAction::MapBrush>();
+            if (brush)
             {
-                rawItemAction->erase = true;
+                brush->erase = true;
             }
             break;
         }
