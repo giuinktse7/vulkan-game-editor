@@ -57,7 +57,8 @@ QVariant TilesetModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole)
     {
         Brush *brush = _tileset->get(index.row());
-        return GuiImageCache::get(brush->iconServerId());
+        // return GuiImageCache::get(brush->iconServerId());
+        return QVariant::fromValue(QtUtil::itemImageData(brush->iconServerId()));
     }
     else if (role == TilesetModel::HighlightRole)
     {
@@ -90,13 +91,22 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     // painter->drawPixmap(4, option.rect.y(), data.pixmap);
     // qDebug() << "Delegate::paint: " << option.rect;
 
-    painter->drawPixmap(option.rect.x(), option.rect.y(), qvariant_cast<QPixmap>(index.data(Qt::DisplayRole)));
+    ItemImageData imageData = qvariant_cast<ItemImageData>(index.data(Qt::DisplayRole));
+
+    // painter->drawPixmap(option.rect.x(), option.rect.y(), qvariant_cast<QPixmap>(index.data(Qt::DisplayRole)));
+    if (imageData.rect.width() > 32 || imageData.rect.height() > 32)
+    {
+        painter->drawImage(option.rect.topLeft(), imageData.image->copy(imageData.rect).mirrored().scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    else
+    {
+        painter->drawImage(option.rect.topLeft(), imageData.image->copy(imageData.rect).mirrored());
+    }
 
     bool ok;
     int highlightOpacity = index.data(TilesetModel::HighlightRole).toInt(&ok);
     if (ok && highlightOpacity > 0)
     {
-        // VME_LOG_D("paint highlight: " << highlightOpacity);
         painter->save();
         setHighlightPenOpacity(highlightOpacity / 100.0f);
         painter->setPen(highlightBorderPen);

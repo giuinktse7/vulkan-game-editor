@@ -18,11 +18,12 @@
 #include "../map_view.h"
 #include "../qt/logging.h"
 
-vme_unordered_map<uint32_t, QPixmap> GuiImageCache::serverIdToPixmap;
+std::unordered_map<uint32_t, QPixmap> GuiImageCache::serverIdToPixmap;
+std::unordered_map<TextureAtlas *, std::unique_ptr<QImage>> GuiImageCache::atlasToQImage;
 
 namespace
 {
-    constexpr int InitialImageCacheCapacity = 30000;
+    constexpr int InitialImageCacheCapacity = 4096;
 }
 
 void GuiImageCache::initialize()
@@ -46,9 +47,40 @@ const QPixmap &GuiImageCache::get(uint32_t serverId)
     return serverIdToPixmap.at(serverId);
 }
 
+QImage *GuiImageCache::getOrCreateQImageForAtlas(TextureAtlas *atlas)
+{
+    auto found = atlasToQImage.find(atlas);
+    if (found == atlasToQImage.end())
+    {
+        const uint8_t *pixelData = atlas->getOrCreateTexture().pixels().data();
+        auto image = std::make_unique<QImage>(pixelData, 12 * 32, 12 * 32, 384 * 4, QImage::Format::Format_ARGB32);
+        atlasToQImage.try_emplace(atlas, std::move(image));
+    }
+
+    return atlasToQImage.at(atlas).get();
+}
+
 namespace
 {
     std::unique_ptr<QPixmap> blackSquare;
+    std::optional<ItemImageData> blackSquareImage;
+    std::unique_ptr<QImage> black32x32;
+
+    ItemImageData &getBlackSquareImage()
+    {
+        if (!blackSquareImage)
+        {
+            blackSquareImage = {};
+
+            blackSquareImage->rect = QRect(0, 0, 32, 32);
+
+            black32x32 = std::make_unique<QImage>(32, 32, QImage::Format::Format_ARGB32);
+            black32x32->fill(QColor(0, 0, 0, 255));
+            blackSquareImage->image = black32x32.get();
+        }
+
+        return *blackSquareImage;
+    }
 
     QPixmap blackSquarePixmap()
     {
@@ -94,6 +126,38 @@ void QtUtil::QtUiUtils::waitForDraw(std::function<void()> f)
     window->waitingForDraw.emplace(f);
 }
 
+ItemImageData QtUtil::itemImageData(uint32_t serverId, uint8_t subtype)
+{
+    if (!Items::items.validItemType(serverId))
+    {
+        return getBlackSquareImage();
+    }
+
+    ItemType *t = Items::items.getItemTypeByServerId(serverId);
+    auto info = subtype == 0 ? t->getTextureInfo(TextureInfo::CoordinateType::Unnormalized)
+                             : t->getTextureInfoForSubtype(subtype, TextureInfo::CoordinateType::Unnormalized);
+
+    return itemImageData(info);
+}
+
+ItemImageData QtUtil::itemImageData(const TextureInfo &info)
+{
+    TextureAtlas *atlas = info.atlas;
+    QRect textureRegion(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
+
+    QImage *image = GuiImageCache::getOrCreateQImageForAtlas(info.atlas);
+
+    if (atlas->spriteWidth == 32 && atlas->spriteHeight == 32)
+    {
+        return {textureRegion, image};
+    }
+    else
+    {
+        // return QPixmap::fromImage(sprite.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        return {textureRegion, image};
+    }
+}
+
 QPixmap QtUtil::itemPixmap(uint32_t serverId, uint8_t subtype)
 {
     if (!Items::items.validItemType(serverId))
@@ -128,7 +192,7 @@ QPixmap QtUtil::itemPixmap(const TextureInfo &info)
 
     if (atlas->spriteWidth == 32 && atlas->spriteHeight == 32)
     {
-        return QPixmap::fromImage(sprite);
+        return QPixmap::fromImage(std::move(sprite));
     }
     else
     {

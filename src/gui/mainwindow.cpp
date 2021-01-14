@@ -356,7 +356,7 @@ void MainWindow::initializePaletteWindow()
 
 #ifdef _DEBUG_VME
     from = 100;
-    to = 500;
+    to = 5000;
 #endif
 
     for (int i = from; i < to; ++i)
@@ -403,7 +403,7 @@ void MainWindow::initializePaletteWindow()
             otherTileset->addRawBrush(i);
         }
 
-        GuiImageCache::cachePixmapForServerId(i);
+        // GuiImageCache::cachePixmapForServerId(i);
     }
 
     _paletteWindow->addPalette(ItemPalettes::getByName("Raw Palette"));

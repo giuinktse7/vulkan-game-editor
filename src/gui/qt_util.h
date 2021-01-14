@@ -7,7 +7,9 @@
 #include <QString>
 #include <QWidget>
 
+#include <memory>
 #include <optional>
+#include <unordered_map>
 
 #include "../editor_action.h"
 
@@ -22,6 +24,7 @@ struct TextureInfo;
 class Item;
 class MapView;
 class VulkanWindow;
+struct TextureAtlas;
 
 namespace
 {
@@ -31,12 +34,23 @@ namespace
 
 struct GuiImageCache
 {
+
     static void initialize();
     static const QPixmap &get(uint32_t serverId);
     static void cachePixmapForServerId(uint32_t serverId);
+    static QImage *getOrCreateQImageForAtlas(TextureAtlas *atlas);
 
-    static vme_unordered_map<uint32_t, QPixmap> serverIdToPixmap;
+    static std::unordered_map<uint32_t, QPixmap> serverIdToPixmap;
+    static std::unordered_map<TextureAtlas *, std::unique_ptr<QImage>> atlasToQImage;
 };
+
+struct ItemImageData
+{
+    QRect rect;
+    QImage *image;
+};
+
+Q_DECLARE_METATYPE(ItemImageData);
 
 namespace QtUtil
 {
@@ -144,6 +158,9 @@ namespace QtUtil
     QPixmap itemPixmap(uint32_t serverId, uint8_t subtype = 0);
     QPixmap itemPixmap(const Position &pos, const Item &item);
     QPixmap itemPixmap(const TextureInfo &info);
+
+    ItemImageData itemImageData(uint32_t serverId, uint8_t subtype = 0);
+    ItemImageData itemImageData(const TextureInfo &info);
     MainApplication *qtApp();
 
     class EventFilter : public QObject
