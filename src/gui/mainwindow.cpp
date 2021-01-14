@@ -343,12 +343,20 @@ void MainWindow::initializePaletteWindow()
 
     ItemPalette &palette = ItemPalettes::createPalette("Raw Palette");
 
+    Tileset *bottomTileset = palette.createTileset("Bottom items");
     Tileset *groundTileset = palette.createTileset("Grounds");
     Tileset *borderTileset = palette.createTileset("Borders");
     Tileset *unsightTileset = palette.createTileset("Sight-blocking");
+    Tileset *doorTileset = palette.createTileset("Doors");
+    Tileset *archwayTileset = palette.createTileset("Archways");
     Tileset *containerTileset = palette.createTileset("Containers");
+    Tileset *hangableTileset = palette.createTileset("Hangables");
     Tileset *pickuableTileset = palette.createTileset("Pickupables");
     Tileset *equipmentTileset = palette.createTileset("Equipment");
+    Tileset *lightSourceTileset = palette.createTileset("Light source");
+
+    Tileset *interiorTileset = palette.createTileset("Interior / Wrap / Unwrap");
+
     Tileset *otherTileset = palette.createTileset("Other");
 
     int from = 100;
@@ -370,18 +378,37 @@ void MainWindow::initializePaletteWindow()
             // Skip corpses
             continue;
         }
+        else if (itemType->hasFlag(AppearanceFlag::Bottom))
+        {
+            bottomTileset->addRawBrush(i);
+        }
         else if (itemType->hasFlag(AppearanceFlag::Ground))
         {
             groundTileset->addRawBrush(i);
         }
-        else if (itemType->hasFlag(AppearanceFlag::GroundBorder))
+        else if (itemType->hasFlag(AppearanceFlag::Border))
         {
             borderTileset->addRawBrush(i);
         }
-
-        else if (itemType->hasFlag(AppearanceFlag::Container))
+        else if (itemType->hasFlag(AppearanceFlag::Top))
+        {
+            archwayTileset->addRawBrush(i);
+        }
+        else if (itemType->isDoor())
+        {
+            doorTileset->addRawBrush(i);
+        }
+        else if (itemType->hasFlag(AppearanceFlag::Unsight))
+        {
+            unsightTileset->addRawBrush(i);
+        }
+        else if (itemType->isContainer())
         {
             containerTileset->addRawBrush(i);
+        }
+        else if (itemType->hasFlag(AppearanceFlag::Wrap) || itemType->hasFlag(AppearanceFlag::Unwrap) || itemType->isBed())
+        {
+            interiorTileset->addRawBrush(i);
         }
         else if (itemType->hasFlag(AppearanceFlag::Take))
         {
@@ -394,10 +421,15 @@ void MainWindow::initializePaletteWindow()
                 pickuableTileset->addRawBrush(i);
             }
         }
-        else if (itemType->hasFlag(AppearanceFlag::Unsight))
+        else if (itemType->hasFlag(AppearanceFlag::Light))
         {
-            unsightTileset->addRawBrush(i);
+            lightSourceTileset->addRawBrush(i);
         }
+        else if (itemType->hasFlag(AppearanceFlag::Hang))
+        {
+            hangableTileset->addRawBrush(i);
+        }
+
         else
         {
             otherTileset->addRawBrush(i);
