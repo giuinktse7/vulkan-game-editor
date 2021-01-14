@@ -873,6 +873,8 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
     {
         if (newTile)
             requestDraw();
+
+        _previousMouseGamePos = pos;
         return;
     }
 
