@@ -5,7 +5,7 @@
 #include "../items.h"
 
 RawBrush::RawBrush(ItemType *itemType)
-    : Brush(itemType->name), _itemType(itemType)
+    : Brush(itemType->name()), _itemType(itemType)
 {
     DEBUG_ASSERT(_itemType != nullptr, "Invalid itemType. No ItemType for server ID " + itemType->id);
 }

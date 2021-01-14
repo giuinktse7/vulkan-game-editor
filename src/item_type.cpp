@@ -202,7 +202,10 @@ bool ItemType::hasElevation() const noexcept
     return appearance->hasFlag(AppearanceFlag::Height);
 }
 
-// std::vector<TextureAtlas> atlases()
+bool ItemType::alwaysBottomOfTile() const noexcept
+{
+    return appearance->hasFlag(AppearanceFlag::Top);
+}
 
 std::string ItemType::getPluralName() const
 {
@@ -211,16 +214,26 @@ std::string ItemType::getPluralName() const
         return pluralName;
     }
 
-    if (showCount == 0)
+    if (!showCount)
     {
-        return name;
+        return appearance->name;
     }
 
     std::string str;
-    str.reserve(name.length() + 1);
-    str.assign(name);
+    str.reserve(appearance->name.length() + 1);
+    str.assign(appearance->name);
     str += 's';
     return str;
+}
+
+uint32_t ItemType::clientId() const noexcept
+{
+    return appearance->clientId;
+}
+
+const std::string &ItemType::name() const noexcept
+{
+    return appearance->name;
 }
 
 bool ItemType::isGroundTile() const noexcept
@@ -288,7 +301,7 @@ bool ItemType::isPickupable() const noexcept
 }
 bool ItemType::isUseable() const noexcept
 {
-    return (useable);
+    return appearance->hasFlag(AppearanceFlag::Usable);
 }
 bool ItemType::hasSubType() const noexcept
 {

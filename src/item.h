@@ -111,12 +111,12 @@ inline uint32_t Item::serverId() const noexcept
 
 inline uint32_t Item::clientId() const noexcept
 {
-    return itemType->clientId;
+    return itemType->clientId();
 }
 
 inline const std::string Item::name() const noexcept
 {
-    return itemType->name;
+    return itemType->name();
 }
 
 inline const uint32_t Item::weight() const noexcept

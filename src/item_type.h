@@ -23,7 +23,7 @@ enum class ItemDataType
     Container
 };
 
-enum FloorChange
+enum FloorChange : uint8_t
 {
     Down,
     West,
@@ -210,6 +210,9 @@ class ItemType
     inline TextureAtlas *getFirstTextureAtlas() const noexcept;
     std::vector<const TextureAtlas *> atlases() const;
 
+    [[nodiscard]] const std::string &name() const noexcept;
+    [[nodiscard]] uint32_t clientId() const noexcept;
+
     bool isGroundTile() const noexcept;
     bool isContainer() const noexcept;
     bool isSplash() const noexcept;
@@ -253,103 +256,65 @@ class ItemType
     uint32_t speed() const noexcept;
     ItemSlot inventorySlot() const noexcept;
 
-    std::string editorsuffix;
-    std::string name;
+    [[nodiscard]] bool alwaysBottomOfTile() const noexcept;
+
+    // std::string editorsuffix;
     std::string article;
     std::string pluralName;
     std::string description;
-    std::string runeSpellName;
-    std::string vocationString;
+    // std::string runeSpellName;
+
+    ObjectAppearance *appearance = nullptr;
+    RawBrush *rawBrush = nullptr;
 
     ItemType::Group group = ItemType::Group::None;
     ItemTypes_t type = ItemTypes_t::None;
 
+    uint32_t id = 0;
     uint32_t weight = 0;
     uint32_t levelDoor = 0;
-    uint32_t decayTime = 0;
-    uint32_t wieldInfo = 0;
-    uint32_t minReqLevel = 0;
-    uint32_t minReqMagicLevel = 0;
     uint32_t charges = 0;
-    int32_t maxHitChance = -1;
-    int32_t decayTo = -1;
-    int32_t attack = 0;
-    int32_t defense = 0;
-    int32_t extraDefense = 0;
-    int32_t armor = 0;
-    int32_t runeMagLevel = 0;
-    int32_t runeLevel = 0;
-
-    uint32_t id = 0;
-    uint32_t clientId = 0;
 
     // CombatType_t combatType = COMBAT_NONE;
     uint16_t rotateTo = 0;
     uint16_t volume = 0;
 
-    uint16_t transformToOnUse[2] = {0, 0};
-    uint16_t transformToFree = 0;
-    uint16_t destroyTo = 0;
     uint16_t maxTextLen = 0;
     uint16_t writeOnceItemId = 0;
-    uint16_t transformEquipTo = 0;
-    uint16_t transformDeEquipTo = 0;
-    uint16_t maxItems = 8;
+    uint16_t maxItems = 0;
     uint16_t wareId = 0;
-
-    MagicEffectClasses magicEffect = CONST_ME_NONE;
-    GameDirection bedPartnerDir = DIRECTION_NONE;
-    WeaponType_t weaponType = WEAPON_NONE;
-    Ammo_t ammoType = AMMO_NONE;
-    ShootType_t shootType = CONST_ANI_NONE;
-    RaceType_t corpseType = RACE_NONE;
-    FluidTypes_t fluidSource = FLUID_NONE;
 
     FloorChange floorChange = FloorChange::None;
     /*
-    Also called alwaysOnTopOrder. Used to determine order for items on a tile,
-    when more than one itemtype has alwaysBottomOfTile = true
-  */
+        Also called alwaysOnTopOrder. Used to determine order for items on a tile,
+        when more than one itemtype has alwaysBottomOfTile = true
+    */
     uint8_t stackOrderIndex = 0;
-    uint8_t lightLevel = 0;
-    uint8_t lightColor = 0;
-    uint8_t shootRange = 1;
     StackableSpriteType stackableSpriteType = StackableSpriteType::SingleId;
-    int8_t hitChance = 0;
 
-    bool forceUse = false;
-    bool forceSerialize = false;
-    bool hasHeight = false;
-    bool blockSolid = false;
-    bool blockPickupable = false;
-    bool blockProjectile = false;
-    bool blockPathFind = false;
+    // bool blockSolid = false;
+    // bool blockProjectile = false;
+    // bool blockPathFind = false;
     bool allowPickupable = false;
-    bool showDuration = false;
-    bool showCharges = false;
-    bool showAttributes = false;
-    bool replaceable = true;
+    // bool showDuration = false;
+    // bool showCharges = false;
+    // bool showAttributes = false;
+    // bool replaceable = true;
     bool pickupable = false;
-    bool rotatable = false;
-    bool useable = false;
-    bool moveable = false;
-    bool alwaysBottomOfTile = false;
+    // bool rotatable = false;
+    // bool useable = false;
+    // bool moveable = false;
+    // bool alwaysBottomOfTile = false;
     bool canReadText = false;
     bool canWriteText = false;
     bool isVertical = false;
     bool isHorizontal = false;
     bool isHangable = false;
-    bool allowDistRead = false;
+    // bool allowDistRead = false;
     bool lookThrough = false;
-    bool stopTime = false;
+    // bool stopTime = false;
     bool showCount = true;
-    bool decays = false;
     bool stackable = false;
-    bool isAnimation = false;
-
-    ObjectAppearance *appearance = nullptr;
-
-    RawBrush *rawBrush;
 
   private:
     static constexpr size_t CachedTextureAtlasAmount = 5;
@@ -366,7 +331,7 @@ inline bool ItemType::isGroundBorder() const noexcept
 
 inline bool ItemType::isValid() const noexcept
 {
-    return clientId != 0;
+    return appearance != nullptr;
 }
 
 inline TextureAtlas *ItemType::getFirstTextureAtlas() const noexcept

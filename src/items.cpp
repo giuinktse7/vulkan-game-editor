@@ -45,6 +45,20 @@ namespace
             return false;
         }
     }
+
+    static std::unordered_map<std::string, FloorChange> const FloorChangeFromStringTable = {
+        {"down", FloorChange::Down},
+        {"down", FloorChange::Down},
+        {"north", FloorChange::North},
+        {"south", FloorChange::South},
+        {"west", FloorChange::West},
+        {"east", FloorChange::East},
+        {"northex", FloorChange::NorthEx},
+        {"southex", FloorChange::SouthEx},
+        {"westex", FloorChange::WestEx},
+        {"eastex", FloorChange::EastEx},
+        {"southalt", FloorChange::SouthAlt},
+        {"eastalt", FloorChange::EastAlt}};
 } // namespace
 
 Items::Items()
@@ -189,8 +203,8 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 
     ItemType &it = *Items::items.getItemTypeByServerId(id);
 
-    it.name = itemNode.attribute("name").as_string();
-    it.editorsuffix = itemNode.attribute("editorsuffix").as_string();
+    it.appearance->name = itemNode.attribute("name").as_string();
+    // it.editorsuffix = itemNode.attribute("editorsuffix").as_string();
 
     pugi::xml_attribute attribute;
     for (pugi::xml_node itemAttributesNode = itemNode.first_child(); itemAttributesNode; itemAttributesNode = itemAttributesNode.next_sibling())
@@ -202,6 +216,7 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 
         std::string key = attribute.as_string();
         to_lower_str(key);
+
         if (key == "type")
         {
             if (!(attribute = itemAttributesNode.attribute("value")))
@@ -211,6 +226,7 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 
             std::string typeValue = attribute.as_string();
             to_lower_str(typeValue);
+
             if (typeValue == "depot")
             {
                 it.type = ItemTypes_t::Depot;
@@ -253,7 +269,7 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
         {
             if ((attribute = itemAttributesNode.attribute("value")))
             {
-                it.name = attribute.as_string();
+                it.appearance->name = attribute.as_string();
             }
         }
         else if (key == "description")
@@ -263,12 +279,13 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
                 it.description = attribute.as_string();
             }
         }
-        else if (key == "runespellName")
-        {
-            /*if((attribute = itemAttributesNode.attribute("value"))) {
+        // Currently no use for runeSpellName
+        // else if (key == "runespellName")
+        // {
+        /*if((attribute = itemAttributesNode.attribute("value"))) {
 				it.runeSpellName = attribute.as_string();
 			}*/
-        }
+        // }
         else if (key == "weight")
         {
             if ((attribute = itemAttributesNode.attribute("value")))
@@ -276,20 +293,23 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
                 it.weight = static_cast<uint32_t>(std::floor(attribute.as_int() / 100.f));
             }
         }
-        else if (key == "armor")
-        {
-            if ((attribute = itemAttributesNode.attribute("value")))
-            {
-                it.armor = attribute.as_int();
-            }
-        }
-        else if (key == "defense")
-        {
-            if ((attribute = itemAttributesNode.attribute("value")))
-            {
-                it.defense = attribute.as_int();
-            }
-        }
+        // Currenly no use for armor (2021-01-13)
+        // else if (key == "armor")
+        // {
+        // if ((attribute = itemAttributesNode.attribute("value")))
+        // {
+        //     it.armor = attribute.as_int();
+        // }
+        // }
+        // Currenly no use for defense (2021-01-13)
+        // else if (key == "defense")
+        // {
+
+        // if ((attribute = itemAttributesNode.attribute("value")))
+        // {
+        //     it.defense = attribute.as_int();
+        // }
+        // }
         else if (key == "rotateto")
         {
             if ((attribute = itemAttributesNode.attribute("value")))
@@ -318,10 +338,10 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
                 it.canWriteText = it.canReadText = attribute.as_bool();
             }
         }
-        else if (key == "decayto")
-        {
-            it.decays = true;
-        }
+        // else if (key == "decayto")
+        // {
+        //     it.decays = true;
+        // }
         else if (key == "maxtextlen" || key == "maxtextlength")
         {
             if ((attribute = itemAttributesNode.attribute("value")))
@@ -330,19 +350,21 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
                 it.canReadText = it.maxTextLen > 0;
             }
         }
-        else if (key == "writeonceitemid")
-        {
-            /*if((attribute = itemAttributesNode.attribute("value"))) {
+        // Currenly no use for writeonceitemid (2021-01-13)
+        // else if (key == "writeonceitemid")
+        // {
+        /*if((attribute = itemAttributesNode.attribute("value"))) {
 				it.writeOnceItemId = pugi::cast<int32_t>(attribute.value());
 			}*/
-        }
-        else if (key == "allowdistread")
-        {
-            if ((attribute = itemAttributesNode.attribute("value")))
-            {
-                it.allowDistRead = attribute.as_bool();
-            }
-        }
+        // }
+        // Currenly no use for allowdistread (2021-01-13)
+        // else if (key == "allowdistread")
+        // {
+        // if ((attribute = itemAttributesNode.attribute("value")))
+        // {
+        //     it.allowDistRead = attribute.as_bool();
+        // }
+        // }
         else if (key == "charges")
         {
             if ((attribute = itemAttributesNode.attribute("value")))
@@ -352,50 +374,28 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
         }
         else if (key == "floorchange")
         {
-            if ((attribute = itemAttributesNode.attribute("value")))
+            if (attribute = itemAttributesNode.attribute("value"))
             {
-                std::string value = attribute.as_string();
-                if (value == "down")
+                std::string floorChangeString = attribute.as_string();
+
+                auto found = FloorChangeFromStringTable.find(floorChangeString);
+                if (found != FloorChangeFromStringTable.end())
                 {
-                    it.floorChange = FloorChange::Down;
+                    it.floorChange = found->second;
                 }
-                else if (value == "north")
+                else
                 {
-                    it.floorChange = FloorChange::North;
+                    VME_LOG_ERROR("Unknown floorchange: " << floorChangeString);
                 }
-                else if (value == "south")
-                {
-                    it.floorChange = FloorChange::South;
-                }
-                else if (value == "west")
-                {
-                    it.floorChange = FloorChange::West;
-                }
-                else if (value == "east")
-                {
-                    it.floorChange = FloorChange::East;
-                }
-                else if (value == "northex")
-                    it.floorChange = FloorChange::NorthEx;
-                else if (value == "southex")
-                    it.floorChange = FloorChange::SouthEx;
-                else if (value == "westex")
-                    it.floorChange = FloorChange::WestEx;
-                else if (value == "eastex")
-                    it.floorChange = FloorChange::EastEx;
-                else if (value == "southalt")
-                    it.floorChange = FloorChange::SouthAlt;
-                else if (value == "eastalt")
-                    it.floorChange = FloorChange::EastAlt;
             }
         }
     }
     return true;
 }
 
-void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t flags)
+void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t clientId, uint32_t flags)
 {
-    auto &appearance = Appearances::getObjectById(itemType.clientId);
+    auto &appearance = Appearances::getObjectById(clientId);
 
     if (appearance.hasFlag(AppearanceFlag::Ground))
     {
@@ -407,36 +407,31 @@ void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t flags)
     }
 
     // TODO: Check for items that do not have matching flags in .otb and appearances.dat
-    itemType.blockSolid = hasBitSet(FLAG_BLOCK_SOLID, flags);
-    itemType.blockProjectile = hasBitSet(FLAG_BLOCK_PROJECTILE, flags) || appearance.hasFlag(AppearanceFlag::Unsight);
-    itemType.blockPathFind = hasBitSet(FLAG_BLOCK_PATHFIND, flags);
-    itemType.hasHeight = hasBitSet(FLAG_HAS_HEIGHT, flags) || appearance.hasFlag(AppearanceFlag::Height);
-    itemType.useable = hasBitSet(FLAG_USEABLE, flags) || appearance.hasFlag(AppearanceFlag::Usable);
+    // itemType.blockSolid = hasBitSet(FLAG_BLOCK_SOLID, flags);
+    // itemType.blockProjectile = hasBitSet(FLAG_BLOCK_PROJECTILE, flags) || appearance.hasFlag(AppearanceFlag::Unsight);
+    // itemType.blockPathFind = hasBitSet(FLAG_BLOCK_PATHFIND, flags);
+    // itemType.useable = hasBitSet(FLAG_USEABLE, flags) || appearance.hasFlag(AppearanceFlag::Usable);
     itemType.pickupable = hasBitSet(FLAG_PICKUPABLE, flags) || appearance.hasFlag(AppearanceFlag::Take);
-    itemType.moveable = hasBitSet(FLAG_MOVEABLE, flags) || !appearance.hasFlag(AppearanceFlag::Unmove);
+    // itemType.moveable = hasBitSet(FLAG_MOVEABLE, flags) || !appearance.hasFlag(AppearanceFlag::Unmove);
     // itemType.stackable = hasBitSet(FLAG_STACKABLE, flags);
     itemType.stackable = appearance.hasFlag(AppearanceFlag::Cumulative);
     itemType.maxTextLen = std::max(
         static_cast<uint32_t>(itemType.maxTextLen),
         std::max(appearance.flagData.maxTextLength, appearance.flagData.maxTextLengthOnce));
 
-    itemType.alwaysBottomOfTile = hasBitSet(FLAG_ALWAYSONTOP, flags) || appearance.hasFlag(AppearanceFlag::Top);
+    // itemType.alwaysBottomOfTile = hasBitSet(FLAG_ALWAYSONTOP, flags) || appearance.hasFlag(AppearanceFlag::Top);
     itemType.isVertical = hasBitSet(FLAG_VERTICAL, flags);
     itemType.isHorizontal = hasBitSet(FLAG_HORIZONTAL, flags);
     itemType.isHangable = hasBitSet(FLAG_HANGABLE, flags) || appearance.hasFlag(AppearanceFlag::Hang);
-    itemType.allowDistRead = hasBitSet(FLAG_ALLOWDISTREAD, flags);
-    itemType.rotatable = hasBitSet(FLAG_ROTATABLE, flags) || appearance.hasFlag(AppearanceFlag::Rotate);
+    // itemType.allowDistRead = hasBitSet(FLAG_ALLOWDISTREAD, flags);
+    // itemType.rotatable = hasBitSet(FLAG_ROTATABLE, flags) || appearance.hasFlag(AppearanceFlag::Rotate);
     itemType.canReadText = hasBitSet(FLAG_READABLE, flags) || appearance.hasFlag(AppearanceFlag::Write) || appearance.hasFlag(AppearanceFlag::WriteOnce);
     itemType.lookThrough = hasBitSet(FLAG_LOOKTHROUGH, flags);
-    itemType.isAnimation = hasBitSet(FLAG_ANIMATION, flags);
-    itemType.forceUse = hasBitSet(FLAG_FORCEUSE, flags) || appearance.hasFlag(AppearanceFlag::Forceuse);
+    // itemType.isAnimation = hasBitSet(FLAG_ANIMATION, flags);
+    // itemType.forceUse = hasBitSet(FLAG_FORCEUSE, flags) || appearance.hasFlag(AppearanceFlag::Forceuse);
 
     itemType.appearance = &appearance;
     itemType.cacheTextureAtlases();
-    if (appearance.name.size() != 0)
-    {
-        itemType.name = appearance.name;
-    }
 }
 
 void Items::loadMissingItemTypes()
@@ -468,11 +463,10 @@ void Items::loadMissingItemTypes()
 
             ItemType &itemType = items.itemTypes.at(serverId);
             itemType.id = serverId;
-            itemType.clientId = clientId;
 
             items.clientIdToServerId.emplace(clientId, serverId);
 
-            items.addItemTypeAppearanceData(itemType, 0);
+            items.addItemTypeAppearanceData(itemType, clientId, 0);
         }
     }
 }
@@ -600,10 +594,10 @@ void Items::OtbReader::readNodes()
 
                     items.highestServerId = std::max(items.highestServerId, serverId);
 
-                    if (serverId >= items.size())
-                    {
-                        items.itemTypes.resize(static_cast<size_t>(serverId) + 1);
-                    }
+                    // if (serverId >= items.size())
+                    // {
+                    //     items.itemTypes.resize(static_cast<size_t>(serverId) + 1);
+                    // }
 
                     if (serverId >= items.size())
                     {
@@ -674,14 +668,7 @@ void Items::OtbReader::readNodes()
 
                 case itemproperty_t::ITEM_ATTR_NAME:
                 {
-                    if (itemType)
-                    {
-                        itemType->name = nextString(attributeSize);
-                    }
-                    else
-                    {
-                        name = nextString(attributeSize);
-                    }
+                    name = nextString(attributeSize);
                     break;
                 }
 
@@ -718,49 +705,50 @@ void Items::OtbReader::readNodes()
 
         items.clientIdToServerId.emplace(clientId, serverId);
 
-        itemType->group = static_cast<ItemType::Group>(itemGroup);
-        itemType->type = serverItemType(itemType->group);
-
         itemType->id = serverId;
-        itemType->clientId = clientId;
-        // itemType->speed = speed;
-        itemType->lightLevel = static_cast<uint8_t>(lightLevel);
-        itemType->lightColor = static_cast<uint8_t>(lightColor);
-        itemType->stackOrderIndex = static_cast<uint8_t>(stackOrderIndex);
-        itemType->wareId = wareId;
-        itemType->maxTextLen = maxTextLen;
 
-        if (Appearances::hasObject(itemType->clientId))
+        if (Appearances::hasObject(clientId))
         {
-            items.addItemTypeAppearanceData(*itemType, flags);
-        }
-        else
-        {
-            // No matching Appearance for this item type.
-            itemType->clientId = 0;
-        }
+            items.addItemTypeAppearanceData(*itemType, clientId, flags);
 
-        if (itemType->name.size() == 0 && name.size() != 0)
-        {
-            itemType->name = std::move(name);
+            switch (itemType->id)
+            {
+                case 8133:
+                    // Earth ground 64x64, earth on top-left and bottom-right quadrants
+                    itemType->appearance->quadrantRenderType = QuadrantRenderType::TopLeftBottomRight;
+                    break;
+                case 919:
+                    // Mountain ground 64x64, mountain on top-left quadrant
+                    itemType->appearance->quadrantRenderType = QuadrantRenderType::TopLeft;
+                    break;
+                case 877:
+                    // Mountain bottom-right wall piece 64x64, mountain wall on every quadrant except top-left
+                    itemType->appearance->quadrantRenderType = QuadrantRenderType::TopRightBottomRightBottomLeft;
+                    break;
+                default:
+                    break;
+            }
+
+            itemType->group = static_cast<ItemType::Group>(itemGroup);
+            itemType->type = serverItemType(itemType->group);
+
+            // itemType->speed = speed;
+            itemType->appearance->flagData.brightness = static_cast<uint8_t>(lightLevel);
+            itemType->appearance->flagData.color = static_cast<uint8_t>(lightColor);
+            itemType->stackOrderIndex = static_cast<uint8_t>(stackOrderIndex);
+            itemType->wareId = wareId;
+            itemType->maxTextLen = maxTextLen;
+
+            if (itemType->appearance->name.size() == 0 && name.size() != 0)
+            {
+                itemType->appearance->name = std::move(name);
+            }
         }
 
         [[maybe_unused]] uint8_t endToken = nextU8();
         DEBUG_ASSERT(endToken == EndNode, "Expected end token when parsing items.otb.");
 
-        if (itemType->id == 28713)
-        {
-            VME_LOG("Appearance for " << 28713 << ":");
-            VME_LOG(*itemType->appearance);
-        }
-
     } while (!nodeEnd());
-}
-
-bool Items::OtbReader::nodeEnd() const
-{
-    bool endCursor = *cursor == EndNode;
-    return endCursor;
 }
 
 ItemTypes_t Items::OtbReader::serverItemType(ItemType::Group itemGroup)
@@ -790,6 +778,11 @@ ItemTypes_t Items::OtbReader::serverItemType(ItemType::Group itemGroup)
             VME_LOG("Unknown item type!");
             return ItemTypes_t::None;
     }
+}
+
+bool Items::OtbReader::nodeEnd() const
+{
+    return *cursor == EndNode;
 }
 
 uint8_t Items::OtbReader::peekByte()
@@ -906,7 +899,115 @@ const OTB::VersionInfo Items::otbVersionInfo() const
     return _otbVersionInfo;
 }
 
-const ItemType &Items::getItemIdByClientId(uint32_t clientId) const
+std::ostringstream stringify(const itemproperty_t &property)
 {
-    return itemTypes.at(clientIdToServerId.at(clientId));
+    std::ostringstream s;
+
+    switch (property)
+    {
+        case ITEM_ATTR_FIRST:
+            s << "ITEM_ATTR_SERVERID";
+            break;
+        case ITEM_ATTR_CLIENTID:
+            s << "ITEM_ATTR_CLIENTID";
+            break;
+        case ITEM_ATTR_NAME:
+            s << "ITEM_ATTR_NAME";
+            break;
+        case ITEM_ATTR_DESCR:
+            s << "ITEM_ATTR_DESCR";
+            break;
+        case ITEM_ATTR_SPEED:
+            s << "ITEM_ATTR_SPEED";
+            break;
+        case ITEM_ATTR_SLOT:
+            s << "ITEM_ATTR_SLOT";
+            break;
+        case ITEM_ATTR_MAXITEMS:
+            s << "ITEM_ATTR_MAXITEMS";
+            break;
+        case ITEM_ATTR_WEIGHT:
+            s << "ITEM_ATTR_WEIGHT";
+            break;
+        case ITEM_ATTR_WEAPON:
+            s << "ITEM_ATTR_WEAPON";
+            break;
+        case ITEM_ATTR_AMU:
+            s << "ITEM_ATTR_AMU";
+            break;
+        case ITEM_ATTR_ARMOR:
+            s << "ITEM_ATTR_ARMOR";
+            break;
+        case ITEM_ATTR_MAGLEVEL:
+            s << "ITEM_ATTR_MAGLEVEL";
+            break;
+        case ITEM_ATTR_MAGFIELDTYPE:
+            s << "ITEM_ATTR_MAGFIELDTYPE";
+            break;
+        case ITEM_ATTR_WRITEABLE:
+            s << "ITEM_ATTR_WRITEABLE";
+            break;
+        case ITEM_ATTR_ROTATETO:
+            s << "ITEM_ATTR_ROTATETO";
+            break;
+        case ITEM_ATTR_DECAY:
+            s << "ITEM_ATTR_DECAY";
+            break;
+        case ITEM_ATTR_SPRITEHASH:
+            s << "ITEM_ATTR_SPRITEHASH";
+            break;
+        case ITEM_ATTR_MINIMAPCOLOR:
+            s << "ITEM_ATTR_MINIMAPCOLOR";
+            break;
+        case ITEM_ATTR_MAX_TEXT_LENGTH:
+            s << "ITEM_ATTR_MAX_TEXT_LENGTH";
+            break;
+        case ITEM_ATTR_MAX_TEXT_LENGTH_ONCE:
+            s << "ITEM_ATTR_MAX_TEXT_LENGTH_ONCE";
+            break;
+        case ITEM_ATTR_LIGHT:
+            s << "ITEM_ATTR_LIGHT";
+            break;
+        case ITEM_ATTR_DECAY2:
+            s << "ITEM_ATTR_DECAY2";
+            break;
+        case ITEM_ATTR_WEAPON2:
+            s << "ITEM_ATTR_WEAPON2";
+            break;
+        case ITEM_ATTR_AMU2:
+            s << "ITEM_ATTR_AMU2";
+            break;
+        case ITEM_ATTR_ARMOR2:
+            s << "ITEM_ATTR_ARMOR2";
+            break;
+        case ITEM_ATTR_WRITEABLE2:
+            s << "ITEM_ATTR_WRITEABLE2";
+            break;
+        case ITEM_ATTR_LIGHT2:
+            s << "ITEM_ATTR_LIGHT2";
+            break;
+        case ITEM_ATTR_TOPORDER:
+            s << "ITEM_ATTR_TOPORDER";
+            break;
+        case ITEM_ATTR_WRITEABLE3:
+            s << "ITEM_ATTR_WRITEABLE3";
+            break;
+        case ITEM_ATTR_WAREID:
+            s << "ITEM_ATTR_WAREID";
+            break;
+        case ITEM_ATTR_LAST:
+            s << "ITEM_ATTR_LAST";
+            break;
+        default:
+            s << "Unknown itemproperty_t: " << static_cast<int>(to_underlying(property));
+            break;
+    }
+
+    return s;
+}
+
+std::ostream &operator<<(std::ostream &os, const itemproperty_t &property)
+{
+    os << stringify(property).str();
+    return os;
 }
