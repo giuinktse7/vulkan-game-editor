@@ -45,14 +45,23 @@ vec4 textureBilinear(in sampler2D texSampler, in vec2 textureCoordinate)
     vec3 magenta = vec3(1.0f, 0.0f, 1.0f);
     vec4 transparent = vec4(0.0f);
 
+    // if (c00.rgb == magenta)
+    //     c00.rgb = black;
+    // if (c01.rgb == magenta)
+    //     c01.rgb = black;
+    // if (c11.rgb == magenta)
+    //     c11.rgb = black;
+    // if (c10.rgb == magenta)
+    //     c10.rgb = black;
+
     if (c00.rgb == magenta)
-        c00.rgb = black;
+        c00 = transparent;
     if (c01.rgb == magenta)
-        c01.rgb = black;
+        c01 = transparent;
     if (c11.rgb == magenta)
-        c11.rgb = black;
+        c11 = transparent;
     if (c10.rgb == magenta)
-        c10.rgb = black;
+        c10 = transparent;
 
     // Filter weight is fract(coord * colorTextureSize - 0.5f) = (coord *
     // colorTextureSize - 0.5f) - floor(coord * colorTextureSize - 0.5f)
