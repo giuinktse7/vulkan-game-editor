@@ -118,7 +118,9 @@ enum ItemFlags_t
     FLAG_FLOORCHANGEEAST = 1 << 10,  // unused
     FLAG_FLOORCHANGESOUTH = 1 << 11, // unused
     FLAG_FLOORCHANGEWEST = 1 << 12,  // unused
-    FLAG_ALWAYSONTOP = 1 << 13,
+
+    // Called FLAG_ALWAYSONTOP in other software (like Remere's Map Editor)
+    FLAG_DIRECTLY_ABOVE_BORDER = 1 << 13,
     FLAG_READABLE = 1 << 14,
     FLAG_ROTATABLE = 1 << 15,
     FLAG_HANGABLE = 1 << 16,
@@ -133,6 +135,22 @@ enum ItemFlags_t
     FLAG_FULLTILE = 1 << 25, // unused
     FLAG_FORCEUSE = 1 << 26,
 };
+
+enum class TileStackOrder : uint8_t
+{
+    Ground = 0,
+    Border = 1,
+    // Things like trees, walls, stones, statues, pillars, ...
+    Bottom = 2,
+
+    // Items with TileStackOrder `Default` are placed on top of all other items, except for `Top` items.
+    Default = 3,
+
+    // Things like archways, open doors, open fence gates, ...
+    Top = UINT8_MAX
+};
+
+// [[nodiscard]] TileStackOrder TileStackOrderFromValue(uint8_t value, bool *ok = nullptr) noexcept;
 
 /**
  * A stackable ItemType can have either one sprite ID for all counts, or eight
@@ -221,7 +239,7 @@ class ItemType
     [[nodiscard]] const std::string &name() const noexcept;
     [[nodiscard]] uint32_t clientId() const noexcept;
 
-    bool isGroundTile() const noexcept;
+    bool isGround() const noexcept;
     bool isContainer() const noexcept;
     bool isSplash() const noexcept;
     bool isFluidContainer() const noexcept;
@@ -243,7 +261,7 @@ class ItemType
 
     bool usesSubType() const noexcept;
     bool isStackable() const noexcept;
-    bool isGroundBorder() const noexcept;
+    bool isBorder() const noexcept;
     bool hasFlag(AppearanceFlag flag) const noexcept;
 
     /*
@@ -293,11 +311,13 @@ class ItemType
     uint16_t wareId = 0;
 
     FloorChange floorChange = FloorChange::None;
+
     /*
         Also called alwaysOnTopOrder. Used to determine order for items on a tile,
         when more than one itemtype has alwaysBottomOfTile = true
     */
-    uint8_t stackOrderIndex = 0;
+    TileStackOrder stackOrder = TileStackOrder::Default;
+
     StackableSpriteType stackableSpriteType = StackableSpriteType::SingleId;
 
     // bool blockSolid = false;
@@ -332,9 +352,9 @@ class ItemType
     void cacheTextureAtlas(uint32_t spriteId);
 };
 
-inline bool ItemType::isGroundBorder() const noexcept
+inline bool ItemType::isBorder() const noexcept
 {
-    return hasFlag(AppearanceFlag::GroundBorder);
+    return hasFlag(AppearanceFlag::Border);
 }
 
 inline bool ItemType::isValid() const noexcept

@@ -320,6 +320,15 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
     this->clientId = protobufAppearance.id();
     this->name = protobufAppearance.name();
 
+    uint32_t cid1 = 3614;
+    uint32_t cid2 = 2178;
+
+    if (this->clientId == cid1 || this->clientId == cid2)
+    {
+        VME_LOG("Flags for " << this->clientId << ":");
+        VME_LOG(protobufAppearance.flags());
+    }
+
     // if (this->clientId == 447 || this->clientId == 5750)
     // {
     //     std::cout << protobufAppearance.flags() << std::endl;
@@ -356,7 +365,7 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
     } while (false)
 
         ADD_FLAG_UTIL(bank, AppearanceFlag::Ground);
-        ADD_FLAG_UTIL(clip, AppearanceFlag::GroundBorder);
+        ADD_FLAG_UTIL(clip, AppearanceFlag::Border);
         ADD_FLAG_UTIL(bottom, AppearanceFlag::Bottom);
         ADD_FLAG_UTIL(top, AppearanceFlag::Top);
         ADD_FLAG_UTIL(container, AppearanceFlag::Container);

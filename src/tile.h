@@ -85,6 +85,7 @@ class Tile
     void selectAll();
 
     bool isEmpty() const;
+    bool hasItems() const;
 
     int getTopElevation() const;
 

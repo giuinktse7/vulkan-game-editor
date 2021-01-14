@@ -37,11 +37,16 @@ class Item
     uint32_t clientId() const noexcept;
     const std::string name() const noexcept;
     const uint32_t weight() const noexcept;
+
     bool isGround() const noexcept;
+    bool isBorder() const noexcept;
+    bool isBottom() const noexcept;
+    bool isTop() const noexcept;
+
     uint8_t subtype() const noexcept;
     inline uint8_t count() const noexcept;
     inline bool hasAttributes() const noexcept;
-    inline const int getTopOrder() const noexcept;
+    // [[nodiscard]] inline const TileStackOrder TileStackOrder() const noexcept;
     uint32_t getSpriteId(const Position &pos) const;
     const TextureInfo getTextureInfo(
         const Position &pos,
@@ -161,10 +166,10 @@ inline bool Item::hasAttributes() const noexcept
     return _attributes && _attributes->size() > 0;
 }
 
-inline const int Item::getTopOrder() const noexcept
-{
-    return itemType->stackOrderIndex;
-}
+// inline const TileStackOrder Item::TileStackOrder() const noexcept
+// {
+//     return itemType->TileStackOrder;
+// }
 
 inline const std::unordered_map<ItemAttribute_t, ItemAttribute> *Item::attributes() const noexcept
 {

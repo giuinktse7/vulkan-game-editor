@@ -2,7 +2,9 @@
 
 #include "brush.h"
 
+struct Position;
 class ItemType;
+class MapView;
 
 class RawBrush : public Brush
 {
@@ -12,6 +14,7 @@ class RawBrush : public Brush
     // Uses the item name as brush name
     static RawBrush fromServerId(uint32_t serverId);
 
+    void apply(MapView &mapView, const Position &position) const override;
     uint32_t iconServerId() const override;
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;

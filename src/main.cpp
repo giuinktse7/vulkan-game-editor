@@ -48,6 +48,11 @@ int main(int argc, char *argv[])
     Config config = configResult.unwrap();
     config.loadOrTerminate();
 
+    auto atlas = Items::items.getItemTypeByServerId(8133)->getFirstTextureAtlas();
+    VME_LOG(atlas->sourceFile);
+
+    // TemporaryTest::loadAllTexturesIntoMemory();
+
     std::filesystem::path mapPath = "C:/Users/giuin/Desktop/Untitled-1.otbm";
 
     std::variant<Map, std::string> result = LoadMap::loadMap(mapPath);
@@ -106,10 +111,10 @@ void TemporaryTest::loadAllTexturesIntoMemory()
         if (!Items::items.validItemType(id))
             continue;
 
-        const TextureInfo &info = t->getTextureInfo(false);
+        const TextureInfo &info = t->getTextureInfo();
         info.atlas->getOrCreateTexture();
     }
-    VME_LOG_D("loadTextures() ms: " << start.elapsedMillis());
+    VME_LOG("loadTextures() ms: " << start.elapsedMillis());
 }
 
 MainApplication::MainApplication(int &argc, char **argv)
@@ -183,29 +188,6 @@ void MainApplication::initializeUI()
 
     // mainWindow.editorAction.setRawItem(2148);
     // mainWindow.editorAction.setRawBrush(1987);
-}
-
-void MainUtils::printOutfitAtlases(std::vector<uint32_t> outfitIds)
-{
-    std::unordered_set<const TextureAtlas *> atlases;
-    for (const auto id : outfitIds)
-    {
-        auto &type = *Creatures::creatureType(id);
-        auto &groups = type.frameGroups();
-        for (const FrameGroup &frameGroup : groups)
-        {
-            for (const auto spriteId : frameGroup.spriteInfo.spriteIds)
-            {
-                atlases.emplace(Appearances::getTextureAtlas(spriteId));
-            }
-        }
-    }
-
-    VME_LOG("Looktype atlases:");
-    for (const auto atlas : atlases)
-    {
-        VME_LOG(atlas->sourceFile);
-    }
 }
 
 void MainApplication::loadStyleSheet(const QString &path)
@@ -342,6 +324,29 @@ std::shared_ptr<Map> TemporaryTest::makeTestMap2()
     // }
 
     return map;
+}
+
+void MainUtils::printOutfitAtlases(std::vector<uint32_t> outfitIds)
+{
+    std::unordered_set<const TextureAtlas *> atlases;
+    for (const auto id : outfitIds)
+    {
+        auto &type = *Creatures::creatureType(id);
+        auto &groups = type.frameGroups();
+        for (const FrameGroup &frameGroup : groups)
+        {
+            for (const auto spriteId : frameGroup.spriteInfo.spriteIds)
+            {
+                atlases.emplace(Appearances::getTextureAtlas(spriteId));
+            }
+        }
+    }
+
+    VME_LOG("Looktype atlases:");
+    for (const auto atlas : atlases)
+    {
+        VME_LOG(atlas->sourceFile);
+    }
 }
 
 void TemporaryTest::addChunk(Position from, vme::octree::Tree &tree)

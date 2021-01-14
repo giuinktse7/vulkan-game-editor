@@ -5,7 +5,9 @@
 
 #include "../util.h"
 
+struct Position;
 class Tileset;
+class MapView;
 
 enum class BrushType
 {
@@ -16,6 +18,8 @@ class Brush
 {
   public:
     Brush(std::string name);
+
+    virtual void apply(MapView &mapView, const Position &position) const = 0;
 
     virtual uint32_t iconServerId() const = 0;
 
@@ -29,7 +33,7 @@ class Brush
     void setTileset(Tileset *tileset) noexcept;
     Tileset *tileset() const noexcept;
 
-  private:
+  protected:
     static vme_unordered_map<uint32_t, std::unique_ptr<Brush>> rawBrushes;
 
     std::string _name;

@@ -138,7 +138,22 @@ const uint32_t Item::getPatternIndex(const Position &pos) const
 
 bool Item::isGround() const noexcept
 {
-    return itemType->isGroundTile();
+    return itemType->isGround();
+}
+
+bool Item::isBorder() const noexcept
+{
+    return itemType->hasFlag(AppearanceFlag::Border);
+}
+
+bool Item::isBottom() const noexcept
+{
+    return itemType->hasFlag(AppearanceFlag::Bottom);
+}
+
+bool Item::isTop() const noexcept
+{
+    return itemType->hasFlag(AppearanceFlag::Top);
 }
 
 void Item::animate() const

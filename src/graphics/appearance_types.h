@@ -80,10 +80,10 @@ enum class AppearanceFlag : uint64_t
     
     Corresponds to Clip in the protobuf Appearance data.
   */
-    GroundBorder = 1ULL << 1,
+    Border = 1ULL << 1,
     // If the appearance is the bottom-most appearance, only above the ground (bank).
     Bottom = 1ULL << 2,
-    // If the appearance is the top-most appearance.
+    // If the appearance is the top-most appearance (renders above all non-top appearances, including creatures/players).
     Top = 1ULL << 3,
     // If the appearance is a container.
     Container = 1ULL << 4,

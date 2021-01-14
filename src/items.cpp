@@ -400,6 +400,19 @@ void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t clientId, uin
     if (appearance.hasFlag(AppearanceFlag::Ground))
     {
         itemType.group = ItemType::Group::Ground;
+        itemType.stackOrder = TileStackOrder::Ground;
+    }
+    else if (appearance.hasFlag(AppearanceFlag::Border))
+    {
+        itemType.stackOrder = TileStackOrder::Border;
+    }
+    else if (appearance.hasFlag(AppearanceFlag::Bottom))
+    {
+        itemType.stackOrder = TileStackOrder::Bottom;
+    }
+    else if (appearance.hasFlag(AppearanceFlag::Top))
+    {
+        itemType.stackOrder = TileStackOrder::Top;
     }
     else if (appearance.hasFlag(AppearanceFlag::Container))
     {
@@ -419,7 +432,6 @@ void Items::addItemTypeAppearanceData(ItemType &itemType, uint32_t clientId, uin
         static_cast<uint32_t>(itemType.maxTextLen),
         std::max(appearance.flagData.maxTextLength, appearance.flagData.maxTextLengthOnce));
 
-    // itemType.alwaysBottomOfTile = hasBitSet(FLAG_ALWAYSONTOP, flags) || appearance.hasFlag(AppearanceFlag::Top);
     itemType.isVertical = hasBitSet(FLAG_VERTICAL, flags);
     itemType.isHorizontal = hasBitSet(FLAG_HORIZONTAL, flags);
     itemType.isHangable = hasBitSet(FLAG_HANGABLE, flags) || appearance.hasFlag(AppearanceFlag::Hang);
@@ -565,7 +577,6 @@ void Items::OtbReader::readNodes()
         // uint16_t speed = 0;
         uint16_t lightLevel = 0;
         uint16_t lightColor = 0;
-        uint16_t stackOrderIndex = 0;
         uint16_t wareId = 0;
         std::string name;
         uint16_t maxTextLen = 0;
@@ -640,8 +651,14 @@ void Items::OtbReader::readNodes()
 
                 case itemproperty_t::ITEM_ATTR_TOPORDER:
                 {
+                    // This information is gotten from the protobuf file instead.
+                    // AppearanceFlag::Ground => Ground item (corresponds to toporder 0)
+                    // AppearanceFlag::Border => Border item (corresponds to toporder 1)
+                    // AppearanceFlag::Bottom => Bottom item (corresponds to toporder 2)
+                    // AppearanceFlag::Top => Top item (corresponds to toporder 3)
+
                     DEBUG_ASSERT(attributeSize == sizeof(uint8_t), "Invalid attribute length.");
-                    stackOrderIndex = nextU8();
+                    skipBytes(attributeSize);
                     break;
                 }
 
@@ -735,7 +752,7 @@ void Items::OtbReader::readNodes()
             // itemType->speed = speed;
             itemType->appearance->flagData.brightness = static_cast<uint8_t>(lightLevel);
             itemType->appearance->flagData.color = static_cast<uint8_t>(lightColor);
-            itemType->stackOrderIndex = static_cast<uint8_t>(stackOrderIndex);
+
             itemType->wareId = wareId;
             itemType->maxTextLen = maxTextLen;
 

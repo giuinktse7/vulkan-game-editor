@@ -200,7 +200,7 @@ const SpriteInfo &ItemType::getSpriteInfo() const
 
 uint32_t ItemType::speed() const noexcept
 {
-    return isGroundTile() ? appearance->flagData.groundSpeed : 0;
+    return isGround() ? appearance->flagData.groundSpeed : 0;
 }
 
 ItemSlot ItemType::inventorySlot() const noexcept
@@ -268,18 +268,21 @@ const std::string &ItemType::name() const noexcept
     return appearance->name;
 }
 
-bool ItemType::isGroundTile() const noexcept
+bool ItemType::isGround() const noexcept
 {
-    return group == ItemType::Group::Ground;
+    return appearance->hasFlag(AppearanceFlag::Ground);
 }
+
 bool ItemType::isContainer() const noexcept
 {
-    return group == ItemType::Group::Container;
+    return group == ItemType::Group::Container || appearance->hasFlag(AppearanceFlag::Container);
 }
+
 bool ItemType::isSplash() const noexcept
 {
     return group == ItemType::Group::Splash;
 }
+
 bool ItemType::isFluidContainer() const noexcept
 {
     return group == ItemType::Group::Fluid;
@@ -294,18 +297,22 @@ bool ItemType::isDoor() const noexcept
 {
     return (type == ItemTypes_t::Door);
 }
+
 bool ItemType::isMagicField() const noexcept
 {
     return (type == ItemTypes_t::MagicField);
 }
+
 bool ItemType::isTeleport() const noexcept
 {
     return (type == ItemTypes_t::Teleport);
 }
+
 bool ItemType::isKey() const noexcept
 {
     return (type == ItemTypes_t::Key);
 }
+
 bool ItemType::isDepot() const noexcept
 {
     return (type == ItemTypes_t::Depot);
@@ -314,10 +321,12 @@ bool ItemType::isMailbox() const noexcept
 {
     return (type == ItemTypes_t::Mailbox);
 }
+
 bool ItemType::isTrashHolder() const noexcept
 {
     return (type == ItemTypes_t::TrashHolder);
 }
+
 bool ItemType::isBed() const noexcept
 {
     return (type == ItemTypes_t::Bed);
@@ -327,14 +336,17 @@ bool ItemType::isRune() const noexcept
 {
     return (type == ItemTypes_t::Rune);
 }
+
 bool ItemType::isPickupable() const noexcept
 {
     return (allowPickupable || pickupable);
 }
+
 bool ItemType::isUseable() const noexcept
 {
     return appearance->hasFlag(AppearanceFlag::Usable);
 }
+
 bool ItemType::hasSubType() const noexcept
 {
     return (isFluidContainer() || isSplash() || stackable || charges != 0);

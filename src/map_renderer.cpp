@@ -391,7 +391,7 @@ void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
     info.position = pos;
     info.spriteId = itemType->getSpriteId(pos);
 
-    if (!itemType->isGroundTile())
+    if (!itemType->isGround())
     {
         const Tile *tile = mapView->getTile(pos);
         int elevation = tile ? tile->getTopElevation() : 0;

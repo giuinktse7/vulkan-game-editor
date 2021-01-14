@@ -833,8 +833,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                         {
                             if (action.brush->type() == BrushType::RawItem)
                             {
-                                auto rawBrush = static_cast<RawBrush *>(action.brush);
-                                addItem(pos, rawBrush->serverId());
+                                action.brush->apply(*this, pos);
                             }
                             else
                             {
@@ -1018,6 +1017,7 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
                     waitForDraw([this, &select] {
                         Position deltaPos = select.moveDelta.value();
                         moveSelection(deltaPos);
+                        requestDraw();
 
                         select.reset();
                         editorAction.unlock();

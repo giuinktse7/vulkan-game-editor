@@ -198,44 +198,36 @@ Item *Tile::addItem(Item &&item)
     {
         return replaceGround(std::move(item));
     }
-
-    ItemType &itemType = *item.itemType;
-
-    // Place item on top of tile if it does not want to be on bottom.
-    if (!itemType.alwaysBottomOfTile())
+    else if (_items.size() == 0 || item.isTop() || item.itemType->stackOrder >= _items.back().itemType->stackOrder)
     {
         if (item.selected)
             ++_selectionCount;
 
-        Item *newItem = &(*_items.emplace(_items.end(), std::move(item)));
+        Item *newItem = &_items.emplace_back(std::move(item));
         return newItem;
     }
-
-    bool replace = false;
-    bool border = itemType.isGroundBorder();
-
-    auto cursor = _items.begin();
-    for (; cursor != _items.end(); ++cursor)
+    else
     {
-        ItemType &currentType = *cursor->itemType;
-        if (!currentType.alwaysBottomOfTile())
-            break;
+        if (item.selected)
+            ++_selectionCount;
 
-        if (itemType.isGroundBorder() && !currentType.isGroundBorder())
-            break;
-
-        if (!currentType.isGroundBorder())
+        auto cursor = _items.begin();
+        while (cursor != _items.end() && cursor->itemType->stackOrder <= item.itemType->stackOrder)
         {
-            // Replace the current item at cursor with the new item
-            size_t index = static_cast<size_t>(cursor - _items.begin());
-            return replaceItem(index, std::move(item));
+            ++cursor;
+        }
+
+        if (cursor == _items.end())
+        {
+            Item *newItem = &_items.emplace_back(std::move(item));
+            return newItem;
+        }
+        else
+        {
+            Item *newItem = &(*_items.emplace(cursor, std::move(item)));
+            return newItem;
         }
     }
-
-    if (item.selected)
-        ++_selectionCount;
-
-    return &(*_items.emplace(cursor, std::move(item)));
 }
 
 Item *Tile::replaceGround(Item &&ground)
@@ -468,6 +460,11 @@ Tile Tile::deepCopy() const
 bool Tile::isEmpty() const
 {
     return !_ground && _items.empty() && !_creature;
+}
+
+bool Tile::hasItems() const
+{
+    return _ground || !_items.empty();
 }
 
 bool Tile::allSelected() const
