@@ -202,7 +202,7 @@ Item *Tile::addItem(Item &&item)
     ItemType &itemType = *item.itemType;
 
     // Place item on top of tile if it does not want to be on bottom.
-    if (!itemType.alwaysBottomOfTile)
+    if (!itemType.alwaysBottomOfTile())
     {
         if (item.selected)
             ++_selectionCount;
@@ -218,7 +218,7 @@ Item *Tile::addItem(Item &&item)
     for (; cursor != _items.end(); ++cursor)
     {
         ItemType &currentType = *cursor->itemType;
-        if (!currentType.alwaysBottomOfTile)
+        if (!currentType.alwaysBottomOfTile())
             break;
 
         if (itemType.isGroundBorder() && !currentType.isGroundBorder())

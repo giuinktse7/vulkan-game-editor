@@ -33,9 +33,9 @@ struct LZMA
 
 inline std::vector<uint8_t> LZMA::decompress(std::vector<uint8_t> &&inBuffer)
 {
-#ifdef _DEBUG_VME
+    // #ifdef _DEBUG_VME
     return decompressDebug(std::move(inBuffer));
-#else
-    return decompressRelease(std::move(inBuffer));
-#endif
+    // #else
+    // return decompressRelease(std::move(inBuffer));
+    // #endif
 }

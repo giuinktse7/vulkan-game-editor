@@ -72,8 +72,6 @@ class Items
     bool validItemType(uint32_t serverId) const;
     ItemType *getItemTypeByClientId(uint32_t clientId);
 
-    const ItemType &getItemIdByClientId(uint32_t clientId) const;
-
     uint32_t getItemIdByName(const std::string &name);
 
     size_t size() const
@@ -134,7 +132,7 @@ class Items
 
     static bool loadItemFromXml(pugi::xml_node itemNode, uint32_t id);
 
-    void addItemTypeAppearanceData(ItemType &itemType, uint32_t itemTypeFlags);
+    void addItemTypeAppearanceData(ItemType &itemType, uint32_t clientId, uint32_t itemTypeFlags);
 
     std::vector<ItemType> itemTypes;
     std::unordered_map<ClientID, ServerID> clientIdToServerId;
@@ -207,115 +205,5 @@ ItemGuidDisconnect Items::trackContainer(uint32_t itemGuid, T *instance)
     return ItemGuidDisconnect(disconnect);
 }
 
-inline std::ostringstream stringify(const itemproperty_t &property)
-{
-    std::ostringstream s;
-
-    switch (property)
-    {
-        case ITEM_ATTR_FIRST:
-            s << "ITEM_ATTR_SERVERID";
-            break;
-        case ITEM_ATTR_CLIENTID:
-            s << "ITEM_ATTR_CLIENTID";
-            break;
-        case ITEM_ATTR_NAME:
-            s << "ITEM_ATTR_NAME";
-            break;
-        case ITEM_ATTR_DESCR:
-            s << "ITEM_ATTR_DESCR";
-            break;
-        case ITEM_ATTR_SPEED:
-            s << "ITEM_ATTR_SPEED";
-            break;
-        case ITEM_ATTR_SLOT:
-            s << "ITEM_ATTR_SLOT";
-            break;
-        case ITEM_ATTR_MAXITEMS:
-            s << "ITEM_ATTR_MAXITEMS";
-            break;
-        case ITEM_ATTR_WEIGHT:
-            s << "ITEM_ATTR_WEIGHT";
-            break;
-        case ITEM_ATTR_WEAPON:
-            s << "ITEM_ATTR_WEAPON";
-            break;
-        case ITEM_ATTR_AMU:
-            s << "ITEM_ATTR_AMU";
-            break;
-        case ITEM_ATTR_ARMOR:
-            s << "ITEM_ATTR_ARMOR";
-            break;
-        case ITEM_ATTR_MAGLEVEL:
-            s << "ITEM_ATTR_MAGLEVEL";
-            break;
-        case ITEM_ATTR_MAGFIELDTYPE:
-            s << "ITEM_ATTR_MAGFIELDTYPE";
-            break;
-        case ITEM_ATTR_WRITEABLE:
-            s << "ITEM_ATTR_WRITEABLE";
-            break;
-        case ITEM_ATTR_ROTATETO:
-            s << "ITEM_ATTR_ROTATETO";
-            break;
-        case ITEM_ATTR_DECAY:
-            s << "ITEM_ATTR_DECAY";
-            break;
-        case ITEM_ATTR_SPRITEHASH:
-            s << "ITEM_ATTR_SPRITEHASH";
-            break;
-        case ITEM_ATTR_MINIMAPCOLOR:
-            s << "ITEM_ATTR_MINIMAPCOLOR";
-            break;
-        case ITEM_ATTR_MAX_TEXT_LENGTH:
-            s << "ITEM_ATTR_MAX_TEXT_LENGTH";
-            break;
-        case ITEM_ATTR_MAX_TEXT_LENGTH_ONCE:
-            s << "ITEM_ATTR_MAX_TEXT_LENGTH_ONCE";
-            break;
-        case ITEM_ATTR_LIGHT:
-            s << "ITEM_ATTR_LIGHT";
-            break;
-        case ITEM_ATTR_DECAY2:
-            s << "ITEM_ATTR_DECAY2";
-            break;
-        case ITEM_ATTR_WEAPON2:
-            s << "ITEM_ATTR_WEAPON2";
-            break;
-        case ITEM_ATTR_AMU2:
-            s << "ITEM_ATTR_AMU2";
-            break;
-        case ITEM_ATTR_ARMOR2:
-            s << "ITEM_ATTR_ARMOR2";
-            break;
-        case ITEM_ATTR_WRITEABLE2:
-            s << "ITEM_ATTR_WRITEABLE2";
-            break;
-        case ITEM_ATTR_LIGHT2:
-            s << "ITEM_ATTR_LIGHT2";
-            break;
-        case ITEM_ATTR_TOPORDER:
-            s << "ITEM_ATTR_TOPORDER";
-            break;
-        case ITEM_ATTR_WRITEABLE3:
-            s << "ITEM_ATTR_WRITEABLE3";
-            break;
-        case ITEM_ATTR_WAREID:
-            s << "ITEM_ATTR_WAREID";
-            break;
-        case ITEM_ATTR_LAST:
-            s << "ITEM_ATTR_LAST";
-            break;
-        default:
-            s << "Unknown itemproperty_t: " << static_cast<int>(to_underlying(property));
-            break;
-    }
-
-    return s;
-}
-
-inline std::ostream &operator<<(std::ostream &os, const itemproperty_t &property)
-{
-    os << stringify(property).str();
-    return os;
-}
+std::ostringstream stringify(const itemproperty_t &property);
+std::ostream &operator<<(std::ostream &os, const itemproperty_t &property);
