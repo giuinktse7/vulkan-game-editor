@@ -90,10 +90,8 @@ Item Item::deepCopy() const
     return item;
 }
 
-const TextureInfo Item::getTextureInfo(const Position &pos, TextureInfo::CoordinateType coordinateType) const
+uint32_t Item::getSpriteId(const Position &pos) const
 {
-    // TODO Add more pattern checks like hanging item types
-
     uint32_t offset = getPatternIndex(pos);
     const SpriteInfo &spriteInfo = itemType->getSpriteInfo(0);
     if (spriteInfo.hasAnimation() && _animation)
@@ -101,7 +99,14 @@ const TextureInfo Item::getTextureInfo(const Position &pos, TextureInfo::Coordin
         offset += _animation->state.phaseIndex * spriteInfo.patternSize;
     }
 
-    uint32_t spriteId = spriteInfo.spriteIds.at(offset);
+    return spriteInfo.spriteIds.at(offset);
+}
+
+const TextureInfo Item::getTextureInfo(const Position &pos, TextureInfo::CoordinateType coordinateType) const
+{
+    // TODO Add more pattern checks like hanging item types
+    uint32_t spriteId = getSpriteId(pos);
+
     return itemType->getTextureInfo(spriteId, coordinateType);
 }
 

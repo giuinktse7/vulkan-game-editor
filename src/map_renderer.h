@@ -47,6 +47,8 @@ namespace DrawInfo
         TextureInfo textureInfo;
         glm::vec4 color = colors::Default;
         VkDescriptorSet descriptorSet;
+        uint32_t width;
+        uint32_t height;
     };
 
     /**
@@ -61,6 +63,13 @@ namespace DrawInfo
     };
 
     struct Object : Base
+    {
+        ObjectAppearance *appearance;
+        Position position;
+        DrawOffset drawOffset = {0, 0};
+    };
+
+    struct ObjectQuadrant : Base
     {
         ObjectAppearance *appearance;
         Position position;
@@ -110,6 +119,23 @@ struct TextureOffset
 struct ItemUniformBufferObject
 {
     glm::mat4 projection;
+};
+
+struct ItemDrawInfo
+{
+    const Item *item = nullptr;
+    Position position;
+    uint32_t drawFlags = 0;
+    DrawOffset worldPosOffset = {0, 0};
+};
+
+struct ItemTypeDrawInfo
+{
+    uint32_t spriteId;
+    glm::vec4 color = colors::Default;
+    const ItemType *itemType = nullptr;
+    Position position;
+    DrawOffset worldPosOffset = {0, 0};
 };
 
 enum BlendMode
@@ -311,7 +337,7 @@ class MapRenderer
     void drawRectangle(const Texture &texture, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
     void drawSolidRectangle(const SolidColor color, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
 
-    DrawInfo::Object itemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags);
+    DrawInfo::Object getItemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags);
     DrawInfo::Object itemTypeDrawInfo(const ItemType &itemType, const Position &position, uint32_t drawFlags);
     DrawInfo::Creature creatureDrawInfo(const Creature &creature, const Position &position, uint32_t drawFlags);
 
@@ -319,7 +345,7 @@ class MapRenderer
     glm::vec4 getCreatureDrawColor(const Creature &creature, const Position &position, uint32_t drawFlags);
     glm::vec4 getItemTypeDrawColor(uint32_t drawFlags);
 
-    VkDescriptorSet objectDescriptorSet(const DrawInfo::Base &info);
+    VkDescriptorSet objectDescriptorSet(TextureAtlas *atlas);
 
     void issueDraw(const DrawInfo::Base &info, const WorldPosition &worldPos);
 
@@ -333,7 +359,13 @@ class MapRenderer
     void drawTile(const TileLocation &tileLocation,
                   uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
                   const ItemPredicate &filter = nullptr);
-    void drawItem(const DrawInfo::Object &info);
+
+    WorldPosition getWorldPos(const ItemTypeDrawInfo &info, TextureAtlas *atlas) const;
+
+    void drawItem(const ItemDrawInfo &drawInfo);
+    void drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderType renderType);
+    void drawItemType(const ItemTypeDrawInfo &drawInfo);
+
     void drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
 
     void drawCreature(const DrawInfo::Creature &info);
@@ -343,4 +375,6 @@ class MapRenderer
     bool shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter = {}) const noexcept;
 
     VkDescriptorSet currentDescriptorSet;
+
+    bool isDefaultZoom = true;
 };

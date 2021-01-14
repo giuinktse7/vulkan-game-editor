@@ -42,9 +42,11 @@ class Item
     inline uint8_t count() const noexcept;
     inline bool hasAttributes() const noexcept;
     inline const int getTopOrder() const noexcept;
+    uint32_t getSpriteId(const Position &pos) const;
     const TextureInfo getTextureInfo(
         const Position &pos,
         TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
+
     inline ItemDataType itemDataType() const;
 
     void setActionId(uint16_t id);

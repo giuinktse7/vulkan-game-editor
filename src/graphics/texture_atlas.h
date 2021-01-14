@@ -2,6 +2,8 @@
 
 #include <filesystem>
 #include <memory>
+#include <tuple>
+#include <utility>
 #include <variant>
 
 #include "../const.h"
@@ -65,6 +67,9 @@ struct TextureAtlas
 
     glm::vec4 getFragmentBounds(const TextureWindow window) const;
     const TextureWindow getTextureWindow(uint32_t spriteId, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
+    const TextureWindow getTextureWindowTopLeft(uint32_t spriteId) const;
+    const std::pair<TextureWindow, TextureWindow> getTextureWindowTopLeftBottomRight(uint32_t spriteId) const;
+    const std::tuple<TextureWindow, TextureWindow, TextureWindow> getTextureWindowTopRightBottomRightBottomLeft(uint32_t spriteId) const;
 
     bool isCompressed() const;
 
@@ -84,11 +89,21 @@ struct TextureAtlas
     inline uint32_t id() const;
 
   private:
+    struct InternalTextureInfo
+    {
+        float x;
+        float y;
+        float width;
+        float height;
+    };
+
+    TextureAtlas::InternalTextureInfo internalTextureInfoNormalized(uint32_t spriteId) const;
+
     uint32_t _id;
 
     std::variant<LZMACompressedBuffer, Texture> texture;
 
-    void validateBmp(std::vector<uint8_t> buffer);
+    void validateBmp(std::vector<uint8_t> &decompressed);
 };
 
 inline uint32_t TextureAtlas::id() const

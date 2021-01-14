@@ -72,24 +72,34 @@ TextureAtlas::TextureAtlas(uint32_t id, LZMACompressedBuffer &&buffer, uint32_t 
     }
 }
 
+TextureAtlas::InternalTextureInfo TextureAtlas::internalTextureInfoNormalized(uint32_t spriteId) const
+{
+    DEBUG_ASSERT(firstSpriteId <= spriteId && spriteId <= lastSpriteId, "The TextureAtlas does not contain that sprite ID.");
+    InternalTextureInfo info;
+
+    uint32_t offset = spriteId - this->firstSpriteId;
+
+    uint32_t row = offset / columns;
+    uint32_t col = offset % columns;
+
+    info.x = static_cast<float>(col) / columns;
+    info.y = static_cast<float>(rows - row) / rows;
+
+    info.width = static_cast<float>(spriteWidth) / this->width;
+    info.height = static_cast<float>(spriteHeight) / this->height;
+
+    return info;
+}
+
 const TextureWindow TextureAtlas::getTextureWindow(uint32_t spriteId, TextureInfo::CoordinateType coordinateType) const
 {
     DEBUG_ASSERT(firstSpriteId <= spriteId && spriteId <= lastSpriteId, "The TextureAtlas does not contain that sprite ID.");
 
     if (coordinateType == TextureInfo::CoordinateType::Normalized)
     {
-        uint32_t offset = spriteId - this->firstSpriteId;
+        auto info = internalTextureInfoNormalized(spriteId);
 
-        auto row = offset / columns;
-        auto col = offset % columns;
-
-        const float x = static_cast<float>(col) / columns;
-        const float y = static_cast<float>(rows - row) / rows;
-
-        const float width = static_cast<float>(spriteWidth) / this->width;
-        const float height = static_cast<float>(spriteHeight) / this->height;
-
-        return TextureWindow{x, y - height, x + width, y};
+        return TextureWindow{info.x, info.y - info.height, info.x + info.width, info.y};
     }
     else
     {
@@ -106,6 +116,32 @@ const TextureWindow TextureAtlas::getTextureWindow(uint32_t spriteId, TextureInf
 
         return TextureWindow{x, y, width, height};
     }
+}
+
+const TextureWindow TextureAtlas::getTextureWindowTopLeft(uint32_t spriteId) const
+{
+    auto info = internalTextureInfoNormalized(spriteId);
+
+    return TextureWindow{info.x, info.y - info.height / 2, info.x + info.width / 2, info.y};
+}
+
+const std::pair<TextureWindow, TextureWindow> TextureAtlas::getTextureWindowTopLeftBottomRight(uint32_t spriteId) const
+{
+    auto info = internalTextureInfoNormalized(spriteId);
+
+    return std::pair{
+        TextureWindow{info.x, info.y - info.height / 2, info.x + info.width / 2, info.y},
+        TextureWindow{info.x + info.width / 2, info.y - info.height, info.x + info.width, info.y - info.height / 2}};
+}
+
+const std::tuple<TextureWindow, TextureWindow, TextureWindow> TextureAtlas::getTextureWindowTopRightBottomRightBottomLeft(uint32_t spriteId) const
+{
+    auto info = internalTextureInfoNormalized(spriteId);
+
+    return std::tuple{
+        TextureWindow{info.x + info.width / 2, info.y - info.height / 2, info.x + info.width, info.y},
+        TextureWindow{info.x + info.width / 2, info.y - info.height, info.x + info.width, info.y - info.height / 2},
+        TextureWindow{info.x, info.y - info.height, info.x + info.width / 2, info.y - info.height / 2}};
 }
 
 void print_byte(uint8_t b)
@@ -132,7 +168,7 @@ uint32_t readU32(std::vector<uint8_t> &buffer, uint32_t offset)
     return value;
 }
 
-void TextureAtlas::validateBmp(std::vector<uint8_t> decompressed)
+void TextureAtlas::validateBmp(std::vector<uint8_t> &decompressed)
 {
     uint32_t width = readU32(decompressed, 0x12);
     if (width != TextureAtlasSize.width)
@@ -185,7 +221,6 @@ void TextureAtlas::decompressTexture()
     std::memcpy(&offset, decompressed.data() + OFFSET_OF_BMP_START_OFFSET, sizeof(uint32_t));
 
     texture = Texture(this->width, this->height, std::vector<uint8_t>(decompressed.begin() + offset, decompressed.end()));
-    // VME_LOG_D("Decompressed " << this->sourceFile.string());
 }
 
 Texture &TextureAtlas::getOrCreateTexture()

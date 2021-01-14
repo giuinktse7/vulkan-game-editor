@@ -114,6 +114,8 @@ class ObjectAppearance
     uint32_t clientId;
     std::string name;
 
+    QuadrantRenderType quadrantRenderType = QuadrantRenderType::Full;
+
     // Appearance flag data
     struct AppearanceFlagData
     {

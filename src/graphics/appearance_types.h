@@ -155,3 +155,30 @@ enum class AppearanceFlag : uint64_t
     // If the object is in the Cyclopedia.
     CyclopediaItem = 1ULL << 43
 };
+
+// Used to allow for smooth tiling when zoomed in/out.
+//
+// Example 1:
+// The ground item 'mountain' (serverid: 919, clientid: 1128) is an example of an item that requires TopLeftQuadrant
+// to render properly.
+//
+// Example 2:
+// The ground item 'earth' (serverid: 8133, clientid: 4427) is an example of an item that requires TopLeftBottomRightQuadrants
+// to render properly.
+// Example 3:
+// The wall item 'mountain' (serverid: 877, clientid: 1085) is an example of an item that requires TopLeftBottomRightQuadrants
+// to render properly.
+enum class QuadrantRenderType : uint8_t
+{
+    // Renders the entire item type as a single quad
+    Full,
+    // Renders only the top left quadrant of the item type (only for 64x64 sprites)
+    TopLeft,
+    // Renders only the top left and bottom right quadrants of the item type.
+    // One quad is rendered for each quadrant (only for 64x64 sprites)
+    TopLeftBottomRight,
+
+    // Renders all quads except the top left quad.
+    // One quad is rendered for each quadrant (only for 64x64 sprites)
+    TopRightBottomRightBottomLeft
+};

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <tuple>
+#include <utility>
 
 #include "graphics/appearance_types.h"
 #include "graphics/texture_atlas.h"
@@ -195,10 +197,16 @@ class ItemType
     const uint32_t getPatternIndex(const Position &pos) const;
     const uint32_t getPatternIndexForSubtype(uint8_t subtype) const;
 
+    uint32_t getSpriteId(const Position &pos) const;
+
     const TextureInfo getTextureInfo(TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
     const TextureInfo getTextureInfo(uint32_t spriteId, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
     const TextureInfo getTextureInfo(const Position &pos, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
     const TextureInfo getTextureInfoForSubtype(uint8_t subtype, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
+
+    const TextureInfo getTextureInfoTopLeftQuadrant(uint32_t spriteId) const;
+    const std::pair<TextureInfo, TextureInfo> getTextureInfoTopLeftBottomRightQuadrant(uint32_t spriteId) const;
+    const std::tuple<TextureInfo, TextureInfo, TextureInfo> getTextureInfoTopRightBottomRightBottomLeftQuadrant(uint32_t spriteId) const;
 
     const SpriteInfo &getSpriteInfo(size_t frameGroup) const;
     const SpriteInfo &getSpriteInfo() const;

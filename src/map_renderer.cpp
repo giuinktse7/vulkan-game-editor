@@ -69,6 +69,8 @@ constexpr VkClearColorValue ClearColor = {{0.0f, 0.0f, 0.0f, 1.0f}};
 constexpr uint32_t IndexBufferSize = 6 * sizeof(uint16_t);
 constexpr uint32_t VertexBufferSize = 4 * sizeof(NewVertex);
 
+constexpr int MaxDrawOffsetPixels = 24;
+
 glm::vec4 colors::opacity(float value)
 {
     DEBUG_ASSERT(0 <= value && value <= 1, "value must be in range [0.0f, 1.0f].");
@@ -173,6 +175,11 @@ void MapRenderer::startNextFrame()
     beginRenderPass();
 
     setupFrame();
+
+    // Attempt to avoid possible floating point errors. Might be unnecessary.
+    float zoom = mapView->getZoomFactor();
+    auto floorZoom = std::floor(zoom);
+    isDefaultZoom = floorZoom == zoom && floorZoom == 1;
 
     drawMap();
     drawCurrentAction();
@@ -357,7 +364,10 @@ void MapRenderer::drawCurrentAction()
             [this](const MouseAction::DragDropItem drag) {
                 if (mapView->underMouse())
                 {
-                    auto info = itemDrawInfo(*drag.item, drag.tile->position() + drag.moveDelta.value(), ItemDrawFlags::DrawNonSelected);
+                    ItemDrawInfo info{};
+                    info.item = drag.item;
+                    info.position = drag.tile->position() + drag.moveDelta.value();
+
                     drawItem(info);
                 }
             },
@@ -371,18 +381,24 @@ void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
     if (pos.x < 0 || pos.x > mapView->mapWidth() || pos.y < 0 || pos.y > mapView->mapHeight())
         return;
 
-    ItemType &selectedItemType = *Items::items.getItemTypeByServerId(serverId);
+    ItemType *itemType = Items::items.getItemTypeByServerId(serverId);
 
-    auto info = itemTypeDrawInfo(selectedItemType, pos, ItemDrawFlags::Ghost);
+    // auto info = itemTypeDrawInfo(selectedItemType, pos, ItemDrawFlags::Ghost);
 
-    if (!selectedItemType.isGroundTile())
+    ItemTypeDrawInfo info{};
+    info.color = colors::ItemPreview;
+    info.itemType = itemType;
+    info.position = pos;
+    info.spriteId = itemType->getSpriteId(pos);
+
+    if (!itemType->isGroundTile())
     {
         const Tile *tile = mapView->getTile(pos);
         int elevation = tile ? tile->getTopElevation() : 0;
-        info.drawOffset = {-elevation, -elevation};
+        info.worldPosOffset = {-elevation, -elevation};
     }
 
-    drawItem(info);
+    drawItemType(info);
 }
 
 void MapRenderer::drawMovingSelection()
@@ -424,12 +440,10 @@ void MapRenderer::drawMapOverlay()
     if (overlay.draggedItem)
     {
         auto item = overlay.draggedItem;
-        DrawInfo::Object info{};
-        info.appearance = item->itemType->appearance;
+
+        ItemDrawInfo info{};
+        info.item = item;
         info.position = mapView->mouseGamePos();
-        info.color = colors::Default;
-        info.textureInfo = item->itemType->getTextureInfoForSubtype(item->subtype());
-        info.descriptorSet = objectDescriptorSet(info);
 
         drawItem(info);
     }
@@ -461,12 +475,20 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, con
         if (shouldDrawItem(position, *groundPtr, flags, filter))
         {
             groundPtr->animate();
-            auto info = itemDrawInfo(*groundPtr, position, flags);
+
+            ItemDrawInfo info{};
+
+            info.drawFlags = flags;
+            info.item = groundPtr;
+            info.position = position;
+
             drawItem(info);
         }
     }
 
-    DrawOffset drawOffset{0, 0};
+    DrawOffset worldPosOffset{0, 0};
+    ItemDrawInfo info{};
+
     for (const Item &item : tile->items())
     {
         if (!shouldDrawItem(position, item, flags, filter))
@@ -474,15 +496,18 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, con
 
         item.animate();
 
-        auto info = itemDrawInfo(item, position, flags);
-        info.drawOffset = drawOffset;
+        info.drawFlags = flags;
+        info.item = &item;
+        info.position = position;
+        info.worldPosOffset = worldPosOffset;
+
         drawItem(info);
 
         if (item.itemType->hasElevation())
         {
             uint32_t elevation = item.itemType->getElevation();
-            drawOffset.x -= elevation;
-            drawOffset.y -= elevation;
+            worldPosOffset.x -= elevation;
+            worldPosOffset.y -= elevation;
         }
     }
 
@@ -505,8 +530,9 @@ void MapRenderer::issueDraw(const DrawInfo::Base &info, const WorldPosition &wor
     pushConstant.pos = pos;
 
     glm::vec4 size{};
-    size.x = atlas->spriteWidth;
-    size.y = atlas->spriteHeight;
+    size.x = info.width;
+    size.y = info.height;
+
     pushConstant.size = size;
     pushConstant.color = info.color;
     pushConstant.textureQuad = glm::vec4(window.x0, window.y0, window.x1, window.y1);
@@ -526,24 +552,24 @@ void MapRenderer::issueDraw(const DrawInfo::Base &info, const WorldPosition &wor
     vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
 }
 
-void MapRenderer::drawItem(const DrawInfo::Object &info)
+WorldPosition MapRenderer::getWorldPos(const ItemTypeDrawInfo &info, TextureAtlas *atlas) const
 {
-    constexpr int MaxDrawOffsetPixels = 24;
-    const auto *atlas = info.textureInfo.atlas;
     WorldPosition worldPos = (info.position + Position(atlas->drawOffset.x, atlas->drawOffset.y, 0)).worldPos();
 
     // Add draw offsets like elevation
-    worldPos.x += std::clamp(info.drawOffset.x, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
-    worldPos.y += std::clamp(info.drawOffset.y, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
+    worldPos.x += std::clamp(info.worldPosOffset.x, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
+    worldPos.y += std::clamp(info.worldPosOffset.y, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
+
+    auto appearance = info.itemType->appearance;
 
     // Add the item shift if necessary
-    if (info.appearance->hasFlag(AppearanceFlag::Shift))
+    if (appearance->hasFlag(AppearanceFlag::Shift))
     {
-        worldPos.x -= info.appearance->flagData.shiftX;
-        worldPos.y -= info.appearance->flagData.shiftY;
+        worldPos.x -= appearance->flagData.shiftX;
+        worldPos.y -= appearance->flagData.shiftY;
     }
 
-    issueDraw(info, worldPos);
+    return worldPos;
 }
 
 void MapRenderer::drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color)
@@ -554,7 +580,7 @@ void MapRenderer::drawOverlayItemType(uint32_t serverId, const WorldPosition pos
     info.position = position;
     info.color = color;
     info.textureInfo = itemType.getTextureInfo();
-    info.descriptorSet = objectDescriptorSet(info);
+    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
 
     // TODO Actually draw it
 }
@@ -688,14 +714,141 @@ glm::vec4 MapRenderer::getCreatureDrawColor(const Creature &creature, const Posi
     }
 }
 
-DrawInfo::Object MapRenderer::itemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags)
+void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderType renderType)
+{
+    const ItemType *itemType = drawInfo.itemType;
+
+    // When zoomed in or zoomed out, there are special cases for drawing grounds with a 64x64 texture. These cases are
+    // sprites where only the top-left (or top-left and bottom-right, like serverID 8133) quadrant is non-transparent.
+    // These extra render types make sure that these special grounds are tiled properly when placed next to each other.
+    // Without these rules, antialiasing creates black borders between separate tiles of these grounds when they are
+    // tiled (i.e. placed next to each other).
+    switch (renderType)
+    {
+        case QuadrantRenderType::Full:
+        {
+            DrawInfo::Object info{};
+            info.appearance = itemType->appearance;
+
+            info.color = drawInfo.color;
+            info.textureInfo = itemType->getTextureInfo(drawInfo.spriteId);
+            info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+            info.width = info.textureInfo.atlas->spriteWidth;
+            info.height = info.textureInfo.atlas->spriteHeight;
+
+            auto worldPos = getWorldPos(drawInfo, info.textureInfo.atlas);
+            issueDraw(info, worldPos);
+            break;
+        }
+        case QuadrantRenderType::TopLeft:
+        {
+            DrawInfo::ObjectQuadrant info{};
+            info.appearance = itemType->appearance;
+            info.color = drawInfo.color;
+            info.textureInfo = itemType->getTextureInfoTopLeftQuadrant(drawInfo.spriteId);
+            info.width = info.textureInfo.atlas->spriteWidth / 2;
+            info.height = info.textureInfo.atlas->spriteHeight / 2;
+            info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+
+            auto worldPos = getWorldPos(drawInfo, info.textureInfo.atlas);
+            issueDraw(info, worldPos);
+
+            break;
+        }
+        case QuadrantRenderType::TopLeftBottomRight:
+        {
+            DrawInfo::ObjectQuadrant info{};
+            info.appearance = itemType->appearance;
+            info.color = drawInfo.color;
+
+            const auto [topLeftTextureInfo,
+                        bottomRightTextureInfo] = itemType->getTextureInfoTopLeftBottomRightQuadrant(drawInfo.spriteId);
+
+            auto atlas = topLeftTextureInfo.atlas;
+
+            info.textureInfo = bottomRightTextureInfo;
+            info.width = atlas->spriteWidth / 2;
+            info.height = atlas->spriteHeight / 2;
+
+            info.descriptorSet = objectDescriptorSet(atlas);
+
+            auto worldPos = getWorldPos(drawInfo, atlas);
+
+            issueDraw(info, worldPos + WorldPosition(atlas->spriteWidth / 2, atlas->spriteHeight / 2));
+
+            info.textureInfo = topLeftTextureInfo;
+            issueDraw(info, worldPos);
+            break;
+        }
+        case QuadrantRenderType::TopRightBottomRightBottomLeft:
+        {
+            DrawInfo::ObjectQuadrant info{};
+            info.appearance = itemType->appearance;
+            info.color = drawInfo.color;
+
+            const auto [topRightTextureInfo,
+                        bottomRightTextureInfo,
+                        bottomLeftTextureInfo] = itemType->getTextureInfoTopRightBottomRightBottomLeftQuadrant(drawInfo.spriteId);
+
+            auto atlas = topRightTextureInfo.atlas;
+
+            info.textureInfo = bottomRightTextureInfo;
+            info.width = atlas->spriteWidth / 2;
+            info.height = atlas->spriteHeight / 2;
+            info.descriptorSet = objectDescriptorSet(atlas);
+
+            auto worldPos = getWorldPos(drawInfo, atlas);
+
+            issueDraw(info, worldPos + WorldPosition(atlas->spriteWidth / 2, atlas->spriteHeight / 2));
+
+            info.textureInfo = bottomLeftTextureInfo;
+            issueDraw(info, worldPos + WorldPosition(0, atlas->spriteHeight / 2));
+
+            info.textureInfo = topRightTextureInfo;
+            issueDraw(info, worldPos + WorldPosition(atlas->spriteWidth / 2, 0));
+            break;
+        }
+        default:
+            ABORT_PROGRAM("Should be unreachable.");
+    }
+}
+
+void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo)
+{
+    QuadrantRenderType renderType = isDefaultZoom
+                                        ? QuadrantRenderType::Full
+                                        : drawInfo.itemType->appearance->quadrantRenderType;
+
+    drawItemType(drawInfo, renderType);
+}
+
+void MapRenderer::drawItem(const ItemDrawInfo &itemDrawInfo)
+{
+    const Item *item = itemDrawInfo.item;
+    QuadrantRenderType renderType = isDefaultZoom
+                                        ? QuadrantRenderType::Full
+                                        : item->itemType->appearance->quadrantRenderType;
+
+    ItemTypeDrawInfo info{};
+    info.color = getItemDrawColor(*itemDrawInfo.item, itemDrawInfo.position, itemDrawInfo.drawFlags);
+    info.itemType = itemDrawInfo.item->itemType;
+    info.position = itemDrawInfo.position;
+    info.spriteId = item->getSpriteId(itemDrawInfo.position);
+    info.worldPosOffset = itemDrawInfo.worldPosOffset;
+
+    drawItemType(info);
+}
+
+DrawInfo::Object MapRenderer::getItemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags)
 {
     DrawInfo::Object info;
     info.appearance = item.itemType->appearance;
     info.position = position;
     info.color = getItemDrawColor(item, position, drawFlags);
     info.textureInfo = item.getTextureInfo(position);
-    info.descriptorSet = objectDescriptorSet(info);
+    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+    info.width = info.textureInfo.atlas->spriteWidth;
+    info.height = info.textureInfo.atlas->spriteHeight;
 
     return info;
 }
@@ -705,8 +858,10 @@ DrawInfo::Creature MapRenderer::creatureDrawInfo(const Creature &creature, const
     DrawInfo::Creature info;
     info.color = getCreatureDrawColor(creature, position, drawFlags);
     info.textureInfo = creature.getTextureInfo();
-    info.descriptorSet = objectDescriptorSet(info);
+    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
     info.position = position;
+    info.width = info.textureInfo.atlas->spriteWidth;
+    info.height = info.textureInfo.atlas->spriteHeight;
 
     return info;
 }
@@ -718,18 +873,19 @@ DrawInfo::Object MapRenderer::itemTypeDrawInfo(const ItemType &itemType, const P
     info.position = position;
     info.color = getItemTypeDrawColor(drawFlags);
     info.textureInfo = itemType.getTextureInfo(position);
-    info.descriptorSet = objectDescriptorSet(info);
+    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+    info.width = info.textureInfo.atlas->spriteWidth;
+    info.height = info.textureInfo.atlas->spriteHeight;
 
     return info;
 }
 
-VkDescriptorSet MapRenderer::objectDescriptorSet(const DrawInfo::Base &info)
+VkDescriptorSet MapRenderer::objectDescriptorSet(TextureAtlas *atlas)
 {
     VulkanTexture::Descriptor descriptor;
     descriptor.layout = textureDescriptorSetLayout;
     descriptor.pool = descriptorPool;
 
-    TextureAtlas *atlas = info.textureInfo.atlas;
     VulkanTexture &vulkanTexture = vulkanTexturesForAppearances.at(atlas->id());
 
     if (!vulkanTexture.hasResources())
@@ -815,7 +971,6 @@ void MapRenderer::createRenderPass()
     colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
     colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     VkAttachmentReference colorAttachmentRef{};

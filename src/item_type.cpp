@@ -35,18 +35,50 @@ const uint32_t ItemType::getPatternIndexForSubtype(uint8_t subtype) const
         return to_underlying(StackSizeOffset::Fifty);
 }
 
+uint32_t ItemType::getSpriteId(const Position &pos) const
+{
+    const SpriteInfo &spriteInfo = appearance->getSpriteInfo();
+
+    uint32_t spriteIndex = getPatternIndex(pos);
+    return spriteInfo.spriteIds.at(spriteIndex);
+}
+
 const TextureInfo ItemType::getTextureInfo(TextureInfo::CoordinateType coordinateType) const
 {
     uint32_t spriteId = appearance->getFirstSpriteId();
     return getTextureInfo(spriteId, coordinateType);
 }
 
+const TextureInfo ItemType::getTextureInfoTopLeftQuadrant(uint32_t spriteId) const
+{
+    auto atlas = getTextureAtlas(spriteId);
+
+    return TextureInfo{atlas, atlas->getTextureWindowTopLeft(spriteId)};
+}
+const std::pair<TextureInfo, TextureInfo> ItemType::getTextureInfoTopLeftBottomRightQuadrant(uint32_t spriteId) const
+{
+    auto atlas = getTextureAtlas(spriteId);
+    const auto [topLeftTextureWindow, bottomRightTextureWindow] = atlas->getTextureWindowTopLeftBottomRight(spriteId);
+
+    return std::pair{
+        TextureInfo{atlas, topLeftTextureWindow},
+        TextureInfo{atlas, bottomRightTextureWindow}};
+}
+
+const std::tuple<TextureInfo, TextureInfo, TextureInfo> ItemType::getTextureInfoTopRightBottomRightBottomLeftQuadrant(uint32_t spriteId) const
+{
+    auto atlas = getTextureAtlas(spriteId);
+    const auto [topRightTextureWindow, bottomRightTextureWindow, bottomLeftTextureWindow] = atlas->getTextureWindowTopRightBottomRightBottomLeft(spriteId);
+
+    return std::tuple{
+        TextureInfo{atlas, topRightTextureWindow},
+        TextureInfo{atlas, bottomRightTextureWindow},
+        TextureInfo{atlas, bottomLeftTextureWindow}};
+}
+
 const TextureInfo ItemType::getTextureInfo(const Position &pos, TextureInfo::CoordinateType coordinateType) const
 {
-    const SpriteInfo &spriteInfo = appearance->getSpriteInfo();
-
-    uint32_t spriteIndex = getPatternIndex(pos);
-    uint32_t spriteId = spriteInfo.spriteIds.at(spriteIndex);
+    uint32_t spriteId = getSpriteId(pos);
 
     return getTextureInfo(spriteId, coordinateType);
 }
