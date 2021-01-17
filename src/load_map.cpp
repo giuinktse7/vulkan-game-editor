@@ -667,6 +667,8 @@ std::optional<std::string> OTBM::OTBM4Deserializer::deserializeItemAttributes(It
                             return "Unknown OTBM::AttributeTypeId: " + to_underlying(attributeTypeId);
                     }
                 }
+
+                break;
             }
             case OTBM::NodeAttribute::Count:
             {
@@ -674,6 +676,9 @@ std::optional<std::string> OTBM::OTBM4Deserializer::deserializeItemAttributes(It
                 item.setCount(count);
                 break;
             }
+            default:
+                VME_LOG(FILE_AND_LINE_STR << "Unknown NodeAttribute: " << std::to_string(static_cast<int>(attribute)));
+                return "Unknown NodeAttribute: " + std::to_string(static_cast<int>(attribute));
         }
     }
 
