@@ -43,7 +43,12 @@ int main(int argc, char *argv[])
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
 
-    // testLua();
+    // if (!LuaScriptInterface::initialize())
+    // {
+    //     return EXIT_FAILURE;
+    // }
+
+    // LuaScriptInterface::get()->test();
 
     // return 0;
 
@@ -60,9 +65,6 @@ int main(int argc, char *argv[])
     Config config = configResult.unwrap();
     config.loadOrTerminate();
 
-    auto atlas = Items::items.getItemTypeByServerId(8133)->getFirstTextureAtlas();
-    VME_LOG(atlas->sourceFile);
-
     // TemporaryTest::loadAllTexturesIntoMemory();
 
     std::filesystem::path mapPath = "C:/Users/giuin/Desktop/Untitled-1.otbm";
@@ -73,8 +75,6 @@ int main(int argc, char *argv[])
         VME_LOG("Map load error: " << std::get<std::string>(result));
         return EXIT_FAILURE;
     }
-
-    VME_LOG("Finished loading map.");
 
     Map loadedMap = std::move(std::get<Map>(result));
     std::shared_ptr<Map> sharedMap = std::make_shared<Map>(std::move(loadedMap));

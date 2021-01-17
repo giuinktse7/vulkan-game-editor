@@ -4,6 +4,7 @@
 #include "file.h"
 #include "items.h"
 #include "otb.h"
+#include "time_point.h"
 
 namespace
 {
@@ -34,6 +35,7 @@ namespace
 
 std::variant<Map, std::string> LoadMap::loadMap(std::filesystem::path &path)
 {
+    TimePoint start;
     if (!std::filesystem::exists(path) || std::filesystem::is_directory(path))
     {
         return error(FILE_AND_LINE_STR + "Could not find map at path: " + path.string());
@@ -163,6 +165,9 @@ std::variant<Map, std::string> LoadMap::loadMap(std::filesystem::path &path)
     {
         ABORT_PROGRAM("Expected end.");
     }
+
+    VME_LOG("Loaded map in " << start.elapsedMillis() << " ms.");
+
     return map;
 }
 
