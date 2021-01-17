@@ -17,6 +17,7 @@ class QLabel;
 class QTabWidget;
 class QPushButton;
 class BorderLayout;
+class QMenuBar;
 class QListView;
 QT_END_NAMESPACE
 
@@ -25,9 +26,9 @@ class ItemPropertyWindow;
 class ItemPaletteWindow;
 class TilesetListView;
 
+#include "../signal.h"
 #include "gui.h"
 #include "qt_util.h"
-#include "signal.h"
 #include "vulkan_window.h"
 
 #define QT_MANAGED_POINTER(cls, ...) new cls(__VA_ARGS__);

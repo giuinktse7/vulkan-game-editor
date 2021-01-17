@@ -17,7 +17,6 @@
 #include "../brushes/brush.h"
 #include "../item_location.h"
 #include "../logger.h"
-#include "../main.h"
 #include "../map_renderer.h"
 #include "../map_view.h"
 #include "../position.h"

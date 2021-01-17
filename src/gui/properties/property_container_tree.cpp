@@ -26,8 +26,7 @@ PropertiesUI::ContainerTree::Root::Root(
     ContainerSignals *_signals)
     : ContainerNode(containerItem, _signals),
       mapPosition(mapPosition),
-      mapView(mapView),
-      tileIndex(tileIndex) {}
+      mapView(mapView) {}
 
 Item *ContainerNode::containerItem() const
 {

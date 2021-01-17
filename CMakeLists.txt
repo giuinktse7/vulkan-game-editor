@@ -230,11 +230,14 @@ target_include_directories(common PUBLIC ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 
 set_target_properties(common PROPERTIES LINK_FLAGS "/PROFILE")
 
+# set_target_properties(common PROPERTIES LINK_FLAGS "/PROFILE")
+
 set(GuiSources
     src/qt/enum_conversion.h
     src/qt/logging.h
     src/gui/gui.h
     # src/gui/borderless_window.h
+    src/gui/main_application.h
     src/gui/border_layout.h
     src/gui/split_widget.h
     src/gui/mainwindow.h
@@ -254,6 +257,7 @@ set(GuiSources
     src/gui/itempalette/item_palette_model.h
     src/main.h
     src/main.cpp
+    src/gui/main_application.cpp
     src/qt/enum_conversion.cpp
     src/qt/logging.cpp
     # src/gui/borderless_window.cpp
@@ -273,7 +277,9 @@ set(GuiSources
     src/gui/properties/container_list_model.cpp
     src/gui/itempalette/item_palette_window.cpp
     src/gui/itempalette/item_palette_model.cpp
-    src/qt/qt_vulkan_info.cpp)
+    src/qt/qt_vulkan_info.cpp
+    src/main.h
+    src/main.cpp
 
 add_library(gui STATIC ${GuiSources})
 

@@ -17,6 +17,7 @@
 #include "../logger.h"
 #include "../map_view.h"
 #include "../qt/logging.h"
+#include "main_application.h"
 
 std::unordered_map<uint32_t, QPixmap> GuiImageCache::serverIdToPixmap;
 std::unordered_map<TextureAtlas *, std::unique_ptr<QImage>> GuiImageCache::atlasToQImage;

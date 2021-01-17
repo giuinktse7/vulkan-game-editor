@@ -6,8 +6,8 @@
 #include "../../editor_action.h"
 #include "../../items.h"
 #include "../../logger.h"
-#include "../../main.h"
 #include "../../qt/logging.h"
+#include "../main_application.h"
 
 #include "item_palette_model.h"
 

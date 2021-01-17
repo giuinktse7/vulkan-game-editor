@@ -93,7 +93,6 @@ namespace PropertiesUI
             friend struct ContainerNode;
             Position mapPosition;
             MapView *mapView;
-            uint16_t tileIndex;
         };
 
         struct Node : public ContainerNode
@@ -103,7 +102,7 @@ namespace PropertiesUI
             void setIndexInParent(int index) override;
 
             std::unique_ptr<ContainerNode> createChildNode(int index) override;
-            bool isRoot() const noexcept
+            bool isRoot() const noexcept override
             {
                 return false;
             }

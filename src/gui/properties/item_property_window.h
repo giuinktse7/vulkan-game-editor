@@ -91,7 +91,7 @@ class ItemPropertyWindow : public QQuickView
     QWidget *wrapperWidget() const noexcept;
 
   protected:
-    bool event(QEvent *event);
+    bool event(QEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
 

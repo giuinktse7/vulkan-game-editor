@@ -16,15 +16,16 @@
 #include <QWidget>
 #include <QtWidgets>
 
+#include "../brushes/ground_brush.h"
 #include "../graphics/appearance_types.h"
 #include "../item_location.h"
-#include "../main.h"
 #include "../qt/logging.h"
 #include "../save_map.h"
 #include "../util.h"
 #include "border_layout.h"
 #include "itempalette/item_palette_model.h"
 #include "itempalette/item_palette_window.h"
+#include "main_application.h"
 #include "map_tab_widget.h"
 #include "map_view_widget.h"
 #include "menu.h"
@@ -126,8 +127,8 @@ MainWindow::MainWindow(QWidget *parent)
       rootLayout(new BorderLayout),
       positionStatus(new QLabel),
       zoomStatus(new QLabel),
-      topItemInfo(new QLabel),
-      _paletteWindow(nullptr)
+      _paletteWindow(nullptr),
+      topItemInfo(new QLabel)
 {
 
     // editorAction.onActionChanged<&MainWindow::editorActionChangedEvent>(this);
@@ -341,104 +342,137 @@ void MainWindow::initializePaletteWindow()
 
     _paletteWindow = new ItemPaletteWindow(&editorAction, this);
 
-    ItemPalette &palette = ItemPalettes::createPalette("Raw Palette");
+    // Raw palette
+    {
+        ItemPalette &rawPalette = ItemPalettes::createPalette("Raw Palette");
 
-    Tileset *bottomTileset = palette.createTileset("Bottom items");
-    Tileset *groundTileset = palette.createTileset("Grounds");
-    Tileset *borderTileset = palette.createTileset("Borders");
-    Tileset *unsightTileset = palette.createTileset("Sight-blocking");
-    Tileset *doorTileset = palette.createTileset("Doors");
-    Tileset *archwayTileset = palette.createTileset("Archways");
-    Tileset *containerTileset = palette.createTileset("Containers");
-    Tileset *hangableTileset = palette.createTileset("Hangables");
-    Tileset *pickuableTileset = palette.createTileset("Pickupables");
-    Tileset *equipmentTileset = palette.createTileset("Equipment");
-    Tileset *lightSourceTileset = palette.createTileset("Light source");
+        Tileset *bottomTileset = rawPalette.createTileset("Bottom items");
+        Tileset *groundTileset = rawPalette.createTileset("Grounds");
+        Tileset *borderTileset = rawPalette.createTileset("Borders");
+        Tileset *unsightTileset = rawPalette.createTileset("Sight-blocking");
+        Tileset *doorTileset = rawPalette.createTileset("Doors");
+        Tileset *archwayTileset = rawPalette.createTileset("Archways");
+        Tileset *containerTileset = rawPalette.createTileset("Containers");
+        Tileset *hangableTileset = rawPalette.createTileset("Hangables");
+        Tileset *pickuableTileset = rawPalette.createTileset("Pickupables");
+        Tileset *equipmentTileset = rawPalette.createTileset("Equipment");
+        Tileset *lightSourceTileset = rawPalette.createTileset("Light source");
 
-    Tileset *interiorTileset = palette.createTileset("Interior / Wrap / Unwrap");
+        Tileset *interiorTileset = rawPalette.createTileset("Interior / Wrap / Unwrap");
 
-    Tileset *otherTileset = palette.createTileset("Other");
+        Tileset *otherTileset = rawPalette.createTileset("Other");
 
-    int from = 100;
-    int to = 40000;
+        int from = 100;
+        int to = 40000;
 
 #ifdef _DEBUG_VME
-    from = 100;
-    to = 5000;
+        from = 100;
+        to = 5000;
 #endif
 
-    for (int i = from; i < to; ++i)
-    {
-        ItemType *itemType = Items::items.getItemTypeByServerId(i);
-        if (!itemType || !itemType->isValid())
-            continue;
+        for (int i = from; i < to; ++i)
+        {
+            ItemType *itemType = Items::items.getItemTypeByServerId(i);
+            if (!itemType || !itemType->isValid())
+                continue;
 
-        if (itemType->hasFlag(AppearanceFlag::Corpse) || itemType->hasFlag(AppearanceFlag::PlayerCorpse))
-        {
-            // Skip corpses
-            continue;
-        }
-        else if (itemType->hasFlag(AppearanceFlag::Bottom))
-        {
-            bottomTileset->addRawBrush(i);
-        }
-        else if (itemType->hasFlag(AppearanceFlag::Ground))
-        {
-            groundTileset->addRawBrush(i);
-        }
-        else if (itemType->hasFlag(AppearanceFlag::Border))
-        {
-            borderTileset->addRawBrush(i);
-        }
-        else if (itemType->hasFlag(AppearanceFlag::Top))
-        {
-            archwayTileset->addRawBrush(i);
-        }
-        else if (itemType->isDoor())
-        {
-            doorTileset->addRawBrush(i);
-        }
-        else if (itemType->hasFlag(AppearanceFlag::Unsight))
-        {
-            unsightTileset->addRawBrush(i);
-        }
-        else if (itemType->isContainer())
-        {
-            containerTileset->addRawBrush(i);
-        }
-        else if (itemType->hasFlag(AppearanceFlag::Wrap) || itemType->hasFlag(AppearanceFlag::Unwrap) || itemType->isBed())
-        {
-            interiorTileset->addRawBrush(i);
-        }
-        else if (itemType->hasFlag(AppearanceFlag::Take))
-        {
-            if (itemType->hasFlag(AppearanceFlag::Clothes))
+            if (itemType->hasFlag(AppearanceFlag::Corpse) || itemType->hasFlag(AppearanceFlag::PlayerCorpse))
             {
-                equipmentTileset->addRawBrush(i);
+                // Skip corpses
+                continue;
             }
+            else if (itemType->hasFlag(AppearanceFlag::Bottom))
+            {
+                bottomTileset->addRawBrush(i);
+            }
+            else if (itemType->hasFlag(AppearanceFlag::Ground))
+            {
+                groundTileset->addRawBrush(i);
+            }
+            else if (itemType->hasFlag(AppearanceFlag::Border))
+            {
+                borderTileset->addRawBrush(i);
+            }
+            else if (itemType->hasFlag(AppearanceFlag::Top))
+            {
+                archwayTileset->addRawBrush(i);
+            }
+            else if (itemType->isDoor())
+            {
+                doorTileset->addRawBrush(i);
+            }
+            else if (itemType->hasFlag(AppearanceFlag::Unsight))
+            {
+                unsightTileset->addRawBrush(i);
+            }
+            else if (itemType->isContainer())
+            {
+                containerTileset->addRawBrush(i);
+            }
+            else if (itemType->hasFlag(AppearanceFlag::Wrap) || itemType->hasFlag(AppearanceFlag::Unwrap) || itemType->isBed())
+            {
+                interiorTileset->addRawBrush(i);
+            }
+            else if (itemType->hasFlag(AppearanceFlag::Take))
+            {
+                if (itemType->hasFlag(AppearanceFlag::Clothes))
+                {
+                    equipmentTileset->addRawBrush(i);
+                }
+                else
+                {
+                    pickuableTileset->addRawBrush(i);
+                }
+            }
+            else if (itemType->hasFlag(AppearanceFlag::Light))
+            {
+                lightSourceTileset->addRawBrush(i);
+            }
+            else if (itemType->hasFlag(AppearanceFlag::Hang))
+            {
+                hangableTileset->addRawBrush(i);
+            }
+
             else
             {
-                pickuableTileset->addRawBrush(i);
+                otherTileset->addRawBrush(i);
             }
-        }
-        else if (itemType->hasFlag(AppearanceFlag::Light))
-        {
-            lightSourceTileset->addRawBrush(i);
-        }
-        else if (itemType->hasFlag(AppearanceFlag::Hang))
-        {
-            hangableTileset->addRawBrush(i);
+
+            // GuiImageCache::cachePixmapForServerId(i);
         }
 
-        else
-        {
-            otherTileset->addRawBrush(i);
-        }
-
-        // GuiImageCache::cachePixmapForServerId(i);
+        _paletteWindow->addPalette(ItemPalettes::getByName("Raw Palette"));
     }
 
-    _paletteWindow->addPalette(ItemPalettes::getByName("Raw Palette"));
+    // Terrain palette
+    {
+        ItemPalette &terrainPalette = ItemPalettes::createPalette("Terrain palette");
+
+        Tileset *groundTileset = terrainPalette.createTileset("Grounds");
+
+        std::vector<GroundBrush::WeightedItemId> weightedIds{
+            {4526, 300},
+            {4527, 10},
+            {4528, 25},
+            {4529, 25},
+            {4530, 25},
+            {4531, 15},
+            {4532, 25},
+            {4533, 25},
+            {4534, 15},
+            {4535, 25},
+            {4536, 25},
+            {4537, 25},
+            {4538, 20},
+            {4539, 20},
+            {4540, 20},
+            {4541, 20}};
+
+        GroundBrush *grassBrush = Brush::addGroundBrush(GroundBrush(0, "Grass", std::move(weightedIds)));
+        groundTileset->addBrush(grassBrush);
+
+        _paletteWindow->addPalette(ItemPalettes::getByName("Terrain palette"));
+    }
 
     connect(_paletteWindow, &ItemPaletteWindow::brushSelectionEvent, [this](Brush *brush) {
         editorAction.setIfUnlocked(MouseAction::MapBrush(brush));
