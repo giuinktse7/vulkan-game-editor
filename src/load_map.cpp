@@ -668,6 +668,12 @@ std::optional<std::string> OTBM::OTBM4Deserializer::deserializeItemAttributes(It
                     }
                 }
             }
+            case OTBM::NodeAttribute::Count:
+            {
+                uint8_t count = buffer.nextU8();
+                item.setCount(count);
+                break;
+            }
         }
     }
 
