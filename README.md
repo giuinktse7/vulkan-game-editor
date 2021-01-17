@@ -88,6 +88,8 @@ To build the project, first install the required [Dependencies](#dependencies).
 
 5. In `./build`, run `cmake --build .` to compile a debug build, or `cmake --build . --config release` to compile a release build.
 
+6. Copy over the folders `shaders` and `data` into `./build`.
+
 #### Run tests using CMake
 
 To run the test suite `vme_tests`, run `./runtest` in the project root.

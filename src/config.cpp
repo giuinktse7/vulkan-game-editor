@@ -7,6 +7,8 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 
+// #include "../vendor/sol/sol.hpp"
+
 namespace
 {
     constexpr auto DataFolder = "data/clients";

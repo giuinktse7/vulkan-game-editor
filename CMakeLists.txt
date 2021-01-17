@@ -35,7 +35,7 @@ project(
 enable_testing()
 add_subdirectory("test")
 
-set(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # QT Specific
@@ -44,6 +44,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 # End QT
 
+include(FindLua)
+
 find_package(Vulkan REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
 find_package(liblzma CONFIG REQUIRED)
@@ -51,6 +53,9 @@ find_package(Stb REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(pugixml CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(Lua REQUIRED)
+# find_package(LuaJIT REQUIRED)
+# find_package(sol2 CONFIG REQUIRED)
 find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_signal_slot.hpp")
 
 find_package(
@@ -122,6 +127,7 @@ set(CommonSources
     ../vendor/tsl/robin_map.h
     ../vendor/tsl/robin_set.h
     ../vendor/result/result.h
+    # ../vendor/sol/sol.hpp ../vendor/sol/config.hpp ../vendor/sol/forward.hpp
     src/map.h
     src/save_map.h
     src/load_map.h
@@ -209,6 +215,8 @@ set(CommonSources
     src/brushes/brush.cpp
     src/brushes/raw_brush.cpp
     src/brushes/ground_brush.cpp
+    src/lua_test.h
+    src/lua_test.cpp)
 
 add_library(common STATIC ${CommonSources})
 
@@ -228,7 +236,12 @@ target_link_libraries(common PRIVATE glm)
 
 target_include_directories(common PUBLIC ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 
-set_target_properties(common PROPERTIES LINK_FLAGS "/PROFILE")
+target_include_directories(common PRIVATE ${LUA_INCLUDE_DIR})
+target_link_libraries(common PRIVATE ${LUA_LIBRARIES})
+
+# target_link_libraries(common PRIVATE sol2::sol2)
+
+# target_compile_definitions(common PRIVATE SOL_USING_CXX_LUA=1)
 
 # set_target_properties(common PROPERTIES LINK_FLAGS "/PROFILE")
 
@@ -277,10 +290,9 @@ set(GuiSources
     src/gui/properties/container_list_model.cpp
     src/gui/itempalette/item_palette_window.cpp
     src/gui/itempalette/item_palette_model.cpp
-    src/qt/qt_vulkan_info.cpp
-    src/main.h
-    src/main.cpp
+    src/qt/qt_vulkan_info.cpp)
 
+# NOTE: All files that use the QT framework must be in the `gui` library, because it is the only target that links QT.
 add_library(gui STATIC ${GuiSources})
 
 target_link_libraries(gui PRIVATE common)
