@@ -26,6 +26,7 @@
 #include "map.h"
 
 class MapView;
+class Brush;
 
 namespace colors
 {
@@ -134,7 +135,7 @@ struct ItemTypeDrawInfo
     uint32_t spriteId;
     glm::vec4 color = colors::Default;
     const ItemType *itemType = nullptr;
-    Position position;
+    WorldPosition worldPos;
     DrawOffset worldPosOffset = {0, 0};
 };
 
@@ -360,11 +361,14 @@ class MapRenderer
                   uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
                   const ItemPredicate &filter = nullptr);
 
-    WorldPosition getWorldPos(const ItemTypeDrawInfo &info, TextureAtlas *atlas) const;
+    WorldPosition getWorldPosForDraw(const ItemTypeDrawInfo &info, TextureAtlas *atlas) const;
 
     void drawItem(const ItemDrawInfo &drawInfo);
     void drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderType renderType);
     void drawItemType(const ItemTypeDrawInfo &drawInfo);
+
+    void drawBrushPreview(Brush *brush, const Position &position);
+    void drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos);
 
     void drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
 

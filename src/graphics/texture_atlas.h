@@ -11,6 +11,7 @@
 #include "texture.h"
 
 struct TextureAtlas;
+struct WorldPosition;
 
 /*
 	The width and height of a texture atlas in pixels
@@ -77,6 +78,8 @@ struct TextureAtlas
     {
         return width * height * 4;
     }
+
+    WorldPosition worldPosOffset() const noexcept;
 
     void decompressTexture();
     Texture *getTexture();

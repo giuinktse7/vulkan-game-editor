@@ -5,6 +5,7 @@
 #include <variant>
 
 #include "brushes/brush.h"
+#include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
 #include "debug.h"
 #include "file.h"
@@ -308,25 +309,13 @@ void MapRenderer::drawCurrentAction()
                     {
                         const auto [from, to] = mapView->getDragPoints().value();
                         drawSolidRectangle(SolidColor::Red, from, to, 0.2f);
-
-                        if (action.brush->type() == BrushType::RawItem)
-                        {
-                            auto rawBrush = static_cast<RawBrush *>(action.brush);
-                            drawOverlayItemType(rawBrush->serverId(), to);
-                        }
-                        else
-                        {
-                            // TODO
-                            NOT_IMPLEMENTED_ABORT();
-                        }
+                        drawBrushPreviewAtWorldPos(action.brush, to);
                     }
                     else
                     {
-
-                        if (action.brush->type() == BrushType::RawItem)
+                        if (action.brush->type() == BrushType::Raw || action.brush->type() == BrushType::Ground)
                         {
-                            auto rawBrush = static_cast<RawBrush *>(action.brush);
-                            uint32_t serverId = rawBrush->serverId();
+                            uint32_t serverId = action.brush->iconServerId();
                             auto [from, to] = mapView->getDragPoints().value();
                             int floor = mapView->floor();
                             auto area = MapArea(from.toPos(floor), to.toPos(floor));
@@ -345,18 +334,7 @@ void MapRenderer::drawCurrentAction()
                 {
                     if (mapView->underMouse())
                     {
-                        if (action.brush->type() == BrushType::RawItem)
-                        {
-                            auto rawBrush = static_cast<RawBrush *>(action.brush);
-                            uint32_t serverId = rawBrush->serverId();
-
-                            drawPreviewItem(serverId, pos);
-                        }
-                        else
-                        {
-                            // TODO
-                            NOT_IMPLEMENTED_ABORT();
-                        }
+                        drawBrushPreview(action.brush, pos);
                     }
                 }
             },
@@ -383,12 +361,10 @@ void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
 
     ItemType *itemType = Items::items.getItemTypeByServerId(serverId);
 
-    // auto info = itemTypeDrawInfo(selectedItemType, pos, ItemDrawFlags::Ghost);
-
     ItemTypeDrawInfo info{};
     info.color = colors::ItemPreview;
     info.itemType = itemType;
-    info.position = pos;
+    info.worldPos = pos.worldPos();
     info.spriteId = itemType->getSpriteId(pos);
 
     if (!itemType->isGround())
@@ -552,9 +528,35 @@ void MapRenderer::issueDraw(const DrawInfo::Base &info, const WorldPosition &wor
     vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
 }
 
-WorldPosition MapRenderer::getWorldPos(const ItemTypeDrawInfo &info, TextureAtlas *atlas) const
+void MapRenderer::drawBrushPreview(Brush *brush, const Position &position)
 {
-    WorldPosition worldPos = (info.position + Position(atlas->drawOffset.x, atlas->drawOffset.y, 0)).worldPos();
+    for (const auto preview : brush->previewInfo())
+        drawPreviewItem(preview.serverId, position + preview.relativePosition);
+}
+
+void MapRenderer::drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos)
+{
+    for (const auto preview : brush->previewInfo())
+    {
+        ItemTypeDrawInfo info{};
+        info.color = colors::ItemPreview;
+        info.itemType = Items::items.getItemTypeByServerId(preview.serverId);
+        info.spriteId = info.itemType->appearance->getFirstSpriteId();
+
+        Position pos = preview.relativePosition;
+        // Position::worldPos() skews x and y depending on z. Since the preview is z-irrelevant, we need to add
+        // GROUND_FLOOR to get to the baseline position.
+        pos.z += GROUND_FLOOR;
+
+        info.worldPos = worldPos + pos.worldPos();
+
+        drawItemType(info);
+    }
+}
+
+WorldPosition MapRenderer::getWorldPosForDraw(const ItemTypeDrawInfo &info, TextureAtlas *atlas) const
+{
+    WorldPosition worldPos = info.worldPos + atlas->worldPosOffset();
 
     // Add draw offsets like elevation
     worldPos.x += std::clamp(info.worldPosOffset.x, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
@@ -582,7 +584,7 @@ void MapRenderer::drawOverlayItemType(uint32_t serverId, const WorldPosition pos
     info.textureInfo = itemType.getTextureInfo();
     info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
 
-    // TODO Actually draw it
+    issueDraw(info, position);
 }
 
 void MapRenderer::drawCreature(const DrawInfo::Creature &info)
@@ -736,7 +738,7 @@ void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderT
             info.width = info.textureInfo.atlas->spriteWidth;
             info.height = info.textureInfo.atlas->spriteHeight;
 
-            auto worldPos = getWorldPos(drawInfo, info.textureInfo.atlas);
+            auto worldPos = getWorldPosForDraw(drawInfo, info.textureInfo.atlas);
             issueDraw(info, worldPos);
             break;
         }
@@ -750,7 +752,7 @@ void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderT
             info.height = info.textureInfo.atlas->spriteHeight / 2;
             info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
 
-            auto worldPos = getWorldPos(drawInfo, info.textureInfo.atlas);
+            auto worldPos = getWorldPosForDraw(drawInfo, info.textureInfo.atlas);
             issueDraw(info, worldPos);
 
             break;
@@ -772,7 +774,7 @@ void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderT
 
             info.descriptorSet = objectDescriptorSet(atlas);
 
-            auto worldPos = getWorldPos(drawInfo, atlas);
+            auto worldPos = getWorldPosForDraw(drawInfo, atlas);
 
             issueDraw(info, worldPos + WorldPosition(atlas->spriteWidth / 2, atlas->spriteHeight / 2));
 
@@ -797,7 +799,7 @@ void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderT
             info.height = atlas->spriteHeight / 2;
             info.descriptorSet = objectDescriptorSet(atlas);
 
-            auto worldPos = getWorldPos(drawInfo, atlas);
+            auto worldPos = getWorldPosForDraw(drawInfo, atlas);
 
             issueDraw(info, worldPos + WorldPosition(atlas->spriteWidth / 2, atlas->spriteHeight / 2));
 
@@ -832,7 +834,7 @@ void MapRenderer::drawItem(const ItemDrawInfo &itemDrawInfo)
     ItemTypeDrawInfo info{};
     info.color = getItemDrawColor(*itemDrawInfo.item, itemDrawInfo.position, itemDrawInfo.drawFlags);
     info.itemType = itemDrawInfo.item->itemType;
-    info.position = itemDrawInfo.position;
+    info.worldPos = itemDrawInfo.position.worldPos();
     info.spriteId = item->getSpriteId(itemDrawInfo.position);
     info.worldPosOffset = itemDrawInfo.worldPosOffset;
 

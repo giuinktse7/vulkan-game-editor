@@ -11,6 +11,7 @@
 #include "../debug.h"
 #include "../file.h"
 #include "../logger.h"
+#include "../position.h"
 #include "compression.h"
 
 namespace
@@ -244,4 +245,9 @@ glm::vec4 TextureAtlas::getFragmentBounds(const TextureWindow window) const
         window.x1 - offsetX,
         window.y1 - offsetY,
     };
+}
+
+WorldPosition TextureAtlas::worldPosOffset() const noexcept
+{
+    return WorldPosition(drawOffset.x * SPRITE_SIZE, drawOffset.y * SPRITE_SIZE);
 }

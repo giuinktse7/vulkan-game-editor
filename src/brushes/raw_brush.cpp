@@ -13,7 +13,7 @@ RawBrush::RawBrush(ItemType *itemType)
     DEBUG_ASSERT(_itemType != nullptr, "Invalid itemType. No ItemType for server ID " + itemType->id);
 }
 
-void RawBrush::apply(MapView &mapView, const Position &position) const
+void RawBrush::apply(MapView &mapView, const Position &position)
 {
     if (!_itemType)
     {
@@ -29,24 +29,6 @@ void RawBrush::apply(MapView &mapView, const Position &position) const
     }
 
     mapView.addItem(position, Item(_itemType->id));
-
-    /*
-    if(!itemtype) return;
-
-	bool b = parameter? *reinterpret_cast<bool*>(parameter) : false;
-	if((g_settings.getInteger(Config::RAW_LIKE_SIMONE) && !b) && itemtype->alwaysOnBottom && itemtype->alwaysOnTopOrder == 2) {
-		for(ItemVector::iterator iter = tile->items.begin(); iter != tile->items.end();) {
-			Item* item = *iter;
-			if(item->getTopOrder() == itemtype->alwaysOnTopOrder) {
-				delete item;
-				iter = tile->items.erase(iter);
-			}
-			else
-				++iter;
-		}
-	}
-	tile->addItem(Item::Create(itemtype->id));
-    */
 }
 
 RawBrush RawBrush::fromServerId(uint32_t serverId)
@@ -76,5 +58,10 @@ bool RawBrush::erasesItem(uint32_t serverId) const
 
 BrushType RawBrush::type() const
 {
-    return BrushType::RawItem;
+    return BrushType::Raw;
+}
+
+std::vector<ItemPreviewInfo> RawBrush::previewInfo() const
+{
+    return std::vector<ItemPreviewInfo>{{_itemType->id, PositionConstants::Zero}};
 }

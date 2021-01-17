@@ -20,6 +20,7 @@ class Tileset
     Tileset &operator=(Tileset &&other) = default;
 
     void addRawBrush(uint32_t serverId);
+    void addBrush(Brush *brush);
 
     const std::string &name() const noexcept;
 

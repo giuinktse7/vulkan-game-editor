@@ -2,6 +2,7 @@
 
 #include "../vendor/rollbear-visit/visit.hpp"
 #include "brushes/brush.h"
+#include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
 #include "const.h"
 #include "items.h"
@@ -420,9 +421,6 @@ void MapView::removeItemsInRegion(const Position &from, const Position &to, std:
 
 void MapView::fillRegion(const Position &from, const Position &to, uint32_t serverId)
 {
-    if (!Items::items.validItemType(serverId))
-        return;
-
     history.beginTransaction(TransactionType::AddMapItem);
 
     Action action(ActionType::SetTile);
@@ -432,30 +430,36 @@ void MapView::fillRegion(const Position &from, const Position &to, uint32_t serv
     {
         auto location = _map->getTileLocation(pos);
 
-        if (location && location->hasTile())
-        {
-            Tile newTile(location->tile()->deepCopy());
-            newTile.addItem(Item(serverId));
+        Tile newTile = location && location->hasTile() ? location->tile()->deepCopy() : Tile(pos);
+        newTile.addItem(Item(serverId));
 
-            action.changes.emplace_back<SetTile>(std::move(newTile));
-        }
-        else
-        {
-            Tile newTile(pos);
-            newTile.addItem(Item(serverId));
-
-            action.changes.emplace_back<SetTile>(std::move(newTile));
-        }
+        action.changes.emplace_back<SetTile>(std::move(newTile));
     }
 
-    /*
-    shrinkToFit appears to reallocate. All tiles are used when filling,
-    so there is no advantage to shrinking here.
-  */
-    // action.shrinkToFit();
+    history.commit(std::move(action));
+    history.endTransaction(TransactionType::AddMapItem);
+}
+
+void MapView::fillRegion(const Position &from, const Position &to, std::function<uint32_t()> itemSupplier)
+{
+    history.beginTransaction(TransactionType::AddMapItem);
+
+    Action action(ActionType::SetTile);
+    action.reserve(Position::tilesInRegion(from, to));
+
+    for (const auto &pos : MapArea(from, to))
+    {
+        auto location = _map->getTileLocation(pos);
+
+        Tile newTile = location && location->hasTile() ? location->tile()->deepCopy() : Tile(pos);
+
+        uint32_t serverId = itemSupplier();
+        newTile.addItem(Item(serverId));
+
+        action.changes.emplace_back<SetTile>(std::move(newTile));
+    }
 
     history.commit(std::move(action));
-
     history.endTransaction(TransactionType::AddMapItem);
 }
 
@@ -590,7 +594,7 @@ Tile *MapView::singleSelectedTile()
 bool MapView::singleItemSelected() const
 {
     if (!singleTileSelected())
-        return nullptr;
+        return false;
 
     const Position pos = _selection.onlyPosition().value();
     const Tile *tile = getTile(pos);
@@ -692,15 +696,23 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
                     }
                     else
                     {
-                        if (brush.brush->type() == BrushType::RawItem)
+                        switch (brush.brush->type())
                         {
-                            auto rawBrush = static_cast<RawBrush *>(brush.brush);
-                            fillRegion(from, to, rawBrush->serverId());
-                        }
-                        else
-                        {
-                            // TODO Handle cases other than RawItem
-                            NOT_IMPLEMENTED_ABORT();
+                            case BrushType::Raw:
+                            {
+                                auto rawBrush = static_cast<RawBrush *>(brush.brush);
+                                fillRegion(from, to, rawBrush->serverId());
+                                break;
+                            }
+                            case BrushType::Ground:
+                            {
+                                auto groundBrush = static_cast<GroundBrush *>(brush.brush);
+                                fillRegion(from, to, [groundBrush]() { return groundBrush->nextServerId(); });
+                                break;
+                            }
+                            default:
+                                // TODO Handle cases other than RawItem
+                                NOT_IMPLEMENTED_ABORT();
                         }
                     }
 
@@ -815,7 +827,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                     action.area = event.modifiers() & VME::ModifierKeys::Shift;
                     action.erase = event.modifiers() & VME::ModifierKeys::Ctrl;
 
-                    history.beginTransaction(TransactionType::RawItemAction);
+                    history.beginTransaction(TransactionType::BrushAction);
 
                     if (action.erase)
                     {
@@ -831,15 +843,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                     {
                         if (!action.area)
                         {
-                            if (action.brush->type() == BrushType::RawItem)
-                            {
-                                action.brush->apply(*this, pos);
-                            }
-                            else
-                            {
-                                // TODO
-                                NOT_IMPLEMENTED_ABORT();
-                            }
+                            action.brush->apply(*this, pos);
                         }
                     }
                 },
@@ -932,17 +936,11 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                     }
                     else
                     {
-                        if (action.brush->type() == BrushType::RawItem)
+                        DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::BrushAction), "Incorrect transaction type.");
+
+                        for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
                         {
-                            uint32_t rawBrushServerId = static_cast<RawBrush *>(action.brush)->serverId();
-                            DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::RawItemAction), "Incorrect transaction type.");
-                            for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
-                                addItem(position, rawBrushServerId);
-                        }
-                        else
-                        {
-                            // TODO
-                            NOT_IMPLEMENTED_ABORT();
+                            action.brush->apply(*this, position);
                         }
                     }
                 },
@@ -1004,9 +1002,9 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
             },
 
             [this, modifiers](MouseAction::MapBrush &action) {
-                if (history.hasCurrentTransactionType(TransactionType::RawItemAction))
+                if (history.hasCurrentTransactionType(TransactionType::BrushAction))
                 {
-                    history.endTransaction(TransactionType::RawItemAction);
+                    history.endTransaction(TransactionType::BrushAction);
                     editorAction.unlock();
                 }
             },

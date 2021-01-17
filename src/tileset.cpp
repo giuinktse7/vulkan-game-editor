@@ -48,6 +48,23 @@ void Tileset::addRawBrush(uint32_t serverId)
     brushes.emplace_back(brush);
 }
 
+void Tileset::addBrush(Brush *brush)
+{
+    if (hasBrush(brush))
+    {
+        auto paletteName = _palette ? _palette->name() : "(No palette)";
+        VME_LOG_ERROR(
+            "The tileset '" << _name << "' in palette '" << paletteName
+                            << "' already contains the brush " << brush->name() << ".");
+        return;
+    }
+
+    brush->setTileset(this);
+
+    brushToIndexMap.try_emplace(brush, brushes.size());
+    brushes.emplace_back(brush);
+}
+
 int Tileset::indexOf(Brush *brush) const
 {
     auto found = brushToIndexMap.find(brush);

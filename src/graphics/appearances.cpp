@@ -320,24 +320,10 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
     this->clientId = protobufAppearance.id();
     this->name = protobufAppearance.name();
 
-    uint32_t cid1 = 3614;
-    uint32_t cid2 = 2178;
-
-    if (this->clientId == cid1 || this->clientId == cid2)
-    {
-        VME_LOG("Flags for " << this->clientId << ":");
-        VME_LOG(protobufAppearance.flags());
-    }
-
-    // if (this->clientId == 447 || this->clientId == 5750)
-    // {
-    //     std::cout << protobufAppearance.flags() << std::endl;
-    // }
-
     if (protobufAppearance.frame_group_size() == 1)
     {
         const auto &spriteInfo = protobufAppearance.frame_group().at(0).sprite_info();
-        bool cumulative = protobufAppearance.flags().has_cumulative() && protobufAppearance.flags().cumulative();
+        // bool cumulative = protobufAppearance.flags().has_cumulative() && protobufAppearance.flags().cumulative();
 
         auto group = protobufAppearance.frame_group(0);
         frameGroups.emplace_back(static_cast<FixedFrameGroup>(group.fixed_frame_group()),

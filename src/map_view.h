@@ -18,7 +18,10 @@
 #include "signal.h"
 #include "util.h"
 
-class MapHistory::ChangeItem;
+namespace MapHistory
+{
+    class ChangeItem;
+}
 
 class MapView;
 
@@ -247,6 +250,7 @@ class MapView : public Nano::Observer<>
     void selectRegion(const Position &from, const Position &to);
     void removeItemsInRegion(const Position &from, const Position &to, std::function<bool(const Item &)> predicate);
     void fillRegion(const Position &from, const Position &to, uint32_t serverId);
+    void fillRegion(const Position &from, const Position &to, std::function<uint32_t()> itemSupplier);
     void endCurrentAction(VME::ModifierKeys modifiers);
 
     void cameraViewportChangedEvent();

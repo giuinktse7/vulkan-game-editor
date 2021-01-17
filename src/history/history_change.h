@@ -159,8 +159,8 @@ namespace MapHistory
         void undo(MapView &mapView) override;
 
       private:
-        Position toPosition;
         ContainerLocation from;
+        Position toPosition;
     };
 
     class RemoveTile : public ChangeItem

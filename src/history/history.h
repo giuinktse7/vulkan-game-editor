@@ -33,9 +33,10 @@ namespace MapHistory
       private:
         std::optional<Transaction> currentTransaction;
         std::vector<Transaction> transactions;
-        size_t insertionIndex;
 
         MapView *mapView;
+
+        size_t insertionIndex;
 
         Action *getLatestAction();
     };

@@ -145,6 +145,7 @@ set(CommonSources
     src/octree.h
     src/brushes/brush.h
     src/brushes/raw_brush.h
+    src/brushes/ground_brush.h
     ../vendor/lzma/Alloc.c
     ../vendor/lzma/LzFind.c
     ../vendor/lzma/LzFindMt.c
@@ -206,7 +207,8 @@ set(CommonSources
     src/util.cpp
     src/octree.cpp
     src/brushes/brush.cpp
-    src/brushes/raw_brush.cpp)
+    src/brushes/raw_brush.cpp
+    src/brushes/ground_brush.cpp
 
 add_library(common STATIC ${CommonSources})
 

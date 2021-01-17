@@ -164,7 +164,6 @@ class Appearances
 
     static SpriteAnimation parseSpriteAnimation(const proto::SpriteAnimation &animation);
     static SpriteInfo parseSpriteInfo(const proto::SpriteInfo &info);
-    static SpriteInfo parseCreatureType(const proto::SpriteInfo &info);
     static CreatureType parseCreatureType(const proto::Appearance &appearance);
 
     inline static const vme_unordered_map<AppearanceId, ObjectAppearance> &objects();
@@ -381,36 +380,43 @@ inline std::ostream &operator<<(std::ostream &os, const proto::AppearanceFlags &
     std::ostringstream s;
     s << std::endl;
 
-#define PRINT_FLAG_UTIL(a)                                      \
-    do                                                          \
-    {                                                           \
-        if (flags.has_##a() && flags.##a())                     \
-        {                                                       \
-            s << "\t" << #a << ":" << flags.##a() << std::endl; \
-        }                                                       \
-    } while (false)
+    // TODO Remove this macro. It relies on undefined behavior, only works in MSVC compiler.
+    // #define PRINT_FLAG_UTIL(a)                                      \
+//     do                                                          \
+//     {                                                           \
+//         if (flags.has_##a() && flags.##a())                     \
+//         {                                                       \
+//             s << "\t" << #a << ":" << flags.##a() << std::endl; \
+//         }                                                       \
+//     } while (false)
 
     if (flags.has_bank())
     {
         std::cout << "bank.waypoints: " << flags.bank().waypoints() << std::endl;
     }
-    PRINT_FLAG_UTIL(clip);
-    PRINT_FLAG_UTIL(bottom);
-    PRINT_FLAG_UTIL(top);
-    PRINT_FLAG_UTIL(container);
-    PRINT_FLAG_UTIL(cumulative);
-    PRINT_FLAG_UTIL(usable);
-    PRINT_FLAG_UTIL(forceuse);
-    PRINT_FLAG_UTIL(multiuse);
-    PRINT_FLAG_UTIL(liquidpool);
-    PRINT_FLAG_UTIL(unpass);
-    PRINT_FLAG_UTIL(unmove);
-    PRINT_FLAG_UTIL(unsight);
-    PRINT_FLAG_UTIL(avoid);
-    PRINT_FLAG_UTIL(no_movement_animation);
-    PRINT_FLAG_UTIL(take);
-    PRINT_FLAG_UTIL(liquidcontainer);
-    PRINT_FLAG_UTIL(hang);
+    if (flags.has_clip() && flags.clip())
+    {
+        s << "\t"
+          << "clip"
+          << ":" << flags.clip() << std::endl;
+    }
+    // PRINT_FLAG_UTIL(clip);
+    // PRINT_FLAG_UTIL(bottom);
+    // PRINT_FLAG_UTIL(top);
+    // PRINT_FLAG_UTIL(container);
+    // PRINT_FLAG_UTIL(cumulative);
+    // PRINT_FLAG_UTIL(usable);
+    // PRINT_FLAG_UTIL(forceuse);
+    // PRINT_FLAG_UTIL(multiuse);
+    // PRINT_FLAG_UTIL(liquidpool);
+    // PRINT_FLAG_UTIL(unpass);
+    // PRINT_FLAG_UTIL(unmove);
+    // PRINT_FLAG_UTIL(unsight);
+    // PRINT_FLAG_UTIL(avoid);
+    // PRINT_FLAG_UTIL(no_movement_animation);
+    // PRINT_FLAG_UTIL(take);
+    // PRINT_FLAG_UTIL(liquidcontainer);
+    // PRINT_FLAG_UTIL(hang);
     if (flags.has_hook())
     {
         if (flags.hook().has_direction())
@@ -419,14 +425,14 @@ inline std::ostream &operator<<(std::ostream &os, const proto::AppearanceFlags &
             s << "\thook (no direction)" << std::endl;
     }
 
-    PRINT_FLAG_UTIL(rotate);
+    // PRINT_FLAG_UTIL(rotate);
     if (flags.has_light())
     {
         s << "\tlight: ("
           << "brightness: " << flags.light().brightness() << ", color: " << flags.light().color() << ")" << std::endl;
     }
-    PRINT_FLAG_UTIL(dont_hide);
-    PRINT_FLAG_UTIL(translucent);
+    // PRINT_FLAG_UTIL(dont_hide);
+    // PRINT_FLAG_UTIL(translucent);
     if (flags.has_shift())
     {
         s << "\tshift: (";
@@ -453,13 +459,13 @@ inline std::ostream &operator<<(std::ostream &os, const proto::AppearanceFlags &
             s << "\theight (no elevation)" << std::endl;
         }
     }
-    PRINT_FLAG_UTIL(lying_object);
-    PRINT_FLAG_UTIL(animate_always);
-    PRINT_FLAG_UTIL(fullbank);
-    PRINT_FLAG_UTIL(ignore_look);
-    PRINT_FLAG_UTIL(wrap);
-    PRINT_FLAG_UTIL(unwrap);
-    PRINT_FLAG_UTIL(topeffect);
+    // PRINT_FLAG_UTIL(lying_object);
+    // PRINT_FLAG_UTIL(animate_always);
+    // PRINT_FLAG_UTIL(fullbank);
+    // PRINT_FLAG_UTIL(ignore_look);
+    // PRINT_FLAG_UTIL(wrap);
+    // PRINT_FLAG_UTIL(unwrap);
+    // PRINT_FLAG_UTIL(topeffect);
 
     // Print NPC sale data for RL Tibia
     // for (const auto saleData : flags.npcsaledata())
@@ -467,10 +473,10 @@ inline std::ostream &operator<<(std::ostream &os, const proto::AppearanceFlags &
     //   s << "\t" << saleData.name() << " (" << saleData.location() << "): sells_for=" << saleData.sale_price() << ", buys_for=" << saleData.buy_price() << ", currency=" << saleData.currency() << std::endl;
     // }
 
-    PRINT_FLAG_UTIL(corpse);
-    PRINT_FLAG_UTIL(player_corpse);
+    // PRINT_FLAG_UTIL(corpse);
+    // PRINT_FLAG_UTIL(player_corpse);
 
-#undef PRINT_FLAG_UTIL
+    // #undef PRINT_FLAG_UTIL
 
     os << s.str();
     return os;

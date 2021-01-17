@@ -7,8 +7,8 @@ class Item;
 
 TrackedItem::TrackedItem(Item *item)
     : _guid(item->guid()),
-      disconnect(Items::items.trackItem<&TrackedItem::updateItem>(_guid, this)),
-      _item(item) {}
+      _item(item),
+      disconnect(Items::items.trackItem<&TrackedItem::updateItem>(_guid, this)) {}
 
 Item *TrackedItem::item() const noexcept
 {

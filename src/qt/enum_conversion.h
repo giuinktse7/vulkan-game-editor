@@ -1,9 +1,10 @@
+#pragma once
+
 /*
 This header file contains utility methods for converting Qt enums to VME enums.
 All of this conversion code is a replacement for using many if's to perform the
 conversion. This should reduce branching, resulting in faster conversion.
 */
-#pragma once
 
 #include <Qt>
 #include <array>

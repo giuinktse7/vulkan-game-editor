@@ -24,7 +24,7 @@ namespace MapHistory
         if (locationTile)
         {
             // locationTile->destroyEntities();
-            location.swapTile(std::move(tile));
+            location.swapTile(tile);
         }
         else
         {
@@ -138,7 +138,7 @@ namespace MapHistory
     }
 
     MoveFromMapToContainer::MoveFromMapToContainer(Tile &tile, Item *item, ContainerLocation &to)
-        : fromPosition(tile.position()), data(PreFirstCommitData{item}), to(to) {}
+        : fromPosition(tile.position()), to(to), data(PreFirstCommitData{item}) {}
 
     void MoveFromMapToContainer::commit(MapView &mapView)
     {
