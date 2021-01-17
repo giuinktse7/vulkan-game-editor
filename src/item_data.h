@@ -14,6 +14,10 @@ struct ItemData
     ItemData(Item *item)
         : _item(item) {}
 
+    virtual ~ItemData()
+    {
+    }
+
     virtual ItemDataType type() const noexcept = 0;
     virtual std::unique_ptr<ItemData> copy() const = 0;
 
@@ -32,7 +36,7 @@ struct ItemData
     Item *_item;
 };
 
-struct Teleport : public ItemData
+struct Teleport final : public ItemData
 {
     Teleport(const Position destination)
         : destination(destination) {}
@@ -49,7 +53,7 @@ struct Teleport : public ItemData
     Position destination;
 };
 
-struct HouseDoor : public ItemData
+struct HouseDoor final : public ItemData
 {
     HouseDoor(uint8_t doorId)
         : doorId(doorId) {}
@@ -67,7 +71,7 @@ struct HouseDoor : public ItemData
     uint8_t doorId;
 };
 
-struct Depot : public ItemData
+struct Depot final : public ItemData
 {
     Depot(uint16_t depotId)
         : depotId(depotId) {}
@@ -85,7 +89,7 @@ struct Depot : public ItemData
     uint16_t depotId;
 };
 
-struct Container : public ItemData
+struct Container final : public ItemData
 {
   public:
     struct HistoryParent

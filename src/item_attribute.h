@@ -98,7 +98,7 @@ inline std::ostream &operator<<(std::ostream &os, const std::variant<T, Ts...> &
 
 inline std::ostream &operator<<(std::ostream &os, const ItemAttribute &attribute)
 {
-    os << "{ type: " << attribute.type() << ", value: " << attribute.value() << "}";
+    os << "{ ItemAttribute, value: " << attribute.value() << "}";
     return os;
 }
 

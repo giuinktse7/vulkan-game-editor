@@ -87,8 +87,8 @@ std::unique_ptr<Tile> TileLocation::replaceTile(Tile &&newTile)
     return tile;
 }
 
-void TileLocation::swapTile(std::unique_ptr<Tile> &&tile)
+void TileLocation::swapTile(std::unique_ptr<Tile> &tile)
 {
     DEBUG_ASSERT(tile->position() == _position, "The tile must have the same position as the tile location.");
-    _tile.swap(std::move(tile));
+    _tile.swap(tile);
 }

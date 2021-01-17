@@ -70,7 +70,7 @@ class Item
     template <class T>
     void setItemData(T &&itemData);
     void setItemData(Container &&container);
-    inline ItemData *data() const;
+    ItemData *data() const;
 
     template <typename T>
     inline T *getDataAs() const;

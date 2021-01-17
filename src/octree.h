@@ -686,7 +686,7 @@ namespace vme
             if (!root.boundingBox())
                 return std::nullopt;
 
-            auto &bbox = root.boundingBox().value();
+            BoundingBox bbox = root.boundingBox().value();
             return Position(
                 positiveX ? bbox.maxX() : bbox.minX(),
                 positiveY ? bbox.maxY() : bbox.minY(),

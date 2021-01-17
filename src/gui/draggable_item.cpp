@@ -5,10 +5,10 @@
 
 #include "../../vendor/rollbear-visit/visit.hpp"
 
-#include "../main.h"
 #include "../qt/logging.h"
 #include "../tile.h"
 #include "../util.h"
+#include "main_application.h"
 #include "qt_util.h"
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

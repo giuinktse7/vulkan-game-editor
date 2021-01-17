@@ -58,7 +58,7 @@ namespace ItemDrag
         bool _accepted = false;
     };
 
-    struct MapItem : DraggableItem
+    struct MapItem final : DraggableItem
     {
         MapItem();
         MapItem(MapView *mapView, Tile *tile, Item *item);
@@ -87,7 +87,7 @@ namespace ItemDrag
         QDataStream &serializeInto(QDataStream &dataStream) const override;
     };
 
-    struct ContainerItemDrag : DraggableItem
+    struct ContainerItemDrag final : DraggableItem
     {
         Item *item() const override;
         QPixmap pixmap() const override;
@@ -220,7 +220,7 @@ QDataStream &operator<<(QDataStream &, const ItemDrag::DraggableItem &);
 QDataStream &operator>>(QDataStream &, ItemDrag::DraggableItem &);
 
 template <typename T, typename std::enable_if<std::is_base_of<ItemDrag::DraggableItem, T>::value>::type *>
-static std::unique_ptr<ItemDrag::DraggableItem> ItemDrag::DraggableItem::moveToHeap(std::optional<T> value)
+std::unique_ptr<ItemDrag::DraggableItem> ItemDrag::DraggableItem::moveToHeap(std::optional<T> value)
 {
     return value ? std::make_unique<T>(value.value()) : std::unique_ptr<DraggableItem>{};
 }

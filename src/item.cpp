@@ -26,10 +26,10 @@ Item::Item(Item &&other) noexcept
     : itemType(other.itemType),
       selected(other.selected),
       _attributes(std::move(other._attributes)),
-      _subtype(other._subtype),
       _itemData(std::move(other._itemData)),
-      _guid(other._guid),
-      _animation(std::move(other._animation))
+      _animation(std::move(other._animation)),
+      _subtype(other._subtype),
+      _guid(other._guid)
 {
     Items::items.guidRefCreated(_guid);
 

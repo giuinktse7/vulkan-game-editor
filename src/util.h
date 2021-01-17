@@ -87,10 +87,10 @@ namespace util
         }
         else
         {
-            static_assert(
-                false,
-                "Invalid pointer size. Pointer size must be 4 or 8 bytes.");
-            return 0;
+            // static_assert(
+            // false,
+            // "Invalid pointer size. Pointer size must be 4 or 8 bytes.");
+            return 8;
         }
     }
 
@@ -475,12 +475,10 @@ inline std::string toString(T value)
         }                                                                      \
         inline bool isSet(const EnumType a, const EnumType b)                  \
         {                                                                      \
-            typedef std::underlying_type<EnumType>::type ut;                   \
             return (a & ~(b)) == b;                                            \
         }                                                                      \
         inline void toggle(EnumType &a, EnumType b)                            \
         {                                                                      \
-            typedef std::underlying_type<EnumType>::type ut;                   \
             a ^= b;                                                            \
         }                                                                      \
     }

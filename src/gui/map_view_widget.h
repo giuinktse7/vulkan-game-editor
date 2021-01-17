@@ -23,7 +23,7 @@ class QtScrollBar : public QScrollBar
     void mousePressEvent(QMouseEvent *e) override;
     void mouseMoveEvent(QMouseEvent *e) override;
 
-    void initStyleOption(QStyleOptionSlider *option) const;
+    void initStyleOption(QStyleOptionSlider *option) const override;
 
     void addValue(int value);
 };

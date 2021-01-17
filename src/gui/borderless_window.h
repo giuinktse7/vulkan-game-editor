@@ -1,9 +1,8 @@
 #pragma once
 
+#include "gui/main_application.h"
 #include "mainwindow.h"
 #include <QWidget>
-
-#include "../main.h"
 
 class QLabel;
 class QPushButton;
