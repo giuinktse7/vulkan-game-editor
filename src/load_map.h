@@ -66,6 +66,8 @@ namespace OTBM
       public:
         static std::unique_ptr<Deserializer> create(OTBMVersion version, LoadBuffer &buffer);
 
+        virtual ~Deserializer() = default;
+
         virtual Item deserializeCompactItem() = 0;
 
         virtual Item deserializeItem() = 0;
@@ -77,6 +79,8 @@ namespace OTBM
       public:
         OTBM1Deserializer(LoadBuffer &buffer)
             : buffer(buffer) {}
+
+        virtual ~OTBM1Deserializer() = default;
 
         Item deserializeCompactItem() override;
         Item deserializeItem() override;
@@ -92,6 +96,8 @@ namespace OTBM
       public:
         OTBM2Deserializer(LoadBuffer &buffer)
             : OTBM1Deserializer(buffer) {}
+
+        virtual ~OTBM2Deserializer() = default;
     };
 
     class OTBM3Deserializer : public OTBM2Deserializer
@@ -99,6 +105,8 @@ namespace OTBM
       public:
         OTBM3Deserializer(LoadBuffer &buffer)
             : OTBM2Deserializer(buffer) {}
+
+        virtual ~OTBM3Deserializer() = default;
     };
 
     class OTBM4Deserializer : public OTBM3Deserializer
@@ -106,6 +114,8 @@ namespace OTBM
       public:
         OTBM4Deserializer(LoadBuffer &buffer)
             : OTBM3Deserializer(buffer) {}
+
+        virtual ~OTBM4Deserializer() = default;
 
         std::optional<std::string> deserializeItemAttributes(Item &item) override;
     };
