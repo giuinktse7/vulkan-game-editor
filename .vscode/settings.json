@@ -158,7 +158,9 @@
     "bit": "cpp",
     "qabstractitemdelegate": "cpp",
     "qvboxlayout": "cpp",
-    "qpalette": "cpp"
+    "qpalette": "cpp",
+    "qtwidgets": "cpp",
+    "qvariant": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

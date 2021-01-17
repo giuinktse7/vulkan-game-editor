@@ -826,16 +826,11 @@ void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo)
 
 void MapRenderer::drawItem(const ItemDrawInfo &itemDrawInfo)
 {
-    const Item *item = itemDrawInfo.item;
-    QuadrantRenderType renderType = isDefaultZoom
-                                        ? QuadrantRenderType::Full
-                                        : item->itemType->appearance->quadrantRenderType;
-
     ItemTypeDrawInfo info{};
     info.color = getItemDrawColor(*itemDrawInfo.item, itemDrawInfo.position, itemDrawInfo.drawFlags);
     info.itemType = itemDrawInfo.item->itemType;
     info.worldPos = itemDrawInfo.position.worldPos();
-    info.spriteId = item->getSpriteId(itemDrawInfo.position);
+    info.spriteId = itemDrawInfo.item->getSpriteId(itemDrawInfo.position);
     info.worldPosOffset = itemDrawInfo.worldPosOffset;
 
     drawItemType(info);

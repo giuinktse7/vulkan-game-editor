@@ -34,5 +34,5 @@ class MainApplication : public QApplication
     QWidget *prevWidget = nullptr;
     QWidget *currentWidget = nullptr;
 
-    QWindow *vulkanWindow = nullptr;
+    // QWindow *vulkanWindow = nullptr;
 };

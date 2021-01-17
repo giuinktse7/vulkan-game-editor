@@ -10,7 +10,7 @@
 RawBrush::RawBrush(ItemType *itemType)
     : Brush(itemType->name()), _itemType(itemType)
 {
-    DEBUG_ASSERT(_itemType != nullptr, "Invalid itemType. No ItemType for server ID " + itemType->id);
+    DEBUG_ASSERT(_itemType != nullptr, "Invalid itemType. No ItemType for server ID " + std::to_string(itemType->id));
 }
 
 void RawBrush::apply(MapView &mapView, const Position &position)

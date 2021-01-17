@@ -26,8 +26,8 @@ Item::Item(Item &&other) noexcept
     : itemType(other.itemType),
       selected(other.selected),
       _attributes(std::move(other._attributes)),
-      _itemData(std::move(other._itemData)),
       _animation(std::move(other._animation)),
+      _itemData(std::move(other._itemData)),
       _subtype(other._subtype),
       _guid(other._guid)
 {

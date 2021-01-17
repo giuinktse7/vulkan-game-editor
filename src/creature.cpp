@@ -5,7 +5,7 @@
 vme_unordered_map<uint32_t, CreatureType> Creatures::_creatureTypes;
 
 CreatureType::CreatureType(uint32_t id, std::vector<FrameGroup> &&frameGroups)
-    : _id(id), _frameGroups(std::move(frameGroups)) {}
+    : _frameGroups(std::move(frameGroups)), _id(id) {}
 
 void Creatures::addCreatureType(CreatureType &&creatureType)
 {

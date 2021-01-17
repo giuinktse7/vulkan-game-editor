@@ -441,8 +441,6 @@ void Map::createItemAt(Position pos, uint16_t id)
 {
     Item item(id);
 
-    const SpriteInfo &spriteInfo = item.itemType->appearance->getSpriteInfo();
-
     getOrCreateTile(pos).addItem(std::move(item));
 }
 

@@ -77,7 +77,7 @@ namespace PropertiesUI
     {
         ContainerTree();
 
-        struct Root : public ContainerNode
+        struct Root final : public ContainerNode
         {
             Root(MapView *mapView, Position mapPosition, uint16_t tileIndex, Item *containerItem, ContainerSignals *_signals);
 
@@ -95,7 +95,7 @@ namespace PropertiesUI
             MapView *mapView;
         };
 
-        struct Node : public ContainerNode
+        struct Node final : public ContainerNode
         {
             Node(Item *containerItem, ContainerNode *parent, uint16_t parentIndex);
 

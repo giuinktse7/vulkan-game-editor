@@ -8,6 +8,7 @@
 #include <QDialog>
 #include <QDrag>
 #include <QFocusEvent>
+#include <QKeyCombination>
 #include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
@@ -40,15 +41,15 @@ VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
     connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
     mapView->onMapItemDragStart<&VulkanWindow::mapItemDragStartEvent>(this);
 
-    setShortcut(Qt::Key_Z | Qt::CTRL, ShortcutAction::Undo);
-    setShortcut(Qt::Key_Z | Qt::CTRL | Qt::SHIFT, ShortcutAction::Redo);
+    setShortcut(Qt::ControlModifier, Qt::Key_Z, ShortcutAction::Undo);
+    setShortcut(Qt::ControlModifier | Qt::ShiftModifier, Qt::Key_Z, ShortcutAction::Redo);
     setShortcut(Qt::Key_Space, ShortcutAction::Pan);
     setShortcut(Qt::Key_I, ShortcutAction::EyeDropper);
     setShortcut(Qt::Key_Escape, ShortcutAction::Escape);
     setShortcut(Qt::Key_Delete, ShortcutAction::Delete);
-    setShortcut(Qt::Key_0 | Qt::CTRL, ShortcutAction::ResetZoom);
-    setShortcut(Qt::Key_Plus | Qt::KeypadModifier, ShortcutAction::FloorUp);
-    setShortcut(Qt::Key_Minus | Qt::KeypadModifier, ShortcutAction::FloorDown);
+    setShortcut(Qt::ControlModifier, Qt::Key_0, ShortcutAction::ResetZoom);
+    setShortcut(Qt::KeypadModifier, Qt::Key_Plus, ShortcutAction::FloorUp);
+    setShortcut(Qt::KeypadModifier, Qt::Key_Minus, ShortcutAction::FloorDown);
     setShortcut(Qt::Key_Q, ShortcutAction::LowerFloorShade);
 }
 
@@ -138,12 +139,16 @@ void VulkanWindow::shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event
     switch (action)
     {
         case ShortcutAction::Pan:
+        {
             auto pan = mapView->editorAction.as<MouseAction::Pan>();
             if (pan)
             {
                 unsetCursor();
                 mapView->editorAction.setPrevious();
             }
+            break;
+        }
+        default:
             break;
     }
 }
@@ -158,7 +163,7 @@ void VulkanWindow::mousePressEvent(QMouseEvent *event)
     switch (event->button())
     {
         case Qt::MouseButton::RightButton:
-            showContextMenu(event->globalPos());
+            showContextMenu(event->globalPosition().toPoint());
             break;
         case Qt::MouseButton::LeftButton:
             if (contextMenu)
@@ -193,7 +198,7 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
         dragOperation->mouseMoveEvent(event);
     }
 
-    auto pos = event->windowPos();
+    auto pos = event->scenePosition();
     util::Point<float> mousePos(pos.x(), pos.y());
     emit mousePosChanged(mousePos);
 
@@ -293,10 +298,18 @@ void VulkanWindow::keyPressEvent(QKeyEvent *e)
     }
 }
 
-void VulkanWindow::setShortcut(int keyAndModifiers, ShortcutAction shortcut)
+void VulkanWindow::setShortcut(Qt::KeyboardModifiers modifiers, Qt::Key key, ShortcutAction shortcut)
 {
-    shortcuts.emplace(keyAndModifiers, shortcut);
-    shortcutActionToKeyCombination.emplace(shortcut, keyAndModifiers);
+    int combination = QKeyCombination(modifiers, key).toCombined();
+    shortcuts.emplace(combination, shortcut);
+    shortcutActionToKeyCombination.emplace(shortcut, combination);
+}
+
+void VulkanWindow::setShortcut(Qt::Key key, ShortcutAction shortcut)
+{
+    int combination = QKeyCombination(key).toCombined();
+    shortcuts.emplace(combination, shortcut);
+    shortcutActionToKeyCombination.emplace(shortcut, combination);
 }
 
 std::optional<ShortcutAction> VulkanWindow::getShortcutAction(QKeyEvent *event) const
@@ -342,8 +355,6 @@ void VulkanWindow::dropEvent(QDropEvent *event)
     auto mimeData = static_cast<const ItemDrag::MimeData *>(eventMimeData);
 
     mapView->overlay().draggedItem = nullptr;
-
-    ItemDropEvent dropEvent{};
 
     auto droppedItem = mimeData->draggableItem.get();
 

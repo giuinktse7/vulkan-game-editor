@@ -18,7 +18,7 @@ class MapView;
  * C++ Implementation: https://gist.github.com/Liam0205/0b5786e9bfc73e75eb8180b5400cd1f8
  */
 
-class GroundBrush : public Brush
+class GroundBrush final : public Brush
 {
   public:
     struct WeightedItemId

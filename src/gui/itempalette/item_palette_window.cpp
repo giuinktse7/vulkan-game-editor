@@ -15,8 +15,8 @@ using TilesetModel = ItemPaletteUI::TilesetModel;
 
 ItemPaletteWindow::ItemPaletteWindow(EditorAction *editorAction, QWidget *parent)
     : QWidget(parent),
-      paletteDropdown(new QComboBox(this)),
       paletteWidget(new PaletteWidget(this)),
+      paletteDropdown(new QComboBox(this)),
       editorAction(editorAction)
 {
     auto layout = new QVBoxLayout();

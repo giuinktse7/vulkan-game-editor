@@ -1,20 +1,20 @@
 #include "mainwindow.h"
 
-#include <QContextMenuEvent>
-#include <QGridLayout>
-#include <QListView>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnonportable-include-path"
+
+#include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
-#include <QModelIndex>
 #include <QMouseEvent>
 #include <QPlainTextEdit>
 #include <QQuickView>
 #include <QSlider>
-#include <QTabWidget>
 #include <QVariant>
 #include <QVulkanInstance>
 #include <QWidget>
-#include <QtWidgets>
+
+#pragma clang diagnostic pop
 
 #include "../brushes/ground_brush.h"
 #include "../graphics/appearance_types.h"
@@ -124,10 +124,10 @@ void MainWindow::mapTabChangedEvent(int index)
 
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent),
+      _paletteWindow(nullptr),
       rootLayout(new BorderLayout),
       positionStatus(new QLabel),
       zoomStatus(new QLabel),
-      _paletteWindow(nullptr),
       topItemInfo(new QLabel)
 {
 

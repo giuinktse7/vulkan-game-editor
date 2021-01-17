@@ -5,8 +5,6 @@
 #include "items.h"
 #include "otb.h"
 
-#define FILE_AND_LINE_STR (__FILE__ + std::string("(" + std::to_string(__LINE__) + "): "))
-
 namespace
 {
     // The first four bytes of an .otbm file must be 'OTBM' or all 0 (\0\0\0\0).

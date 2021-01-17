@@ -18,10 +18,10 @@
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ItemDrag::DragOperation::DragOperation(ItemDrag::MimeData &&mimeData, Source source, QWindow *parent)
-    : _parent(parent),
+    : mimeData(std::move(mimeData)),
+      _parent(parent),
       _hoveredObject(QApplication::widgetAt(QCursor::pos())),
       _source(source),
-      mimeData(std::move(mimeData)),
       pixmap(this->mimeData.draggableItem->pixmap()),
       renderingCursor(false)
 {
@@ -33,13 +33,13 @@ ItemDrag::DragOperation::DragOperation(ItemDrag::MimeData &&mimeData, Source sou
 }
 
 ItemDrag::DragOperation::DragOperation(DragOperation &&other) noexcept
-    : _parent(std::move(other._parent)),
+    : mimeData(std::move(other.mimeData)),
+      _parent(std::move(other._parent)),
       _hoveredObject(std::move(other._hoveredObject)),
       _source(std::move(other._source)),
       pixmap(std::move(other.pixmap)),
       shouldRender(std::move(other.shouldRender)),
-      renderingCursor(std::move(other.renderingCursor)),
-      mimeData(std::move(other.mimeData))
+      renderingCursor(std::move(other.renderingCursor))
 {
 }
 

@@ -210,7 +210,6 @@ ItemSlot ItemType::inventorySlot() const noexcept
 
 bool ItemType::hasFlag(AppearanceFlag flag) const noexcept
 {
-    auto k = this;
     return appearance->hasFlag(flag);
 }
 

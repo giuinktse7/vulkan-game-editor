@@ -92,7 +92,7 @@ uint32_t Items::createItemGid()
 void Items::guidRefCreated(uint32_t id)
 {
     uint16_t &refCount = guidRefCounts.at(id);
-    DEBUG_ASSERT(refCount != 0, "There is no UUID " + id);
+    DEBUG_ASSERT(refCount != 0, "There is no item with that uid.");
     ++refCount;
 }
 
@@ -374,7 +374,7 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
         }
         else if (key == "floorchange")
         {
-            if (attribute = itemAttributesNode.attribute("value"))
+            if ((attribute = itemAttributesNode.attribute("value")))
             {
                 std::string floorChangeString = attribute.as_string();
 

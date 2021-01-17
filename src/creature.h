@@ -51,7 +51,7 @@ class CreatureType
     std::vector<FrameGroup> _frameGroups;
     uint32_t _id;
 
-    bool _npc;
+    // bool _npc;
 };
 
 class Creature

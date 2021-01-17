@@ -142,7 +142,8 @@ class VulkanWindow : public QVulkanWindow
 
     std::optional<ShortcutAction> getShortcutAction(QKeyEvent *event) const;
 
-    void setShortcut(int keyAndModifiers, ShortcutAction shortcut);
+    void setShortcut(Qt::KeyboardModifiers modifiers, Qt::Key key, ShortcutAction shortcut);
+    void setShortcut(Qt::Key key, ShortcutAction shortcut);
 
     bool containsMouse() const;
 
@@ -161,8 +162,8 @@ class VulkanWindow : public QVulkanWindow
     static std::unordered_set<const VulkanWindow *> instances;
 
     /**
-   * The key is a combination of Qt::Key and Qt Modifiers (Ctrl, Shift, Alt)
-   */
+      * The key is an int from QKeyCombination::toCombined. (combination of Qt::Key and Qt Modifiers (Ctrl, Shift, Alt))
+      */
     vme_unordered_map<int, ShortcutAction> shortcuts;
     vme_unordered_map<ShortcutAction, int> shortcutActionToKeyCombination;
 

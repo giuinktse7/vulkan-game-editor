@@ -144,9 +144,10 @@ class Tile
     Item *replaceItem(size_t index, Item &&item);
 
     std::vector<Item> _items;
-    Position _position;
     std::unique_ptr<Item> _ground;
     std::unique_ptr<Creature> _creature;
+
+    Position _position;
 
     // This structure makes it possible to access all flags, or map/stat flags separately.
     union

@@ -152,6 +152,7 @@ set(CommonSources
     src/brushes/brush.h
     src/brushes/raw_brush.h
     src/brushes/ground_brush.h
+    src/brushes/doodad_brush.h
     ../vendor/lzma/Alloc.c
     ../vendor/lzma/LzFind.c
     ../vendor/lzma/LzFindMt.c
@@ -215,6 +216,7 @@ set(CommonSources
     src/brushes/brush.cpp
     src/brushes/raw_brush.cpp
     src/brushes/ground_brush.cpp
+    src/brushes/doodad_brush.cpp
     src/lua_test.h
     src/lua_test.cpp)
 

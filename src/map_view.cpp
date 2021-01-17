@@ -962,9 +962,6 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
 
 void MapView::mouseReleaseEvent(VME::MouseEvent event)
 {
-    Position pos = event.pos().toPos(*this);
-    // VME_LOG_D("MapView::mouseReleaseEvent: " << pos);
-
     if (!(event.buttons() & VME::MouseButtons::LeftButton))
     {
         endCurrentAction(event.modifiers());
@@ -1001,7 +998,7 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
                 editorAction.unlock();
             },
 
-            [this, modifiers](MouseAction::MapBrush &action) {
+            [this](MouseAction::MapBrush &action) {
                 if (history.hasCurrentTransactionType(TransactionType::BrushAction))
                 {
                     history.endTransaction(TransactionType::BrushAction);

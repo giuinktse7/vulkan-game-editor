@@ -14,9 +14,7 @@ struct ItemData
     ItemData(Item *item)
         : _item(item) {}
 
-    virtual ~ItemData()
-    {
-    }
+    virtual ~ItemData() = default;
 
     virtual ItemDataType type() const noexcept = 0;
     virtual std::unique_ptr<ItemData> copy() const = 0;

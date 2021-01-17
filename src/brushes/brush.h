@@ -33,6 +33,8 @@ class Brush
   public:
     Brush(std::string name);
 
+    virtual ~Brush() = default;
+
     virtual void apply(MapView &mapView, const Position &position) = 0;
 
     virtual uint32_t iconServerId() const = 0;

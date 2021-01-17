@@ -371,8 +371,6 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
                 ABORT_PROGRAM("Drag between different MapViews is not implemented.");
             }
 
-            auto container = containerNode->container();
-
             ContainerLocation to(
                 state.selectedPosition,
                 static_cast<uint16_t>(focusedItem.tileIndex),
@@ -381,10 +379,6 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
             mapView->history.beginTransaction(TransactionType::MoveItems);
             mapView->moveFromMapToContainer(*dropped->tile, dropped->_item, to);
             mapView->history.endTransaction(TransactionType::MoveItems);
-
-            // containerNode->itemInserted(index);
-
-            // containerNode->model()->refresh();
             break;
         }
         case DragSource::ContainerItem:

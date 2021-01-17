@@ -35,7 +35,7 @@ namespace ItemDrag
             MapItem,
             ContainerItem
         };
-        ~DraggableItem() {}
+        virtual ~DraggableItem() = default;
 
         virtual Item *item() const = 0;
         virtual const Type type() const noexcept = 0;

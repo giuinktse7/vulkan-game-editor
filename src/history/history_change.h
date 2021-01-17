@@ -33,7 +33,7 @@ namespace MapHistory
       public:
         ChangeItem()
             : committed(false) {}
-        virtual ~ChangeItem() {}
+        virtual ~ChangeItem() = default;
 
         ChangeItem(ChangeItem &&other) = default;
         ChangeItem &operator=(ChangeItem &&other) noexcept

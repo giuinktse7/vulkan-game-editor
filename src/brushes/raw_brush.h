@@ -6,7 +6,7 @@ struct Position;
 class ItemType;
 class MapView;
 
-class RawBrush : public Brush
+class RawBrush final : public Brush
 {
   public:
     RawBrush(ItemType *itemType);

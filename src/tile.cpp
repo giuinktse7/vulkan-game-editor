@@ -14,8 +14,8 @@ Tile::Tile(Position position)
 Tile::Tile(Tile &&other) noexcept
     : _items(std::move(other._items)),
       _ground(std::move(other._ground)),
-      _position(other._position),
       _creature(std::move(other._creature)),
+      _position(other._position),
       _flags(other._flags),
       _selectionCount(other._selectionCount) {}
 
@@ -23,8 +23,8 @@ Tile &Tile::operator=(Tile &&other) noexcept
 {
     _items = std::move(other._items);
     _ground = std::move(other._ground);
-    _position = std::move(other._position);
     _creature = std::move(other._creature);
+    _position = std::move(other._position);
     _selectionCount = other._selectionCount;
     _flags = other._flags;
 

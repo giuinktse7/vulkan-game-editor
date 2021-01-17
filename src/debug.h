@@ -54,3 +54,5 @@ class GeneralDebugException : public std::exception
     {                          \
     } while (0)
 #endif
+
+#define FILE_AND_LINE_STR (__FILE__ + std::string("(" + std::to_string(__LINE__) + "): "))
