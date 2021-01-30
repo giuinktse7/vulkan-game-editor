@@ -28,10 +28,18 @@ class LuaGroundBrush
     static int luaCreate(lua_State *L);
 
     static int luaTest(lua_State *L);
+    static int luaSetName(lua_State *L);
 
     static int metaIndex(lua_State *L);
 
+    void setName(const char *name);
+
+    static LuaGroundBrush *checkSelf(lua_State *L);
+
     int x = 0;
+
+  private:
+    std::string _name;
 };
 
 class LuaBrush

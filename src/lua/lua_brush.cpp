@@ -13,9 +13,9 @@ int LuaGroundBrush::luaRegister(lua_State *L)
 
         int globalObject = lua_gettop(L);
 
-        const auto globalMetaTableName = (std::string(LuaName) + "__Meta").c_str();
+        auto globalMetaTableName = (std::string(LuaName) + "__Meta");
 
-        luaL_newmetatable(L, globalMetaTableName);
+        luaL_newmetatable(L, globalMetaTableName.c_str());
 
         luaL_Reg methods[] = {
             {"__call", luaCreate},
@@ -28,24 +28,25 @@ int LuaGroundBrush::luaRegister(lua_State *L)
     }
 
     // Source: https://stackoverflow.com/questions/26970316/lua-userdata-array-access-and-methods
+    // Indexing and member functions
+    {
+        luaL_newmetatable(L, LuaId);
 
-    // LuaState::stackDump(L);
+        luaL_Reg methods[] = {
+            {"__index", metaIndex},
+            {nullptr, nullptr}};
 
-    // luaL_newmetatable(L, LuaId);
+        luaL_Reg functions[] = {
+            {"test", luaTest},
+            {"setName", luaSetName},
+            {nullptr, nullptr}};
 
-    // luaL_Reg methods[] = {
-    //     {"__index", metaIndex},
-    //     {nullptr, nullptr}};
+        luaL_setfuncs(L, methods, 0);
+        luaL_setfuncs(L, functions, 0);
+        lua_pop(L, 1);
 
-    // luaL_Reg functions[] = {
-    //     {"test", luaTest},
-    //     {nullptr, nullptr}};
-
-    // luaL_setfuncs(L, methods, 0);
-    // luaL_setfuncs(L, functions, 0);
-    // lua_pop(L, 1);
-
-    // luaL_newlib(L, functions);
+        luaL_newlib(L, functions);
+    }
 
     // LuaState::stackDump(L);
 
@@ -66,7 +67,7 @@ int LuaGroundBrush::luaCreate(lua_State *L)
 
 int LuaGroundBrush::metaIndex(lua_State *L)
 {
-    LuaGroundBrush *brush = *static_cast<LuaGroundBrush **>(luaL_checkudata(L, 1, LuaGroundBrush::LuaId));
+    auto self = checkSelf(L);
 
     luaL_getmetatable(L, LuaId);
     lua_pushvalue(L, 2);
@@ -77,9 +78,18 @@ int LuaGroundBrush::metaIndex(lua_State *L)
         /* found no method, so get value from userdata. */
         std::string index = luaL_checkstring(L, 2);
 
-        luaL_argcheck(L, index == "x", 2, "Invalid index.");
-
-        lua_pushinteger(L, brush->x);
+        if (index == "x")
+        {
+            lua_pushinteger(L, self->x);
+        }
+        else if (index == "name")
+        {
+            lua_pushstring(L, self->_name.c_str());
+        }
+        else
+        {
+            luaL_error(L, "Invalid index.");
+        }
     };
 
     return 1;
@@ -87,10 +97,8 @@ int LuaGroundBrush::metaIndex(lua_State *L)
 
 int LuaGroundBrush::luaTest(lua_State *L)
 {
-    LuaState::stackDump(L);
-
-    LuaGroundBrush *brush = LuaState::checkUserData<LuaGroundBrush>(L, -1, LuaGroundBrush::LuaId);
-    if (brush)
+    auto self = checkSelf(L);
+    if (self)
     {
         VME_LOG_D("Have brush!");
     }
@@ -98,6 +106,28 @@ int LuaGroundBrush::luaTest(lua_State *L)
     {
         VME_LOG_D("no brush!");
     }
+
+    return 0;
+}
+
+LuaGroundBrush *LuaGroundBrush::checkSelf(lua_State *L)
+{
+    return LuaState::checkUserData<LuaGroundBrush>(L, 1, LuaGroundBrush::LuaId);
+}
+
+int LuaGroundBrush::luaSetName(lua_State *L)
+{
+    auto self = checkSelf(L);
+    auto name = luaL_checkstring(L, 2);
+
+    self->setName(name);
+
+    return 0;
+}
+
+void LuaGroundBrush::setName(const char *name)
+{
+    _name = std::string(name);
 }
 
 /**

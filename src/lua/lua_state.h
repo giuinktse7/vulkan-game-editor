@@ -167,14 +167,14 @@ template <class T>
 T *LuaState::getUserdata(lua_State *L, int32_t arg)
 {
     T **userdata = static_cast<T **>(lua_touserdata(L, arg));
-    return userdata ? nullptr : *userdata;
+    return userdata ? *userdata : nullptr;
 }
 
 template <class T>
 T *LuaState::checkUserData(lua_State *L, int32_t arg, const char *typeName)
 {
     T **userdata = static_cast<T **>(luaL_checkudata(L, arg, typeName));
-    return userdata ? nullptr : *userdata;
+    return userdata ? *userdata : nullptr;
 }
 
 template <typename T>
