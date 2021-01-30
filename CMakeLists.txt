@@ -54,8 +54,7 @@ find_package(glm CONFIG REQUIRED)
 find_package(pugixml CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Lua REQUIRED)
-# find_package(LuaJIT REQUIRED)
-# find_package(sol2 CONFIG REQUIRED)
+# find_package(LuaJIT REQUIRED) find_package(sol2 CONFIG REQUIRED)
 find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_signal_slot.hpp")
 
 find_package(
@@ -153,6 +152,9 @@ set(CommonSources
     src/brushes/raw_brush.h
     src/brushes/ground_brush.h
     src/brushes/doodad_brush.h
+    src/lua/lua_state.h
+    src/lua/luascript_interface.h
+    src/lua/lua_brush.h
     ../vendor/lzma/Alloc.c
     ../vendor/lzma/LzFind.c
     ../vendor/lzma/LzFindMt.c
@@ -217,8 +219,9 @@ set(CommonSources
     src/brushes/raw_brush.cpp
     src/brushes/ground_brush.cpp
     src/brushes/doodad_brush.cpp
-    src/lua_test.h
-    src/lua_test.cpp)
+    src/lua/lua_state.cpp
+    src/lua/luascript_interface.cpp
+    src/lua/lua_brush.cpp)
 
 add_library(common STATIC ${CommonSources})
 
@@ -294,7 +297,8 @@ set(GuiSources
     src/gui/itempalette/item_palette_model.cpp
     src/qt/qt_vulkan_info.cpp)
 
-# NOTE: All files that use the QT framework must be in the `gui` library, because it is the only target that links QT.
+# NOTE: All files that use the QT framework must be in the `gui` library,
+# because it is the only target that links QT.
 add_library(gui STATIC ${GuiSources})
 
 target_link_libraries(gui PRIVATE common)

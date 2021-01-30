@@ -1,16 +1,13 @@
 #pragma once
 
+#include <lua.hpp>
 #include <optional>
 #include <string>
 
-#include <lua.hpp>
+#include "lua_state.h"
 
 class GroundBrush;
-
-struct LuaUtil
-{
-    static int popInt(lua_State *L, bool *ok);
-};
+class LuaState;
 
 class LuaScriptInterface
 {
@@ -20,9 +17,14 @@ class LuaScriptInterface
     static bool initialize();
     static LuaScriptInterface *get();
 
+    void registerTable(const std::string &tableName);
+    void registerMethod(const std::string &globalName, const std::string &methodName, lua_CFunction function);
+
     [[nodiscard]] lua_State *luaState() const noexcept;
 
     void test();
+
+    static LuaScriptInterface g_luaInterface;
 
   private:
     LuaScriptInterface(const LuaScriptInterface &) = delete;
@@ -30,14 +32,7 @@ class LuaScriptInterface
 
     bool initState();
 
-    lua_State *L = nullptr;
+    LuaState L;
 
     void errorAbort(const std::string &error);
-    void stackDump();
-};
-
-class LuaParser
-{
-  public:
-    static std::optional<GroundBrush> parseGroundBrush(lua_State *L);
 };
