@@ -3,54 +3,17 @@
 #include "../debug.h"
 #include "lua_state.h"
 
-int LuaGroundBrush::luaRegister(lua_State *L)
+void LuaGroundBrush::luaRegister(lua_State *L)
 {
-    // LuaState::stackDump(L);
+    LuaState::registerClass(L, LuaName, luaCreate);
 
-    // Create the global table
-    {
-        lua_newtable(L);
+    LuaState::registerField(L, LuaName, "name", luaGetName);
+    LuaState::registerFunction(L, LuaName, "setName", luaSetName);
 
-        int globalObject = lua_gettop(L);
+    LuaState::registerFunction(L, LuaName, "setItemWeights", luaSetItemWeights);
 
-        auto globalMetaTableName = (std::string(LuaName) + "__Meta");
-
-        luaL_newmetatable(L, globalMetaTableName.c_str());
-
-        luaL_Reg methods[] = {
-            {"__call", luaCreate},
-            {nullptr, nullptr}};
-
-        luaL_setfuncs(L, methods, 0);
-        lua_setmetatable(L, globalObject);
-
-        lua_setglobal(L, LuaName);
-    }
-
-    // Source: https://stackoverflow.com/questions/26970316/lua-userdata-array-access-and-methods
-    // Indexing and member functions
-    {
-        luaL_newmetatable(L, LuaId);
-
-        luaL_Reg methods[] = {
-            {"__index", metaIndex},
-            {nullptr, nullptr}};
-
-        luaL_Reg functions[] = {
-            {"test", luaTest},
-            {"setName", luaSetName},
-            {nullptr, nullptr}};
-
-        luaL_setfuncs(L, methods, 0);
-        luaL_setfuncs(L, functions, 0);
-        lua_pop(L, 1);
-
-        luaL_newlib(L, functions);
-    }
-
-    // LuaState::stackDump(L);
-
-    return 1;
+    auto k = [](lua_State *L) { lua_pushstring(L, "'result of lambdaFn'"); return 1; };
+    LuaState::registerField(L, LuaName, "lambdaFn", k);
 }
 
 int LuaGroundBrush::luaCreate(lua_State *L)
@@ -58,61 +21,23 @@ int LuaGroundBrush::luaCreate(lua_State *L)
     auto brush = new LuaGroundBrush();
 
     LuaState::pushUserData(L, brush);
-    LuaState::setMetaTable(L, -1, LuaId);
-
-    VME_LOG_D("LuaGroundBrush::luaCreate");
+    LuaState::setMetaTable(L, -1, LuaName);
 
     return 1;
-}
-
-int LuaGroundBrush::metaIndex(lua_State *L)
-{
-    auto self = checkSelf(L);
-
-    luaL_getmetatable(L, LuaId);
-    lua_pushvalue(L, 2);
-    lua_rawget(L, -2);
-
-    if (lua_isnil(L, -1))
-    {
-        /* found no method, so get value from userdata. */
-        std::string index = luaL_checkstring(L, 2);
-
-        if (index == "x")
-        {
-            lua_pushinteger(L, self->x);
-        }
-        else if (index == "name")
-        {
-            lua_pushstring(L, self->_name.c_str());
-        }
-        else
-        {
-            luaL_error(L, "Invalid index.");
-        }
-    };
-
-    return 1;
-};
-
-int LuaGroundBrush::luaTest(lua_State *L)
-{
-    auto self = checkSelf(L);
-    if (self)
-    {
-        VME_LOG_D("Have brush!");
-    }
-    else
-    {
-        VME_LOG_D("no brush!");
-    }
-
-    return 0;
 }
 
 LuaGroundBrush *LuaGroundBrush::checkSelf(lua_State *L)
 {
-    return LuaState::checkUserData<LuaGroundBrush>(L, 1, LuaGroundBrush::LuaId);
+    return LuaState::checkUserData<LuaGroundBrush>(L, 1, LuaGroundBrush::LuaName);
+}
+
+int LuaGroundBrush::luaGetName(lua_State *L)
+{
+    auto self = checkSelf(L);
+
+    lua_pushstring(L, self->_name.c_str());
+
+    return 1;
 }
 
 int LuaGroundBrush::luaSetName(lua_State *L)
@@ -125,60 +50,41 @@ int LuaGroundBrush::luaSetName(lua_State *L)
     return 0;
 }
 
+int LuaGroundBrush::luaSetItemWeights(lua_State *L)
+{
+    auto self = checkSelf(L);
+    luaL_argcheck(L, lua_istable(L, 2), 1, "Expected a table.");
+
+    lua_pushnil(L);
+    while (lua_next(L, -2))
+    {
+        WeightedItemId weightedId = LuaBrush::parseItemWeight(L);
+
+        self->weightedIds.emplace_back(weightedId);
+
+        // Pop the weighted id table
+        lua_pop(L, 1);
+    }
+
+    // Pop the entire table
+    lua_pop(L, 1);
+
+    return 0;
+}
+
 void LuaGroundBrush::setName(const char *name)
 {
     _name = std::string(name);
 }
 
-/**
-  * Requires a ground brush table at the top of the stack.
-  */
-std::optional<GroundBrush> LuaBrush::parseGroundBrush(LuaState &L)
+WeightedItemId LuaBrush::parseItemWeight(lua_State *L)
 {
-    DEBUG_ASSERT(L.isTable(-1), "Top of stack must be a table.");
-    std::optional<GroundBrush> result = std::nullopt;
+    luaL_argcheck(L, lua_istable(L, -1), 1, "Argument must be a table.");
 
-    auto brushName = L.readTableString(-1, "name");
-    if (!brushName)
-    {
-        SHOW_LUA_ERROR("A ground brush needs key `name`, e.x. 'brush = { name = \"my brush\", ... }'");
-        return result;
-    }
+    int id = LuaState::checkIntField(L, "id");
+    int weight = LuaState::checkIntField(L, "weight");
 
-    if (!L.getField(-1, "items", LuaType::Table))
-    {
-        SHOW_LUA_ERROR("A ground brush needs key `items` containing a list of items, e.x. items = {4526, 4527, 4528}.");
-        return result;
-    }
-
-    std::vector<WeightedItemId> weightedIds;
-
-    VME_LOG("Before:");
-    L.stackDump();
-
-    L.pushNil();
-    while (L.next(-2))
-    {
-        auto weightedId = parseItemWeight(L);
-        if (!weightedId)
-        {
-            SHOW_LUA_ERROR("Values in ground brush `items` list must be server IDs, e.x. 4526.");
-            return result;
-        }
-
-        weightedIds.emplace_back(*weightedId);
-
-        // Pop the weighted id table
-        L.pop();
-        L.stackDump();
-    }
-
-    // Pop the table
-    L.pop();
-
-    result.emplace(std::move(*brushName), std::move(weightedIds));
-
-    return result;
+    return WeightedItemId(id, weight);
 }
 
 std::optional<WeightedItemId> LuaBrush::parseItemWeight(LuaState &L)

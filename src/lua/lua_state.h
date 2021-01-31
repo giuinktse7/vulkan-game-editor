@@ -61,6 +61,10 @@ class LuaState
 {
   public:
     /* Begin static */
+    static void registerClass(lua_State *L, std::string className, lua_CFunction constructor);
+    static void registerFunction(lua_State *L, std::string globalName, std::string functionName, lua_CFunction function);
+    static void registerField(lua_State *L, std::string globalName, std::string fieldName, lua_CFunction function);
+
     template <typename T>
     static typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type
     getNumber(int32_t arg);
@@ -71,8 +75,6 @@ class LuaState
     template <class T>
     static void pushUserData(lua_State *L, T *value);
 
-    void testMetaTables();
-
     template <class T>
     static T *getUserdata(lua_State *L, int32_t arg);
 
@@ -80,10 +82,9 @@ class LuaState
     static T *checkUserData(lua_State *L, int32_t arg, const char *typeName);
 
     static void setMetaTable(lua_State *L, int32_t stackOffset, const std::string &name);
-    /* End static */
 
     static LuaType getField(lua_State *L, int stackOffset, const char *name);
-    static int indexTest(lua_State *L);
+    /* End static */
 
     LuaState(lua_State *L);
 
@@ -93,15 +94,13 @@ class LuaState
 
     bool registerTable(const std::string &tableName);
 
-    void registerClass(const std::string &className, const std::string &baseClass, lua_CFunction constructor = nullptr);
-    void registerMethod(const std::string &globalName, const std::string &methodName, lua_CFunction function);
-
-    void registerClass2(const std::string &className, lua_CFunction constructor);
+    // void registerClass(const std::string &className, const std::string &baseClass, lua_CFunction constructor = nullptr);
+    // void registerMethod(const std::string &globalName, const std::string &methodName, lua_CFunction function);
 
     void setMetaTable(int stackOffset);
 
     std::string toString(int stackOffset);
-    static std::string toString(lua_State *L, int stackOffset);
+    static std::string toString(lua_State *L, int stackOffset = -1);
     lua_Number toNumber(int stackOffset);
     static lua_Number toNumber(lua_State *L, int stackOffset);
     bool toBool(int stackOffset);
@@ -132,6 +131,8 @@ class LuaState
     bool isNumber(int stackOffset) const;
     bool isString(int stackOffset) const;
 
+    static int checkIntField(lua_State *L, const char *fieldName, int stackOffset = -1);
+
     void pushNil();
     void pushNumber(lua_Number number);
     void pushCopy(int stackOffset);
@@ -154,6 +155,8 @@ class LuaState
   private:
     friend class LuaScriptInterface;
     LuaState();
+
+    static int metaIndex(lua_State *L, std::string userDataId);
 };
 
 template <class T>

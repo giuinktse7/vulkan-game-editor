@@ -9,6 +9,128 @@ LuaState::LuaState() {}
 LuaState::LuaState(lua_State *L)
     : L(L) {}
 
+void LuaState::registerClass(lua_State *L, std::string className, lua_CFunction constructor)
+{
+    auto cName = className.c_str();
+
+    // Create the global table
+    {
+        lua_newtable(L);
+        int globalObject = lua_gettop(L);
+
+        auto globalMetaTableName = (className + "__Type");
+
+        luaL_newmetatable(L, globalMetaTableName.c_str());
+
+        luaL_Reg methods[] = {
+            {"__call", constructor},
+            {nullptr, nullptr}};
+
+        luaL_setfuncs(L, methods, 0);
+        lua_setmetatable(L, globalObject);
+
+        lua_setglobal(L, cName);
+    }
+
+    // Source: https://stackoverflow.com/questions/26970316/lua-userdata-array-access-and-methods
+    // Indexing and member functions
+    {
+        luaL_newmetatable(L, cName);
+        int metaTable = lua_gettop(L);
+
+        auto indexFn = [](lua_State *L) {
+            auto name = luaL_checkstring(L, lua_upvalueindex(1));
+            return metaIndex(L, name);
+        };
+
+        luaL_Reg methods[] = {
+            {"__index", indexFn},
+            {nullptr, nullptr}};
+
+        // Upvalue for indexFn
+        lua_pushstring(L, cName);
+
+        // Uses the UserData name as upvalue for __index function, hence '1' as last argument.
+        luaL_setfuncs(L, methods, 1);
+
+        lua_newtable(L);
+        lua_setmetatable(L, metaTable);
+
+        lua_pop(L, 1);
+
+        // luaL_newlib(L, functions);
+    }
+}
+
+void LuaState::registerFunction(lua_State *L, std::string typeName, std::string functionName, lua_CFunction function)
+{
+    // Meta table
+    luaL_getmetatable(L, typeName.c_str());
+
+    if (lua_isnil(L, -1))
+    {
+        std::string error = "There is no metatable for type '" + typeName + "'.";
+        luaL_error(L, error.c_str());
+    }
+
+    luaL_Reg functions[] = {
+        {functionName.c_str(), function},
+        {nullptr, nullptr}};
+
+    luaL_setfuncs(L, functions, 0);
+
+    lua_pop(L, 1);
+}
+
+void LuaState::registerField(lua_State *L, std::string globalName, std::string fieldName, lua_CFunction function)
+{
+    // Meta table
+    luaL_getmetatable(L, globalName.c_str());
+
+    // Field table
+    lua_getmetatable(L, -1);
+
+    luaL_Reg functions[] = {
+        {fieldName.c_str(), function},
+        {nullptr, nullptr}};
+
+    luaL_setfuncs(L, functions, 0);
+
+    lua_pop(L, 2);
+}
+
+int LuaState::metaIndex(lua_State *L, std::string userDataId)
+{
+    auto id = userDataId.c_str();
+    luaL_checkudata(L, 1, id);
+
+    luaL_getmetatable(L, id);
+    int metaOffset = lua_gettop(L);
+
+    // Key to top of stack
+    lua_pushvalue(L, 2);
+
+    // Use key to index metatable
+    lua_rawget(L, -2);
+
+    if (lua_isnil(L, -1))
+    {
+        /* found no method, so get value from userdata. */
+        auto index = luaL_checkstring(L, 2);
+
+        lua_getmetatable(L, metaOffset);
+        lua_getfield(L, -1, index);
+
+        lua_replace(L, -2);
+
+        lua_pushvalue(L, 1);
+
+        lua_pcall(L, 1, 1, 0);
+    };
+
+    return 1;
+}
+
 bool LuaState::registerTable(const std::string &tableName)
 {
     if (getGlobal(tableName) != LuaType::Nil)
@@ -84,16 +206,6 @@ LuaType LuaState::type(int stackOffset) const
 LuaType LuaState::type(lua_State *L, int stackOffset)
 {
     return static_cast<LuaType>(lua_type(L, stackOffset));
-}
-
-std::string LuaState::toString(int stackOffset)
-{
-    return lua_tostring(L, stackOffset);
-}
-
-std::string LuaState::toString(lua_State *L, int stackOffset)
-{
-    return lua_tostring(L, stackOffset);
 }
 
 bool LuaState::toBool(int stackOffset)
@@ -235,128 +347,64 @@ void LuaState::setFieldUnsafe(int stackOffset, const char *name)
     lua_setfield(L, stackOffset, name);
 }
 
-int setIndexTest(lua_State *L)
-{
-    LuaGroundBrush *brush = *static_cast<LuaGroundBrush **>(luaL_checkudata(L, 1, LuaGroundBrush::LuaId));
+// void LuaState::registerClass(const std::string &className, const std::string &baseClass, lua_CFunction constructor)
+// {
+//     lua_newtable(L);
+//     int methodsOffset = topIndex();
 
-    luaL_argcheck(L, brush != nullptr, 1, "invalid pointer");
-    std::string index = luaL_checkstring(L, 2);
-    luaL_argcheck(L, index == "x", 2, "Invalid index.");
-    luaL_argcheck(L, lua_isnumber(L, 3), 3, "Not a number.");
-    float x = lua_tonumber(L, 3);
+//     pushCopy(-1);
+//     lua_setglobal(L, className.c_str());
 
-    brush->x = x;
+//     lua_newtable(L);
+//     int methodsMetaTableOffset = topIndex();
 
-    return 0;
-}
+//     if (constructor)
+//     {
+//         lua_pushcfunction(L, constructor);
+//         lua_setfield(L, methodsMetaTableOffset, "__call");
+//     }
 
-int LuaState::indexTest(lua_State *L)
-{
-    // TODO Continue here: https://stackoverflow.com/questions/26970316/lua-userdata-array-access-and-methods
-    LuaGroundBrush *brush = *static_cast<LuaGroundBrush **>(luaL_checkudata(L, 1, LuaGroundBrush::LuaId));
+//     uint32_t parents = 0;
+//     if (!baseClass.empty())
+//     {
+//         getGlobal(baseClass.c_str());
+//         lua_rawgeti(L, -1, to_underlying(ClassMetaTableIndex::Parent));
+//         parents = popIntUnsafe() + 1;
+//         setFieldUnsafe(methodsMetaTableOffset, LuaMetaTable::Index);
+//     }
 
-    luaL_argcheck(L, brush != nullptr, 1, "invalid pointer");
+//     setMetaTable(methodsOffset);
 
-    std::string index = luaL_checkstring(L, 2);
-    if (index == "x")
-    {
-        lua_pushnumber(L, brush->x);
+//     luaL_newmetatable(L, className.c_str());
+//     int metaTableOffset = topIndex();
 
-        VME_LOG_D("indexTest: " << brush->x);
+//     pushCopy(methodsOffset);
+//     setFieldUnsafe(metaTableOffset, LuaMetaTable::MetaTable);
 
-        return 1;
-    }
-    else
-    {
-        stackDump(L);
+//     pushCopy(methodsOffset);
+//     setFieldUnsafe(metaTableOffset, LuaMetaTable::Index);
 
-        lua_getglobal(L, LuaGroundBrush::LuaId);
-        auto k = getField(L, -1, index.c_str());
+//     size_t hash = std::hash<std::string>()(className);
+//     pushNumber(hash);
+//     lua_rawseti(L, metaTableOffset, to_underlying(ClassMetaTableIndex::Hash));
 
-        // lua_replace(L, -2);
-        // lua_replace(L, -2);
+//     pushNumber(parents);
+//     lua_rawseti(L, metaTableOffset, to_underlying(ClassMetaTableIndex::Parent));
 
-        lua_remove(L, -2);
-        lua_remove(L, -2);
-        stackDump(L);
-    }
-}
+//     pushNumber(to_underlying(LuaDataType::GroundBrush));
+//     lua_rawseti(L, metaTableOffset, to_underlying(ClassMetaTableIndex::Type));
 
-void LuaState::testMetaTables()
-{
-    luaL_getmetatable(L, LuaGroundBrush::LuaId);
+//     pop(2);
+// }
 
-    luaL_Reg meta[] = {
-        {LuaMetaTable::NewIndex, setIndexTest},
-        {LuaMetaTable::Index, indexTest},
-        {nullptr, nullptr}};
+// void LuaState::registerMethod(const std::string &globalName, const std::string &methodName, lua_CFunction function)
+// {
+//     getGlobal(globalName);
+//     lua_pushcfunction(L, function);
+//     setFieldUnsafe(-2, methodName.c_str());
 
-    luaL_setfuncs(L, meta, 0);
-    lua_pop(L, 1);
-}
-
-void LuaState::registerClass2(const std::string &className, lua_CFunction constructor)
-{
-}
-
-void LuaState::registerClass(const std::string &className, const std::string &baseClass, lua_CFunction constructor)
-{
-    lua_newtable(L);
-    int methodsOffset = topIndex();
-
-    pushCopy(-1);
-    lua_setglobal(L, className.c_str());
-
-    lua_newtable(L);
-    int methodsMetaTableOffset = topIndex();
-
-    if (constructor)
-    {
-        lua_pushcfunction(L, constructor);
-        lua_setfield(L, methodsMetaTableOffset, "__call");
-    }
-
-    uint32_t parents = 0;
-    if (!baseClass.empty())
-    {
-        getGlobal(baseClass.c_str());
-        lua_rawgeti(L, -1, to_underlying(ClassMetaTableIndex::Parent));
-        parents = popIntUnsafe() + 1;
-        setFieldUnsafe(methodsMetaTableOffset, LuaMetaTable::Index);
-    }
-
-    setMetaTable(methodsOffset);
-
-    luaL_newmetatable(L, className.c_str());
-    int metaTableOffset = topIndex();
-
-    pushCopy(methodsOffset);
-    setFieldUnsafe(metaTableOffset, LuaMetaTable::MetaTable);
-
-    pushCopy(methodsOffset);
-    setFieldUnsafe(metaTableOffset, LuaMetaTable::Index);
-
-    size_t hash = std::hash<std::string>()(className);
-    pushNumber(hash);
-    lua_rawseti(L, metaTableOffset, to_underlying(ClassMetaTableIndex::Hash));
-
-    pushNumber(parents);
-    lua_rawseti(L, metaTableOffset, to_underlying(ClassMetaTableIndex::Parent));
-
-    pushNumber(to_underlying(LuaDataType::GroundBrush));
-    lua_rawseti(L, metaTableOffset, to_underlying(ClassMetaTableIndex::Type));
-
-    pop(2);
-}
-
-void LuaState::registerMethod(const std::string &globalName, const std::string &methodName, lua_CFunction function)
-{
-    getGlobal(globalName);
-    lua_pushcfunction(L, function);
-    setFieldUnsafe(-2, methodName.c_str());
-
-    pop();
-}
+//     pop();
+// }
 
 void LuaState::pushCopy(int stackOffset)
 {
@@ -385,6 +433,52 @@ void LuaState::setMetaTable(lua_State *L, int32_t stackOffset, const std::string
     }
 }
 
+int LuaState::checkIntField(lua_State *L, const char *fieldName, int stackOffset)
+{
+    lua_getfield(L, stackOffset, fieldName);
+    if (!lua_isinteger(L, stackOffset))
+    {
+        luaL_error(L, "Expected integer, but received %s.", toString(L, stackOffset).c_str());
+    }
+
+    int result = lua_tointeger(L, stackOffset);
+    lua_pop(L, 1);
+
+    return result;
+}
+
+std::string LuaState::toString(int stackOffset)
+{
+    return lua_tostring(L, stackOffset);
+}
+
+std::string LuaState::toString(lua_State *L, int stackOffset)
+{
+    LuaType luaType = type(L, stackOffset);
+    switch (luaType)
+    {
+        case LuaType::String: /* strings */
+            return lua_tostring(L, stackOffset);
+            break;
+
+        case LuaType::Bool: /* booleans */
+            return toBool(L, stackOffset) ? "true" : "false";
+            break;
+
+        case LuaType::Number: /* numbers */
+            return std::to_string(toNumber(L, stackOffset));
+            break;
+
+        case LuaType::Table:
+            return "Table";
+            break;
+
+        default: /* other values */
+            return typeName(L, luaType);
+            break;
+    }
+}
+
 void LuaState::stackDump()
 {
     stackDump(L);
@@ -395,30 +489,8 @@ void LuaState::stackDump(lua_State *L)
     int i;
     int top = topIndex(L);
     for (i = top; i >= 1; i--)
-    { /* repeat for each level */
-        LuaType luaType = type(L, i);
-        switch (luaType)
-        {
-            case LuaType::String: /* strings */
-                VME_LOG(toString(L, i));
-                break;
-
-            case LuaType::Bool: /* booleans */
-                VME_LOG((toBool(L, i) ? "true" : "false"));
-                break;
-
-            case LuaType::Number: /* numbers */
-                VME_LOG(toNumber(L, i));
-                break;
-
-            case LuaType::Table:
-                VME_LOG("Table");
-                break;
-
-            default: /* other values */
-                VME_LOG(typeName(L, luaType));
-                break;
-        }
+    {
+        VME_LOG(toString(L, i));
     }
 
     VME_LOG("");

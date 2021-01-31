@@ -15,22 +15,18 @@ class LuaGroundBrush
 {
   public:
     static constexpr auto LuaName = "GroundBrush";
-    static constexpr auto LuaId = "GroundBrushMeta";
-    static constexpr auto LuaConstructorId = "GroundBrushConstructor";
     LuaGroundBrush() {}
     ~LuaGroundBrush()
     {
         VME_LOG("~LuaGroundBrush");
     }
 
-    static int luaRegister(lua_State *L);
+    static void luaRegister(lua_State *L);
 
     static int luaCreate(lua_State *L);
-
-    static int luaTest(lua_State *L);
     static int luaSetName(lua_State *L);
-
-    static int metaIndex(lua_State *L);
+    static int luaGetName(lua_State *L);
+    static int luaSetItemWeights(lua_State *L);
 
     void setName(const char *name);
 
@@ -40,6 +36,8 @@ class LuaGroundBrush
 
   private:
     std::string _name;
+
+    std::vector<WeightedItemId> weightedIds;
 };
 
 class LuaBrush
@@ -54,6 +52,7 @@ class LuaBrush
      * Parses format { id=<uint>, weight=<uint> }
      */
     static std::optional<WeightedItemId> parseItemWeight(LuaState &L);
+    static WeightedItemId parseItemWeight(lua_State *L);
 
     static int luaCreateGroundBrush(lua_State *L);
 
