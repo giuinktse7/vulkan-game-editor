@@ -21,8 +21,8 @@ namespace OTBM
         return !(lhs == to_underlying(rhs));
     }
 
-// Pragma pack is VERY important since otherwise it won't be able to load the structs correctly (Comment from Remere's Map Editor)
-#pragma pack(1)
+    // Pragma pack is VERY important since otherwise it won't be able to load the structs correctly (Comment from Remere's Map Editor)
+    // #pragma pack(1)
 
     enum class NodeAttribute
     {
@@ -116,7 +116,7 @@ namespace OTBM
         uint32_t houseid;
     };
 
-#pragma pack()
+    // #pragma pack(pop)
 
     bool isNodeType(uint8_t value);
 
