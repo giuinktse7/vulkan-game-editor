@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "frame_group.h"
 #include "graphics/texture_atlas.h"
 #include "util.h"
 
@@ -10,8 +11,30 @@ namespace tibia::protobuf::appearances
     class Appearance;
 }
 
-struct FrameGroup;
-class CreatureType;
+class CreatureType
+{
+  public:
+    CreatureType(uint32_t id, std::vector<FrameGroup> &&frameGroups);
+
+    void cacheTextureAtlases();
+
+    inline uint32_t id() const noexcept;
+
+    const FrameGroup &frameGroup(size_t index) const;
+    const std::vector<FrameGroup> &frameGroups() const noexcept;
+    TextureAtlas *getTextureAtlas(uint32_t spriteId) const;
+
+  private:
+    void cacheTextureAtlas(uint32_t spriteId);
+
+    static constexpr size_t CachedTextureAtlasAmount = 5;
+
+    std::array<TextureAtlas *, CachedTextureAtlasAmount> _atlases = {};
+    std::vector<FrameGroup> _frameGroups;
+    uint32_t _id;
+
+    // bool _npc;
+};
 
 class Creatures
 {
@@ -27,31 +50,6 @@ class Creatures
     }
 
     static vme_unordered_map<uint32_t, CreatureType> _creatureTypes;
-};
-
-class CreatureType
-{
-  public:
-    CreatureType(uint32_t id, std::vector<FrameGroup> &&frameGroups);
-
-    void cacheTextureAtlases();
-
-    inline uint32_t id() const noexcept;
-
-    const FrameGroup &frameGroup(size_t index) const;
-    inline const std::vector<FrameGroup> &frameGroups() const noexcept;
-    TextureAtlas *getTextureAtlas(uint32_t spriteId) const;
-
-  private:
-    void cacheTextureAtlas(uint32_t spriteId);
-
-    static constexpr size_t CachedTextureAtlasAmount = 5;
-
-    std::array<TextureAtlas *, CachedTextureAtlasAmount> _atlases = {};
-    std::vector<FrameGroup> _frameGroups;
-    uint32_t _id;
-
-    // bool _npc;
 };
 
 class Creature
@@ -86,11 +84,6 @@ class Creature
   private:
     Direction _direction = Direction::North;
 };
-
-inline const std::vector<FrameGroup> &CreatureType::frameGroups() const noexcept
-{
-    return _frameGroups;
-}
 
 inline uint32_t CreatureType::id() const noexcept
 {

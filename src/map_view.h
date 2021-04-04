@@ -34,7 +34,7 @@ class MapView : public Nano::Observer<>
 {
 
   public:
-    enum ViewOption
+    enum ViewOption : int
     {
         None = 0,
         ShadeLowerFloors = 1 << 0

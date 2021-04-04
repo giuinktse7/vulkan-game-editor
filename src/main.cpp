@@ -36,21 +36,21 @@
 #include <nlohmann/json.hpp>
 #include <numeric>
 
-#include "lua_test.h"
+#include "lua/luascript_interface.h"
 
 int main(int argc, char *argv[])
 {
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
 
-    // if (!LuaScriptInterface::initialize())
-    // {
-    //     return EXIT_FAILURE;
-    // }
+    if (!LuaScriptInterface::initialize())
+    {
+        return EXIT_FAILURE;
+    }
 
-    // LuaScriptInterface::get()->test();
+    LuaScriptInterface::get()->test();
 
-    // return 0;
+    /* return 0; */
 
     // QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
     MainApplication app(argc, argv);
@@ -292,7 +292,7 @@ void TemporaryTest::addChunk(Position from, vme::octree::Tree &tree)
 void TemporaryTest::testOctree()
 {
     VME_LOG_D("octree:");
-    constexpr vme::MapSize mapSize = {2048, 2048, 16};
+    vme::MapSize mapSize = {2048, 2048, 16};
     // constexpr vme::MapSize mapSize = {4096, 4096, 16};
 
     vme::octree::Tree tree = vme::octree::Tree::create(mapSize);

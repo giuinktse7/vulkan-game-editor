@@ -14,6 +14,9 @@
 class Tile;
 struct Container;
 
+template <typename T>
+concept ItemWrapperType = std::is_base_of<ItemWrapper, T>::value;
+
 class Item
 {
     using ItemTypeId = uint32_t;
@@ -85,7 +88,7 @@ class Item
     uint32_t guid() const noexcept;
 
     // Wrapper converters for convenient _itemData access
-    template <typename T, typename std::enable_if<std::is_base_of<ItemWrapper, T>::value>::type * = nullptr>
+    template <ItemWrapperType T>
     T as();
 
     ItemType *itemType;
@@ -201,7 +204,7 @@ inline T *Item::getDataAs() const
     return static_cast<T *>(_itemData.get());
 }
 
-template <typename T, typename std::enable_if<std::is_base_of<ItemWrapper, T>::value>::type *>
+template <ItemWrapperType T>
 T Item::as()
 {
     return T(*this);

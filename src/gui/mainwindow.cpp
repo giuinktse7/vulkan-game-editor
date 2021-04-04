@@ -450,7 +450,7 @@ void MainWindow::initializePaletteWindow()
 
         Tileset *groundTileset = terrainPalette.createTileset("Grounds");
 
-        std::vector<GroundBrush::WeightedItemId> weightedIds{
+        std::vector<WeightedItemId> weightedIds{
             {4526, 300},
             {4527, 10},
             {4528, 25},

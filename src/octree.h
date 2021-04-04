@@ -31,7 +31,7 @@
         uint16_t getIndex(const Position &pos) const override;                        \
     }
 
-enum SplitDimension
+enum SplitDimension : int
 {
     X = 1 << 2,
     Y = 1 << 1,
@@ -124,7 +124,7 @@ namespace vme
         static constexpr Cube ChunkSize = {64, 64, 8};
         constexpr uint32_t DefaultMaxCacheSplitCount = 4;
 
-        constexpr CacheInitInfo computeCacheStuff(const vme::MapSize mapSize, const uint32_t maxCacheSplitCount = DefaultMaxCacheSplitCount)
+        inline CacheInitInfo computeCacheStuff(const vme::MapSize mapSize, const uint32_t maxCacheSplitCount = DefaultMaxCacheSplitCount)
         {
             SplitSize splitCounts;
             splitCounts.x = std::min(mapSize.width() / ChunkSize.width - 1, maxCacheSplitCount);

@@ -8,6 +8,8 @@
 #include <variant>
 #include <vector>
 
+#include "concepts.h"
+
 #include "../vendor/tsl/robin_map.h"
 #include "../vendor/tsl/robin_set.h"
 
@@ -96,10 +98,7 @@ namespace util
 
     using PointerAddress = decltype(pointerAddress((void *)nullptr));
 
-    template <
-        typename T,
-        typename std::enable_if<std::is_arithmetic<T>::value>::type * = nullptr>
-    bool powerOf2(T value)
+    bool powerOf2(Arithmetic auto value)
     {
         return (value & (value - 1)) == 0 && value != 0;
     }
@@ -108,7 +107,7 @@ namespace util
     class Volume
     {
       public:
-        constexpr Volume(T1 width, T2 height, T3 depth);
+        Volume(T1 width, T2 height, T3 depth);
 
         inline constexpr T1 width() const noexcept;
         inline constexpr T2 height() const noexcept;
@@ -198,14 +197,12 @@ namespace util
     {
         using Ts::operator()...;
     };
-    // explicit deduction guide (not needed as of C++20)
     template <class... Ts>
     overloaded(Ts...) -> overloaded<Ts...>;
 
-    template <typename T>
+    template <Arithmetic T>
     struct Point
     {
-        static_assert(std::is_arithmetic<T>::value, "T must be numeric.");
         Point()
             : _x(0), _y(0) {}
 
@@ -219,10 +216,9 @@ namespace util
         T _x, _y;
     };
 
-    template <typename T>
+    template <Arithmetic T>
     struct Rectangle
     {
-        static_assert(std::is_arithmetic<T>::value, "T must be numeric.");
         T x1, y1, x2, y2;
 
         inline Rectangle translate(T dx, T dy) const
@@ -323,7 +319,7 @@ namespace vme
 //>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>
 template <typename T1, typename T2, typename T3>
-inline constexpr util::Volume<T1, T2, T3>::Volume(T1 width, T2 height, T3 depth)
+inline util::Volume<T1, T2, T3>::Volume(T1 width, T2 height, T3 depth)
     : _width(width), _height(height), _depth(depth)
 {
 }
@@ -374,13 +370,13 @@ inline constexpr int util::Size::height() const noexcept
     return h;
 }
 
-template <typename T>
+template <Arithmetic T>
 inline constexpr T util::Point<T>::x() const noexcept
 {
     return _x;
 }
 
-template <typename T>
+template <Arithmetic T>
 inline constexpr T util::Point<T>::y() const noexcept
 {
     return _y;

@@ -34,7 +34,7 @@ Result<Config, Config::Error> Config::create(const std::string version)
     {
         std::stringstream s;
         s << "Could not locate config file for client version '" << version << "'." << std::endl;
-        s << "You need to add a '" << ConfigFile << "' file at: '" + std::filesystem::absolute(config._configFile).u8string() << "'.";
+        s << "You need to add a '" << ConfigFile << "' file at: '" << std::filesystem::absolute(config._configFile).string() << "'.";
         return Err(Error(Error::Kind::NoConfigFile, s.str()));
     }
 
@@ -72,7 +72,7 @@ std::optional<Config::Error> Config::load()
     if (!std::filesystem::exists(_assetFolder) || !std::filesystem::is_directory(_assetFolder))
     {
         std::stringstream s;
-        s << "Could not locate config file for client version " << _version << ". You need to add a config.json file at: " + std::filesystem::absolute(_configFile).u8string() << std::endl;
+        s << "Could not locate config file for client version " << _version << ". You need to add a config.json file at: " + std::filesystem::absolute(_configFile).string() << std::endl;
         result.emplace(Error::Kind::NoConfigFile, s.str());
         return result;
     }

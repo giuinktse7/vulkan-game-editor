@@ -129,3 +129,8 @@ void CreatureType::cacheTextureAtlas(uint32_t spriteId)
         }
     }
 }
+
+const std::vector<FrameGroup> &CreatureType::frameGroups() const noexcept
+{
+    return _frameGroups;
+}

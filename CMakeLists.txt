@@ -18,11 +18,11 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
       CACHE STRING "")
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_PREFIX_PATH
     "D:/Programs/cpp/libraries/Qt6/6.0.0/msvc2019_64/lib/cmake")
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-format-style='file';-std=c++17")
+set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-format-style='file';-std=c++20")
 
 # set(ARCH "-target x86_64-w64-mingw32") set(CMAKE_ASM_FLAGS "${ARCH}")
 # set(CMAKE_C_FLAGS "${ARCH}") set(CMAKE_CXX_FLAGS "${ARCH}")
@@ -81,6 +81,7 @@ set(CommonSources
     src/ecs/item_animation_component.h
     src/item_animation.h
     src/file.h
+    src/frame_group.h
     src/editor_action.h
     src/graphics/appearances.h
     src/graphics/appearance_types.h
@@ -155,6 +156,7 @@ set(CommonSources
     src/lua/lua_state.h
     src/lua/luascript_interface.h
     src/lua/lua_brush.h
+    src/concepts.h
     ../vendor/lzma/Alloc.c
     ../vendor/lzma/LzFind.c
     ../vendor/lzma/LzFindMt.c
@@ -227,8 +229,8 @@ add_library(common STATIC ${CommonSources})
 
 # target_include_directories(common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_compile_features(common PUBLIC cxx_std_17)
-target_compile_features(common PRIVATE cxx_std_17)
+target_compile_features(common PUBLIC cxx_std_20)
+target_compile_features(common PRIVATE cxx_std_20)
 
 target_link_libraries(common PUBLIC Vulkan::Vulkan)
 target_include_directories(common PUBLIC ${Vulkan_INCLUDE_DIRS})
@@ -304,8 +306,8 @@ add_library(gui STATIC ${GuiSources})
 target_link_libraries(gui PRIVATE common)
 target_link_libraries(gui PRIVATE glm)
 
-target_compile_features(gui PUBLIC cxx_std_17)
-target_compile_features(gui PRIVATE cxx_std_17)
+target_compile_features(gui PUBLIC cxx_std_20)
+target_compile_features(gui PRIVATE cxx_std_20)
 
 # QT
 target_link_libraries(gui PUBLIC Qt6::Core Qt6::Widgets Qt6::Qml Qt6::Quick
@@ -323,8 +325,8 @@ add_executable(main ${QT_RESOURCES})
 target_link_libraries(main PRIVATE common)
 target_link_libraries(main PRIVATE gui)
 
-target_compile_features(main PUBLIC cxx_std_17)
-target_compile_features(main PRIVATE cxx_std_17)
+target_compile_features(main PUBLIC cxx_std_20)
+target_compile_features(main PRIVATE cxx_std_20)
 
 # Move required files post-build add_custom_command( TARGET main POST_BUILD
 # COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/

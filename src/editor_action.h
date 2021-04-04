@@ -15,7 +15,7 @@ class Brush;
 namespace VME
 {
 
-    enum MouseButtons
+    enum MouseButtons : int
     {
         NoButton = 0,
         LeftButton = 1 << 0,
@@ -30,7 +30,7 @@ namespace VME
     using MouseButton = MouseButtons;
     VME_ENUM_OPERATORS(MouseButtons)
 
-    enum ModifierKeys
+    enum ModifierKeys : int
     {
         None = 0,
         Shift = 1 << 0,

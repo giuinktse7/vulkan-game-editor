@@ -160,7 +160,8 @@
     "qvboxlayout": "cpp",
     "qpalette": "cpp",
     "qtwidgets": "cpp",
-    "qvariant": "cpp"
+    "qvariant": "cpp",
+    "stop_token": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

@@ -71,7 +71,7 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
     if (!std::filesystem::exists(catalogContentsPath))
     {
         std::stringstream s;
-        s << "Could not locate the catalog JSON file. Failed to find file at path: " + std::filesystem::absolute(catalogContentsPath).u8string() << std::endl;
+        s << "Could not locate the catalog JSON file. Failed to find file at path: " + std::filesystem::absolute(catalogContentsPath).string() << std::endl;
         ABORT_PROGRAM(s.str());
     }
 
