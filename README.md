@@ -1,14 +1,8 @@
-# Vulkan Game Editor - A game editor written in C++17 using Vulkan and the QT framework
+# Vulkan Game Editor - A game editor written in C++20 using Vulkan and the QT framework
 
 ## Features
 
 TODO
-
-## Terminology
-
-### Action
-
-An action is an event that can occur and can be undone/redone.
 
 ## Dependencies
 
@@ -105,6 +99,12 @@ There are four targets:
 - **vme_tests** (Executable): Contains tests for the `common` and `gui` libraries (See [Run tests using CMake](#run-tests-using-cmake)).
 
 The main purpose of having the `common` and `gui` library separate from the `main` target was to enable running unit tests against the code. It also ensures that there is no coupling introduced between core editor functionality and Qt6 (`common` does not have Qt6 as a dependency).
+
+## Terminology
+
+### Action
+
+An action is an event that can occur and can be undone/redone.
 
 ## Investigate build performance
 
