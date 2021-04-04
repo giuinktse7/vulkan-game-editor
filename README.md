@@ -1,4 +1,8 @@
-# Vulkan Game Editor - A game editor written in C++20 using Vulkan and the QT framework
+# Vulkan Game Editor
+
+A game editor written in C++20 using Vulkan and the QT framework
+
+---
 
 ## Features
 
