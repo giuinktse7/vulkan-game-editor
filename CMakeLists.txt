@@ -21,7 +21,7 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_PREFIX_PATH
-    "D:/Programs/cpp/libraries/Qt6/6.0.0/msvc2019_64/lib/cmake")
+    "D:/Programs/cpp/libraries/Qt6.1/6.1.0/msvc2019_64/lib/cmake")
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-format-style='file';-std=c++20")
 
 # set(ARCH "-target x86_64-w64-mingw32") set(CMAKE_ASM_FLAGS "${ARCH}")
