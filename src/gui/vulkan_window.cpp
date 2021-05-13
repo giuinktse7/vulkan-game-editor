@@ -208,6 +208,7 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 
 void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
 {
+    // VME_LOG_D("VulkanWindow::mouseReleaseEvent");
     // Propagate drag operation
     if (dragOperation)
     {
@@ -390,7 +391,7 @@ bool VulkanWindow::event(QEvent *event)
 {
     // if (!(event->type() == QEvent::UpdateRequest) && !(event->type() == QEvent::MouseMove))
     // {
-    //   qDebug() << "[" << QString(debugName.c_str()) << "] " << event->type() << " { " << mapToGlobal(position()) << " }";
+    //     qDebug() << "[" << QString(debugName.c_str()) << "] " << event->type() << " { " << mapToGlobal(position()) << " }";
     // }
 
     switch (event->type())

@@ -320,7 +320,19 @@ void ContainerNode::open()
 
 void ContainerNode::close()
 {
-    qDebug() << "Close: " << _model->containerName();
+    // Get the indices of opened items
+    std::vector<int> indices;
+    for (const auto &[index, _] : openedChildrenNodes)
+    {
+        indices.emplace_back(index);
+    }
+
+    for (const int index : indices)
+    {
+        closeChild(index);
+    }
+
+    qDebug() << "Close ContainerNode for: " << _model->containerName();
     _signals->preClosed.fire(&_model.value());
     _model.reset();
     opened = false;
@@ -336,6 +348,15 @@ void ContainerNode::toggle()
     {
         open();
     }
+}
+
+void ContainerNode::closeChild(int index)
+{
+    auto child = openedChildrenNodes.find(index);
+    DEBUG_ASSERT(child != openedChildrenNodes.end(), "The child is not opened.");
+
+    child->second->close();
+    openedChildrenNodes.erase(index);
 }
 
 void ContainerNode::openChild(int index)

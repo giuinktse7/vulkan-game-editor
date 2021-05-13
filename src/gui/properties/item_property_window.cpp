@@ -20,8 +20,8 @@ namespace ObjectName
     constexpr auto ItemContainerArea = "item_container_area";
 } // namespace ObjectName
 
-ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
-    : _url(url), mainWindow(mainWindow), _wrapperWidget(nullptr)
+ItemPropertyWindow::ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow)
+    : _filepath(filepath), mainWindow(mainWindow), _wrapperWidget(nullptr)
 {
     VME_LOG_D("ItemPropertyWindow address: " << this);
     installEventFilter(new PropertyWindowEventFilter(this));
@@ -38,7 +38,7 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl url, MainWindow *mainWindow)
 
     engine()->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
 
-    setSource(_url);
+    setSource(filepath);
     VME_LOG_D("After ItemPropertyWindow::setSource");
 
     QmlApplicationContext *applicationContext = new QmlApplicationContext();
@@ -60,11 +60,17 @@ void ItemPropertyWindow::initializeProperties()
     show();
     std::visit(
         util::overloaded{
+            [this](const FocusedContainer &focusedContainer) {
+                setContainerVisible(true);
+
+                auto countSpinBox = child(ObjectName::CountSpinBox);
+                setQmlObjectActive(countSpinBox->parent(), false);
+            },
             [this](const FocusedItem &focusedItem) {
                 auto item = focusedItem.item();
                 auto itemtype = item->itemType;
 
-                setContainerVisible(item->isContainer());
+                setContainerVisible(false);
 
                 auto countSpinBox = child(ObjectName::CountSpinBox);
                 setQmlObjectActive(countSpinBox->parent(), itemtype->stackable);
@@ -218,6 +224,21 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
             return;
         }
     }
+    else if (state.holds<FocusedContainer>())
+    {
+        auto &focusedContainer = state.focusedAs<FocusedContainer>();
+        if (item == focusedContainer.containerItem())
+        {
+            setSelectedPosition(position);
+
+            auto maybeTileIndex = mapView.getTile(position)->indexOf(item);
+            DEBUG_ASSERT(maybeTileIndex.has_value(), "The tile did not have the item.");
+
+            focusedContainer.tileIndex = static_cast<uint16_t>(maybeTileIndex.value());
+
+            return;
+        }
+    }
 
     resetFocus();
 
@@ -232,12 +253,6 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
 
     if (isContainer)
     {
-        // if (containerTree.rootItem() == item)
-        // {
-        //     // This is already the focused item.
-        //     return;
-        // }
-
         Container *container = item->getOrCreateContainer();
         container->setParent(&mapView, position);
 
@@ -253,19 +268,15 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
             parcel.getOrCreateContainer()->addItem(std::move(bag));
         }
 
-        // if (container->empty())
-        // {
-        //     std::vector<uint32_t> serverIds{{1987, 2148, 5710, 2673, 2463, 2649}};
-
-        //     for (const auto id : serverIds)
-        //         container->addItem(Item(id));
-        // }
-
         containerTree.setRootContainer(&mapView, position, tileIndex, item);
+
+        state.focusedItem.emplace<FocusedContainer>(item, tileIndex);
+    }
+    else
+    {
+        state.focusedItem.emplace<FocusedItem>(item, tileIndex);
     }
 
-    state.focusedItem.emplace<FocusedItem>(item, tileIndex);
-    state.focusedAs<FocusedItem>().latestCommittedCount = item->count();
     initializeProperties();
 }
 
@@ -354,9 +365,12 @@ void ItemPropertyWindow::refresh()
 
 bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *targetContainerNode, int index, const ItemDrag::DraggableItem *droppedItem)
 {
+    if (!state.holds<FocusedContainer>())
+        return false;
+
     using DragSource = ItemDrag::DraggableItem::Type;
-    auto &focusedItem = state.focusedAs<FocusedItem>();
-    if (droppedItem->item() == focusedItem.item())
+    auto &focusedItem = state.focusedAs<FocusedContainer>();
+    if (droppedItem->item() == focusedItem.containerItem())
     {
         VME_LOG_D("Can not add item to itself.");
         return false;
@@ -434,7 +448,9 @@ void ItemPropertyWindow::startContainerItemDrag(PropertiesUI::ContainerNode *tre
 {
     VME_LOG_D("ItemPropertyWindow::startContainerItemDrag");
 
-    const auto &focusedItem = state.focusedAs<FocusedItem>();
+    DEBUG_ASSERT(state.holds<FocusedContainer>(), "A drag can only start if a container is focused. Otherwise there is nothing to drag; very likely a bug.");
+
+    const auto &focusedItem = state.focusedAs<FocusedContainer>();
 
     ItemDrag::ContainerItemDrag itemDrag;
     itemDrag.mapView = state.mapView;

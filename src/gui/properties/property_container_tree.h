@@ -50,6 +50,7 @@ namespace PropertiesUI
         void toggle();
 
         void openChild(int index);
+        void closeChild(int index);
         void toggleChild(int index);
 
         void itemDropEvent(int index, ItemDrag::DraggableItem *droppedItem);

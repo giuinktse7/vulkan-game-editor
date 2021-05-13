@@ -71,7 +71,7 @@ class ItemPropertyWindow : public QQuickView
     void countChanged(ItemLocation &itemLocation, int count, bool shouldCommit = false);
 
   public:
-    ItemPropertyWindow(QUrl url, MainWindow *mainWindow);
+    ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow);
 
     void startContainerItemDrag(PropertiesUI::ContainerNode *treeNode, int index);
     bool itemDropEvent(PropertiesUI::ContainerNode *treeNode, int index, const ItemDrag::DraggableItem *droppedItem);
@@ -118,7 +118,7 @@ class ItemPropertyWindow : public QQuickView
    */
     inline QObject *child(const char *name);
 
-    QUrl _url;
+    QUrl _filepath;
     MainWindow *mainWindow;
     QWidget *_wrapperWidget;
 
@@ -127,7 +127,10 @@ class ItemPropertyWindow : public QQuickView
     struct FocusedItem
     {
         FocusedItem(Item *item, size_t tileIndex)
-            : trackedItem(item), tileIndex(tileIndex), latestCommittedCount(item->count()) {}
+            : trackedItem(item), tileIndex(tileIndex), latestCommittedCount(item->count())
+        {
+            DEBUG_ASSERT(!item->isContainer(), "Item may not be a container. Use FocusedContainer instead.");
+        }
 
         FocusedItem(const FocusedItem &other) = default;
         FocusedItem &operator=(const FocusedItem &other) = default;
@@ -142,6 +145,33 @@ class ItemPropertyWindow : public QQuickView
         size_t tileIndex;
 
         uint8_t latestCommittedCount;
+    };
+
+    struct FocusedContainer
+    {
+        FocusedContainer(Item *item, size_t tileIndex)
+            : trackedContainer(item), tileIndex(tileIndex)
+        {
+            DEBUG_ASSERT(item->isContainer(), "Item must be a container.");
+        }
+
+        FocusedContainer(const FocusedContainer &other) = default;
+        FocusedContainer &operator=(const FocusedContainer &other) = default;
+        FocusedContainer(FocusedContainer &&other) = default;
+
+        Item *containerItem() const noexcept
+        {
+            return trackedContainer.item();
+        }
+
+        Item *trackedItem() const noexcept
+        {
+            return _trackedItem.has_value() ? _trackedItem->item() : trackedContainer.item();
+        }
+
+        size_t tileIndex;
+        TrackedContainer trackedContainer;
+        std::optional<TrackedItem> _trackedItem;
     };
 
     struct FocusedGround
@@ -164,7 +194,7 @@ class ItemPropertyWindow : public QQuickView
     struct State
     {
         MapView *mapView;
-        std::variant<std::monostate, FocusedItem, FocusedGround> focusedItem;
+        std::variant<std::monostate, FocusedItem, FocusedGround, FocusedContainer> focusedItem;
 
         Position selectedPosition;
 
@@ -198,7 +228,7 @@ class ItemTypeImageProvider : public QQuickImageProvider
 template <typename T>
 bool ItemPropertyWindow::State::holds()
 {
-    static_assert(util::is_one_of<T, FocusedItem, FocusedGround>::value, "T must be FocusedItem or FocusedGround");
+    static_assert(util::is_one_of<T, FocusedItem, FocusedGround, FocusedContainer>::value, "T must be FocusedItem or FocusedGround");
 
     return std::holds_alternative<T>(focusedItem);
 }
@@ -206,7 +236,7 @@ bool ItemPropertyWindow::State::holds()
 template <typename T>
 T &ItemPropertyWindow::State::focusedAs()
 {
-    static_assert(util::is_one_of<T, FocusedItem, FocusedGround>::value, "T must be FocusedItem or FocusedGround");
+    static_assert(util::is_one_of<T, FocusedItem, FocusedGround, FocusedContainer>::value, "T must be FocusedItem or FocusedGround");
 
     return std::get<T>(focusedItem);
 }
