@@ -76,7 +76,7 @@ ItemAnimation::ItemAnimation(SpriteAnimation *animationInfo)
             state.info = Direction::Forward;
             break;
         case AnimationLoopType::Counted:
-            state.info = 0;
+            state.info = static_cast<uint32_t>(0);
             break;
         default:
             VME_LOG_D("Unknown AnimationLoopType");
