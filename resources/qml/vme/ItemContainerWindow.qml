@@ -23,13 +23,11 @@ Item {
     return model ? model.capacity : 0;
   }
 
-  property double maxHeight: itemContainerView.cellHeight * Math.ceil(capacity / 4) + header.height;
-  property double visibleHeight: itemContainerView.cellHeight * Math.ceil(capacity / 4) + header.height;
+  property double maxHeight: itemContainerView.cellHeight * Math.ceil(capacity / 4) + headerHeight;
+  property double visibleHeight: itemContainerView.cellHeight * Math.ceil(capacity / 4) + headerHeight;
 
   property int currentHeight: {
-    const x = Math.round(gridWrapper.visible ? Math.min(visibleHeight, maxHeight) : header.height)
-    console.log(x)
-    return x;
+    return Math.round(!minimized ? Math.min(visibleHeight, maxHeight) : headerHeight)
   };
 
   property bool minimized: false;
