@@ -50,7 +50,7 @@ To build the project, first install the required [Dependencies](#dependencies).
    - Add the Qt6 bin folder to the `PATH` environment variable:
 
    ```sh
-     <your Qt6 install path>/6.0.0/msvc2019_64/bin
+     <your Qt6 install path>/6.1.0/msvc2019_64/bin
    ```
 
    - Set the environment variable `LIB` to the Windows libpath. Its default path is

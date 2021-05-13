@@ -1,5 +1,14 @@
 # Compilation issues
 
+## QT Issues
+
+### QT tries to use `experimental/source_location` in `qproperty.h`
+
+In qproperty.h:
+
+- Line 53, replace `#include <experimental/source_location>` with `#include <source_location>`
+- Line 100, replace `std::experimental::source_location` with `std::source_location`
+
 ## Lua-related issues
 
 ### unresolved external symbol in the Lua libraries
