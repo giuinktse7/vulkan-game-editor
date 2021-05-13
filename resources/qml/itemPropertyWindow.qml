@@ -1,7 +1,6 @@
-// import QtQuick.Controls 2.15
 import QtQuick.Controls 2.0
 import QtQuick 2.15
-import QtQuick.Layouts 1.15
+import QtQuick.Layouts 1.1
 import "./vme" as Vme
 import Vme.context 1.0 as Context
 
@@ -163,7 +162,7 @@ ScrollView {
       //   color : "#b7bcc1"
       // }
 
-      TableView {
+      ListView {
         id : containersView
         objectName : "item_container_area"
         model : propertyContainer.containers;
@@ -180,35 +179,25 @@ ScrollView {
         width : 100
         implicitHeight : contentItem.height;
 
-
-        // contentHeight : childrenRect.height
+        // reuseItems : true
 
         clip : true
-        // boundsBehavior : Flickable.OvershootBounds
-        // flow : GridView.LeftToRight
         focus : true
-
-
-        // Rectangle {
-        //   color : "transparent"
-        //   anchors.fill : parent
-        //   border.color : "red"
-        // }
 
         delegate : Component {
           Vme.ItemContainerWindow {
             id : itemContainerView
 
             required property var itemModel
+
             model : itemModel
             
-            onUpdateLayout : {
-              // containersView.forceLayout();
+            onClose: () => {
+              containersView.model.closeContainer(index);
             }
           }
         }
       }
-    // }
 
   }
 }

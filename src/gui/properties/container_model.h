@@ -48,6 +48,8 @@ namespace PropertiesUI
 
         QVariant data(const QModelIndex &modelIndex, int role = Qt::DisplayRole) const;
 
+        ContainerNode *node();
+
       signals:
         void capacityChanged(int capacity);
 

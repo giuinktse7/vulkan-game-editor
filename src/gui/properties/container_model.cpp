@@ -22,6 +22,11 @@ void ContainerModel::refresh()
     endResetModel();
 }
 
+ContainerNode *ContainerModel::node()
+{
+    return treeNode;
+}
+
 void ContainerModel::containerItemClicked(int index)
 {
     if (index >= size())

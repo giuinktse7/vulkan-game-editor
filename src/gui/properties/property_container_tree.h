@@ -57,8 +57,7 @@ namespace PropertiesUI
         Container *container();
         Item *containerItem() const;
 
-        std::unordered_map<int, std::unique_ptr<ContainerNode>> children;
-        std::optional<int> draggedIndex;
+        std::unordered_map<int, std::unique_ptr<ContainerNode>> openedChildrenNodes;
 
       protected:
         ContainerSignals *_signals;

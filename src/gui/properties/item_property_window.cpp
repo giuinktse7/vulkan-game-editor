@@ -98,6 +98,7 @@ bool ItemPropertyWindow::event(QEvent *e)
 
 void ItemPropertyWindow::mouseMoveEvent(QMouseEvent *event)
 {
+    // VME_LOG_D("ItemPropertyWindow::mouseMoveEvent");
     QQuickView::mouseMoveEvent(event);
 
     // if (dragOperation)
@@ -108,6 +109,7 @@ void ItemPropertyWindow::mouseMoveEvent(QMouseEvent *event)
 
 void ItemPropertyWindow::mouseReleaseEvent(QMouseEvent *mouseEvent)
 {
+    // VME_LOG_D("ItemPropertyWindow::mouseReleaseEvent");
     QQuickView::mouseReleaseEvent(mouseEvent);
 
     if (dragOperation)
@@ -269,8 +271,11 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
 
 void ItemPropertyWindow::setQmlObjectActive(QObject *qmlObject, bool enabled)
 {
-    qmlObject->setProperty("visible", enabled);
-    qmlObject->setProperty("enabled", enabled);
+    if (qmlObject)
+    {
+        qmlObject->setProperty("visible", enabled);
+        qmlObject->setProperty("enabled", enabled);
+    }
 }
 
 void ItemPropertyWindow::resetFocus()
@@ -347,7 +352,7 @@ void ItemPropertyWindow::refresh()
     }
 }
 
-bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNode, int index, const ItemDrag::DraggableItem *droppedItem)
+bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *targetContainerNode, int index, const ItemDrag::DraggableItem *droppedItem)
 {
     using DragSource = ItemDrag::DraggableItem::Type;
     auto &focusedItem = state.focusedAs<FocusedItem>();
@@ -374,7 +379,7 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
             ContainerLocation to(
                 state.selectedPosition,
                 static_cast<uint16_t>(focusedItem.tileIndex),
-                containerNode->indexChain(index));
+                targetContainerNode->indexChain(index));
 
             mapView->history.beginTransaction(TransactionType::MoveItems);
             mapView->moveFromMapToContainer(*dropped->tile, dropped->_item, to);
@@ -390,13 +395,12 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
                 ABORT_PROGRAM("Drag between different MapViews is not implemented.");
             }
 
-            auto targetContainer = containerNode->container();
+            auto targetContainer = targetContainerNode->container();
             bool movedWithinSameContainer = dropped->container() == targetContainer;
 
             // Dropped on the same container slot that the drag started
-            if (dropped->container() == targetContainer && index == dropped->containerIndices.back())
+            if (movedWithinSameContainer && index == dropped->containerIndices.back())
             {
-                containerNode->draggedIndex.reset();
                 return true;
             }
 
@@ -408,25 +412,14 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *containerNod
             ContainerLocation to(
                 state.selectedPosition,
                 static_cast<uint16_t>(focusedItem.tileIndex),
-                containerNode->indexChain(index));
+                targetContainerNode->indexChain(index));
 
             mapView->history.beginTransaction(TransactionType::MoveItems);
             mapView->moveFromContainerToContainer(from, to);
             mapView->history.endTransaction(TransactionType::MoveItems);
 
-            // Update child indices
-            if (movedWithinSameContainer)
-            {
-                containerNode->itemMoved(dropped->containerIndices.back(), index);
-                containerNode->draggedIndex.reset();
-            }
-            else
-            {
+            VME_LOG_D("Finished move transaction");
 
-                // containerNode->itemInserted(index);
-            }
-
-            // containerNode->model()->refresh();
             break;
         }
         default:
@@ -449,9 +442,6 @@ void ItemPropertyWindow::startContainerItemDrag(PropertiesUI::ContainerNode *tre
 
     itemDrag.containerIndices = treeNode->indexChain(index);
     itemDrag.tileIndex = static_cast<uint16_t>(focusedItem.tileIndex);
-    // Add treeNode in itemdrag. Needed to update container indices.
-
-    treeNode->draggedIndex.emplace(index);
 
     dragOperation.emplace(ItemDrag::DragOperation::create(std::move(itemDrag), state.mapView, this));
     dragOperation->setRenderCondition([this] { return !state.mapView->underMouse(); });
@@ -521,6 +511,19 @@ bool PropertyWindowEventFilter::eventFilter(QObject *obj, QEvent *event)
                 return false;
             }
             break;
+        case QEvent::MouseButtonRelease:
+            if (propertyWindow->dragOperation)
+            {
+                auto mouseEvent = static_cast<QMouseEvent *>(event);
+
+                bool accepted = propertyWindow->dragOperation->sendDropEvent(mouseEvent);
+                if (accepted)
+                {
+                    propertyWindow->refresh();
+                }
+
+                propertyWindow->dragOperation.reset();
+            }
         default:
             break;
     }

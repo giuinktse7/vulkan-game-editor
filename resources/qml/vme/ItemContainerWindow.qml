@@ -1,5 +1,6 @@
 import QtQuick.Controls 2.15
-import QtQuick 2.15
+import QtQuick.Layouts 1.1
+import QtQuick 2.1
 import "./item_container_window" as Components
 import "./" as Vme
 import Vme.context 1.0 as Context
@@ -8,6 +9,7 @@ Item {
   id: itemContainer;
 
   signal updateLayout();
+  signal close();
 
   required property var model;
   required property int index;
@@ -24,15 +26,21 @@ Item {
   property double maxHeight: itemContainerView.cellHeight * Math.ceil(capacity / 4) + header.height;
   property double visibleHeight: itemContainerView.cellHeight * Math.ceil(capacity / 4) + header.height;
 
-  property int currentHeight: Math.round(gridWrapper.visible ? Math.min(visibleHeight,maxHeight) : header.height);
+  property int currentHeight: {
+    const x = Math.round(gridWrapper.visible ? Math.min(visibleHeight, maxHeight) : header.height)
+    console.log(x)
+    return x;
+  };
 
-  property bool showContainerItems: true;
+  property bool minimized: false;
 
   implicitWidth: fixedWidth;
-  implicitHeight: currentHeight;
+  // implicitHeight: header.height;
 
-  onImplicitHeightChanged: {
-    updateLayout();
+  height: currentHeight;
+
+  onHeightChanged: {
+    // updateLayout();
   }
 
   // Header
@@ -75,33 +83,65 @@ Item {
       color: "#909090"
     }
 
-    Rectangle {
-      width: 15
-      height: 15
-      border.color: "#3b3d40"
+    RowLayout {
       anchors.right: parent.right
-      color: "#18191a"
-      Text {
-        anchors.centerIn: parent
-        font {
-          pointSize: 22
-          family: Vme.Constants.labelFontFamily
-          capitalization: Font.AllUppercase
+      spacing: 1
+      
+      Rectangle {
+        width: 15
+        height: 15
+        border.color: "#3b3d40"
+        color: "#18191a"
+        Text {
+          anchors.centerIn: parent
+          font {
+            pointSize: 22
+            family: Vme.Constants.labelFontFamily
+            capitalization: Font.AllUppercase
+          }
+
+          text: "-"
+          color: "#ccc"
         }
 
-        text: "-"
-        color: "#ccc"
+        MouseArea {
+          anchors.fill: parent
+
+          onPressed: {
+            // itemContainerView.parent.height = 0;
+            itemContainer.minimized = !itemContainer.minimized
+          }
+        }
       }
 
-      MouseArea {
-        anchors.fill: parent
+      Rectangle {
+        visible: itemContainer.index != 0
+        width: 15
+        height: 15
+        border.color: "#3b3d40"
+        color: "#18191a"
+        Text {
+          anchors.centerIn: parent
+          font {
+            pointSize: 12
+            family: Vme.Constants.labelFontFamily
+          }
 
-        onPressed: {
-          // itemContainerView.parent.height = 0;
-          itemContainer.showContainerItems = !itemContainer.showContainerItems
+          text: "x"
+          color: "#ccc"
+        }
+
+        MouseArea {
+          anchors.fill: parent
+
+          onPressed: {
+            itemContainer.close();
+          }
         }
       }
     }
+
+    
   }
 
   Component {
@@ -167,7 +207,7 @@ Item {
 
     width: parent.width
 
-    visible: itemContainer.showContainerItems
+    visible: !itemContainer.minimized
 
     GridView {
       id: itemContainerView

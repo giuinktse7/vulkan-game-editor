@@ -95,6 +95,9 @@ inline std::ostream &operator<<(std::ostream &os, const ContainerChangeType &typ
         case ContainerChangeType::Remove:
             os << "ContainerChangeType::Remove";
             break;
+        case ContainerChangeType::MoveInSameContainer:
+            os << "ContainerChangeType::MoveInSameContainer";
+            break;
         default:
             os << "Unknown ContainerChangeType";
             break;

@@ -134,19 +134,16 @@ void ContainerNode::onDragFinished(ItemDrag::DragOperation::DropResult result)
         // It would be faster to only refresh the changed indices. But this should
         // not make a significant difference in performance, because the model will
         // have at most ~25 items (max capacity of the largest container item).
-        // _model->refresh();
-
-        // if (draggedIndex.has_value())
-        // {
-        //     int index = draggedIndex.value();
-        //     itemRemoved(index);
-        // }
+        _model->refresh();
     }
 }
 
 void PropertiesUI::ContainerTree::Node::setIndexInParent(int index)
 {
+    auto k = parent->container()->itemAt(index).name();
+    VME_LOG_D(k + ", setIndexInParent: " + std::to_string(index));
     indexInParentContainer = index;
+
     Items::items.itemMoved(&parent->container()->itemAt(index));
 }
 
@@ -157,12 +154,12 @@ void PropertiesUI::ContainerTree::Root::setIndexInParent(int index)
 
 void ContainerNode::itemInserted(int index)
 {
-    if (children.empty())
+    if (openedChildrenNodes.empty())
         return;
 
     std::vector<int> indices;
 
-    for (const auto &[i, _] : children)
+    for (const auto &[i, _] : openedChildrenNodes)
     {
         if (i >= index)
         {
@@ -174,28 +171,28 @@ void ContainerNode::itemInserted(int index)
     {
         int newIndex = i + 1;
 
-        auto mapNode = children.extract(i);
+        auto mapNode = openedChildrenNodes.extract(i);
         mapNode.key() = newIndex;
-        children.insert(std::move(mapNode));
+        openedChildrenNodes.insert(std::move(mapNode));
 
-        children.at(newIndex)->setIndexInParent(newIndex);
+        openedChildrenNodes.at(newIndex)->setIndexInParent(newIndex);
     }
 }
 
 void ContainerNode::itemRemoved(int index)
 {
-    if (children.empty())
+    if (openedChildrenNodes.empty())
         return;
 
-    auto found = children.find(index);
-    if (found != children.end())
+    auto found = openedChildrenNodes.find(index);
+    if (found != openedChildrenNodes.end())
     {
-        children.erase(found);
+        openedChildrenNodes.erase(found);
     }
 
     std::vector<int> indices;
 
-    for (const auto &[i, _] : children)
+    for (const auto &[i, _] : openedChildrenNodes)
     {
         if (i >= index)
         {
@@ -207,22 +204,22 @@ void ContainerNode::itemRemoved(int index)
     {
         int newIndex = i - 1;
 
-        auto mapNode = children.extract(i);
+        auto mapNode = openedChildrenNodes.extract(i);
         mapNode.key() = newIndex;
-        children.insert(std::move(mapNode));
+        openedChildrenNodes.insert(std::move(mapNode));
 
-        children.at(newIndex)->setIndexInParent(newIndex);
+        openedChildrenNodes.at(newIndex)->setIndexInParent(newIndex);
     }
 }
 
 void ContainerNode::itemMoved(int fromIndex, int toIndex)
 {
-    if (children.empty())
+    if (openedChildrenNodes.empty())
         return;
 
     std::vector<std::pair<int, int>> changes;
 
-    for (const auto &[i, _] : children)
+    for (const auto &[i, _] : openedChildrenNodes)
     {
         int newIndex;
         if (i == fromIndex)
@@ -247,11 +244,11 @@ void ContainerNode::itemMoved(int fromIndex, int toIndex)
 
     for (const auto [fromIndex, toIndex] : changes)
     {
-        auto mapNode = children.extract(fromIndex);
+        auto mapNode = openedChildrenNodes.extract(fromIndex);
         mapNode.key() = toIndex;
-        children.insert(std::move(mapNode));
+        openedChildrenNodes.insert(std::move(mapNode));
 
-        children.at(toIndex)->setIndexInParent(toIndex);
+        openedChildrenNodes.at(toIndex)->setIndexInParent(toIndex);
     }
 }
 void ContainerNode::trackedItemChanged(Item *trackedItem)
@@ -315,12 +312,15 @@ void ContainerNode::open()
     DEBUG_ASSERT(!opened, "Already opened.");
 
     _model.emplace(this);
+    qDebug() << "Open: " << _model->containerName();
+
     _signals->postOpened.fire(&_model.value());
     opened = true;
 }
 
 void ContainerNode::close()
 {
+    qDebug() << "Close: " << _model->containerName();
     _signals->preClosed.fire(&_model.value());
     _model.reset();
     opened = false;
@@ -340,21 +340,21 @@ void ContainerNode::toggle()
 
 void ContainerNode::openChild(int index)
 {
-    DEBUG_ASSERT(children.find(index) == children.end(), "The child is already opened.");
+    DEBUG_ASSERT(openedChildrenNodes.find(index) == openedChildrenNodes.end(), "The child is already opened.");
     auto &child = container()->itemAt(index);
 
     DEBUG_ASSERT(child.isContainer(), "Must be container.");
     auto node = createChildNode(index);
-    children.emplace(index, std::move(node));
-    auto &c = *children.at(index);
+    openedChildrenNodes.emplace(index, std::move(node));
+    auto &c = *openedChildrenNodes.at(index);
     ContainerTree::Node *d = dynamic_cast<ContainerTree::Node *>(&c);
-    children.at(index)->open();
+    openedChildrenNodes.at(index)->open();
 }
 
 void ContainerNode::toggleChild(int index)
 {
-    auto child = children.find(index);
-    if (child == children.end())
+    auto child = openedChildrenNodes.find(index);
+    if (child == openedChildrenNodes.end())
     {
         openChild(index);
         return;

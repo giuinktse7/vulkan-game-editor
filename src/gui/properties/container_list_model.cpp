@@ -3,6 +3,7 @@
 #include "../../debug.h"
 #include "../../util.h"
 #include "container_model.h"
+#include "property_container_tree.h"
 
 using ContainerListModel = PropertiesUI::ContainerListModel;
 using ContainerModel = PropertiesUI::ContainerModel;
@@ -21,9 +22,11 @@ std::vector<ContainerModel *>::iterator ContainerListModel::find(const Container
 void ContainerListModel::addItemModel(ContainerModel *model)
 {
     auto modelSize = static_cast<int>(itemModels.size());
+
     beginInsertRows(QModelIndex(), modelSize, modelSize);
     itemModels.emplace_back(model);
     endInsertRows();
+
     emit sizeChanged(size());
 }
 
@@ -40,7 +43,12 @@ void ContainerListModel::remove(ContainerModel *model)
         return;
     }
 
+    int index = static_cast<int>(found - itemModels.begin());
+    beginRemoveRows(QModelIndex(), index, index);
     itemModels.erase(found);
+    endRemoveRows();
+
+    emit sizeChanged(size());
 }
 
 void ContainerListModel::refresh(ContainerModel *model)
@@ -49,6 +57,11 @@ void ContainerListModel::refresh(ContainerModel *model)
     DEBUG_ASSERT(found != itemModels.end(), "model was not present.");
 
     (*found)->refresh();
+}
+
+void ContainerListModel::closeContainer(int containerIndex)
+{
+    itemModels.at(containerIndex)->node()->close();
 }
 
 void ContainerListModel::remove(int index)
