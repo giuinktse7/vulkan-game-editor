@@ -47,7 +47,7 @@ Item {
       property bool dragging : false
 
 
-      onPressed : {
+      onPressed : (mouse) => {
         if (mouse.button & Qt.LeftButton) {
           pressOrigin = Qt.point(mouseX, mouseY);
           dragging = false;

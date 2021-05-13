@@ -268,7 +268,7 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
 
-        onPressed: {
+        onPressed: (mouse) => {
           if ((mouseY > height - 5)) {
             oldMouseY = mouseY
             startHeight = itemContainer.visibleHeight
