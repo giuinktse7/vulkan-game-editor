@@ -175,14 +175,14 @@ namespace MapHistory
 
     void MoveFromContainerToMap::commit(MapView &mapView)
     {
-        auto item = from.container(mapView)->dropItem(from.containerIndex());
+        auto item = from.container(mapView)->dropItemTracked(from.containerIndex());
         mapView.getTile(toPosition)->addItem(std::move(item));
     }
 
     void MoveFromContainerToMap::undo(MapView &mapView)
     {
         auto item = mapView.getTile(toPosition)->dropItem(static_cast<size_t>(0));
-        from.container(mapView)->insertItem(std::move(item), from.containerIndex());
+        from.container(mapView)->insertItemTracked(std::move(item), from.containerIndex());
     }
 
     MoveFromContainerToContainer::MoveFromContainerToContainer(ContainerLocation &from, ContainerLocation &to)
