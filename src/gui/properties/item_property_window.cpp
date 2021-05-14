@@ -363,8 +363,11 @@ void ItemPropertyWindow::refresh()
     }
 }
 
-bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *targetContainerNode, int index, const ItemDrag::DraggableItem *droppedItem)
+bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *targetContainerNode, int dropIndex, const ItemDrag::DraggableItem *droppedItem)
 {
+    int index = static_cast<int>(std::min(static_cast<size_t>(dropIndex), targetContainerNode->container()->size()));
+    index = std::min(index, targetContainerNode->container()->capacity() - 1);
+
     if (!state.holds<FocusedContainer>())
         return false;
 
@@ -375,6 +378,13 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *targetContai
         VME_LOG_D("Can not add item to itself.");
         return false;
     }
+
+    if (targetContainerNode->container()->isFull() && !targetContainerNode->container()->hasNonFullContainerAtIndex(index))
+    {
+        return false;
+    }
+
+    int insertionIndex = targetContainerNode->container()->hasNonFullContainerAtIndex(index) ? index : 0;
 
     MapView *mapView = state.mapView;
 
@@ -390,10 +400,16 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *targetContai
                 ABORT_PROGRAM("Drag between different MapViews is not implemented.");
             }
 
+            auto indexChain = targetContainerNode->indexChain(insertionIndex);
+            if (targetContainerNode->container()->hasNonFullContainerAtIndex(dropIndex))
+            {
+                indexChain.emplace_back(0);
+            }
+
             ContainerLocation to(
                 state.selectedPosition,
                 static_cast<uint16_t>(focusedItem.tileIndex),
-                targetContainerNode->indexChain(index));
+                indexChain);
 
             mapView->history.beginTransaction(TransactionType::MoveItems);
             mapView->moveFromMapToContainer(*dropped->tile, dropped->_item, to);
@@ -413,7 +429,7 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *targetContai
             bool movedWithinSameContainer = dropped->container() == targetContainer;
 
             // Dropped on the same container slot that the drag started
-            if (movedWithinSameContainer && index == dropped->containerIndices.back())
+            if (movedWithinSameContainer && insertionIndex == dropped->containerIndices.back())
             {
                 return true;
             }
@@ -423,10 +439,16 @@ bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *targetContai
                 dropped->tileIndex,
                 dropped->containerIndices);
 
+            auto indexChain = targetContainerNode->indexChain(insertionIndex);
+            if (targetContainerNode->container()->hasNonFullContainerAtIndex(index))
+            {
+                indexChain.emplace_back(0);
+            }
+
             ContainerLocation to(
                 state.selectedPosition,
                 static_cast<uint16_t>(focusedItem.tileIndex),
-                targetContainerNode->indexChain(index));
+                indexChain);
 
             mapView->history.beginTransaction(TransactionType::MoveItems);
             mapView->moveFromContainerToContainer(from, to);
