@@ -61,9 +61,9 @@ bool ContainerModel::itemDropEvent(int index, QByteArray serializedDraggableItem
         return false;
     }
 
-    if (droppedItem->item() == container()->item())
+    if (treeNode->isSelfOrParent(droppedItem->item()))
     {
-        VME_LOG_D("Can not add item to itself.");
+        VME_LOG_D("Can not add an item to itself or to a sub-container of itself.");
         return false;
     }
 

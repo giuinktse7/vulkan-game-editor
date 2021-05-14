@@ -280,6 +280,16 @@ void ContainerNode::trackedContainerChanged(ContainerChange change)
     _model->refresh();
 }
 
+bool PropertiesUI::ContainerTree::Root::isSelfOrParent(Item *item) const
+{
+    return item == containerItem();
+}
+
+bool PropertiesUI::ContainerTree::Node::isSelfOrParent(Item *item) const
+{
+    return item == containerItem() || parent->isSelfOrParent(item);
+}
+
 std::vector<uint16_t> ContainerNode::indexChain() const
 {
     return indexChain(0);

@@ -168,6 +168,9 @@ ScrollView {
         model : propertyContainer.containers;
         readonly property int fixedWidth : 36 * 4
 
+        // Disables swiping
+        interactive: false
+
         visible : model.size > 0
 
         Layout.alignment : Qt.AlignTop

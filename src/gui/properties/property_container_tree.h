@@ -25,6 +25,9 @@ namespace PropertiesUI
         ContainerNode(Item *containerItem, ContainerNode *parent);
         ~ContainerNode();
 
+        Item *containerItem() const;
+        Container *container();
+
         virtual void setIndexInParent(int index) = 0;
 
         void onDragFinished(ItemDrag::DragOperation::DropResult result);
@@ -39,6 +42,8 @@ namespace PropertiesUI
         void itemMoved(int fromIndex, int toIndex);
         void itemInserted(int index);
         void itemRemoved(int index);
+
+        virtual bool isSelfOrParent(Item *item) const = 0;
 
         std::vector<uint16_t> indexChain(int index) const;
         std::vector<uint16_t> indexChain() const;
@@ -55,8 +60,6 @@ namespace PropertiesUI
 
         void itemDropEvent(int index, ItemDrag::DraggableItem *droppedItem);
         void itemDragStartEvent(int index);
-        Container *container();
-        Item *containerItem() const;
 
         std::unordered_map<int, std::unique_ptr<ContainerNode>> openedChildrenNodes;
 
@@ -81,6 +84,8 @@ namespace PropertiesUI
         {
             Root(MapView *mapView, Position mapPosition, uint16_t tileIndex, Item *containerItem, ContainerSignals *_signals);
 
+            bool isSelfOrParent(Item *item) const override;
+
             void setIndexInParent(int index) override;
 
             std::unique_ptr<ContainerNode> createChildNode(int index) override;
@@ -98,6 +103,8 @@ namespace PropertiesUI
         struct Node final : public ContainerNode
         {
             Node(Item *containerItem, ContainerNode *parent, uint16_t parentIndex);
+
+            bool isSelfOrParent(Item *item) const override;
 
             void setIndexInParent(int index) override;
 
