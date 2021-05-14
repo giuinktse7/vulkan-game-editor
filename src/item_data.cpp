@@ -3,14 +3,14 @@
 #include "item.h"
 #include "items.h"
 
-Container::Container(uint16_t capacity, const std::vector<Item> &items)
+Container::Container(uint16_t capacity, const std::vector<std::unique_ptr<Item>> &items)
     : _capacity(capacity)
 {
     DEBUG_ASSERT(capacity >= items.size(), "Too many items.");
 
     for (const auto &item : items)
     {
-        _items.emplace_back(item.deepCopy());
+        _items.emplace_back(std::make_unique<Item>(item->deepCopy()));
     }
 }
 
@@ -53,13 +53,13 @@ bool Container::insertItemTracked(Item &&item, size_t index)
     if (isFull())
         return false;
 
-    auto itemLocation = _items.emplace(_items.begin() + index, std::move(item));
+    auto itemLocation = _items.emplace(_items.begin() + index, std::make_unique<Item>(std::move(item)));
 
     Items::items.containerChanged(this->item(), ContainerChange::inserted(static_cast<uint8_t>(index)));
 
     while (itemLocation != _items.end())
     {
-        Items::items.itemMoved(&(*itemLocation));
+        Items::items.itemMoved(&(**itemLocation));
         ++itemLocation;
     }
 
@@ -71,7 +71,7 @@ bool Container::insertItem(Item &&item, size_t index)
     if (isFull())
         return false;
 
-    auto itemLocation = _items.emplace(_items.begin() + index, std::move(item));
+    auto itemLocation = _items.emplace(_items.begin() + index, std::make_unique<Item>(std::move(item)));
     return true;
 }
 
@@ -80,20 +80,22 @@ bool Container::addItem(Item &&item)
     if (isFull())
         return false;
 
+    VME_LOG_D("Add item " << item.name() << " to container " << this->item()->name());
+
     bool isContainer = item.isContainer();
 
-    _items.emplace_back(std::move(item));
+    _items.emplace_back(std::make_unique<Item>(std::move(item)));
     if (isContainer)
     {
         auto &item = _items.back();
-        if (item.itemDataType() != ItemDataType::Container)
+        if (item->itemDataType() != ItemDataType::Container)
         {
-            item.setItemData(Container(item.itemType->volume, &item, this));
+            item->setItemData(Container(item->itemType->volume, &(*item), this));
         }
         else
         {
-            auto container = item.getDataAs<Container>();
-            container->setItem(&item);
+            auto container = item->getDataAs<Container>();
+            container->setItem(&(*item));
             container->setParent(this);
         }
     }
@@ -106,7 +108,7 @@ bool Container::addItem(int index, Item &&item)
     if (isFull())
         return false;
 
-    _items.emplace(_items.begin() + index, std::move(item));
+    _items.emplace(_items.begin() + index, std::make_unique<Item>(std::move(item)));
     return true;
 }
 
@@ -121,7 +123,7 @@ bool Container::removeItem(size_t index)
 
 bool Container::removeItem(Item *item)
 {
-    auto found = std::find_if(_items.begin(), _items.end(), [item](const Item &_item) { return item == &_item; });
+    auto found = findItem([item](const Item &_item) { return item == &_item; });
 
     // check that there actually is a 3 in our vector
     if (found == _items.end())
@@ -137,7 +139,7 @@ Item Container::dropItemTracked(size_t index)
 {
     DEBUG_ASSERT(index <= UINT8_MAX, "index too large.");
 
-    Item item(std::move(_items.at(index)));
+    Item item(std::move(*_items.at(index)));
 
     auto itemLocation = _items.erase(_items.begin() + index);
 
@@ -145,7 +147,7 @@ Item Container::dropItemTracked(size_t index)
 
     while (itemLocation != _items.end())
     {
-        Items::items.itemMoved(&(*itemLocation));
+        Items::items.itemMoved(&(**itemLocation));
         ++itemLocation;
     }
 
@@ -169,14 +171,36 @@ void Container::moveItemTracked(size_t fromIndex, size_t toIndex)
 
     while (fromIt != toIt)
     {
-        Items::items.itemMoved(&(*fromIt));
+        Items::items.itemMoved(&(**fromIt));
         ++fromIt;
     }
 }
 
+bool Container::hasNonFullContainerAtIndex(size_t index)
+{
+    if (index >= size())
+    {
+        return false;
+    }
+
+    auto &slotItem = itemAt(index);
+    if (!slotItem.isContainer())
+    {
+        return false;
+    }
+
+    auto slotContainer = slotItem.getOrCreateContainer();
+    if (slotContainer->isFull())
+    {
+        return false;
+    }
+
+    return true;
+}
+
 Item Container::dropItem(size_t index)
 {
-    Item item(std::move(_items.at(index)));
+    Item item(std::move(*_items.at(index)));
     _items.erase(_items.begin() + index);
 
     return item;
@@ -192,12 +216,12 @@ void Container::moveItem(size_t fromIndex, size_t toIndex)
 
 Item &Container::itemAt(size_t index)
 {
-    return _items.at(index);
+    return *_items.at(index);
 }
 
 const Item &Container::itemAt(size_t index) const
 {
-    return _items.at(index);
+    return *_items.at(index);
 }
 
 std::optional<size_t> Container::indexOf(Item *item) const
@@ -213,12 +237,12 @@ std::optional<size_t> Container::indexOf(Item *item) const
     }
 }
 
-const std::vector<Item>::const_iterator Container::findItem(std::function<bool(const Item &)> predicate) const
+const std::vector<std::unique_ptr<Item>>::const_iterator Container::findItem(std::function<bool(const Item &)> predicate) const
 {
-    return std::find_if(_items.begin(), _items.end(), predicate);
+    return std::find_if(_items.begin(), _items.end(), [predicate](const std::unique_ptr<Item> &_item) { return predicate(*_item); });
 }
 
-const std::vector<Item> &Container::items() const noexcept
+const std::vector<std::unique_ptr<Item>> &Container::items() const noexcept
 {
     return _items;
 }
