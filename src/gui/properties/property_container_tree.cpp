@@ -342,7 +342,6 @@ void ContainerNode::close()
         closeChild(index);
     }
 
-    qDebug() << "Close ContainerNode for: " << _model->containerName();
     _signals->preClosed.fire(&_model.value());
     _model.reset();
     opened = false;
@@ -403,8 +402,7 @@ void ContainerNode::itemDropEvent(int index, ItemDrag::DraggableItem *droppedIte
     // TODO Maybe use fire_accumulate here to see if drop was accepted.
     //Drop **should** always be accepted for now, but that might change in the future.
 
-    // Index must be in [0, size - 1]
-    index = std::min(index, std::max(_model->size() - 1, 0));
+    DEBUG_ASSERT(index >= 0 && index < _model->capacity() - 1, "Invalid index");
 
     _signals->itemDropped.fire(this, index, droppedItem);
 }
