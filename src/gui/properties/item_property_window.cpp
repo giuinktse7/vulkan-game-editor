@@ -26,6 +26,7 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow)
     VME_LOG_D("ItemPropertyWindow address: " << this);
     installEventFilter(new PropertyWindowEventFilter(this));
 
+    containerTree.onItemLeftClicked<&ItemPropertyWindow::containerItemSelectedEvent>(this);
     containerTree.onContainerItemDrop<&ItemPropertyWindow::itemDropEvent>(this);
     containerTree.onContainerItemDragStart<&ItemPropertyWindow::startContainerItemDrag>(this);
 
@@ -53,43 +54,6 @@ void ItemPropertyWindow::show()
 void ItemPropertyWindow::hide()
 {
     setQmlObjectActive(rootObject(), false);
-}
-
-void ItemPropertyWindow::initializeProperties()
-{
-    show();
-    std::visit(
-        util::overloaded{
-            [this](const FocusedContainer &focusedContainer) {
-                setContainerVisible(true);
-
-                auto countSpinBox = child(ObjectName::CountSpinBox);
-                setQmlObjectActive(countSpinBox->parent(), false);
-            },
-            [this](const FocusedItem &focusedItem) {
-                auto item = focusedItem.item();
-                auto itemtype = item->itemType;
-
-                setContainerVisible(false);
-
-                auto countSpinBox = child(ObjectName::CountSpinBox);
-                setQmlObjectActive(countSpinBox->parent(), itemtype->stackable);
-
-                if (itemtype->stackable)
-                {
-                    countSpinBox->setProperty("value", item->count());
-                }
-            },
-            [this](const FocusedGround &item) {
-                auto countSpinBox = child(ObjectName::CountSpinBox);
-                setQmlObjectActive(countSpinBox->parent(), false);
-
-                setContainerVisible(false);
-            },
-            [](const auto &arg) {
-                ABORT_PROGRAM("This should never happen.");
-            }},
-        state.focusedItem);
 }
 
 bool ItemPropertyWindow::event(QEvent *e)
@@ -170,14 +134,18 @@ void ItemPropertyWindow::focusGround(Item *item, Position &position, MapView &ma
     DEBUG_ASSERT(item != nullptr, "Can not focus nullptr ground.");
     DEBUG_ASSERT(mapView.getTile(position)->ground() == item, "This should never happen.");
 
-    FocusedGround ground(position, item);
-
-    state.focusedItem.emplace<FocusedGround>(position, item);
-    initializeProperties();
+    setFocused(FocusedGround(position, item));
+    setPropertyItem(item);
 }
 
-void ItemPropertyWindow::setFocusedItemCount(int count, bool shouldCommit)
+void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
 {
+    if (state.holds<FocusedContainer>())
+    {
+        VME_LOG("ItemPropertyWindow::setPropertyItemCount -- Not implemented for item in FocusedContainer.");
+        return;
+    }
+
     DEBUG_ASSERT(state.holds<FocusedItem>(), "Only a FocusedItem has a count property.");
     auto &focusedItem = state.focusedAs<FocusedItem>();
 
@@ -198,6 +166,75 @@ void ItemPropertyWindow::setFocusedItemCount(int count, bool shouldCommit)
         }
         emit countChanged(location, count, shouldCommit);
     }
+}
+
+int ItemPropertyWindow::getPropertyItemItemid() const
+{
+    return state.propertyItem()->item()->serverId();
+}
+
+void ItemPropertyWindow::setPropertyItem(Item *item)
+{
+    state.setPropertyItem(item);
+    state.propertyItem()->onPropertyChanged([this](Item *item, ItemChangeType type) {
+        switch (type)
+        {
+            case ItemChangeType::Count:
+                this->setPropertyItemCount(item->count());
+                break;
+            default:
+                VME_LOG("Unknown ItemChangeType");
+        }
+    });
+
+    // Update UI
+
+    auto itemtype = item->itemType;
+
+    auto countSpinBox = child(ObjectName::CountSpinBox);
+    setQmlObjectActive(countSpinBox->parent(), itemtype->stackable);
+
+    if (itemtype->stackable)
+    {
+        countSpinBox->setProperty("value", item->count());
+    }
+}
+
+void ItemPropertyWindow::setFocused(FocusedGround &&ground)
+{
+
+    auto item = ground.item();
+
+    state.setFocused(std::move(ground));
+    setPropertyItem(item);
+
+    setContainerVisible(false);
+
+    show();
+}
+
+void ItemPropertyWindow::setFocused(FocusedItem &&focusedItem)
+{
+    auto item = focusedItem.item();
+
+    state.setFocused(std::move(focusedItem));
+    setPropertyItem(item);
+
+    setContainerVisible(false);
+
+    show();
+}
+
+void ItemPropertyWindow::setFocused(FocusedContainer &&container)
+{
+    auto item = container.trackedItem().item();
+
+    state.setFocused(std::move(container));
+    setPropertyItem(item);
+
+    setContainerVisible(true);
+
+    show();
 }
 
 void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapView)
@@ -230,6 +267,11 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
         if (item == focusedContainer.containerItem())
         {
             setSelectedPosition(position);
+            if (focusedContainer.trackedItem().item() != item)
+            {
+                focusedContainer.setTrackedItem(item);
+                setPropertyItem(item);
+            }
 
             auto maybeTileIndex = mapView.getTile(position)->indexOf(item);
             DEBUG_ASSERT(maybeTileIndex.has_value(), "The tile did not have the item.");
@@ -270,14 +312,13 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
 
         containerTree.setRootContainer(&mapView, position, tileIndex, item);
 
-        state.focusedItem.emplace<FocusedContainer>(item, tileIndex);
+        setFocused(FocusedContainer(item, tileIndex));
     }
     else
     {
-        state.focusedItem.emplace<FocusedItem>(item, tileIndex);
+        setFocused(FocusedItem(item, tileIndex));
+        auto &focusedItem = state.focusedAs<FocusedItem>();
     }
-
-    initializeProperties();
 }
 
 void ItemPropertyWindow::setQmlObjectActive(QObject *qmlObject, bool enabled)
@@ -291,7 +332,7 @@ void ItemPropertyWindow::setQmlObjectActive(QObject *qmlObject, bool enabled)
 
 void ItemPropertyWindow::resetFocus()
 {
-    state.focusedItem = std::monostate{};
+    state.resetFocused();
 
     resetSelectedPosition();
     resetMapView();
@@ -345,6 +386,27 @@ void ItemPropertyWindow::reloadSource()
     setSource(QUrl::fromLocalFile("../resources/qml/itemPropertyWindow.qml"));
 }
 
+void ItemPropertyWindow::State::setFocused(FocusedGround &&ground)
+{
+    _focusedItem.emplace<FocusedGround>(std::move(ground));
+}
+
+void ItemPropertyWindow::State::setFocused(FocusedItem &&item)
+{
+    _focusedItem.emplace<FocusedItem>(std::move(item));
+}
+
+void ItemPropertyWindow::State::setFocused(FocusedContainer &&container)
+{
+    _focusedItem.emplace<FocusedContainer>(std::move(container));
+}
+
+void ItemPropertyWindow::State::resetFocused()
+{
+    _focusedItem = std::monostate{};
+    _propertyItem.reset();
+}
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>QML Callbacks>>>>>>
@@ -361,6 +423,26 @@ void ItemPropertyWindow::refresh()
             containerTree.containerListModel.refreshAll();
         }
     }
+}
+
+bool ItemPropertyWindow::containerItemSelectedEvent(PropertiesUI::ContainerNode *treeNode, int index)
+{
+    DEBUG_ASSERT(state.holds<FocusedContainer>(), "Must be a focused container.");
+
+    auto &focusedContainer = state.focusedAs<FocusedContainer>();
+
+    auto item = &treeNode->container()->itemAt(index);
+
+    // No action needed
+    if (focusedContainer.trackedItem().item() == item)
+    {
+        return true;
+    }
+
+    focusedContainer.setTrackedItem(item);
+    setPropertyItem(item);
+
+    return true;
 }
 
 bool ItemPropertyWindow::itemDropEvent(PropertiesUI::ContainerNode *targetContainerNode, int dropIndex, const ItemDrag::DraggableItem *droppedItem)

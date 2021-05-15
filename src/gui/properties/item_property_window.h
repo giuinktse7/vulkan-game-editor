@@ -75,8 +75,10 @@ class ItemPropertyWindow : public QQuickView
 
     void startContainerItemDrag(PropertiesUI::ContainerNode *treeNode, int index);
     bool itemDropEvent(PropertiesUI::ContainerNode *treeNode, int index, const ItemDrag::DraggableItem *droppedItem);
+    bool containerItemSelectedEvent(PropertiesUI::ContainerNode *treeNode, int index);
 
-    Q_INVOKABLE void setFocusedItemCount(int count, bool shouldCommit = false);
+    Q_INVOKABLE void setPropertyItemCount(int count, bool shouldCommit = false);
+    Q_INVOKABLE int getPropertyItemItemid() const;
 
     QWidget *wrapInWidget(QWidget *parent = nullptr);
 
@@ -96,34 +98,6 @@ class ItemPropertyWindow : public QQuickView
     void mouseReleaseEvent(QMouseEvent *event) override;
 
   private:
-    friend class PropertyWindowEventFilter;
-
-    void setMapView(MapView &mapView);
-    void resetMapView();
-
-    void setSelectedPosition(const Position &pos);
-    void resetSelectedPosition();
-
-    void setQmlObjectActive(QObject *qmlObject, bool enabled);
-
-    void show();
-    void hide();
-
-    void initializeProperties();
-    void setCount(uint8_t count);
-    void setContainerVisible(bool visible);
-
-    /**
-   * Returns a child from QML with objectName : name
-   */
-    inline QObject *child(const char *name);
-
-    QUrl _filepath;
-    MainWindow *mainWindow;
-    QWidget *_wrapperWidget;
-
-    PropertiesUI::ContainerTree containerTree;
-
     struct FocusedItem
     {
         FocusedItem(Item *item, size_t tileIndex)
@@ -150,7 +124,7 @@ class ItemPropertyWindow : public QQuickView
     struct FocusedContainer
     {
         FocusedContainer(Item *item, size_t tileIndex)
-            : trackedContainer(item), tileIndex(tileIndex)
+            : trackedContainer(item), _trackedItem(item), tileIndex(tileIndex)
         {
             DEBUG_ASSERT(item->isContainer(), "Item must be a container.");
         }
@@ -164,14 +138,22 @@ class ItemPropertyWindow : public QQuickView
             return trackedContainer.item();
         }
 
-        Item *trackedItem() const noexcept
+        TrackedItem &trackedItem() noexcept
         {
-            return _trackedItem.has_value() ? _trackedItem->item() : trackedContainer.item();
+            return _trackedItem;
+        }
+
+        void setTrackedItem(Item *item)
+        {
+            if (_trackedItem.item() != item)
+            {
+                _trackedItem = TrackedItem(item);
+            }
         }
 
         size_t tileIndex;
         TrackedContainer trackedContainer;
-        std::optional<TrackedItem> _trackedItem;
+        TrackedItem _trackedItem;
     };
 
     struct FocusedGround
@@ -191,18 +173,88 @@ class ItemPropertyWindow : public QQuickView
         TrackedItem trackedGround;
     };
 
+    friend class PropertyWindowEventFilter;
+
+    void setMapView(MapView &mapView);
+    void resetMapView();
+
+    void setSelectedPosition(const Position &pos);
+    void resetSelectedPosition();
+
+    void setQmlObjectActive(QObject *qmlObject, bool enabled);
+
+    void show();
+    void hide();
+
+    void setCount(uint8_t count);
+    void setContainerVisible(bool visible);
+
+    void setFocused(FocusedGround &&ground);
+    void setFocused(FocusedItem &&item);
+    void setFocused(FocusedContainer &&container);
+
+    void setPropertyItem(Item *item);
+
+    /**
+   * Returns a child from QML with objectName : name
+   */
+    inline QObject *child(const char *name);
+
+    QUrl _filepath;
+    MainWindow *mainWindow;
+    QWidget *_wrapperWidget;
+
+    PropertiesUI::ContainerTree containerTree;
+
     struct State
     {
-        MapView *mapView;
-        std::variant<std::monostate, FocusedItem, FocusedGround, FocusedContainer> focusedItem;
-
-        Position selectedPosition;
-
         template <typename T>
         bool holds();
 
         template <typename T>
         T &focusedAs();
+
+        const std::variant<std::monostate, FocusedItem, FocusedGround, FocusedContainer> &focusedItem() const
+        {
+            return _focusedItem;
+        }
+
+        // The setFocused methods should only be called from ItemPropertyWindow::setFocused
+        void setFocused(FocusedGround &&ground);
+        void setFocused(FocusedItem &&item);
+        void setFocused(FocusedContainer &&container);
+
+        void resetFocused();
+
+        std::optional<TrackedItem> propertyItem()
+        {
+            return _propertyItem;
+        }
+
+        const std::optional<TrackedItem> propertyItem() const
+        {
+            return _propertyItem;
+        }
+
+        void setPropertyItem(Item *item)
+        {
+            if (_propertyItem.has_value() && _propertyItem->item() == item)
+            {
+                return;
+            }
+
+            _propertyItem = TrackedItem(item);
+        }
+
+        MapView *mapView;
+
+        Position selectedPosition;
+
+      private:
+        std::variant<std::monostate, FocusedItem, FocusedGround, FocusedContainer> _focusedItem;
+
+        // This is the tracked item that is used for the property window (excluding container contents)
+        std::optional<TrackedItem> _propertyItem;
     };
 
     State state;
@@ -230,7 +282,7 @@ bool ItemPropertyWindow::State::holds()
 {
     static_assert(util::is_one_of<T, FocusedItem, FocusedGround, FocusedContainer>::value, "T must be FocusedItem or FocusedGround");
 
-    return std::holds_alternative<T>(focusedItem);
+    return std::holds_alternative<T>(_focusedItem);
 }
 
 template <typename T>
@@ -238,5 +290,5 @@ T &ItemPropertyWindow::State::focusedAs()
 {
     static_assert(util::is_one_of<T, FocusedItem, FocusedGround, FocusedContainer>::value, "T must be FocusedItem or FocusedGround");
 
-    return std::get<T>(focusedItem);
+    return std::get<T>(_focusedItem);
 }

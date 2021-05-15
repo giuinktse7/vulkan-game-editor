@@ -27,12 +27,22 @@ ContainerNode *ContainerModel::node()
     return treeNode;
 }
 
-void ContainerModel::containerItemClicked(int index)
+void ContainerModel::containerItemLeftClicked(int index)
 {
     if (index >= size())
         return;
 
-    VME_LOG_D("containerItemClicked. Item id: " << containerServerId() << ", index: " << index);
+    VME_LOG_D("containerItemLeftClicked. Item id: " << containerServerId() << ", index: " << index);
+
+    treeNode->itemLeftClickedEvent(index);
+}
+
+void ContainerModel::containerItemRightClicked(int index)
+{
+    if (index >= size())
+        return;
+
+    VME_LOG_D("containerItemRightClicked. Item id: " << containerServerId() << ", index: " << index);
 
     if (container()->itemAt(index).isContainer())
     {

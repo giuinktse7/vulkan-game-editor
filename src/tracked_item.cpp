@@ -8,20 +8,28 @@ class Item;
 TrackedItem::TrackedItem(Item *item)
     : _guid(item->guid()),
       _item(item),
-      disconnect(Items::items.trackItem<&TrackedItem::updateItem>(_guid, this)) {}
+      disconnect(Items::items.trackItem<&TrackedItem::itemAddressChanged, &TrackedItem::itemPropertyChanged>(_guid, this)) {}
 
 Item *TrackedItem::item() const noexcept
 {
     return _item;
 }
 
-void TrackedItem::updateItem(Item *item)
+void TrackedItem::itemAddressChanged(Item *item)
 {
     _item = item;
 
-    if (onChangeCallback)
+    if (onAddressChangedCallback)
     {
-        onChangeCallback(_item);
+        onAddressChangedCallback(_item);
+    }
+}
+
+void TrackedItem::itemPropertyChanged(ItemChangeType changeType)
+{
+    if (onPropertyChangedCallback)
+    {
+        onPropertyChangedCallback(_item, changeType);
     }
 }
 

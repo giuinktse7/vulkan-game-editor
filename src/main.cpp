@@ -43,12 +43,12 @@ int main(int argc, char *argv[])
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
 
-    if (!LuaScriptInterface::initialize())
-    {
-        return EXIT_FAILURE;
-    }
+    // if (!LuaScriptInterface::initialize())
+    // {
+    //     return EXIT_FAILURE;
+    // }
 
-    LuaScriptInterface::get()->test();
+    // LuaScriptInterface::get()->test();
 
     /* return 0; */
 

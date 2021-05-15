@@ -124,12 +124,12 @@ ScrollView {
 
           onValueChanged: {
             if (visible) {
-              Context.C_PropertyWindow.setFocusedItemCount(value);
+              Context.C_PropertyWindow.setPropertyItemCount(value);
             }
           }
 
           onEditingFinished: {
-            Context.C_PropertyWindow.setFocusedItemCount(value, true);
+            Context.C_PropertyWindow.setPropertyItemCount(value, true);
           }
         }
       }

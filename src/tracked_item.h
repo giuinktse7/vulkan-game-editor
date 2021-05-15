@@ -12,6 +12,13 @@ enum class ContainerChangeType
     MoveInSameContainer
 };
 
+enum class ItemChangeType
+{
+    Count,
+    ActionId,
+    UniqueId
+};
+
 struct ContainerChange
 {
     static ContainerChange inserted(uint8_t index);
@@ -47,21 +54,34 @@ struct TrackedItem
     Item *item() const noexcept;
 
     template <auto MemberFunction, typename T>
-    void onChanged(T *instance)
+    void onAddressChanged(T *instance)
     {
-        onChangeCallback = std::bind(MemberFunction, instance, std::placeholders::_1);
+        onAddressChangedCallback = std::bind(MemberFunction, instance, std::placeholders::_1);
+    }
+
+    template <auto MemberFunction, typename T>
+    void onPropertyChanged(T *instance)
+    {
+        onPropertyChangedCallback = std::bind(MemberFunction, instance, std::placeholders::_1, std::placeholders::_2);
+    }
+
+    void onPropertyChanged(std::function<void(Item *, ItemChangeType)> f)
+    {
+        onPropertyChangedCallback = f;
     }
 
     inline uint32_t guid() const noexcept;
 
   protected:
-    void updateItem(Item *item);
+    void itemAddressChanged(Item *item);
+    void itemPropertyChanged(ItemChangeType changeType);
 
     uint32_t _guid;
     Item *_item;
 
     ItemGuidDisconnect disconnect;
-    std::function<void(Item *)> onChangeCallback;
+    std::function<void(Item *)> onAddressChangedCallback;
+    std::function<void(Item *, ItemChangeType)> onPropertyChangedCallback;
 };
 
 struct TrackedContainer : TrackedItem

@@ -19,6 +19,14 @@ enum class BrushType
     Doodad
 };
 
+struct WeightedItemId
+{
+    WeightedItemId(uint32_t id, uint32_t weight)
+        : id(id), weight(weight) {}
+    uint32_t id;
+    uint32_t weight;
+};
+
 struct ItemPreviewInfo
 {
     ItemPreviewInfo(uint32_t serverId, const Position relativePosition)
@@ -49,6 +57,8 @@ class Brush
 
     static GroundBrush *addGroundBrush(std::unique_ptr<GroundBrush> &&brush);
     static GroundBrush *addGroundBrush(GroundBrush &&brush);
+
+    static int nextGroundBrushId();
 
     void setTileset(Tileset *tileset) noexcept;
     Tileset *tileset() const noexcept;

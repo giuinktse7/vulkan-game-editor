@@ -14,8 +14,8 @@ conversion. This should reduce branching, resulting in faster conversion.
 
 namespace VME
 {
-    enum ModifierKeys;
-    enum MouseButtons;
+    enum ModifierKeys : int;
+    enum MouseButtons : int;
 } // namespace VME
 
 namespace enum_conversion

@@ -136,6 +136,17 @@ const uint32_t Item::getPatternIndex(const Position &pos) const
         return to_underlying(StackSizeOffset::Fifty);
 }
 
+void Item::setCount(uint8_t count) noexcept
+{
+    bool changed = count != _subtype;
+    _subtype = count;
+
+    if (changed)
+    {
+        Items::items.itemPropertyChanged(this, ItemChangeType::Count);
+    }
+}
+
 bool Item::isGround() const noexcept
 {
     return itemType->isGround();
@@ -176,12 +187,24 @@ void Item::setAttribute(ItemAttribute &&attribute)
 
 void Item::setActionId(uint16_t id)
 {
-    getOrCreateAttribute(ItemAttribute_t::ActionId).setInt(id);
+    auto &attr = getOrCreateAttribute(ItemAttribute_t::ActionId);
+    const auto oldActionId = attr.get<int>();
+    if (oldActionId == id)
+        return;
+
+    attr.setInt(id);
+    Items::items.itemPropertyChanged(this, ItemChangeType::ActionId);
 }
 
 void Item::setUniqueId(uint16_t id)
 {
-    getOrCreateAttribute(ItemAttribute_t::UniqueId).setInt(id);
+    auto &attr = getOrCreateAttribute(ItemAttribute_t::UniqueId);
+    const auto oldUniqueId = attr.get<int>();
+    if (oldUniqueId == id)
+        return;
+
+    attr.setInt(id);
+    Items::items.itemPropertyChanged(this, ItemChangeType::UniqueId);
 }
 
 void Item::setText(const std::string &text)

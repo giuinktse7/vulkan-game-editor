@@ -19,7 +19,8 @@ namespace PropertiesUI
         Q_PROPERTY(QString containerName READ containerName CONSTANT)
 
       public:
-        Q_INVOKABLE void containerItemClicked(int index);
+        Q_INVOKABLE void containerItemLeftClicked(int index);
+        Q_INVOKABLE void containerItemRightClicked(int index);
         Q_INVOKABLE bool itemDropEvent(int index, QByteArray serializedDraggableItem);
         Q_INVOKABLE void itemDragStartEvent(int index);
 

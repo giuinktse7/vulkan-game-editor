@@ -28,6 +28,14 @@
 class Item;
 enum class ItemTypes_t;
 
+struct ItemSignal
+{
+    Nano::Signal<void(Item *)> address;
+    Nano::Signal<void(ItemChangeType)> property;
+
+    ItemSignal() {}
+};
+
 class Items
 {
   public:
@@ -35,7 +43,7 @@ class Items
 
     // Used to track (observe) items and be notified if the address of an item
     // with a given entity ID changes. The key is an entity ID.
-    std::unordered_map<uint32_t, Nano::Signal<void(Item *)>> itemSignals;
+    std::unordered_map<uint32_t, ItemSignal> itemSignals;
 
     // Used to track changes in a container (insert/remove item).
     // The key is an entity ID for the container item.
@@ -51,13 +59,14 @@ class Items
     static void loadFromOtb(const std::filesystem::path path);
     static void loadFromXml(const std::filesystem::path path);
 
-    template <auto MemberFunction, typename T>
+    template <auto AddressFunction, auto PropertyFunction, typename T>
     ItemGuidDisconnect trackItem(uint32_t itemGuid, T *instance);
 
     template <auto MemberFunction, typename T>
     ItemGuidDisconnect trackContainer(uint32_t itemGuid, T *instance);
 
-    void itemMoved(Item *item);
+    void itemAddressChanged(Item *item);
+    void itemPropertyChanged(Item *item, const ItemChangeType changeType);
     void containerChanged(Item *containerItem, const ContainerChange &containerChange);
 
     /**
@@ -147,7 +156,7 @@ class Items
     std::vector<uint16_t> guidRefCounts;
 };
 
-template <auto MemberFunction, typename T>
+template <auto AddressFunction, auto PropertyFunction, typename T>
 ItemGuidDisconnect Items::trackItem(uint32_t itemGuid, T *instance)
 {
     auto outerFound = itemSignals.find(itemGuid);
@@ -163,15 +172,17 @@ ItemGuidDisconnect Items::trackItem(uint32_t itemGuid, T *instance)
         auto found = itemMoveSignals->find(itemGuid);
         if (found != itemMoveSignals->end())
         {
-            found->second.disconnect<MemberFunction>(instance);
-            if (found->second.is_empty())
+            found->second.address.disconnect<AddressFunction>(instance);
+            found->second.property.disconnect<PropertyFunction>(instance);
+            if (found->second.address.is_empty() && found->second.property.is_empty())
             {
                 itemMoveSignals->erase(itemGuid);
             }
         }
     };
 
-    outerFound->second.connect<MemberFunction>(instance);
+    outerFound->second.address.connect<AddressFunction>(instance);
+    outerFound->second.property.connect<PropertyFunction>(instance);
 
     return ItemGuidDisconnect(disconnect);
 }

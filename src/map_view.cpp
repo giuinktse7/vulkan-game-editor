@@ -797,7 +797,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                     }
                     else
                     {
-                        const Item *topItem = _map->getTopItem(pos);
+                        Item *topItem = _map->getTopItem(pos);
                         if (!topItem)
                         {
                             commitTransaction(TransactionType::Selection, [this] { clearSelection(); });
@@ -810,6 +810,10 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                                 clearSelection();
                                 selectTopItem(pos);
                             });
+                        }
+                        else
+                        {
+                            selectedItemClicked.fire(this, this->getTile(pos), topItem);
                         }
 
                         action.setMoveOrigin(pos);

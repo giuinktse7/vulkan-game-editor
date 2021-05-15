@@ -91,6 +91,8 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
             this,
             &MainWindow::mapViewUndoRedoEvent);
 
+    vulkanWindow->getMapView()->onSelectedItemClicked<&MainWindow::mapViewSelectedItemClicked>(this);
+
     if (map->name().empty())
     {
         uint32_t untitledNameId = nextUntitledId();
@@ -140,10 +142,18 @@ MainWindow::MainWindow(QWidget *parent)
 //>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>
 
+void MainWindow::mapViewSelectedItemClicked(MapView *mapView, const Tile *tile, Item *item)
+{
+    auto position = tile->position();
+    bool showInPropertyWindow = !(QApplication::keyboardModifiers() & Qt::KeyboardModifier::AltModifier);
+    if (showInPropertyWindow)
+    {
+        propertyWindow->focusItem(item, position, *mapView);
+    }
+}
+
 void MainWindow::mapViewSelectionChangedEvent(MapView &mapView)
 {
-    // VME_LOG_D("mapViewSelectionChangedEvent");
-
     Item *selectedItem = mapView.singleSelectedItem();
     if (selectedItem)
     {

@@ -178,12 +178,21 @@ void Items::loadFromXml(const std::filesystem::path path)
     VME_LOG("Loaded items.xml in " << start.elapsedMillis() << " ms.");
 }
 
-void Items::itemMoved(Item *item)
+void Items::itemAddressChanged(Item *item)
 {
     auto found = itemSignals.find(item->guid());
     if (found != itemSignals.end())
     {
-        found->second.fire(item);
+        found->second.address.fire(item);
+    }
+}
+
+void Items::itemPropertyChanged(Item *item, const ItemChangeType changeType)
+{
+    auto found = itemSignals.find(item->guid());
+    if (found != itemSignals.end())
+    {
+        found->second.property.fire(changeType);
     }
 }
 

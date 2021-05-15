@@ -59,7 +59,7 @@ bool Container::insertItemTracked(Item &&item, size_t index)
 
     while (itemLocation != _items.end())
     {
-        Items::items.itemMoved(&(**itemLocation));
+        Items::items.itemAddressChanged(&(**itemLocation));
         ++itemLocation;
     }
 
@@ -147,7 +147,7 @@ Item Container::dropItemTracked(size_t index)
 
     while (itemLocation != _items.end())
     {
-        Items::items.itemMoved(&(**itemLocation));
+        Items::items.itemAddressChanged(&(**itemLocation));
         ++itemLocation;
     }
 
@@ -171,7 +171,7 @@ void Container::moveItemTracked(size_t fromIndex, size_t toIndex)
 
     while (fromIt != toIt)
     {
-        Items::items.itemMoved(&(**fromIt));
+        Items::items.itemAddressChanged(&(**fromIt));
         ++fromIt;
     }
 }

@@ -21,12 +21,7 @@ class MapView;
 class GroundBrush final : public Brush
 {
   public:
-    struct WeightedItemId
-    {
-        uint32_t id;
-        uint32_t weight;
-    };
-
+    GroundBrush(const std::string &name, std::vector<WeightedItemId> &&weightedIds);
     GroundBrush(uint32_t id, const std::string &name, std::vector<WeightedItemId> &&weightedIds);
     GroundBrush(uint32_t id, const std::string &name, std::vector<WeightedItemId> &&weightedIds, uint32_t iconServerId);
 

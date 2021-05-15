@@ -161,7 +161,11 @@
     "qpalette": "cpp",
     "qtwidgets": "cpp",
     "qvariant": "cpp",
-    "stop_token": "cpp"
+    "stop_token": "cpp",
+    "charconv": "cpp",
+    "coroutine": "cpp",
+    "format": "cpp",
+    "source_location": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

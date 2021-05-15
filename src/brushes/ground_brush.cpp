@@ -21,6 +21,12 @@ GroundBrush::GroundBrush(uint32_t id, const std::string &name, std::vector<Weigh
     initialize();
 }
 
+GroundBrush::GroundBrush(const std::string &name, std::vector<WeightedItemId> &&weightedIds)
+    : Brush(name), _weightedIds(std::move(weightedIds)), id(UINT32_MAX), _iconServerId(_weightedIds.at(0).id)
+{
+    initialize();
+}
+
 void GroundBrush::initialize()
 {
     // Sort by weights descending to optimize iteration in sampleServerId() for the most common cases.

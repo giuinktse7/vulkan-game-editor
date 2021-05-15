@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gui/mainwindow.h"
+#include "gui/vulkan_window.h"
 #include <QApplication>
 #include <QVulkanInstance>
 #include <filesystem>
@@ -8,9 +10,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "gui/mainwindow.h"
-#include "gui/vulkan_window.h"
 
 // TemporaryTest includes
 #include <memory>

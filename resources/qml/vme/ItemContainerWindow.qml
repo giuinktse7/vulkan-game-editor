@@ -187,8 +187,13 @@ Item {
           }
 
           onRightClick: {
-            itemContainer.model.containerItemClicked(itemSlot.index);
-            itemContainer.updateLayout();
+            itemContainer.model.containerItemRightClicked(itemSlot.index);
+            // itemContainer.updateLayout();
+          }
+
+          onLeftClick: {
+            itemContainer.model.containerItemLeftClicked(itemSlot.index);
+            // itemContainer.updateLayout();
           }
         }
 

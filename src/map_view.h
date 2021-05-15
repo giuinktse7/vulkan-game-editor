@@ -235,6 +235,9 @@ class MapView : public Nano::Observer<>
     void onMapItemDragStart(T *instance);
 
     template <auto MemberFunction, typename T>
+    void onSelectedItemClicked(T *instance);
+
+    template <auto MemberFunction, typename T>
     void onUndoRedo(T *instance);
 
     EditorAction &editorAction;
@@ -259,6 +262,7 @@ class MapView : public Nano::Observer<>
 
     Nano::Signal<void(const Camera::Viewport &)> viewportChange;
     Nano::Signal<void(Tile *tile, Item *item)> mapItemDragStart;
+    Nano::Signal<void(MapView *mapView, const Tile *tile, Item *item)> selectedItemClicked;
     Nano::Signal<void()> drawRequest;
     Nano::Signal<void()> undoRedoPerformed;
 
@@ -423,6 +427,12 @@ template <auto MemberFunction, typename T>
 void MapView::onMapItemDragStart(T *instance)
 {
     mapItemDragStart.connect<MemberFunction>(instance);
+}
+
+template <auto MemberFunction, typename T>
+void MapView::onSelectedItemClicked(T *instance)
+{
+    selectedItemClicked.connect<MemberFunction>(instance);
 }
 
 template <auto MemberFunction, typename T>

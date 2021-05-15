@@ -1,5 +1,7 @@
 #pragma once
 
+#include <concepts>
+
 #include "../../position.h"
 #include "../../signal.h"
 #include "../../tracked_item.h"
@@ -15,6 +17,7 @@ namespace PropertiesUI
     {
         Nano::Signal<void(ContainerModel *)> postOpened;
         Nano::Signal<void(ContainerModel *)> preClosed;
+        Nano::Signal<bool(ContainerNode *, int)> itemLeftClicked;
         Nano::Signal<bool(ContainerNode *, int, const ItemDrag::DraggableItem *)> itemDropped;
         Nano::Signal<void(ContainerNode *, int)> itemDragStarted;
     };
@@ -58,6 +61,7 @@ namespace PropertiesUI
         void closeChild(int index);
         void toggleChild(int index);
 
+        void itemLeftClickedEvent(int index);
         void itemDropEvent(int index, ItemDrag::DraggableItem *droppedItem);
         void itemDragStartEvent(int index);
 
@@ -134,6 +138,9 @@ namespace PropertiesUI
         template <auto MemberFunction, typename T>
         void onContainerItemDragStart(T *instance);
 
+        template <auto MemberFunction, typename T>
+        void onItemLeftClicked(T *instance);
+
         ContainerListModel containerListModel;
 
       private:
@@ -151,6 +158,12 @@ namespace PropertiesUI
     void ContainerTree::onContainerItemDragStart(T *instance)
     {
         _signals.itemDragStarted.connect<MemberFunction>(instance);
+    }
+
+    template <auto MemberFunction, typename T>
+    void ContainerTree::onItemLeftClicked(T *instance)
+    {
+        _signals.itemLeftClicked.connect<MemberFunction>(instance);
     }
 
 } // namespace PropertiesUI

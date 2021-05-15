@@ -7,6 +7,7 @@ Item {
   height : 36
 
   signal dragStart();
+  signal leftClick();
   signal rightClick();
   signal itemDroppedFromMap(var mapItemBuffer, var dropCallback);
 
@@ -47,12 +48,16 @@ Item {
       property int dragStartThreshold : 7
       property bool dragging : false
 
+      onClicked: (mouse) => {
+        if (mouse.button & Qt.LeftButton) {
+          leftClick();
+        }
+      }
 
       onPressed : (mouse) => {
         if (mouse.button & Qt.LeftButton) {
           pressOrigin = Qt.point(mouseX, mouseY);
           dragging = false;
-          console.log("Press");
         } else if (mouse.button & Qt.RightButton) {
           rightClick();
         }

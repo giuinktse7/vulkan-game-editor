@@ -105,14 +105,14 @@ void ContainterTree::modelRemovedEvent(ContainerModel *model)
 ContainerNode::ContainerNode(Item *containerItem, ContainerSignals *_signals)
     : trackedContainerItem(containerItem), _signals(_signals)
 {
-    trackedContainerItem.onChanged<&ContainerNode::trackedItemChanged>(this);
+    trackedContainerItem.onAddressChanged<&ContainerNode::trackedItemChanged>(this);
     trackedContainerItem.onContainerChanged<&ContainerNode::trackedContainerChanged>(this);
 }
 
 ContainerNode::ContainerNode(Item *containerItem, ContainerNode *parent)
     : trackedContainerItem(containerItem), _signals(parent->_signals)
 {
-    trackedContainerItem.onChanged<&ContainerNode::trackedItemChanged>(this);
+    trackedContainerItem.onAddressChanged<&ContainerNode::trackedItemChanged>(this);
     trackedContainerItem.onContainerChanged<&ContainerNode::trackedContainerChanged>(this);
 }
 
@@ -144,7 +144,7 @@ void PropertiesUI::ContainerTree::Node::setIndexInParent(int index)
     VME_LOG_D(k + ", setIndexInParent: " + std::to_string(index));
     indexInParentContainer = index;
 
-    Items::items.itemMoved(&parent->container()->itemAt(index));
+    Items::items.itemAddressChanged(&parent->container()->itemAt(index));
 }
 
 void PropertiesUI::ContainerTree::Root::setIndexInParent(int index)
@@ -395,6 +395,11 @@ void ContainerNode::toggleChild(int index)
 void ContainerNode::itemDragStartEvent(int index)
 {
     _signals->itemDragStarted.fire(this, index);
+}
+
+void ContainerNode::itemLeftClickedEvent(int index)
+{
+    _signals->itemLeftClicked.fire(this, index);
 }
 
 void ContainerNode::itemDropEvent(int index, ItemDrag::DraggableItem *droppedItem)

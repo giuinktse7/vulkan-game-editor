@@ -149,7 +149,7 @@ void Tile::moveItemsWithBroadcast(Tile &other)
     for (auto &item : _items)
     {
         Item *newItem = other.addItem(std::move(item));
-        Items::items.itemMoved(newItem);
+        Items::items.itemAddressChanged(newItem);
     }
     _items.clear();
 
@@ -528,11 +528,11 @@ void Tile::movedInMap()
 {
     if (_ground)
     {
-        Items::items.itemMoved(&(*_ground));
+        Items::items.itemAddressChanged(&(*_ground));
     }
 
     for (Item &item : _items)
     {
-        Items::items.itemMoved(&item);
+        Items::items.itemAddressChanged(&item);
     }
 }

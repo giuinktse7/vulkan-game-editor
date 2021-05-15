@@ -7,12 +7,18 @@
 
 struct ItemObserver
 {
-    void onChanged(Item *item)
+    void onAddressChanged(Item *item)
     {
-        receivedChange = true;
+        receivedAddressChange = true;
     }
 
-    bool receivedChange = false;
+    void onPropertyChanged(Item *item, ItemChangeType changeType)
+    {
+        latestPropertyChange = changeType;
+    }
+
+    bool receivedAddressChange = false;
+    std::optional<ItemChangeType> latestPropertyChange;
 };
 
 struct ContainerObserver
@@ -41,16 +47,24 @@ TEST_CASE("tracked_item.h", "[observer][item]")
                 ItemObserver observer;
 
                 auto tracked = TrackedItem(&item);
-                tracked.onChanged<&ItemObserver::onChanged>(&observer);
+                tracked.onAddressChanged<&ItemObserver::onAddressChanged>(&observer);
+                tracked.onPropertyChanged<&ItemObserver::onPropertyChanged>(&observer);
 
                 REQUIRE(Items::items.itemSignals.size() == 1);
 
                 Item i2 = item.deepCopy();
 
-                SECTION("Item signal works")
+                SECTION("Item address signal works")
                 {
-                    Items::items.itemMoved(&i2);
-                    REQUIRE(observer.receivedChange);
+                    Items::items.itemAddressChanged(&i2);
+                    REQUIRE(observer.receivedAddressChange);
+                }
+
+                SECTION("Item property signal works for count")
+                {
+                    item.setCount(25);
+                    bool ok = observer.latestPropertyChange.has_value() && (*observer.latestPropertyChange) == ItemChangeType::Count;
+                    REQUIRE(ok);
                 }
             }
 

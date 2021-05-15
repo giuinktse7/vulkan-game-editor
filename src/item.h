@@ -65,7 +65,7 @@ class Item
     void setDescription(std::string &&description);
     void setAttribute(ItemAttribute &&attribute);
     inline void setSubtype(uint8_t subtype) noexcept;
-    inline void setCount(uint8_t count) noexcept;
+    void setCount(uint8_t count) noexcept;
     inline void setCharges(uint8_t charges) noexcept;
 
     Container *getOrCreateContainer();
@@ -152,11 +152,6 @@ inline uint8_t Item::subtype() const noexcept
 inline void Item::setSubtype(uint8_t subtype) noexcept
 {
     this->_subtype = subtype;
-}
-
-inline void Item::setCount(uint8_t count) noexcept
-{
-    _subtype = count;
 }
 
 inline void Item::setCharges(uint8_t charges) noexcept
