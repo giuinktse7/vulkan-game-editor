@@ -68,7 +68,7 @@ class ItemPropertyWindow : public QQuickView
 {
     Q_OBJECT
   signals:
-    void countChanged(ItemLocation &itemLocation, int count, bool shouldCommit = false);
+    void countChanged(std::variant<Item *, ItemLocation> itemData, int count, bool shouldCommit);
 
   public:
     ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow);

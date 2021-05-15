@@ -465,7 +465,7 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, con
     DrawOffset worldPosOffset{0, 0};
     ItemDrawInfo info{};
 
-    for (const std::unique_ptr<Item> &itemPtr : tile->items())
+    for (const std::shared_ptr<Item> &itemPtr : tile->items())
     {
         const Item &item = *itemPtr;
         if (!shouldDrawItem(position, item, flags, filter))

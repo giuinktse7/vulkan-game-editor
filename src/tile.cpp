@@ -92,9 +92,9 @@ void Tile::removeItem(std::function<bool(const Item &)> predicate)
     }
 }
 
-std::unique_ptr<Item> Tile::dropItem(size_t index)
+std::shared_ptr<Item> Tile::dropItem(size_t index)
 {
-    std::unique_ptr<Item> item(std::move(_items.at(index)));
+    std::shared_ptr<Item> item(std::move(_items.at(index)));
     _items.erase(_items.begin() + index);
 
     if (item->selected)
@@ -103,7 +103,7 @@ std::unique_ptr<Item> Tile::dropItem(size_t index)
     return item;
 }
 
-std::unique_ptr<Item> Tile::dropItem(Item *item)
+std::shared_ptr<Item> Tile::dropItem(Item *item)
 {
     DEBUG_ASSERT(!(_ground && item == _ground.get()), "Can not drop ground using dropItem (as of now. It will maybe make sense in the future to be able to do so).");
 
@@ -187,14 +187,54 @@ Item *Tile::itemAt(size_t index)
     return index >= _items.size() ? nullptr : _items.at(index).get();
 }
 
-void Tile::insertItem(Item &&item, size_t index)
+void Tile::insertItem(std::shared_ptr<Item> item, size_t index)
 {
-    _items.emplace(_items.begin() + index, std::make_unique<Item>(std::move(item)));
+    _items.emplace(_items.begin() + index, item);
 }
 
-Item *Tile::addItem(std::unique_ptr<Item> &&item)
+void Tile::insertItem(Item &&item, size_t index)
 {
-    return addItem(std::move(*item));
+    _items.emplace(_items.begin() + index, std::make_shared<Item>(std::move(item)));
+}
+
+Item *Tile::addItem(std::shared_ptr<Item> item)
+{
+    if (item->isGround())
+    {
+        VME_LOG_D("TODO ::: Tile::addItem: Did nothing!");
+        // return replaceGround(std::move(item));
+        return _ground.get();
+    }
+    else if (_items.size() == 0 || item->isTop() || item->itemType->stackOrder >= _items.back()->itemType->stackOrder)
+    {
+        if (item->selected)
+            ++_selectionCount;
+
+        auto &newItem = _items.emplace_back(item);
+        return newItem.get();
+    }
+    else
+    {
+        if (item->selected)
+            ++_selectionCount;
+
+        auto cursor = _items.begin();
+        while (cursor != _items.end() && (*cursor)->itemType->stackOrder <= item->itemType->stackOrder)
+        {
+            ++cursor;
+        }
+
+        if (cursor == _items.end())
+        {
+            auto &newItem = _items.emplace_back(item);
+            return newItem.get();
+        }
+        else
+        {
+            auto &newItem = *_items.emplace(cursor, item);
+            return newItem.get();
+        }
+    }
 }
 
 Item *Tile::addItem(Item &&item)
@@ -262,7 +302,7 @@ Item *Tile::replaceItem(size_t index, Item &&item)
     return _items.at(index).get();
 }
 
-void Tile::setGround(std::unique_ptr<Item> ground)
+void Tile::setGround(std::shared_ptr<Item> ground)
 {
     DEBUG_ASSERT(ground->isGround(), "Tried to add a ground that is not a ground item.");
 
@@ -354,11 +394,11 @@ void Tile::deselectGround()
     }
 }
 
-std::unique_ptr<Item> Tile::dropGround()
+std::shared_ptr<Item> Tile::dropGround()
 {
     if (_ground)
     {
-        std::unique_ptr<Item> ground = std::move(_ground);
+        std::shared_ptr<Item> ground = std::move(_ground);
         _ground.reset();
 
         return ground;
@@ -436,7 +476,30 @@ int Tile::getTopElevation() const
         _items.begin(),
         _items.end(),
         0,
-        [](int elevation, const std::unique_ptr<Item> &next) { return elevation + (*next).itemType->getElevation(); });
+        [](int elevation, const std::shared_ptr<Item> &next) { return elevation + (*next).itemType->getElevation(); });
+}
+
+Tile Tile::copyForHistory() const
+{
+    Tile tile(_position);
+    for (const auto &item : _items)
+    {
+        tile.addItem(item);
+    }
+    tile._flags = this->_flags;
+    if (_ground)
+    {
+        tile._ground = std::make_unique<Item>(_ground->deepCopy());
+    }
+
+    if (_creature)
+    {
+        tile._creature = std::make_unique<Creature>(_creature->deepCopy());
+    }
+
+    tile._selectionCount = this->_selectionCount;
+
+    return tile;
 }
 
 Tile Tile::deepCopy() const
@@ -511,9 +574,9 @@ void Tile::setFlags(uint32_t flags)
     _flags = flags;
 }
 
-const std::vector<std::unique_ptr<Item>>::const_iterator Tile::findItem(std::function<bool(const Item &)> predicate) const
+const std::vector<std::shared_ptr<Item>>::const_iterator Tile::findItem(std::function<bool(const Item &)> predicate) const
 {
-    return std::find_if(_items.begin(), _items.end(), [predicate](const std::unique_ptr<Item> &item) { return predicate(*item); });
+    return std::find_if(_items.begin(), _items.end(), [predicate](const std::shared_ptr<Item> &item) { return predicate(*item); });
 }
 
 std::optional<size_t> Tile::indexOf(Item *item) const

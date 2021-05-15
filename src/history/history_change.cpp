@@ -318,6 +318,107 @@ namespace MapHistory
         data = pos;
     }
 
+    RemoveTile_v2::RemoveTile_v2(Position pos)
+        : data(pos) {}
+
+    void RemoveTile_v2::commit(MapView &mapView)
+    {
+        Position &position = std::get<Position>(data);
+
+        data = removeMapTile(mapView, position);
+    }
+
+    void RemoveTile_v2::undo(MapView &mapView)
+    {
+        auto &tile = std::get<std::unique_ptr<Tile>>(data);
+        Position pos = tile->position();
+
+        setMapTile(mapView, std::move(*tile));
+
+        data = pos;
+    }
+
+    Move_v2::Move_v2(Position from, Position to)
+        : fromTile(from), toTile(to) {}
+
+    Move_v2::Move_v2(Position from, Position to, bool ground)
+        : fromTile(from), toTile(to), partialMoveData({}) {}
+
+    Move_v2::Move_v2(Position from, Position to, bool ground, std::vector<uint16_t> indices)
+        : fromTile(from), toTile(to), partialMoveData({indices, ground}) {}
+
+    Move_v2 Move_v2::entire(Position from, Position to)
+    {
+        return Move_v2(from, to);
+    }
+
+    Move_v2 Move_v2::entire(const Tile &tile, Position to)
+    {
+        return Move_v2(tile.position(), to);
+    }
+
+    Move_v2 Move_v2::selected(const Tile &tile, Position to)
+    {
+        std::vector<uint16_t> indices;
+        auto &items = tile.items();
+        int count = static_cast<int>(tile.itemCount());
+
+        // The indices need to be in descending order for Move::commit to work.
+        for (int i = count - 1; i >= 0; --i)
+        {
+            if (items.at(i)->selected)
+                indices.emplace_back(i);
+        }
+
+        bool moveGround = tile.hasGround() && tile.ground()->selected;
+
+        return Move_v2(tile.position(), to, moveGround, indices);
+    }
+
+    void Move_v2::commit(MapView &mapView)
+    {
+        Map *map = getMap(mapView);
+        Position fromPos = fromTile.position();
+        Position toPos = toTile.position();
+
+        Tile &from = mapView.getOrCreateTile(fromPos);
+        Tile &to = mapView.getOrCreateTile(toPos);
+
+        // VME_LOG_D("Moving from " << fromPos << " to " << toPos);
+        fromTile = from.copyForHistory();
+        toTile = to.copyForHistory();
+
+        if (partialMoveData)
+        {
+            for (const auto i : partialMoveData->indices)
+            {
+                to.addItem(from.dropItem(i));
+            }
+
+            if (partialMoveData->ground)
+            {
+                to.setGround(from.dropGround());
+            }
+        }
+
+        // toPos being the first call improves performance (slightly). If toPos is no longer selected,
+        // it is possible that selection size becomes 0. If so, caching the only selected
+        // position becomes a much faster operation.
+        updateSelection(mapView, toPos);
+        updateSelection(mapView, fromPos);
+    }
+
+    void Move_v2::undo(MapView &mapView)
+    {
+        Map *map = getMap(mapView);
+
+        map->insertTile(std::move(toTile));
+        map->insertTile(std::move(fromTile));
+
+        updateSelection(mapView, fromTile.position());
+        updateSelection(mapView, toTile.position());
+    }
+
     Move::Move(Position from, Position to)
         : moveData(Move::Entire{}), undoData{Tile(from), Tile(to)} {}
 
@@ -810,22 +911,38 @@ namespace MapHistory
 
     void ModifyItem::commit(MapView &mapView)
     {
-        auto item = location.item(mapView);
+        // auto item = location.item(mapView);
         std::visit(
-            [item](ItemMutation::BaseMutation &itemMutation) {
-                itemMutation.commit(item);
+            [this](ItemMutation::BaseMutation &itemMutation) {
+                itemMutation.commit(this->item);
             },
             mutation);
     }
 
     void ModifyItem::undo(MapView &mapView)
     {
-        auto item = location.item(mapView);
+        // auto item = location.item(mapView);
         std::visit(
-            [item](ItemMutation::BaseMutation &itemMutation) {
-                itemMutation.undo(item);
+            [this](ItemMutation::BaseMutation &itemMutation) {
+                itemMutation.undo(this->item);
             },
             mutation);
+    }
+
+    ModifyItem_v2::ModifyItem_v2(Item *item, ItemMutation::Mutation &&mutation)
+        : item(item), mutation(std::move(mutation)) {}
+
+    ModifyItem_v2::ModifyItem_v2(Item *item, const ItemMutation::Mutation &mutation)
+        : item(item), mutation(mutation) {}
+
+    void ModifyItem_v2::commit(MapView &mapView)
+    {
+        std::visit([this](ItemMutation::BaseMutation &itemMutation) { itemMutation.commit(this->item); }, mutation);
+    }
+
+    void ModifyItem_v2::undo(MapView &mapView)
+    {
+        std::visit([this](ItemMutation::BaseMutation &itemMutation) { itemMutation.undo(this->item); }, mutation);
     }
 
     void Action::markAsCommitted()

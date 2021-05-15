@@ -141,11 +141,12 @@ namespace PropertiesUI
         template <auto MemberFunction, typename T>
         void onItemLeftClicked(T *instance);
 
+        std::optional<Root> root;
+
         ContainerListModel containerListModel;
 
       private:
         ContainerSignals _signals;
-        std::optional<Root> root;
     };
 
     template <auto MemberFunction, typename T>

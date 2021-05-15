@@ -44,6 +44,7 @@ namespace PropertiesUI
         Item *containerItem() const noexcept;
 
         void refresh();
+        void indexChanged(int index);
 
         int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
@@ -58,8 +59,6 @@ namespace PropertiesUI
         QHash<int, QByteArray> roleNames() const;
 
       private:
-        void indexChanged(int index);
-
         ContainerNode *treeNode;
     };
 } // namespace PropertiesUI

@@ -81,8 +81,25 @@ namespace MapHistory
         void commit(MapView &mapView) override;
         void undo(MapView &mapView) override;
 
+        // Test item caching
+        Item *item;
+
       private:
         ItemLocation location;
+        ItemMutation::Mutation mutation;
+    };
+
+    class ModifyItem_v2 : public ChangeItem
+    {
+      public:
+        ModifyItem_v2(Item *item, ItemMutation::Mutation &&mutation);
+        ModifyItem_v2(Item *item, const ItemMutation::Mutation &mutation);
+
+        void commit(MapView &mapView) override;
+        void undo(MapView &mapView) override;
+
+      private:
+        Item *item;
         ItemMutation::Mutation mutation;
     };
 
@@ -163,6 +180,18 @@ namespace MapHistory
         Position toPosition;
     };
 
+    class RemoveTile_v2 : public ChangeItem
+    {
+      public:
+        RemoveTile_v2(Position pos);
+
+        void commit(MapView &mapView) override;
+        void undo(MapView &mapView) override;
+
+      private:
+        std::variant<std::unique_ptr<Tile>, Position> data;
+    };
+
     class RemoveTile : public ChangeItem
     {
       public:
@@ -173,6 +202,33 @@ namespace MapHistory
 
       private:
         std::variant<Tile, Position> data;
+    };
+
+    class Move_v2 : public ChangeItem
+    {
+      public:
+        Move_v2(Position from, Position to);
+        Move_v2(Position from, Position to, bool ground);
+        Move_v2(Position from, Position to, bool ground, std::vector<uint16_t> indices);
+
+        static Move_v2 entire(Position from, Position to);
+        static Move_v2 entire(const Tile &tile, Position to);
+
+        static Move_v2 selected(const Tile &tile, Position to);
+
+        void commit(MapView &mapView) override;
+        void undo(MapView &mapView) override;
+
+      private:
+        struct PartialMoveData
+        {
+            std::vector<uint16_t> indices;
+            bool ground;
+        };
+        std::optional<PartialMoveData> partialMoveData;
+
+        Tile fromTile;
+        Tile toTile;
     };
 
     /* 
@@ -331,6 +387,7 @@ namespace MapHistory
             MoveFromContainerToMap,
             MoveFromContainerToContainer,
             ModifyItem,
+            ModifyItem_v2,
             std::unique_ptr<ChangeItem>>;
 
         Change(DataTypes data = {})

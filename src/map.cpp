@@ -159,7 +159,7 @@ void Map::removeTile(const Position pos)
     }
 }
 
-std::unique_ptr<Item> Map::dropItem(Tile *tile, Item *item)
+std::shared_ptr<Item> Map::dropItem(Tile *tile, Item *item)
 {
     DEBUG_ASSERT(tile != nullptr && item != nullptr, "These may not be nullptr.");
     DEBUG_ASSERT(getTile(tile->position()) == tile, "The tile must be present in the map.");

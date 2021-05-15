@@ -109,7 +109,7 @@ struct Container final : public ItemData
         : ItemData(item), _capacity(capacity) {}
     Container(uint16_t capacity, Item *item, Parent parent)
         : ItemData(item), _capacity(capacity) {}
-    Container(uint16_t capacity, const std::vector<std::unique_ptr<Item>> &items);
+    Container(uint16_t capacity, const std::vector<std::shared_ptr<Item>> &items);
     ~Container();
 
     Container(Container &&other) noexcept;
@@ -123,11 +123,11 @@ struct Container final : public ItemData
         _parent = std::monostate{};
     }
 
-    const std::vector<std::unique_ptr<Item>>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
+    const std::vector<std::shared_ptr<Item>>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
 
-    bool insertItemTracked(std::unique_ptr<Item> &&item, size_t index);
+    bool insertItemTracked(std::shared_ptr<Item> item, size_t index);
     bool insertItemTracked(Item &&item, size_t index);
-    Item dropItemTracked(size_t index);
+    std::shared_ptr<Item> dropItemTracked(size_t index);
     void moveItemTracked(size_t fromIndex, size_t toIndex);
 
     bool insertItem(Item &&item, size_t index);
@@ -145,9 +145,10 @@ struct Container final : public ItemData
     Item &itemAt(size_t index);
 
     std::optional<size_t> indexOf(Item *item) const;
+    bool hasItem(Item *item) const;
 
     const Item &itemAt(size_t index) const;
-    const std::vector<std::unique_ptr<Item>> &items() const noexcept;
+    const std::vector<std::shared_ptr<Item>> &items() const noexcept;
     size_t size() const noexcept;
     bool isFull() const noexcept;
     bool empty() const noexcept;
@@ -155,7 +156,7 @@ struct Container final : public ItemData
     uint16_t capacity() const noexcept;
     uint16_t volume() const noexcept;
 
-    std::vector<std::unique_ptr<Item>> _items;
+    std::vector<std::shared_ptr<Item>> _items;
 
     uint16_t _capacity;
 

@@ -127,6 +127,7 @@ class MapView : public Nano::Observer<>
     void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
 
     void setItemCount(ItemLocation itemLocation, uint8_t count);
+    void setItemCount(Item *item, uint8_t count);
 
     void moveFromMapToContainer(Tile &tile, Item *item, ContainerLocation &containerInfo);
     void moveFromContainerToMap(ContainerLocation &moveInfo, Tile &tile);
@@ -176,7 +177,7 @@ class MapView : public Nano::Observer<>
 
     void startItemDrag(Tile *tile, Item *item);
 
-    std::unique_ptr<Item> dropItem(Tile *tile, Item *item);
+    std::shared_ptr<Item> dropItem(Tile *tile, Item *item);
 
     bool singleTileSelected() const;
     const Tile *singleSelectedTile() const;

@@ -271,7 +271,8 @@ void MapView::removeTile(const Position position)
 {
     Action action(ActionType::RemoveTile);
 
-    action.addChange(RemoveTile(position));
+    // action.addChange(RemoveTile(position));
+    action.addChange(std::make_unique<RemoveTile_v2>(position));
 
     history.commit(std::move(action));
 }
@@ -290,11 +291,22 @@ void MapView::moveItem(const Tile &fromTile, const Position toPosition, Item *it
     history.commit(std::move(action));
 }
 
-void MapView::setItemCount(ItemLocation itemLocation, uint8_t count)
+void MapView::setItemCount(Item *item, uint8_t count)
 {
     Action action(
         ActionType::ModifyItem,
-        MapHistory::ModifyItem(std::move(itemLocation), ItemMutation::SetCount(count)));
+        MapHistory::ModifyItem_v2(item, ItemMutation::SetCount(count)));
+
+    history.commit(std::move(action));
+}
+
+void MapView::setItemCount(ItemLocation itemLocation, uint8_t count)
+{
+    auto k = MapHistory::ModifyItem(std::move(itemLocation), ItemMutation::SetCount(count));
+    k.item = itemLocation.item(*this);
+    Action action(
+        ActionType::ModifyItem,
+        std::move(k));
 
     history.commit(std::move(action));
 }
@@ -327,11 +339,33 @@ void MapView::moveFromContainerToContainer(ContainerLocation &from, ContainerLoc
 
 void MapView::moveSelection(const Position &offset)
 {
+    // history.beginTransaction(TransactionType::MoveItems);
+    // {
+    //     Action action(ActionType::Selection);
+
+    //     auto multiMove = std::make_unique<MultiMove>(offset, _selection.size());
+
+    //     for (const auto fromPos : _selection)
+    //     {
+    //         const Tile &fromTile = *getTile(fromPos);
+    //         Position toPos = fromPos + offset;
+    //         DEBUG_ASSERT(fromTile.hasSelection(), "The tile at each position of a selection should have a selection.");
+
+    //         if (fromTile.allSelected())
+    //             multiMove->add(Move::entire(fromPos, toPos));
+    //         else
+    //             multiMove->add(Move::selected(fromTile, toPos));
+    //     }
+
+    //     action.addChange(std::move(multiMove));
+
+    //     history.commit(std::move(action));
+    // }
+    // history.endTransaction(TransactionType::MoveItems);
+
     history.beginTransaction(TransactionType::MoveItems);
     {
         Action action(ActionType::Selection);
-
-        auto multiMove = std::make_unique<MultiMove>(offset, _selection.size());
 
         for (const auto fromPos : _selection)
         {
@@ -339,13 +373,8 @@ void MapView::moveSelection(const Position &offset)
             Position toPos = fromPos + offset;
             DEBUG_ASSERT(fromTile.hasSelection(), "The tile at each position of a selection should have a selection.");
 
-            if (fromTile.allSelected())
-                multiMove->add(Move::entire(fromPos, toPos));
-            else
-                multiMove->add(Move::selected(fromTile, toPos));
+            action.addChange(std::make_unique<Move_v2>(Move_v2::selected(fromTile, toPos)));
         }
-
-        action.addChange(std::move(multiMove));
 
         history.commit(std::move(action));
     }
@@ -463,11 +492,11 @@ void MapView::fillRegion(const Position &from, const Position &to, std::function
     history.endTransaction(TransactionType::AddMapItem);
 }
 
-std::unique_ptr<Item> MapView::dropItem(Tile *tile, Item *item)
+std::shared_ptr<Item> MapView::dropItem(Tile *tile, Item *item)
 {
     // TODO Add redo/undo for this action
 
-    std::unique_ptr<Item> droppedItem(_map->dropItem(tile, item));
+    std::shared_ptr<Item> droppedItem(_map->dropItem(tile, item));
 
     _selection.updatePosition(tile->position());
 

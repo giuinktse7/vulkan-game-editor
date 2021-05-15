@@ -4,6 +4,7 @@
 #include <QQmlEngine>
 #include <QQmlProperty>
 #include <QWidget>
+#include <queue>
 
 #include "../../../vendor/rollbear-visit/visit.hpp"
 #include "../../item_location.h"
@@ -141,33 +142,93 @@ void ItemPropertyWindow::focusGround(Item *item, Position &position, MapView &ma
 
 void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
 {
+    // DEBUG_ASSERT(state.propertyItem().has_value(), "No property item.");
+
+    // uint16_t tileIndex;
+    // ItemLocation location(state.selectedPosition, tileIndex);
+
+    // if (state.holds<FocusedItem>())
+    // {
+    //     location.tileIndex = state.focusedAs<FocusedItem>().tileIndex;
+    // }
+    // else if (state.holds<FocusedContainer>())
+    // {
+    //     tileIndex = state.focusedAs<FocusedContainer>().tileIndex;
+    // }
+    // else
+    // {
+    //     ABORT_PROGRAM("ItemPropertyWindow::setPropertyItemCount : Invalid focused thing.");
+    // }
+
+    // Item *item = state.propertyItem()->item();
+
+    // if (count == latestCommittedCount)
+    // {
+    //     // Do not commit if the count is the same as when the item was first focused.
+    //     emit countChanged(location, count, false);
+    // }
+    // else
+    // {
+    //     // Necessary to make sure that the correct "old" count is stored in MapView history
+    //     if (shouldCommit)
+    //     {
+    //         item->setCount(latestCommittedCount);
+    //         latestCommittedCount = count;
+    //     }
+    //     emit countChanged(location, count, shouldCommit);
+    // }
+
     DEBUG_ASSERT(state.propertyItem().has_value(), "No property item.");
-    DEBUG_ASSERT(state.holds<FocusedItem>() || state.holds<FocusedContainer>(), "Invalid focused thing.");
+
     Item *item = state.propertyItem()->item();
 
-    auto &focusedItem = state.focusedAs<FocusedItem>();
-
-    ItemLocation location(state.selectedPosition, static_cast<uint16_t>(focusedItem.tileIndex));
+    // if (item->count() == count)
+    //     return;
 
     if (count == latestCommittedCount)
     {
         // Do not commit if the count is the same as when the item was first focused.
-        emit countChanged(location, count, false);
+        emit countChanged(item, count, false);
     }
     else
     {
         // Necessary to make sure that the correct "old" count is stored in MapView history
         if (shouldCommit)
         {
-            focusedItem.item()->setCount(latestCommittedCount);
+            item->setCount(latestCommittedCount);
             latestCommittedCount = count;
         }
-        emit countChanged(location, count, shouldCommit);
+        emit countChanged(item, count, shouldCommit);
+    }
+
+    // Refresh the container UI if necessary
+    if (state.holds<FocusedContainer>())
+    {
+        std::queue<PropertiesUI::ContainerNode *> nodeQueue;
+        nodeQueue.emplace(&(*containerTree.root));
+        while (!nodeQueue.empty())
+        {
+            auto node = nodeQueue.front();
+            nodeQueue.pop();
+
+            auto index = node->container()->indexOf(item);
+            if (index.has_value())
+            {
+                node->model()->indexChanged(*index);
+                return;
+            }
+
+            for (const auto &[_, b] : node->openedChildrenNodes)
+            {
+                nodeQueue.emplace(b.get());
+            }
+        }
     }
 }
 
 void ItemPropertyWindow::setPropertyItem(Item *item)
 {
+    latestCommittedCount = item->count();
     state.setPropertyItem(item);
     state.propertyItem()->onPropertyChanged([this](Item *item, ItemChangeType type) {
         switch (type)
@@ -235,6 +296,8 @@ void ItemPropertyWindow::setFocused(FocusedContainer &&container)
 
 void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapView)
 {
+    latestCommittedCount = item->count();
+
     if (item->isGround())
     {
         focusGround(item, position, mapView);
@@ -252,7 +315,6 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
             DEBUG_ASSERT(maybeTileIndex.has_value(), "The tile did not have the item.");
 
             focusedItem.tileIndex = static_cast<uint16_t>(maybeTileIndex.value());
-            latestCommittedCount = item->count();
 
             return;
         }

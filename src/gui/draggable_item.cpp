@@ -226,7 +226,7 @@ ItemDrag::MapItem::MapItem(MapView *mapView, Tile *tile, Item *item)
 {
 }
 
-std::unique_ptr<Item> ItemDrag::MapItem::moveFromMap()
+std::shared_ptr<Item> ItemDrag::MapItem::moveFromMap()
 {
     return mapView->dropItem(tile, _item);
 }

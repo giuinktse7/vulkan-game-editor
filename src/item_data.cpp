@@ -3,14 +3,14 @@
 #include "item.h"
 #include "items.h"
 
-Container::Container(uint16_t capacity, const std::vector<std::unique_ptr<Item>> &items)
+Container::Container(uint16_t capacity, const std::vector<std::shared_ptr<Item>> &items)
     : _capacity(capacity)
 {
     DEBUG_ASSERT(capacity >= items.size(), "Too many items.");
 
     for (const auto &item : items)
     {
-        _items.emplace_back(std::make_unique<Item>(item->deepCopy()));
+        _items.emplace_back(item);
     }
 }
 
@@ -48,9 +48,22 @@ bool Container::empty() const noexcept
     return _items.empty();
 }
 
-bool Container::insertItemTracked(std::unique_ptr<Item> &&item, size_t index)
+bool Container::insertItemTracked(std::shared_ptr<Item> item, size_t index)
 {
-    return insertItemTracked(std::move(*item), index);
+    if (isFull())
+        return false;
+
+    auto itemLocation = _items.emplace(_items.begin() + index, item);
+
+    Items::items.containerChanged(this->item(), ContainerChange::inserted(static_cast<uint8_t>(index)));
+
+    // while (itemLocation != _items.end())
+    // {
+    //     Items::items.itemAddressChanged(&(**itemLocation));
+    //     ++itemLocation;
+    // }
+
+    return true;
 }
 
 bool Container::insertItemTracked(Item &&item, size_t index)
@@ -140,21 +153,21 @@ bool Container::removeItem(Item *item)
     return true;
 }
 
-Item Container::dropItemTracked(size_t index)
+std::shared_ptr<Item> Container::dropItemTracked(size_t index)
 {
     DEBUG_ASSERT(index <= UINT8_MAX, "index too large.");
 
-    Item item(std::move(*_items.at(index)));
+    std::shared_ptr<Item> item(std::move(_items.at(index)));
 
     auto itemLocation = _items.erase(_items.begin() + index);
 
     Items::items.containerChanged(this->item(), ContainerChange::removed(static_cast<uint8_t>(index)));
 
-    while (itemLocation != _items.end())
-    {
-        Items::items.itemAddressChanged(&(**itemLocation));
-        ++itemLocation;
-    }
+    // while (itemLocation != _items.end())
+    // {
+    //     Items::items.itemAddressChanged(&(**itemLocation));
+    //     ++itemLocation;
+    // }
 
     return item;
 }
@@ -229,6 +242,11 @@ const Item &Container::itemAt(size_t index) const
     return *_items.at(index);
 }
 
+bool Container::hasItem(Item *item) const
+{
+    return findItem([item](const Item &_item) { return item == &_item; }) != _items.end();
+}
+
 std::optional<size_t> Container::indexOf(Item *item) const
 {
     auto found = findItem([item](const Item &_item) { return item == &_item; });
@@ -242,12 +260,12 @@ std::optional<size_t> Container::indexOf(Item *item) const
     }
 }
 
-const std::vector<std::unique_ptr<Item>>::const_iterator Container::findItem(std::function<bool(const Item &)> predicate) const
+const std::vector<std::shared_ptr<Item>>::const_iterator Container::findItem(std::function<bool(const Item &)> predicate) const
 {
-    return std::find_if(_items.begin(), _items.end(), [predicate](const std::unique_ptr<Item> &_item) { return predicate(*_item); });
+    return std::find_if(_items.begin(), _items.end(), [predicate](const std::shared_ptr<Item> &_item) { return predicate(*_item); });
 }
 
-const std::vector<std::unique_ptr<Item>> &Container::items() const noexcept
+const std::vector<std::shared_ptr<Item>> &Container::items() const noexcept
 {
     return _items;
 }

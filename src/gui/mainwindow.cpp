@@ -290,17 +290,40 @@ void MainWindow::initializeUI()
     connect(mapTabs, &MapTabWidget::currentChanged, this, &MainWindow::mapTabChangedEvent);
 
     propertyWindow = new ItemPropertyWindow(QUrl("qrc:/vme/qml/itemPropertyWindow.qml"), this);
-    connect(propertyWindow, &ItemPropertyWindow::countChanged, [this](ItemLocation &itemLocation, int count, bool shouldCommit) {
+    connect(propertyWindow, &ItemPropertyWindow::countChanged, [this](std::variant<Item *, ItemLocation> itemData, int count, bool shouldCommit) {
         MapView &mapView = *currentMapView();
         if (shouldCommit)
         {
             mapView.beginTransaction(TransactionType::ModifyItem);
-            mapView.setItemCount(itemLocation, count);
+            if (std::holds_alternative<Item *>(itemData))
+            {
+                mapView.setItemCount(std::get<Item *>(itemData), count);
+            }
+            else if (std::holds_alternative<ItemLocation>(itemData))
+            {
+                mapView.setItemCount(std::get<ItemLocation>(itemData), count);
+            }
+            else
+            {
+                ABORT_PROGRAM("mainwindow.cpp : Bad itemData.");
+            }
+
             mapView.endTransaction(TransactionType::ModifyItem);
         }
         else
         {
-            itemLocation.item(mapView)->setCount(count);
+            if (std::holds_alternative<Item *>(itemData))
+            {
+                std::get<Item *>(itemData)->setCount(count);
+            }
+            else if (std::holds_alternative<ItemLocation>(itemData))
+            {
+                std::get<ItemLocation>(itemData).item(mapView)->setCount(count);
+            }
+            else
+            {
+                ABORT_PROGRAM("mainwindow.cpp : Bad itemData.");
+            }
         }
 
         mapView.requestDraw();
