@@ -71,7 +71,7 @@ namespace ItemDrag
         Item *item() const override;
         QPixmap pixmap() const override;
 
-        Item moveFromMap();
+        std::unique_ptr<Item> moveFromMap();
         static std::optional<MapItem> fromDataStream(QDataStream &dataStream);
 
         bool operator==(const MapItem &other) const

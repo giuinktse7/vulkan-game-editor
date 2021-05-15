@@ -128,7 +128,7 @@ class Map
     /*
 		Remove and release ownership of the item
 	*/
-    Item dropItem(Tile *tile, Item *item);
+    std::unique_ptr<Item> dropItem(Tile *tile, Item *item);
 
     void createItemAt(Position pos, uint16_t id);
 };

@@ -219,7 +219,7 @@ void MapView::removeSelectedItems(const Tile &tile)
 
     for (size_t i = 0; i < tile.items().size(); ++i)
     {
-        if (tile.items().at(i).selected)
+        if (tile.items().at(i)->selected)
             newTile.removeItem(i);
     }
 
@@ -463,11 +463,11 @@ void MapView::fillRegion(const Position &from, const Position &to, std::function
     history.endTransaction(TransactionType::AddMapItem);
 }
 
-Item MapView::dropItem(Tile *tile, Item *item)
+std::unique_ptr<Item> MapView::dropItem(Tile *tile, Item *item)
 {
     // TODO Add redo/undo for this action
 
-    Item droppedItem(_map->dropItem(tile, item));
+    std::unique_ptr<Item> droppedItem(_map->dropItem(tile, item));
 
     _selection.updatePosition(tile->position());
 

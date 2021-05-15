@@ -125,6 +125,7 @@ struct Container final : public ItemData
 
     const std::vector<std::unique_ptr<Item>>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
 
+    bool insertItemTracked(std::unique_ptr<Item> &&item, size_t index);
     bool insertItemTracked(Item &&item, size_t index);
     Item dropItemTracked(size_t index);
     void moveItemTracked(size_t fromIndex, size_t toIndex);

@@ -25,6 +25,8 @@ ScrollView {
   // ColumnLayout {
     // anchors.left: parent.left
     // anchors.right: parent.right
+  
+
     ColumnLayout {
       id : contents
       Layout.alignment : Qt.AlignTop
@@ -32,6 +34,19 @@ ScrollView {
       Layout.margins : 16
 
       Layout.preferredWidth : parent.width
+
+      ColumnLayout {
+        Layout.alignment : Qt.AlignTop
+        Layout.bottomMargin : 12
+
+        Image {
+          objectName : "property_item_image"
+          width: 32
+          height: 32
+          source: ""
+        }
+      }
+      
 
       ColumnLayout {
         Layout.alignment : Qt.AlignTop

@@ -170,7 +170,8 @@ Item {
           anchors.fill: parent
           source: {
             // console.log(itemSlot.serverId);
-            return itemSlot.serverId != -1 ? "image://itemTypes/" + itemSlot.serverId + ":" + itemSlot.subtype : ""
+            // return itemSlot.serverId != -1 ? "image://itemTypes/" + itemSlot.serverId + ":" + itemSlot.subtype : ""
+            return  Context.C_PropertyWindow.getItemPixmapString(itemSlot.serverId, itemSlot.subtype);
           }
         }
 

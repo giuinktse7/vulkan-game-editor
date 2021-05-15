@@ -78,7 +78,8 @@ class ItemPropertyWindow : public QQuickView
     bool containerItemSelectedEvent(PropertiesUI::ContainerNode *treeNode, int index);
 
     Q_INVOKABLE void setPropertyItemCount(int count, bool shouldCommit = false);
-    Q_INVOKABLE int getPropertyItemItemid() const;
+    Q_INVOKABLE QString getItemPixmapString(int serverId, int subtype) const;
+    QString getItemPixmapString(const Item &item) const;
 
     QWidget *wrapInWidget(QWidget *parent = nullptr);
 
@@ -101,7 +102,7 @@ class ItemPropertyWindow : public QQuickView
     struct FocusedItem
     {
         FocusedItem(Item *item, size_t tileIndex)
-            : trackedItem(item), tileIndex(tileIndex), latestCommittedCount(item->count())
+            : trackedItem(item), tileIndex(tileIndex)
         {
             DEBUG_ASSERT(!item->isContainer(), "Item may not be a container. Use FocusedContainer instead.");
         }
@@ -117,8 +118,6 @@ class ItemPropertyWindow : public QQuickView
 
         TrackedItem trackedItem;
         size_t tileIndex;
-
-        uint8_t latestCommittedCount;
     };
 
     struct FocusedContainer
@@ -200,6 +199,8 @@ class ItemPropertyWindow : public QQuickView
    */
     inline QObject *child(const char *name);
 
+    uint8_t latestCommittedCount = 1;
+
     QUrl _filepath;
     MainWindow *mainWindow;
     QWidget *_wrapperWidget;
@@ -243,6 +244,7 @@ class ItemPropertyWindow : public QQuickView
                 return;
             }
 
+            VME_LOG_D("PropertyItem: " << item->name());
             _propertyItem = TrackedItem(item);
         }
 

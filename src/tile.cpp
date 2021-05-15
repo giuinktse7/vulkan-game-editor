@@ -92,18 +92,18 @@ void Tile::removeItem(std::function<bool(const Item &)> predicate)
     }
 }
 
-Item Tile::dropItem(size_t index)
+std::unique_ptr<Item> Tile::dropItem(size_t index)
 {
-    Item item = std::move(_items.at(index));
+    std::unique_ptr<Item> item(std::move(_items.at(index)));
     _items.erase(_items.begin() + index);
 
-    if (item.selected)
+    if (item->selected)
         _selectionCount -= 1;
 
     return item;
 }
 
-Item Tile::dropItem(Item *item)
+std::unique_ptr<Item> Tile::dropItem(Item *item)
 {
     DEBUG_ASSERT(!(_ground && item == _ground.get()), "Can not drop ground using dropItem (as of now. It will maybe make sense in the future to be able to do so).");
 
@@ -111,13 +111,13 @@ Item Tile::dropItem(Item *item)
         return item == &_item;
     });
 
-    if (found != _items.end())
+    if (found == _items.end())
     {
-        auto index = static_cast<size_t>(found - _items.begin());
-        return dropItem(index);
+        ABORT_PROGRAM("[Tile::dropItem] The item was not present in the tile.");
     }
 
-    ABORT_PROGRAM("[Tile::dropItem] The item was not present in the tile.");
+    auto index = static_cast<size_t>(found - _items.begin());
+    return dropItem(index);
 }
 
 void Tile::deselectAll()
@@ -125,9 +125,9 @@ void Tile::deselectAll()
     if (_ground)
         _ground->selected = false;
 
-    for (Item &item : _items)
+    for (auto &item : _items)
     {
-        item.selected = false;
+        item->selected = false;
     }
 
     _selectionCount = 0;
@@ -167,8 +167,8 @@ void Tile::moveSelected(Tile &other)
     auto it = _items.begin();
     while (it != _items.end())
     {
-        Item &item = *it;
-        if (item.selected)
+        auto &item = *it;
+        if (item->selected)
         {
             other.addItem(std::move(item));
             it = _items.erase(it);
@@ -184,12 +184,17 @@ void Tile::moveSelected(Tile &other)
 
 Item *Tile::itemAt(size_t index)
 {
-    return index >= _items.size() ? nullptr : &_items.at(index);
+    return index >= _items.size() ? nullptr : _items.at(index).get();
 }
 
 void Tile::insertItem(Item &&item, size_t index)
 {
-    _items.emplace(_items.begin() + index, std::move(item));
+    _items.emplace(_items.begin() + index, std::make_unique<Item>(std::move(item)));
+}
+
+Item *Tile::addItem(std::unique_ptr<Item> &&item)
+{
+    return addItem(std::move(*item));
 }
 
 Item *Tile::addItem(Item &&item)
@@ -198,13 +203,13 @@ Item *Tile::addItem(Item &&item)
     {
         return replaceGround(std::move(item));
     }
-    else if (_items.size() == 0 || item.isTop() || item.itemType->stackOrder >= _items.back().itemType->stackOrder)
+    else if (_items.size() == 0 || item.isTop() || item.itemType->stackOrder >= _items.back()->itemType->stackOrder)
     {
         if (item.selected)
             ++_selectionCount;
 
-        Item *newItem = &_items.emplace_back(std::move(item));
-        return newItem;
+        auto &newItem = _items.emplace_back(std::make_unique<Item>(std::move(item)));
+        return newItem.get();
     }
     else
     {
@@ -212,20 +217,20 @@ Item *Tile::addItem(Item &&item)
             ++_selectionCount;
 
         auto cursor = _items.begin();
-        while (cursor != _items.end() && cursor->itemType->stackOrder <= item.itemType->stackOrder)
+        while (cursor != _items.end() && (*cursor)->itemType->stackOrder <= item.itemType->stackOrder)
         {
             ++cursor;
         }
 
         if (cursor == _items.end())
         {
-            Item *newItem = &_items.emplace_back(std::move(item));
-            return newItem;
+            auto &newItem = _items.emplace_back(std::make_unique<Item>(std::move(item)));
+            return newItem.get();
         }
         else
         {
-            Item *newItem = &(*_items.emplace(cursor, std::move(item)));
-            return newItem;
+            auto &newItem = *_items.emplace(cursor, std::make_unique<Item>(std::move(item)));
+            return newItem.get();
         }
     }
 }
@@ -245,16 +250,16 @@ Item *Tile::replaceGround(Item &&ground)
 
 Item *Tile::replaceItem(size_t index, Item &&item)
 {
-    bool s1 = _items.at(index).selected;
+    bool s1 = _items.at(index)->selected;
     bool s2 = item.selected;
-    _items.at(index) = std::move(item);
+    _items.at(index) = std::make_unique<Item>(std::move(item));
 
     if (s1 && !s2)
         --_selectionCount;
     else if (!s1 && s2)
         ++_selectionCount;
 
-    return &_items.at(index);
+    return _items.at(index).get();
 }
 
 void Tile::setGround(std::unique_ptr<Item> ground)
@@ -289,18 +294,18 @@ void Tile::setItemSelected(size_t itemIndex, bool selected)
 
 void Tile::selectItemAtIndex(size_t index)
 {
-    if (!_items.at(index).selected)
+    if (!_items.at(index)->selected)
     {
-        _items.at(index).selected = true;
+        _items.at(index)->selected = true;
         ++_selectionCount;
     }
 }
 
 void Tile::deselectItemAtIndex(size_t index)
 {
-    if (_items.at(index).selected)
+    if (_items.at(index)->selected)
     {
-        _items.at(index).selected = false;
+        _items.at(index)->selected = false;
         --_selectionCount;
     }
 }
@@ -315,9 +320,9 @@ void Tile::selectAll()
     }
 
     count += _items.size();
-    for (Item &item : _items)
+    for (auto &item : _items)
     {
-        item.selected = true;
+        item->selected = true;
     }
 
     DEBUG_ASSERT(count < UINT16_MAX, "Count too large.");
@@ -397,7 +402,7 @@ Item *Tile::getTopItem() const
 {
     if (_items.size() > 0)
     {
-        return const_cast<Item *>(&_items.back());
+        return const_cast<Item *>(_items.back().get());
     }
     if (_ground)
     {
@@ -431,7 +436,7 @@ int Tile::getTopElevation() const
         _items.begin(),
         _items.end(),
         0,
-        [](int elevation, const Item &next) { return elevation + next.itemType->getElevation(); });
+        [](int elevation, const std::unique_ptr<Item> &next) { return elevation + (*next).itemType->getElevation(); });
 }
 
 Tile Tile::deepCopy() const
@@ -439,7 +444,7 @@ Tile Tile::deepCopy() const
     Tile tile(_position);
     for (const auto &item : _items)
     {
-        tile.addItem(item.deepCopy());
+        tile.addItem(item->deepCopy());
     }
     tile._flags = this->_flags;
     if (_ground)
@@ -494,8 +499,8 @@ const Item *Tile::firstSelectedItem() const
 
     for (auto &item : _items)
     {
-        if (item.selected)
-            return &item;
+        if (item->selected)
+            return item.get();
     }
 
     return nullptr;
@@ -506,9 +511,9 @@ void Tile::setFlags(uint32_t flags)
     _flags = flags;
 }
 
-const std::vector<Item>::const_iterator Tile::findItem(std::function<bool(const Item &)> predicate) const
+const std::vector<std::unique_ptr<Item>>::const_iterator Tile::findItem(std::function<bool(const Item &)> predicate) const
 {
-    return std::find_if(_items.begin(), _items.end(), predicate);
+    return std::find_if(_items.begin(), _items.end(), [predicate](const std::unique_ptr<Item> &item) { return predicate(*item); });
 }
 
 std::optional<size_t> Tile::indexOf(Item *item) const
@@ -531,8 +536,8 @@ void Tile::movedInMap()
         Items::items.itemAddressChanged(&(*_ground));
     }
 
-    for (Item &item : _items)
+    for (auto &item : _items)
     {
-        Items::items.itemAddressChanged(&item);
+        Items::items.itemAddressChanged(item.get());
     }
 }

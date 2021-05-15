@@ -28,7 +28,7 @@ class Tile
 
     inline bool itemSelected(uint16_t itemIndex) const
     {
-        return _items.at(itemIndex).selected;
+        return _items.at(itemIndex)->selected;
     }
 
     void movedInMap();
@@ -49,12 +49,14 @@ class Tile
     Item *itemAt(size_t index);
 
     Item *addItem(Item &&item);
+    Item *addItem(std::unique_ptr<Item> &&item);
+
     void insertItem(Item &&item, size_t index);
     void removeItem(size_t index);
     void removeItem(Item *item);
     void removeItem(std::function<bool(const Item &)> predicate);
-    Item dropItem(size_t index);
-    Item dropItem(Item *item);
+    std::unique_ptr<Item> dropItem(size_t index);
+    std::unique_ptr<Item> dropItem(Item *item);
     void removeGround();
     std::unique_ptr<Item> dropGround();
     void setGround(std::unique_ptr<Item> ground);
@@ -62,7 +64,7 @@ class Tile
     void moveItemsWithBroadcast(Tile &other);
     void moveSelected(Tile &other);
 
-    const std::vector<Item>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
+    const std::vector<std::unique_ptr<Item>>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
 
     /**
 	 * @return The amount of removed items
@@ -89,7 +91,7 @@ class Tile
 
     int getTopElevation() const;
 
-    const std::vector<Item> &items() const noexcept
+    const std::vector<std::unique_ptr<Item>> &items() const noexcept
     {
         return _items;
     }
@@ -143,7 +145,7 @@ class Tile
     Item *replaceGround(Item &&ground);
     Item *replaceItem(size_t index, Item &&item);
 
-    std::vector<Item> _items;
+    std::vector<std::unique_ptr<Item>> _items;
     std::unique_ptr<Item> _ground;
     std::unique_ptr<Creature> _creature;
 
@@ -193,13 +195,13 @@ inline uint16_t Tile::removeItemsIf(UnaryPredicate &&predicate)
         auto removed = std::remove_if(
             _items.begin(),
             _items.end(),
-            [this, &predicate, &removedItems](const Item &item) {
-                bool remove = std::forward<UnaryPredicate>(predicate)(item);
+            [this, &predicate, &removedItems](const std::unique_ptr<Item> &item) {
+                bool remove = std::forward<UnaryPredicate>(predicate)(*item);
 
                 if (remove)
                 {
                     ++removedItems;
-                    if (item.selected)
+                    if (item->selected)
                         --this->_selectionCount;
                 }
 

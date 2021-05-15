@@ -48,6 +48,11 @@ bool Container::empty() const noexcept
     return _items.empty();
 }
 
+bool Container::insertItemTracked(std::unique_ptr<Item> &&item, size_t index)
+{
+    return insertItemTracked(std::move(*item), index);
+}
+
 bool Container::insertItemTracked(Item &&item, size_t index)
 {
     if (isFull())

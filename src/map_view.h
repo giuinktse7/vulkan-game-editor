@@ -176,7 +176,7 @@ class MapView : public Nano::Observer<>
 
     void startItemDrag(Tile *tile, Item *item);
 
-    Item dropItem(Tile *tile, Item *item);
+    std::unique_ptr<Item> dropItem(Tile *tile, Item *item);
 
     bool singleTileSelected() const;
     const Tile *singleSelectedTile() const;

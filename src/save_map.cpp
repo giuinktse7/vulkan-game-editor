@@ -139,9 +139,9 @@ void SaveMap::saveMap(const Map &map)
                     }
                 }
 
-                for (const Item &item : tile->items())
+                for (const auto &item : tile->items())
                 {
-                    serializer.serializeItem(item);
+                    serializer.serializeItem(*item);
                 }
 
                 buffer.endNode();

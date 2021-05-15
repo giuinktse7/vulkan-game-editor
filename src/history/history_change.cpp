@@ -157,7 +157,7 @@ namespace MapHistory
             data = newData;
         }
 
-        container->insertItemTracked(tile->dropItem(std::get<Data>(data).tileIndex), to.containerIndex());
+        container->insertItemTracked((tile->dropItem(std::get<Data>(data).tileIndex)), to.containerIndex());
         updateSelection(mapView, tile->position());
     }
 
@@ -369,7 +369,7 @@ namespace MapHistory
         // The indices need to be in descending order for Move::commit to work.
         for (int i = count - 1; i >= 0; --i)
         {
-            if (items.at(i).selected)
+            if (items.at(i)->selected)
                 indices.emplace_back(i);
         }
 
@@ -638,7 +638,7 @@ namespace MapHistory
         std::vector<uint16_t> result;
 
         const Tile &tile = *mapView.getTile(position);
-        const std::vector<Item> &items = tile.items();
+        const auto tileItemCount = tile.itemCount();
 
         if (select)
         {
@@ -648,7 +648,7 @@ namespace MapHistory
                 result.emplace_back(0);
             }
 
-            for (int i = 0; i < items.size(); ++i)
+            for (int i = 0; i < tileItemCount; ++i)
             {
                 if (!tile.itemSelected(i))
                     result.emplace_back(i + 1);
@@ -662,7 +662,7 @@ namespace MapHistory
                 result.emplace_back(0);
             }
 
-            for (int i = 0; i < items.size(); ++i)
+            for (int i = 0; i < tileItemCount; ++i)
             {
                 if (tile.itemSelected(i))
                     result.emplace_back(i + 1);

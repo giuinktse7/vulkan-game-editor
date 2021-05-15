@@ -16,6 +16,7 @@ namespace ObjectName
     constexpr auto CountSpinBox = "count_spinbox";
     constexpr auto ActionIdSpinBox = "action_id_spinbox";
     constexpr auto UniqueIdSpinBox = "unique_id_spinbox";
+    constexpr auto PropertyItemImage = "property_item_image";
 
     constexpr auto ItemContainerArea = "item_container_area";
 } // namespace ObjectName
@@ -140,18 +141,15 @@ void ItemPropertyWindow::focusGround(Item *item, Position &position, MapView &ma
 
 void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
 {
-    if (state.holds<FocusedContainer>())
-    {
-        VME_LOG("ItemPropertyWindow::setPropertyItemCount -- Not implemented for item in FocusedContainer.");
-        return;
-    }
+    DEBUG_ASSERT(state.propertyItem().has_value(), "No property item.");
+    DEBUG_ASSERT(state.holds<FocusedItem>() || state.holds<FocusedContainer>(), "Invalid focused thing.");
+    Item *item = state.propertyItem()->item();
 
-    DEBUG_ASSERT(state.holds<FocusedItem>(), "Only a FocusedItem has a count property.");
     auto &focusedItem = state.focusedAs<FocusedItem>();
 
     ItemLocation location(state.selectedPosition, static_cast<uint16_t>(focusedItem.tileIndex));
 
-    if (count == focusedItem.latestCommittedCount)
+    if (count == latestCommittedCount)
     {
         // Do not commit if the count is the same as when the item was first focused.
         emit countChanged(location, count, false);
@@ -161,16 +159,11 @@ void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
         // Necessary to make sure that the correct "old" count is stored in MapView history
         if (shouldCommit)
         {
-            focusedItem.item()->setCount(focusedItem.latestCommittedCount);
-            focusedItem.latestCommittedCount = count;
+            focusedItem.item()->setCount(latestCommittedCount);
+            latestCommittedCount = count;
         }
         emit countChanged(location, count, shouldCommit);
     }
-}
-
-int ItemPropertyWindow::getPropertyItemItemid() const
-{
-    return state.propertyItem()->item()->serverId();
 }
 
 void ItemPropertyWindow::setPropertyItem(Item *item)
@@ -190,6 +183,9 @@ void ItemPropertyWindow::setPropertyItem(Item *item)
     // Update UI
 
     auto itemtype = item->itemType;
+
+    auto itemImage = child(ObjectName::PropertyItemImage);
+    itemImage->setProperty("source", getItemPixmapString(*item));
 
     auto countSpinBox = child(ObjectName::CountSpinBox);
     setQmlObjectActive(countSpinBox->parent(), itemtype->stackable);
@@ -256,7 +252,7 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
             DEBUG_ASSERT(maybeTileIndex.has_value(), "The tile did not have the item.");
 
             focusedItem.tileIndex = static_cast<uint16_t>(maybeTileIndex.value());
-            focusedItem.latestCommittedCount = item->count();
+            latestCommittedCount = item->count();
 
             return;
         }
@@ -384,6 +380,16 @@ void ItemPropertyWindow::reloadSource()
     VME_LOG_D("ItemPropertyWindow source reloaded.");
     engine()->clearComponentCache();
     setSource(QUrl::fromLocalFile("../resources/qml/itemPropertyWindow.qml"));
+}
+
+QString ItemPropertyWindow::getItemPixmapString(const Item &item) const
+{
+    return getItemPixmapString(item.serverId(), item.subtype());
+}
+
+QString ItemPropertyWindow::getItemPixmapString(int serverId, int subtype) const
+{
+    return QString::fromStdString(serverId != -1 ? "image://itemTypes/" + std::to_string(serverId) + ":" + std::to_string(subtype) : "");
 }
 
 void ItemPropertyWindow::State::setFocused(FocusedGround &&ground)
