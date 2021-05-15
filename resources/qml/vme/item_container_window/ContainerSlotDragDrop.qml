@@ -3,8 +3,8 @@ import QtQml 2.15
 
 Item {
   id : root
-  width : 32
-  height : 32
+  width : 36
+  height : 36
 
   signal dragStart();
   signal rightClick();
@@ -28,7 +28,8 @@ Item {
       }
 
       Rectangle {
-        anchors.fill : parent
+        width: 32
+        height: 32
 
         color : "transparent"
         border.color : "#FFB74D"
@@ -69,7 +70,6 @@ Item {
           const dx = pressOrigin.x - mouseX
           const dy = pressOrigin.y - mouseY
           if (Math.sqrt(dx * dx + dy * dy) >= dragStartThreshold) {
-            console.log("dragstart");
             root.dragStart();
             dragging = true;
           }
