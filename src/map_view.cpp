@@ -973,7 +973,12 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
 
                         for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
                         {
-                            action.brush->apply(*this, position);
+                            // Require non-negative positions
+                            if (position.x >= 0 && position.y >= 0)
+                            {
+                                action.brush->apply(*this, position);
+                            }
+                            
                         }
                     }
                 },
