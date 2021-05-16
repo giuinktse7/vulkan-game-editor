@@ -1,6 +1,6 @@
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.1
-import QtQuick 2.1
+import QtQuick 2.15
 import "./item_container_window" as Components
 import "./" as Vme
 import Vme.context 1.0 as Context
@@ -75,7 +75,7 @@ Item {
       renderType: Text.NativeRendering
       antialiasing: false
       text: {
-        return model === null ? "" : model.containerName;
+        return model === null ? "No model :(" : model.containerName;
       }
       
       color: "#909090"
@@ -232,7 +232,6 @@ Item {
       snapMode: ListView.NoSnap
 
       delegate: itemDelegate
-      focus: true
 
       ScrollBar.vertical: ScrollBar {
         visible: itemContainer.currentHeight < itemContainer.maxHeight

@@ -95,7 +95,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -103,7 +103,6 @@
       <UseFullPaths>false</UseFullPaths>
       <PreprocessorDefinitions>WIN32;_WINDOWS;QT_CORE_LIB;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;_WIN64;QT_WIDGETS_LIB;QT_GUI_LIB;QT_QML_LIB;QT_NETWORK_LIB;QT_QUICK_LIB;QT_QMLMODELS_LIB;QT_OPENGL_LIB;QT_SVGWIDGETS_LIB;QT_SVG_LIB;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;QT_CORE_LIB;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;_WIN64;QT_WIDGETS_LIB;QT_GUI_LIB;QT_QML_LIB;QT_NETWORK_LIB;QT_QUICK_LIB;QT_QMLMODELS_LIB;QT_OPENGL_LIB;QT_SVGWIDGETS_LIB;QT_SVG_LIB;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -135,8 +134,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>
-      </Message>
+      <Message>		</Message>
       <Command>setlocal
 powershell -noprofile -executionpolicy Bypass -file C:/Users/giuin/AppData/Local/vcpkg/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary D:/dev/C++/vulkan-map-editor/vulkan-map-editor/build/Debug/main.exe -installedDir C:/Users/giuin/AppData/Local/vcpkg/vcpkg/installed/x64-windows/debug/bin -OutVariable out
 if %errorlevel% neq 0 goto :cmEnd
@@ -228,8 +226,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>
-      </Message>
+      <Message>		</Message>
       <Command>setlocal
 powershell -noprofile -executionpolicy Bypass -file C:/Users/giuin/AppData/Local/vcpkg/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary D:/dev/C++/vulkan-map-editor/vulkan-map-editor/build/Release/main.exe -installedDir C:/Users/giuin/AppData/Local/vcpkg/vcpkg/installed/x64-windows/bin -OutVariable out
 if %errorlevel% neq 0 goto :cmEnd
@@ -321,8 +318,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>
-      </Message>
+      <Message>		</Message>
       <Command>setlocal
 powershell -noprofile -executionpolicy Bypass -file C:/Users/giuin/AppData/Local/vcpkg/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary D:/dev/C++/vulkan-map-editor/vulkan-map-editor/build/MinSizeRel/main.exe -installedDir C:/Users/giuin/AppData/Local/vcpkg/vcpkg/installed/x64-windows/bin -OutVariable out
 if %errorlevel% neq 0 goto :cmEnd
@@ -413,8 +409,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>
-      </Message>
+      <Message>		</Message>
       <Command>setlocal
 powershell -noprofile -executionpolicy Bypass -file C:/Users/giuin/AppData/Local/vcpkg/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary D:/dev/C++/vulkan-map-editor/vulkan-map-editor/build/RelWithDebInfo/main.exe -installedDir C:/Users/giuin/AppData/Local/vcpkg/vcpkg/installed/x64-windows/bin -OutVariable out
 if %errorlevel% neq 0 goto :cmEnd

@@ -176,12 +176,38 @@ ScrollView {
       //   text : "Text 3"
       //   color : "#b7bcc1"
       // }
-
+      
       ListView {
         id : containersView
         objectName : "item_container_area"
         model : propertyContainer.containers;
         readonly property int fixedWidth : 36 * 4
+        onActiveFocusChanged: {console.log("activeFocus: ", activeFocus);}
+
+        MouseArea {
+          propagateComposedEvents: true
+          acceptedButtons: Qt.LeftButton | Qt.RightButton
+          anchors.fill: parent
+
+          onClicked: mouse =>
+          {
+              containersView.forceActiveFocus();
+              mouse.accepted = false;
+          }
+
+          onPressed: mouse => {
+            containersView.forceActiveFocus();
+            mouse.accepted = false;
+          }
+        }
+
+        focus : true
+        activeFocusOnTab: true
+
+        Keys.onPressed: event => {
+            console.log("onPressed key");
+            event.accepted = true;
+        }
 
         // Disables swiping
         interactive: false
@@ -200,7 +226,6 @@ ScrollView {
         // reuseItems : true
 
         clip : true
-        focus : true
 
         delegate : Component {
           Vme.ItemContainerWindow {

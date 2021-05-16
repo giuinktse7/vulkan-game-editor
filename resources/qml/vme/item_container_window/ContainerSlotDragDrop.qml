@@ -49,12 +49,15 @@ Item {
       property bool dragging : false
 
       onClicked: (mouse) => {
+        console.log("onClicked")
         if (mouse.button & Qt.LeftButton) {
           leftClick();
+          mouse.accepted = false
         }
       }
 
-      onPressed : (mouse) => {
+      onPressed: (mouse) => {
+        console.log("onPressed")
         if (mouse.button & Qt.LeftButton) {
           pressOrigin = Qt.point(mouseX, mouseY);
           dragging = false;

@@ -2,9 +2,9 @@
 
 #include <concepts>
 
+#include "../../observable_item.h"
 #include "../../position.h"
 #include "../../signal.h"
-#include "../../tracked_item.h"
 #include "../draggable_item.h"
 #include "container_list_model.h"
 #include "container_model.h"

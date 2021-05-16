@@ -13,11 +13,11 @@
 #include "const.h"
 #include "graphics/texture_atlas.h"
 #include "item_type.h"
+#include "observable_item.h"
 #include "otb.h"
 #include "position.h"
 #include "signal.h"
 #include "time_point.h"
-#include "tracked_item.h"
 
 /* Amount of cached texture atlas pointers that an ItemType can store.
   If the appearance of an ItemType has more than this amount of texture atlases,

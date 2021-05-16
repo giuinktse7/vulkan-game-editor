@@ -272,6 +272,11 @@ MapView *MainWindow::currentMapView() const noexcept
     return mapTabs->currentMapView();
 }
 
+VulkanWindow *MainWindow::currentVulkanWindow() const noexcept
+{
+    return mapTabs->currentVulkanWindow();
+}
+
 bool MainWindow::selectBrush(Brush *brush) noexcept
 {
     return _paletteWindow->selectBrush(brush);
@@ -541,9 +546,11 @@ QMenuBar *MainWindow::createMenuBar()
         auto editMenu = menuBar->addMenu(tr("Edit"));
 
         auto undo = new MenuAction(tr("Undo"), Qt::CTRL | Qt::Key_Z, this);
+        connect(undo, &QWidgetAction::triggered, [this] { this->currentMapView()->undo(); });
         editMenu->addAction(undo);
 
         auto redo = new MenuAction(tr("Redo"), Qt::CTRL | Qt::SHIFT | Qt::Key_Z, this);
+        connect(redo, &QWidgetAction::triggered, [this] { this->currentMapView()->redo(); });
         editMenu->addAction(redo);
 
         editMenu->addSeparator();

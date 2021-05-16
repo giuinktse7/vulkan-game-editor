@@ -13,8 +13,8 @@
 
 #include "../../item.h"
 #include "../../items.h"
+#include "../../observable_item.h"
 #include "../../signal.h"
-#include "../../tracked_item.h"
 #include "../../util.h"
 #include "../draggable_item.h"
 #include "../qt_util.h"
@@ -102,7 +102,7 @@ class ItemPropertyWindow : public QQuickView
     struct FocusedItem
     {
         FocusedItem(Item *item, size_t tileIndex)
-            : trackedItem(item), tileIndex(tileIndex)
+            : item(item), tileIndex(tileIndex)
         {
             DEBUG_ASSERT(!item->isContainer(), "Item may not be a container. Use FocusedContainer instead.");
         }
@@ -111,19 +111,14 @@ class ItemPropertyWindow : public QQuickView
         FocusedItem &operator=(const FocusedItem &other) = default;
         FocusedItem(FocusedItem &&other) = default;
 
-        Item *item() const noexcept
-        {
-            return trackedItem.item();
-        }
-
-        TrackedItem trackedItem;
+        Item *item;
         size_t tileIndex;
     };
 
     struct FocusedContainer
     {
         FocusedContainer(Item *item, size_t tileIndex)
-            : trackedContainer(item), _trackedItem(item), tileIndex(tileIndex)
+            : trackedContainer(item), tileIndex(tileIndex)
         {
             DEBUG_ASSERT(item->isContainer(), "Item must be a container.");
         }
@@ -137,22 +132,9 @@ class ItemPropertyWindow : public QQuickView
             return trackedContainer.item();
         }
 
-        TrackedItem &trackedItem() noexcept
-        {
-            return _trackedItem;
-        }
-
-        void setTrackedItem(Item *item)
-        {
-            if (_trackedItem.item() != item)
-            {
-                _trackedItem = TrackedItem(item);
-            }
-        }
-
         size_t tileIndex;
         TrackedContainer trackedContainer;
-        TrackedItem _trackedItem;
+        Item *trackedItem;
     };
 
     struct FocusedGround
@@ -169,7 +151,7 @@ class ItemPropertyWindow : public QQuickView
             return trackedGround.item();
         }
 
-        TrackedItem trackedGround;
+        ObservableItem trackedGround;
     };
 
     friend class PropertyWindowEventFilter;
@@ -227,36 +209,16 @@ class ItemPropertyWindow : public QQuickView
 
         void resetFocused();
 
-        std::optional<TrackedItem> propertyItem()
-        {
-            return _propertyItem;
-        }
-
-        const std::optional<TrackedItem> propertyItem() const
-        {
-            return _propertyItem;
-        }
-
-        void setPropertyItem(Item *item)
-        {
-            if (_propertyItem.has_value() && _propertyItem->item() == item)
-            {
-                return;
-            }
-
-            VME_LOG_D("PropertyItem: " << item->name());
-            _propertyItem = TrackedItem(item);
-        }
-
         MapView *mapView;
 
         Position selectedPosition;
 
+        Item *propertyItem = nullptr;
+
       private:
         std::variant<std::monostate, FocusedItem, FocusedGround, FocusedContainer> _focusedItem;
 
-        // This is the tracked item that is used for the property window (excluding container contents)
-        std::optional<TrackedItem> _propertyItem;
+        // The item that is used for the property window (excluding for container contents)
     };
 
     State state;

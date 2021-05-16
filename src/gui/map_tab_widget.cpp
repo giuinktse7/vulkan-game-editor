@@ -76,6 +76,14 @@ MapView *MapTabWidget::currentMapView() const
     return getMapView(currentIndex());
 }
 
+VulkanWindow *MapTabWidget::currentVulkanWindow() const
+{
+    if (count() == 0)
+        return nullptr;
+
+    return static_cast<MapViewWidget *>(widget(currentIndex()))->getVulkanWindow();
+}
+
 int MapTabWidget::addTabWithButton(QWidget *widget, const QString &text, QVariant data)
 {
     int index = insertTab(currentIndex() + 1, widget, text);

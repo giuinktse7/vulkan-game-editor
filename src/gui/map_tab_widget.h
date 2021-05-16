@@ -28,6 +28,7 @@ class QDrag;
 class QPropertyAnimation;
 class QStylePainter;
 class MapView;
+class VulkanWindow;
 
 class OpacityAnimation : public QObject
 {
@@ -199,6 +200,7 @@ class MapTabWidget : public QTabWidget
 
     MapView *getMapView(int index) const;
     MapView *currentMapView() const;
+    VulkanWindow *currentVulkanWindow() const;
 
     int addTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
     int insertTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());

@@ -49,6 +49,7 @@ class MainWindow : public QWidget, public Nano::Observer<>
     bool vulkanWindowEvent(QEvent *event);
 
     MapView *currentMapView() const noexcept;
+    VulkanWindow *currentVulkanWindow() const noexcept;
 
     bool selectBrush(Brush *brush) noexcept;
 

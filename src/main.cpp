@@ -25,10 +25,10 @@
 #include "load_map.h"
 #include "logger.h"
 #include "minimap.h"
+#include "observable_item.h"
 #include "qt/logging.h"
 #include "random.h"
 #include "time_point.h"
-#include "tracked_item.h"
 #include "util.h"
 
 #include "brushes/brush.h"

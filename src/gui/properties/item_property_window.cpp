@@ -60,11 +60,6 @@ void ItemPropertyWindow::hide()
 
 bool ItemPropertyWindow::event(QEvent *e)
 {
-    // if (e->type() != QEvent::UpdateRequest)
-    // {
-    //   qDebug() << e;
-    // }
-
     return QQuickView::event(e);
 }
 
@@ -142,48 +137,9 @@ void ItemPropertyWindow::focusGround(Item *item, Position &position, MapView &ma
 
 void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
 {
-    // DEBUG_ASSERT(state.propertyItem().has_value(), "No property item.");
+    DEBUG_ASSERT(state.propertyItem != nullptr, "No property item.");
 
-    // uint16_t tileIndex;
-    // ItemLocation location(state.selectedPosition, tileIndex);
-
-    // if (state.holds<FocusedItem>())
-    // {
-    //     location.tileIndex = state.focusedAs<FocusedItem>().tileIndex;
-    // }
-    // else if (state.holds<FocusedContainer>())
-    // {
-    //     tileIndex = state.focusedAs<FocusedContainer>().tileIndex;
-    // }
-    // else
-    // {
-    //     ABORT_PROGRAM("ItemPropertyWindow::setPropertyItemCount : Invalid focused thing.");
-    // }
-
-    // Item *item = state.propertyItem()->item();
-
-    // if (count == latestCommittedCount)
-    // {
-    //     // Do not commit if the count is the same as when the item was first focused.
-    //     emit countChanged(location, count, false);
-    // }
-    // else
-    // {
-    //     // Necessary to make sure that the correct "old" count is stored in MapView history
-    //     if (shouldCommit)
-    //     {
-    //         item->setCount(latestCommittedCount);
-    //         latestCommittedCount = count;
-    //     }
-    //     emit countChanged(location, count, shouldCommit);
-    // }
-
-    DEBUG_ASSERT(state.propertyItem().has_value(), "No property item.");
-
-    Item *item = state.propertyItem()->item();
-
-    // if (item->count() == count)
-    //     return;
+    Item *item = state.propertyItem;
 
     if (count == latestCommittedCount)
     {
@@ -229,17 +185,7 @@ void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
 void ItemPropertyWindow::setPropertyItem(Item *item)
 {
     latestCommittedCount = item->count();
-    state.setPropertyItem(item);
-    state.propertyItem()->onPropertyChanged([this](Item *item, ItemChangeType type) {
-        switch (type)
-        {
-            case ItemChangeType::Count:
-                this->setPropertyItemCount(item->count());
-                break;
-            default:
-                VME_LOG("Unknown ItemChangeType");
-        }
-    });
+    state.propertyItem = item;
 
     // Update UI
 
@@ -272,7 +218,7 @@ void ItemPropertyWindow::setFocused(FocusedGround &&ground)
 
 void ItemPropertyWindow::setFocused(FocusedItem &&focusedItem)
 {
-    auto item = focusedItem.item();
+    auto item = focusedItem.item;
 
     state.setFocused(std::move(focusedItem));
     setPropertyItem(item);
@@ -284,7 +230,7 @@ void ItemPropertyWindow::setFocused(FocusedItem &&focusedItem)
 
 void ItemPropertyWindow::setFocused(FocusedContainer &&container)
 {
-    auto item = container.trackedItem().item();
+    auto item = container.containerItem();
 
     state.setFocused(std::move(container));
     setPropertyItem(item);
@@ -306,7 +252,7 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
     else if (state.holds<FocusedItem>())
     {
         auto &focusedItem = state.focusedAs<FocusedItem>();
-        if (item == focusedItem.item())
+        if (item == focusedItem.item)
         {
             // The item is already focused, update it
             setSelectedPosition(position);
@@ -325,9 +271,8 @@ void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapV
         if (item == focusedContainer.containerItem())
         {
             setSelectedPosition(position);
-            if (focusedContainer.trackedItem().item() != item)
+            if (state.propertyItem != item)
             {
-                focusedContainer.setTrackedItem(item);
                 setPropertyItem(item);
             }
 
@@ -394,6 +339,7 @@ void ItemPropertyWindow::resetFocus()
 
     resetSelectedPosition();
     resetMapView();
+    state.propertyItem = nullptr;
 
     containerTree.clear();
     hide();
@@ -472,7 +418,7 @@ void ItemPropertyWindow::State::setFocused(FocusedContainer &&container)
 void ItemPropertyWindow::State::resetFocused()
 {
     _focusedItem = std::monostate{};
-    _propertyItem.reset();
+    propertyItem = nullptr;
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -491,6 +437,12 @@ void ItemPropertyWindow::refresh()
             containerTree.containerListModel.refreshAll();
         }
     }
+
+    if (state.propertyItem != nullptr)
+    {
+        auto countSpinBox = child(ObjectName::CountSpinBox);
+        countSpinBox->setProperty("value", state.propertyItem->count());
+    }
 }
 
 bool ItemPropertyWindow::containerItemSelectedEvent(PropertiesUI::ContainerNode *treeNode, int index)
@@ -502,12 +454,11 @@ bool ItemPropertyWindow::containerItemSelectedEvent(PropertiesUI::ContainerNode 
     auto item = &treeNode->container()->itemAt(index);
 
     // No action needed
-    if (focusedContainer.trackedItem().item() == item)
+    if (state.propertyItem == item)
     {
         return true;
     }
 
-    focusedContainer.setTrackedItem(item);
     setPropertyItem(item);
 
     return true;

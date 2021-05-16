@@ -39,6 +39,11 @@ class MapViewWidget : public QWidget, public Nano::Observer<>
     void selectionChanged();
     void undoRedoPerformed();
 
+    VulkanWindow *getVulkanWindow() const
+    {
+        return vulkanWindow;
+    }
+
     MapView *mapView;
 
   signals:

@@ -187,11 +187,11 @@ void Container::moveItemTracked(size_t fromIndex, size_t toIndex)
     auto fromIt = _items.begin() + from;
     auto toIt = _items.begin() + to;
 
-    while (fromIt != toIt)
-    {
-        Items::items.itemAddressChanged(&(**fromIt));
-        ++fromIt;
-    }
+    // while (fromIt != toIt)
+    // {
+    //     Items::items.itemAddressChanged(&(**fromIt));
+    //     ++fromIt;
+    // }
 }
 
 bool Container::hasNonFullContainerAtIndex(size_t index)

@@ -103,7 +103,7 @@ set(CommonSources
     src/item.h
     src/item_data.h
     src/item_wrapper.h
-    src/tracked_item.h
+    src/observable_item.h
     src/item_location.h
     src/items.h
     src/item_attribute.h
@@ -191,7 +191,7 @@ set(CommonSources
     src/item.cpp
     src/item_data.cpp
     src/item_wrapper.cpp
-    src/tracked_item.cpp
+    src/observable_item.cpp
     src/item_location.cpp
     src/items.cpp
     src/item_attribute.cpp
