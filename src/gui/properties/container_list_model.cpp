@@ -1,26 +1,28 @@
 #include "container_list_model.h"
 
 #include "../../debug.h"
+#include "../../item.h"
 #include "../../util.h"
 #include "container_model.h"
 #include "property_container_tree.h"
 
 using ContainerListModel = PropertiesUI::ContainerListModel;
-using ContainerModel = PropertiesUI::ContainerModel;
+using UIContainerModel = PropertiesUI::UIContainerModel;
 
 ContainerListModel::ContainerListModel(QObject *parent)
     : QAbstractListModel(parent) {}
 
-std::vector<ContainerModel *>::iterator ContainerListModel::find(const ContainerModel *model)
+std::vector<UIContainerModel *>::iterator ContainerListModel::find(const UIContainerModel *model)
 {
     return std::find_if(
         itemModels.begin(),
         itemModels.end(),
-        [model](const ContainerModel *_model) { return model == _model; });
+        [model](const UIContainerModel *_model) { return model == _model; });
 }
 
-void ContainerListModel::addItemModel(ContainerModel *model)
+void ContainerListModel::addItemModel(UIContainerModel *model)
 {
+    VME_LOG_D("addItemModel " << model->containerItem()->name());
     auto modelSize = static_cast<int>(itemModels.size());
 
     beginInsertRows(QModelIndex(), modelSize, modelSize);
@@ -30,12 +32,11 @@ void ContainerListModel::addItemModel(ContainerModel *model)
     emit sizeChanged(size());
 }
 
-void ContainerListModel::remove(ContainerModel *model)
+void ContainerListModel::remove(UIContainerModel *model)
 {
-    auto found = std::remove_if(
-        itemModels.begin(),
-        itemModels.end(),
-        [model](const ContainerModel *_model) { return model == _model; });
+    auto found = std::find_if(itemModels.begin(),
+                              itemModels.end(),
+                              [model](const UIContainerModel *_model) { return model == _model; });
 
     if (found == itemModels.end())
     {
@@ -51,7 +52,7 @@ void ContainerListModel::remove(ContainerModel *model)
     emit sizeChanged(size());
 }
 
-void ContainerListModel::refresh(ContainerModel *model)
+void ContainerListModel::refresh(UIContainerModel *model)
 {
     auto found = find(model);
     DEBUG_ASSERT(found != itemModels.end(), "model was not present.");

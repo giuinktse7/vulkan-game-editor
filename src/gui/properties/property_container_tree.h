@@ -15,8 +15,8 @@ namespace PropertiesUI
 {
     struct ContainerSignals
     {
-        Nano::Signal<void(ContainerModel *)> postOpened;
-        Nano::Signal<void(ContainerModel *)> preClosed;
+        Nano::Signal<void(UIContainerModel *)> postOpened;
+        Nano::Signal<void(UIContainerModel *)> preClosed;
         Nano::Signal<bool(ContainerNode *, int)> itemLeftClicked;
         Nano::Signal<bool(ContainerNode *, int, const ItemDrag::DraggableItem *)> itemDropped;
         Nano::Signal<void(ContainerNode *, int)> itemDragStarted;
@@ -51,7 +51,7 @@ namespace PropertiesUI
         std::vector<uint16_t> indexChain(int index) const;
         std::vector<uint16_t> indexChain() const;
 
-        ContainerModel *model();
+        UIContainerModel *uiContainerModel();
 
         void open();
         void close();
@@ -69,7 +69,7 @@ namespace PropertiesUI
 
       protected:
         ContainerSignals *_signals;
-        std::optional<ContainerModel> _model;
+        std::optional<UIContainerModel> _uiContainerModel;
 
         bool opened = false;
 
@@ -129,8 +129,8 @@ namespace PropertiesUI
 
         void clear();
 
-        void modelAddedEvent(ContainerModel *model);
-        void modelRemovedEvent(ContainerModel *model);
+        void modelAddedEvent(UIContainerModel *model);
+        void modelRemovedEvent(UIContainerModel *model);
 
         template <auto MemberFunction, typename T>
         void onContainerItemDrop(T *instance);

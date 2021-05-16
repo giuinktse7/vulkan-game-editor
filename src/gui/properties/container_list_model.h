@@ -26,14 +26,14 @@ namespace PropertiesUI
 
         void clear();
         void refresh(int index);
-        void refresh(ContainerModel *model);
+        void refresh(UIContainerModel *model);
         void refreshAll();
 
-        void addItemModel(ContainerModel *model);
-        void remove(ContainerModel *model);
+        void addItemModel(UIContainerModel *model);
+        void remove(UIContainerModel *model);
         void remove(int index);
 
-        std::vector<ContainerModel *>::iterator find(const ContainerModel *model);
+        std::vector<UIContainerModel *>::iterator find(const UIContainerModel *model);
 
         int rowCount(const QModelIndex &parent = QModelIndex()) const;
         int size();
@@ -47,6 +47,6 @@ namespace PropertiesUI
         QHash<int, QByteArray> roleNames() const;
 
       private:
-        std::vector<ContainerModel *> itemModels;
+        std::vector<UIContainerModel *> itemModels;
     };
 } // namespace PropertiesUI

@@ -10,7 +10,7 @@ namespace PropertiesUI
 {
     struct ContainerNode;
 
-    class ContainerModel : public QAbstractListModel
+    class UIContainerModel : public QAbstractListModel
     {
         Q_OBJECT
         Q_PROPERTY(int capacity READ capacity NOTIFY capacityChanged)
@@ -30,7 +30,7 @@ namespace PropertiesUI
             SubtypeRole = Qt::UserRole + 2
         };
 
-        ContainerModel(ContainerNode *treeNode, QObject *parent = 0);
+        UIContainerModel(ContainerNode *treeNode, QObject *parent = 0);
 
         bool addItem(Item &&item);
         void reset();

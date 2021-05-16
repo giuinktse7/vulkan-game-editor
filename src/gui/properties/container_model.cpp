@@ -5,10 +5,10 @@
 
 #include "../../item.h"
 
-using ContainerModel = PropertiesUI::ContainerModel;
+using UIContainerModel = PropertiesUI::UIContainerModel;
 using ContainerNode = PropertiesUI::ContainerNode;
 
-ContainerModel::ContainerModel(PropertiesUI::ContainerNode *treeNode, QObject *parent)
+UIContainerModel::UIContainerModel(PropertiesUI::ContainerNode *treeNode, QObject *parent)
     : QAbstractListModel(parent), treeNode(treeNode)
 {
     // TODO: Maybe this reset is not necessary?
@@ -16,18 +16,18 @@ ContainerModel::ContainerModel(PropertiesUI::ContainerNode *treeNode, QObject *p
     endResetModel();
 }
 
-void ContainerModel::refresh()
+void UIContainerModel::refresh()
 {
     beginResetModel();
     endResetModel();
 }
 
-ContainerNode *ContainerModel::node()
+ContainerNode *UIContainerModel::node()
 {
     return treeNode;
 }
 
-void ContainerModel::containerItemLeftClicked(int index)
+void UIContainerModel::containerItemLeftClicked(int index)
 {
     if (index >= size())
         return;
@@ -37,7 +37,7 @@ void ContainerModel::containerItemLeftClicked(int index)
     treeNode->itemLeftClickedEvent(index);
 }
 
-void ContainerModel::containerItemRightClicked(int index)
+void UIContainerModel::containerItemRightClicked(int index)
 {
     if (index >= size())
         return;
@@ -50,12 +50,12 @@ void ContainerModel::containerItemRightClicked(int index)
     }
 }
 
-void ContainerModel::itemDragStartEvent(int index)
+void UIContainerModel::itemDragStartEvent(int index)
 {
     treeNode->itemDragStartEvent(index);
 }
 
-bool ContainerModel::itemDropEvent(int index, QByteArray serializedDraggableItem)
+bool UIContainerModel::itemDropEvent(int index, QByteArray serializedDraggableItem)
 {
     VME_LOG_D("Index: " << index);
     auto droppedItem = ItemDrag::DraggableItem::deserialize(serializedDraggableItem);
@@ -81,12 +81,12 @@ bool ContainerModel::itemDropEvent(int index, QByteArray serializedDraggableItem
     return true;
 }
 
-int ContainerModel::size()
+int UIContainerModel::size()
 {
     return static_cast<int>(treeNode->container()->size());
 }
 
-int ContainerModel::containerServerId()
+int UIContainerModel::containerServerId()
 {
     if (treeNode)
     {
@@ -100,7 +100,7 @@ int ContainerModel::containerServerId()
     return -1;
 }
 
-QString ContainerModel::containerName()
+QString UIContainerModel::containerName()
 {
     if (treeNode)
     {
@@ -118,27 +118,27 @@ QString ContainerModel::containerName()
     return "Unknown container";
 }
 
-int ContainerModel::capacity()
+int UIContainerModel::capacity()
 {
     return static_cast<int>(treeNode->container()->capacity());
 }
 
-Item *ContainerModel::containerItem() const noexcept
+Item *UIContainerModel::containerItem() const noexcept
 {
     return treeNode->containerItem();
 }
 
-Container *ContainerModel::container() const noexcept
+Container *UIContainerModel::container() const noexcept
 {
     return treeNode->container();
 }
 
-Container *ContainerModel::container() noexcept
+Container *UIContainerModel::container() noexcept
 {
-    return const_cast<Container *>(const_cast<const ContainerModel *>(this)->container());
+    return const_cast<Container *>(const_cast<const UIContainerModel *>(this)->container());
 }
 
-bool ContainerModel::addItem(Item &&item)
+bool UIContainerModel::addItem(Item &&item)
 {
     if (container()->isFull())
         return false;
@@ -151,22 +151,22 @@ bool ContainerModel::addItem(Item &&item)
     bool added = container()->addItem(std::move(item));
     // endInsertRows();
 
-    emit dataChanged(ContainerModel::createIndex(size, 0), ContainerModel::createIndex(size + 1, 0));
+    emit dataChanged(UIContainerModel::createIndex(size, 0), UIContainerModel::createIndex(size + 1, 0));
     return added;
 }
 
-void ContainerModel::indexChanged(int index)
+void UIContainerModel::indexChanged(int index)
 {
-    auto modelIndex = ContainerModel::createIndex(index, 0);
+    auto modelIndex = UIContainerModel::createIndex(index, 0);
     emit dataChanged(modelIndex, modelIndex);
 }
 
-int ContainerModel::rowCount(const QModelIndex &parent) const
+int UIContainerModel::rowCount(const QModelIndex &parent) const
 {
     return container()->capacity();
 }
 
-QVariant ContainerModel::data(const QModelIndex &modelIndex, int role) const
+QVariant UIContainerModel::data(const QModelIndex &modelIndex, int role) const
 {
     auto index = modelIndex.row();
     if (index < 0 || index >= rowCount())
@@ -198,7 +198,7 @@ QVariant ContainerModel::data(const QModelIndex &modelIndex, int role) const
     return QVariant();
 }
 
-QHash<int, QByteArray> ContainerModel::roleNames() const
+QHash<int, QByteArray> UIContainerModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[ServerIdRole] = "serverId";

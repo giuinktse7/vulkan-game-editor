@@ -170,7 +170,7 @@ void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
             auto index = node->container()->indexOf(item);
             if (index.has_value())
             {
-                node->model()->indexChanged(*index);
+                node->uiContainerModel()->indexChanged(*index);
                 return;
             }
 

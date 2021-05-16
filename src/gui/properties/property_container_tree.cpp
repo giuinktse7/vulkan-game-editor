@@ -86,12 +86,12 @@ void ContainterTree::clear()
     containerListModel.clear();
 }
 
-void ContainterTree::modelAddedEvent(ContainerModel *model)
+void ContainterTree::modelAddedEvent(UIContainerModel *model)
 {
     containerListModel.addItemModel(model);
 }
 
-void ContainterTree::modelRemovedEvent(ContainerModel *model)
+void ContainterTree::modelRemovedEvent(UIContainerModel *model)
 {
     containerListModel.remove(model);
 }
@@ -134,7 +134,7 @@ void ContainerNode::onDragFinished(ItemDrag::DragOperation::DropResult result)
         // It would be faster to only refresh the changed indices. But this should
         // not make a significant difference in performance, because the model will
         // have at most ~25 items (max capacity of the largest container item).
-        _model->refresh();
+        _uiContainerModel->refresh();
     }
 }
 
@@ -144,7 +144,7 @@ void PropertiesUI::ContainerTree::Node::setIndexInParent(int index)
     VME_LOG_D(k + ", setIndexInParent: " + std::to_string(index));
     indexInParentContainer = index;
 
-    Items::items.itemAddressChanged(&parent->container()->itemAt(index));
+    // Items::items.itemAddressChanged(&parent->container()->itemAt(index));
 }
 
 void PropertiesUI::ContainerTree::Root::setIndexInParent(int index)
@@ -242,28 +242,33 @@ void ContainerNode::itemMoved(int fromIndex, int toIndex)
         changes.emplace_back(std::make_pair(i, newIndex));
     }
 
+    std::vector<decltype(ContainerNode::openedChildrenNodes)::node_type> nodeInsertions;
+
     for (const auto [fromIndex, toIndex] : changes)
     {
         auto mapNode = openedChildrenNodes.extract(fromIndex);
         mapNode.key() = toIndex;
-        openedChildrenNodes.insert(std::move(mapNode));
 
-        openedChildrenNodes.at(toIndex)->setIndexInParent(toIndex);
+        nodeInsertions.emplace_back(std::move(mapNode));
+        // openedChildrenNodes.insert(std::move(mapNode));
+
+        // openedChildrenNodes.at(toIndex)->setIndexInParent(toIndex);
+    }
+
+    for (auto &node : nodeInsertions)
+    {
+        int newIndex = node.key();
+        openedChildrenNodes.insert(std::move(node));
+
+        openedChildrenNodes.at(newIndex)->setIndexInParent(newIndex);
     }
 }
 void ContainerNode::trackedItemChanged(Item *trackedItem)
 {
-    VME_LOG_D("trackedItemChanged for: " << containerItem()->name());
-    // for (auto &entry : children)
-    // {
-    //     auto &i = container()->itemAt(entry.first);
-    //     Items::items.itemMoved(&i);
-    // }
 }
 
 void ContainerNode::trackedContainerChanged(ContainerChange change)
 {
-    VME_LOG_D("trackedContainerChanged for " << containerItem()->name() << ":" << change);
     switch (change.type)
     {
         case ContainerChangeType::Insert:
@@ -277,7 +282,10 @@ void ContainerNode::trackedContainerChanged(ContainerChange change)
             break;
     }
 
-    _model->refresh();
+    if (_uiContainerModel)
+    {
+        _uiContainerModel->refresh();
+    }
 }
 
 bool PropertiesUI::ContainerTree::Root::isSelfOrParent(Item *item) const
@@ -312,19 +320,19 @@ std::vector<uint16_t> ContainerNode::indexChain(int index) const
     return result;
 }
 
-PropertiesUI::ContainerModel *ContainerNode::model()
+PropertiesUI::UIContainerModel *ContainerNode::uiContainerModel()
 {
-    return _model.has_value() ? &(*_model) : nullptr;
+    return _uiContainerModel.has_value() ? &(*_uiContainerModel) : nullptr;
 }
 
 void ContainerNode::open()
 {
     DEBUG_ASSERT(!opened, "Already opened.");
 
-    _model.emplace(this);
-    qDebug() << "Open: " << _model->containerName();
+    _uiContainerModel.emplace(this);
+    qDebug() << "Open: " << _uiContainerModel->containerName();
 
-    _signals->postOpened.fire(&_model.value());
+    _signals->postOpened.fire(&_uiContainerModel.value());
     opened = true;
 }
 
@@ -342,8 +350,8 @@ void ContainerNode::close()
         closeChild(index);
     }
 
-    _signals->preClosed.fire(&_model.value());
-    _model.reset();
+    _signals->preClosed.fire(&_uiContainerModel.value());
+    _uiContainerModel.reset();
     opened = false;
 }
 
@@ -376,8 +384,7 @@ void ContainerNode::openChild(int index)
     DEBUG_ASSERT(child.isContainer(), "Must be container.");
     auto node = createChildNode(index);
     openedChildrenNodes.emplace(index, std::move(node));
-    auto &c = *openedChildrenNodes.at(index);
-    ContainerTree::Node *d = dynamic_cast<ContainerTree::Node *>(&c);
+
     openedChildrenNodes.at(index)->open();
 }
 
@@ -407,7 +414,7 @@ void ContainerNode::itemDropEvent(int index, ItemDrag::DraggableItem *droppedIte
     // TODO Maybe use fire_accumulate here to see if drop was accepted.
     //Drop **should** always be accepted for now, but that might change in the future.
 
-    DEBUG_ASSERT(index >= 0 && index < _model->capacity(), "Invalid index");
+    DEBUG_ASSERT(index >= 0 && index < _uiContainerModel->capacity(), "Invalid index");
 
     _signals->itemDropped.fire(this, index, droppedItem);
 }
