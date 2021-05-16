@@ -47,9 +47,9 @@ struct ItemGuidDisconnect
     std::function<void()> f;
 };
 
-struct TrackedItem
+struct ObservableItem
 {
-    TrackedItem(Item *item);
+    ObservableItem(Item *item);
 
     Item *item() const noexcept;
 
@@ -84,7 +84,7 @@ struct TrackedItem
     std::function<void(Item *, ItemChangeType)> onPropertyChangedCallback;
 };
 
-struct TrackedContainer : TrackedItem
+struct TrackedContainer : ObservableItem
 {
     TrackedContainer(Item *item);
 
@@ -100,7 +100,7 @@ struct TrackedContainer : TrackedItem
     std::function<void(ContainerChange)> onContainerChangeCallback;
 };
 
-inline uint32_t TrackedItem::guid() const noexcept
+inline uint32_t ObservableItem::guid() const noexcept
 {
     return _guid;
 }

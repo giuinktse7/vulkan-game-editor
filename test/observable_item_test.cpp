@@ -36,7 +36,7 @@ struct ContainerObserver
     std::optional<ContainerChange> latestChange;
 };
 
-TEST_CASE("tracked_item.h", "[observer][item]")
+TEST_CASE("observable_item.h", "[observer][item]")
 {
     SECTION("Item signals are cleared when no longer needed")
     {
@@ -46,7 +46,7 @@ TEST_CASE("tracked_item.h", "[observer][item]")
             {
                 ItemObserver observer;
 
-                auto tracked = TrackedItem(&item);
+                auto tracked = ObservableItem(&item);
                 tracked.onAddressChanged<&ItemObserver::onAddressChanged>(&observer);
                 tracked.onPropertyChanged<&ItemObserver::onPropertyChanged>(&observer);
 

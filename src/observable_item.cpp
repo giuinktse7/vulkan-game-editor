@@ -1,21 +1,21 @@
-#include "tracked_item.h"
+#include "observable_item.h"
 
 #include "item.h"
 #include "items.h"
 
 class Item;
 
-TrackedItem::TrackedItem(Item *item)
+ObservableItem::ObservableItem(Item *item)
     : _guid(item->guid()),
       _item(item),
-      disconnect(Items::items.trackItem<&TrackedItem::itemAddressChanged, &TrackedItem::itemPropertyChanged>(_guid, this)) {}
+      disconnect(Items::items.trackItem<&ObservableItem::itemAddressChanged, &ObservableItem::itemPropertyChanged>(_guid, this)) {}
 
-Item *TrackedItem::item() const noexcept
+Item *ObservableItem::item() const noexcept
 {
     return _item;
 }
 
-void TrackedItem::itemAddressChanged(Item *item)
+void ObservableItem::itemAddressChanged(Item *item)
 {
     _item = item;
 
@@ -25,7 +25,7 @@ void TrackedItem::itemAddressChanged(Item *item)
     }
 }
 
-void TrackedItem::itemPropertyChanged(ItemChangeType changeType)
+void ObservableItem::itemPropertyChanged(ItemChangeType changeType)
 {
     if (onPropertyChangedCallback)
     {
@@ -34,7 +34,7 @@ void TrackedItem::itemPropertyChanged(ItemChangeType changeType)
 }
 
 TrackedContainer::TrackedContainer(Item *item)
-    : TrackedItem(item),
+    : ObservableItem(item),
       containerDisconnect(Items::items.trackContainer<&TrackedContainer::updateContainer>(_guid, this)) {}
 
 void TrackedContainer::updateContainer(ContainerChange change)
