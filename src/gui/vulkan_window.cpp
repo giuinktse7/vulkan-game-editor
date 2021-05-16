@@ -41,8 +41,6 @@ VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
     connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
     mapView->onMapItemDragStart<&VulkanWindow::mapItemDragStartEvent>(this);
 
-    setShortcut(Qt::ControlModifier, Qt::Key_Z, ShortcutAction::Undo);
-    setShortcut(Qt::ControlModifier | Qt::ShiftModifier, Qt::Key_Z, ShortcutAction::Redo);
     setShortcut(Qt::Key_Space, ShortcutAction::Pan);
     setShortcut(Qt::Key_I, ShortcutAction::EyeDropper);
     setShortcut(Qt::Key_Escape, ShortcutAction::Escape);
@@ -62,12 +60,6 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
 {
     switch (action)
     {
-        case ShortcutAction::Undo:
-            mapView->undo();
-            break;
-        case ShortcutAction::Redo:
-            mapView->redo();
-            break;
         case ShortcutAction::Pan:
         {
             bool panning = mapView->editorAction.is<MouseAction::Pan>();
