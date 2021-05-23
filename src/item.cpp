@@ -112,32 +112,19 @@ const TextureInfo Item::getTextureInfo(const Position &pos, TextureInfo::Coordin
 
 const uint32_t Item::getPatternIndex(const Position &pos) const
 {
-    const SpriteInfo &spriteInfo = itemType->getSpriteInfo();
-    if (!itemType->isStackable())
-        return itemType->getPatternIndex(pos);
-
-    // For stackable items
-
-    // Amount of sprites for the different counts
-    uint8_t stackSpriteCount = spriteInfo.patternSize;
-    if (stackSpriteCount == 1)
-        return 0;
-
-    int itemCount = count();
-    if (itemCount <= 5)
-        return itemCount - 1;
-    else if (itemCount < 10)
-        return to_underlying(StackSizeOffset::Five);
-    else if (itemCount < 25)
-        return to_underlying(StackSizeOffset::Ten);
-    else if (itemCount < 50)
-        return to_underlying(StackSizeOffset::TwentyFive);
+    if (itemType->usesSubType())
+    {
+        return itemType->getPatternIndexForSubtype(_subtype);
+    }
     else
-        return to_underlying(StackSizeOffset::Fifty);
+    {
+        return itemType->getPatternIndex(pos);
+    }
 }
 
 void Item::setCount(uint8_t count) noexcept
 {
+    DEBUG_ASSERT(count >= 1 && count <= 100, "Count must be in [1, 100].");
     bool changed = count != _subtype;
     _subtype = count;
 
@@ -185,6 +172,38 @@ void Item::setAttribute(ItemAttribute &&attribute)
     _attributes->emplace(attribute.type(), std::move(attribute));
 }
 
+uint16_t Item::actionId() const
+{
+    if (!_attributes)
+    {
+        return 0;
+    }
+
+    auto found = _attributes->find(ItemAttribute_t::ActionId);
+    if (found == _attributes->end())
+    {
+        return 0;
+    }
+
+    return found->second.as<int>();
+}
+
+uint16_t Item::uniqueId() const
+{
+    if (!_attributes)
+    {
+        return 0;
+    }
+
+    auto found = _attributes->find(ItemAttribute_t::UniqueId);
+    if (found == _attributes->end())
+    {
+        return 0;
+    }
+
+    return found->second.as<int>();
+}
+
 void Item::setActionId(uint16_t id)
 {
     auto &attr = getOrCreateAttribute(ItemAttribute_t::ActionId);
@@ -192,7 +211,7 @@ void Item::setActionId(uint16_t id)
     if (oldActionId == id)
         return;
 
-    attr.setInt(id);
+    attr.setInt(static_cast<int>(id));
     Items::items.itemPropertyChanged(this, ItemChangeType::ActionId);
 }
 

@@ -57,6 +57,9 @@ class Item
 
     inline ItemDataType itemDataType() const;
 
+    uint16_t actionId() const;
+    uint16_t uniqueId() const;
+
     void setActionId(uint16_t id);
     void setUniqueId(uint16_t id);
     void setText(const std::string &text);
