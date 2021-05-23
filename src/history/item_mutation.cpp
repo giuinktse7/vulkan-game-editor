@@ -2,28 +2,44 @@
 
 #include "../item.h"
 
-using SetCount = ItemMutation::SetCount;
+using SetSubType = ItemMutation::SetSubType;
+using SetActionId = ItemMutation::SetActionId;
 using MutationType = ItemMutation::MutationType;
 using BaseMutation = ItemMutation::BaseMutation;
 
 BaseMutation::BaseMutation(MutationType type)
     : type(type) {}
 
-SetCount::SetCount(uint8_t count)
-    : BaseMutation(MutationType::Count), count(count) {}
+SetSubType::SetSubType(uint8_t subtype)
+    : BaseMutation(MutationType::SubType), subtype(subtype) {}
 
-void SetCount::commit(Item *item)
+void SetSubType::commit(Item *item)
 {
-    VME_LOG_D("SetCount::commit: " << static_cast<int>(item->count()) << " to " << static_cast<int>(count));
     uint8_t temp = item->count();
-    item->setCount(count);
-    count = temp;
+    item->setSubtype(subtype);
+    subtype = temp;
 }
 
-void SetCount::undo(Item *item)
+void SetSubType::undo(Item *item)
 {
-    VME_LOG_D("SetCount::undo: " << static_cast<int>(item->count()) << " to " << static_cast<int>(count));
-    uint8_t temp = item->count();
-    item->setCount(count);
-    count = temp;
+    uint8_t temp = item->subtype();
+    item->setSubtype(subtype);
+    subtype = temp;
+}
+
+SetActionId::SetActionId(uint16_t actionId)
+    : BaseMutation(MutationType::ActionId), actionId(actionId) {}
+
+void SetActionId::commit(Item *item)
+{
+    uint16_t temp = item->actionId();
+    item->setActionId(actionId);
+    actionId = temp;
+}
+
+void SetActionId::undo(Item *item)
+{
+    uint16_t temp = item->actionId();
+    item->setActionId(actionId);
+    actionId = temp;
 }

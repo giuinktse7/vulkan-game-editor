@@ -9,4 +9,6 @@ QtObject {
   readonly property alias labelFontFamily : labelFontLoader.name
 
   readonly property int defaultMargin : 16
+  
+  readonly property string labelTextColor: "#2b2b2b"
 }

@@ -8,7 +8,8 @@ namespace ItemMutation
 {
     enum class MutationType
     {
-        Count
+        SubType,
+        ActionId
     };
 
     struct BaseMutation
@@ -20,14 +21,23 @@ namespace ItemMutation
         MutationType type;
     };
 
-    struct SetCount : BaseMutation
+    struct SetSubType : BaseMutation
     {
-        SetCount(uint8_t count);
+        SetSubType(uint8_t subtype);
         void commit(Item *item) override;
         void undo(Item *item) override;
 
-        uint8_t count;
+        uint8_t subtype;
     };
 
-    using Mutation = std::variant<SetCount>;
+    struct SetActionId : BaseMutation
+    {
+        SetActionId(uint16_t actionId);
+        void commit(Item *item) override;
+        void undo(Item *item) override;
+
+        uint16_t actionId;
+    };
+
+    using Mutation = std::variant<SetSubType, SetActionId>;
 } // namespace ItemMutation

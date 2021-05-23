@@ -30,6 +30,35 @@ namespace PropertiesUI
 
 } // namespace PropertiesUI
 
+class FluidTypeModel : public QAbstractListModel
+{
+    Q_OBJECT
+
+  public:
+    enum ContainerModelRole
+    {
+        TextRole = Qt::UserRole + 1,
+        SubtypeRole = Qt::UserRole + 2
+    };
+
+    static uint8_t fluidTypeFromIndex(int index);
+    static int fluidTypeToIndex(uint8_t fluidType);
+
+    FluidTypeModel(QObject *parent = 0);
+
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+
+    QVariant data(const QModelIndex &modelIndex, int role = Qt::DisplayRole) const;
+
+    static const std::pair<std::string, uint8_t> fluidTypes[int(SplashType::Last) + 1];
+
+  protected:
+    QHash<int, QByteArray> roleNames() const;
+
+  private:
+    static const int _size;
+};
+
 class PropertyWindowEventFilter : public QtUtil::EventFilter
 {
   public:
@@ -68,7 +97,8 @@ class ItemPropertyWindow : public QQuickView
 {
     Q_OBJECT
   signals:
-    void countChanged(std::variant<Item *, ItemLocation> itemData, int count, bool shouldCommit);
+    void subtypeChanged(Item *item, int subtype, bool shouldCommit);
+    void actionIdChanged(Item *item, int actionId, bool shouldCommit);
 
   public:
     ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow);
@@ -77,7 +107,10 @@ class ItemPropertyWindow : public QQuickView
     bool itemDropEvent(PropertiesUI::ContainerNode *treeNode, int index, const ItemDrag::DraggableItem *droppedItem);
     bool containerItemSelectedEvent(PropertiesUI::ContainerNode *treeNode, int index);
 
+    Q_INVOKABLE void setFluidType(int index);
+    Q_INVOKABLE void fluidTypeHighlighted(int highlightedIndex);
     Q_INVOKABLE void setPropertyItemCount(int count, bool shouldCommit = false);
+    Q_INVOKABLE void setPropertyItemActionId(int actionId, bool shouldCommit = false);
     Q_INVOKABLE QString getItemPixmapString(int serverId, int subtype) const;
     QString getItemPixmapString(const Item &item) const;
 
@@ -181,7 +214,12 @@ class ItemPropertyWindow : public QQuickView
    */
     inline QObject *child(const char *name);
 
-    uint8_t latestCommittedCount = 1;
+    struct LatestCommittedPropertyValues
+    {
+        uint8_t subtype;
+        int actionId;
+        int uniqueId;
+    } latestCommittedPropertyValues;
 
     QUrl _filepath;
     MainWindow *mainWindow;
@@ -224,6 +262,8 @@ class ItemPropertyWindow : public QQuickView
     State state;
 
     std::optional<ItemDrag::DragOperation> dragOperation;
+
+    FluidTypeModel fluidTypeModel;
 };
 
 inline QObject *ItemPropertyWindow::child(const char *name)

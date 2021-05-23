@@ -3,6 +3,8 @@
       <file>itemPropertyWindow.qml</file>
       <file>vme/Constants.qml</file>
       <file>vme/SpinBox.qml</file>
+      <file>vme/IntItemProperty.qml</file>
+      <file>vme/Dropdown.qml</file>
       <file>vme/ItemContainerWindow.qml</file>
       <file>vme/spinbox/IndicatorButton.qml</file>
       <file>vme/item_container_window/ContainerSlotDragDrop.qml</file>

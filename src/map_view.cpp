@@ -291,22 +291,20 @@ void MapView::moveItem(const Tile &fromTile, const Position toPosition, Item *it
     history.commit(std::move(action));
 }
 
-void MapView::setItemCount(Item *item, uint8_t count)
+void MapView::setItemActionId(Item *item, uint16_t actionId)
 {
     Action action(
         ActionType::ModifyItem,
-        MapHistory::ModifyItem_v2(item, ItemMutation::SetCount(count)));
+        MapHistory::ModifyItem_v2(item, ItemMutation::SetActionId(actionId)));
 
     history.commit(std::move(action));
 }
 
-void MapView::setItemCount(ItemLocation itemLocation, uint8_t count)
+void MapView::setSubtype(Item *item, uint8_t subtype)
 {
-    auto k = MapHistory::ModifyItem(std::move(itemLocation), ItemMutation::SetCount(count));
-    k.item = itemLocation.item(*this);
     Action action(
         ActionType::ModifyItem,
-        std::move(k));
+        MapHistory::ModifyItem_v2(item, ItemMutation::SetSubType(subtype)));
 
     history.commit(std::move(action));
 }
@@ -978,7 +976,6 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                             {
                                 action.brush->apply(*this, position);
                             }
-                            
                         }
                     }
                 },

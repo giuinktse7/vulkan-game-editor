@@ -378,7 +378,7 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
         {
             if ((attribute = itemAttributesNode.attribute("value")))
             {
-                it.charges = attribute.as_int();
+                // Ignore (maybe should not?)
             }
         }
         else if (key == "floorchange")

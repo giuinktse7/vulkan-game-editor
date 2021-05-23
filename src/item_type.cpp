@@ -19,27 +19,41 @@ const uint32_t ItemType::getPatternIndex(const Position &pos) const
 
 const uint32_t ItemType::getPatternIndexForSubtype(uint8_t subtype) const
 {
-    // TODO Handle isFluidContainer(), isSplash(), and charges != 0
-    if (!stackable)
-        return 0;
+    DEBUG_ASSERT(usesSubType(), "Invalid call to getPatternIndexForSubtype: the ItemType does not use subtype.");
+    // TODO Handle charges != 0 (?)
+    if (isSplash() || isFluidContainer())
+    {
+        return subtype;
+    }
+    else if (stackable)
+    {
+        // Amount of sprites for different subtypes
+        uint8_t stackSpriteCount = appearance->getSpriteInfo().patternSize;
+        if (stackSpriteCount == 1)
+            return 0;
 
-    if (subtype <= 5)
-        return subtype - 1;
-    else if (subtype < 10)
-        return to_underlying(StackSizeOffset::Five);
-    else if (subtype < 25)
-        return to_underlying(StackSizeOffset::Ten);
-    else if (subtype < 50)
-        return to_underlying(StackSizeOffset::TwentyFive);
+        if (subtype <= 5)
+            return subtype - 1;
+        else if (subtype < 10)
+            return to_underlying(StackSizeOffset::Five);
+        else if (subtype < 25)
+            return to_underlying(StackSizeOffset::Ten);
+        else if (subtype < 50)
+            return to_underlying(StackSizeOffset::TwentyFive);
+        else
+            return to_underlying(StackSizeOffset::Fifty);
+    }
     else
-        return to_underlying(StackSizeOffset::Fifty);
+    {
+        return 0;
+    }
 }
 
 uint32_t ItemType::getSpriteId(const Position &pos) const
 {
     const SpriteInfo &spriteInfo = appearance->getSpriteInfo();
 
-    uint32_t spriteIndex = getPatternIndex(pos);
+    uint32_t spriteIndex = usesSubType() ? 0 : getPatternIndex(pos);
     return spriteInfo.spriteIds.at(spriteIndex);
 }
 
@@ -282,6 +296,11 @@ bool ItemType::isSplash() const noexcept
     return group == ItemType::Group::Splash;
 }
 
+bool ItemType::isChargeable() const noexcept
+{
+    return group == ItemType::Group::Charges;
+}
+
 bool ItemType::isFluidContainer() const noexcept
 {
     return group == ItemType::Group::Fluid;
@@ -348,7 +367,7 @@ bool ItemType::isUseable() const noexcept
 
 bool ItemType::hasSubType() const noexcept
 {
-    return (isFluidContainer() || isSplash() || stackable || charges != 0);
+    return (isFluidContainer() || isSplash() || stackable);
 }
 
 bool ItemType::usesSubType() const noexcept

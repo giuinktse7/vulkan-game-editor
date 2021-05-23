@@ -12,11 +12,38 @@
 #include "../draggable_item.h"
 #include "../mainwindow.h"
 
+const std::pair<std::string, uint8_t> FluidTypeModel::fluidTypes[] = {
+    {"None", 0},
+    {"Water", 1},
+    {"Blood", 2},
+    {"Beer", 3},
+    {"Slime", 4},
+    {"Lemonade", 5},
+    {"Milk", 6},
+    {"Mana fluid", 7},
+    {"Water 2", 9},
+    {"Life fluid", 10},
+    {"Oil", 11},
+    {"Slime 2", 12},
+    {"Urine", 13},
+    {"Coconut Milk", 14},
+    {"Wine", 15},
+    {"Mud", 19},
+    {"Fruit Juice", 21},
+    {"Lava", 26},
+    {"Rum", 27},
+    {"Swamp", 28},
+};
+
+const int FluidTypeModel::_size = sizeof(FluidTypeModel::fluidTypes) / sizeof(FluidTypeModel::fluidTypes[0]);
+
 namespace ObjectName
 {
-    constexpr auto CountSpinBox = "count_spinbox";
-    constexpr auto ActionIdSpinBox = "action_id_spinbox";
-    constexpr auto UniqueIdSpinBox = "unique_id_spinbox";
+    constexpr auto CountInput = "item_count_input";
+    constexpr auto ActionIdInput = "item_actionid_input";
+    constexpr auto UniqueIdInput = "item_uniqueid_input";
+    constexpr auto FluidTypeInput = "fluid_type_input";
+
     constexpr auto PropertyItemImage = "property_item_image";
 
     constexpr auto ItemContainerArea = "item_container_area";
@@ -25,7 +52,6 @@ namespace ObjectName
 ItemPropertyWindow::ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow)
     : _filepath(filepath), mainWindow(mainWindow), _wrapperWidget(nullptr)
 {
-    VME_LOG_D("ItemPropertyWindow address: " << this);
     installEventFilter(new PropertyWindowEventFilter(this));
 
     containerTree.onItemLeftClicked<&ItemPropertyWindow::containerItemSelectedEvent>(this);
@@ -34,6 +60,7 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow)
 
     QVariantMap properties;
     properties.insert("containers", QVariant::fromValue(&containerTree.containerListModel));
+    properties.insert("fluidTypeModel", QVariant::fromValue(&fluidTypeModel));
 
     setInitialProperties(properties);
 
@@ -42,10 +69,14 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow)
     engine()->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
 
     setSource(filepath);
-    VME_LOG_D("After ItemPropertyWindow::setSource");
 
     QmlApplicationContext *applicationContext = new QmlApplicationContext();
     engine()->rootContext()->setContextProperty("applicationContext", applicationContext);
+
+    latestCommittedPropertyValues.actionId = 100;
+    latestCommittedPropertyValues.uniqueId = 100;
+
+    latestCommittedPropertyValues.subtype = 1;
 }
 
 void ItemPropertyWindow::show()
@@ -135,26 +166,49 @@ void ItemPropertyWindow::focusGround(Item *item, Position &position, MapView &ma
     setPropertyItem(item);
 }
 
-void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
+void ItemPropertyWindow::setPropertyItemActionId(int actionId, bool shouldCommit)
 {
     DEBUG_ASSERT(state.propertyItem != nullptr, "No property item.");
 
     Item *item = state.propertyItem;
 
-    if (count == latestCommittedCount)
+    if (actionId == latestCommittedPropertyValues.actionId)
     {
         // Do not commit if the count is the same as when the item was first focused.
-        emit countChanged(item, count, false);
+        emit actionIdChanged(item, actionId, false);
     }
     else
     {
         // Necessary to make sure that the correct "old" count is stored in MapView history
         if (shouldCommit)
         {
-            item->setCount(latestCommittedCount);
-            latestCommittedCount = count;
+            item->setActionId(latestCommittedPropertyValues.actionId);
+            latestCommittedPropertyValues.actionId = actionId;
         }
-        emit countChanged(item, count, shouldCommit);
+        emit actionIdChanged(item, actionId, shouldCommit);
+    }
+}
+
+void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
+{
+    DEBUG_ASSERT(state.propertyItem != nullptr, "No property item.");
+
+    Item *item = state.propertyItem;
+
+    if (count == latestCommittedPropertyValues.subtype)
+    {
+        // Do not commit if the count is the same as when the item was first focused.
+        emit subtypeChanged(item, count, false);
+    }
+    else
+    {
+        // Necessary to make sure that the correct "old" count is stored in MapView history
+        if (shouldCommit)
+        {
+            item->setCount(latestCommittedPropertyValues.subtype);
+            latestCommittedPropertyValues.subtype = count;
+        }
+        emit subtypeChanged(item, count, shouldCommit);
     }
 
     // Refresh the container UI if necessary
@@ -182,9 +236,26 @@ void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
     }
 }
 
+void ItemPropertyWindow::fluidTypeHighlighted(int highlightedIndex)
+{
+    uint8_t fluidType = FluidTypeModel::fluidTypeFromIndex(highlightedIndex);
+    emit subtypeChanged(state.propertyItem, fluidType, false);
+}
+
+void ItemPropertyWindow::setFluidType(int index)
+{
+    uint8_t fluidType = FluidTypeModel::fluidTypeFromIndex(index);
+    if (state.propertyItem->subtype() != latestCommittedPropertyValues.subtype)
+    {
+        state.propertyItem->setSubtype(latestCommittedPropertyValues.subtype);
+        latestCommittedPropertyValues.subtype = fluidType;
+        emit subtypeChanged(state.propertyItem, fluidType, true);
+    }
+}
+
 void ItemPropertyWindow::setPropertyItem(Item *item)
 {
-    latestCommittedCount = item->count();
+    latestCommittedPropertyValues.subtype = item->count();
     state.propertyItem = item;
 
     // Update UI
@@ -194,12 +265,33 @@ void ItemPropertyWindow::setPropertyItem(Item *item)
     auto itemImage = child(ObjectName::PropertyItemImage);
     itemImage->setProperty("source", getItemPixmapString(*item));
 
-    auto countSpinBox = child(ObjectName::CountSpinBox);
-    setQmlObjectActive(countSpinBox->parent(), itemtype->stackable);
+    // ActionID
+    auto actionIdInput = child(ObjectName::ActionIdInput);
+    setQmlObjectActive(actionIdInput->parent(), true);
+    actionIdInput->setProperty("value", item->actionId());
 
+    // UniqueID
+    auto uniqueIdInput = child(ObjectName::UniqueIdInput);
+    setQmlObjectActive(uniqueIdInput->parent(), true);
+    uniqueIdInput->setProperty("value", item->uniqueId());
+
+    // Count / charges
+    auto countInput = child(ObjectName::CountInput);
+    setQmlObjectActive(countInput->parent()->parent(), itemtype->stackable || itemtype->isChargeable());
     if (itemtype->stackable)
     {
-        countSpinBox->setProperty("value", item->count());
+        countInput->setProperty("text", item->count());
+    }
+
+    // Fluids
+    bool usesFluid = itemtype->isSplash() || itemtype->isFluidContainer();
+
+    auto fluidInput = child(ObjectName::FluidTypeInput);
+    setQmlObjectActive(fluidInput->parent(), usesFluid);
+    if (usesFluid)
+    {
+        uint8_t index = FluidTypeModel::fluidTypeToIndex(state.propertyItem->subtype());
+        fluidInput->setProperty("currentIndex", index);
     }
 }
 
@@ -242,7 +334,7 @@ void ItemPropertyWindow::setFocused(FocusedContainer &&container)
 
 void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapView)
 {
-    latestCommittedCount = item->count();
+    latestCommittedPropertyValues.subtype = item->count();
 
     if (item->isGround())
     {
@@ -351,8 +443,9 @@ void ItemPropertyWindow::resetFocus()
 
 void ItemPropertyWindow::setCount(uint8_t count)
 {
-    auto countSpinBox = child(ObjectName::CountSpinBox);
-    countSpinBox->setProperty("value", count);
+    VME_LOG_D("ItemPropertyWindow::setCount: " << int(count));
+    auto countInput = child(ObjectName::CountInput);
+    countInput->setProperty("value", count);
 }
 
 void ItemPropertyWindow::setContainerVisible(bool visible)
@@ -440,8 +533,17 @@ void ItemPropertyWindow::refresh()
 
     if (state.propertyItem != nullptr)
     {
-        auto countSpinBox = child(ObjectName::CountSpinBox);
-        countSpinBox->setProperty("value", state.propertyItem->count());
+        auto actionIdInput = child(ObjectName::ActionIdInput);
+        actionIdInput->setProperty("text", state.propertyItem->actionId());
+
+        auto uniqueIdInput = child(ObjectName::UniqueIdInput);
+        uniqueIdInput->setProperty("text", state.propertyItem->uniqueId());
+
+        auto countInput = child(ObjectName::CountInput);
+        countInput->setProperty("text", state.propertyItem->count());
+
+        auto fluidTypeInput = child(ObjectName::FluidTypeInput);
+        fluidTypeInput->setProperty("currentIndex", FluidTypeModel::fluidTypeToIndex(state.propertyItem->subtype()));
     }
 }
 
@@ -668,4 +770,65 @@ bool PropertyWindowEventFilter::eventFilter(QObject *obj, QEvent *event)
     }
 
     return QObject::eventFilter(obj, event);
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>FluidTypeModel>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+FluidTypeModel::FluidTypeModel(QObject *parent)
+    : QAbstractListModel(parent)
+{
+}
+
+uint8_t FluidTypeModel::fluidTypeFromIndex(int index)
+{
+    return fluidTypes[index].second;
+}
+
+int FluidTypeModel::fluidTypeToIndex(uint8_t fluidType)
+{
+    for (int i = 0; i < _size; ++i)
+    {
+        if (fluidTypes[i].second == fluidType)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+QHash<int, QByteArray> FluidTypeModel::roleNames() const
+{
+    QHash<int, QByteArray> roles;
+    roles[TextRole] = "text";
+    roles[SubtypeRole] = "subtype";
+
+    return roles;
+}
+
+int FluidTypeModel::rowCount(const QModelIndex &parent) const
+{
+    return _size;
+}
+
+QVariant FluidTypeModel::data(const QModelIndex &modelIndex, int role) const
+{
+    auto index = modelIndex.row();
+    if (index < 0 || index >= rowCount())
+        return QVariant();
+
+    if (role == TextRole)
+    {
+        return QString::fromStdString(fluidTypes[index].first);
+    }
+    else if (role == SubtypeRole)
+    {
+        return FluidTypeModel::fluidTypeFromIndex(index);
+    }
+
+    return QVariant();
 }

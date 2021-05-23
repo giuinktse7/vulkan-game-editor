@@ -126,8 +126,8 @@ class MapView : public Nano::Observer<>
 
     void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
 
-    void setItemCount(ItemLocation itemLocation, uint8_t count);
-    void setItemCount(Item *item, uint8_t count);
+    void setSubtype(Item *item, uint8_t count);
+    void setItemActionId(Item *item, uint16_t actionId);
 
     void moveFromMapToContainer(Tile &tile, Item *item, ContainerLocation &containerInfo);
     void moveFromContainerToMap(ContainerLocation &moveInfo, Tile &tile);

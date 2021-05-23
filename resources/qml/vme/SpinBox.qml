@@ -5,10 +5,17 @@ import "./spinbox" as Components
 
 Control {
   id : vmeSpinBox
-  property int value : 1
-  property int from : 1
-  property int to : 100
-  property bool editable : true
+  property int value: 1
+  property int from: 1
+  property int to: 100
+  property bool editable: true
+  property var validator: null
+
+  Layout.minimumWidth : 100
+  Layout.preferredWidth : 100
+  Layout.maximumWidth : 150
+  Layout.minimumHeight : 23
+  Layout.preferredHeight : 23
 
   signal editingFinished();
 
@@ -28,22 +35,6 @@ Control {
   onValueChanged : {
     input.text = valueAsText();
   }
-
-  // Drop shadow for the input field
-  // DropShadow {
-  //   anchors.fill : childContainer
-  //   visible : input.focus
-  //   transparentBorder : true
-  //   horizontalOffset : 0
-  //   verticalOffset : 0
-  //   spread : 0.5
-  //   source : childContainer
-  //   radius : 8
-  //   samples : 17
-  //   // color : "#2196F37F"
-  //   // color : "#2196F348"
-  //   color : "#1F2196F3"
-  // }
 
   Rectangle {
     id : childContainer
@@ -83,7 +74,7 @@ Control {
         z : 2
         text : vmeSpinBox.valueAsText()
 
-        validator: RegularExpressionValidator { regularExpression: /(?:^[1-9][0-9]?[0-9]?$)?/ }
+        validator: IntValidator { bottom: vmeSpinBox.from; top: vmeSpinBox.to; }
 
         onTextChanged : {
           if (text !== "") {
@@ -95,7 +86,7 @@ Control {
 
         onEditingFinished : {
           if (text === "") {
-            vmeSpinBox.setValue(1);
+            vmeSpinBox.setValue(vmeSpinBox.from);
             text = vmeSpinBox.valueAsText();
           }
 

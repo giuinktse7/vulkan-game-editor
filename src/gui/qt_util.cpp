@@ -167,8 +167,8 @@ QPixmap QtUtil::itemPixmap(uint32_t serverId, uint8_t subtype)
     }
 
     ItemType *t = Items::items.getItemTypeByServerId(serverId);
-    auto info = subtype == 0 ? t->getTextureInfo(TextureInfo::CoordinateType::Unnormalized)
-                             : t->getTextureInfoForSubtype(subtype, TextureInfo::CoordinateType::Unnormalized);
+    auto info = t->usesSubType() ? t->getTextureInfoForSubtype(subtype, TextureInfo::CoordinateType::Unnormalized) 
+                                 : t->getTextureInfo(TextureInfo::CoordinateType::Unnormalized);
 
     return itemPixmap(info);
 }

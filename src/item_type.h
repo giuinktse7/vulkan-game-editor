@@ -136,6 +136,33 @@ enum ItemFlags_t
     FLAG_FORCEUSE = 1 << 26,
 };
 
+enum class SplashType
+{
+    None = 0,
+    Water = 1,
+    Blood = 2,
+    Beer = 3,
+    Slime = 4,
+    Lemonade = 5,
+    Milk = 6,
+    Manafluid = 7,
+    Water2 = 9,
+    Lifefluid = 10,
+    Oil = 11,
+    Slime2 = 12,
+    Urine = 13,
+    CoconutMilk = 14,
+    Wine = 15,
+    Mud = 19,
+    FruitJuice = 21,
+    Lava = 26,
+    Rum = 27,
+    Swamp = 28,
+
+    First = Water,
+    Last = Swamp
+};
+
 enum class TileStackOrder : uint8_t
 {
     Ground = 0,
@@ -242,6 +269,7 @@ class ItemType
     bool isGround() const noexcept;
     bool isContainer() const noexcept;
     bool isSplash() const noexcept;
+    bool isChargeable() const noexcept;
     bool isFluidContainer() const noexcept;
     bool isCorpse() const noexcept;
 
@@ -299,7 +327,6 @@ class ItemType
     uint32_t id = 0;
     uint32_t weight = 0;
     uint32_t levelDoor = 0;
-    uint32_t charges = 0;
 
     // CombatType_t combatType = COMBAT_NONE;
     uint16_t rotateTo = 0;
@@ -320,27 +347,14 @@ class ItemType
 
     StackableSpriteType stackableSpriteType = StackableSpriteType::SingleId;
 
-    // bool blockSolid = false;
-    // bool blockProjectile = false;
-    // bool blockPathFind = false;
     bool allowPickupable = false;
-    // bool showDuration = false;
-    // bool showCharges = false;
-    // bool showAttributes = false;
-    // bool replaceable = true;
     bool pickupable = false;
-    // bool rotatable = false;
-    // bool useable = false;
-    // bool moveable = false;
-    // bool alwaysBottomOfTile = false;
     bool canReadText = false;
     bool canWriteText = false;
     bool isVertical = false;
     bool isHorizontal = false;
     bool isHangable = false;
-    // bool allowDistRead = false;
     bool lookThrough = false;
-    // bool stopTime = false;
     bool showCount = true;
     bool stackable = false;
 

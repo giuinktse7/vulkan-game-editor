@@ -350,8 +350,12 @@ void ContainerNode::close()
         closeChild(index);
     }
 
-    _signals->preClosed.fire(&_uiContainerModel.value());
-    _uiContainerModel.reset();
+    if (_uiContainerModel.has_value())
+    {
+        _signals->preClosed.fire(&_uiContainerModel.value());
+        _uiContainerModel.reset();
+    }
+    
     opened = false;
 }
 

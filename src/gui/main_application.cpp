@@ -72,7 +72,7 @@ void MainApplication::initializeUI()
     mainWindow.initializeUI();
 
     // mainWindow.editorAction.setRawItem(2148);
-    mainWindow.editorAction.setRawBrush(5050);
+    // mainWindow.editorAction.setRawBrush(5050);
 }
 
 void MainApplication::loadStyleSheet(const QString &path)

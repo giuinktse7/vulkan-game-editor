@@ -110,6 +110,9 @@ int main(int argc, char *argv[])
 
     // QApplication::setOverrideCursor(QtUtil::itemPixmap(1987));
 
+    // Enables QML binding debug logs
+    // QLoggingCategory::setFilterRules(QStringLiteral("qt.qml.binding.removal.info=true"));
+
     return app.run();
 }
 

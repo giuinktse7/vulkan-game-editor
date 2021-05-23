@@ -295,40 +295,36 @@ void MainWindow::initializeUI()
     connect(mapTabs, &MapTabWidget::currentChanged, this, &MainWindow::mapTabChangedEvent);
 
     propertyWindow = new ItemPropertyWindow(QUrl("qrc:/vme/qml/itemPropertyWindow.qml"), this);
-    connect(propertyWindow, &ItemPropertyWindow::countChanged, [this](std::variant<Item *, ItemLocation> itemData, int count, bool shouldCommit) {
+
+    connect(propertyWindow, &ItemPropertyWindow::actionIdChanged, [this](Item *item, int actionId, bool shouldCommit) {
         MapView &mapView = *currentMapView();
+
         if (shouldCommit)
         {
             mapView.beginTransaction(TransactionType::ModifyItem);
-            if (std::holds_alternative<Item *>(itemData))
-            {
-                mapView.setItemCount(std::get<Item *>(itemData), count);
-            }
-            else if (std::holds_alternative<ItemLocation>(itemData))
-            {
-                mapView.setItemCount(std::get<ItemLocation>(itemData), count);
-            }
-            else
-            {
-                ABORT_PROGRAM("mainwindow.cpp : Bad itemData.");
-            }
-
+            mapView.setItemActionId(item, actionId);
             mapView.endTransaction(TransactionType::ModifyItem);
         }
         else
         {
-            if (std::holds_alternative<Item *>(itemData))
-            {
-                std::get<Item *>(itemData)->setCount(count);
-            }
-            else if (std::holds_alternative<ItemLocation>(itemData))
-            {
-                std::get<ItemLocation>(itemData).item(mapView)->setCount(count);
-            }
-            else
-            {
-                ABORT_PROGRAM("mainwindow.cpp : Bad itemData.");
-            }
+            item->setActionId(actionId);
+        }
+
+        mapView.requestDraw();
+    });
+
+    connect(propertyWindow, &ItemPropertyWindow::subtypeChanged, [this](Item *item, int subtype, bool shouldCommit) {
+        MapView &mapView = *currentMapView();
+
+        if (shouldCommit)
+        {
+            mapView.beginTransaction(TransactionType::ModifyItem);
+            mapView.setSubtype(item, subtype);
+            mapView.endTransaction(TransactionType::ModifyItem);
+        }
+        else
+        {
+            item->setSubtype(subtype);
         }
 
         mapView.requestDraw();
@@ -515,8 +511,8 @@ void MainWindow::initializePaletteWindow()
     connect(_paletteWindow, &ItemPaletteWindow::brushSelectionEvent, [this](Brush *brush) {
         editorAction.setIfUnlocked(MouseAction::MapBrush(brush));
     });
-
-    Brush *testBrush = Brush::getOrCreateRawBrush(446);
+    Brush *testBrush = Brush::getOrCreateRawBrush(2016);
+    // Brush *testBrush = Brush::getOrCreateRawBrush(2005);
     _paletteWindow->selectBrush(testBrush);
 }
 
