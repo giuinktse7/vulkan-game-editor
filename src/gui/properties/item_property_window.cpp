@@ -12,31 +12,6 @@
 #include "../draggable_item.h"
 #include "../mainwindow.h"
 
-const std::pair<std::string, uint8_t> FluidTypeModel::fluidTypes[] = {
-    {"None", 0},
-    {"Water", 1},
-    {"Blood", 2},
-    {"Beer", 3},
-    {"Slime", 4},
-    {"Lemonade", 5},
-    {"Milk", 6},
-    {"Mana fluid", 7},
-    {"Water 2", 9},
-    {"Life fluid", 10},
-    {"Oil", 11},
-    {"Slime 2", 12},
-    {"Urine", 13},
-    {"Coconut Milk", 14},
-    {"Wine", 15},
-    {"Mud", 19},
-    {"Fruit Juice", 21},
-    {"Lava", 26},
-    {"Rum", 27},
-    {"Swamp", 28},
-};
-
-const int FluidTypeModel::_size = sizeof(FluidTypeModel::fluidTypes) / sizeof(FluidTypeModel::fluidTypes[0]);
-
 namespace ObjectName
 {
     constexpr auto CountInput = "item_count_input";
@@ -238,13 +213,13 @@ void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
 
 void ItemPropertyWindow::fluidTypeHighlighted(int highlightedIndex)
 {
-    uint8_t fluidType = FluidTypeModel::fluidTypeFromIndex(highlightedIndex);
+    uint8_t fluidType = static_cast<uint8_t>(fluidTypeFromIndex(highlightedIndex));
     emit subtypeChanged(state.propertyItem, fluidType, false);
 }
 
 void ItemPropertyWindow::setFluidType(int index)
 {
-    uint8_t fluidType = FluidTypeModel::fluidTypeFromIndex(index);
+    uint8_t fluidType = static_cast<uint8_t>(fluidTypeFromIndex(index));
     if (state.propertyItem->subtype() != latestCommittedPropertyValues.subtype)
     {
         state.propertyItem->setSubtype(latestCommittedPropertyValues.subtype);
@@ -290,7 +265,7 @@ void ItemPropertyWindow::setPropertyItem(Item *item)
     setQmlObjectActive(fluidInput->parent(), usesFluid);
     if (usesFluid)
     {
-        uint8_t index = FluidTypeModel::fluidTypeToIndex(state.propertyItem->subtype());
+        uint8_t index = indexOfFluidType(static_cast<FluidType>(state.propertyItem->subtype()));
         fluidInput->setProperty("currentIndex", index);
     }
 }
@@ -543,7 +518,7 @@ void ItemPropertyWindow::refresh()
         countInput->setProperty("text", state.propertyItem->count());
 
         auto fluidTypeInput = child(ObjectName::FluidTypeInput);
-        fluidTypeInput->setProperty("currentIndex", FluidTypeModel::fluidTypeToIndex(state.propertyItem->subtype()));
+        fluidTypeInput->setProperty("currentIndex", indexOfFluidType(static_cast<FluidType>(state.propertyItem->subtype())));
     }
 }
 
@@ -783,24 +758,6 @@ FluidTypeModel::FluidTypeModel(QObject *parent)
 {
 }
 
-uint8_t FluidTypeModel::fluidTypeFromIndex(int index)
-{
-    return fluidTypes[index].second;
-}
-
-int FluidTypeModel::fluidTypeToIndex(uint8_t fluidType)
-{
-    for (int i = 0; i < _size; ++i)
-    {
-        if (fluidTypes[i].second == fluidType)
-        {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
 QHash<int, QByteArray> FluidTypeModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
@@ -812,7 +769,7 @@ QHash<int, QByteArray> FluidTypeModel::roleNames() const
 
 int FluidTypeModel::rowCount(const QModelIndex &parent) const
 {
-    return _size;
+    return indexOfFluidType(FluidType::Mead);
 }
 
 QVariant FluidTypeModel::data(const QModelIndex &modelIndex, int role) const
@@ -823,11 +780,57 @@ QVariant FluidTypeModel::data(const QModelIndex &modelIndex, int role) const
 
     if (role == TextRole)
     {
-        return QString::fromStdString(fluidTypes[index].first);
+        switch (fluidTypeFromIndex(index))
+        {
+            case FluidType::None:
+                return "None";
+            case FluidType::Water:
+                return "Water";
+            case FluidType::Mana:
+                return "Mana";
+            case FluidType::Beer:
+                return "Beer";
+            case FluidType::Oil:
+                return "Oil";
+            case FluidType::Blood:
+                return "Blood";
+            case FluidType::Slime:
+                return "Slime";
+            case FluidType::Mud:
+                return "Mud";
+            case FluidType::Lemonade:
+                return "Lemonade";
+            case FluidType::Milk:
+                return "Milk";
+            case FluidType::Wine:
+                return "Wine";
+            case FluidType::Life:
+                return "Life";
+            case FluidType::Urine:
+                return "Urine";
+            case FluidType::CoconutMilk:
+                return "Coconut Milk";
+            case FluidType::FruitJuice:
+                return "Fruit Juice";
+            case FluidType::Ink:
+                return "Ink";
+            case FluidType::Lava:
+                return "Lava";
+            case FluidType::Rum:
+                return "Rum";
+            case FluidType::Swamp:
+                return "Swamp";
+            case FluidType::Tea:
+                return "Tea";
+            case FluidType::Mead:
+                return "Mead";
+            default:
+                return "Unknown";
+        }
     }
     else if (role == SubtypeRole)
     {
-        return FluidTypeModel::fluidTypeFromIndex(index);
+        return static_cast<int>(fluidTypeFromIndex(index));
     }
 
     return QVariant();

@@ -41,22 +41,14 @@ class FluidTypeModel : public QAbstractListModel
         SubtypeRole = Qt::UserRole + 2
     };
 
-    static uint8_t fluidTypeFromIndex(int index);
-    static int fluidTypeToIndex(uint8_t fluidType);
-
     FluidTypeModel(QObject *parent = 0);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
     QVariant data(const QModelIndex &modelIndex, int role = Qt::DisplayRole) const;
 
-    static const std::pair<std::string, uint8_t> fluidTypes[int(SplashType::Last) + 1];
-
   protected:
     QHash<int, QByteArray> roleNames() const;
-
-  private:
-    static const int _size;
 };
 
 class PropertyWindowEventFilter : public QtUtil::EventFilter

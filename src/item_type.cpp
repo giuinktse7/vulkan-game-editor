@@ -17,13 +17,52 @@ const uint32_t ItemType::getPatternIndex(const Position &pos) const
     return spriteIndex;
 }
 
+uint8_t getFluidPatternOffset(FluidType fluidType)
+{
+    switch (fluidType)
+    {
+        case FluidType::None:
+        case FluidType::Ink:
+            return 0;
+        case FluidType::Water:
+            return 1;
+        case FluidType::Blood:
+        case FluidType::Life:
+        case FluidType::Lava:
+            return 2;
+        case FluidType::Beer:
+        case FluidType::Mud:
+        case FluidType::Oil:
+        case FluidType::Rum:
+        case FluidType::Tea:
+        case FluidType::Mead:
+            return 3;
+        case FluidType::Slime:
+        case FluidType::Swamp:
+            return 4;
+        case FluidType::Lemonade:
+        case FluidType::Urine:
+        case FluidType::FruitJuice:
+            return 5;
+        case FluidType::Milk:
+        case FluidType::CoconutMilk:
+            return 6;
+        case FluidType::Mana:
+        case FluidType::Wine:
+            return 7;
+        default:
+            return 0;
+    }
+}
+
 const uint32_t ItemType::getPatternIndexForSubtype(uint8_t subtype) const
 {
     DEBUG_ASSERT(usesSubType(), "Invalid call to getPatternIndexForSubtype: the ItemType does not use subtype.");
     // TODO Handle charges != 0 (?)
     if (isSplash() || isFluidContainer())
     {
-        return subtype;
+        // TODO Handle rotation of fluid containers
+        return getFluidPatternOffset(static_cast<FluidType>(subtype));
     }
     else if (stackable)
     {

@@ -136,32 +136,149 @@ enum ItemFlags_t
     FLAG_FORCEUSE = 1 << 26,
 };
 
-enum class SplashType
+enum class FluidColor : uint8_t
 {
-    None = 0,
-    Water = 1,
-    Blood = 2,
-    Beer = 3,
-    Slime = 4,
-    Lemonade = 5,
-    Milk = 6,
-    Manafluid = 7,
-    Water2 = 9,
-    Lifefluid = 10,
-    Oil = 11,
-    Slime2 = 12,
-    Urine = 13,
-    CoconutMilk = 14,
-    Wine = 15,
-    Mud = 19,
-    FruitJuice = 21,
-    Lava = 26,
-    Rum = 27,
-    Swamp = 28,
-
-    First = Water,
-    Last = Swamp
+    Transparent = 0,
+    Blue,
+    Red,
+    Brown,
+    Green,
+    Yellow,
+    White,
+    Purple
 };
+
+enum class FluidType : uint8_t
+{
+    None = FLUID_EMPTY,
+    Water = static_cast<uint8_t>(FluidColor::Blue),
+    Blood = static_cast<uint8_t>(FluidColor::Red),
+    Beer = static_cast<uint8_t>(FluidColor::Brown),
+    Slime = static_cast<uint8_t>(FluidColor::Green),
+    Lemonade = static_cast<uint8_t>(FluidColor::Yellow),
+    Milk = static_cast<uint8_t>(FluidColor::White),
+    Mana = static_cast<uint8_t>(FluidColor::Purple),
+    Life = static_cast<uint8_t>(FluidColor::Red) + 8,
+    Oil = static_cast<uint8_t>(FluidColor::Brown) + 8,
+    Urine = static_cast<uint8_t>(FluidColor::Yellow) + 8,
+    CoconutMilk = static_cast<uint8_t>(FluidColor::White) + 8,
+    Wine = static_cast<uint8_t>(FluidColor::Purple) + 8,
+
+    Mud = static_cast<uint8_t>(FluidColor::Brown) + 16,
+    FruitJuice = static_cast<uint8_t>(FluidColor::Yellow) + 16,
+    Ink = static_cast<uint8_t>(FluidColor::White) + 16, //12.20+ - we don't care about this id so let's choose whatever
+
+    Lava = static_cast<uint8_t>(FluidColor::Red) + 24,
+    Rum = static_cast<uint8_t>(FluidColor::Brown) + 24,
+    Swamp = static_cast<uint8_t>(FluidColor::Green) + 24,
+
+    Tea = static_cast<uint8_t>(FluidColor::Brown) + 32,
+
+    Mead = static_cast<uint8_t>(FluidColor::Brown) + 40,
+};
+
+inline FluidType fluidTypeFromIndex(int index)
+{
+    switch (index)
+    {
+        case 0:
+            return FluidType::None;
+        case 1:
+            return FluidType::Water;
+        case 2:
+            return FluidType::Blood;
+        case 3:
+            return FluidType::Beer;
+        case 4:
+            return FluidType::Slime;
+        case 5:
+            return FluidType::Lemonade;
+        case 6:
+            return FluidType::Milk;
+        case 7:
+            return FluidType::Mana;
+        case 8:
+            return FluidType::Life;
+        case 9:
+            return FluidType::Oil;
+        case 10:
+            return FluidType::Urine;
+        case 11:
+            return FluidType::CoconutMilk;
+        case 12:
+            return FluidType::Wine;
+        case 13:
+            return FluidType::Mud;
+        case 14:
+            return FluidType::FruitJuice;
+        case 15:
+            return FluidType::Ink;
+        case 16:
+            return FluidType::Lava;
+        case 17:
+            return FluidType::Rum;
+        case 18:
+            return FluidType::Swamp;
+        case 19:
+            return FluidType::Tea;
+        case 20:
+            return FluidType::Mead;
+        default:
+        {
+            VME_LOG_ERROR("Could not convert" << index << " to fluid type. Using FluidType::None instead.");
+            return FluidType::None;
+        }
+    }
+}
+
+inline uint8_t indexOfFluidType(FluidType fluidType)
+{
+    switch (fluidType)
+    {
+        case FluidType::None:
+            return 0;
+        case FluidType::Water:
+            return 1;
+        case FluidType::Blood:
+            return 2;
+        case FluidType::Beer:
+            return 3;
+        case FluidType::Slime:
+            return 4;
+        case FluidType::Lemonade:
+            return 5;
+        case FluidType::Milk:
+            return 6;
+        case FluidType::Mana:
+            return 7;
+        case FluidType::Life:
+            return 8;
+        case FluidType::Oil:
+            return 9;
+        case FluidType::Urine:
+            return 10;
+        case FluidType::CoconutMilk:
+            return 11;
+        case FluidType::Wine:
+            return 12;
+        case FluidType::Mud:
+            return 13;
+        case FluidType::FruitJuice:
+            return 14;
+        case FluidType::Ink:
+            return 15;
+        case FluidType::Lava:
+            return 16;
+        case FluidType::Rum:
+            return 17;
+        case FluidType::Swamp:
+            return 18;
+        case FluidType::Tea:
+            return 19;
+        case FluidType::Mead:
+            return 20;
+    }
+}
 
 enum class TileStackOrder : uint8_t
 {
