@@ -26,13 +26,13 @@ class GeneralDebugException : public std::exception
     const char *message;
 };
 
-#define ABORT_PROGRAM(message)                                                                              \
-    do                                                                                                      \
-    {                                                                                                       \
-        std::ostringstream s;                                                                               \
-        s << "[ERROR] " << __FILE__ << ", line " << (unsigned)(__LINE__) << ": " << (message) << std::endl; \
-        VME_LOG_D(s.str());                                                                                 \
-        throw GeneralDebugException(s.str().c_str());                                                       \
+#define ABORT_PROGRAM(message)                                                                            \
+    do                                                                                                    \
+    {                                                                                                     \
+        std::ostringstream s;                                                                             \
+        s << "[ERROR] " << __FILE__ << ", line " << (unsigned)(__LINE__) << ": " << message << std::endl; \
+        VME_LOG_D(s.str());                                                                               \
+        throw GeneralDebugException(s.str().c_str());                                                     \
     } while (false)
 
 #define NOT_IMPLEMENTED_ABORT() ABORT_PROGRAM("Not implemented yet.");
