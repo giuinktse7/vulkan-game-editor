@@ -77,6 +77,8 @@ class MainWindow : public QWidget, public Nano::Observer<>
     QMenuBar *createMenuBar();
     void initializePaletteWindow();
 
+    void registerPropertyItemListeners();
+
     MapTabWidget *mapTabs;
     ItemPropertyWindow *propertyWindow;
     ItemPaletteWindow *_paletteWindow;

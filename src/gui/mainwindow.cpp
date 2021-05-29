@@ -295,6 +295,51 @@ void MainWindow::initializeUI()
     connect(mapTabs, &MapTabWidget::currentChanged, this, &MainWindow::mapTabChangedEvent);
 
     propertyWindow = new ItemPropertyWindow(QUrl("qrc:/vme/qml/itemPropertyWindow.qml"), this);
+    registerPropertyItemListeners();
+
+    QMenuBar *menu = createMenuBar();
+    rootLayout->setMenuBar(menu);
+
+    Splitter *splitter = new Splitter();
+    rootLayout->addWidget(splitter, BorderLayout::Position::Center);
+
+    initializePaletteWindow();
+
+    splitter->addWidget(_paletteWindow);
+    splitter->addWidget(mapTabs);
+    splitter->setStretchFactor(1, 1);
+
+    {
+        auto container = propertyWindow->wrapInWidget();
+        container->setMinimumWidth(240);
+        container->setMaximumWidth(240);
+
+        splitter->addWidget(container);
+        splitter->setStretchFactor(2, 0);
+    }
+
+    splitter->setSizes(QList<int>({200, 760, 240}));
+
+    QWidget *bottomStatusBar = new QWidget;
+    QHBoxLayout *bottomLayout = new QHBoxLayout;
+    bottomStatusBar->setLayout(bottomLayout);
+
+    positionStatus->setText("");
+    bottomLayout->addWidget(positionStatus);
+
+    zoomStatus->setText("");
+    bottomLayout->addWidget(zoomStatus);
+
+    topItemInfo->setText("");
+    bottomLayout->addWidget(topItemInfo);
+
+    rootLayout->addWidget(bottomStatusBar, BorderLayout::Position::South);
+
+    setLayout(rootLayout);
+}
+
+void MainWindow::registerPropertyItemListeners()
+{
 
     connect(propertyWindow, &ItemPropertyWindow::actionIdChanged, [this](Item *item, int actionId, bool shouldCommit) {
         MapView &mapView = *currentMapView();
@@ -330,44 +375,13 @@ void MainWindow::initializeUI()
         mapView.requestDraw();
     });
 
-    QMenuBar *menu = createMenuBar();
-    rootLayout->setMenuBar(menu);
+    connect(propertyWindow, &ItemPropertyWindow::textChanged, [this](Item *item, const std::string &text) {
+        MapView &mapView = *currentMapView();
 
-    Splitter *splitter = new Splitter();
-    rootLayout->addWidget(splitter, BorderLayout::Position::Center);
-
-    initializePaletteWindow();
-
-    splitter->addWidget(_paletteWindow);
-    splitter->addWidget(mapTabs);
-    splitter->setStretchFactor(1, 1);
-
-    {
-        auto container = propertyWindow->wrapInWidget();
-        container->setMinimumWidth(200);
-
-        splitter->addWidget(container);
-        splitter->setStretchFactor(2, 0);
-    }
-
-    splitter->setSizes(QList<int>({200, 800, 200}));
-
-    QWidget *bottomStatusBar = new QWidget;
-    QHBoxLayout *bottomLayout = new QHBoxLayout;
-    bottomStatusBar->setLayout(bottomLayout);
-
-    positionStatus->setText("");
-    bottomLayout->addWidget(positionStatus);
-
-    zoomStatus->setText("");
-    bottomLayout->addWidget(zoomStatus);
-
-    topItemInfo->setText("");
-    bottomLayout->addWidget(topItemInfo);
-
-    rootLayout->addWidget(bottomStatusBar, BorderLayout::Position::South);
-
-    setLayout(rootLayout);
+        mapView.beginTransaction(TransactionType::ModifyItem);
+        mapView.setText(item, text);
+        mapView.endTransaction(TransactionType::ModifyItem);
+    });
 }
 
 void MainWindow::initializePaletteWindow()
