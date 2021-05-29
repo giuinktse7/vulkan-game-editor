@@ -68,9 +68,7 @@ void Tile::removeItem(Item *item)
         return;
     }
 
-    auto found = findItem([item](const Item &_item) {
-        return item == &_item;
-    });
+    auto found = findItem([item](const Item &_item) { return item == &_item; });
 
     if (found != _items.end())
     {
@@ -107,9 +105,7 @@ std::shared_ptr<Item> Tile::dropItem(Item *item)
 {
     DEBUG_ASSERT(!(_ground && item == _ground.get()), "Can not drop ground using dropItem (as of now. It will maybe make sense in the future to be able to do so).");
 
-    auto found = findItem([item](const Item &_item) {
-        return item == &_item;
-    });
+    auto found = findItem([item](const Item &_item) { return item == &_item; });
 
     if (found == _items.end())
     {
@@ -502,27 +498,42 @@ Tile Tile::copyForHistory() const
     return tile;
 }
 
-Tile Tile::deepCopy() const
+Tile Tile::deepCopy(Position newPosition) const
+{
+    Tile tile(newPosition);
+    deepCopyInto(tile, false);
+    return tile;
+}
+
+Tile Tile::deepCopy(bool onlySelected) const
 {
     Tile tile(_position);
+    deepCopyInto(tile, false);
+    return tile;
+}
+
+void Tile::deepCopyInto(Tile &tile, bool onlySelected) const
+{
     for (const auto &item : _items)
     {
-        tile.addItem(item->deepCopy());
-    }
-    tile._flags = this->_flags;
-    if (_ground)
-    {
-        tile._ground = std::make_unique<Item>(_ground->deepCopy());
+        if (!onlySelected || item->selected)
+        {
+            tile.addItem(item->deepCopy());
+        }
     }
 
-    if (_creature)
+    if (_ground && (!onlySelected || _ground->selected))
+    {
+        tile._ground = std::make_unique<Item>(_ground->deepCopy());
+        tile._flags = this->_flags;
+    }
+
+    if (_creature && (!onlySelected || _creature->selected))
     {
         tile._creature = std::make_unique<Creature>(_creature->deepCopy());
     }
 
     tile._selectionCount = this->_selectionCount;
-
-    return tile;
 }
 
 bool Tile::isEmpty() const

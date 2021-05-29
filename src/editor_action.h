@@ -3,6 +3,7 @@
 #include <variant>
 
 #include "debug.h"
+#include "map_copy_buffer.h"
 #include "position.h"
 #include "signal.h"
 #include "util.h"
@@ -125,9 +126,15 @@ struct MouseAction
         bool active() const;
         void stop();
     };
+
+    struct PasteMapBuffer
+    {
+        PasteMapBuffer(MapCopyBuffer *buffer);
+        MapCopyBuffer *buffer;
+    };
 };
 
-using MouseAction_t = std::variant<MouseAction::None, MouseAction::MapBrush, MouseAction::Select, MouseAction::Pan, MouseAction::DragDropItem>;
+using MouseAction_t = std::variant<MouseAction::None, MouseAction::MapBrush, MouseAction::Select, MouseAction::Pan, MouseAction::DragDropItem, MouseAction::PasteMapBuffer>;
 
 /**
  * Utility class for sending UI information to a MapView.

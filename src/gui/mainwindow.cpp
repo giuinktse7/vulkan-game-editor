@@ -525,8 +525,8 @@ void MainWindow::initializePaletteWindow()
     connect(_paletteWindow, &ItemPaletteWindow::brushSelectionEvent, [this](Brush *brush) {
         editorAction.setIfUnlocked(MouseAction::MapBrush(brush));
     });
-    Brush *testBrush = Brush::getOrCreateRawBrush(2016);
-    // Brush *testBrush = Brush::getOrCreateRawBrush(2005);
+    // Brush *testBrush = Brush::getOrCreateRawBrush(2016);
+    Brush *testBrush = Brush::getOrCreateRawBrush(2005);
     _paletteWindow->selectBrush(testBrush);
 }
 
@@ -569,9 +569,20 @@ QMenuBar *MainWindow::createMenuBar()
         editMenu->addAction(cut);
 
         auto copy = new MenuAction(tr("Copy"), Qt::CTRL | Qt::Key_C, this);
+        connect(copy, &QWidgetAction::triggered, [this] { this->mapCopyBuffer.copySelection(*this->currentMapView()); });
+
         editMenu->addAction(copy);
 
         auto paste = new MenuAction(tr("Paste"), Qt::CTRL | Qt::Key_V, this);
+        connect(paste, &QWidgetAction::triggered, [this] {
+            if (this->mapCopyBuffer.empty() || !this->currentMapView())
+            {
+                return;
+            }
+
+            this->editorAction.set(MouseAction::PasteMapBuffer(&this->mapCopyBuffer));
+            this->currentMapView()->requestDraw();
+        });
         editMenu->addAction(paste);
     }
 

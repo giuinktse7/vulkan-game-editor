@@ -83,3 +83,6 @@ void MouseAction::Pan::stop()
     cameraOrigin.reset();
     mouseOrigin.reset();
 }
+
+MouseAction::PasteMapBuffer::PasteMapBuffer(MapCopyBuffer *buffer)
+    : buffer(buffer) {}

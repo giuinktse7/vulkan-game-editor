@@ -90,6 +90,7 @@ class MapView : public Nano::Observer<>
 
     Tile &getOrCreateTile(const Position pos);
     void insertTile(Tile &&tile);
+    void insertTile(std::unique_ptr<Tile> &&tile);
     void removeTile(const Position pos);
     void modifyTile(const Position pos, std::function<void(Tile &)> f);
 
@@ -217,6 +218,7 @@ class MapView : public Nano::Observer<>
     Position toPosition(util::Point<T> point) const;
 
     Selection &selection();
+    const Selection &selection() const;
     const Camera::Viewport &getViewport() const noexcept;
     util::Rectangle<int> getGameBoundingRect() const;
     std::optional<std::pair<WorldPosition, WorldPosition>> getDragPoints() const;
@@ -318,6 +320,11 @@ inline uint8_t MapView::mapDepth() const noexcept
 }
 
 inline Selection &MapView::selection()
+{
+    return _selection;
+}
+
+inline const Selection &MapView::selection() const
 {
     return _selection;
 }

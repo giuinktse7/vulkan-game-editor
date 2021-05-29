@@ -285,7 +285,7 @@ void MainUtils::printOutfitAtlases(std::vector<uint32_t> outfitIds)
 void TemporaryTest::addChunk(Position from, vme::octree::Tree &tree)
 {
     auto chunk = vme::octree::ChunkSize;
-    auto to = Position(from.x + chunk.width - 1, from.y + chunk.height - 1, from.z + chunk.depth - 1);
+    auto to = Position(from.x + chunk.width - 1, from.y + chunk.height - 1, static_cast<Position::z_type>(from.z + chunk.depth - 1));
     VME_LOG("addChunk: " << from << " to " << to);
 
     for (const auto pos : MapArea(from, to))

@@ -24,7 +24,9 @@ class Tile
     Tile(Tile &&other) noexcept;
     Tile &operator=(Tile &&other) noexcept;
 
-    Tile deepCopy() const;
+    Tile deepCopy(bool onlySelected = false) const;
+    Tile deepCopy(Position newPosition) const;
+
     Tile copyForHistory() const;
 
     inline bool itemSelected(uint16_t itemIndex) const
@@ -146,6 +148,8 @@ class Tile
 
     Item *replaceGround(Item &&ground);
     Item *replaceItem(size_t index, Item &&item);
+
+    void deepCopyInto(Tile &tile, bool onlySelected) const;
 
     std::vector<std::shared_ptr<Item>> _items;
     std::shared_ptr<Item> _ground;

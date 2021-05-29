@@ -267,6 +267,11 @@ void MapView::insertTile(Tile &&tile)
     history.commit(ActionType::SetTile, SetTile(std::move(tile)));
 }
 
+void MapView::insertTile(std::unique_ptr<Tile> &&tile)
+{
+    history.commit(ActionType::SetTile, SetTile(std::move(tile)));
+}
+
 void MapView::removeTile(const Position position)
 {
     Action action(ActionType::RemoveTile);
@@ -894,8 +899,28 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                     pan.mouseOrigin = event.pos();
                     pan.cameraOrigin = camera.worldPosition();
                 },
+                [this, event](MouseAction::PasteMapBuffer &paste) {
+                    std::vector<Position> positions;
 
+                    history.beginTransaction(TransactionType::AddMapItem);
+                    this->clearSelection();
+
+                    for (const auto &location : paste.buffer->getBufferMap().begin())
+                    {
+                        auto newPosition = this->mouseGamePos() + (location->position() - paste.buffer->topLeft);
+                        auto tile = location->tile()->deepCopy(newPosition);
+                        this->insertTile(std::move(tile));
+                        positions.emplace_back(newPosition);
+                    }
+
+                    history.endTransaction(TransactionType::AddMapItem);
+
+                    // this->_selection.select(positions);
+
+                    editorAction.reset();
+                },
                 [](const auto &arg) {}},
+
             editorAction.action());
 
         auto worldPos = event.pos().worldPos(*this);

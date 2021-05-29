@@ -1,5 +1,6 @@
 {
   "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, IndentWidth: 4, ColumnLimit: 120, BreakBeforeBraces: Allman, AllowShortIfStatementsOnASingleLine: Never, IndentCaseLabels: true, AllowShortFunctionsOnASingleLine: Empty, AccessModifierOffset: -2, NamespaceIndentation: All, SpaceBeforeCtorInitializerColon: true, ConstructorInitializerIndentWidth: 4, BreakBeforeInheritanceComma: false, BreakInheritanceList: AfterColon, BreakConstructorInitializersBeforeComma: false, BreakConstructorInitializers: BeforeColon, ConstructorInitializerAllOnOneLineOrOnePerLine: true, AllowShortLambdasOnASingleLine: All, AlwaysBreakTemplateDeclarations: Yes, BinPackParameters: false, ExperimentalAutoDetectBinPacking: false, AllowAllParametersOfDeclarationOnNextLine: false, PenaltyReturnTypeOnItsOwnLine: 1000000 }",
   "files.associations": {
     "vector": "cpp",
     "algorithm": "cpp",

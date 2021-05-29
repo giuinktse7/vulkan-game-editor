@@ -360,6 +360,7 @@ class MapRenderer
     void drawTile(const TileLocation &tileLocation,
                   uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
                   const ItemPredicate &filter = nullptr);
+    void drawTile(Tile *tile, uint32_t flags, const Position offset, const ItemPredicate &filter);
 
     WorldPosition getWorldPosForDraw(const ItemTypeDrawInfo &info, TextureAtlas *atlas) const;
 

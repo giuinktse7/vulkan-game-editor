@@ -26,6 +26,7 @@ class ItemPropertyWindow;
 class ItemPaletteWindow;
 class TilesetListView;
 
+#include "../map_copy_buffer.h"
 #include "../signal.h"
 #include "gui.h"
 #include "qt_util.h"
@@ -93,6 +94,8 @@ class MainWindow : public QWidget, public Nano::Observer<>
     std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> untitledIds;
 
     QVulkanInstance *vulkanInstance;
+
+    MapCopyBuffer mapCopyBuffer;
 
     // void updatePositionText();
 };

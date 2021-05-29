@@ -110,6 +110,9 @@ namespace MapHistory
     SetTile::SetTile(Tile &&tile)
         : data(std::make_unique<Tile>(std::move(tile))) {}
 
+    SetTile::SetTile(std::unique_ptr<Tile> &&tile)
+        : data(std::move(tile)) {}
+
     void SetTile::commit(MapView &mapView)
     {
         auto &tile = std::get<std::unique_ptr<Tile>>(data);

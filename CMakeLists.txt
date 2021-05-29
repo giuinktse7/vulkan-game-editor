@@ -131,6 +131,7 @@ set(CommonSources
     src/map.h
     src/save_map.h
     src/load_map.h
+    src/map_copy_buffer.h
     src/map_view.h
     src/otb.h
     src/position.h
@@ -201,6 +202,7 @@ set(CommonSources
     src/map.cpp
     src/save_map.cpp
     src/load_map.cpp
+    src/map_copy_buffer.cpp
     src/map_view.cpp
     src/otb.cpp
     src/position.cpp

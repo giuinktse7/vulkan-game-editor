@@ -277,6 +277,22 @@ void MapRenderer::drawMap()
 
         drawTile(tileLocation, tileFlags, filter);
     }
+
+    // Draw paste preview
+    auto pasteAction = mapView->editorAction.as<MouseAction::PasteMapBuffer>();
+    if (pasteAction)
+    {
+        auto mapBuffer = pasteAction->buffer;
+        for (auto &tileLocation : mapBuffer->getBufferMap().getRegion(mapBuffer->topLeft, mapBuffer->bottomRight))
+        {
+            if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
+                continue;
+
+            auto offset = mapView->mouseGamePos() - mapBuffer->topLeft;
+
+            drawTile(tileLocation.tile(), ItemDrawFlags::DrawSelected | ItemDrawFlags::Ghost, offset, filter);
+        }
+    }
 }
 
 void MapRenderer::drawCurrentAction()
@@ -441,9 +457,13 @@ void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, con
 
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, const Position offset, const ItemPredicate &filter)
 {
-    auto position = tileLocation.position();
+    drawTile(tileLocation.tile(), flags, offset, filter);
+}
+
+void MapRenderer::drawTile(Tile *tile, uint32_t flags, const Position offset, const ItemPredicate &filter)
+{
+    auto position = tile->position();
     position += offset;
-    auto tile = tileLocation.tile();
 
     Item *groundPtr = tile->ground();
     if (groundPtr != nullptr)
@@ -680,6 +700,10 @@ void MapRenderer::drawRectangle(const Texture &texture, const WorldPosition from
 
 glm::vec4 MapRenderer::getItemDrawColor(const Item &item, const Position &position, uint32_t drawFlags)
 {
+    if (drawFlags & ItemDrawFlags::Ghost)
+    {
+        return colors::ItemPreview;
+    }
     bool drawAsSelected = item.selected || ((drawFlags & ItemDrawFlags::ActiveSelectionArea) && mapView->inDragRegion(position));
     if (drawAsSelected)
     {

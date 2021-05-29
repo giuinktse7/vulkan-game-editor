@@ -64,6 +64,7 @@ namespace MapHistory
     {
       public:
         SetTile(Tile &&tile);
+        SetTile(std::unique_ptr<Tile> &&tile);
 
         void commit(MapView &mapView) override;
         void undo(MapView &mapView) override;
