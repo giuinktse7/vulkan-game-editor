@@ -111,7 +111,7 @@ class SelectionStorageSet : public SelectionStorage
     std::unordered_set<Position, PositionHash> values;
 
     WorldPosition::value_type xMin, yMin, xMax, yMax;
-    int zMin, zMax;
+    Position::z_type zMin, zMax;
 
     bool staleBoundingBox = false;
 

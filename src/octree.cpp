@@ -501,7 +501,9 @@ namespace vme
         //>>>>>>>>>>>>>>>>>>>>>
 
         Leaf::Leaf(const Position pos, HeapNode *parent)
-            : HeapNode(parent), position(pos.x - pos.x % ChunkSize.width, pos.y - pos.y % ChunkSize.height, pos.z - pos.z % ChunkSize.depth) {}
+            : HeapNode(parent), position(pos.x - pos.x % ChunkSize.width, pos.y - pos.y % ChunkSize.height, static_cast<int8_t>(pos.z - pos.z % ChunkSize.depth))
+        {
+        }
 
         bool Leaf::contains(const Position pos) const
         {

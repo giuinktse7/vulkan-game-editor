@@ -40,17 +40,18 @@ struct BasePosition
 struct Position
 {
     using value_type = int32_t;
+    using z_type = int8_t;
     static std::vector<Position> bresenHams(Position from, Position to);
     static uint32_t tilesInRegion(const Position &from, const Position &to);
 
     Position();
-    Position(value_type x, value_type y, value_type z);
+    Position(value_type x, value_type y, z_type z);
 
     value_type x;
     value_type y;
-    value_type z;
+    z_type z;
 
-    void move(value_type x, value_type y, value_type z);
+    void move(value_type x, value_type y, z_type z);
 
     WorldPosition worldPos() const noexcept;
 
@@ -304,7 +305,7 @@ STRUCTURED_BINDING_T1(Region2D, 2);
 /* Common constants */
 namespace PositionConstants
 {
-    const Position Zero = Position(0, 0, 0);
+    const Position Zero = Position(0, 0, static_cast<int8_t>(0));
 }
 
 template <typename T>
@@ -316,7 +317,7 @@ inline std::ostream &operator<<(std::ostream &os, const BasePosition<T> &pos)
 
 inline std::ostream &operator<<(std::ostream &os, const Position &pos)
 {
-    os << pos.x << ':' << pos.y << ':' << pos.z;
+    os << pos.x << ':' << pos.y << ':' << static_cast<int>(pos.z);
     return os;
 }
 

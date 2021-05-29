@@ -5,10 +5,10 @@
 Position::Position()
     : x(0), y(0), z(0) {}
 
-Position::Position(Position::value_type x, Position::value_type y, int z)
+Position::Position(Position::value_type x, Position::value_type y, z_type z)
     : x(x), y(y), z(z) {}
 
-void Position::move(Position::value_type x, Position::value_type y, int z)
+void Position::move(Position::value_type x, Position::value_type y, z_type z)
 {
     this->x += x;
     this->y += y;
