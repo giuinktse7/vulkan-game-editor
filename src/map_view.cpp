@@ -309,6 +309,15 @@ void MapView::setSubtype(Item *item, uint8_t subtype)
     history.commit(std::move(action));
 }
 
+void MapView::setText(Item *item, const std::string &text)
+{
+    Action action(
+        ActionType::ModifyItem,
+        MapHistory::ModifyItem_v2(item, ItemMutation::SetText(text)));
+
+    history.commit(std::move(action));
+}
+
 void MapView::moveFromMapToContainer(Tile &tile, Item *item, ContainerLocation &containerInfo)
 {
     DEBUG_ASSERT(tile.indexOf(item) != -1, "The tile must contain the item");

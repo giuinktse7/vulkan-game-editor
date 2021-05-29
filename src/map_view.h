@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -128,6 +129,7 @@ class MapView : public Nano::Observer<>
 
     void setSubtype(Item *item, uint8_t count);
     void setItemActionId(Item *item, uint16_t actionId);
+    void setText(Item *item, const std::string &text);
 
     void moveFromMapToContainer(Tile &tile, Item *item, ContainerLocation &containerInfo);
     void moveFromContainerToMap(ContainerLocation &moveInfo, Tile &tile);

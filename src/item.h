@@ -59,9 +59,11 @@ class Item
 
     uint16_t actionId() const;
     uint16_t uniqueId() const;
+    std::optional<std::string> text() const;
 
     void setActionId(uint16_t id);
     void setUniqueId(uint16_t id);
+    void clearText();
     void setText(const std::string &text);
     void setText(std::string &&text);
     void setDescription(const std::string &description);

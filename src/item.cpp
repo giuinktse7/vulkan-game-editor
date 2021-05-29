@@ -204,6 +204,23 @@ uint16_t Item::uniqueId() const
     return found->second.as<int>();
 }
 
+std::optional<std::string> Item::text() const
+{
+
+    if (!_attributes)
+    {
+        return std::nullopt;
+    }
+
+    auto found = _attributes->find(ItemAttribute_t::Text);
+    if (found == _attributes->end())
+    {
+        return std::nullopt;
+    }
+
+    return found->second.as<std::string>();
+}
+
 void Item::setActionId(uint16_t id)
 {
     auto &attr = getOrCreateAttribute(ItemAttribute_t::ActionId);
@@ -234,6 +251,11 @@ void Item::setText(const std::string &text)
 void Item::setText(std::string &&text)
 {
     getOrCreateAttribute(ItemAttribute_t::Text).setString(std::move(text));
+}
+
+void Item::clearText()
+{
+    _attributes->erase(ItemAttribute_t::Text);
 }
 
 void Item::setDescription(const std::string &description)
