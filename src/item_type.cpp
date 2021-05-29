@@ -17,7 +17,7 @@ const uint32_t ItemType::getPatternIndex(const Position &pos) const
     return spriteIndex;
 }
 
-uint8_t getFluidPatternOffset(FluidType fluidType)
+uint8_t ItemType::getFluidPatternOffset(FluidType fluidType) const
 {
     switch (fluidType)
     {
@@ -62,7 +62,10 @@ const uint32_t ItemType::getPatternIndexForSubtype(uint8_t subtype) const
     if (isSplash() || isFluidContainer())
     {
         // TODO Handle rotation of fluid containers
-        return getFluidPatternOffset(static_cast<FluidType>(subtype));
+        uint8_t fluidPatternOffset = getFluidPatternOffset(static_cast<FluidType>(subtype));
+        uint8_t patternIndex = std::min(static_cast<uint8_t>(appearance->spriteCount(0) - 1), fluidPatternOffset);
+
+        return patternIndex;
     }
     else if (stackable)
     {
@@ -348,6 +351,11 @@ bool ItemType::isFluidContainer() const noexcept
 bool ItemType::isCorpse() const noexcept
 {
     return appearance->hasFlag(AppearanceFlag::Corpse);
+}
+
+bool ItemType::isWriteable() const noexcept
+{
+    return appearance->hasFlag(AppearanceFlag::Write) || appearance->hasFlag(AppearanceFlag::WriteOnce);
 }
 
 bool ItemType::isDoor() const noexcept

@@ -277,6 +277,8 @@ inline uint8_t indexOfFluidType(FluidType fluidType)
             return 19;
         case FluidType::Mead:
             return 20;
+        default:
+            return 0;
     }
 }
 
@@ -389,6 +391,7 @@ class ItemType
     bool isChargeable() const noexcept;
     bool isFluidContainer() const noexcept;
     bool isCorpse() const noexcept;
+    bool isWriteable() const noexcept;
 
     bool isDoor() const noexcept;
     bool isMagicField() const noexcept;
@@ -481,6 +484,8 @@ class ItemType
     std::array<TextureAtlas *, CachedTextureAtlasAmount> _atlases = {};
 
     void cacheTextureAtlas(uint32_t spriteId);
+
+    uint8_t getFluidPatternOffset(FluidType fluidType) const;
 };
 
 inline bool ItemType::isBorder() const noexcept
