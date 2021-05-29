@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+#include <optional>
 #include <variant>
 
 class Item;
@@ -39,5 +41,14 @@ namespace ItemMutation
         uint16_t actionId;
     };
 
-    using Mutation = std::variant<SetSubType, SetActionId>;
+    struct SetText : BaseMutation
+    {
+        SetText(std::optional<std::string> text);
+        void commit(Item *item) override;
+        void undo(Item *item) override;
+
+        std::optional<std::string> text;
+    };
+
+    using Mutation = std::variant<SetSubType, SetActionId, SetText>;
 } // namespace ItemMutation

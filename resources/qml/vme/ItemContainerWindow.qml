@@ -72,7 +72,7 @@ Item {
         family: "Verdana"
          capitalization : Font.Capitalize
       }
-      renderType: Text.NativeRendering
+      // renderType: Text.NativeRendering
       antialiasing: false
       text: {
         return model === null ? "No model :(" : model.containerName;

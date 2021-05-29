@@ -4,9 +4,8 @@ import QtQuick.Layouts 1.15
 import "./" as Vme
 
 
-ColumnLayout {
+Column {
     id: intItemProperty
-    Layout.fillWidth: true
 
     signal editingFinished(int value);
 
@@ -15,9 +14,11 @@ ColumnLayout {
 
     required property int from;
     required property int to;
+    property int inputWidth: 80;
 
     property int value: input.value
 
+    spacing: 4
 
     Text {
         Layout.alignment : Qt.AlignTop
@@ -36,7 +37,8 @@ ColumnLayout {
         Layout.alignment : Qt.AlignTop
         Layout.fillHeight: true
 
-        width: 70
+        // width: 70
+        width: intItemProperty.inputWidth
         height: 25
 
         border.color : {

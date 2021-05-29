@@ -89,6 +89,7 @@ class ItemPropertyWindow : public QQuickView
 {
     Q_OBJECT
   signals:
+    void textChanged(Item *item, const std::string &text);
     void subtypeChanged(Item *item, int subtype, bool shouldCommit);
     void actionIdChanged(Item *item, int actionId, bool shouldCommit);
 
@@ -103,6 +104,7 @@ class ItemPropertyWindow : public QQuickView
     Q_INVOKABLE void fluidTypeHighlighted(int highlightedIndex);
     Q_INVOKABLE void setPropertyItemCount(int count, bool shouldCommit = false);
     Q_INVOKABLE void setPropertyItemActionId(int actionId, bool shouldCommit = false);
+    Q_INVOKABLE void setPropertyItemText(QString text);
     Q_INVOKABLE QString getItemPixmapString(int serverId, int subtype) const;
     QString getItemPixmapString(const Item &item) const;
 
@@ -193,7 +195,6 @@ class ItemPropertyWindow : public QQuickView
     void hide();
 
     void setCount(uint8_t count);
-    void setContainerVisible(bool visible);
 
     void setFocused(FocusedGround &&ground);
     void setFocused(FocusedItem &&item);

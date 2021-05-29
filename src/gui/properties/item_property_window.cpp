@@ -12,12 +12,20 @@
 #include "../draggable_item.h"
 #include "../mainwindow.h"
 
+namespace ItemPropertyName
+{
+    constexpr auto Stackable = "isStackable";
+    constexpr auto Fluid = "isFluid";
+    constexpr auto Writeable = "isWriteable";
+} // namespace ItemPropertyName
+
 namespace ObjectName
 {
     constexpr auto CountInput = "item_count_input";
     constexpr auto ActionIdInput = "item_actionid_input";
     constexpr auto UniqueIdInput = "item_uniqueid_input";
-    constexpr auto FluidTypeInput = "fluid_type_input";
+    constexpr auto FluidTypeInput = "item_fluid_type_input";
+    constexpr auto TextInput = "item_text_input";
 
     constexpr auto PropertyItemImage = "property_item_image";
 
@@ -44,6 +52,7 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow)
     engine()->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
 
     setSource(filepath);
+    setResizeMode(ResizeMode::SizeRootObjectToView);
 
     QmlApplicationContext *applicationContext = new QmlApplicationContext();
     engine()->rootContext()->setContextProperty("applicationContext", applicationContext);
@@ -164,9 +173,29 @@ void ItemPropertyWindow::setPropertyItemActionId(int actionId, bool shouldCommit
     }
 }
 
+void ItemPropertyWindow::setPropertyItemText(QString qtText)
+{
+    if (!state.propertyItem || !state.propertyItem->itemType->isWriteable())
+        return;
+
+    auto text = qtText.toStdString();
+
+    std::optional<std::string> itemText = state.propertyItem->text();
+    bool changed = (itemText.has_value() && itemText != text) || (!itemText.has_value() && text != "");
+    if (!changed)
+    {
+        return;
+    }
+
+    emit textChanged(state.propertyItem, text);
+}
+
 void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
 {
-    DEBUG_ASSERT(state.propertyItem != nullptr, "No property item.");
+    if (!state.propertyItem)
+        return;
+
+    // DEBUG_ASSERT(state.propertyItem != nullptr, "No property item.");
 
     Item *item = state.propertyItem;
 
@@ -234,7 +263,6 @@ void ItemPropertyWindow::setPropertyItem(Item *item)
     state.propertyItem = item;
 
     // Update UI
-
     auto itemtype = item->itemType;
 
     auto itemImage = child(ObjectName::PropertyItemImage);
@@ -251,22 +279,31 @@ void ItemPropertyWindow::setPropertyItem(Item *item)
     uniqueIdInput->setProperty("value", item->uniqueId());
 
     // Count / charges
-    auto countInput = child(ObjectName::CountInput);
-    setQmlObjectActive(countInput->parent()->parent(), itemtype->stackable || itemtype->isChargeable());
+    rootObject()->setProperty(ItemPropertyName::Stackable, itemtype->stackable);
     if (itemtype->stackable)
     {
-        countInput->setProperty("text", item->count());
+        child(ObjectName::CountInput)->setProperty("text", item->count());
     }
 
     // Fluids
     bool usesFluid = itemtype->isSplash() || itemtype->isFluidContainer();
-
-    auto fluidInput = child(ObjectName::FluidTypeInput);
-    setQmlObjectActive(fluidInput->parent(), usesFluid);
+    rootObject()->setProperty(ItemPropertyName::Fluid, usesFluid);
     if (usesFluid)
     {
         uint8_t index = indexOfFluidType(static_cast<FluidType>(state.propertyItem->subtype()));
-        fluidInput->setProperty("currentIndex", index);
+        child(ObjectName::FluidTypeInput)->setProperty("currentIndex", index);
+    }
+
+    // Text
+    rootObject()->setProperty(ItemPropertyName::Writeable, itemtype->isWriteable());
+    if (itemtype->isWriteable())
+    {
+        std::string text = state.propertyItem->text().value_or("");
+        child(ObjectName::TextInput)->setProperty("text", QString::fromStdString(text));
+    }
+    else
+    {
+        child(ObjectName::TextInput)->setProperty("text", "");
     }
 }
 
@@ -278,8 +315,6 @@ void ItemPropertyWindow::setFocused(FocusedGround &&ground)
     state.setFocused(std::move(ground));
     setPropertyItem(item);
 
-    setContainerVisible(false);
-
     show();
 }
 
@@ -290,8 +325,6 @@ void ItemPropertyWindow::setFocused(FocusedItem &&focusedItem)
     state.setFocused(std::move(focusedItem));
     setPropertyItem(item);
 
-    setContainerVisible(false);
-
     show();
 }
 
@@ -301,8 +334,6 @@ void ItemPropertyWindow::setFocused(FocusedContainer &&container)
 
     state.setFocused(std::move(container));
     setPropertyItem(item);
-
-    setContainerVisible(true);
 
     show();
 }
@@ -410,7 +441,6 @@ void ItemPropertyWindow::resetFocus()
 
     containerTree.clear();
     hide();
-    setContainerVisible(false);
     setCount(1);
 
     resetMapView();
@@ -421,19 +451,6 @@ void ItemPropertyWindow::setCount(uint8_t count)
     VME_LOG_D("ItemPropertyWindow::setCount: " << int(count));
     auto countInput = child(ObjectName::CountInput);
     countInput->setProperty("value", count);
-}
-
-void ItemPropertyWindow::setContainerVisible(bool visible)
-{
-    auto containerArea = child(ObjectName::ItemContainerArea);
-    if (containerArea)
-    {
-        setQmlObjectActive(containerArea, visible);
-    }
-    else
-    {
-        VME_LOG_D("Warning: could not find objectName: " << ObjectName::ItemContainerArea);
-    }
 }
 
 QWidget *ItemPropertyWindow::wrapInWidget(QWidget *parent)
