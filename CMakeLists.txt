@@ -127,6 +127,7 @@ set(CommonSources
     ../vendor/tsl/robin_map.h
     ../vendor/tsl/robin_set.h
     ../vendor/result/result.h
+    ../vendor/fts_fuzzy_match/fts_fuzzy_match.h
     # ../vendor/sol/sol.hpp ../vendor/sol/config.hpp ../vendor/sol/forward.hpp
     src/map.h
     src/save_map.h
@@ -154,6 +155,7 @@ set(CommonSources
     src/brushes/raw_brush.h
     src/brushes/ground_brush.h
     src/brushes/doodad_brush.h
+    src/brushes/brush_loader.h
     src/lua/lua_state.h
     src/lua/luascript_interface.h
     src/lua/lua_brush.h
@@ -223,6 +225,7 @@ set(CommonSources
     src/brushes/raw_brush.cpp
     src/brushes/ground_brush.cpp
     src/brushes/doodad_brush.cpp
+    src/brushes/brush_loader.cpp
     src/lua/lua_state.cpp
     src/lua/luascript_interface.cpp
     src/lua/lua_brush.cpp)

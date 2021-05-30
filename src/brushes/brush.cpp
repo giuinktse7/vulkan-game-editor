@@ -4,6 +4,9 @@
 #include "ground_brush.h"
 #include "raw_brush.h"
 
+#define FTS_FUZZY_MATCH_IMPLEMENTATION
+#include "../../vendor/fts_fuzzy_match/fts_fuzzy_match.h"
+
 vme_unordered_map<uint32_t, std::unique_ptr<Brush>> Brush::rawBrushes;
 vme_unordered_map<uint32_t, std::unique_ptr<Brush>> Brush::groundBrushes;
 
@@ -58,4 +61,31 @@ GroundBrush *Brush::addGroundBrush(std::unique_ptr<GroundBrush> &&brush)
     auto result = groundBrushes.emplace(brushId, std::move(brush));
 
     return static_cast<GroundBrush *>(result.first.value().get());
+}
+
+
+std::vector<std::pair<int, Brush *>> Brush::search(std::string searchString)
+{
+    using Match = std::pair<int, Brush *>;
+    std::vector<Match> matches;
+
+    auto f = [](const Match &lhs, const Match &rhs) {
+        return lhs.first > rhs.first;
+    };
+
+    VME_LOG("Brushes count: " << rawBrushes.size());
+    for (const auto &[_, rawBrush] : rawBrushes)
+    {
+        int score;
+        bool match = fts::fuzzy_match(searchString.c_str(), rawBrush->name().c_str(), score);
+
+        if (match)
+        {
+            matches.emplace_back(std::pair{score, rawBrush.get()});
+        }
+    }
+
+    std::sort(matches.begin(), matches.end(), f);
+
+    return matches;
 }

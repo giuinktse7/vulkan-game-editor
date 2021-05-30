@@ -49,6 +49,8 @@ class Brush
 
     const std::string &name() const noexcept;
 
+    static std::vector<std::pair<int, Brush *>> search(std::string searchString);
+
     virtual bool erasesItem(uint32_t serverId) const = 0;
     virtual BrushType type() const = 0;
     virtual std::vector<ItemPreviewInfo> previewInfo() const = 0;
