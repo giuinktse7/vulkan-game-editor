@@ -1,0 +1,198 @@
+#include "search_popup.h"
+
+#include <QGraphicsDropShadowEffect>
+#include <QQmlContext>
+#include <QQmlEngine>
+#include <QQmlProperty>
+#include <QQuickItem>
+#include <QWidget>
+
+#include "../brushes/brush.h"
+#include "mainwindow.h"
+#include "qt_util.h"
+
+namespace ObjectName
+{
+    constexpr auto SearchTextfield = "search_textfield";
+} // namespace ObjectName
+
+SearchPopupView::SearchPopupView(QUrl filepath, MainWindow *mainWindow)
+    : _filepath(filepath), mainWindow(mainWindow), _wrapperWidget(nullptr)
+{
+    installEventFilter(new SearchWrapperEventFilter(this));
+
+    QVariantMap properties;
+    properties.insert("searchResults", QVariant::fromValue(&searchResultModel));
+
+    setInitialProperties(properties);
+
+    qmlRegisterSingletonInstance("Vme.context", 1, 0, "C_SearchPopupView", this);
+
+    engine()->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
+
+    setSource(filepath);
+    setResizeMode(ResizeMode::SizeRootObjectToView);
+}
+
+void SearchPopupView::focus()
+{
+    _wrapperWidget->setFocus();
+}
+
+QWidget *SearchPopupView::wrapInWidget(QWidget *parent)
+{
+    DEBUG_ASSERT(_wrapperWidget == nullptr, "There is already a wrapper for this window.");
+
+    _wrapperWidget = QWidget::createWindowContainer(this, parent);
+    _wrapperWidget->setObjectName("SearchPopupView wrapper");
+
+    return _wrapperWidget;
+}
+
+void SearchPopupView::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape)
+    {
+        emit requestClose();
+    }
+
+    QQuickView::keyPressEvent(event);
+}
+
+void SearchPopupView::closeEvent()
+{
+    emit requestClose();
+}
+
+void SearchPopupView::hideEvent(QHideEvent *e)
+{
+    // child(ObjectName::SearchTextfield)->setProperty("text", "");
+    QQuickView::hideEvent(e);
+}
+
+void SearchPopupView::search(std::string searchTerm)
+{
+    auto results = Brush::search(searchTerm);
+    searchResultModel.setSearchResults(std::move(results));
+}
+
+SearchWrapperEventFilter::SearchWrapperEventFilter(SearchPopupView *parent)
+    : QObject(static_cast<QObject *>(parent)), searchPopupView(parent) {}
+
+bool SearchWrapperEventFilter::eventFilter(QObject *obj, QEvent *event)
+{
+    switch (event->type())
+    {
+        case QEvent::FocusOut:
+            searchPopupView->closeEvent();
+            break;
+        default:
+            break;
+    }
+
+    return QObject::eventFilter(obj, event);
+}
+
+SearchPopupWidget::SearchPopupWidget(MainWindow *mainWindow)
+    : mainWindow(mainWindow)
+{
+    searchPopupView = new SearchPopupView(QUrl("qrc:/vme/qml/SearchPopupView.qml"), mainWindow);
+
+    auto wrapperWidget = searchPopupView->wrapInWidget();
+
+    wrapperWidget->setFixedWidth(mainWindow->width() * 0.6);
+    wrapperWidget->setMinimumHeight(300);
+    wrapperWidget->setMaximumHeight(mainWindow->height() * 0.6);
+    // searchPopupWidget->setFixedWidth(300);
+    // searchPopupWidget->setFixedHeight(300);
+    QVBoxLayout *searchLayout = new QVBoxLayout(this);
+    searchLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+    searchLayout->setContentsMargins(0, 30, 0, 0);
+    searchLayout->addWidget(wrapperWidget);
+    setLayout(searchLayout);
+}
+
+void SearchPopupView::searchEvent(QString searchTerm)
+{
+    this->search(searchTerm.toStdString());
+}
+
+inline QObject *SearchPopupView::child(const char *name)
+{
+    return rootObject()->findChild<QObject *>(name);
+}
+
+SearchPopupView *SearchPopupWidget::popupView() const
+{
+    return searchPopupView;
+}
+
+void SearchPopupWidget::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape)
+    {
+        searchPopupView->closeEvent();
+    }
+}
+
+void SearchPopupView::reloadSource()
+{
+    VME_LOG_D("SearchPopupView source reloaded.");
+    engine()->clearComponentCache();
+    setSource(QUrl::fromLocalFile("../../resources/qml/SearchPopupView.qml"));
+}
+
+SearchResultModel::SearchResultModel(QObject *parent)
+    : QAbstractListModel(parent) {}
+
+int SearchResultModel::rowCount(const QModelIndex &parent) const
+{
+    return _searchResults ? _searchResults->size() : 0;
+}
+
+Brush *SearchResultModel::brushAtIndex(size_t index) const
+{
+    return _searchResults ? _searchResults->at(index) : nullptr;
+}
+
+void SearchResultModel::clear()
+{
+    if (_searchResults)
+    {
+        beginResetModel();
+        _searchResults->clear();
+        endResetModel();
+    }
+}
+
+void SearchResultModel::setSearchResults(std::unique_ptr<std::vector<Brush *>> &&brushes)
+{
+    beginResetModel();
+    _searchResults = std::move(brushes);
+    VME_LOG_D("SearchResultModel::setSearchResults: " << _searchResults->size());
+    endResetModel();
+}
+
+QVariant SearchResultModel::data(const QModelIndex &index, int role) const
+{
+    if (index.row() < 0 || index.row() >= _searchResults->size())
+        return QVariant();
+
+    if (role == to_underlying(Role::ServerId))
+    {
+        Brush *brush = _searchResults->at(index.row());
+        auto serverId = brush->iconServerId();
+
+        return QVariant::fromValue(serverId);
+    }
+
+    return QVariant();
+}
+
+QHash<int, QByteArray> SearchResultModel::roleNames() const
+{
+    QHash<int, QByteArray> roles;
+    roles[to_underlying(Role::ServerId)] = "serverId";
+
+    return roles;
+}

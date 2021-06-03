@@ -202,7 +202,6 @@ void QtScrollBar::mousePressEvent(QMouseEvent *e)
     {
         QScrollBar::mousePressEvent(e);
         e->accept();
-        VME_LOG_D("Accepted");
         return;
     }
 

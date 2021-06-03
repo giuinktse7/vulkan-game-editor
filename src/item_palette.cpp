@@ -9,29 +9,34 @@
 //>>>>>>ItemPalettes>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>
-std::unordered_map<std::string, ItemPalette> ItemPalettes::itemPalettes;
+std::unordered_map<std::string, ItemPalette> ItemPalettes::_itemPalettes;
 
-ItemPalette &ItemPalettes::createPalette(const std::string &name)
+ItemPalette &ItemPalettes::createPalette(const std::string &id, const std::string &name)
 {
-    if (hasPaletteWithName(name))
+    if (contains(id))
     {
-        VME_LOG_ERROR("A palette with name " << name << " is already registered.");
-        return itemPalettes.at(name);
+        VME_LOG_ERROR("A palette with id " << id << " is already registered.");
+        return _itemPalettes.at(id);
     }
 
-    auto result = itemPalettes.try_emplace(name, ItemPalette(name));
+    auto result = _itemPalettes.try_emplace(id, ItemPalette(id, name));
     return result.first->second;
 }
 
-ItemPalette *ItemPalettes::getByName(const std::string &name)
+ItemPalette *ItemPalettes::getById(const std::string &id)
 {
-    auto found = itemPalettes.find(name);
-    return found != itemPalettes.end() ? &(found->second) : nullptr;
+    auto found = _itemPalettes.find(id);
+    return found != _itemPalettes.end() ? &(found->second) : nullptr;
 }
 
-bool ItemPalettes::hasPaletteWithName(const std::string &name)
+bool ItemPalettes::contains(const std::string &id)
 {
-    return itemPalettes.find(name) != itemPalettes.end();
+    return _itemPalettes.find(id) != _itemPalettes.end();
+}
+
+std::unordered_map<std::string, ItemPalette> &ItemPalettes::itemPalettes()
+{
+    return _itemPalettes;
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>
@@ -40,17 +45,17 @@ bool ItemPalettes::hasPaletteWithName(const std::string &name)
 //>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>
 
-ItemPalette::ItemPalette(std::string name)
-    : _name(name) {}
+ItemPalette::ItemPalette(const std::string &id, const std::string &name)
+    : _id(id), _name(name) {}
 
 const std::string &ItemPalette::name() const noexcept
 {
     return _name;
 }
 
-Tileset *ItemPalette::tileset(const std::string &name)
+Tileset *ItemPalette::getTileset(const std::string &id)
 {
-    auto found = tilesetIndexMap.find(name);
+    auto found = tilesetIndexMap.find(id);
     if (found == tilesetIndexMap.end())
         return nullptr;
 
@@ -58,14 +63,13 @@ Tileset *ItemPalette::tileset(const std::string &name)
     return _tilesets.at(index).get();
 }
 
-Tileset *ItemPalette::createTileset(const std::string &name)
+Tileset &ItemPalette::addTileset(Tileset &&tileset)
 {
-    tilesetIndexMap.emplace(name, _tilesets.size());
+    tileset.setPalette(this);
 
-    std::unique_ptr<Tileset> &tileset = _tilesets.emplace_back(std::make_unique<Tileset>(Tileset(name)));
-    tileset->setPalette(this);
-
-    return tileset.get();
+    tilesetIndexMap.emplace(tileset.id(), _tilesets.size());
+    auto &result = _tilesets.emplace_back(std::make_unique<Tileset>(std::move(tileset)));
+    return *result;
 }
 
 Tileset *ItemPalette::tileset(size_t index)

@@ -8,7 +8,7 @@
 #include "../../vendor/fts_fuzzy_match/fts_fuzzy_match.h"
 
 vme_unordered_map<uint32_t, std::unique_ptr<Brush>> Brush::rawBrushes;
-vme_unordered_map<uint32_t, std::unique_ptr<Brush>> Brush::groundBrushes;
+vme_unordered_map<std::string, std::unique_ptr<Brush>> Brush::groundBrushes;
 
 Brush::Brush(std::string name)
     : _name(name) {}
@@ -46,15 +46,14 @@ GroundBrush *Brush::addGroundBrush(GroundBrush &&brush)
 
 GroundBrush *Brush::addGroundBrush(std::unique_ptr<GroundBrush> &&brush)
 {
-    uint32_t brushId = brush->brushId();
+    std::string brushId = brush->brushId();
 
     auto found = groundBrushes.find(brushId);
     if (found != groundBrushes.end())
     {
-        VME_LOG_ERROR(
-            "Could not add ground brush '" << brush->name() << "' with id '" << brushId
-                                           << "'. A brush with name '" << found->second->name()
-                                           << "' already uses that brush id. Tip: Change the id to something else.");
+        VME_LOG_ERROR(std::format(
+            "Could not add ground brush '{}' with id '{}'. A brush with id '{}' (named '{}') already exists.",
+            brush->name(), brushId, brushId, found->second->name()));
         return nullptr;
     }
 
@@ -63,8 +62,37 @@ GroundBrush *Brush::addGroundBrush(std::unique_ptr<GroundBrush> &&brush)
     return static_cast<GroundBrush *>(result.first.value().get());
 }
 
+GroundBrush *Brush::getGroundBrush(const std::string &id)
+{
+    auto found = groundBrushes.find(id);
+    if (found == groundBrushes.end())
+    {
+        return nullptr;
+    }
 
-std::vector<std::pair<int, Brush *>> Brush::search(std::string searchString)
+    return static_cast<GroundBrush *>(found->second.get());
+}
+
+const vme_unordered_map<uint32_t, std::unique_ptr<Brush>> &Brush::getRawBrushes()
+{
+    return rawBrushes;
+}
+
+std::unique_ptr<std::vector<Brush *>> Brush::search(std::string searchString)
+{
+    using Match = std::pair<int, Brush *>;
+    std::vector<Match> matches = searchWithScore(searchString);
+
+    auto results = std::make_unique<std::vector<Brush *>>();
+    results->reserve(matches.size());
+
+    std::transform(matches.begin(), matches.end(), std::back_inserter(*results),
+                   [](Match match) -> Brush * { return match.second; });
+
+    return results;
+}
+
+std::vector<std::pair<int, Brush *>> Brush::searchWithScore(std::string searchString)
 {
     using Match = std::pair<int, Brush *>;
     std::vector<Match> matches;
@@ -73,7 +101,6 @@ std::vector<std::pair<int, Brush *>> Brush::search(std::string searchString)
         return lhs.first > rhs.first;
     };
 
-    VME_LOG("Brushes count: " << rawBrushes.size());
     for (const auto &[_, rawBrush] : rawBrushes)
     {
         int score;

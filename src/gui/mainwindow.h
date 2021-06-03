@@ -6,6 +6,7 @@
 #include <queue>
 #include <vector>
 
+#include <QStackedLayout>
 #include <QString>
 #include <QWidget>
 #include <QWidgetAction>
@@ -17,14 +18,17 @@ class QLabel;
 class QTabWidget;
 class QPushButton;
 class BorderLayout;
+class QWindow;
 class QMenuBar;
 class QListView;
 QT_END_NAMESPACE
 
 class MapTabWidget;
 class ItemPropertyWindow;
+class SearchPopupView;
 class ItemPaletteWindow;
 class TilesetListView;
+class SearchPopupWidget;
 
 #include "../map_copy_buffer.h"
 #include "../signal.h"
@@ -54,6 +58,10 @@ class MainWindow : public QWidget, public Nano::Observer<>
 
     bool selectBrush(Brush *brush) noexcept;
 
+    void setSearchVisible(bool visible);
+
+    void windowPressEvent(QWindow *window, QMouseEvent *event);
+
     EditorAction editorAction;
 
   protected:
@@ -80,22 +88,40 @@ class MainWindow : public QWidget, public Nano::Observer<>
 
     void registerPropertyItemListeners();
 
-    MapTabWidget *mapTabs;
-    ItemPropertyWindow *propertyWindow;
-    ItemPaletteWindow *_paletteWindow;
+    MapTabWidget *mapTabs = nullptr;
+    ItemPropertyWindow *propertyWindow = nullptr;
+    ItemPaletteWindow *_paletteWindow = nullptr;
 
-    BorderLayout *rootLayout;
+    BorderLayout *rootLayout = nullptr;
 
-    QLabel *positionStatus;
-    QLabel *zoomStatus;
-    QLabel *topItemInfo;
+    QLabel *positionStatus = nullptr;
+    QLabel *zoomStatus = nullptr;
+    QLabel *topItemInfo = nullptr;
 
     uint32_t highestUntitledId = 0;
     std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> untitledIds;
 
-    QVulkanInstance *vulkanInstance;
+    QVulkanInstance *vulkanInstance = nullptr;
 
     MapCopyBuffer mapCopyBuffer;
 
-    // void updatePositionText();
+    SearchPopupWidget *searchPopupWidget = nullptr;
+};
+
+class MainLayout : public QStackedLayout
+{
+  public:
+    MainLayout(QWidget *mainWidget);
+
+    void setSearchWidget(SearchPopupWidget *searchWidget);
+    void showSearch();
+    void hideSearch();
+
+    bool isSearchVisible() const noexcept;
+
+  private:
+    QWidget *mainWidget;
+    SearchPopupWidget *searchWidget;
+
+    bool searchVisible = false;
 };

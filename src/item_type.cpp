@@ -58,7 +58,9 @@ uint8_t ItemType::getFluidPatternOffset(FluidType fluidType) const
 const uint32_t ItemType::getPatternIndexForSubtype(uint8_t subtype) const
 {
     DEBUG_ASSERT(usesSubType(), "Invalid call to getPatternIndexForSubtype: the ItemType does not use subtype.");
-    // TODO Handle charges != 0 (?)
+    DEBUG_ASSERT(subtype > 0 && subtype < std::numeric_limits<uint8_t>::max(), std::format("Invalid subtype {}. Subtype Must be in [1, 255].", int(subtype)));
+
+    // TODO Handle charges if necessary
     if (isSplash() || isFluidContainer())
     {
         // TODO Handle rotation of fluid containers

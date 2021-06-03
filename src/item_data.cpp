@@ -35,7 +35,16 @@ ItemDataType Container::type() const noexcept
 
 std::unique_ptr<ItemData> Container::copy() const
 {
-    return std::make_unique<Container>(_capacity, _items);
+    auto container = std::make_unique<Container>(_capacity);
+    auto it = _items.rbegin();
+    while (it != _items.rend())
+    {
+        auto item = (*it).get();
+        container->addItem(item->deepCopy());
+        ++it;
+    }
+
+    return container;
 }
 
 bool Container::isFull() const noexcept
@@ -97,8 +106,6 @@ bool Container::addItem(Item &&item)
 {
     if (isFull())
         return false;
-
-    VME_LOG_D("Add item " << item.name() << " to container " << this->item()->name());
 
     bool isContainer = item.isContainer();
 

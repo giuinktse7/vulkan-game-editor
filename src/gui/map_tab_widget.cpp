@@ -84,7 +84,7 @@ VulkanWindow *MapTabWidget::currentVulkanWindow() const
     return static_cast<MapViewWidget *>(widget(currentIndex()))->getVulkanWindow();
 }
 
-int MapTabWidget::addTabWithButton(QWidget *widget, const QString &text, QVariant data)
+int MapTabWidget::addTabWithButton(MapViewWidget *widget, const QString &text, QVariant data)
 {
     int index = insertTab(currentIndex() + 1, widget, text);
     tabBar()->setTabData(index, data);
@@ -556,18 +556,18 @@ bool MapTabWidget::MapTabBar::insertMoveTab(int srcIndex, int destIndex)
     if (srcIndex == destIndex)
         return false;
 
-    QWidget *srcWidget = parentWidget()->widget(srcIndex);
+    QWidget *srcWidget = getParentWidget()->widget(srcIndex);
     QString srcText = tabText(srcIndex);
     // QWidget *closeButton = tabButton(srcIndex, QTabBar::ButtonPosition::RightSide);
 
     {
         // To reduce flicker. https://doc.qt.io/qt-5/qtabwidget.html#insertTab
-        parentWidget()->setUpdatesEnabled(false);
+        getParentWidget()->setUpdatesEnabled(false);
 
-        int i = parentWidget()->insertTab(destIndex, srcWidget, srcText);
+        int i = getParentWidget()->insertTab(destIndex, srcWidget, srcText);
         initCloseButton(i);
-        parentWidget()->setCurrentIndex(i);
-        parentWidget()->setUpdatesEnabled(true);
+        getParentWidget()->setCurrentIndex(i);
+        getParentWidget()->setUpdatesEnabled(true);
     }
 
     return true;
@@ -603,24 +603,24 @@ void MapTabWidget::MapTabBar::dropEvent(QDropEvent *event)
     {
         if (cursorTabIndex == -1)
         {
-            MapTabWidget *p = parentWidget();
+            MapTabWidget *parentWidget = getParentWidget();
 
-            p->addTabWithButton(p->widget(srcIndex), p->tabText(srcIndex));
-            // p->removeTab(droppedTabIndex);
+            MapViewWidget *widget = static_cast<MapViewWidget *>(parentWidget->widget(srcIndex));
+            parentWidget->addTabWithButton(widget, parentWidget->tabText(srcIndex));
         }
     }
 
     drag = nullptr;
 }
 
-MapTabWidget *MapTabWidget::MapTabBar::parentWidget() const
+MapTabWidget *MapTabWidget::MapTabBar::getParentWidget() const
 {
     return static_cast<MapTabWidget *>(parent());
 }
 
 QWidget *MapTabWidget::MapTabBar::getActiveWidget()
 {
-    return parentWidget()->widget(this->currentIndex());
+    return getParentWidget()->widget(this->currentIndex());
 }
 
 void MapTabWidget::MapTabBar::setHoveredIndex(int index)

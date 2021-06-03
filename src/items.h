@@ -69,6 +69,8 @@ class Items
     void itemPropertyChanged(Item *item, const ItemChangeType changeType);
     void containerChanged(Item *containerItem, const ContainerChange &containerChange);
 
+    const std::vector<ItemType> &getItemTypes() const;
+
     /**
    * Load item types that are not present in the items.otb.
    */

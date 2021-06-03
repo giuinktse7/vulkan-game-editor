@@ -75,8 +75,9 @@ class PaletteWidget : public QWidget
     ItemPalette *palette() const;
     void setPalette(ItemPalette *palette, Tileset *tileset = nullptr);
 
-    void selectTileset(const std::string &tilesetName);
-    void selectTileset(const QString &tilesetName);
+    void selectTileset(Tileset *tileset);
+    void selectTileset(const std::string &tilesetId);
+    void selectTileset(const QString &tilesetId);
     Tileset *tileset() const noexcept;
 
     void selectBrush(Brush *brush);

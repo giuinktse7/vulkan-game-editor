@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <unordered_set>
 
 #include "brush.h"
@@ -22,8 +23,8 @@ class GroundBrush final : public Brush
 {
   public:
     GroundBrush(const std::string &name, std::vector<WeightedItemId> &&weightedIds);
-    GroundBrush(uint32_t id, const std::string &name, std::vector<WeightedItemId> &&weightedIds);
-    GroundBrush(uint32_t id, const std::string &name, std::vector<WeightedItemId> &&weightedIds, uint32_t iconServerId);
+    GroundBrush(std::string id, const std::string &name, std::vector<WeightedItemId> &&weightedIds);
+    GroundBrush(std::string id, const std::string &name, std::vector<WeightedItemId> &&weightedIds, uint32_t iconServerId);
 
     void apply(MapView &mapView, const Position &position) override;
     uint32_t iconServerId() const override;
@@ -31,9 +32,12 @@ class GroundBrush final : public Brush
     BrushType type() const override;
     std::vector<ItemPreviewInfo> previewInfo() const override;
 
+    void setIconServerId(uint32_t serverId);
+    void setName(std::string name);
+
     uint32_t nextServerId();
 
-    uint32_t brushId() const noexcept;
+    std::string brushId() const noexcept;
 
   private:
     void initialize();
@@ -42,7 +46,7 @@ class GroundBrush final : public Brush
     std::unordered_set<uint32_t> serverIds;
     std::vector<WeightedItemId> _weightedIds;
 
-    uint32_t id;
+    std::string id;
     uint32_t _iconServerId;
 
     uint32_t totalWeight = 0;

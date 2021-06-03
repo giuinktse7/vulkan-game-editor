@@ -1,5 +1,6 @@
 #include "main.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -38,8 +39,13 @@
 
 #include "lua/luascript_interface.h"
 
+#include "brushes/brush_loader.h"
+#include "item_palette.h"
+
 int main(int argc, char *argv[])
 {
+    ItemPalettes::createPalette("Default", "default");
+
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
 
@@ -55,7 +61,9 @@ int main(int argc, char *argv[])
     // QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
     MainApplication app(argc, argv);
 
-    auto configResult = Config::create("12.60.10411");
+    std::string clientPath = "12.60.10411";
+
+    auto configResult = Config::create(clientPath);
     if (configResult.isErr())
     {
         VME_LOG(configResult.unwrapErr().show());
@@ -64,6 +72,11 @@ int main(int argc, char *argv[])
 
     Config config = configResult.unwrap();
     config.loadOrTerminate();
+
+    BrushLoader brushLoader;
+    brushLoader.load(std::format("data/clients/{}/palettes/palettes.json", clientPath));
+    brushLoader.load(std::format("data/clients/{}/palettes/grounds.json", clientPath));
+    brushLoader.load(std::format("data/clients/{}/palettes/tilesets.json", clientPath));
 
     // TemporaryTest::loadAllTexturesIntoMemory();
 
@@ -112,6 +125,33 @@ int main(int argc, char *argv[])
 
     // Enables QML binding debug logs
     // QLoggingCategory::setFilterRules(QStringLiteral("qt.qml.binding.removal.info=true"));
+
+    // for (int serverId = 0; serverId < 40000; ++serverId)
+    // {
+    //     if (Items::items.validItemType(serverId))
+    //     {
+    //         auto itemtype = Items::items.getItemTypeByServerId(serverId);
+    //         if (itemtype->isFluidContainer())
+    //         {
+    //             VME_LOG_D("\n" << serverId << ": " << itemtype->name() << ":");
+    //             for (int fg = 0; fg < itemtype->appearance->frameGroupCount(); ++fg)
+    //             {
+    //                 const std::string delimiter = ", ";
+    //                 auto ids = itemtype->appearance->getSpriteInfo(fg).spriteIds;
+    //                 if (ids.size() == 1)
+    //                     continue;
+    //                 const auto zero = std::to_string(ids[0]);
+    //                 std::string result = std::accumulate(std::next(ids.begin()), ids.end(),
+    //                                                      zero,
+    //                                                      [delimiter](std::string a, uint32_t b) {
+    //                                                          return a + delimiter + std::to_string(b);
+    //                                                      });
+
+    //                 VME_LOG_D(result << " : " << std::to_string(ids.size()));
+    //             }
+    //         }
+    //     }
+    // }
 
     return app.run();
 }

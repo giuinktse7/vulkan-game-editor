@@ -12,6 +12,9 @@ class RawBrush;
 class Tileset
 {
   public:
+    Tileset(std::string id);
+    Tileset(std::string id, std::string name);
+
     // Non-copyable
     Tileset(const Tileset &other) = delete;
     Tileset operator&=(const Tileset &other) = delete;
@@ -23,6 +26,7 @@ class Tileset
     void addBrush(Brush *brush);
 
     const std::string &name() const noexcept;
+    const std::string &id() const noexcept;
 
     int indexOf(Brush *brush) const;
 
@@ -34,12 +38,12 @@ class Tileset
 
     void setPalette(ItemPalette *palette) noexcept;
 
-  private:
-    friend class ItemPalette;
-    Tileset(std::string name);
+    void setName(std::string name);
 
+  private:
     bool hasBrush(Brush *brush) const;
 
+    std::string _id;
     std::string _name;
     std::vector<Brush *> brushes;
     vme_unordered_map<Brush *, size_t> brushToIndexMap;

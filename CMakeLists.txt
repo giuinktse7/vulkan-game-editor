@@ -110,25 +110,25 @@ set(CommonSources
     src/item_type.h
     src/sprite_info.h
     src/logger.h
-    ../vendor/lzma/7zTypes.h
-    ../vendor/lzma/Alloc.h
-    ../vendor/lzma/Compiler.h
-    ../vendor/lzma/LzFind.h
-    ../vendor/lzma/LzFindMt.h
-    ../vendor/lzma/LzHash.h
-    ../vendor/lzma/LzmaDec.h
-    ../vendor/lzma/LzmaEnc.h
-    ../vendor/lzma/LzmaLib.h
-    ../vendor/lzma/Precomp.h
-    ../vendor/lzma/Threads.h
-    ../vendor/rollbear-visit/visit.hpp
-    ../vendor/tsl/robin_growth_policy.h
-    ../vendor/tsl/robin_hash.h
-    ../vendor/tsl/robin_map.h
-    ../vendor/tsl/robin_set.h
-    ../vendor/result/result.h
-    ../vendor/fts_fuzzy_match/fts_fuzzy_match.h
-    # ../vendor/sol/sol.hpp ../vendor/sol/config.hpp ../vendor/sol/forward.hpp
+    vendor/lzma/7zTypes.h
+    vendor/lzma/Alloc.h
+    vendor/lzma/Compiler.h
+    vendor/lzma/LzFind.h
+    vendor/lzma/LzFindMt.h
+    vendor/lzma/LzHash.h
+    vendor/lzma/LzmaDec.h
+    vendor/lzma/LzmaEnc.h
+    vendor/lzma/LzmaLib.h
+    vendor/lzma/Precomp.h
+    vendor/lzma/Threads.h
+    vendor/rollbear-visit/visit.hpp
+    vendor/tsl/robin_growth_policy.h
+    vendor/tsl/robin_hash.h
+    vendor/tsl/robin_map.h
+    vendor/tsl/robin_set.h
+    vendor/result/result.h
+    vendor/fts_fuzzy_match/fts_fuzzy_match.h
+    # vendor/sol/sol.hpp vendor/sol/config.hpp vendor/sol/forward.hpp
     src/map.h
     src/save_map.h
     src/load_map.h
@@ -160,13 +160,13 @@ set(CommonSources
     src/lua/luascript_interface.h
     src/lua/lua_brush.h
     src/concepts.h
-    ../vendor/lzma/Alloc.c
-    ../vendor/lzma/LzFind.c
-    ../vendor/lzma/LzFindMt.c
-    ../vendor/lzma/LzmaDec.c
-    ../vendor/lzma/LzmaEnc.c
-    ../vendor/lzma/LzmaLib.c
-    ../vendor/lzma/Threads.c
+    vendor/lzma/Alloc.c
+    vendor/lzma/LzFind.c
+    vendor/lzma/LzFindMt.c
+    vendor/lzma/LzmaDec.c
+    vendor/lzma/LzmaEnc.c
+    vendor/lzma/LzmaLib.c
+    vendor/lzma/Threads.c
     src/config.cpp
     src/history/history.cpp
     src/history/history_action.cpp
@@ -280,6 +280,7 @@ set(GuiSources
     src/gui/properties/container_list_model.h
     src/gui/itempalette/item_palette_window.h
     src/gui/itempalette/item_palette_model.h
+    src/gui/search_popup.h
     src/main.h
     src/main.cpp
     src/gui/main_application.cpp
@@ -302,6 +303,7 @@ set(GuiSources
     src/gui/properties/container_list_model.cpp
     src/gui/itempalette/item_palette_window.cpp
     src/gui/itempalette/item_palette_model.cpp
+    src/gui/search_popup.cpp
     src/qt/qt_vulkan_info.cpp)
 
 # NOTE: All files that use the QT framework must be in the `gui` library,
@@ -317,15 +319,17 @@ target_compile_features(gui PRIVATE cxx_std_20)
 # QT
 target_link_libraries(gui PUBLIC Qt6::Core Qt6::Widgets Qt6::Qml Qt6::Quick
                                  Qt6::SvgWidgets)
-# End QT
 
-# set(Src)
+# set_target_properties(gui PROPERTIES CMAKE_INCLUDE_CURRENT_DIR ON
+# CMAKE_AUTOMOC ON) End QT
 
 qt_add_resources(QT_RESOURCES resources/qml/qml.qrc)
 qt_add_resources(QT_RESOURCES resources/style/style.qrc)
 qt_add_resources(QT_RESOURCES resources/images/images.qrc)
-
-add_executable(main ${QT_RESOURCES})
+qt_add_resources(QT_RESOURCES resources/shaders/shaders.qrc)
+set(app_icon_resource_windows
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/vulkan-map-editor.rc")
+qt_add_executable(main ${QT_RESOURCES} ${app_icon_resource_windows})
 
 target_link_libraries(main PRIVATE common)
 target_link_libraries(main PRIVATE gui)
@@ -333,9 +337,12 @@ target_link_libraries(main PRIVATE gui)
 target_compile_features(main PUBLIC cxx_std_20)
 target_compile_features(main PRIVATE cxx_std_20)
 
-# Move required files post-build add_custom_command( TARGET main POST_BUILD
-# COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/
-# $<TARGET_FILE_DIR:main>/resources)
+# Move required files post-build
+add_custom_command(
+  TARGET main
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/
+          $<TARGET_FILE_DIR:main>/resources)
 
 add_custom_command(
   TARGET main

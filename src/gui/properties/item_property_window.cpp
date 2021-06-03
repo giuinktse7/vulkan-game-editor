@@ -472,7 +472,7 @@ void ItemPropertyWindow::reloadSource()
 {
     VME_LOG_D("ItemPropertyWindow source reloaded.");
     engine()->clearComponentCache();
-    setSource(QUrl::fromLocalFile("../resources/qml/itemPropertyWindow.qml"));
+    setSource(QUrl::fromLocalFile("../../resources/qml/itemPropertyWindow.qml"));
 }
 
 QString ItemPropertyWindow::getItemPixmapString(const Item &item) const
@@ -680,47 +680,6 @@ void ItemPropertyWindow::startContainerItemDrag(PropertiesUI::ContainerNode *tre
     dragOperation->setRenderCondition([this] { return !state.mapView->underMouse(); });
     dragOperation->start();
     dragOperation->onDragFinished<&PropertiesUI::ContainerNode::onDragFinished>(treeNode);
-}
-
-QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
-{
-    //id is either 'serverId' or 'serverId:subtype'.
-    auto parts = id.split(':');
-
-    uint32_t serverId;
-    uint8_t subtype = 0;
-
-    bool success = false;
-
-    // No subtype if only one part
-    if (parts.size() == 1)
-    {
-        serverId = parts.at(0).toInt(&success);
-    }
-    else
-    {
-        DEBUG_ASSERT(parts.size() == 2, "Must have 2 parts here; a serverId and a subtype");
-        bool ok;
-        serverId = parts.at(0).toInt(&ok);
-        if (ok)
-        {
-            int parsedSubtype = parts.at(1).toInt(&success);
-            if (success)
-            {
-                DEBUG_ASSERT(0 <= subtype && subtype <= UINT8_MAX, "Subtype out of bounds.");
-                subtype = static_cast<uint8_t>(parsedSubtype);
-            }
-        }
-    }
-
-    if (!success)
-    {
-        QPixmap pixmap(32, 32);
-        pixmap.fill(QColor("black").rgba());
-        return pixmap;
-    }
-
-    return QtUtil::itemPixmap(serverId, subtype);
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

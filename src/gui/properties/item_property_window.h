@@ -2,7 +2,6 @@
 
 #include <QAbstractListModel>
 #include <QListView>
-#include <QQuickImageProvider>
 #include <QQuickItem>
 #include <QQuickView>
 #include <QUrl>
@@ -263,16 +262,6 @@ inline QObject *ItemPropertyWindow::child(const char *name)
 {
     return rootObject()->findChild<QObject *>(name);
 }
-
-// Images
-class ItemTypeImageProvider : public QQuickImageProvider
-{
-  public:
-    ItemTypeImageProvider()
-        : QQuickImageProvider(QQuickImageProvider::Pixmap) {}
-
-    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override;
-};
 
 template <typename T>
 bool ItemPropertyWindow::State::holds()

@@ -35,4 +35,15 @@ class MainApplication : public QApplication
     QWidget *currentWidget = nullptr;
 
     // QWindow *vulkanWindow = nullptr;
+
+    class EventFilter : public QObject
+    {
+      public:
+        EventFilter(MainApplication *mainApplication);
+
+        bool eventFilter(QObject *obj, QEvent *event) override;
+
+      private:
+        MainApplication *mainApplication;
+    };
 };

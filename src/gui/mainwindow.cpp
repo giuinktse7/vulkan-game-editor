@@ -10,9 +10,11 @@
 #include <QPlainTextEdit>
 #include <QQuickView>
 #include <QSlider>
+#include <QStackedLayout>
 #include <QVariant>
 #include <QVulkanInstance>
 #include <QWidget>
+#include <QWindow>
 
 #pragma clang diagnostic pop
 
@@ -31,8 +33,59 @@
 #include "menu.h"
 #include "properties/item_property_window.h"
 #include "qt_util.h"
+#include "search_popup.h"
 #include "split_widget.h"
 #include "vulkan_window.h"
+
+MainLayout::MainLayout(QWidget *mainWidget)
+    : mainWidget(mainWidget)
+{
+    setStackingMode(QStackedLayout::StackAll);
+    addWidget(mainWidget);
+}
+
+void MainLayout::setSearchWidget(SearchPopupWidget *searchWidget)
+{
+    this->searchWidget = searchWidget;
+}
+
+void MainWindow::windowPressEvent(QWindow *window, QMouseEvent *event)
+{
+    auto mainLayout = static_cast<MainLayout *>(layout());
+    if (mainLayout->isSearchVisible() && window != searchPopupWidget->popupView())
+    {
+        mainLayout->hideSearch();
+    }
+}
+
+bool MainLayout::isSearchVisible() const noexcept
+{
+    return searchVisible;
+}
+
+void MainLayout::showSearch()
+{
+    if (searchVisible)
+    {
+        return;
+    }
+
+    searchVisible = true;
+    addWidget(searchWidget);
+    setCurrentWidget(searchWidget);
+    searchWidget->popupView()->focus();
+}
+
+void MainLayout::hideSearch()
+{
+    if (!searchVisible)
+    {
+        return;
+    }
+
+    searchVisible = false;
+    removeWidget(searchWidget);
+}
 
 uint32_t MainWindow::nextUntitledId()
 {
@@ -132,8 +185,6 @@ MainWindow::MainWindow(QWidget *parent)
       zoomStatus(new QLabel),
       topItemInfo(new QLabel)
 {
-
-    // editorAction.onActionChanged<&MainWindow::editorActionChangedEvent>(this);
 }
 
 //>>>>>>>>>>>>>>>>>>>>
@@ -335,12 +386,36 @@ void MainWindow::initializeUI()
 
     rootLayout->addWidget(bottomStatusBar, BorderLayout::Position::South);
 
-    setLayout(rootLayout);
+    searchPopupWidget = new SearchPopupWidget(this);
+
+    auto mainWidget = new QWidget(this);
+    mainWidget->setLayout(rootLayout);
+
+    MainLayout *layout = new MainLayout(mainWidget);
+    layout->setSearchWidget(searchPopupWidget);
+
+    connect(searchPopupWidget->popupView(), &SearchPopupView::requestClose, [layout]() {
+        layout->hideSearch();
+    });
+
+    setLayout(layout);
+}
+
+void MainWindow::setSearchVisible(bool visible)
+{
+    auto mainLayout = static_cast<MainLayout *>(layout());
+    if (visible)
+    {
+        mainLayout->showSearch();
+    }
+    else
+    {
+        mainLayout->hideSearch();
+    }
 }
 
 void MainWindow::registerPropertyItemListeners()
 {
-
     connect(propertyWindow, &ItemPropertyWindow::actionIdChanged, [this](Item *item, int actionId, bool shouldCommit) {
         MapView &mapView = *currentMapView();
 
@@ -392,23 +467,21 @@ void MainWindow::initializePaletteWindow()
 
     // Raw palette
     {
-        ItemPalette &rawPalette = ItemPalettes::createPalette("Raw Palette");
+        ItemPalette &rawPalette = *ItemPalettes::getById("raw");
 
-        Tileset *bottomTileset = rawPalette.createTileset("Bottom items");
-        Tileset *groundTileset = rawPalette.createTileset("Grounds");
-        Tileset *borderTileset = rawPalette.createTileset("Borders");
-        Tileset *unsightTileset = rawPalette.createTileset("Sight-blocking");
-        Tileset *doorTileset = rawPalette.createTileset("Doors");
-        Tileset *archwayTileset = rawPalette.createTileset("Archways");
-        Tileset *containerTileset = rawPalette.createTileset("Containers");
-        Tileset *hangableTileset = rawPalette.createTileset("Hangables");
-        Tileset *pickuableTileset = rawPalette.createTileset("Pickupables");
-        Tileset *equipmentTileset = rawPalette.createTileset("Equipment");
-        Tileset *lightSourceTileset = rawPalette.createTileset("Light source");
-
-        Tileset *interiorTileset = rawPalette.createTileset("Interior / Wrap / Unwrap");
-
-        Tileset *otherTileset = rawPalette.createTileset("Other");
+        auto &bottomTileset = rawPalette.addTileset(Tileset("bottom_items", "Bottom items"));
+        auto &groundTileset = rawPalette.addTileset(Tileset("grounds", "Grounds"));
+        auto &borderTileset = rawPalette.addTileset(Tileset("borders", "Borders"));
+        auto &unsightTileset = rawPalette.addTileset(Tileset("sight_blocking", "Sight-blocking"));
+        auto &doorTileset = rawPalette.addTileset(Tileset("doors", "Doors"));
+        auto &archwayTileset = rawPalette.addTileset(Tileset("archways", "Archways"));
+        auto &containerTileset = rawPalette.addTileset(Tileset("containers", "Containers"));
+        auto &hangableTileset = rawPalette.addTileset(Tileset("hangables", "Hangables"));
+        auto &pickuableTileset = rawPalette.addTileset(Tileset("pickupables", "Pickupables"));
+        auto &equipmentTileset = rawPalette.addTileset(Tileset("equipment", "Equipment"));
+        auto &lightSourceTileset = rawPalette.addTileset(Tileset("light_source", "Light source"));
+        auto &interiorTileset = rawPalette.addTileset(Tileset("interior_wrap_unwrap", "Interior / Wrap / Unwrap"));
+        auto &otherTileset = rawPalette.addTileset(Tileset("other", "Other"));
 
         int from = 100;
         int to = 40000;
@@ -431,102 +504,95 @@ void MainWindow::initializePaletteWindow()
             }
             else if (itemType->hasFlag(AppearanceFlag::Bottom))
             {
-                bottomTileset->addRawBrush(i);
+                bottomTileset.addRawBrush(i);
             }
             else if (itemType->hasFlag(AppearanceFlag::Ground))
             {
-                groundTileset->addRawBrush(i);
+                groundTileset.addRawBrush(i);
             }
             else if (itemType->hasFlag(AppearanceFlag::Border))
             {
-                borderTileset->addRawBrush(i);
+                borderTileset.addRawBrush(i);
             }
             else if (itemType->hasFlag(AppearanceFlag::Top))
             {
-                archwayTileset->addRawBrush(i);
+                archwayTileset.addRawBrush(i);
             }
             else if (itemType->isDoor())
             {
-                doorTileset->addRawBrush(i);
+                doorTileset.addRawBrush(i);
             }
             else if (itemType->hasFlag(AppearanceFlag::Unsight))
             {
-                unsightTileset->addRawBrush(i);
+                unsightTileset.addRawBrush(i);
             }
             else if (itemType->isContainer())
             {
-                containerTileset->addRawBrush(i);
+                containerTileset.addRawBrush(i);
             }
             else if (itemType->hasFlag(AppearanceFlag::Wrap) || itemType->hasFlag(AppearanceFlag::Unwrap) || itemType->isBed())
             {
-                interiorTileset->addRawBrush(i);
+                interiorTileset.addRawBrush(i);
             }
             else if (itemType->hasFlag(AppearanceFlag::Take))
             {
                 if (itemType->hasFlag(AppearanceFlag::Clothes))
                 {
-                    equipmentTileset->addRawBrush(i);
+                    equipmentTileset.addRawBrush(i);
                 }
                 else
                 {
-                    pickuableTileset->addRawBrush(i);
+                    pickuableTileset.addRawBrush(i);
                 }
             }
             else if (itemType->hasFlag(AppearanceFlag::Light))
             {
-                lightSourceTileset->addRawBrush(i);
+                lightSourceTileset.addRawBrush(i);
             }
             else if (itemType->hasFlag(AppearanceFlag::Hang))
             {
-                hangableTileset->addRawBrush(i);
+                hangableTileset.addRawBrush(i);
             }
 
             else
             {
-                otherTileset->addRawBrush(i);
+                otherTileset.addRawBrush(i);
             }
 
             // GuiImageCache::cachePixmapForServerId(i);
         }
-
-        _paletteWindow->addPalette(ItemPalettes::getByName("Raw Palette"));
     }
 
     // Terrain palette
     {
-        ItemPalette &terrainPalette = ItemPalettes::createPalette("Terrain palette");
+        ItemPalette &terrainPalette = *ItemPalettes::getById("terrain");
 
-        Tileset *groundTileset = terrainPalette.createTileset("Grounds");
+        auto &groundTileset = terrainPalette.addTileset(Tileset("grounds", "Grounds"));
 
-        std::vector<WeightedItemId> weightedIds{
-            {4526, 300},
-            {4527, 10},
-            {4528, 25},
-            {4529, 25},
-            {4530, 25},
-            {4531, 15},
-            {4532, 25},
-            {4533, 25},
-            {4534, 15},
-            {4535, 25},
-            {4536, 25},
-            {4537, 25},
-            {4538, 20},
-            {4539, 20},
-            {4540, 20},
-            {4541, 20}};
+        auto grassBrush = Brush::getGroundBrush("normal_grass");
+        if (grassBrush)
+        {
+            groundTileset.addBrush(grassBrush);
+        }
 
-        GroundBrush *grassBrush = Brush::addGroundBrush(GroundBrush(0, "Grass", std::move(weightedIds)));
-        groundTileset->addBrush(grassBrush);
+        auto driedGrassBrush = Brush::getGroundBrush("dried_grass");
+        if (driedGrassBrush)
+        {
+            groundTileset.addBrush(driedGrassBrush);
+        }
+    }
 
-        _paletteWindow->addPalette(ItemPalettes::getByName("Terrain palette"));
+    for (auto &[k, palette] : ItemPalettes::itemPalettes())
+    {
+        _paletteWindow->addPalette(&palette);
     }
 
     connect(_paletteWindow, &ItemPaletteWindow::brushSelectionEvent, [this](Brush *brush) {
         editorAction.setIfUnlocked(MouseAction::MapBrush(brush));
     });
     // Brush *testBrush = Brush::getOrCreateRawBrush(2016);
-    Brush *testBrush = Brush::getOrCreateRawBrush(2005);
+    // Brush *testBrush = Brush::getOrCreateRawBrush(2005);
+    Brush *testBrush = Brush::getOrCreateRawBrush(1892);
     _paletteWindow->selectBrush(testBrush);
 }
 
@@ -565,12 +631,26 @@ QMenuBar *MainWindow::createMenuBar()
 
         editMenu->addSeparator();
 
+        auto jumpToBrush = new MenuAction(tr("Jump to brush..."), Qt::CTRL | Qt::Key_P, this);
+        connect(jumpToBrush, &QWidgetAction::triggered, [this] {
+            auto mainLayout = static_cast<MainLayout *>(layout());
+            setSearchVisible(!mainLayout->isSearchVisible());
+        });
+        editMenu->addAction(jumpToBrush);
+
+        auto temp = new MenuAction(tr("Temp debug"), Qt::Key_K, this);
+        connect(temp, &QWidgetAction::triggered, [this] {
+            VME_LOG_D(".");
+        });
+        editMenu->addAction(temp);
+
+        editMenu->addSeparator();
+
         auto cut = new MenuAction(tr("Cut"), Qt::CTRL | Qt::Key_X, this);
         editMenu->addAction(cut);
 
         auto copy = new MenuAction(tr("Copy"), Qt::CTRL | Qt::Key_C, this);
         connect(copy, &QWidgetAction::triggered, [this] { this->mapCopyBuffer.copySelection(*this->currentMapView()); });
-
         editMenu->addAction(copy);
 
         auto paste = new MenuAction(tr("Paste"), Qt::CTRL | Qt::Key_V, this);
@@ -634,7 +714,10 @@ QMenuBar *MainWindow::createMenuBar()
 
         QAction *reloadPropertyQml = new QAction(tr("Reload Properties QML"), this);
         reloadPropertyQml->setShortcut(Qt::Key_F5);
-        connect(reloadPropertyQml, &QAction::triggered, [=] { propertyWindow->reloadSource(); });
+        connect(reloadPropertyQml, &QAction::triggered, [=] {
+            propertyWindow->reloadSource();
+            searchPopupWidget->popupView()->reloadSource();
+        });
         reloadMenu->addAction(reloadPropertyQml);
     }
 

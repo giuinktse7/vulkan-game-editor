@@ -1,0 +1,49 @@
+{
+    "brushes": [
+        {
+            "id": "normal_grass",
+            "name": "Grass",
+            "type": "ground",
+            "lookId": 4526,
+            "zOrder": 3200,
+            "items": [
+                { "id": 4526, "chance": 300 },
+                { "id": 4527, "chance": 10 },
+                { "id": 4528, "chance": 25 },
+                { "id": 4529, "chance": 25 },
+                { "id": 4530, "chance": 25 },
+                { "id": 4531, "chance": 15 },
+                { "id": 4532, "chance": 25 },
+                { "id": 4533, "chance": 25 },
+                { "id": 4534, "chance": 15 },
+                { "id": 4535, "chance": 25 },
+                { "id": 4536, "chance": 25 },
+                { "id": 4537, "chance": 25 },
+                { "id": 4538, "chance": 20 },
+                { "id": 4539, "chance": 20 },
+                { "id": 4540, "chance": 20 },
+                { "id": 4541, "chance": 20 }
+            ]
+        },
+        {
+            "id": "dried_grass",
+            "name": "Dried Grass",
+            "type": "ground",
+            "lookId": 8326,
+            "zOrder": 2900,
+            "items": [
+                { "id": 8326, "chance": 25 },
+                { "id": 8327, "chance": 25 },
+                { "id": 8328, "chance": 25 },
+                { "id": 8329, "chance": 25 },
+                { "id": 8330, "chance": 25 },
+                { "id": 8331, "chance": 25 },
+                { "id": 8332, "chance": 25 },
+                { "id": 8333, "chance": 25 },
+                { "id": 8334, "chance": 25 },
+                { "id": 8347, "chance": 25 },
+                { "id": 8348, "chance": 25 }
+            ]
+        }
+    ]
+}

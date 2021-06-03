@@ -167,7 +167,7 @@ QPixmap QtUtil::itemPixmap(uint32_t serverId, uint8_t subtype)
     }
 
     ItemType *t = Items::items.getItemTypeByServerId(serverId);
-    auto info = t->usesSubType() ? t->getTextureInfoForSubtype(subtype, TextureInfo::CoordinateType::Unnormalized) 
+    auto info = t->usesSubType() ? t->getTextureInfoForSubtype(subtype, TextureInfo::CoordinateType::Unnormalized)
                                  : t->getTextureInfo(TextureInfo::CoordinateType::Unnormalized);
 
     return itemPixmap(info);
@@ -191,13 +191,29 @@ QPixmap QtUtil::itemPixmap(const TextureInfo &info)
                         .copy(textureRegion)
                         .mirrored();
 
-    if (atlas->spriteWidth == 32 && atlas->spriteHeight == 32)
+    auto width = atlas->spriteWidth;
+    auto height = atlas->spriteHeight;
+
+    if (width == 32 && height == 32)
     {
         return QPixmap::fromImage(std::move(sprite));
     }
-    else
+    else if (width == 64 && height == 64)
     {
         return QPixmap::fromImage(sprite.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    else if (width == 64 && height == 32)
+    {
+        return QPixmap::fromImage(sprite.scaled(32, 16, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    else if (width == 32 && height == 64)
+    {
+        return QPixmap::fromImage(sprite.scaled(16, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    else
+    {
+        VME_LOG_ERROR(std::format("Warning: Unknown sprite size: (width: {}, height: {})", width, height));
+        return QPixmap::fromImage(std::move(sprite));
     }
 }
 
@@ -219,6 +235,47 @@ std::optional<int> QtUtil::ScrollState::scroll(QWheelEvent *event)
     amountBuffer = amountBuffer % QtMinimumWheelDelta;
 
     return result;
+}
+
+QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
+{
+    //id is either 'serverId' or 'serverId:subtype'.
+    auto parts = id.split(':');
+
+    uint32_t serverId;
+    uint8_t subtype = 1;
+
+    bool success = false;
+
+    // No subtype if only one part
+    if (parts.size() == 1)
+    {
+        serverId = parts.at(0).toInt(&success);
+    }
+    else
+    {
+        DEBUG_ASSERT(parts.size() == 2, "Must have 2 parts here; a serverId and a subtype");
+        bool ok;
+        serverId = parts.at(0).toInt(&ok);
+        if (ok)
+        {
+            int parsedSubtype = parts.at(1).toInt(&success);
+            if (success)
+            {
+                DEBUG_ASSERT(0 <= subtype && subtype <= UINT8_MAX, "Subtype out of bounds.");
+                subtype = static_cast<uint8_t>(parsedSubtype);
+            }
+        }
+    }
+
+    if (!success)
+    {
+        QPixmap pixmap(32, 32);
+        pixmap.fill(QColor("black").rgba());
+        return pixmap;
+    }
+
+    return QtUtil::itemPixmap(serverId, subtype);
 }
 
 MapView *QtUtil::associatedMapView(QWidget *widget)

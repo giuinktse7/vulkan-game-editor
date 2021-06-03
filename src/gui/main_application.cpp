@@ -2,9 +2,14 @@
 
 #include <QFile>
 
+MainApplication::EventFilter::EventFilter(MainApplication *mainApplication)
+    : QObject(mainApplication), mainApplication(mainApplication) {}
+
 MainApplication::MainApplication(int &argc, char **argv)
     : QApplication(argc, argv)
 {
+    installEventFilter(new EventFilter(this));
+
     connect(this, &QApplication::applicationStateChanged, this, &MainApplication::onApplicationStateChanged);
     connect(this, &QApplication::focusWindowChanged, this, &MainApplication::onFocusWindowChanged);
     connect(this, &QApplication::focusChanged, this, &MainApplication::onFocusWidgetChanged);
@@ -82,4 +87,22 @@ void MainApplication::loadStyleSheet(const QString &path)
     QString styleSheet = QString::fromLatin1(file.readAll());
 
     setStyleSheet(styleSheet);
+}
+
+bool MainApplication::EventFilter::eventFilter(QObject *target, QEvent *event)
+{
+    if (event->type() == QEvent::MouseButtonPress)
+    {
+        auto object = target;
+        while (object && !object->isWindowType())
+        {
+            object = object->parent();
+        }
+        if (object)
+        {
+            mainApplication->mainWindow.windowPressEvent(static_cast<QWindow *>(object), static_cast<QMouseEvent *>(event));
+        }
+    }
+
+    return QObject::eventFilter(target, event);
 }

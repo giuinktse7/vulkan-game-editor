@@ -4,8 +4,10 @@
 #include <QDataStream>
 #include <QMouseEvent>
 #include <QPixmap>
+#include <QQuickImageProvider>
 #include <QString>
 #include <QWidget>
+
 
 #include <memory>
 #include <optional>
@@ -173,6 +175,16 @@ namespace QtUtil
         virtual bool eventFilter(QObject *obj, QEvent *event) = 0;
     };
 } // namespace QtUtil
+
+// Images
+class ItemTypeImageProvider : public QQuickImageProvider
+{
+  public:
+    ItemTypeImageProvider()
+        : QQuickImageProvider(QQuickImageProvider::Pixmap) {}
+
+    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override;
+};
 
 template <typename T>
 inline QString toQString(T value)

@@ -3,13 +3,27 @@
 #include "brushes/brush.h"
 #include "debug.h"
 #include "item_palette.h"
+#include "items.h"
 
-Tileset::Tileset(std::string name)
-    : _name(name) {}
+Tileset::Tileset(std::string id)
+    : _id(id) {}
+
+Tileset::Tileset(std::string id, std::string name)
+    : _id(id), _name(name) {}
 
 const std::string &Tileset::name() const noexcept
 {
     return _name;
+}
+
+const std::string &Tileset::id() const noexcept
+{
+    return _id;
+}
+
+void Tileset::setName(std::string name)
+{
+    _name = name;
 }
 
 size_t Tileset::size() const noexcept
@@ -34,6 +48,12 @@ void Tileset::setPalette(ItemPalette *palette) noexcept
 
 void Tileset::addRawBrush(uint32_t serverId)
 {
+    if (!Items::items.validItemType(serverId))
+    {
+        VME_LOG_ERROR(serverId << " is not a valid server ID.");
+        return;
+    }
+
     Brush *brush = Brush::getOrCreateRawBrush(serverId);
     if (hasBrush(brush))
     {

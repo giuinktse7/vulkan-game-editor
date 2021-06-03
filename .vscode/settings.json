@@ -166,7 +166,9 @@
     "charconv": "cpp",
     "coroutine": "cpp",
     "format": "cpp",
-    "source_location": "cpp"
+    "source_location": "cpp",
+    "qqmlengine": "cpp",
+    "qobject": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

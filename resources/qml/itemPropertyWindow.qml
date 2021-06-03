@@ -19,6 +19,7 @@ Rectangle {
     // border.color: "red"
     // border.width: 2
 
+
     Column {
         id: mainContainer
         width: parent.width;

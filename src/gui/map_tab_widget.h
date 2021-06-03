@@ -29,6 +29,7 @@ class QPropertyAnimation;
 class QStylePainter;
 class MapView;
 class VulkanWindow;
+class MapViewWidget;
 
 class OpacityAnimation : public QObject
 {
@@ -139,7 +140,7 @@ class MapTabWidget : public QTabWidget
     */
         bool withinWidget(QPoint relativePoint) const;
 
-        MapTabWidget *parentWidget() const;
+        MapTabWidget *getParentWidget() const;
 
         /*
       Moves the tab at srcIndex to the tab at destIndex. Differs from moveTab
@@ -202,8 +203,7 @@ class MapTabWidget : public QTabWidget
     MapView *currentMapView() const;
     VulkanWindow *currentVulkanWindow() const;
 
-    int addTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
-    int insertTabWithButton(QWidget *widget, const QString &text, QVariant data = QVariant());
+    int addTabWithButton(MapViewWidget *widget, const QString &text, QVariant data = QVariant());
 
     void removeCurrentTab();
 

@@ -223,15 +223,21 @@ PaletteWidget::PaletteWidget(QWidget *parent)
     });
 }
 
-void PaletteWidget::selectTileset(const std::string &tilesetName)
+void PaletteWidget::selectTileset(const std::string &tilesetId)
 {
-    auto tileset = _palette->tileset(tilesetName);
+    auto tileset = _palette->getTileset(tilesetId);
     _tilesetListView->setTileset(tileset);
 }
 
-void PaletteWidget::selectTileset(const QString &tilesetName)
+void PaletteWidget::selectTileset(Tileset *tileset)
 {
-    selectTileset(tilesetName.toStdString());
+    DEBUG_ASSERT(tileset->palette() == _palette, "Wrong palette.");
+    _tilesetListView->setTileset(tileset);
+}
+
+void PaletteWidget::selectTileset(const QString &tilesetId)
+{
+    selectTileset(tilesetId.toStdString());
 }
 
 TilesetListView *PaletteWidget::tilesetListView() const noexcept
@@ -246,11 +252,11 @@ ItemPalette *PaletteWidget::palette() const
 
 void PaletteWidget::selectBrush(Brush *brush)
 {
+    selectTileset(brush->tileset());
     Tileset *currentTileset = tileset();
-    Tileset *brushTileset = brush->tileset();
-    DEBUG_ASSERT(brushTileset != nullptr && currentTileset == brushTileset, "The brush is not part of the current tileset.");
+    // DEBUG_ASSERT(brushTileset != nullptr && currentTileset == brushTileset, "The brush is not part of the current tileset.");
 
-    ItemPalette *brushPalette = brushTileset->palette();
+    ItemPalette *brushPalette = currentTileset->palette();
     DEBUG_ASSERT(brushPalette != nullptr && brushPalette == _palette, "The brush palette is not the current palette.");
 
     int index = currentTileset->indexOf(brush);

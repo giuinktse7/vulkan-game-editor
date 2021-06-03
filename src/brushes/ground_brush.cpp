@@ -9,22 +9,27 @@
 #include "../random.h"
 #include "../tile.h"
 
-GroundBrush::GroundBrush(uint32_t id, const std::string &name, std::vector<WeightedItemId> &&weightedIds)
+GroundBrush::GroundBrush(std::string id, const std::string &name, std::vector<WeightedItemId> &&weightedIds)
     : Brush(name), _weightedIds(std::move(weightedIds)), id(id), _iconServerId(_weightedIds.at(0).id)
 {
     initialize();
 }
 
-GroundBrush::GroundBrush(uint32_t id, const std::string &name, std::vector<WeightedItemId> &&weightedIds, uint32_t iconServerId)
+GroundBrush::GroundBrush(std::string id, const std::string &name, std::vector<WeightedItemId> &&weightedIds, uint32_t iconServerId)
     : Brush(name), _weightedIds(std::move(weightedIds)), id(id), _iconServerId(iconServerId)
 {
     initialize();
 }
 
-GroundBrush::GroundBrush(const std::string &name, std::vector<WeightedItemId> &&weightedIds)
-    : Brush(name), _weightedIds(std::move(weightedIds)), id(UINT32_MAX), _iconServerId(_weightedIds.at(0).id)
+GroundBrush::GroundBrush(const std::string &id, std::vector<WeightedItemId> &&weightedIds)
+    : Brush(id), _weightedIds(std::move(weightedIds)), id(id), _iconServerId(_weightedIds.at(0).id)
 {
     initialize();
+}
+
+void GroundBrush::setIconServerId(uint32_t serverId)
+{
+    _iconServerId = serverId;
 }
 
 void GroundBrush::initialize()
@@ -93,7 +98,7 @@ uint32_t GroundBrush::sampleServerId()
     return _weightedIds.at(0).id;
 }
 
-uint32_t GroundBrush::brushId() const noexcept
+std::string GroundBrush::brushId() const noexcept
 {
     return id;
 }
@@ -101,4 +106,9 @@ uint32_t GroundBrush::brushId() const noexcept
 std::vector<ItemPreviewInfo> GroundBrush::previewInfo() const
 {
     return std::vector<ItemPreviewInfo>{{_nextId, PositionConstants::Zero}};
+}
+
+void GroundBrush::setName(std::string name)
+{
+    _name = name;
 }

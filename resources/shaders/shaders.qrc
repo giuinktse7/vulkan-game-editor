@@ -1,0 +1,7 @@
+<RCC>
+  <qresource>
+        <file>shadow.frag.qsb</file>
+        <file>blur.frag.qsb</file>
+        <file>test.frag.qsb</file>
+  </qresource>
+</RCC>

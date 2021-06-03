@@ -156,10 +156,6 @@ struct Container final : public ItemData
     uint16_t capacity() const noexcept;
     uint16_t volume() const noexcept;
 
-    std::vector<std::shared_ptr<Item>> _items;
-
-    uint16_t _capacity;
-
     std::vector<Parent> parents()
     {
         std::vector<Parent> result{_parent};
@@ -180,6 +176,9 @@ struct Container final : public ItemData
     {
         _parent = container;
     }
+
+    std::vector<std::shared_ptr<Item>> _items;
+    uint16_t _capacity;
 
   private:
     Parent _parent;

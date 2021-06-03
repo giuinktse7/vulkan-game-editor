@@ -777,6 +777,11 @@ void Items::OtbReader::readNodes()
     } while (!nodeEnd());
 }
 
+const std::vector<ItemType>& Items::getItemTypes() const
+{
+    return itemTypes;
+}
+
 ItemTypes_t Items::OtbReader::serverItemType(ItemType::Group itemGroup)
 {
     switch (itemGroup)
