@@ -8,7 +8,6 @@
 #include <QString>
 #include <QWidget>
 
-
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -184,6 +183,23 @@ class ItemTypeImageProvider : public QQuickImageProvider
         : QQuickImageProvider(QQuickImageProvider::Pixmap) {}
 
     QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override;
+};
+
+class QmlApplicationContext : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit QmlApplicationContext(QObject *parent = 0)
+        : QObject(parent) {}
+    Q_INVOKABLE void setCursor(Qt::CursorShape cursor)
+    {
+        QApplication::setOverrideCursor(cursor);
+    }
+
+    Q_INVOKABLE void resetCursor()
+    {
+        QApplication::restoreOverrideCursor();
+    }
 };
 
 template <typename T>

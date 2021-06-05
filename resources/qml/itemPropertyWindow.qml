@@ -6,7 +6,6 @@ import Vme.context 1.0 as Context
 
 Rectangle {
     id: root
-    anchors.fill: parent;
     anchors.margins: 14
 
     property var containers;

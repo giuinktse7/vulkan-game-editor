@@ -8,6 +8,7 @@
       <file>vme/Dropdown.qml</file>
       <file>vme/ItemContainerWindow.qml</file>
       <file>vme/spinbox/IndicatorButton.qml</file>
+      <file>vme/search_popup/FilterChoice.qml</file>
       <file>vme/item_container_window/ContainerSlotDragDrop.qml</file>
       <file>vme/qmldir</file>
       <file>vme/fonts/SourceSansPro-Regular.ttf</file>

@@ -3,3 +3,4 @@ SpinBox 1.0 SpinBox.qml
 IntItemProperty 1.0 IntItemProperty.qml
 Dropdown 1.0 Dropdown.qml
 ItemContainerWindow 1.0 ItemContainerWindow.qml
+FilterChoice 1.0 search_popup/FilterChoice.qml

@@ -2,15 +2,79 @@ import QtQuick.Controls 2.15
 import QtQuick 2.15
 import QtQuick.Layouts
 import "./vme" as Vme
+import "./vme/search_popup" as SearchPopup
 import Vme.context 1.0 as Context
 
 Rectangle {
     id: root;
     anchors.fill: parent;
+    border.color: "#aaa"
+    border.width: 1
+
+    property int minHeight: 300;
+    property int maxHeight: 600;
+
+    property var searchResults;
 
     color: "transparent";
 
-    property var searchResults;
+    
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton
+
+        id: mouseArea
+        property int oldMouseY
+        property int startHeight
+        property bool resizing : false;
+        cursorShape: containsMouse
+                     || pressed ? Qt.SizeVerCursor : Qt.ArrowCursor
+        preventStealing: true
+        propagateComposedEvents: true
+
+        // Rectangle {
+        //   anchors.fill: parent
+        //   color: "red"
+        // }
+
+        hoverEnabled: true
+
+        onPressed: (mouse) => {
+            if ((mouseY > height - 5)) {
+                oldMouseY = mouseY
+                startHeight = root.height
+                resizing = true;
+                applicationContext.setCursor(Qt.SizeVerCursor)
+            } else {
+                mouse.accepted = false;
+            }
+        }
+        
+        onReleased: {
+            if (resizing) {
+                applicationContext.resetCursor()
+                resizing = false;
+            }
+        }
+
+        onPositionChanged: {
+            if (!pressed && resizing) {
+                applicationContext.resetCursor()
+                resizing = false;
+            }
+
+            cursorShape = ((mouseY > height - 5) || resizing) ? Qt.SizeVerCursor : Qt.ArrowCursor;
+
+            if (resizing) {
+                const deltaY = (mouseY - oldMouseY)
+                const newHeight = Math.max(root.minHeight,
+                                       Math.min(startHeight + deltaY,
+                                                root.maxHeight))
+                Context.C_SearchPopupView.setHeight(newHeight);
+            }
+        }
+    }
+
 
     // ShaderEffectSource {
     //     id: theSource
@@ -22,183 +86,282 @@ Rectangle {
     //     fragmentShader: "qrc:/test.frag.qsb"
     // }
 
-    // Rectangle {
-    //     anchors.fill: parent;
-    //     anchors.margins: 14;
+    Rectangle {
+        anchors.fill: parent;
+        // anchors.margins: 14;
             
-    //     color: "#fcfcfc";
+        color: "#fcfcfc";
+        // color: "#ccc";
 
-    //     ColumnLayout {
-    //         anchors.fill: parent;
-    //         TextField {
-    //             Layout.alignment : Qt.AlignTop
-    //             objectName: "search_textfield"
+        ColumnLayout {
+            anchors.fill: parent;
+            TextField {
+                Layout.alignment : Qt.AlignTop
+                Layout.preferredHeight: 30;
+                Layout.leftMargin: 7;
+                Layout.topMargin: 10;
+                objectName: "search_textfield"
 
-    //             selectByMouse: true;
-    //             width: root.width;
-    //             height: 80
-    //             color: "#222222"
-    //             background: Item {}
-    //             placeholderText: qsTr("Search for brushes...");
+                selectByMouse: true;
+                color: "#222222"
+                background: Item {}
+                placeholderText: qsTr("Search for brushes...");
+                font.pixelSize: 12;
 
-    //             onTextChanged: {
-    //                 console.log("Search text: ", text);
-    //                 Context.C_SearchPopupView.searchEvent(text);
-    //             }
+                onTextChanged: {
+                    Context.C_SearchPopupView.searchEvent(text);
+                }
+            }
 
-    //         }
+            Rectangle {
+                Layout.margins: 0;
+                Layout.fillWidth: true;
+                height: 1;
+                color: "#BDBDBD";
+            }
 
-    //         TabBar {
-    //             Layout.alignment : Qt.AlignTop
-    //             id: bar
-    //             width: parent.width
-    //             TabButton {
-    //                 text: qsTr("Raw Brush")
-    //                 width: implicitWidth
-    //             }
-    //             TabButton {
-    //                 text: qsTr("Ground Brush")
-    //                 width: implicitWidth
-    //             }
-    //             TabButton {
-    //                 text: qsTr("Doodad Brush")
-    //                 width: implicitWidth
-    //             }
-    //         }
+            Row {
+                id: filterOptionsRow
+                spacing: 30;
+                Layout.fillWidth: true;
+                Layout.alignment : Qt.AlignTop;
+                Layout.leftMargin: 15;
+                Layout.rightMargin: 15;
+                Layout.bottomMargin: 7;
+                Layout.topMargin: 7;
+
+                readonly property int fontSize: 11;
+                property string selectedId;
+                property int selectedOffsetX;
+                property int selectedWidth;
+
+                onSelectedIdChanged: {
+                    filter_selection_indicator.x = selectedOffsetX;
+                    filter_selection_indicator.width = selectedWidth + spacing;
+                }
+
+                SearchPopup.FilterChoice {
+                    readonly property int filterId: 0;
+                    id: "filter_choice_all"
+                    text: qsTr("All");
+                    fontSize: filterOptionsRow.fontSize;
+                    selected: filterOptionsRow.selectedId == filterId;
+                    amount: root.searchResults.totalCount;
+                    onPressed: {
+                        root.searchResults.resetFilter();
+                        filterOptionsRow.selectedWidth = width;
+                        filterOptionsRow.selectedOffsetX = x;
+                        filterOptionsRow.selectedId = filterId;
+                    }
+                }
+                SearchPopup.FilterChoice {
+                    readonly property int filterId: 1;
+                    id: "filter_choice_raw"
+                    text: qsTr("Raw");
+                    fontSize: filterOptionsRow.fontSize;
+                    selected: filterOptionsRow.selectedId == filterId;
+                    amount: root.searchResults.rawCount;
+                    onPressed: {
+                        root.searchResults.setFilter("raw");
+
+                        filterOptionsRow.selectedWidth = width;
+                        filterOptionsRow.selectedOffsetX = x;
+                        filterOptionsRow.selectedId = filterId;
+                    }
+                }
+                SearchPopup.FilterChoice {
+                    readonly property int filterId: 2;
+                    id: "filter_choice_ground"
+                    text: qsTr("Ground");
+                    fontSize: filterOptionsRow.fontSize;
+                    selected: filterOptionsRow.selectedId == filterId;
+                    amount: root.searchResults.groundCount;
+                    onPressed: {
+                        root.searchResults.setFilter("ground");
+
+                        filterOptionsRow.selectedWidth = width;
+                        filterOptionsRow.selectedOffsetX = x;
+                        filterOptionsRow.selectedId = filterId;
+                    }
+                }
+                SearchPopup.FilterChoice {
+                    readonly property int filterId: 3;
+                    id: "filter_choice_doodad"
+                    text: qsTr("Doodad");
+                    fontSize: filterOptionsRow.fontSize;
+                    selected: filterOptionsRow.selectedId == filterId;
+                    amount: root.searchResults.doodadCount;
+                    onPressed: {
+                        root.searchResults.setFilter("doodad");
+
+                        filterOptionsRow.selectedWidth = width;
+                        filterOptionsRow.selectedOffsetX = x;
+                        filterOptionsRow.selectedId = filterId;
+                    }
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true;
+                Rectangle {
+                    width: parent.width;
+                    height: 1;
+                    color: "#BDBDBD";
+                }
+
+                Rectangle {
+                    id: "filter_selection_indicator";
+                    width: 50;
+                    height: 2;
+                    color: "#4F4F4F";
+
+                    Behavior on x {
+                        NumberAnimation { easing.type: Easing.InOutQuad; duration: 150 }
+                    }
+
+                    Behavior on width {
+                        NumberAnimation { easing.type: Easing.InOutQuad; duration: 150 }
+                    }
+                }
+            }
             
-    //         GridView {
-    //             id: searchResultList
 
-    //             Layout.fillHeight: true
-    //             Layout.fillWidth: true
 
-    //             model: root.searchResults;
+            
+            GridView {
+                id: searchResultList
 
-    //             cellWidth: 36
-    //             cellHeight: 70
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                Layout.margins: 30;
 
-    //             focus: true
-    //             clip: true
-    //             interactive: false
+                model: root.searchResults;
 
-    //             ScrollBar.vertical: ScrollBar {
-    //                 interactive: true
-    //             }
-    //             // ScrollIndicator.vertical: ScrollIndicator { }
+                cellWidth: 85
+                cellHeight: 85
 
-    //             MouseArea {
-    //                 anchors.fill: parent
-    //                 acceptedButtons: Qt.NoButton
+                readonly property int cellHSpacing: 14;
+                readonly property int cellVSpacing: 14;
 
-    //                 hoverEnabled: false
-    //                 propagateComposedEvents: true
-    //                 onWheel: e => {
-    //                     const scrollBar = searchResultList.ScrollBar.vertical
-    //                     const newPos = scrollBar.position - Math.sign(e.angleDelta.y) * 0.06;
+                focus: true
+                clip: true
+                interactive: false
 
-    //                     scrollBar.position = Math.max(0, Math.min(newPos, 1 - scrollBar.size));
-    //                     e.accepted = true;
-    //                 }
-    //             }
+                ScrollBar.vertical: ScrollBar {
+                    interactive: true
+                }
+                // ScrollIndicator.vertical: ScrollIndicator { }
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.NoButton
+
+                    hoverEnabled: false
+                    propagateComposedEvents: true
+                    onWheel: e => {
+                        const scrollBar = searchResultList.ScrollBar.vertical
+                        const newPos = scrollBar.position - Math.sign(e.angleDelta.y) * 0.06;
+
+                        scrollBar.position = Math.max(0, Math.min(newPos, 1 - scrollBar.size));
+                        e.accepted = true;
+                    }
+                }
 
                 
-    //             delegate: Component {
-    //                 id: itemDelegate
+                delegate: Component {
+                    id: itemDelegate
 
-    //                 ColumnLayout {
-    //                     id: brush
+                    MouseArea {
+                        id: brush
 
-    //                     required property int serverId
-    //                     required property int index
+                        required property string name
+                        required property int serverId
+                        required property int index
 
-    //                     width: 36
+                        width: childrenRect.width;
+                        height: childrenRect.height;
 
-    //                     Rectangle {
-    //                         Layout.preferredWidth: 32
-    //                         Layout.preferredHeight: 32
-    //                         Layout.alignment: Qt.AlignHCenter
+                        hoverEnabled: true
 
-    //                         color: "transparent"
+                        ToolTip {
+                            id: nameTextTooltip;
+                            parent: nameText;
+                            visible: nameText.truncated && brush.containsMouse
+                            text: brush.name
+                            // width: contentItem.width;
+                            // height: contentItem.height;
 
-    //                         Image {
-    //                         anchors.centerIn: parent
-    //                             source: {
-    //                                 return "image://itemTypes/" + brush.serverId;
-    //                             }
-    //                         }
-    //                     }
+                            contentItem: Text {
+                                text: nameTextTooltip.text;
+                                font: nameTextTooltip.font;
+                                color: "white";
+                            }
 
-    //                     Text {
-    //                         Layout.preferredWidth: 32
-    //                         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-    //                         text: brush.serverId
-    //                     }
-    //                 }
-    //             }
-    //         }
+                             background: Rectangle {
+                                 color: "#CC303F9F"
+                             }
+                        }
 
-    //     }
-    // }
+                        Column {
+                            width: searchResultList.cellWidth - searchResultList.cellHSpacing;
+                            height: searchResultList.cellHeight - searchResultList.cellVSpacing;
 
-    // Row {
-    //     Item {
-    //         id: test_rect
-    //         width: 80;
-    //         height: 80;
+                            Rectangle {
+                                anchors.horizontalCenter: parent.horizontalCenter;
+                                width: 32;
+                                height: 32;
+                                // Layout.preferredWidth: 32;
+                                // Layout.preferredHeight: 32;
+                                // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop;
 
-    //         Rectangle {
-    //             anchors.centerIn: parent;
-    //             width: 50;
-    //             height: 50;
-    //             color: "black"
-    //         }
-    //     }
-        
+                                color: "transparent";
 
-    //         Rectangle {
-    //             width: 50;
-    //             height: 50;
-    //             color: "transparent"
-    //             border.color: "green"
-    //             border.width: 1
+                                border.color: "#f2f2f2";
+                                // border.color: "red";
+                                border.width: 1;
 
-    //             ShaderEffect {
-    //                 id: shader
-    //                 anchors.fill: parent
-    //                 property variant src: theSource
+                                Image {
+                                anchors.centerIn: parent
+                                    source: {
+                                        return "image://itemTypes/" + brush.serverId;
+                                    }
+                                }
+                            }
 
-    //                 fragmentShader: "qrc:/shadow.frag.qsb"
 
-    //                 property real angle: 0
-    //                 NumberAnimation on angle { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 6000 }
-    //                 property variant offset: Qt.point(15.0 * Math.cos(angle), 15.0 * Math.sin(angle))
-    //                 property variant delta: Qt.size(offset.x / width, offset.y / height)
+                            // Column {
+                            //     width: searchResultList.cellWidth - searchResultList.cellHSpacing;
+                            //     height: childrenRect.height
+                                // Layout.preferredWidth: 32
+                                // Layout.preferredHeight: childrenRect.height
+                                // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
 
-    //                 property real darkness: 0.5
 
-    //                 property variant shadow: ShaderEffectSource {
-    //                     sourceItem: ShaderEffect {
-    //                         width: test_rect.width
-    //                         height: test_rect.height
-    //                         property variant delta: Qt.size(0.0, 1.0 / height)
-    //                         property variant source: ShaderEffectSource {
-    //                             sourceItem: ShaderEffect {
-    //                                 width: test_rect.width
-    //                                 height: test_rect.height
-    //                                 property variant delta: Qt.size(1.0 / width, 0.0)
-    //                                 property variant source: theSource
-    //                                 fragmentShader: "qrc:/blur.frag.qsb"
-    //                             }
-    //                         }
-    //                         fragmentShader: "qrc:/blur.frag.qsb"
-    //                     }
-    //                 }
-    //             }
-    //         }
+                                Text {
+                                    width: parent.width
+                                    text: brush.serverId
+                                    horizontalAlignment: Text.AlignHCenter;
 
-            
-    //     Text {
-    //         text: shader.angle
-    //     }
-    // }
+                                }
+
+                                Text {
+                                    id: nameText
+                                    width: parent.width
+                                    text: brush.name
+                                    wrapMode: Text.WordWrap
+                                    elide: Text.ElideRight
+                                    maximumLineCount: 1
+
+                                    horizontalAlignment: Text.AlignHCenter;
+                                }
+
+                            
+                            // }
+                        }
+                    }
+                }
+            }
+
+        }
+    }
 }

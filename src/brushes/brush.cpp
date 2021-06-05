@@ -78,28 +78,13 @@ const vme_unordered_map<uint32_t, std::unique_ptr<Brush>> &Brush::getRawBrushes(
     return rawBrushes;
 }
 
-std::unique_ptr<std::vector<Brush *>> Brush::search(std::string searchString)
+BrushSearchResult Brush::search(std::string searchString)
 {
     using Match = std::pair<int, Brush *>;
-    std::vector<Match> matches = searchWithScore(searchString);
 
-    auto results = std::make_unique<std::vector<Brush *>>();
-    results->reserve(matches.size());
+    BrushSearchResult searchResult;
 
-    std::transform(matches.begin(), matches.end(), std::back_inserter(*results),
-                   [](Match match) -> Brush * { return match.second; });
-
-    return results;
-}
-
-std::vector<std::pair<int, Brush *>> Brush::searchWithScore(std::string searchString)
-{
-    using Match = std::pair<int, Brush *>;
     std::vector<Match> matches;
-
-    auto f = [](const Match &lhs, const Match &rhs) {
-        return lhs.first > rhs.first;
-    };
 
     for (const auto &[_, rawBrush] : rawBrushes)
     {
@@ -109,10 +94,65 @@ std::vector<std::pair<int, Brush *>> Brush::searchWithScore(std::string searchSt
         if (match)
         {
             matches.emplace_back(std::pair{score, rawBrush.get()});
+            ++searchResult.rawCount;
         }
     }
 
-    std::sort(matches.begin(), matches.end(), f);
+    for (const auto &[_, groundBrush] : groundBrushes)
+    {
+        int score;
+        bool match = fts::fuzzy_match(searchString.c_str(), groundBrush->name().c_str(), score);
 
-    return matches;
+        if (match)
+        {
+            matches.emplace_back(std::pair{score, groundBrush.get()});
+            ++searchResult.groundCount;
+        }
+    }
+
+    std::sort(matches.begin(), matches.end(), Brush::matchSorter);
+
+    searchResult.matches = std::make_unique<std::vector<Brush *>>();
+    searchResult.matches->reserve(matches.size());
+
+    std::transform(matches.begin(), matches.end(), std::back_inserter(*searchResult.matches),
+                   [](Match match) -> Brush * { return match.second; });
+
+    return searchResult;
+}
+
+bool Brush::brushSorter(const Brush *leftBrush, const Brush *rightBrush)
+{
+    if (leftBrush->type() != rightBrush->type())
+    {
+        return to_underlying(leftBrush->type()) > to_underlying(rightBrush->type());
+    }
+
+    // Both raw here, no need to check rightBrush (we check if they are the same above)
+    if (leftBrush->type() == BrushType::Raw)
+    {
+        return static_cast<const RawBrush *>(leftBrush)->serverId() > static_cast<const RawBrush *>(rightBrush)->serverId();
+    }
+
+    // Same brushes but not of type Raw, use match score
+    return leftBrush->name() < rightBrush->name();
+}
+
+bool Brush::matchSorter(std::pair<int, Brush *> &lhs, const std::pair<int, Brush *> &rhs)
+{
+    auto leftBrush = lhs.second;
+    auto rightBrush = rhs.second;
+    if (leftBrush->type() != rightBrush->type())
+    {
+        return to_underlying(leftBrush->type()) > to_underlying(rightBrush->type());
+    }
+
+    // Both raw here, no need to check rightBrush (we check if they are the same above)
+    if (leftBrush->type() == BrushType::Raw)
+    {
+        return static_cast<RawBrush *>(leftBrush)->serverId() < static_cast<RawBrush *>(rightBrush)->serverId();
+    }
+
+    // Same brushes but not of type Raw, use match score
+    return lhs.first < rhs.first;
 }

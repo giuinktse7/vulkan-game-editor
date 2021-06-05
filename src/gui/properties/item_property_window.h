@@ -61,23 +61,6 @@ class PropertyWindowEventFilter : public QtUtil::EventFilter
     ItemPropertyWindow *propertyWindow;
 };
 
-class QmlApplicationContext : public QObject
-{
-    Q_OBJECT
-  public:
-    explicit QmlApplicationContext(QObject *parent = 0)
-        : QObject(parent) {}
-    Q_INVOKABLE void setCursor(Qt::CursorShape cursor)
-    {
-        QApplication::setOverrideCursor(cursor);
-    }
-
-    Q_INVOKABLE void resetCursor()
-    {
-        QApplication::restoreOverrideCursor();
-    }
-};
-
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>ItemPropertyWindow>>>>>

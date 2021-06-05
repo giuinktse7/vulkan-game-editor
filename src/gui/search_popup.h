@@ -5,19 +5,67 @@
 #include <QObject>
 #include <QPixmap>
 #include <QQuickView>
+#include <QSortFilterProxyModel>
 #include <QWidget>
+
+#include <functional>
+#include <optional>
+
+#include "../brushes/brush.h"
 
 class MainWindow;
 class Brush;
 class QHideEvent;
+class SearchResultModel;
+
+class FilteredSearchModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+
+  signals:
+    void searchModelChanged();
+
+  public:
+    FilteredSearchModel(QObject *parent = 0);
+
+    Q_PROPERTY(int totalCount READ totalCount NOTIFY searchModelChanged)
+    Q_PROPERTY(int rawCount READ rawCount NOTIFY searchModelChanged)
+    Q_PROPERTY(int groundCount READ groundCount NOTIFY searchModelChanged)
+    Q_PROPERTY(int doodadCount READ doodadCount NOTIFY searchModelChanged)
+
+    Q_INVOKABLE void resetFilter();
+    Q_INVOKABLE void setFilter(QString brushType);
+
+    int totalCount() const;
+    int rawCount() const;
+    int groundCount() const;
+    int doodadCount() const;
+
+    void setPredicate(std::function<bool(Brush *)> predicate);
+    void reset();
+    void setSourceModel(QAbstractItemModel *model) override;
+
+  protected:
+    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
+
+  private:
+    std::function<bool(Brush *)> acceptAll = [](Brush *) { return true; };
+    std::function<bool(Brush *)> predicate = acceptAll;
+
+    SearchResultModel *_searchModel = nullptr;
+
+    std::optional<BrushType> parseBrushType(QString raw);
+};
 
 class SearchResultModel : public QAbstractListModel
 {
+  public:
     Q_OBJECT
   public:
     enum class Role
     {
         ServerId = Qt::UserRole + 1,
+        Name = Qt::UserRole + 2,
     };
 
     SearchResultModel(QObject *parent = nullptr);
@@ -25,7 +73,11 @@ class SearchResultModel : public QAbstractListModel
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-    void setSearchResults(std::unique_ptr<std::vector<Brush *>> &&brushes);
+    void setSearchResults(BrushSearchResult &&brushes);
+    const std::optional<BrushSearchResult> &searchResults() const
+    {
+        return _searchResults;
+    }
 
     void clear();
 
@@ -35,7 +87,7 @@ class SearchResultModel : public QAbstractListModel
     QHash<int, QByteArray> roleNames() const override;
 
   private:
-    std::unique_ptr<std::vector<Brush *>> _searchResults;
+    std::optional<BrushSearchResult> _searchResults;
 };
 
 class SearchPopupView : public QQuickView
@@ -49,6 +101,7 @@ class SearchPopupView : public QQuickView
     SearchPopupView(QUrl filepath, MainWindow *mainWindow);
 
     Q_INVOKABLE void searchEvent(QString searchTerm);
+    Q_INVOKABLE void setHeight(int height);
 
     QWidget *wrapInWidget(QWidget *parent = nullptr);
 
@@ -70,6 +123,7 @@ class SearchPopupView : public QQuickView
 
   private:
     SearchResultModel searchResultModel;
+    FilteredSearchModel filteredSearchModel;
 
     QObject *child(const char *name);
 };

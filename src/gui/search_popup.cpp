@@ -7,7 +7,6 @@
 #include <QQuickItem>
 #include <QWidget>
 
-#include "../brushes/brush.h"
 #include "mainwindow.h"
 #include "qt_util.h"
 
@@ -20,9 +19,10 @@ SearchPopupView::SearchPopupView(QUrl filepath, MainWindow *mainWindow)
     : _filepath(filepath), mainWindow(mainWindow), _wrapperWidget(nullptr)
 {
     installEventFilter(new SearchWrapperEventFilter(this));
+    filteredSearchModel.setSourceModel(&searchResultModel);
 
     QVariantMap properties;
-    properties.insert("searchResults", QVariant::fromValue(&searchResultModel));
+    properties.insert("searchResults", QVariant::fromValue(&filteredSearchModel));
 
     setInitialProperties(properties);
 
@@ -32,6 +32,9 @@ SearchPopupView::SearchPopupView(QUrl filepath, MainWindow *mainWindow)
 
     setSource(filepath);
     setResizeMode(ResizeMode::SizeRootObjectToView);
+
+    QmlApplicationContext *applicationContext = new QmlApplicationContext();
+    engine()->rootContext()->setContextProperty("applicationContext", applicationContext);
 }
 
 void SearchPopupView::focus()
@@ -102,7 +105,7 @@ SearchPopupWidget::SearchPopupWidget(MainWindow *mainWindow)
 
     wrapperWidget->setFixedWidth(mainWindow->width() * 0.6);
     wrapperWidget->setMinimumHeight(300);
-    wrapperWidget->setMaximumHeight(mainWindow->height() * 0.6);
+    // wrapperWidget->setMaximumHeight(mainWindow->height() * 0.6);
     // searchPopupWidget->setFixedWidth(300);
     // searchPopupWidget->setFixedHeight(300);
     QVBoxLayout *searchLayout = new QVBoxLayout(this);
@@ -115,6 +118,11 @@ SearchPopupWidget::SearchPopupWidget(MainWindow *mainWindow)
 void SearchPopupView::searchEvent(QString searchTerm)
 {
     this->search(searchTerm.toStdString());
+}
+
+void SearchPopupView::setHeight(int height)
+{
+    _wrapperWidget->setFixedHeight(height);
 }
 
 inline QObject *SearchPopupView::child(const char *name)
@@ -147,12 +155,12 @@ SearchResultModel::SearchResultModel(QObject *parent)
 
 int SearchResultModel::rowCount(const QModelIndex &parent) const
 {
-    return _searchResults ? _searchResults->size() : 0;
+    return _searchResults ? _searchResults->matches->size() : 0;
 }
 
 Brush *SearchResultModel::brushAtIndex(size_t index) const
 {
-    return _searchResults ? _searchResults->at(index) : nullptr;
+    return _searchResults ? _searchResults->matches->at(index) : nullptr;
 }
 
 void SearchResultModel::clear()
@@ -160,39 +168,144 @@ void SearchResultModel::clear()
     if (_searchResults)
     {
         beginResetModel();
-        _searchResults->clear();
+        _searchResults.reset();
         endResetModel();
     }
 }
 
-void SearchResultModel::setSearchResults(std::unique_ptr<std::vector<Brush *>> &&brushes)
+void SearchResultModel::setSearchResults(BrushSearchResult &&brushes)
 {
     beginResetModel();
     _searchResults = std::move(brushes);
-    VME_LOG_D("SearchResultModel::setSearchResults: " << _searchResults->size());
     endResetModel();
 }
 
 QVariant SearchResultModel::data(const QModelIndex &index, int role) const
 {
-    if (index.row() < 0 || index.row() >= _searchResults->size())
+    if (index.row() < 0 || index.row() >= _searchResults->matches->size())
         return QVariant();
 
     if (role == to_underlying(Role::ServerId))
     {
-        Brush *brush = _searchResults->at(index.row());
+        Brush *brush = _searchResults->matches->at(index.row());
         auto serverId = brush->iconServerId();
 
         return QVariant::fromValue(serverId);
     }
+    else if (role == to_underlying(Role::Name))
+    {
+        Brush *brush = _searchResults->matches->at(index.row());
+
+        return QString::fromStdString(brush->name());
+    }
 
     return QVariant();
+}
+
+FilteredSearchModel::FilteredSearchModel(QObject *parent)
+    : QSortFilterProxyModel(parent) {}
+
+void FilteredSearchModel::setSourceModel(QAbstractItemModel *model)
+{
+    _searchModel = dynamic_cast<SearchResultModel *>(model);
+    connect(this, &SearchResultModel::modelReset, [this]() {
+        emit searchModelChanged();
+    });
+    QSortFilterProxyModel::setSourceModel(model);
+}
+
+void FilteredSearchModel::setFilter(QString s)
+{
+    if (s == "raw")
+    {
+        setPredicate([](Brush *brush) { return brush->type() == BrushType::Raw; });
+    }
+    else if (s == "ground")
+    {
+        setPredicate([](Brush *brush) { return brush->type() == BrushType::Ground; });
+    }
+    else if (s == "doodad")
+    {
+        setPredicate([](Brush *brush) { return brush->type() == BrushType::Doodad; });
+    }
+    else
+    {
+        VME_LOG_ERROR("FilteredSearchModel::setFilter Unknown filter type: " << s.toStdString());
+        reset();
+    }
+}
+
+void FilteredSearchModel::setPredicate(std::function<bool(Brush *)> predicate)
+{
+    this->predicate = predicate;
+    invalidateFilter();
+}
+
+void FilteredSearchModel::resetFilter()
+{
+    reset();
 }
 
 QHash<int, QByteArray> SearchResultModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[to_underlying(Role::ServerId)] = "serverId";
+    roles[to_underlying(Role::Name)] = "name";
 
     return roles;
+}
+
+void FilteredSearchModel::reset()
+{
+    predicate = acceptAll;
+    invalidateFilter();
+}
+
+bool FilteredSearchModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
+{
+    return predicate(static_cast<SearchResultModel *>(sourceModel())->brushAtIndex(sourceRow));
+}
+
+int FilteredSearchModel::totalCount() const
+{
+    const auto &results = _searchModel->searchResults();
+    return results ? results->matches->size() : 0;
+}
+
+int FilteredSearchModel::rawCount() const
+{
+    const auto &results = _searchModel->searchResults();
+    return results ? results->rawCount : 0;
+}
+
+int FilteredSearchModel::groundCount() const
+{
+    const auto &results = _searchModel->searchResults();
+    return results ? results->groundCount : 0;
+}
+
+int FilteredSearchModel::doodadCount() const
+{
+    const auto &results = _searchModel->searchResults();
+    return results ? results->doodadCount : 0;
+}
+
+std::optional<BrushType> FilteredSearchModel::parseBrushType(QString rawBrushType)
+{
+    if (rawBrushType == "raw")
+    {
+        return BrushType::Raw;
+    }
+    else if (rawBrushType == "ground")
+    {
+        return BrushType::Ground;
+    }
+    else if (rawBrushType == "doodad")
+    {
+        return BrushType::Doodad;
+    }
+    else
+    {
+        return std::nullopt;
+    }
 }

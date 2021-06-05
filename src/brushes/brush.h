@@ -13,12 +13,22 @@ struct Position;
 class Tileset;
 class MapView;
 class GroundBrush;
+class Brush;
 
 enum class BrushType
 {
-    Raw,
+    Doodad,
     Ground,
-    Doodad
+    Raw,
+};
+
+struct BrushSearchResult
+{
+    std::unique_ptr<std::vector<Brush *>> matches;
+
+    int rawCount = 0;
+    int groundCount = 0;
+    int doodadCount = 0;
 };
 
 inline std::optional<BrushType> parseBrushType(const std::string &rawType)
@@ -71,7 +81,7 @@ class Brush
 
     const std::string &name() const noexcept;
 
-    static std::unique_ptr<std::vector<Brush *>> search(std::string searchString);
+    static BrushSearchResult search(std::string searchString);
 
     virtual bool erasesItem(uint32_t serverId) const = 0;
     virtual BrushType type() const = 0;
@@ -90,6 +100,8 @@ class Brush
     void setTileset(Tileset *tileset) noexcept;
     Tileset *tileset() const noexcept;
 
+    static bool brushSorter(const Brush *leftBrush, const Brush *rightBrush);
+
   protected:
     static vme_unordered_map<uint32_t, std::unique_ptr<Brush>> rawBrushes;
 
@@ -97,7 +109,5 @@ class Brush
 
     std::string _name;
     Tileset *_tileset = nullptr;
-
-  private:
-    static std::vector<std::pair<int, Brush *>> searchWithScore(std::string searchString);
+    static bool matchSorter(std::pair<int, Brush *> &lhs, const std::pair<int, Brush *> &rhs);
 };
