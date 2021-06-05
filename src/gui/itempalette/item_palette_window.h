@@ -46,8 +46,8 @@ class ItemPaletteWindow : public QWidget
   public:
     void addPalette(ItemPalette *itemPalette);
 
-    void selectPalette(const std::string &paletteName);
-    void selectPalette(const QString &paletteName);
+    void selectPalette(const std::string &paletteId);
+    void selectPalette(const QString &paletteId);
     ItemPalette *selectedPalette() const;
 
     bool selectBrush(Brush *brush);

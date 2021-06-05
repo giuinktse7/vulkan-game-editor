@@ -102,6 +102,7 @@ class SearchPopupView : public QQuickView
 
     Q_INVOKABLE void searchEvent(QString searchTerm);
     Q_INVOKABLE void setHeight(int height);
+    Q_INVOKABLE void brushSelected(int index);
 
     QWidget *wrapInWidget(QWidget *parent = nullptr);
 

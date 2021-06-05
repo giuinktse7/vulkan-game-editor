@@ -18,6 +18,10 @@ Rectangle {
 
     color: "transparent";
 
+    function resetSearchText() {
+        search_textfield.text = "";
+    }
+
     
     MouseArea {
         anchors.fill: parent
@@ -96,6 +100,7 @@ Rectangle {
         ColumnLayout {
             anchors.fill: parent;
             TextField {
+                id: search_textfield
                 Layout.alignment : Qt.AlignTop
                 Layout.preferredHeight: 30;
                 Layout.leftMargin: 7;
@@ -283,24 +288,36 @@ Rectangle {
 
                         hoverEnabled: true
 
-                        ToolTip {
-                            id: nameTextTooltip;
-                            parent: nameText;
-                            visible: nameText.truncated && brush.containsMouse
-                            text: brush.name
-                            // width: contentItem.width;
-                            // height: contentItem.height;
-
-                            contentItem: Text {
-                                text: nameTextTooltip.text;
-                                font: nameTextTooltip.font;
-                                color: "white";
-                            }
-
-                             background: Rectangle {
-                                 color: "#CC303F9F"
-                             }
+                        onPressed: {
+                            Context.C_SearchPopupView.brushSelected(index);
                         }
+
+                        // ToolTip {
+                        //     id: nameTextTooltip;
+                        //     parent: nameText;
+                        //     visible: nameText.truncated && nameTextMouseArea.containsMouse
+                        //     text: brush.name
+                        //     delay: 300
+                        //     y: -5;
+
+                        //     contentItem: MouseArea {
+                        //         width: childrenRect.width;
+                        //         height: childrenRect.height;
+
+                        //         onPressed: {
+                        //             Context.C_SearchPopupView.brushSelected(brush.index);
+                        //         }
+                        //         Text {
+                        //             text: nameTextTooltip.text;
+                        //             font: nameTextTooltip.font;
+                        //             color: "white";
+                        //         }
+                        //     }
+
+                        //     background: Rectangle {
+                        //         color: "#CC303F9F"
+                        //     }
+                        // }
 
                         Column {
                             width: searchResultList.cellWidth - searchResultList.cellHSpacing;
@@ -343,16 +360,21 @@ Rectangle {
                                     horizontalAlignment: Text.AlignHCenter;
 
                                 }
-
                                 Text {
                                     id: nameText
                                     width: parent.width
                                     text: brush.name
                                     wrapMode: Text.WordWrap
                                     elide: Text.ElideRight
-                                    maximumLineCount: 1
+                                    maximumLineCount: brush.containsMouse ? 3 : 1;
 
                                     horizontalAlignment: Text.AlignHCenter;
+
+                                    MouseArea {
+                                        id: nameTextMouseArea
+                                        anchors.fill: parent;
+                                        hoverEnabled: true
+                                    }
                                 }
 
                             

@@ -28,7 +28,7 @@ ItemPaletteWindow::ItemPaletteWindow(EditorAction *editorAction, QWidget *parent
     layout->addWidget(paletteWidget);
 
     connect(paletteDropdown, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int index) {
-        selectPalette(paletteDropdown->currentText());
+        selectPalette(paletteDropdown->currentData().toString());
     });
 
     connect(paletteWidget->tilesetListView(), &QListView::clicked, this, &ItemPaletteWindow::onTilesetViewItemClicked);
@@ -45,7 +45,7 @@ void ItemPaletteWindow::addPalette(ItemPalette *itemPalette)
     bool firstPalette = itemPalettes.empty();
     itemPalettes.emplace_back(itemPalette);
 
-    paletteDropdown->addItem(QString::fromStdString(itemPalette->name()));
+    paletteDropdown->addItem(QString::fromStdString(itemPalette->name()), QString::fromStdString(itemPalette->id()));
 
     if (firstPalette)
     {
@@ -55,34 +55,34 @@ void ItemPaletteWindow::addPalette(ItemPalette *itemPalette)
 
 void ItemPaletteWindow::selectPalette(ItemPalette *itemPalette)
 {
-    selectPalette(itemPalette->name());
+    selectPalette(itemPalette->id());
 }
 
-void ItemPaletteWindow::selectPalette(const std::string &paletteName)
+void ItemPaletteWindow::selectPalette(const std::string &paletteId)
 {
-    selectPalette(QString::fromStdString(paletteName));
+    selectPalette(QString::fromStdString(paletteId));
 }
 
-void ItemPaletteWindow::selectPalette(const QString &paletteName)
+void ItemPaletteWindow::selectPalette(const QString &paletteId)
 {
-    int index = paletteDropdown->findText(paletteName);
+    int index = paletteDropdown->findData(paletteId);
 
     if (index == -1)
     {
-        VME_LOG_ERROR("ItemPaletteWindow did not have a palette with name " << paletteName << "(in paletteDropdown).");
+        VME_LOG_ERROR("ItemPaletteWindow did not have a palette with name " << paletteId << "(in paletteDropdown).");
         return;
     }
 
-    std::string stdName = paletteName.toStdString();
+    std::string stdId = paletteId.toStdString();
 
     auto found = std::find_if(
         itemPalettes.begin(),
         itemPalettes.end(),
-        [&stdName](ItemPalette *p) { return p->name() == stdName; });
+        [&stdId](ItemPalette *p) { return p->id() == stdId; });
 
     if (found == itemPalettes.end())
     {
-        VME_LOG_ERROR("ItemPaletteWindow did not have a palette with name " << paletteName << "(in itemPalettes).");
+        VME_LOG_ERROR("ItemPaletteWindow did not have a palette with name " << paletteId << "(in itemPalettes).");
         return;
     }
 
@@ -92,10 +92,10 @@ void ItemPaletteWindow::selectPalette(const QString &paletteName)
 
 void ItemPaletteWindow::selectPalette(ItemPalette *itemPalette, Tileset *tileset)
 {
-    int dropdownIndex = paletteDropdown->findText(QString::fromStdString(itemPalette->name()));
+    int dropdownIndex = paletteDropdown->findData(QString::fromStdString(itemPalette->id()));
     if (dropdownIndex == -1)
     {
-        VME_LOG_ERROR("ItemPaletteWindow did not have a palette with name " << itemPalette->name() << "(in paletteDropdown).");
+        VME_LOG_ERROR("ItemPaletteWindow did not have a palette with id " << itemPalette->id() << "(in paletteDropdown).");
         return;
     }
 
@@ -106,7 +106,7 @@ void ItemPaletteWindow::selectPalette(ItemPalette *itemPalette, Tileset *tileset
 
     if (found == itemPalettes.end())
     {
-        VME_LOG_ERROR("ItemPaletteWindow did not have a palette with name " << itemPalette->name() << "(in itemPalettes).");
+        VME_LOG_ERROR("ItemPaletteWindow did not have a palette with id " << itemPalette->id() << "(in itemPalettes).");
         return;
     }
 
@@ -219,7 +219,7 @@ PaletteWidget::PaletteWidget(QWidget *parent)
     layout->addWidget(_tilesetListView);
 
     connect(_tilesetDropdown, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int index) {
-        selectTileset(_tilesetDropdown->currentText());
+        selectTileset(_tilesetDropdown->currentData().toString());
     });
 }
 
@@ -293,7 +293,7 @@ void PaletteWidget::setPalette(ItemPalette *palette, Tileset *tileset)
         {
             _tilesetListView->setTileset(tileset);
 
-            int index = _tilesetDropdown->findText(QString::fromStdString(tileset->name()));
+            int index = _tilesetDropdown->findData(QString::fromStdString(tileset->id()));
             DEBUG_ASSERT(index != -1, "The tileset was not present in the dropdown.");
             _tilesetDropdown->setCurrentIndex(index);
         }
@@ -312,7 +312,7 @@ void PaletteWidget::setPalette(ItemPalette *palette, Tileset *tileset)
         {
             for (const auto &tileset : palette->tilesets())
             {
-                _tilesetDropdown->addItem(QString::fromStdString(tileset->name()));
+                _tilesetDropdown->addItem(QString::fromStdString(tileset->name()), QString::fromStdString(tileset->id()));
             }
             if (tileset == nullptr)
             {
@@ -323,7 +323,7 @@ void PaletteWidget::setPalette(ItemPalette *palette, Tileset *tileset)
             {
                 _tilesetListView->setTileset(tileset);
 
-                int index = _tilesetDropdown->findText(QString::fromStdString(tileset->name()));
+                int index = _tilesetDropdown->findData(QString::fromStdString(tileset->id()));
                 DEBUG_ASSERT(index != -1, "The tileset was not present in the dropdown.");
                 _tilesetDropdown->setCurrentIndex(index);
             }

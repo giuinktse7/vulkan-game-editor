@@ -53,6 +53,11 @@ const std::string &ItemPalette::name() const noexcept
     return _name;
 }
 
+const std::string &ItemPalette::id() const noexcept
+{
+    return _id;
+}
+
 Tileset *ItemPalette::getTileset(const std::string &id)
 {
     auto found = tilesetIndexMap.find(id);

@@ -10,11 +10,6 @@
 #include "mainwindow.h"
 #include "qt_util.h"
 
-namespace ObjectName
-{
-    constexpr auto SearchTextfield = "search_textfield";
-} // namespace ObjectName
-
 SearchPopupView::SearchPopupView(QUrl filepath, MainWindow *mainWindow)
     : _filepath(filepath), mainWindow(mainWindow), _wrapperWidget(nullptr)
 {
@@ -69,7 +64,7 @@ void SearchPopupView::closeEvent()
 
 void SearchPopupView::hideEvent(QHideEvent *e)
 {
-    // child(ObjectName::SearchTextfield)->setProperty("text", "");
+    QMetaObject::invokeMethod(rootObject(), "resetSearchText");
     QQuickView::hideEvent(e);
 }
 
@@ -123,6 +118,12 @@ void SearchPopupView::searchEvent(QString searchTerm)
 void SearchPopupView::setHeight(int height)
 {
     _wrapperWidget->setFixedHeight(height);
+}
+
+void SearchPopupView::brushSelected(int index)
+{
+    mainWindow->selectBrush(searchResultModel.brushAtIndex(index));
+    emit requestClose();
 }
 
 inline QObject *SearchPopupView::child(const char *name)
