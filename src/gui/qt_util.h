@@ -14,6 +14,7 @@
 
 #include "../editor_action.h"
 
+#include "../creature.h"
 #include "../position.h"
 #include "../qt/enum_conversion.h"
 #include "../util.h"
@@ -158,11 +159,17 @@ namespace QtUtil
 
     QPixmap itemPixmap(uint32_t serverId, uint8_t subtype = 0);
     QPixmap itemPixmap(const Position &pos, const Item &item);
-    QPixmap itemPixmap(const TextureInfo &info);
 
+    QPixmap creaturePixmap(uint32_t looktype, CreatureDirection direction);
+
+    QPixmap thingPixmap(const TextureInfo &info);
+
+    ItemImageData itemImageData(Brush *brush);
     ItemImageData itemImageData(uint32_t serverId, uint8_t subtype = 0);
     ItemImageData itemImageData(const TextureInfo &info);
     MainApplication *qtApp();
+
+    QString resourcePath(Brush *brush);
 
     class EventFilter : public QObject
     {
@@ -180,6 +187,15 @@ class ItemTypeImageProvider : public QQuickImageProvider
 {
   public:
     ItemTypeImageProvider()
+        : QQuickImageProvider(QQuickImageProvider::Pixmap) {}
+
+    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override;
+};
+
+class CreatureImageProvider : public QQuickImageProvider
+{
+  public:
+    CreatureImageProvider()
         : QQuickImageProvider(QQuickImageProvider::Pixmap) {}
 
     QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override;

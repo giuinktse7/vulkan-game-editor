@@ -46,7 +46,7 @@ Creature Creature::deepCopy() const
     return newCreature;
 }
 
-void Creature::setDirection(Creature::Direction direction)
+void Creature::setDirection(CreatureDirection direction)
 {
     _direction = direction;
 }

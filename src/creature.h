@@ -11,6 +11,14 @@ namespace tibia::protobuf::appearances
     class Appearance;
 }
 
+enum class CreatureDirection : uint8_t
+{
+    North = 0,
+    East = 1,
+    South = 2,
+    West = 3
+};
+
 class CreatureType
 {
   public:
@@ -19,6 +27,7 @@ class CreatureType
     void cacheTextureAtlases();
 
     inline uint32_t id() const noexcept;
+    inline uint32_t looktype() const noexcept;
 
     const FrameGroup &frameGroup(size_t index) const;
     const std::vector<FrameGroup> &frameGroups() const noexcept;
@@ -55,14 +64,6 @@ class Creatures
 class Creature
 {
   public:
-    enum class Direction : uint8_t
-    {
-        North = 0,
-        East = 1,
-        South = 2,
-        West = 3
-    };
-
     Creature(const CreatureType &creatureType);
 
     Creature(Creature &&other) noexcept;
@@ -73,7 +74,7 @@ class Creature
 
     Creature deepCopy() const;
 
-    void setDirection(Direction direction);
+    void setDirection(CreatureDirection direction);
 
     const TextureInfo getTextureInfo() const;
 
@@ -82,10 +83,15 @@ class Creature
     bool selected = false;
 
   private:
-    Direction _direction = Direction::North;
+    CreatureDirection _direction = CreatureDirection::North;
 };
 
 inline uint32_t CreatureType::id() const noexcept
+{
+    return _id;
+}
+
+inline uint32_t CreatureType::looktype() const noexcept
 {
     return _id;
 }

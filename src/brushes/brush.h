@@ -3,9 +3,12 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
+#include "../creature.h"
 #include "../debug.h"
+#include "../graphics/texture_atlas.h"
 #include "../position.h"
 #include "../util.h"
 
@@ -13,10 +16,12 @@ struct Position;
 class Tileset;
 class MapView;
 class GroundBrush;
+class ItemType;
 class Brush;
 
 enum class BrushType
 {
+    Creature,
     Doodad,
     Ground,
     Raw,
@@ -29,6 +34,7 @@ struct BrushSearchResult
     int rawCount = 0;
     int groundCount = 0;
     int doodadCount = 0;
+    int creatureCount = 0;
 };
 
 inline std::optional<BrushType> parseBrushType(const std::string &rawType)
@@ -45,6 +51,10 @@ inline std::optional<BrushType> parseBrushType(const std::string &rawType)
     {
         return BrushType::Doodad;
     }
+    else if (rawType == "creature")
+    {
+        return BrushType::Creature;
+    }
     else
     {
         return std::nullopt;
@@ -55,6 +65,7 @@ struct WeightedItemId
 {
     WeightedItemId(uint32_t id, uint32_t weight)
         : id(id), weight(weight) {}
+
     uint32_t id;
     uint32_t weight;
 };
@@ -68,6 +79,43 @@ struct ItemPreviewInfo
     Position relativePosition;
 };
 
+enum class BrushResourceType
+{
+    ItemType,
+    Creature
+};
+
+struct BrushResource
+{
+    BrushResourceType type;
+    uint32_t id;
+
+    // Could be for example creature direction or item subtype
+    uint8_t variant = 0;
+};
+
+struct DrawItemType
+{
+    DrawItemType(uint32_t serverId, Position relativePosition);
+    DrawItemType(ItemType *itemType, Position relativePosition);
+
+    ItemType *itemType;
+    Position relativePosition;
+    uint8_t subtype;
+};
+
+struct DrawCreatureType
+{
+    DrawCreatureType(const CreatureType *creatureType, Position relativePosition)
+        : creatureType(creatureType), relativePosition(relativePosition) {}
+
+    const CreatureType *creatureType;
+    Position relativePosition;
+    CreatureDirection direction;
+};
+
+using ThingDrawInfo = std::variant<DrawItemType, DrawCreatureType>;
+
 class Brush
 {
   public:
@@ -77,15 +125,18 @@ class Brush
 
     virtual void apply(MapView &mapView, const Position &position) = 0;
 
-    virtual uint32_t iconServerId() const = 0;
+    virtual BrushResource brushResource() const = 0;
+
+    virtual const std::string getDisplayId() const = 0;
 
     const std::string &name() const noexcept;
 
     static BrushSearchResult search(std::string searchString);
 
+    virtual std::vector<ThingDrawInfo> getPreviewTextureInfo() const = 0;
+
     virtual bool erasesItem(uint32_t serverId) const = 0;
     virtual BrushType type() const = 0;
-    virtual std::vector<ItemPreviewInfo> previewInfo() const = 0;
 
     static Brush *getOrCreateRawBrush(uint32_t serverId);
 

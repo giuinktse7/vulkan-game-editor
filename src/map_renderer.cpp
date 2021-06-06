@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <variant>
 
+#include "../vendor/rollbear-visit/visit.hpp"
 #include "brushes/brush.h"
 #include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
@@ -331,17 +332,21 @@ void MapRenderer::drawCurrentAction()
                     {
                         if (action.brush->type() == BrushType::Raw || action.brush->type() == BrushType::Ground)
                         {
-                            uint32_t serverId = action.brush->iconServerId();
                             auto [from, to] = mapView->getDragPoints().value();
                             int floor = mapView->floor();
                             auto area = MapArea(from.toPos(floor), to.toPos(floor));
 
+                            std::vector<ThingDrawInfo> previews;
+
                             for (auto &pos : area)
-                                drawPreviewItem(serverId, pos);
+                            {
+                                previews.push_back(action.brush->getPreviewTextureInfo().at(0));
+                                drawPreview(action.brush->getPreviewTextureInfo().at(0), pos);
+                            }
                         }
                         else
                         {
-                            // TODO
+                            // TODO Area drag with other brush
                             NOT_IMPLEMENTED_ABORT();
                         }
                     }
@@ -368,6 +373,61 @@ void MapRenderer::drawCurrentAction()
 
             [](const auto &arg) {}},
         _currentFrame->mouseAction);
+}
+
+bool MapRenderer::insideMap(const Position &position)
+{
+    return !(position.x < 0 || position.x > mapView->mapWidth() || position.y < 0 || position.y > mapView->mapHeight());
+}
+
+void MapRenderer::drawPreview(ThingDrawInfo drawInfo, const Position &position)
+{
+    rollbear::visit(
+        util::overloaded{
+            [this, position](const DrawItemType &draw) {
+                auto drawPos = position + draw.relativePosition;
+
+                if (!insideMap(drawPos))
+                {
+                    return;
+                }
+
+                ItemTypeDrawInfo info{};
+                info.color = colors::ItemPreview;
+                info.itemType = draw.itemType;
+                info.worldPos = drawPos.worldPos();
+                info.spriteId = draw.itemType->getSpriteId(drawPos);
+
+                if (!draw.itemType->isGround())
+                {
+                    const Tile *tile = mapView->getTile(drawPos);
+                    int elevation = tile ? tile->getTopElevation() : 0;
+                    info.worldPosOffset = {-elevation, -elevation};
+                }
+
+                this->drawItemType(info);
+            },
+            [this, position](const DrawCreatureType &draw) {
+                auto drawPos = position + draw.relativePosition;
+
+                if (!insideMap(drawPos))
+                {
+                    return;
+                }
+
+                DrawInfo::Creature info;
+                info.color = colors::ItemPreview;
+                info.textureInfo = draw.creatureType->getTextureInfo(0, draw.direction);
+                info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+                info.position = drawPos;
+                info.width = info.textureInfo.atlas->spriteWidth;
+                info.height = info.textureInfo.atlas->spriteHeight;
+            },
+
+            [](const auto &arg) {
+                ABORT_PROGRAM("Unknown ThingDrawInfo.");
+            }},
+        drawInfo);
 }
 
 void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
@@ -551,27 +611,49 @@ void MapRenderer::issueDraw(const DrawInfo::Base &info, const WorldPosition &wor
 
 void MapRenderer::drawBrushPreview(Brush *brush, const Position &position)
 {
-    for (const auto preview : brush->previewInfo())
-        drawPreviewItem(preview.serverId, position + preview.relativePosition);
+    for (const auto preview : brush->getPreviewTextureInfo())
+        drawPreview(preview, position);
 }
 
 void MapRenderer::drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos)
 {
-    for (const auto preview : brush->previewInfo())
+    for (const auto &drawInfo : brush->getPreviewTextureInfo())
     {
-        ItemTypeDrawInfo info{};
-        info.color = colors::ItemPreview;
-        info.itemType = Items::items.getItemTypeByServerId(preview.serverId);
-        info.spriteId = info.itemType->appearance->getFirstSpriteId();
+        rollbear::visit(
+            util::overloaded{
+                [this, worldPos](const DrawItemType &draw) {
+                    ItemTypeDrawInfo info{};
+                    info.color = colors::ItemPreview;
+                    info.itemType = draw.itemType;
+                    info.spriteId = draw.itemType->appearance->getFirstSpriteId();
 
-        Position pos = preview.relativePosition;
-        // Position::worldPos() skews x and y depending on z. Since the preview is z-irrelevant, we need to add
-        // GROUND_FLOOR to get to the baseline position.
-        pos.z += GROUND_FLOOR;
+                    Position pos = draw.relativePosition;
+                    // Position::worldPos() skews x and y depending on z. Since the preview is z-irrelevant, we need to add
+                    // GROUND_FLOOR to get to the baseline position.
+                    pos.z += GROUND_FLOOR;
 
-        info.worldPos = worldPos + pos.worldPos();
+                    info.worldPos = worldPos + pos.worldPos();
 
-        drawItemType(info);
+                    this->drawItemType(info);
+                },
+                [this, worldPos](const DrawCreatureType &draw) {
+                    DrawInfo::Creature info;
+                    info.color = colors::ItemPreview;
+                    info.textureInfo = draw.creatureType->getTextureInfo(0, draw.direction);
+                    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+
+                    info.width = info.textureInfo.atlas->spriteWidth;
+                    info.height = info.textureInfo.atlas->spriteHeight;
+
+                    auto adjustedWorldPos = worldPos + Position(info.textureInfo.atlas->drawOffset.x, info.textureInfo.atlas->drawOffset.y, GROUND_FLOOR).worldPos();
+
+                    issueDraw(info, adjustedWorldPos);
+                },
+
+                [](const auto &arg) {
+                    ABORT_PROGRAM("Unknown ThingDrawInfo.");
+                }},
+            drawInfo);
     }
 }
 
@@ -599,7 +681,6 @@ void MapRenderer::drawOverlayItemType(uint32_t serverId, const WorldPosition pos
 {
     ItemType &itemType = *Items::items.getItemTypeByServerId(serverId);
     DrawInfo::OverlayObject info;
-    info.appearance = itemType.appearance;
     info.position = position;
     info.color = color;
     info.textureInfo = itemType.getTextureInfo();
@@ -724,7 +805,7 @@ glm::vec4 MapRenderer::getItemTypeDrawColor(uint32_t drawFlags)
     return drawFlags & ItemDrawFlags::Ghost ? colors::ItemPreview : colors::Default;
 }
 
-glm::vec4 MapRenderer::getCreatureDrawColor(const Creature &creature, const Position &position, uint32_t drawFlags)
+glm::vec4 MapRenderer::getCreatureDrawColor(const Creature &creature, const Position &position, uint32_t drawFlags) const
 {
     bool drawAsSelected = creature.selected || ((drawFlags & ItemDrawFlags::ActiveSelectionArea) && mapView->inDragRegion(position));
     if (drawAsSelected)
@@ -755,7 +836,6 @@ void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderT
         case QuadrantRenderType::Full:
         {
             DrawInfo::Object info{};
-            info.appearance = itemType->appearance;
 
             info.color = drawInfo.color;
             info.textureInfo = itemType->getTextureInfo(drawInfo.spriteId);
@@ -770,7 +850,6 @@ void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderT
         case QuadrantRenderType::TopLeft:
         {
             DrawInfo::ObjectQuadrant info{};
-            info.appearance = itemType->appearance;
             info.color = drawInfo.color;
             info.textureInfo = itemType->getTextureInfoTopLeftQuadrant(drawInfo.spriteId);
             info.width = info.textureInfo.atlas->spriteWidth / 2;
@@ -785,7 +864,6 @@ void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderT
         case QuadrantRenderType::TopLeftBottomRight:
         {
             DrawInfo::ObjectQuadrant info{};
-            info.appearance = itemType->appearance;
             info.color = drawInfo.color;
 
             const auto [topLeftTextureInfo,
@@ -810,7 +888,6 @@ void MapRenderer::drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderT
         case QuadrantRenderType::TopRightBottomRightBottomLeft:
         {
             DrawInfo::ObjectQuadrant info{};
-            info.appearance = itemType->appearance;
             info.color = drawInfo.color;
 
             const auto [topRightTextureInfo,
@@ -864,7 +941,6 @@ void MapRenderer::drawItem(const ItemDrawInfo &itemDrawInfo)
 DrawInfo::Object MapRenderer::getItemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags)
 {
     DrawInfo::Object info;
-    info.appearance = item.itemType->appearance;
     info.position = position;
     info.color = getItemDrawColor(item, position, drawFlags);
     info.textureInfo = item.getTextureInfo(position);
@@ -875,7 +951,7 @@ DrawInfo::Object MapRenderer::getItemDrawInfo(const Item &item, const Position &
     return info;
 }
 
-DrawInfo::Creature MapRenderer::creatureDrawInfo(const Creature &creature, const Position &position, uint32_t drawFlags)
+DrawInfo::Creature MapRenderer::creatureDrawInfo(const Creature &creature, const Position &position, uint32_t drawFlags) const
 {
     DrawInfo::Creature info;
     info.color = getCreatureDrawColor(creature, position, drawFlags);
@@ -891,7 +967,6 @@ DrawInfo::Creature MapRenderer::creatureDrawInfo(const Creature &creature, const
 DrawInfo::Object MapRenderer::itemTypeDrawInfo(const ItemType &itemType, const Position &position, uint32_t drawFlags)
 {
     DrawInfo::Object info;
-    info.appearance = itemType.appearance;
     info.position = position;
     info.color = getItemTypeDrawColor(drawFlags);
     info.textureInfo = itemType.getTextureInfo(position);
@@ -902,7 +977,7 @@ DrawInfo::Object MapRenderer::itemTypeDrawInfo(const ItemType &itemType, const P
     return info;
 }
 
-VkDescriptorSet MapRenderer::objectDescriptorSet(TextureAtlas *atlas)
+VkDescriptorSet MapRenderer::objectDescriptorSet(TextureAtlas *atlas) const
 {
     VulkanTexture::Descriptor descriptor;
     descriptor.layout = textureDescriptorSetLayout;

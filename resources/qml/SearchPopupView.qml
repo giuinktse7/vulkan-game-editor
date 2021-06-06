@@ -279,9 +279,10 @@ Rectangle {
                     MouseArea {
                         id: brush
 
-                        required property string name
-                        required property int serverId
                         required property int index
+                        required property string displayId
+                        required property string name
+                        required property string resourceString
 
                         width: childrenRect.width;
                         height: childrenRect.height;
@@ -339,9 +340,7 @@ Rectangle {
 
                                 Image {
                                 anchors.centerIn: parent
-                                    source: {
-                                        return "image://itemTypes/" + brush.serverId;
-                                    }
+                                    source: brush.resourceString;
                                 }
                             }
 
@@ -356,10 +355,11 @@ Rectangle {
 
                                 Text {
                                     width: parent.width
-                                    text: brush.serverId
+                                    text: brush.displayId
+                                    visible: text != ""
                                     horizontalAlignment: Text.AlignHCenter;
-
                                 }
+                                
                                 Text {
                                     id: nameText
                                     width: parent.width

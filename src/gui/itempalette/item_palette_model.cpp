@@ -57,8 +57,7 @@ QVariant TilesetModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole)
     {
         Brush *brush = _tileset->get(index.row());
-        // return GuiImageCache::get(brush->iconServerId());
-        return QVariant::fromValue(QtUtil::itemImageData(brush->iconServerId()));
+        return QVariant::fromValue(QtUtil::itemImageData(brush));
     }
     else if (role == TilesetModel::HighlightRole)
     {
@@ -96,6 +95,7 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     // painter->drawPixmap(option.rect.x(), option.rect.y(), qvariant_cast<QPixmap>(index.data(Qt::DisplayRole)));
     if (imageData.rect.width() > 32 || imageData.rect.height() > 32)
     {
+        // painter->drawImage(option.rect.topLeft(), imageData.image->copy(imageData.rect).mirrored().scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         painter->drawImage(option.rect.topLeft(), imageData.image->copy(imageData.rect).mirrored().scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
     else

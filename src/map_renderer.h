@@ -23,10 +23,10 @@
 #include "editor_action.h"
 #include "util.h"
 
+#include "brushes/brush.h"
 #include "map.h"
 
 class MapView;
-class Brush;
 
 namespace colors
 {
@@ -53,26 +53,23 @@ namespace DrawInfo
     };
 
     /**
- * Describes an overlay object.
- * NOTE: Do not use this to draw a map item. For that, use ObjectDrawInfo;
- * it takes a Position instead of a WorldPosition.
-*/
+     * Describes an overlay object.
+     * NOTE: Do not use this to draw a map item. For that, use DrawInfo::Object;
+     * it takes a Position instead of a WorldPosition.
+    */
     struct OverlayObject : Base
     {
-        ObjectAppearance *appearance;
         WorldPosition position;
     };
 
     struct Object : Base
     {
-        ObjectAppearance *appearance;
         Position position;
         DrawOffset drawOffset = {0, 0};
     };
 
     struct ObjectQuadrant : Base
     {
-        ObjectAppearance *appearance;
         Position position;
         DrawOffset drawOffset = {0, 0};
     };
@@ -302,8 +299,8 @@ class MapRenderer
     VkDescriptorSetLayout textureDescriptorSetLayout = VK_NULL_HANDLE;
 
     // Vulkan texture resources
-    std::vector<uint32_t> activeTextureAtlasIds;
-    std::vector<VulkanTexture> vulkanTexturesForAppearances;
+    mutable std::vector<uint32_t> activeTextureAtlasIds;
+    mutable std::vector<VulkanTexture> vulkanTexturesForAppearances;
     /*
 		Resources for general textures such as solid color textures (non-sprites)
 
@@ -321,6 +318,8 @@ class MapRenderer
     void createDescriptorSets();
     void createIndexBuffer();
     void createVertexBuffer();
+
+    bool insideMap(const Position &position);
 
     void updateUniformBuffer();
 
@@ -340,13 +339,13 @@ class MapRenderer
 
     DrawInfo::Object getItemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags);
     DrawInfo::Object itemTypeDrawInfo(const ItemType &itemType, const Position &position, uint32_t drawFlags);
-    DrawInfo::Creature creatureDrawInfo(const Creature &creature, const Position &position, uint32_t drawFlags);
+    DrawInfo::Creature creatureDrawInfo(const Creature &creature, const Position &position, uint32_t drawFlags) const;
 
     glm::vec4 getItemDrawColor(const Item &item, const Position &position, uint32_t drawFlags);
-    glm::vec4 getCreatureDrawColor(const Creature &creature, const Position &position, uint32_t drawFlags);
+    glm::vec4 getCreatureDrawColor(const Creature &creature, const Position &position, uint32_t drawFlags) const;
     glm::vec4 getItemTypeDrawColor(uint32_t drawFlags);
 
-    VkDescriptorSet objectDescriptorSet(TextureAtlas *atlas);
+    VkDescriptorSet objectDescriptorSet(TextureAtlas *atlas) const;
 
     void issueDraw(const DrawInfo::Base &info, const WorldPosition &worldPos);
 
@@ -368,9 +367,6 @@ class MapRenderer
     void drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderType renderType);
     void drawItemType(const ItemTypeDrawInfo &drawInfo);
 
-    void drawBrushPreview(Brush *brush, const Position &position);
-    void drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos);
-
     void drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
 
     void drawCreature(const DrawInfo::Creature &info);
@@ -378,6 +374,10 @@ class MapRenderer
     void drawRectangle(DrawInfo::Rectangle &info);
 
     bool shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter = {}) const noexcept;
+
+    void drawBrushPreview(Brush *brush, const Position &position);
+    void drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos);
+    void drawPreview(ThingDrawInfo drawInfo, const Position &position);
 
     VkDescriptorSet currentDescriptorSet;
 

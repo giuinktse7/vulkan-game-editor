@@ -4,6 +4,7 @@
 #include <numeric>
 
 #include "../debug.h"
+#include "../items.h"
 #include "../map_view.h"
 #include "../position.h"
 #include "../random.h"
@@ -32,6 +33,11 @@ void GroundBrush::setIconServerId(uint32_t serverId)
     _iconServerId = serverId;
 }
 
+BrushResource GroundBrush::brushResource() const
+{
+    return _brushResource;
+}
+
 void GroundBrush::initialize()
 {
     // Sort by weights descending to optimize iteration in sampleServerId() for the most common cases.
@@ -45,6 +51,10 @@ void GroundBrush::initialize()
     }
 
     _nextId = sampleServerId();
+
+    _brushResource.id = _iconServerId;
+    _brushResource.type = BrushResourceType::ItemType;
+    _brushResource.variant = 0;
 }
 
 void GroundBrush::apply(MapView &mapView, const Position &position)
@@ -103,12 +113,17 @@ std::string GroundBrush::brushId() const noexcept
     return id;
 }
 
-std::vector<ItemPreviewInfo> GroundBrush::previewInfo() const
-{
-    return std::vector<ItemPreviewInfo>{{_nextId, PositionConstants::Zero}};
-}
-
 void GroundBrush::setName(std::string name)
 {
     _name = name;
+}
+
+std::vector<ThingDrawInfo> GroundBrush::getPreviewTextureInfo() const
+{
+    return std::vector<ThingDrawInfo>{DrawItemType(_nextId, PositionConstants::Zero)};
+}
+
+const std::string GroundBrush::getDisplayId() const
+{
+    return id;
 }

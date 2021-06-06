@@ -1,23 +1,24 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "brush.h"
 
 struct Position;
 class ItemType;
 class MapView;
+class CreatureType;
 
-class RawBrush final : public Brush
+class CreatureBrush final : public Brush
 {
   public:
-    RawBrush(ItemType *itemType);
+    CreatureBrush(std::string name, uint32_t looktype);
 
-    // Uses the item name as brush name
-    static RawBrush fromServerId(uint32_t serverId);
+    void apply(MapView &mapView, const Position &position) override;
 
     BrushResource brushResource() const override;
 
-    void apply(MapView &mapView, const Position &position) override;
-    uint32_t iconServerId() const;
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
 
@@ -25,12 +26,8 @@ class RawBrush final : public Brush
     uint32_t serverId() const noexcept;
 
     std::vector<ThingDrawInfo> getPreviewTextureInfo() const override;
-
     const std::string getDisplayId() const override;
 
   private:
-    ItemType *_itemType;
-
-    // Info that lets the GUI know how to draw the brush
-    BrushResource _brushResource;
+    const CreatureType *const creatureType;
 };

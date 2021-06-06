@@ -1,6 +1,13 @@
 #include "doodad_brush.h"
 
+#include <cctype>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <vector>
+
 #include "../debug.h"
+#include "../items.h"
 #include "../map_view.h"
 #include "../random.h"
 #include "../tile.h"
@@ -71,11 +78,10 @@ void DoodadBrush::initialize()
     }
 
     _nextGroup = alternatives.at(alternateIndex).sample(_name);
-}
 
-std::vector<ItemPreviewInfo> DoodadBrush::previewInfo() const
-{
-    return _nextGroup;
+    _brushResource.id = _iconServerId;
+    _brushResource.type = BrushResourceType::ItemType;
+    _brushResource.variant = 0;
 }
 
 std::vector<ItemPreviewInfo> DoodadBrush::sampleGroup()
@@ -175,4 +181,21 @@ std::vector<ItemPreviewInfo> DoodadAlternative::sample(const std::string &brushN
 uint32_t DoodadBrush::brushId() const noexcept
 {
     return id;
+}
+
+std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo() const
+{
+    std::vector<ThingDrawInfo> previewInfo;
+
+    std::ranges::transform(_nextGroup, std::back_inserter(previewInfo),
+                           [](const ItemPreviewInfo &info) -> ThingDrawInfo {
+                               return DrawItemType(info.serverId, info.relativePosition);
+                           });
+
+    return previewInfo;
+}
+
+const std::string DoodadBrush::getDisplayId() const
+{
+    return _name;
 }

@@ -27,10 +27,11 @@ class GroundBrush final : public Brush
     GroundBrush(std::string id, const std::string &name, std::vector<WeightedItemId> &&weightedIds, uint32_t iconServerId);
 
     void apply(MapView &mapView, const Position &position) override;
-    uint32_t iconServerId() const override;
+    uint32_t iconServerId() const;
+    BrushResource brushResource() const override;
+
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
-    std::vector<ItemPreviewInfo> previewInfo() const override;
 
     void setIconServerId(uint32_t serverId);
     void setName(std::string name);
@@ -38,6 +39,10 @@ class GroundBrush final : public Brush
     uint32_t nextServerId();
 
     std::string brushId() const noexcept;
+
+    std::vector<ThingDrawInfo> getPreviewTextureInfo() const override;
+
+    const std::string getDisplayId() const override;
 
   private:
     void initialize();
@@ -51,4 +56,7 @@ class GroundBrush final : public Brush
 
     uint32_t totalWeight = 0;
     uint32_t _nextId;
+
+    // Info that lets the GUI know how to draw the brush
+    BrushResource _brushResource;
 };

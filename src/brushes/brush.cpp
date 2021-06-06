@@ -1,5 +1,6 @@
 #include "brush.h"
 
+#include "../creature.h"
 #include "../items.h"
 #include "ground_brush.h"
 #include "raw_brush.h"
@@ -156,3 +157,9 @@ bool Brush::matchSorter(std::pair<int, Brush *> &lhs, const std::pair<int, Brush
     // Same brushes but not of type Raw, use match score
     return lhs.first < rhs.first;
 }
+
+DrawItemType::DrawItemType(uint32_t serverId, Position relativePosition)
+    : itemType(Items::items.getItemTypeByServerId(serverId)), relativePosition(relativePosition) {}
+
+DrawItemType::DrawItemType(ItemType *itemType, Position relativePosition)
+    : itemType(itemType), relativePosition(relativePosition) {}

@@ -17,6 +17,7 @@ class MainWindow;
 class Brush;
 class QHideEvent;
 class SearchResultModel;
+class ItemTypeImageProvider;
 
 class FilteredSearchModel : public QSortFilterProxyModel
 {
@@ -53,6 +54,7 @@ class FilteredSearchModel : public QSortFilterProxyModel
     std::function<bool(Brush *)> predicate = acceptAll;
 
     SearchResultModel *_searchModel = nullptr;
+    ItemTypeImageProvider *thingImageProvider;
 
     std::optional<BrushType> parseBrushType(QString raw);
 };
@@ -64,8 +66,10 @@ class SearchResultModel : public QAbstractListModel
   public:
     enum class Role
     {
-        ServerId = Qt::UserRole + 1,
-        Name = Qt::UserRole + 2,
+        VectorIndex = Qt::UserRole + 1,
+        DisplayId = Qt::UserRole + 2,
+        ResourceString = Qt::UserRole + 3,
+        Name = Qt::UserRole + 4,
     };
 
     SearchResultModel(QObject *parent = nullptr);
@@ -88,6 +92,8 @@ class SearchResultModel : public QAbstractListModel
 
   private:
     std::optional<BrushSearchResult> _searchResults;
+
+    ItemTypeImageProvider *thingImageProvider;
 };
 
 class SearchPopupView : public QQuickView
@@ -119,13 +125,14 @@ class SearchPopupView : public QQuickView
     MainWindow *mainWindow;
     QWidget *_wrapperWidget = nullptr;
 
+    ItemTypeImageProvider *thingImageProvider;
+
   protected:
     void hideEvent(QHideEvent *e) override;
 
   private:
     SearchResultModel searchResultModel;
     FilteredSearchModel filteredSearchModel;
-
     QObject *child(const char *name);
 };
 

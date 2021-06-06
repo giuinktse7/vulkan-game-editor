@@ -155,6 +155,7 @@ set(CommonSources
     src/brushes/raw_brush.h
     src/brushes/ground_brush.h
     src/brushes/doodad_brush.h
+    src/brushes/creature_brush.h
     src/brushes/brush_loader.h
     src/lua/lua_state.h
     src/lua/luascript_interface.h
@@ -225,6 +226,7 @@ set(CommonSources
     src/brushes/raw_brush.cpp
     src/brushes/ground_brush.cpp
     src/brushes/doodad_brush.cpp
+    src/brushes/creature_brush.cpp
     src/brushes/brush_loader.cpp
     src/lua/lua_state.cpp
     src/lua/luascript_interface.cpp

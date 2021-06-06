@@ -22,8 +22,8 @@ SearchPopupView::SearchPopupView(QUrl filepath, MainWindow *mainWindow)
     setInitialProperties(properties);
 
     qmlRegisterSingletonInstance("Vme.context", 1, 0, "C_SearchPopupView", this);
-
     engine()->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
+    engine()->addImageProvider(QLatin1String("creatureLooktypes"), new ItemTypeImageProvider);
 
     setSource(filepath);
     setResizeMode(ResizeMode::SizeRootObjectToView);
@@ -122,7 +122,10 @@ void SearchPopupView::setHeight(int height)
 
 void SearchPopupView::brushSelected(int index)
 {
-    mainWindow->selectBrush(searchResultModel.brushAtIndex(index));
+    auto modelIndex = filteredSearchModel.index(index, 0);
+    auto indexInUnFilteredList = filteredSearchModel.data(modelIndex, to_underlying(SearchResultModel::Role::VectorIndex)).toInt();
+
+    mainWindow->selectBrush(searchResultModel.brushAtIndex(indexInUnFilteredList));
     emit requestClose();
 }
 
@@ -152,7 +155,7 @@ void SearchPopupView::reloadSource()
 }
 
 SearchResultModel::SearchResultModel(QObject *parent)
-    : QAbstractListModel(parent) {}
+    : QAbstractListModel(parent), thingImageProvider(new ItemTypeImageProvider) {}
 
 int SearchResultModel::rowCount(const QModelIndex &parent) const
 {
@@ -186,18 +189,25 @@ QVariant SearchResultModel::data(const QModelIndex &index, int role) const
     if (index.row() < 0 || index.row() >= _searchResults->matches->size())
         return QVariant();
 
-    if (role == to_underlying(Role::ServerId))
-    {
-        Brush *brush = _searchResults->matches->at(index.row());
-        auto serverId = brush->iconServerId();
+    Brush *brush = _searchResults->matches->at(index.row());
 
-        return QVariant::fromValue(serverId);
+    if (role == to_underlying(Role::DisplayId))
+    {
+        auto displayId = brush->getDisplayId();
+
+        return QVariant::fromValue(displayId);
     }
     else if (role == to_underlying(Role::Name))
     {
-        Brush *brush = _searchResults->matches->at(index.row());
-
         return QString::fromStdString(brush->name());
+    }
+    else if (role == to_underlying(Role::VectorIndex))
+    {
+        return index.row();
+    }
+    else if (role == to_underlying(Role::ResourceString))
+    {
+        return QtUtil::resourcePath(brush);
     }
 
     return QVariant();
@@ -250,7 +260,9 @@ void FilteredSearchModel::resetFilter()
 QHash<int, QByteArray> SearchResultModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
-    roles[to_underlying(Role::ServerId)] = "serverId";
+    roles[to_underlying(Role::VectorIndex)] = "vectorIndex";
+    roles[to_underlying(Role::DisplayId)] = "displayId";
+    roles[to_underlying(Role::ResourceString)] = "resourceString";
     roles[to_underlying(Role::Name)] = "name";
 
     return roles;
