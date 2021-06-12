@@ -84,7 +84,7 @@ std::optional<Config::Error> Config::load()
     // g_ecs.registerComponent<ItemAnimationComponent>();
     // g_ecs.registerSystem<ItemAnimationSystem>();
 
-    Appearances::loadTextureAtlases(_dataFolder / CatalogContentFile, _assetFolder);
+    Appearances::loadTextureAtlases(_assetFolder / CatalogContentFile, _assetFolder);
     Appearances::loadAppearanceData(_dataFolder / AppearancesFile);
 
     Items::loadFromOtb(_dataFolder / "items.otb");

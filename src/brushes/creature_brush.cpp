@@ -1,6 +1,7 @@
 #include "creature_brush.h"
 
 #include "../creature.h"
+#include "../map_view.h"
 
 CreatureBrush::CreatureBrush(std::string name, uint32_t looktype)
     : Brush(name), creatureType(Creatures::creatureType(looktype))
@@ -19,7 +20,7 @@ bool CreatureBrush::erasesItem(uint32_t serverId) const
 
 void CreatureBrush::apply(MapView &mapView, const Position &position)
 {
-    // TODO
+    mapView.addCreature(position, Creature(name(), *creatureType));
 }
 
 BrushResource CreatureBrush::brushResource() const

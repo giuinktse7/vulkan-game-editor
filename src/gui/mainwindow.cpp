@@ -37,6 +37,8 @@
 #include "split_widget.h"
 #include "vulkan_window.h"
 
+#include "../brushes/creature_brush.h"
+
 MainLayout::MainLayout(QWidget *mainWidget)
     : mainWidget(mainWidget)
 {
@@ -236,8 +238,17 @@ void MainWindow::mapViewMousePosEvent(MapView &mapView, util::Point<float> mouse
     }
     else if (tile->hasCreature())
     {
-        auto id = std::to_string(tile->creature()->creatureType.id());
-        topItemInfo->setText("Creature looktype: " + QString::fromStdString(id));
+        auto creature = tile->creature();
+        if (creature->hasName())
+        {
+            auto description = std::format("Monster \"{}\"", creature->name());
+            topItemInfo->setText(QString::fromStdString(description));
+        }
+        else
+        {
+            auto id = std::to_string(creature->creatureType.id());
+            topItemInfo->setText("Creature looktype: " + QString::fromStdString(id));
+        }
     }
     else if (tile->hasTopItem())
     {
@@ -482,6 +493,7 @@ void MainWindow::initializePaletteWindow()
         auto &lightSourceTileset = rawPalette.addTileset(Tileset("light_source", "Light source"));
         auto &interiorTileset = rawPalette.addTileset(Tileset("interior_wrap_unwrap", "Interior / Wrap / Unwrap"));
         auto &otherTileset = rawPalette.addTileset(Tileset("other", "Other"));
+        auto &allTileset = rawPalette.addTileset(Tileset("all", "All"));
 
         int from = 100;
         int to = 40000;
@@ -502,7 +514,10 @@ void MainWindow::initializePaletteWindow()
                 // Skip corpses
                 continue;
             }
-            else if (itemType->hasFlag(AppearanceFlag::Bottom))
+
+            allTileset.addRawBrush(i);
+
+            if (itemType->hasFlag(AppearanceFlag::Bottom))
             {
                 bottomTileset.addRawBrush(i);
             }
@@ -580,6 +595,35 @@ void MainWindow::initializePaletteWindow()
         {
             groundTileset.addBrush(driedGrassBrush);
         }
+
+        auto rockSoilBrush = Brush::getGroundBrush("rock_soil");
+        if (rockSoilBrush)
+        {
+            groundTileset.addBrush(rockSoilBrush);
+        }
+    }
+
+    // Creature palette
+    {
+        ItemPalette &creaturePalette = *ItemPalettes::getById("creature");
+
+        auto &goblinTileset = creaturePalette.addTileset(Tileset("goblin", "Goblins"));
+
+        // for (int i = 0; i < 1400; ++i)
+        // {
+        //     auto creatureType = Creatures::creatureType(i);
+        //     if (creatureType)
+        //     {
+        //         goblinTileset.addBrush(new CreatureBrush(std::to_string(i), i));
+        //     }
+        // }
+
+        goblinTileset.addBrush(new CreatureBrush("Rat", 21));
+        goblinTileset.addBrush(new CreatureBrush("Bear", 16));
+        goblinTileset.addBrush(new CreatureBrush("Cyclops", 22));
+        goblinTileset.addBrush(new CreatureBrush("Goblin", 61));
+        goblinTileset.addBrush(new CreatureBrush("Goblin Scavenger", 297));
+        goblinTileset.addBrush(new CreatureBrush("Goblin Assassin", 296));
     }
 
     for (auto &[k, palette] : ItemPalettes::itemPalettes())

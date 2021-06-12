@@ -106,8 +106,8 @@ struct DrawItemType
 
 struct DrawCreatureType
 {
-    DrawCreatureType(const CreatureType *creatureType, Position relativePosition)
-        : creatureType(creatureType), relativePosition(relativePosition) {}
+    DrawCreatureType(const CreatureType *creatureType, Position relativePosition, CreatureDirection direction = CreatureDirection::South)
+        : creatureType(creatureType), relativePosition(relativePosition), direction(direction) {}
 
     const CreatureType *creatureType;
     Position relativePosition;

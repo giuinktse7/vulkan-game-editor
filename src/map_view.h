@@ -141,6 +141,8 @@ class MapView : public Nano::Observer<>
     void addItem(const Position &position, uint16_t id);
     void addItem(const Position &pos, Item &&item);
 
+    void addCreature(const Position &pos, Creature &&creature);
+
     /* Note: The indices must be in descending order (std::greater), because
 		otherwise the wrong items could be removed.
 	*/

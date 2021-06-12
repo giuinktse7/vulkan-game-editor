@@ -948,6 +948,41 @@ namespace MapHistory
         std::visit([this](ItemMutation::BaseMutation &itemMutation) { itemMutation.undo(this->item); }, mutation);
     }
 
+    SetCreature::SetCreature(Position position, std::unique_ptr<Creature> &&creature)
+        : position(position), creature(std::move(creature)) {}
+
+    SetCreature::SetCreature(Position position, Creature &&creature)
+        : position(position), creature(std::make_unique<Creature>(std::move(creature))) {}
+
+    SetCreature SetCreature::noCreature(Position position)
+    {
+        return SetCreature(position, {});
+    }
+
+    void SetCreature::commit(MapView &mapView)
+    {
+        auto tile = mapView.getTile(position);
+        if (!tile)
+        {
+            VME_LOG_ERROR("SetCreature::commit: No tile.");
+            return;
+        }
+
+        tile->swapCreature(creature);
+    }
+
+    void SetCreature::undo(MapView &mapView)
+    {
+        auto tile = mapView.getTile(position);
+        if (!tile)
+        {
+            VME_LOG_ERROR("SetCreature::undo: No tile.");
+            return;
+        }
+
+        tile->swapCreature(creature);
+    }
+
     void Action::markAsCommitted()
     {
         committed = true;

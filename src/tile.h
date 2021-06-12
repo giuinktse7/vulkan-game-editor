@@ -119,6 +119,7 @@ class Tile
     void setLocation(TileLocation &location);
     void setCreature(Creature &&creature);
     void setCreature(std::unique_ptr<Creature> &&creature);
+    void swapCreature(std::unique_ptr<Creature> &creature);
     std::unique_ptr<Creature> dropCreature();
     inline Creature *creature() const noexcept;
     inline bool hasCreature() const noexcept;

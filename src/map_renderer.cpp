@@ -422,6 +422,8 @@ void MapRenderer::drawPreview(ThingDrawInfo drawInfo, const Position &position)
                 info.position = drawPos;
                 info.width = info.textureInfo.atlas->spriteWidth;
                 info.height = info.textureInfo.atlas->spriteHeight;
+
+                this->drawCreature(info);
             },
 
             [](const auto &arg) {

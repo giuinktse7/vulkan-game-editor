@@ -4,9 +4,11 @@
 #include <optional>
 #include <variant>
 
+#include "../creature.h"
 #include "../item_location.h"
 #include "../tile.h"
 #include "item_mutation.h"
+
 
 class MapView;
 class Map;
@@ -285,6 +287,22 @@ namespace MapHistory
         UndoData undoData;
     };
 
+    class SetCreature : public ChangeItem
+    {
+      public:
+        SetCreature(Position position, std::unique_ptr<Creature> &&creature);
+        SetCreature(Position position, Creature &&creature);
+
+        static SetCreature noCreature(Position position);
+
+        void commit(MapView &mapView) override;
+        void undo(MapView &mapView) override;
+
+      private:
+        Position position;
+        std::unique_ptr<Creature> creature;
+    };
+
     class MultiMove : public ChangeItem
     {
       public:
@@ -389,6 +407,7 @@ namespace MapHistory
             MoveFromContainerToContainer,
             ModifyItem,
             ModifyItem_v2,
+            SetCreature,
             std::unique_ptr<ChangeItem>>;
 
         Change(DataTypes data = {})

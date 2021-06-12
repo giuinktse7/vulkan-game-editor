@@ -21,15 +21,15 @@ const FrameGroup &CreatureType::frameGroup(size_t index) const
 }
 
 Creature::Creature(const CreatureType &creatureType)
-    : creatureType(creatureType)
-{
-}
+    : creatureType(creatureType), _name("") {}
+
+Creature::Creature(std::string name, const CreatureType &creatureType)
+    : creatureType(creatureType), _name(name) {}
 
 Creature::Creature(Creature &&other) noexcept
     : creatureType(other.creatureType),
-      _direction(other._direction)
-{
-}
+      _direction(other._direction),
+      _name(std::move(other._name)) {}
 
 std::optional<Creature> Creature::fromOutfitId(uint32_t outfitId)
 {
@@ -42,6 +42,7 @@ Creature Creature::deepCopy() const
     Creature newCreature(creatureType);
     newCreature.selected = selected;
     newCreature._direction = _direction;
+    newCreature._name = _name;
 
     return newCreature;
 }
@@ -51,18 +52,95 @@ void Creature::setDirection(CreatureDirection direction)
     _direction = direction;
 }
 
+bool Creature::hasName() const noexcept
+{
+    return _name != "";
+}
+
+std::string Creature::name() const noexcept
+{
+    return _name;
+}
+
 const TextureInfo Creature::getTextureInfo() const
 {
-    auto &frameGroup = creatureType.frameGroup(0);
+    return creatureType.getTextureInfo(0, _direction);
+}
 
-    uint32_t spriteIndex = std::min<uint32_t>(to_underlying(_direction), static_cast<uint32_t>(frameGroup.spriteInfo.spriteIds.size()) - 1);
-    auto spriteId = frameGroup.spriteInfo.spriteIds.at(spriteIndex);
+const TextureInfo CreatureType::getTextureInfo() const
+{
+    return getTextureInfo(0, CreatureDirection::South);
+}
 
-    TextureAtlas *atlas = creatureType.getTextureAtlas(spriteId);
+const TextureInfo CreatureType::getTextureInfo(uint32_t frameGroupId, CreatureDirection direction) const
+{
+    return getTextureInfo(frameGroupId, direction, TextureInfo::CoordinateType::Normalized);
+}
+
+const TextureInfo CreatureType::getTextureInfo(uint32_t frameGroupId, CreatureDirection direction, TextureInfo::CoordinateType coordinateType) const
+{
+
+    auto &fg = this->frameGroup(frameGroupId);
+
+    uint32_t spriteIndex = std::min<uint32_t>(to_underlying(direction), static_cast<uint32_t>(fg.spriteInfo.spriteIds.size()) - 1);
+    auto spriteId = fg.spriteInfo.spriteIds.at(spriteIndex);
+
+    TextureAtlas *atlas = getTextureAtlas(spriteId);
 
     TextureInfo info;
     info.atlas = atlas;
-    info.window = atlas->getTextureWindow(spriteId);
+    info.window = atlas->getTextureWindow(spriteId, coordinateType);
+
+    if (coordinateType == TextureInfo::CoordinateType::Unnormalized)
+    {
+        if (!nonMovingCreatureRenderType.has_value())
+        {
+            cacheNonMovingRenderSizes();
+        }
+
+        switch (*nonMovingCreatureRenderType)
+        {
+            case NonMovingCreatureRenderType::Full:
+                break;
+            case NonMovingCreatureRenderType::Half:
+                // switch (direction)
+                // {
+                //     case CreatureDirection::North:
+                //     case CreatureDirection::South:
+                //     {
+                //         auto width = info.window.x1;
+                //         info.window.x0 += width / 2;
+
+                //         // Width in unnormalized case
+                //         info.window.x1 /= 2;
+                //     }
+                //     break;
+                //     case CreatureDirection::East:
+                //     case CreatureDirection::West:
+                //     {
+                //         auto height = info.window.y1;
+                //         info.window.y0 += height / 2;
+
+                //         // Width in unnormalized case
+                //         info.window.y1 /= 2;
+                //     }
+                //     break;
+                // }
+                break;
+            case NonMovingCreatureRenderType::SingleQuadrant:
+            {
+                auto width = info.window.x1;
+                auto height = info.window.y1;
+
+                info.window.x0 += width / 2;
+                // info.window.y0 += height / 2;
+
+                info.window.x1 /= 2;
+                info.window.y1 /= 2;
+                break;
+            }
+        }
+    }
 
     return info;
 }
@@ -133,4 +211,94 @@ void CreatureType::cacheTextureAtlas(uint32_t spriteId)
 const std::vector<FrameGroup> &CreatureType::frameGroups() const noexcept
 {
     return _frameGroups;
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>Code for helping with drawing creatures in proper sizes within the UI>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+void CreatureType::cacheNonMovingRenderSizes() const
+{
+    nonMovingCreatureRenderType = checkTransparency();
+}
+
+Pixel getPixel(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels)
+{
+    int i = (atlasWidth - y) * (atlasWidth * 4) + x * 4;
+
+    Pixel pixel{};
+    pixel.r = pixels.at(i);
+    pixel.g = pixels.at(i + 1);
+    pixel.b = pixels.at(i + 2);
+    pixel.a = pixels.at(i + 3);
+
+    return pixel;
+}
+
+bool isMagenta(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels)
+{
+    int i = (atlasWidth - y - 1) * (atlasWidth * 4) + x * 4;
+    uint8_t r = pixels.at(i);
+    uint8_t g = pixels.at(i + 1);
+    uint8_t b = pixels.at(i + 2);
+
+    return r == 255 && g == 0 && b == 255;
+}
+
+bool transparentRegion(int fromX, int fromY, int width, int height, int atlasWidth, const std::vector<uint8_t> &pixels)
+{
+    for (int y = fromY; y < fromY + height; ++y)
+    {
+        for (int x = fromX; x < fromX + width; ++x)
+        {
+            if (!isMagenta(x, y, atlasWidth, pixels))
+            {
+                // VME_LOG_D(std::format("Fail at: {}, {}", x, y));
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+CreatureType::NonMovingCreatureRenderType CreatureType::checkTransparency() const
+{
+    auto &fg = this->frameGroup(0);
+
+    if (fg.spriteInfo.spriteIds.size() <= to_underlying(CreatureDirection::North))
+    {
+        return NonMovingCreatureRenderType::Full;
+    }
+
+    auto spriteId = fg.spriteInfo.spriteIds.at(to_underlying(CreatureDirection::North));
+    TextureAtlas *atlas = getTextureAtlas(spriteId);
+
+    const auto &pixels = atlas->getOrCreateTexture().pixels();
+
+    int spriteIndex = spriteId - atlas->firstSpriteId;
+
+    auto topLeftX = atlas->spriteWidth * (spriteIndex % atlas->columns);
+    auto topLeftY = atlas->spriteHeight * (spriteIndex / atlas->rows);
+
+    int quadWidth = atlas->spriteWidth / 2;
+    int quadHeight = atlas->spriteHeight / 2;
+
+    // Top-left
+    if (!transparentRegion(topLeftX, topLeftY, quadWidth, quadHeight, atlas->width, pixels))
+    {
+        return NonMovingCreatureRenderType::Full;
+    }
+
+    // Top-right
+    if (!transparentRegion(topLeftX + quadWidth, topLeftY, quadWidth, quadHeight, atlas->width, pixels))
+    {
+        return NonMovingCreatureRenderType::Half;
+    }
+
+    return NonMovingCreatureRenderType::SingleQuadrant;
 }

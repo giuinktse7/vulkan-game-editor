@@ -262,6 +262,17 @@ void MapView::removeItems(const Tile &tile, std::function<bool(const Item &)> pr
     }
 }
 
+void MapView::addCreature(const Position &pos, Creature &&creature)
+{
+    auto tile = getTile(pos);
+    if (!tile || (tile->hasCreature() && &tile->creature()->creatureType == &creature.creatureType))
+    {
+        return;
+    }
+
+    history.commit(ActionType::ModifyTile, SetCreature(pos, std::move(creature)));
+}
+
 void MapView::insertTile(Tile &&tile)
 {
     history.commit(ActionType::SetTile, SetTile(std::move(tile)));

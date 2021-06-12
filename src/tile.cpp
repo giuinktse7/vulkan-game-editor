@@ -615,3 +615,8 @@ void Tile::movedInMap()
         Items::items.itemAddressChanged(item.get());
     }
 }
+
+void Tile::swapCreature(std::unique_ptr<Creature> &creature)
+{
+    _creature.swap(creature);
+}
