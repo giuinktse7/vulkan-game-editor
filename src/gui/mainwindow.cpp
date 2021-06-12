@@ -675,7 +675,7 @@ QMenuBar *MainWindow::createMenuBar()
 
         editMenu->addSeparator();
 
-        auto jumpToBrush = new MenuAction(tr("Jump to brush..."), Qt::CTRL | Qt::Key_P, this);
+        auto jumpToBrush = new MenuAction(tr("Jump to brush..."), Qt::Key_J, this);
         connect(jumpToBrush, &QWidgetAction::triggered, [this] {
             auto mainLayout = static_cast<MainLayout *>(layout());
             setSearchVisible(!mainLayout->isSearchVisible());
