@@ -54,7 +54,8 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
     TimePoint startOutfits;
     for (int i = 0; i < parsed.outfit_size(); ++i)
     {
-        Creatures::addCreatureType(parseCreatureType(parsed.outfit(i)));
+        auto creatureType = parseCreatureType(parsed.outfit(i));
+        Creatures::addCreatureType(std::move(creatureType));
     }
     auto outfitsMs = startOutfits.elapsedMillis();
 

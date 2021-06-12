@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     // QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
     MainApplication app(argc, argv);
 
-    std::string clientPath = "12.60.10411";
+    std::string clientPath = "12.70.10889";
 
     auto configResult = Config::create(clientPath);
     if (configResult.isErr())
@@ -108,6 +108,7 @@ int main(int argc, char *argv[])
     // VME_LOG_D("???: " << database.hasFamily("Source Sans Pro"));
 
     // Appearances::dumpSpriteFiles("D:\\Programs\\Tibia\\packages\\TibiaExternal\\assets", "./spritedump");
+    // return 0;
 
     // std::vector<uint32_t> bounacOutfitIds{1290, 1301, 1317, 1316, 1338, 1339};
     // MainUtils::printOutfitAtlases(bounacOutfitIds);
@@ -153,21 +154,42 @@ int main(int argc, char *argv[])
     //     }
     // }
 
+    // TemporaryTest::loadAllTexturesIntoMemory();
+
+    // int rat = 21;
+    // checkCreature(rat);
+
+    // Creatures::creatureType(rat)->checkTransparency(CreatureDirection::North);
+    // Creatures::creatureType(rat)->checkTransparency(CreatureDirection::East);
+
+    // int cyclops = 22;
+    // checkCreature(cyclops);
+
+    // return 0;
+
     return app.run();
 }
 
 void TemporaryTest::loadAllTexturesIntoMemory()
 {
     TimePoint start;
-    for (uint16_t id = 100; id < Items::items.size(); ++id)
+    // for (uint16_t id = 100; id < Items::items.size(); ++id)
+    // {
+    //     ItemType *t = Items::items.getItemTypeByServerId(id);
+
+    //     if (!Items::items.validItemType(id))
+    //         continue;
+
+    //     const TextureInfo &info = t->getTextureInfo();
+    //     info.atlas->getOrCreateTexture();
+    // }
+    for (uint16_t looktype = 1; looktype < 1400; ++looktype)
     {
-        ItemType *t = Items::items.getItemTypeByServerId(id);
-
-        if (!Items::items.validItemType(id))
-            continue;
-
-        const TextureInfo &info = t->getTextureInfo();
-        info.atlas->getOrCreateTexture();
+        auto creatureType = Creatures::creatureType(looktype);
+        if (creatureType)
+        {
+            creatureType->getTextureInfo(0, CreatureDirection::North).atlas->getOrCreateTexture();
+        }
     }
     VME_LOG("loadTextures() ms: " << start.elapsedMillis());
 }
@@ -211,7 +233,7 @@ std::shared_ptr<Map> TemporaryTest::makeTestMap2()
     //         if (newCreature)
     //         {
     //             auto &creature = newCreature.value();
-    //             creature.setDirection(Creature::Direction::South);
+    //             creature.setDirection(CreatureDirection::South);
     //             map->getTile(pos)->setCreature(std::move(creature));
     //             VME_LOG_D(outfitId);
     //         }
