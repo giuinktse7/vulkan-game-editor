@@ -35,6 +35,7 @@ SearchPopupView::SearchPopupView(QUrl filepath, MainWindow *mainWindow)
 void SearchPopupView::focus()
 {
     _wrapperWidget->setFocus();
+    QMetaObject::invokeMethod(rootObject(), "focusSearchTextInput");
 }
 
 QWidget *SearchPopupView::wrapInWidget(QWidget *parent)

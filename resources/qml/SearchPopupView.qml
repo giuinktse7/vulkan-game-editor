@@ -22,6 +22,9 @@ Rectangle {
         search_textfield.text = "";
     }
 
+    function focusSearchTextInput() {
+        search_textfield.forceActiveFocus();
+    }
     
     MouseArea {
         anchors.fill: parent
