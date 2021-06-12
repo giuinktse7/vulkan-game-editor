@@ -202,7 +202,15 @@ TextureAtlas *Appearances::getTextureAtlas(const uint32_t spriteId)
     {
         if (range.start > spriteId)
         {
-            i -= change;
+            // Handle negative i
+            if (change > i)
+            {
+                i = 0;
+            }
+            else
+            {
+                i -= change;
+            }
         }
         else if (range.end < spriteId)
         {
