@@ -31,7 +31,7 @@ ItemPaletteWindow::ItemPaletteWindow(EditorAction *editorAction, QWidget *parent
         selectPalette(paletteDropdown->currentData().toString());
     });
 
-    connect(paletteWidget->tilesetListView(), &QListView::clicked, this, &ItemPaletteWindow::onTilesetViewItemClicked);
+    connect(paletteWidget->tilesetListView(), &QListView::pressed, this, &ItemPaletteWindow::onTilesetViewItemClicked);
 }
 
 void ItemPaletteWindow::onTilesetViewItemClicked(QModelIndex index)
