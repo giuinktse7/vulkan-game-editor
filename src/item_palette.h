@@ -20,6 +20,7 @@ class ItemPalette
     ItemPalette &operator=(ItemPalette &&other) = default;
 
     Tileset &addTileset(Tileset &&tileset);
+    Tileset &addTileset(std::unique_ptr<Tileset> tileset);
 
     const std::string &name() const noexcept;
     const std::string &id() const noexcept;

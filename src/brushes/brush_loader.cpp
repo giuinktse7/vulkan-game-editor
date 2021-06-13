@@ -206,8 +206,8 @@ void BrushLoader::parseTileset(const nlohmann::json &tilesetJson)
             continue;
         }
 
-        Tileset tileset(tilesetId);
-        tileset.setName(tilesetName);
+        auto tileset = std::make_unique<Tileset>(tilesetId);
+        tileset->setName(tilesetName);
 
         auto brushes = paletteJson.at("brushes");
 
@@ -220,7 +220,7 @@ void BrushLoader::parseTileset(const nlohmann::json &tilesetJson)
                 {
                     if (idObject.is_number_integer())
                     {
-                        tileset.addRawBrush(idObject.get<int>());
+                        tileset->addRawBrush(idObject.get<int>());
                     }
                     else if (idObject.is_array() && idObject.size() == 2)
                     {
@@ -229,7 +229,7 @@ void BrushLoader::parseTileset(const nlohmann::json &tilesetJson)
 
                         for (uint32_t id = from; id <= to; ++id)
                         {
-                            tileset.addRawBrush(id);
+                            tileset->addRawBrush(id);
                         }
                     }
                     else

@@ -77,6 +77,15 @@ Tileset &ItemPalette::addTileset(Tileset &&tileset)
     return *result;
 }
 
+Tileset &ItemPalette::addTileset(std::unique_ptr<Tileset> tileset)
+{
+    tileset->setPalette(this);
+
+    tilesetIndexMap.emplace(tileset->id(), _tilesets.size());
+    auto &result = _tilesets.emplace_back(std::move(tileset));
+    return *result;
+}
+
 Tileset *ItemPalette::tileset(size_t index)
 {
     return index < _tilesets.size() ? _tilesets.at(index).get() : nullptr;
