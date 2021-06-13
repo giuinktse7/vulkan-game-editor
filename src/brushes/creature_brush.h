@@ -13,7 +13,7 @@ class CreatureType;
 class CreatureBrush final : public Brush
 {
   public:
-    CreatureBrush(std::string name, uint32_t looktype);
+    CreatureBrush(CreatureType *creatureType);
 
     void apply(MapView &mapView, const Position &position) override;
 
@@ -24,6 +24,8 @@ class CreatureBrush final : public Brush
 
     ItemType *itemType() const noexcept;
     uint32_t serverId() const noexcept;
+
+    const std::string &id() const noexcept;
 
     std::vector<ThingDrawInfo> getPreviewTextureInfo() const override;
     const std::string getDisplayId() const override;

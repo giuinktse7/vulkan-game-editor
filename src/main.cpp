@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
     brushLoader.load(std::format("data/clients/{}/palettes/palettes.json", clientPath));
     brushLoader.load(std::format("data/clients/{}/palettes/grounds.json", clientPath));
     brushLoader.load(std::format("data/clients/{}/palettes/tilesets.json", clientPath));
+    brushLoader.load(std::format("data/clients/{}/palettes/creatures.json", clientPath));
 
     // TemporaryTest::loadAllTexturesIntoMemory();
 

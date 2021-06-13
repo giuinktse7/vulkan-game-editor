@@ -88,6 +88,12 @@ bool BrushLoader::load(std::filesystem::path path)
         {
             parseTilesets(tilesets);
         }
+
+        auto creatures = asArray(rootJson, "creatures");
+        if (!creatures.is_null())
+        {
+            parseCreatures(creatures);
+        }
     }
     catch (json::exception &exception)
     {
@@ -246,6 +252,50 @@ void BrushLoader::parseTileset(const nlohmann::json &tilesetJson)
     }
 
     stackTrace.pop();
+}
+
+void BrushLoader::parseCreatures(const nlohmann::json &creaturesJson)
+{
+    stackTrace.emplace("/creatures");
+    auto topTrace = stackTrace;
+
+    for (const json &creature : creaturesJson)
+    {
+        stackTrace = topTrace;
+
+        if (!creature.contains("id"))
+        {
+            throw json::other_error::create(403, std::format("A creature is missing an id (all creatures must have an id). Add an id to this creature: {}", creature.dump(4)));
+        }
+
+        parseCreature(creature);
+    }
+    stackTrace.pop();
+}
+
+void BrushLoader::parseCreature(const nlohmann::json &creatureJson)
+{
+    auto id = getString(creatureJson, "id");
+    stackTrace.emplace(std::format("Creature '{}'", id));
+
+    if (!creatureJson.contains("name") || !creatureJson.at("name").is_string())
+    {
+        throw json::other_error::create(403, std::format("A creature is missing a name (all creatures must have a name). Add a name to this creature: {}", creatureJson.dump(4)));
+    }
+
+    if (!creatureJson.contains("type") || !creatureJson.at("type").is_string())
+    {
+        throw json::other_error::create(403, std::format("A creature is missing a type (either 'monster' or 'npc'). Add a type to this creature: {}", creatureJson.dump(4)));
+    }
+
+    if (!creatureJson.contains("looktype") || !creatureJson.at("looktype").is_number_integer())
+    {
+        throw json::other_error::create(403, std::format("A creature is missing a looktype. Add a looktype to this creature: {}", creatureJson.dump(4)));
+    }
+
+    auto name = getString(creatureJson, "name");
+    auto type = getString(creatureJson, "type");
+    int looktype = getInt(creatureJson, "looktype");
 }
 
 void BrushLoader::parsePalettes(const nlohmann::json &paletteJson)

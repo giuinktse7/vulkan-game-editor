@@ -23,7 +23,7 @@ SearchPopupView::SearchPopupView(QUrl filepath, MainWindow *mainWindow)
 
     qmlRegisterSingletonInstance("Vme.context", 1, 0, "C_SearchPopupView", this);
     engine()->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
-    engine()->addImageProvider(QLatin1String("creatureLooktypes"), new ItemTypeImageProvider);
+    engine()->addImageProvider(QLatin1String("creatureLooktypes"), new CreatureImageProvider);
 
     setSource(filepath);
     setResizeMode(ResizeMode::SizeRootObjectToView);
@@ -240,6 +240,10 @@ void FilteredSearchModel::setFilter(QString s)
     {
         setPredicate([](Brush *brush) { return brush->type() == BrushType::Doodad; });
     }
+    else if (s == "creature")
+    {
+        setPredicate([](Brush *brush) { return brush->type() == BrushType::Creature; });
+    }
     else
     {
         VME_LOG_ERROR("FilteredSearchModel::setFilter Unknown filter type: " << s.toStdString());
@@ -304,6 +308,12 @@ int FilteredSearchModel::doodadCount() const
     return results ? results->doodadCount : 0;
 }
 
+int FilteredSearchModel::creatureCount() const
+{
+    const auto &results = _searchModel->searchResults();
+    return results ? results->creatureCount : 0;
+}
+
 std::optional<BrushType> FilteredSearchModel::parseBrushType(QString rawBrushType)
 {
     if (rawBrushType == "raw")
@@ -317,6 +327,10 @@ std::optional<BrushType> FilteredSearchModel::parseBrushType(QString rawBrushTyp
     else if (rawBrushType == "doodad")
     {
         return BrushType::Doodad;
+    }
+    else if (rawBrushType == "creature")
+    {
+        return BrushType::Creature;
     }
     else
     {

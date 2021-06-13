@@ -78,8 +78,8 @@ class DoodadBrush final : public Brush
         uint32_t totalWeight = 0;
     };
 
-    DoodadBrush(uint32_t id, const std::string &name, DoodadAlternative &&alternative, uint32_t iconServerId);
-    DoodadBrush(uint32_t id, const std::string &name, std::vector<DoodadAlternative> &&alternatives, uint32_t iconServerId);
+    DoodadBrush(std::string id, const std::string &name, DoodadAlternative &&alternative, uint32_t iconServerId);
+    DoodadBrush(std::string id, const std::string &name, std::vector<DoodadAlternative> &&alternatives, uint32_t iconServerId);
 
     BrushResource brushResource() const override;
 
@@ -89,7 +89,7 @@ class DoodadBrush final : public Brush
     BrushType type() const override;
     const std::string getDisplayId() const override;
 
-    uint32_t brushId() const noexcept;
+    const std::string &id() const noexcept;
 
     std::vector<ThingDrawInfo> getPreviewTextureInfo() const override;
 
@@ -102,7 +102,7 @@ class DoodadBrush final : public Brush
 
     uint8_t alternateIndex = 0;
 
-    uint32_t id;
+    std::string _id;
     uint32_t _iconServerId;
 
     std::vector<ItemPreviewInfo> _nextGroup;

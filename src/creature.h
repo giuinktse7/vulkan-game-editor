@@ -1,11 +1,15 @@
 #pragma once
 
+#include <memory>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "frame_group.h"
 #include "graphics/texture_atlas.h"
 #include "util.h"
-#include <sstream>
+
+class CreatureAppearance;
 
 namespace tibia::protobuf::appearances
 {
@@ -20,15 +24,36 @@ enum class CreatureDirection : uint8_t
     West = 3
 };
 
+struct Outfit
+{
+    struct Look
+    {
+        uint16_t type;
+        uint8_t item;
+        uint8_t addon;
+        uint8_t head;
+        uint8_t body;
+        uint8_t legs;
+        uint8_t feet;
+    } look;
+
+    Outfit(uint16_t looktype);
+    Outfit(Look look);
+};
+
 class CreatureType
 {
   public:
-    CreatureType(uint32_t id, std::vector<FrameGroup> &&frameGroups);
-
     void cacheTextureAtlases();
 
-    inline uint32_t id() const noexcept;
-    inline uint32_t looktype() const noexcept;
+    CreatureType(std::string id, std::string name, uint16_t looktype);
+    CreatureType(std::string id, std::string name, Outfit outfit);
+
+    CreatureType(CreatureType &&other) noexcept;
+
+    inline const std::string &id() const noexcept;
+    inline const std::string &name() const noexcept;
+    inline uint16_t looktype() const noexcept;
 
     const FrameGroup &frameGroup(size_t index) const;
     const std::vector<FrameGroup> &frameGroups() const noexcept;
@@ -38,34 +63,12 @@ class CreatureType
     const TextureInfo getTextureInfo(uint32_t frameGroupId, CreatureDirection direction) const;
     const TextureInfo getTextureInfo(uint32_t frameGroupId, CreatureDirection direction, TextureInfo::CoordinateType coordinateType) const;
 
+    CreatureAppearance *appearance = nullptr;
+
   private:
-    void cacheTextureAtlas(uint32_t spriteId);
-
-    /**
-     * Used to render the creature with the correct size in the UI windows
-     */
-    enum class NonMovingCreatureRenderType
-    {
-        Full,
-        Half,
-        SingleQuadrant
-    };
-
-    /**
-     * Checks transparency for quadrants in the sprite. Might help with rendering down-scaled (e.g. 64x32 -> 32x32)
-     * images in a better way in the UI.
-     */
-    NonMovingCreatureRenderType checkTransparency() const;
-
-    static constexpr size_t CachedTextureAtlasAmount = 5;
-
-    std::array<TextureAtlas *, CachedTextureAtlasAmount> _atlases = {};
-    std::vector<FrameGroup> _frameGroups;
-    uint32_t _id;
-
-    mutable std::optional<NonMovingCreatureRenderType> nonMovingCreatureRenderType;
-
-    void cacheNonMovingRenderSizes() const;
+    Outfit outfit;
+    std::string _id;
+    std::string _name;
 
     // bool _npc;
 };
@@ -73,8 +76,12 @@ class CreatureType
 class Creatures
 {
   public:
-    static void addCreatureType(CreatureType &&creatureType);
-    static inline const CreatureType *creatureType(uint32_t id);
+    static CreatureType *addCreatureType(std::string id, std::string name, Outfit outfit);
+
+    static inline const CreatureType *creatureType(const std::string &id);
+    static const CreatureType *creatureType(uint16_t looktype);
+
+    static bool isValidLooktype(uint16_t looktype);
 
   private:
     friend class CreatureType;
@@ -83,14 +90,13 @@ class Creatures
         // Empty
     }
 
-    static vme_unordered_map<uint32_t, CreatureType> _creatureTypes;
+    static vme_unordered_map<std::string, std::unique_ptr<CreatureType>> _creatureTypes;
 };
 
 class Creature
 {
   public:
     Creature(const CreatureType &creatureType);
-    Creature(std::string name, const CreatureType &creatureType);
 
     Creature(Creature &&other) noexcept;
     // Can not be implemented because creatureType is const.
@@ -112,23 +118,27 @@ class Creature
 
   private:
     CreatureDirection _direction = CreatureDirection::South;
-    std::string _name;
 };
 
-inline uint32_t CreatureType::id() const noexcept
+inline const std::string &CreatureType::id() const noexcept
 {
     return _id;
 }
 
-inline uint32_t CreatureType::looktype() const noexcept
+inline const std::string &CreatureType::name() const noexcept
 {
-    return _id;
+    return _name;
 }
 
-inline const CreatureType *Creatures::creatureType(uint32_t id)
+inline uint16_t CreatureType::looktype() const noexcept
+{
+    return outfit.look.type;
+}
+
+inline const CreatureType *Creatures::creatureType(const std::string &id)
 {
     auto result = _creatureTypes.find(id);
-    return result == _creatureTypes.end() ? nullptr : &result->second;
+    return result == _creatureTypes.end() ? nullptr : result->second.get();
 }
 
 struct Pixel

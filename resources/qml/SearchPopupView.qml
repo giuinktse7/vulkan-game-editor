@@ -207,6 +207,21 @@ Rectangle {
                         filterOptionsRow.selectedId = filterId;
                     }
                 }
+                SearchPopup.FilterChoice {
+                    readonly property int filterId: 4;
+                    id: "filter_choice_creature"
+                    text: qsTr("Creature");
+                    fontSize: filterOptionsRow.fontSize;
+                    selected: filterOptionsRow.selectedId == filterId;
+                    amount: root.searchResults.creatureCount;
+                    onPressed: {
+                        root.searchResults.setFilter("creature");
+
+                        filterOptionsRow.selectedWidth = width;
+                        filterOptionsRow.selectedOffsetX = x;
+                        filterOptionsRow.selectedId = filterId;
+                    }
+                }
             }
 
             Item {

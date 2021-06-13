@@ -21,5 +21,8 @@ class BrushLoader
     void parseTileset(const nlohmann::json &tilesetJson);
     void parsePalettes(const nlohmann::json &paletteJson);
 
+    void parseCreatures(const nlohmann::json &creaturesJson);
+    void parseCreature(const nlohmann::json &creatureJson);
+
     std::stack<std::string> stackTrace;
 };

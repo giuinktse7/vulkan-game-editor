@@ -33,6 +33,7 @@ class FilteredSearchModel : public QSortFilterProxyModel
     Q_PROPERTY(int rawCount READ rawCount NOTIFY searchModelChanged)
     Q_PROPERTY(int groundCount READ groundCount NOTIFY searchModelChanged)
     Q_PROPERTY(int doodadCount READ doodadCount NOTIFY searchModelChanged)
+    Q_PROPERTY(int creatureCount READ creatureCount NOTIFY searchModelChanged)
 
     Q_INVOKABLE void resetFilter();
     Q_INVOKABLE void setFilter(QString brushType);
@@ -41,6 +42,7 @@ class FilteredSearchModel : public QSortFilterProxyModel
     int rawCount() const;
     int groundCount() const;
     int doodadCount() const;
+    int creatureCount() const;
 
     void setPredicate(std::function<bool(Brush *)> predicate);
     void reset();

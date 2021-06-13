@@ -15,7 +15,10 @@
 struct Position;
 class Tileset;
 class MapView;
+class RawBrush;
 class GroundBrush;
+class DoodadBrush;
+class CreatureBrush;
 class ItemType;
 class Brush;
 
@@ -142,9 +145,17 @@ class Brush
 
     static GroundBrush *addGroundBrush(std::unique_ptr<GroundBrush> &&brush);
     static GroundBrush *addGroundBrush(GroundBrush &&brush);
-    static GroundBrush *getGroundBrush(const std::string &name);
+    static GroundBrush *getGroundBrush(const std::string &id);
 
-    static const vme_unordered_map<uint32_t, std::unique_ptr<Brush>> &getRawBrushes();
+    static DoodadBrush *addDoodadBrush(std::unique_ptr<DoodadBrush> &&brush);
+    static DoodadBrush *addDoodadBrush(DoodadBrush &&brush);
+    static DoodadBrush *getDoodadBrush(const std::string &id);
+
+    static CreatureBrush *addCreatureBrush(std::unique_ptr<CreatureBrush> &&brush);
+    static CreatureBrush *addCreatureBrush(CreatureBrush &&brush);
+    static CreatureBrush *getCreatureBrush(const std::string &id);
+
+    static const vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> &getRawBrushes();
 
     static int nextGroundBrushId();
 
@@ -154,9 +165,17 @@ class Brush
     static bool brushSorter(const Brush *leftBrush, const Brush *rightBrush);
 
   protected:
-    static vme_unordered_map<uint32_t, std::unique_ptr<Brush>> rawBrushes;
+    // ServerId -> Brush
+    static vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> rawBrushes;
 
-    static vme_unordered_map<std::string, std::unique_ptr<Brush>> groundBrushes;
+    // BrushId -> Brush
+    static vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> groundBrushes;
+
+    // BrushId -> Brush
+    static vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> doodadBrushes;
+
+    // BrushId -> Brush
+    static vme_unordered_map<std::string, std::unique_ptr<CreatureBrush>> creatureBrushes;
 
     std::string _name;
     Tileset *_tileset = nullptr;

@@ -16,15 +16,15 @@ using DoodadAlternative = DoodadBrush::DoodadAlternative;
 using DoodadSingle = DoodadBrush::DoodadSingle;
 using DoodadComposite = DoodadBrush::DoodadComposite;
 
-DoodadBrush::DoodadBrush(uint32_t id, const std::string &name, DoodadAlternative &&alternative, uint32_t iconServerId)
-    : Brush(name), id(id), _iconServerId(iconServerId)
+DoodadBrush::DoodadBrush(std::string id, const std::string &name, DoodadAlternative &&alternative, uint32_t iconServerId)
+    : Brush(name), _id(id), _iconServerId(iconServerId)
 {
     alternatives.emplace_back(std::move(alternative));
     initialize();
 }
 
-DoodadBrush::DoodadBrush(uint32_t id, const std::string &name, std::vector<DoodadAlternative> &&alternatives, uint32_t iconServerId)
-    : Brush(name), alternatives(std::move(alternatives)), id(id), _iconServerId(iconServerId)
+DoodadBrush::DoodadBrush(std::string id, const std::string &name, std::vector<DoodadAlternative> &&alternatives, uint32_t iconServerId)
+    : Brush(name), alternatives(std::move(alternatives)), _id(id), _iconServerId(iconServerId)
 {
     initialize();
 }
@@ -178,9 +178,9 @@ std::vector<ItemPreviewInfo> DoodadAlternative::sample(const std::string &brushN
     return result;
 }
 
-uint32_t DoodadBrush::brushId() const noexcept
+const std::string &DoodadBrush::id() const noexcept
 {
-    return id;
+    return _id;
 }
 
 std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo() const
@@ -198,4 +198,9 @@ std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo() const
 const std::string DoodadBrush::getDisplayId() const
 {
     return _name;
+}
+
+BrushResource DoodadBrush::brushResource() const
+{
+    return _brushResource;
 }

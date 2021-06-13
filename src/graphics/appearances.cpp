@@ -16,6 +16,7 @@
 #include "texture_atlas.h"
 
 vme_unordered_map<uint32_t, ObjectAppearance> Appearances::_objects;
+vme_unordered_map<uint32_t, CreatureAppearance> Appearances::_creatures;
 
 std::vector<SpriteRange> Appearances::textureAtlasSpriteRanges;
 vme_unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> Appearances::textureAtlases;
@@ -54,8 +55,8 @@ void Appearances::loadAppearanceData(const std::filesystem::path path)
     TimePoint startOutfits;
     for (int i = 0; i < parsed.outfit_size(); ++i)
     {
-        auto creatureType = parseCreatureType(parsed.outfit(i));
-        Creatures::addCreatureType(std::move(creatureType));
+        auto creatureAppearance = parsed.outfit(i);
+        Appearances::_creatures.emplace(creatureAppearance.id(), creatureAppearance);
     }
     auto outfitsMs = startOutfits.elapsedMillis();
 
@@ -304,23 +305,6 @@ SpriteAnimation Appearances::parseSpriteAnimation(const proto::SpriteAnimation &
     return anim;
 }
 
-CreatureType Appearances::parseCreatureType(const proto::Appearance &appearance)
-{
-    std::vector<FrameGroup> frameGroups;
-    frameGroups.reserve(appearance.frame_group_size());
-    for (int i = 0; i < appearance.frame_group_size(); ++i)
-    {
-        const auto frameGroup = appearance.frame_group().at(i);
-        const auto &spriteInfo = frameGroup.sprite_info();
-
-        frameGroups.emplace_back<FrameGroup>({static_cast<FixedFrameGroup>(frameGroup.fixed_frame_group()),
-                                              static_cast<uint32_t>(frameGroup.id()),
-                                              Appearances::parseSpriteInfo(spriteInfo)});
-    }
-
-    return CreatureType(appearance.id(), std::move(frameGroups));
-}
-
 /*
     Constructs an Appearance from protobuf Appearance data.
 */
@@ -558,4 +542,256 @@ size_t ObjectAppearance::spriteCount(uint32_t frameGroup) const
 size_t ObjectAppearance::frameGroupCount() const
 {
     return frameGroups.size();
+}
+
+CreatureAppearance::CreatureAppearance(const proto::Appearance &appearance)
+    : _id(appearance.id())
+{
+    _frameGroups.reserve(appearance.frame_group_size());
+    for (int i = 0; i < appearance.frame_group_size(); ++i)
+    {
+        const auto frameGroup = appearance.frame_group().at(i);
+        const auto &spriteInfo = frameGroup.sprite_info();
+
+        _frameGroups.emplace_back<FrameGroup>({static_cast<FixedFrameGroup>(frameGroup.fixed_frame_group()),
+                                               static_cast<uint32_t>(frameGroup.id()),
+                                               Appearances::parseSpriteInfo(spriteInfo)});
+    }
+}
+
+const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, CreatureDirection direction, TextureInfo::CoordinateType coordinateType) const
+{
+
+    auto &fg = this->frameGroup(frameGroupId);
+
+    uint32_t spriteIndex = std::min<uint32_t>(to_underlying(direction), static_cast<uint32_t>(fg.spriteInfo.spriteIds.size()) - 1);
+    auto spriteId = fg.spriteInfo.spriteIds.at(spriteIndex);
+
+    TextureAtlas *atlas = getTextureAtlas(spriteId);
+
+    TextureInfo info;
+    info.atlas = atlas;
+    info.window = atlas->getTextureWindow(spriteId, coordinateType);
+
+    if (coordinateType == TextureInfo::CoordinateType::Unnormalized)
+    {
+        if (!nonMovingCreatureRenderType.has_value())
+        {
+            cacheNonMovingRenderSizes();
+        }
+
+        switch (*nonMovingCreatureRenderType)
+        {
+            case NonMovingCreatureRenderType::Full:
+                break;
+            case NonMovingCreatureRenderType::Half:
+                // switch (direction)
+                // {
+                //     case CreatureDirection::North:
+                //     case CreatureDirection::South:
+                //     {
+                //         auto width = info.window.x1;
+                //         info.window.x0 += width / 2;
+
+                //         // Width in unnormalized case
+                //         info.window.x1 /= 2;
+                //     }
+                //     break;
+                //     case CreatureDirection::East:
+                //     case CreatureDirection::West:
+                //     {
+                //         auto height = info.window.y1;
+                //         info.window.y0 += height / 2;
+
+                //         // Width in unnormalized case
+                //         info.window.y1 /= 2;
+                //     }
+                //     break;
+                // }
+                break;
+            case NonMovingCreatureRenderType::SingleQuadrant:
+            {
+                auto width = info.window.x1;
+                auto height = info.window.y1;
+
+                info.window.x0 += width / 2;
+                // info.window.y0 += height / 2;
+
+                info.window.x1 /= 2;
+                info.window.y1 /= 2;
+                break;
+            }
+        }
+    }
+
+    return info;
+}
+
+TextureAtlas *CreatureAppearance::getTextureAtlas(uint32_t spriteId) const
+{
+    for (const auto atlas : _atlases)
+    {
+        if (atlas == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (atlas->firstSpriteId <= spriteId && spriteId <= atlas->lastSpriteId)
+        {
+            return atlas;
+        }
+    }
+
+    return Appearances::getTextureAtlas(spriteId);
+}
+
+void CreatureAppearance::cacheTextureAtlases()
+{
+    if (_atlases.front() != nullptr)
+    {
+        // Atlases already cached
+        return;
+    }
+
+    for (int i = 0; i < _frameGroups.size(); ++i)
+    {
+        for (const auto spriteId : _frameGroups.at(i).spriteInfo.spriteIds)
+        {
+            // Stop if the cache is full
+            if (_atlases.back() != nullptr)
+            {
+                return;
+            }
+            cacheTextureAtlas(spriteId);
+        }
+    }
+}
+
+void CreatureAppearance::cacheTextureAtlas(uint32_t spriteId)
+{
+    // If nothing is cached, cache the TextureAtlas for the first sprite ID in the appearance.
+    if (_atlases.front() == nullptr)
+    {
+        uint32_t firstSpriteId = _frameGroups.at(0).spriteInfo.spriteIds.at(0);
+        _atlases.front() = Appearances::getTextureAtlas(firstSpriteId);
+    }
+
+    for (int i = 0; i < _atlases.size(); ++i)
+    {
+        TextureAtlas *&atlas = _atlases[i];
+        // End of current cache reached, caching the atlas
+        if (atlas == nullptr)
+        {
+            atlas = Appearances::getTextureAtlas(spriteId);
+            return;
+        }
+        else
+        {
+            if (atlas->firstSpriteId <= spriteId && spriteId <= atlas->lastSpriteId)
+            {
+                // The TextureAtlas is already cached
+                return;
+            }
+        }
+    }
+}
+
+const std::vector<FrameGroup> &CreatureAppearance::frameGroups() const noexcept
+{
+    return _frameGroups;
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>Code for helping with drawing creatures in proper sizes within the UI>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+void CreatureAppearance::cacheNonMovingRenderSizes() const
+{
+    nonMovingCreatureRenderType = checkTransparency();
+}
+
+Pixel getPixel(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels)
+{
+    int i = (atlasWidth - y) * (atlasWidth * 4) + x * 4;
+
+    Pixel pixel{};
+    pixel.r = pixels.at(i);
+    pixel.g = pixels.at(i + 1);
+    pixel.b = pixels.at(i + 2);
+    pixel.a = pixels.at(i + 3);
+
+    return pixel;
+}
+
+bool isMagenta(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels)
+{
+    int i = (atlasWidth - y - 1) * (atlasWidth * 4) + x * 4;
+    uint8_t r = pixels.at(i);
+    uint8_t g = pixels.at(i + 1);
+    uint8_t b = pixels.at(i + 2);
+
+    return r == 255 && g == 0 && b == 255;
+}
+
+bool transparentRegion(int fromX, int fromY, int width, int height, int atlasWidth, const std::vector<uint8_t> &pixels)
+{
+    for (int y = fromY; y < fromY + height; ++y)
+    {
+        for (int x = fromX; x < fromX + width; ++x)
+        {
+            if (!isMagenta(x, y, atlasWidth, pixels))
+            {
+                // VME_LOG_D(std::format("Fail at: {}, {}", x, y));
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+CreatureAppearance::NonMovingCreatureRenderType CreatureAppearance::checkTransparency() const
+{
+    auto &fg = this->frameGroup(0);
+
+    if (fg.spriteInfo.spriteIds.size() <= to_underlying(CreatureDirection::North))
+    {
+        return NonMovingCreatureRenderType::Full;
+    }
+
+    auto spriteId = fg.spriteInfo.spriteIds.at(to_underlying(CreatureDirection::North));
+    TextureAtlas *atlas = getTextureAtlas(spriteId);
+
+    const auto &pixels = atlas->getOrCreateTexture().pixels();
+
+    int spriteIndex = spriteId - atlas->firstSpriteId;
+
+    auto topLeftX = atlas->spriteWidth * (spriteIndex % atlas->columns);
+    auto topLeftY = atlas->spriteHeight * (spriteIndex / atlas->rows);
+
+    int quadWidth = atlas->spriteWidth / 2;
+    int quadHeight = atlas->spriteHeight / 2;
+
+    // Top-left
+    if (!transparentRegion(topLeftX, topLeftY, quadWidth, quadHeight, atlas->width, pixels))
+    {
+        return NonMovingCreatureRenderType::Full;
+    }
+
+    // Top-right
+    if (!transparentRegion(topLeftX + quadWidth, topLeftY, quadWidth, quadHeight, atlas->width, pixels))
+    {
+        return NonMovingCreatureRenderType::Half;
+    }
+
+    return NonMovingCreatureRenderType::SingleQuadrant;
+}
+
+const FrameGroup &CreatureAppearance::frameGroup(size_t index) const
+{
+    return _frameGroups.at(index);
 }

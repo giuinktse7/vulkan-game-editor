@@ -2,14 +2,18 @@
 
 #include "../creature.h"
 #include "../items.h"
+#include "creature_brush.h"
+#include "doodad_brush.h"
 #include "ground_brush.h"
 #include "raw_brush.h"
 
 #define FTS_FUZZY_MATCH_IMPLEMENTATION
 #include "../../vendor/fts_fuzzy_match/fts_fuzzy_match.h"
 
-vme_unordered_map<uint32_t, std::unique_ptr<Brush>> Brush::rawBrushes;
-vme_unordered_map<std::string, std::unique_ptr<Brush>> Brush::groundBrushes;
+vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> Brush::rawBrushes;
+vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> Brush::groundBrushes;
+vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> Brush::doodadBrushes;
+vme_unordered_map<std::string, std::unique_ptr<CreatureBrush>> Brush::creatureBrushes;
 
 Brush::Brush(std::string name)
     : _name(name) {}
@@ -53,7 +57,7 @@ GroundBrush *Brush::addGroundBrush(std::unique_ptr<GroundBrush> &&brush)
     if (found != groundBrushes.end())
     {
         VME_LOG_ERROR(std::format(
-            "Could not add ground brush '{}' with id '{}'. A brush with id '{}' (named '{}') already exists.",
+            "Could not add ground brush '{}' with id '{}'. A ground brush with id '{}' (named '{}') already exists.",
             brush->name(), brushId, brushId, found->second->name()));
         return nullptr;
     }
@@ -74,7 +78,75 @@ GroundBrush *Brush::getGroundBrush(const std::string &id)
     return static_cast<GroundBrush *>(found->second.get());
 }
 
-const vme_unordered_map<uint32_t, std::unique_ptr<Brush>> &Brush::getRawBrushes()
+DoodadBrush *Brush::addDoodadBrush(DoodadBrush &&brush)
+{
+    return addDoodadBrush(std::make_unique<DoodadBrush>(std::move(brush)));
+}
+
+DoodadBrush *Brush::addDoodadBrush(std::unique_ptr<DoodadBrush> &&brush)
+{
+    std::string brushId = brush->id();
+
+    auto found = doodadBrushes.find(brushId);
+    if (found != doodadBrushes.end())
+    {
+        VME_LOG_ERROR(std::format(
+            "Could not add doodad brush '{}' with id '{}'. A doodad brush with id '{}' (named '{}') already exists.",
+            brush->name(), brushId, brushId, found->second->name()));
+        return nullptr;
+    }
+
+    auto result = doodadBrushes.emplace(brushId, std::move(brush));
+
+    return static_cast<DoodadBrush *>(result.first.value().get());
+}
+
+DoodadBrush *Brush::getDoodadBrush(const std::string &id)
+{
+    auto found = doodadBrushes.find(id);
+    if (found == doodadBrushes.end())
+    {
+        return nullptr;
+    }
+
+    return static_cast<DoodadBrush *>(found->second.get());
+}
+
+CreatureBrush *Brush::addCreatureBrush(CreatureBrush &&brush)
+{
+    return addCreatureBrush(std::make_unique<CreatureBrush>(std::move(brush)));
+}
+
+CreatureBrush *Brush::addCreatureBrush(std::unique_ptr<CreatureBrush> &&brush)
+{
+    std::string brushId = brush->id();
+
+    auto found = creatureBrushes.find(brushId);
+    if (found != creatureBrushes.end())
+    {
+        VME_LOG_ERROR(std::format(
+            "Could not add creature brush '{}' with id '{}'. A creature brush with id '{}' (named '{}') already exists.",
+            brush->name(), brushId, brushId, found->second->name()));
+        return nullptr;
+    }
+
+    auto result = creatureBrushes.emplace(brushId, std::move(brush));
+
+    return static_cast<CreatureBrush *>(result.first.value().get());
+}
+
+CreatureBrush *Brush::getCreatureBrush(const std::string &id)
+{
+    auto found = creatureBrushes.find(id);
+    if (found == creatureBrushes.end())
+    {
+        return nullptr;
+    }
+
+    return static_cast<CreatureBrush *>(found->second.get());
+}
+
+const vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> &Brush::getRawBrushes()
 {
     return rawBrushes;
 }
@@ -89,8 +161,9 @@ BrushSearchResult Brush::search(std::string searchString)
 
     for (const auto &[_, rawBrush] : rawBrushes)
     {
-        int score;
-        bool match = fts::fuzzy_match(searchString.c_str(), rawBrush->name().c_str(), score);
+        int score = 1;
+        bool match = fts::fuzzy_match(searchString.c_str(), rawBrush->name().c_str(), score) ||
+                     std::to_string(rawBrush->serverId()).find(searchString) != std::string::npos;
 
         if (match)
         {
@@ -111,6 +184,30 @@ BrushSearchResult Brush::search(std::string searchString)
         }
     }
 
+    for (const auto &[_, doodadBrush] : doodadBrushes)
+    {
+        int score;
+        bool match = fts::fuzzy_match(searchString.c_str(), doodadBrush->name().c_str(), score);
+
+        if (match)
+        {
+            matches.emplace_back(std::pair{score, doodadBrush.get()});
+            ++searchResult.doodadCount;
+        }
+    }
+
+    for (const auto &[_, creatureBrush] : creatureBrushes)
+    {
+        int score;
+        bool match = fts::fuzzy_match(searchString.c_str(), creatureBrush->name().c_str(), score);
+
+        if (match)
+        {
+            matches.emplace_back(std::pair{score, creatureBrush.get()});
+            ++searchResult.creatureCount;
+        }
+    }
+
     std::sort(matches.begin(), matches.end(), Brush::matchSorter);
 
     searchResult.matches = std::make_unique<std::vector<Brush *>>();
@@ -126,7 +223,7 @@ bool Brush::brushSorter(const Brush *leftBrush, const Brush *rightBrush)
 {
     if (leftBrush->type() != rightBrush->type())
     {
-        return to_underlying(leftBrush->type()) > to_underlying(rightBrush->type());
+        return to_underlying(leftBrush->type()) < to_underlying(rightBrush->type());
     }
 
     // Both raw here, no need to check rightBrush (we check if they are the same above)
@@ -145,7 +242,7 @@ bool Brush::matchSorter(std::pair<int, Brush *> &lhs, const std::pair<int, Brush
     auto rightBrush = rhs.second;
     if (leftBrush->type() != rightBrush->type())
     {
-        return to_underlying(leftBrush->type()) > to_underlying(rightBrush->type());
+        return to_underlying(leftBrush->type()) < to_underlying(rightBrush->type());
     }
 
     // Both raw here, no need to check rightBrush (we check if they are the same above)

@@ -133,6 +133,50 @@ class ObjectAppearance
     AppearanceFlag flags;
 };
 
+class CreatureAppearance
+{
+  public:
+    CreatureAppearance(const proto::Appearance &protobufAppearance);
+
+    size_t frameGroupCount() const;
+
+    void cacheTextureAtlases();
+    const FrameGroup &frameGroup(size_t index) const;
+    const std::vector<FrameGroup> &frameGroups() const noexcept;
+    TextureAtlas *getTextureAtlas(uint32_t spriteId) const;
+    const TextureInfo getTextureInfo() const;
+    const TextureInfo getTextureInfo(uint32_t frameGroupId, CreatureDirection direction) const;
+    const TextureInfo getTextureInfo(uint32_t frameGroupId, CreatureDirection direction, TextureInfo::CoordinateType coordinateType) const;
+
+  private:
+    void cacheTextureAtlas(uint32_t spriteId);
+
+    /**
+     * Used to render the creature with the correct size in the UI windows
+     */
+    enum class NonMovingCreatureRenderType
+    {
+        Full,
+        Half,
+        SingleQuadrant
+    };
+
+    /**
+     * Checks transparency for quadrants in the sprite. Might help with rendering down-scaled (e.g. 64x32 -> 32x32)
+     * images in a better way in the UI.
+     */
+    NonMovingCreatureRenderType checkTransparency() const;
+    void cacheNonMovingRenderSizes() const;
+
+    uint32_t _id;
+
+    static constexpr size_t CachedTextureAtlasAmount = 5;
+    std::array<TextureAtlas *, CachedTextureAtlasAmount> _atlases = {};
+    std::vector<FrameGroup> _frameGroups;
+
+    mutable std::optional<NonMovingCreatureRenderType> nonMovingCreatureRenderType;
+};
+
 class Appearances
 {
     using AppearanceId = uint32_t;
@@ -145,7 +189,6 @@ class Appearances
 
     static SpriteAnimation parseSpriteAnimation(const proto::SpriteAnimation &animation);
     static SpriteInfo parseSpriteInfo(const proto::SpriteInfo &info);
-    static CreatureType parseCreatureType(const proto::Appearance &appearance);
 
     inline static const vme_unordered_map<AppearanceId, ObjectAppearance> &objects();
 
@@ -154,9 +197,19 @@ class Appearances
         return _objects.find(id) != _objects.end();
     }
 
+    static bool hasCreatureLooktype(uint16_t looktype)
+    {
+        return _creatures.find(looktype) != _creatures.end();
+    }
+
     static ObjectAppearance &getObjectById(AppearanceId id)
     {
         return _objects.at(id);
+    }
+
+    static CreatureAppearance *getCreatureAppearance(uint16_t looktype)
+    {
+        return &_creatures.at(looktype);
     }
 
     static TextureAtlas *getTextureAtlas(const uint32_t spriteId);
@@ -168,6 +221,7 @@ class Appearances
 
   private:
     static vme_unordered_map<AppearanceId, ObjectAppearance> _objects;
+    static vme_unordered_map<AppearanceId, CreatureAppearance> _creatures;
 
     /* 
 		Used for quick retrieval of the correct spritesheet given a sprite ID.

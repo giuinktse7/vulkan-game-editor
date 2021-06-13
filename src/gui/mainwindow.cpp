@@ -260,7 +260,7 @@ void MainWindow::mapViewMousePosEvent(MapView &mapView, util::Point<float> mouse
         }
         else
         {
-            auto id = std::to_string(creature->creatureType.id());
+            auto id = std::to_string(creature->creatureType.looktype());
             topItemInfo->setText("Creature looktype: " + QString::fromStdString(id));
         }
     }
@@ -634,12 +634,16 @@ void MainWindow::initializePaletteWindow()
         //     }
         // }
 
-        goblinTileset.addBrush(new CreatureBrush("Rat", 21));
-        goblinTileset.addBrush(new CreatureBrush("Bear", 16));
-        goblinTileset.addBrush(new CreatureBrush("Cyclops", 22));
-        goblinTileset.addBrush(new CreatureBrush("Goblin", 61));
-        goblinTileset.addBrush(new CreatureBrush("Goblin Scavenger", 297));
-        goblinTileset.addBrush(new CreatureBrush("Goblin Assassin", 296));
+        const auto addTestCreatureBrush = [&goblinTileset](std::string id, std::string name, int looktype) {
+            goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(id, name, looktype))));
+        };
+
+        addTestCreatureBrush("rat", "Rat", 21);
+        addTestCreatureBrush("bear", "Bear", 16);
+        addTestCreatureBrush("cyclops", "Cyclops", 22);
+        addTestCreatureBrush("goblin", "Goblin", 61);
+        addTestCreatureBrush("goblin_scavenger", "Goblin Scavenger", 297);
+        addTestCreatureBrush("goblin_assassin", "Goblin Assassin", 296);
     }
 
     for (auto &[k, palette] : ItemPalettes::itemPalettes())

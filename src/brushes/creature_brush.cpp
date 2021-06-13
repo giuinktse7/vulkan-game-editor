@@ -3,13 +3,12 @@
 #include "../creature.h"
 #include "../map_view.h"
 
-CreatureBrush::CreatureBrush(std::string name, uint32_t looktype)
-    : Brush(name), creatureType(Creatures::creatureType(looktype))
+CreatureBrush::CreatureBrush(CreatureType *creatureType)
+    : Brush(creatureType->name()), creatureType(creatureType)
 {
-    ;
     if (!creatureType)
     {
-        ABORT_PROGRAM("Invalid creature type: " << looktype);
+        ABORT_PROGRAM("CreatureBrush::CreatureBrush was passed nullptr.");
     }
 }
 
@@ -20,7 +19,7 @@ bool CreatureBrush::erasesItem(uint32_t serverId) const
 
 void CreatureBrush::apply(MapView &mapView, const Position &position)
 {
-    mapView.addCreature(position, Creature(name(), *creatureType));
+    mapView.addCreature(position, Creature(*creatureType));
 }
 
 BrushResource CreatureBrush::brushResource() const
@@ -45,4 +44,9 @@ std::vector<ThingDrawInfo> CreatureBrush::getPreviewTextureInfo() const
 const std::string CreatureBrush::getDisplayId() const
 {
     return std::to_string(creatureType->looktype());
+}
+
+const std::string &CreatureBrush::id() const noexcept
+{
+    return creatureType->id();
 }
