@@ -64,8 +64,7 @@ bool BrushLoader::load(std::filesystem::path path)
     }
 
     std::ifstream fileStream(path);
-    json rootJson;
-    fileStream >> rootJson;
+    json rootJson = json::parse(fileStream, nullptr, true, true);
     fileStream.close();
 
     auto topTrace = stackTrace;
