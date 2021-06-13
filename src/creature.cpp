@@ -28,6 +28,7 @@ Creature::Creature(std::string name, const CreatureType &creatureType)
 
 Creature::Creature(Creature &&other) noexcept
     : creatureType(other.creatureType),
+      selected(other.selected),
       _direction(other._direction),
       _name(std::move(other._name)) {}
 
