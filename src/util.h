@@ -415,68 +415,73 @@ inline std::string toString(T value)
 >>>>>>>>>>>>>>>>>>>>>>>>>>>
 */
 
-#define VME_ENUM_OPERATORS(EnumType)                                           \
-    inline constexpr EnumType operator&(EnumType l, EnumType r)                \
-    {                                                                          \
-        typedef std::underlying_type<EnumType>::type ut;                       \
-        return static_cast<EnumType>(static_cast<ut>(l) & static_cast<ut>(r)); \
-    }                                                                          \
-                                                                               \
-    inline constexpr EnumType operator|(EnumType l, EnumType r)                \
-    {                                                                          \
-        typedef std::underlying_type<EnumType>::type ut;                       \
-        return static_cast<EnumType>(static_cast<ut>(l) | static_cast<ut>(r)); \
-    }                                                                          \
-    inline constexpr EnumType operator^(EnumType l, EnumType r)                \
-    {                                                                          \
-        typedef std::underlying_type<EnumType>::type ut;                       \
-        return static_cast<EnumType>(static_cast<ut>(l) ^ static_cast<ut>(r)); \
-    }                                                                          \
-                                                                               \
-    inline constexpr EnumType &operator&=(EnumType &lhs, const EnumType rhs)   \
-    {                                                                          \
-        typedef std::underlying_type<EnumType>::type ut;                       \
-        lhs = static_cast<EnumType>(static_cast<ut>(lhs) &                     \
-                                    static_cast<ut>(rhs));                     \
-        return lhs;                                                            \
-    }                                                                          \
-    inline constexpr EnumType &operator&=(                                     \
-        EnumType &lhs, const std::underlying_type<EnumType>::type rhs)         \
-    {                                                                          \
-        typedef std::underlying_type<EnumType>::type ut;                       \
-        lhs = static_cast<EnumType>(static_cast<ut>(lhs) & rhs);               \
-        return lhs;                                                            \
-    }                                                                          \
-    inline constexpr EnumType &operator^=(                                     \
-        EnumType &lhs, const std::underlying_type<EnumType>::type rhs)         \
-    {                                                                          \
-        typedef std::underlying_type<EnumType>::type ut;                       \
-        lhs = static_cast<EnumType>(static_cast<ut>(lhs) ^ rhs);               \
-        return lhs;                                                            \
-    }                                                                          \
-                                                                               \
-    inline constexpr EnumType &operator|=(EnumType &lhs, const EnumType rhs)   \
-    {                                                                          \
-        typedef std::underlying_type<EnumType>::type ut;                       \
-        lhs = static_cast<EnumType>(static_cast<ut>(lhs) |                     \
-                                    static_cast<ut>(rhs));                     \
-        return lhs;                                                            \
-    }                                                                          \
-    namespace EnumFlag                                                         \
-    {                                                                          \
-        inline void set(EnumType &a, EnumType b, bool value)                   \
-        {                                                                      \
-            typedef std::underlying_type<EnumType>::type ut;                   \
-            a ^= (-static_cast<ut>(value) ^ a) & static_cast<ut>(b);           \
-        }                                                                      \
-        inline bool isSet(const EnumType a, const EnumType b)                  \
-        {                                                                      \
-            return (a & ~(b)) == b;                                            \
-        }                                                                      \
-        inline void toggle(EnumType &a, EnumType b)                            \
-        {                                                                      \
-            a ^= b;                                                            \
-        }                                                                      \
+#define VME_ENUM_OPERATORS(EnumType)                                                                                                                              \
+    inline constexpr EnumType operator&(EnumType l, EnumType r)                                                                                                   \
+    {                                                                                                                                                             \
+        typedef std::underlying_type<EnumType>::type ut;                                                                                                          \
+        return static_cast<EnumType>(static_cast<ut>(l) & static_cast<ut>(r));                                                                                    \
+    }                                                                                                                                                             \
+                                                                                                                                                                  \
+    inline constexpr EnumType operator|(EnumType l, EnumType r)                                                                                                   \
+    {                                                                                                                                                             \
+        typedef std::underlying_type<EnumType>::type ut;                                                                                                          \
+        return static_cast<EnumType>(static_cast<ut>(l) | static_cast<ut>(r));                                                                                    \
+    }                                                                                                                                                             \
+    inline constexpr EnumType operator^(EnumType l, EnumType r)                                                                                                   \
+    {                                                                                                                                                             \
+        typedef std::underlying_type<EnumType>::type ut;                                                                                                          \
+        return static_cast<EnumType>(static_cast<ut>(l) ^ static_cast<ut>(r));                                                                                    \
+    }                                                                                                                                                             \
+                                                                                                                                                                  \
+    inline constexpr EnumType &operator&=(EnumType &lhs, const EnumType rhs)                                                                                      \
+    {                                                                                                                                                             \
+        typedef std::underlying_type<EnumType>::type ut;                                                                                                          \
+        lhs = static_cast<EnumType>(static_cast<ut>(lhs) &                                                                                                        \
+                                    static_cast<ut>(rhs));                                                                                                        \
+        return lhs;                                                                                                                                               \
+    }                                                                                                                                                             \
+    inline constexpr EnumType &operator&=(                                                                                                                        \
+        EnumType &lhs, const std::underlying_type<EnumType>::type rhs)                                                                                            \
+    {                                                                                                                                                             \
+        typedef std::underlying_type<EnumType>::type ut;                                                                                                          \
+        lhs = static_cast<EnumType>(static_cast<ut>(lhs) & rhs);                                                                                                  \
+        return lhs;                                                                                                                                               \
+    }                                                                                                                                                             \
+    inline constexpr EnumType &operator^=(                                                                                                                        \
+        EnumType &lhs, const std::underlying_type<EnumType>::type rhs)                                                                                            \
+    {                                                                                                                                                             \
+        typedef std::underlying_type<EnumType>::type ut;                                                                                                          \
+        lhs = static_cast<EnumType>(static_cast<ut>(lhs) ^ rhs);                                                                                                  \
+        return lhs;                                                                                                                                               \
+    }                                                                                                                                                             \
+                                                                                                                                                                  \
+    inline constexpr EnumType &operator|=(EnumType &lhs, const EnumType rhs)                                                                                      \
+    {                                                                                                                                                             \
+        typedef std::underlying_type<EnumType>::type ut;                                                                                                          \
+        lhs = static_cast<EnumType>(static_cast<ut>(lhs) |                                                                                                        \
+                                    static_cast<ut>(rhs));                                                                                                        \
+        return lhs;                                                                                                                                               \
+    }                                                                                                                                                             \
+    inline EnumType &operator^=(EnumType &a, EnumType b)                                                                                                          \
+    {                                                                                                                                                             \
+        return reinterpret_cast<EnumType &>(reinterpret_cast<std::underlying_type<EnumType>::type &>(a) ^= static_cast<std::underlying_type<EnumType>::type>(b)); \
+    }                                                                                                                                                             \
+    namespace EnumFlag                                                                                                                                            \
+    {                                                                                                                                                             \
+        inline void set(EnumType &a, EnumType b, bool value)                                                                                                      \
+        {                                                                                                                                                         \
+            typedef std::underlying_type<EnumType>::type ut;                                                                                                      \
+            a ^= static_cast<EnumType>(-static_cast<ut>(value) ^ static_cast<ut>(a)) & b;                                                                         \
+        }                                                                                                                                                         \
+        inline bool isSet(const EnumType a, const EnumType b)                                                                                                     \
+        {                                                                                                                                                         \
+            typedef std::underlying_type<EnumType>::type ut;                                                                                                      \
+            return (a & static_cast<EnumType>(~static_cast<ut>(b))) == b;                                                                                         \
+        }                                                                                                                                                         \
+        inline void toggle(EnumType &a, EnumType b)                                                                                                               \
+        {                                                                                                                                                         \
+            a ^= b;                                                                                                                                               \
+        }                                                                                                                                                         \
     }
 
 #define STRUCTURED_BINDING(Type, count)                                 \
