@@ -495,7 +495,7 @@ void MainWindow::initializePaletteWindow()
         ItemPalette &rawPalette = *ItemPalettes::getById("raw");
 
         auto &bottomTileset = rawPalette.addTileset(Tileset("bottom_items", "Bottom items"));
-        auto &groundTileset = rawPalette.addTileset(Tileset("grounds", "Grounds"));
+        // auto &groundTileset = rawPalette.addTileset(Tileset("grounds", "Grounds"));
         auto &borderTileset = rawPalette.addTileset(Tileset("borders", "Borders"));
         auto &unsightTileset = rawPalette.addTileset(Tileset("sight_blocking", "Sight-blocking"));
         auto &doorTileset = rawPalette.addTileset(Tileset("doors", "Doors"));
@@ -535,10 +535,10 @@ void MainWindow::initializePaletteWindow()
             {
                 bottomTileset.addRawBrush(i);
             }
-            else if (itemType->hasFlag(AppearanceFlag::Ground))
-            {
-                groundTileset.addRawBrush(i);
-            }
+            // else if (itemType->hasFlag(AppearanceFlag::Ground))
+            // {
+            //     groundTileset.addRawBrush(i);
+            // }
             else if (itemType->hasFlag(AppearanceFlag::Border))
             {
                 borderTileset.addRawBrush(i);
@@ -582,10 +582,12 @@ void MainWindow::initializePaletteWindow()
             {
                 hangableTileset.addRawBrush(i);
             }
-
             else
             {
-                otherTileset.addRawBrush(i);
+                if (!itemType->hasFlag(AppearanceFlag::Ground))
+                {
+                    otherTileset.addRawBrush(i);
+                }
             }
 
             // GuiImageCache::cachePixmapForServerId(i);
