@@ -344,11 +344,14 @@ namespace MapHistory
     Move_v2::Move_v2(Position from, Position to)
         : fromTile(from), toTile(to) {}
 
-    Move_v2::Move_v2(Position from, Position to, bool ground)
-        : fromTile(from), toTile(to), partialMoveData({}) {}
+    Move_v2::Move_v2(Position from, Position to, MoveFlags moveFlags)
+        : fromTile(from), toTile(to), partialMoveData({})
+    {
+        partialMoveData->moveFlags = moveFlags;
+    }
 
-    Move_v2::Move_v2(Position from, Position to, bool ground, std::vector<uint16_t> indices)
-        : fromTile(from), toTile(to), partialMoveData({indices, ground}) {}
+    Move_v2::Move_v2(Position from, Position to, MoveFlags moveFlags, std::vector<uint16_t> indices)
+        : fromTile(from), toTile(to), partialMoveData({indices, moveFlags}) {}
 
     Move_v2 Move_v2::entire(Position from, Position to)
     {
@@ -373,9 +376,11 @@ namespace MapHistory
                 indices.emplace_back(i);
         }
 
-        bool moveGround = tile.hasGround() && tile.ground()->selected;
+        MoveFlags flags;
+        EnumFlag::set(flags, MoveFlags::MoveGround, tile.hasGround() && tile.ground()->selected);
+        EnumFlag::set(flags, MoveFlags::MoveCreature, tile.hasCreature() && tile.creature()->selected);
 
-        return Move_v2(tile.position(), to, moveGround, indices);
+        return Move_v2(tile.position(), to, flags, indices);
     }
 
     void Move_v2::commit(MapView &mapView)
@@ -383,7 +388,7 @@ namespace MapHistory
         Map *map = getMap(mapView);
         Position fromPos = fromTile.position();
         Position toPos = toTile.position();
-
+            
         Tile &from = mapView.getOrCreateTile(fromPos);
         Tile &to = mapView.getOrCreateTile(toPos);
 
@@ -398,9 +403,13 @@ namespace MapHistory
                 to.addItem(from.dropItem(i));
             }
 
-            if (partialMoveData->ground)
+            if (partialMoveData->moveFlags & MoveFlags::MoveGround)
             {
                 to.setGround(from.dropGround());
+            }
+            if (partialMoveData->moveFlags & MoveFlags::MoveCreature)
+            {
+                to.setCreature(from.dropCreature());
             }
         }
 
@@ -649,10 +658,14 @@ namespace MapHistory
         entries.reserve(positions.size());
         for (auto &position : std::move(positions))
         {
-            std::vector<uint16_t> indices = getIndices(mapView, position);
-            if (!indices.empty())
+            const Tile &tile = *mapView.getTile(position);
+
+            // (All selected + select) or (none selected + deselect) --> Do nothing
+            bool include = !((tile.allSelected() && select) || (!tile.hasSelection() && !select));
+
+            if (include)
             {
-                entries.emplace_back<Entry>({std::move(position), std::move(indices)});
+                entries.emplace_back<Entry>(getEntry(mapView, tile));
             }
         }
     }
@@ -687,6 +700,11 @@ namespace MapHistory
             {
                 Tile &tile = *map->getTile(entry.position);
 
+                if (entry.creature)
+                {
+                    tile.setCreatureSelected(false);
+                }
+
                 if (!entry.indices.empty())
                 {
                     auto it = entry.indices.begin();
@@ -703,9 +721,9 @@ namespace MapHistory
                         tile.deselectItemAtIndex(i - 1);
                         ++it;
                     }
-
-                    updateSelection(mapView, entry.position);
                 }
+
+                updateSelection(mapView, entry.position);
             }
         }
         else
@@ -713,6 +731,11 @@ namespace MapHistory
             for (const auto &entry : entries)
             {
                 Tile &tile = *map->getTile(entry.position);
+
+                if (entry.creature)
+                {
+                    tile.setCreatureSelected(true);
+                }
 
                 if (!entry.indices.empty())
                 {
@@ -730,18 +753,19 @@ namespace MapHistory
                         tile.selectItemAtIndex(i - 1);
                         ++it;
                     }
-
-                    updateSelection(mapView, entry.position);
                 }
+
+                updateSelection(mapView, entry.position);
             }
         }
     }
 
-    std::vector<uint16_t> SelectMultiple::getIndices(const MapView &mapView, const Position &position) const
+    SelectMultiple::Entry SelectMultiple::getEntry(const MapView &mapView, const Tile &tile) const
     {
-        std::vector<uint16_t> result;
+        Entry result;
+        result.position = tile.position();
+        result.creature = tile.hasCreature() && (tile.creature()->selected != select);
 
-        const Tile &tile = *mapView.getTile(position);
         const auto tileItemCount = tile.itemCount();
 
         if (select)
@@ -749,13 +773,13 @@ namespace MapHistory
             if (!(tile.hasGround() && tile.ground()->selected))
             {
                 // Index 0 corresponds to ground
-                result.emplace_back(0);
+                result.indices.emplace_back(0);
             }
 
             for (int i = 0; i < tileItemCount; ++i)
             {
                 if (!tile.itemSelected(i))
-                    result.emplace_back(i + 1);
+                    result.indices.emplace_back(i + 1);
             }
         }
         else
@@ -763,13 +787,13 @@ namespace MapHistory
             if (tile.hasGround() && tile.ground()->selected)
             {
                 // Index 0 corresponds to ground
-                result.emplace_back(0);
+                result.indices.emplace_back(0);
             }
 
             for (int i = 0; i < tileItemCount; ++i)
             {
                 if (tile.itemSelected(i))
-                    result.emplace_back(i + 1);
+                    result.indices.emplace_back(i + 1);
             }
         }
 
@@ -981,6 +1005,59 @@ namespace MapHistory
         }
 
         tile->swapCreature(creature);
+    }
+
+    SetSelectionTileSpecial::SetSelectionTileSpecial(Position position, ThingType thingType, bool selected)
+        : position(position), thingType(thingType), selected(selected)
+    {
+    }
+
+    SetSelectionTileSpecial SetSelectionTileSpecial::creature(Position position, bool selected)
+    {
+        return SetSelectionTileSpecial(position, ThingType::Creature, selected);
+    }
+
+    SetSelectionTileSpecial SetSelectionTileSpecial::spawn(Position position, bool selected)
+    {
+        return SetSelectionTileSpecial(position, ThingType::Spawn, selected);
+    }
+
+    void SetSelectionTileSpecial::commit(MapView &mapView)
+    {
+        auto tile = mapView.getTile(position);
+        DEBUG_ASSERT(tile != nullptr, "Missing tile.");
+        switch (thingType)
+        {
+            case ThingType::Creature:
+                DEBUG_ASSERT(tile->hasCreature(), "No creature.");
+                tile->setCreatureSelected(selected);
+                break;
+            case ThingType::Spawn:
+                ABORT_PROGRAM("TODO! Not implemented yet.");
+                break;
+        }
+
+        selected = !selected;
+        updateSelection(mapView, position);
+    }
+
+    void SetSelectionTileSpecial::undo(MapView &mapView)
+    {
+        auto tile = mapView.getTile(position);
+        DEBUG_ASSERT(tile != nullptr, "Missing tile.");
+        switch (thingType)
+        {
+            case ThingType::Creature:
+                DEBUG_ASSERT(tile->hasCreature(), "No creature.");
+                tile->setCreatureSelected(selected);
+                break;
+            case ThingType::Spawn:
+                ABORT_PROGRAM("TODO! Not implemented yet.");
+                break;
+        }
+
+        selected = !selected;
+        updateSelection(mapView, position);
     }
 
     void Action::markAsCommitted()

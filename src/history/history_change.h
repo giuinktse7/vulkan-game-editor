@@ -9,7 +9,6 @@
 #include "../tile.h"
 #include "item_mutation.h"
 
-
 class MapView;
 class Map;
 
@@ -210,9 +209,15 @@ namespace MapHistory
     class Move_v2 : public ChangeItem
     {
       public:
+        enum MoveFlags : uint8_t
+        {
+            MoveGround = 1,
+            MoveCreature = 1 << 1
+        };
+
         Move_v2(Position from, Position to);
-        Move_v2(Position from, Position to, bool ground);
-        Move_v2(Position from, Position to, bool ground, std::vector<uint16_t> indices);
+        Move_v2(Position from, Position to, MoveFlags moveFlags);
+        Move_v2(Position from, Position to, MoveFlags moveFlags, std::vector<uint16_t> indices);
 
         static Move_v2 entire(Position from, Position to);
         static Move_v2 entire(const Tile &tile, Position to);
@@ -226,7 +231,7 @@ namespace MapHistory
         struct PartialMoveData
         {
             std::vector<uint16_t> indices;
-            bool ground;
+            MoveFlags moveFlags;
         };
         std::optional<PartialMoveData> partialMoveData;
 
@@ -340,12 +345,14 @@ namespace MapHistory
        * 1..n: Items
        */
             std::vector<uint16_t> indices;
+
+            bool creature = false;
         };
 
         std::vector<Entry> entries;
         bool select;
 
-        std::vector<uint16_t> getIndices(const MapView &mapView, const Position &position) const;
+        Entry getEntry(const MapView &mapView, const Tile &tile) const;
     };
 
     class Select : public ChangeItem
@@ -365,6 +372,30 @@ namespace MapHistory
         Position position;
         std::vector<uint16_t> indices;
         bool includesGround = false;
+    };
+
+    // Select tile special (currently only creature)
+    class SetSelectionTileSpecial : public ChangeItem
+    {
+      public:
+        enum class ThingType
+        {
+            Creature,
+            Spawn
+        };
+
+        SetSelectionTileSpecial(Position position, ThingType thingType, bool selected);
+
+        static SetSelectionTileSpecial creature(Position position, bool selected);
+        static SetSelectionTileSpecial spawn(Position position, bool selected);
+
+        void commit(MapView &mapView) override;
+        void undo(MapView &mapView) override;
+
+      private:
+        Position position;
+        ThingType thingType;
+        bool selected;
     };
 
     class Deselect : public ChangeItem
@@ -402,6 +433,7 @@ namespace MapHistory
             Select,
             Deselect,
             SelectMultiple,
+            SetSelectionTileSpecial,
             MoveFromMapToContainer,
             MoveFromContainerToMap,
             MoveFromContainerToContainer,
@@ -436,3 +468,5 @@ namespace MapHistory
     };
 
 } // namespace MapHistory
+
+VME_ENUM_OPERATORS(MapHistory::Move_v2::MoveFlags)

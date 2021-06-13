@@ -38,16 +38,34 @@ void Tile::setLocation(TileLocation &location)
 
 void Tile::setCreature(Creature &&creature)
 {
-    _creature = std::make_unique<Creature>(std::move(creature));
+    setCreature(std::make_unique<Creature>(std::move(creature)));
 }
 
 void Tile::setCreature(std::unique_ptr<Creature> &&creature)
 {
+    if (_creature)
+    {
+        removeCreature();
+    }
+
+    if (!creature)
+    {
+        return;
+    }
+
+    if (creature->selected)
+    {
+        ++_selectionCount;
+    }
     _creature = std::move(creature);
 }
 
 std::unique_ptr<Creature> Tile::dropCreature()
 {
+    if (_creature->selected)
+    {
+        --_selectionCount;
+    }
     std::unique_ptr<Creature> droppedCreature(std::move(_creature));
     _creature.reset();
 
@@ -121,6 +139,9 @@ void Tile::deselectAll()
     if (_ground)
         _ground->selected = false;
 
+    if (_creature)
+        _creature->selected = false;
+
     for (auto &item : _items)
     {
         item->selected = false;
@@ -158,6 +179,11 @@ void Tile::moveSelected(Tile &other)
     {
         other._items.clear();
         other._ground = dropGround();
+    }
+
+    if (_creature && _creature->selected)
+    {
+        other._creature = dropCreature();
     }
 
     auto it = _items.begin();
@@ -320,6 +346,15 @@ void Tile::removeGround()
     _ground.reset();
 }
 
+void Tile::removeCreature()
+{
+    if (_creature->selected)
+    {
+        --_selectionCount;
+    }
+    _creature.reset();
+}
+
 void Tile::setItemSelected(size_t itemIndex, bool selected)
 {
     if (selected)
@@ -355,6 +390,12 @@ void Tile::selectAll()
         _ground->selected = true;
     }
 
+    if (_creature)
+    {
+        ++count;
+        _creature->selected = true;
+    }
+
     count += _items.size();
     for (auto &item : _items)
     {
@@ -371,6 +412,26 @@ void Tile::setGroundSelected(bool selected)
         selectGround();
     else
         deselectGround();
+}
+
+void Tile::setCreatureSelected(bool selected)
+{
+    if (selected)
+    {
+        if (_creature && !_creature->selected)
+        {
+            ++_selectionCount;
+            _creature->selected = true;
+        }
+    }
+    else
+    {
+        if (_creature && _creature->selected)
+        {
+            --_selectionCount;
+            _creature->selected = false;
+        }
+    }
 }
 
 void Tile::selectGround()
@@ -446,6 +507,28 @@ Item *Tile::getTopItem() const
     }
 
     return nullptr;
+}
+
+TileThing Tile::getTopThing() const
+{
+    if (hasCreature())
+    {
+        return _creature.get();
+    }
+    else
+    {
+        return getTopItem();
+    }
+}
+
+bool Tile::topThingSelected() const
+{
+    if (hasCreature())
+    {
+        return _creature->selected;
+    }
+
+    return topItemSelected();
 }
 
 bool Tile::topItemSelected() const
@@ -548,11 +631,14 @@ bool Tile::hasItems() const
 
 bool Tile::allSelected() const
 {
-    size_t size = _items.size();
+    size_t thingCount = _items.size();
     if (_ground)
-        ++size;
+        ++thingCount;
 
-    return _selectionCount == size;
+    if (_creature)
+        ++thingCount;
+
+    return _selectionCount == thingCount;
 }
 
 bool Tile::hasSelection() const
@@ -568,6 +654,9 @@ Item *Tile::firstSelectedItem()
 
 const Item *Tile::firstSelectedItem() const
 {
+    if (_selectionCount == 0)
+        return nullptr;
+
     if (_ground && _ground->selected)
         return ground();
 

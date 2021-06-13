@@ -137,6 +137,7 @@ void MapView::deselectTile(const Tile &tile)
 
 void MapView::clearSelection()
 {
+    bool e = _selection.empty();
     if (!_selection.empty())
     {
         history.commit(
@@ -362,30 +363,6 @@ void MapView::moveFromContainerToContainer(ContainerLocation &from, ContainerLoc
 
 void MapView::moveSelection(const Position &offset)
 {
-    // history.beginTransaction(TransactionType::MoveItems);
-    // {
-    //     Action action(ActionType::Selection);
-
-    //     auto multiMove = std::make_unique<MultiMove>(offset, _selection.size());
-
-    //     for (const auto fromPos : _selection)
-    //     {
-    //         const Tile &fromTile = *getTile(fromPos);
-    //         Position toPos = fromPos + offset;
-    //         DEBUG_ASSERT(fromTile.hasSelection(), "The tile at each position of a selection should have a selection.");
-
-    //         if (fromTile.allSelected())
-    //             multiMove->add(Move::entire(fromPos, toPos));
-    //         else
-    //             multiMove->add(Move::selected(fromTile, toPos));
-    //     }
-
-    //     action.addChange(std::move(multiMove));
-
-    //     history.commit(std::move(action));
-    // }
-    // history.endTransaction(TransactionType::MoveItems);
-
     history.beginTransaction(TransactionType::MoveItems);
     {
         Action action(ActionType::Selection);
@@ -668,7 +645,6 @@ const Item *MapView::singleSelectedItem() const
         return nullptr;
 
     auto item = tile->firstSelectedItem();
-    DEBUG_ASSERT(item != nullptr, "It should be impossible for the selected item to be nullptr.");
 
     return item;
 }
@@ -818,6 +794,52 @@ void MapView::startItemDrag(Tile *tile, Item *item)
     mapItemDragStart.fire(tile, item);
 }
 
+void MapView::selectTopThing(const Position &position, bool isNewSelection)
+{
+    Tile *tile = getTile(position);
+    if (!tile)
+    {
+        commitTransaction(TransactionType::Selection, [this] {
+            clearSelection();
+        });
+        return;
+    }
+
+    if (tile->topThingSelected())
+    {
+        selectedTileThingClicked.fire(this, this->getTile(position), tile->getTopThing());
+        return;
+    }
+
+    if (tile->hasCreature())
+    {
+        commitTransaction(TransactionType::Selection, [this, position, isNewSelection] {
+            if (isNewSelection)
+            {
+                clearSelection();
+            }
+
+            history.commit(ActionType::Selection, SetSelectionTileSpecial::creature(position, true));
+        });
+    }
+    else
+    {
+        Item *topItem = tile->getTopItem();
+
+        commitTransaction(TransactionType::Selection, [this, position, topItem, isNewSelection] {
+            if (isNewSelection)
+            {
+                clearSelection();
+            }
+
+            if (topItem)
+            {
+                selectTopItem(position);
+            }
+        });
+    }
+}
+
 //>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>
 //>>>>>>Events>>>>>>
@@ -834,44 +856,29 @@ void MapView::mousePressEvent(VME::MouseEvent event)
         std::visit(
             util::overloaded{
                 [this, pos, event](MouseAction::Select &action) {
+                    // Pickupable item drag
                     if (event.modifiers() & VME::ModifierKeys::Alt)
                     {
                         Item *topItem = _map->getTopItem(pos);
-                        if (topItem)
+                        if (topItem && topItem->itemType->hasFlag(AppearanceFlag::Take))
                         {
                             Tile *tile = _map->getTile(pos);
                             startItemDrag(tile, topItem);
+                            return;
                         }
                     }
-                    else if (event.modifiers() & VME::ModifierKeys::Shift)
+
+                    if (event.modifiers() & VME::ModifierKeys::Shift)
                     {
                         action.area = true;
                     }
                     else
                     {
-                        Item *topItem = _map->getTopItem(pos);
-                        if (!topItem)
-                        {
-                            commitTransaction(TransactionType::Selection, [this] { clearSelection(); });
-                            return;
-                        }
-
-                        if (!topItem->selected)
-                        {
-                            commitTransaction(TransactionType::Selection, [this, pos] {
-                                clearSelection();
-                                selectTopItem(pos);
-                            });
-                        }
-                        else
-                        {
-                            selectedItemClicked.fire(this, this->getTile(pos), topItem);
-                        }
+                        bool isNewSelection = !(event.modifiers() & VME::ModifierKeys::Ctrl);
+                        selectTopThing(pos, isNewSelection);
 
                         action.setMoveOrigin(pos);
                         editorAction.lock();
-                        // VME_LOG_D("Start move: " << pos);
-                        // VME_LOG_D("moveDelta: " << _selection.moveDelta());
                     }
                 },
 
@@ -978,8 +985,13 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                         {
                             Item *item = tile->firstSelectedItem();
 
-                            editorAction.unlock();
-                            startItemDrag(tile, item);
+                            if (item)
+                            {
+                                editorAction.unlock();
+                                startItemDrag(tile, item);
+                            }
+
+                            // TODO Perhaps other things than items will be draggable in the future, ex. creatures.
                         }
                     }
                 },
@@ -1159,6 +1171,7 @@ void MapView::escapeEvent()
 
 void MapView::setViewOption(ViewOption option, bool value)
 {
+
     if (EnumFlag::isSet(_viewOptions, option) != value)
     {
         EnumFlag::set(_viewOptions, option, value);

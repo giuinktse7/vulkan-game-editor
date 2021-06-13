@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <memory>
 #include <optional>
+#include <variant>
 
 #include "creature.h"
 #include "item.h"
@@ -10,6 +11,8 @@
 
 class MapView;
 class TileLocation;
+
+using TileThing = std::variant<Item *, Creature *>;
 
 class Tile
 {
@@ -38,11 +41,13 @@ class Tile
 
     bool hasSelection() const;
     bool topItemSelected() const;
+    bool topThingSelected() const;
     bool allSelected() const;
     inline size_t selectionCount() const noexcept;
     Item *firstSelectedItem();
     const Item *firstSelectedItem() const;
 
+    TileThing getTopThing() const;
     Item *getTopItem() const;
     bool hasTopItem() const;
     inline Item *ground() const noexcept;
@@ -62,6 +67,7 @@ class Tile
     std::shared_ptr<Item> dropItem(size_t index);
     std::shared_ptr<Item> dropItem(Item *item);
     void removeGround();
+    void removeCreature();
     std::shared_ptr<Item> dropGround();
     void setGround(std::shared_ptr<Item> ground);
     void moveItems(Tile &other);
@@ -89,6 +95,7 @@ class Tile
     void deselectGround();
     void setGroundSelected(bool selected);
     void selectAll();
+    void setCreatureSelected(bool selected);
 
     bool isEmpty() const;
     bool hasItems() const;
