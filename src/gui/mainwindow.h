@@ -75,7 +75,7 @@ class MainWindow : public QWidget, public Nano::Observer<>
 
     void mapViewMousePosEvent(MapView &mapView, util::Point<float> mousePos);
     void mapViewSelectionChangedEvent(MapView &mapView);
-    void mapViewSelectedItemClicked(MapView *mapView, const Tile *tile, Item *item);
+    void mapViewSelectedTileThingClicked(MapView *mapView, const Tile *tile, TileThing tileThing);
     void mapViewUndoRedoEvent(MapView &mapView);
     void mapViewViewportEvent(MapView &mapView, const Camera::Viewport &viewport);
     void mapTabCloseEvent(int index, QVariant data);

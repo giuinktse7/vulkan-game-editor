@@ -18,6 +18,7 @@
 
 #pragma clang diagnostic pop
 
+#include "../../vendor/rollbear-visit/visit.hpp"
 #include "../brushes/ground_brush.h"
 #include "../graphics/appearance_types.h"
 #include "../item_location.h"
@@ -146,7 +147,7 @@ void MainWindow::addMapTab(std::shared_ptr<Map> map)
             this,
             &MainWindow::mapViewUndoRedoEvent);
 
-    vulkanWindow->getMapView()->onSelectedItemClicked<&MainWindow::mapViewSelectedItemClicked>(this);
+    vulkanWindow->getMapView()->onSelectedTileThingClicked<&MainWindow::mapViewSelectedTileThingClicked>(this);
 
     if (map->name().empty())
     {
@@ -195,18 +196,31 @@ MainWindow::MainWindow(QWidget *parent)
 //>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>
 
-void MainWindow::mapViewSelectedItemClicked(MapView *mapView, const Tile *tile, Item *item)
+void MainWindow::mapViewSelectedTileThingClicked(MapView *mapView, const Tile *tile, TileThing tileThing)
 {
     auto position = tile->position();
     bool showInPropertyWindow = !(QApplication::keyboardModifiers() & Qt::KeyboardModifier::AltModifier);
     if (showInPropertyWindow)
     {
-        propertyWindow->focusItem(item, position, *mapView);
+        rollbear::visit(
+            util::overloaded{
+                [this, &position, mapView](Item *item) {
+                    propertyWindow->focusItem(item, position, *mapView);
+                },
+                [this, position](const Creature *creature) {
+                    // TODO
+                },
+
+                [](const auto &arg) {
+                }},
+            tileThing);
     }
 }
 
 void MainWindow::mapViewSelectionChangedEvent(MapView &mapView)
 {
+    // TODO Handle the case where the selected thing is something other than an item (ex. a creature).
+    // All(?) selectable entities should have properties.
     Item *selectedItem = mapView.singleSelectedItem();
     if (selectedItem)
     {
