@@ -71,8 +71,15 @@ void SearchPopupView::hideEvent(QHideEvent *e)
 
 void SearchPopupView::search(std::string searchTerm)
 {
-    auto results = Brush::search(searchTerm);
-    searchResultModel.setSearchResults(std::move(results));
+    if (searchTerm.size() > 2)
+    {
+        auto results = Brush::search(searchTerm);
+        searchResultModel.setSearchResults(std::move(results));
+    }
+    else
+    {
+        searchResultModel.clear();
+    }
 }
 
 SearchWrapperEventFilter::SearchWrapperEventFilter(SearchPopupView *parent)

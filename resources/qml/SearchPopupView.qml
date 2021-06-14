@@ -8,15 +8,13 @@ import Vme.context 1.0 as Context
 Rectangle {
     id: root;
     anchors.fill: parent;
-    border.color: "#aaa"
-    border.width: 1
 
     property int minHeight: 300;
     property int maxHeight: 600;
 
     property var searchResults;
 
-    color: "transparent";
+    color: "#BDBDBD";
 
     function resetSearchText() {
         search_textfield.text = "";
@@ -95,7 +93,7 @@ Rectangle {
 
     Rectangle {
         anchors.fill: parent;
-        // anchors.margins: 14;
+        anchors.margins: 1;
             
         color: "#fcfcfc";
         // color: "#ccc";
@@ -116,8 +114,27 @@ Rectangle {
                 placeholderText: qsTr("Search for brushes...");
                 font.pixelSize: 12;
 
+               activeFocusOnTab: true;
+               onActiveFocusChanged: {
+               if (activeFocus) {
+                        console.log("Focused search field");
+                    }
+                }
+
                 onTextChanged: {
                     Context.C_SearchPopupView.searchEvent(text);
+                }
+
+                Keys.onDownPressed: {
+                    if (root.searchResults.count != 0) {
+                        searchResultList.itemAtIndex(0).forceActiveFocus();
+                    }
+                }
+
+                onAccepted: {
+                    if (root.searchResults.count != 0) {
+                        Context.C_SearchPopupView.brushSelected(0);
+                    }
                 }
             }
 
@@ -140,12 +157,10 @@ Rectangle {
 
                 readonly property int fontSize: 11;
                 property string selectedId;
-                property int selectedOffsetX;
-                property int selectedWidth;
 
-                onSelectedIdChanged: {
-                    filter_selection_indicator.x = selectedOffsetX;
-                    filter_selection_indicator.width = selectedWidth + spacing;
+                function updateSelectionIndicator(x, width) {
+                    filter_selection_indicator.x = x;
+                    filter_selection_indicator.width = width + spacing;
                 }
 
                 SearchPopup.FilterChoice {
@@ -155,28 +170,68 @@ Rectangle {
                     fontSize: filterOptionsRow.fontSize;
                     selected: filterOptionsRow.selectedId == filterId;
                     amount: root.searchResults.totalCount;
+
+                    activeFocusOnTab: true;
+                    onActiveFocusChanged: {
+                        if (activeFocus) {
+                            console.log("Focused ", filterId);
+                        }
+                    }
+
                     onPressed: {
                         root.searchResults.resetFilter();
-                        filterOptionsRow.selectedWidth = width;
-                        filterOptionsRow.selectedOffsetX = x;
+                        filterOptionsRow.updateSelectionIndicator(x, width);
                         filterOptionsRow.selectedId = filterId;
                     }
+
+                    onWidthChanged: {
+                        if (selected) {
+                            filterOptionsRow.updateSelectionIndicator(x, width);
+                        }
+                    }
+
+                    onXChanged: {
+                        if (selected) {
+                            filterOptionsRow.updateSelectionIndicator(x, width);
+                        }
+                    }
                 }
+
                 SearchPopup.FilterChoice {
+                
                     readonly property int filterId: 1;
                     id: "filter_choice_raw"
                     text: qsTr("Raw");
                     fontSize: filterOptionsRow.fontSize;
                     selected: filterOptionsRow.selectedId == filterId;
                     amount: root.searchResults.rawCount;
+
+                    activeFocusOnTab: true;
+                    onActiveFocusChanged: {
+                        if (activeFocus) {
+                            console.log("Focused ", filterId);
+                        }
+                    }
+
                     onPressed: {
                         root.searchResults.setFilter("raw");
-
-                        filterOptionsRow.selectedWidth = width;
-                        filterOptionsRow.selectedOffsetX = x;
+                        filterOptionsRow.updateSelectionIndicator(x, width);
                         filterOptionsRow.selectedId = filterId;
                     }
+
+                    onWidthChanged: {
+                        if (selected) {
+                            filterOptionsRow.updateSelectionIndicator(x, width);
+                        }
+                    }
+
+                    onXChanged: {
+                        if (selected) {
+                            filterOptionsRow.updateSelectionIndicator(x, width);
+                        }
+                    }
                 }
+
                 SearchPopup.FilterChoice {
                     readonly property int filterId: 2;
                     id: "filter_choice_ground"
@@ -184,14 +239,33 @@ Rectangle {
                     fontSize: filterOptionsRow.fontSize;
                     selected: filterOptionsRow.selectedId == filterId;
                     amount: root.searchResults.groundCount;
+
+                    activeFocusOnTab: true;
+                    onActiveFocusChanged: {
+                        if (activeFocus) {
+                            console.log("Focused ", filterId);
+                        }
+                    }
+
                     onPressed: {
                         root.searchResults.setFilter("ground");
-
-                        filterOptionsRow.selectedWidth = width;
-                        filterOptionsRow.selectedOffsetX = x;
+                        filterOptionsRow.updateSelectionIndicator(x, width);
                         filterOptionsRow.selectedId = filterId;
                     }
+
+                    onWidthChanged: {
+                        if (selected) {
+                            filterOptionsRow.updateSelectionIndicator(x, width);
+                        }
+                    }
+
+                    onXChanged: {
+                        if (selected) {
+                            filterOptionsRow.updateSelectionIndicator(x, width);
+                        }
+                    }
                 }
+
                 SearchPopup.FilterChoice {
                     readonly property int filterId: 3;
                     id: "filter_choice_doodad"
@@ -199,14 +273,33 @@ Rectangle {
                     fontSize: filterOptionsRow.fontSize;
                     selected: filterOptionsRow.selectedId == filterId;
                     amount: root.searchResults.doodadCount;
+
+                    activeFocusOnTab: true;
+                    onActiveFocusChanged: {
+                        if (activeFocus) {
+                            console.log("Focused ", filterId);
+                        }
+                    }
+
                     onPressed: {
                         root.searchResults.setFilter("doodad");
-
-                        filterOptionsRow.selectedWidth = width;
-                        filterOptionsRow.selectedOffsetX = x;
+                        filterOptionsRow.updateSelectionIndicator(x, width);
                         filterOptionsRow.selectedId = filterId;
                     }
+
+                    onWidthChanged: {
+                        if (selected) {
+                            filterOptionsRow.updateSelectionIndicator(x, width);
+                        }
+                    }
+
+                    onXChanged: {
+                        if (selected) {
+                            filterOptionsRow.updateSelectionIndicator(x, width);
+                        }
+                    }
                 }
+
                 SearchPopup.FilterChoice {
                     readonly property int filterId: 4;
                     id: "filter_choice_creature"
@@ -214,12 +307,30 @@ Rectangle {
                     fontSize: filterOptionsRow.fontSize;
                     selected: filterOptionsRow.selectedId == filterId;
                     amount: root.searchResults.creatureCount;
+
+                    activeFocusOnTab: true;
+                    onActiveFocusChanged: {
+                        if (activeFocus) {
+                            console.log("Focused ", filterId);
+                        }
+                    }
+
                     onPressed: {
                         root.searchResults.setFilter("creature");
-
-                        filterOptionsRow.selectedWidth = width;
-                        filterOptionsRow.selectedOffsetX = x;
+                        filterOptionsRow.updateSelectionIndicator(x, width);
                         filterOptionsRow.selectedId = filterId;
+                    }
+
+                    onWidthChanged: {
+                        if (selected) {
+                            filterOptionsRow.updateSelectionIndicator(x, width);
+                        }
+                    }
+
+                    onXChanged: {
+                        if (selected) {
+                            filterOptionsRow.updateSelectionIndicator(x, width);
+                        }
                     }
                 }
             }
@@ -234,7 +345,8 @@ Rectangle {
 
                 Rectangle {
                     id: "filter_selection_indicator";
-                    width: 50;
+                    x: filter_choice_all.x;
+                    width: filter_choice_all.width + filterOptionsRow.spacing;
                     height: 2;
                     color: "#4F4F4F";
 
@@ -307,36 +419,16 @@ Rectangle {
 
                         hoverEnabled: true
 
+                        activeFocusOnTab: true;
+                        onActiveFocusChanged: {
+                            if (activeFocus) {
+                                console.log("Focused ", name);
+                            }
+                        }
+
                         onPressed: {
                             Context.C_SearchPopupView.brushSelected(index);
                         }
-
-                        // ToolTip {
-                        //     id: nameTextTooltip;
-                        //     parent: nameText;
-                        //     visible: nameText.truncated && nameTextMouseArea.containsMouse
-                        //     text: brush.name
-                        //     delay: 300
-                        //     y: -5;
-
-                        //     contentItem: MouseArea {
-                        //         width: childrenRect.width;
-                        //         height: childrenRect.height;
-
-                        //         onPressed: {
-                        //             Context.C_SearchPopupView.brushSelected(brush.index);
-                        //         }
-                        //         Text {
-                        //             text: nameTextTooltip.text;
-                        //             font: nameTextTooltip.font;
-                        //             color: "white";
-                        //         }
-                        //     }
-
-                        //     background: Rectangle {
-                        //         color: "#CC303F9F"
-                        //     }
-                        // }
 
                         Column {
                             width: searchResultList.cellWidth - searchResultList.cellHSpacing;
@@ -346,14 +438,10 @@ Rectangle {
                                 anchors.horizontalCenter: parent.horizontalCenter;
                                 width: 32;
                                 height: 32;
-                                // Layout.preferredWidth: 32;
-                                // Layout.preferredHeight: 32;
-                                // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop;
 
                                 color: "transparent";
 
                                 border.color: "#f2f2f2";
-                                // border.color: "red";
                                 border.width: 1;
 
                                 Image {
@@ -362,41 +450,29 @@ Rectangle {
                                 }
                             }
 
-
-                            // Column {
-                            //     width: searchResultList.cellWidth - searchResultList.cellHSpacing;
-                            //     height: childrenRect.height
-                                // Layout.preferredWidth: 32
-                                // Layout.preferredHeight: childrenRect.height
-                                // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-
-
-                                Text {
-                                    width: parent.width
-                                    text: brush.displayId
-                                    visible: text != ""
-                                    horizontalAlignment: Text.AlignHCenter;
-                                }
+                            Text {
+                                width: parent.width;
+                                text: brush.displayId;
+                                visible: text != "";
+                                horizontalAlignment: Text.AlignHCenter;
+                            }
                                 
-                                Text {
-                                    id: nameText
-                                    width: parent.width
-                                    text: brush.name
-                                    wrapMode: Text.WordWrap
-                                    elide: Text.ElideRight
-                                    maximumLineCount: brush.containsMouse ? 3 : 1;
+                            Text {
+                                id: nameText;
+                                width: parent.width;
+                                text: brush.name;
+                                wrapMode: Text.WordWrap;
+                                elide: Text.ElideRight;
+                                maximumLineCount: brush.containsMouse ? 3 : 1;
 
-                                    horizontalAlignment: Text.AlignHCenter;
+                                horizontalAlignment: Text.AlignHCenter;
 
-                                    MouseArea {
-                                        id: nameTextMouseArea
-                                        anchors.fill: parent;
-                                        hoverEnabled: true
-                                    }
+                                MouseArea {
+                                    id: nameTextMouseArea;
+                                    anchors.fill: parent;
+                                    hoverEnabled: true;
                                 }
-
-                            
-                            // }
+                            }
                         }
                     }
                 }
