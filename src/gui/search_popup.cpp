@@ -194,9 +194,15 @@ QVariant SearchResultModel::data(const QModelIndex &index, int role) const
 
     if (role == to_underlying(Role::DisplayId))
     {
-        auto displayId = brush->getDisplayId();
-
-        return QVariant::fromValue(displayId);
+        if (brush->type() == BrushType::Raw)
+        {
+            auto displayId = brush->getDisplayId();
+            return QString::fromStdString(displayId);
+        }
+        else
+        {
+            return QString();
+        }
     }
     else if (role == to_underlying(Role::Name))
     {
