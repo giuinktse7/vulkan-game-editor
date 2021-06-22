@@ -33,3 +33,7 @@ namespace TemporaryTest
     std::shared_ptr<Map> makeTestMap1();
     std::shared_ptr<Map> makeTestMap2();
 } // namespace TemporaryTest
+
+void testApplyAtlasTemplate();
+std::pair<int, int> offsetFromSpriteId(TextureAtlas *atlas, uint32_t spriteId);
+void applyTemplate(int spriteX, int spriteY, int templateX, int templateY, int width, int height, int atlasWidth, std::vector<uint8_t> &pixels, const Outfit &outfit);

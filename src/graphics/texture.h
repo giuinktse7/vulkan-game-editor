@@ -44,6 +44,11 @@ class Texture
         return _pixels;
     }
 
+    inline std::vector<uint8_t> &mutablePixelsTEST() noexcept
+    {
+        return _pixels;
+    }
+
     inline uint32_t sizeInBytes() const;
 
     static Texture *getSolidTexture(SolidColor color);
@@ -55,6 +60,63 @@ class Texture
     uint32_t _width;
     uint32_t _height;
 };
+
+struct Pixel
+{
+    union
+    {
+        struct
+        {
+            uint8_t _r;
+            uint8_t _g;
+            uint8_t _b;
+            uint8_t _a;
+        } parts;
+        uint32_t full;
+    };
+
+    uint8_t r() const noexcept
+    {
+        return parts._r;
+    }
+    uint8_t g() const noexcept
+    {
+        return parts._g;
+    }
+    uint8_t b() const noexcept
+    {
+        return parts._b;
+    }
+    uint8_t a() const noexcept
+    {
+        return parts._a;
+    }
+
+    Pixel multiply(const Pixel &other);
+};
+
+struct Pixels
+{
+    static constexpr Pixel Red{255, 0, 0, 255};
+    static constexpr Pixel Green{0, 255, 0, 255};
+    static constexpr Pixel Blue{0, 0, 255, 255};
+    static constexpr Pixel Yellow{255, 255, 0, 255};
+    static constexpr Pixel Magenta{255, 0, 255, 0};
+};
+
+inline bool operator==(const Pixel &lhs, const Pixel &rhs)
+{
+    // return lhs.r == rhs.r && lhs.g == rhs.g && lhs.b == rhs.b && lhs.a == rhs.a;
+    return lhs.full == rhs.full;
+}
+
+inline bool operator!=(const Pixel &lhs, const Pixel &rhs)
+{
+    return !(lhs == rhs);
+}
+
+Pixel getPixelFromBMPTexture(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels);
+void multiplyPixelInBMP(int x, int y, int atlasWidth, std::vector<uint8_t> &pixels, const Pixel &pixel);
 
 inline int Texture::width() const noexcept
 {

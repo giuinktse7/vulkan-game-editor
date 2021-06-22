@@ -574,6 +574,22 @@ void MapRenderer::drawTile(Tile *tile, uint32_t flags, const Position offset, co
     {
         auto &creature = *tile->creature();
         drawCreature(creatureDrawInfo(creature, position, flags));
+
+        // auto drawTest = [this, &creature, position, flags](int offset) {
+        //     DrawInfo::Creature info;
+        //     info.color = getCreatureDrawColor(creature, position, flags);
+        //     info.textureInfo = creature.creatureType.appearance->getTextureInfoBySpriteIdTEST(offset);
+        //     info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+        //     info.position = position;
+        //     info.width = info.textureInfo.atlas->spriteWidth;
+        //     info.height = info.textureInfo.atlas->spriteHeight;
+
+        //     WorldPosition worldPos = (info.position + Position(info.textureInfo.atlas->drawOffset.x, info.textureInfo.atlas->drawOffset.y, 0)).worldPos();
+
+        //     issueDraw(info, worldPos);
+        // };
+
+        // drawTest(2);
     }
 }
 

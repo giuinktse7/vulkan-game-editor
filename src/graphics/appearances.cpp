@@ -559,12 +559,28 @@ CreatureAppearance::CreatureAppearance(const proto::Appearance &appearance)
     }
 }
 
+const TextureInfo CreatureAppearance::getTextureInfoBySpriteIdTEST(int offset) const
+{
+    auto &fg = this->frameGroup(0);
+
+    auto spriteId = fg.spriteInfo.spriteIds.at(offset);
+
+    TextureAtlas *atlas = getTextureAtlas(spriteId);
+
+    TextureInfo info;
+    info.atlas = atlas;
+    info.window = atlas->getTextureWindow(spriteId, TextureInfo::CoordinateType::Normalized);
+
+    return info;
+}
+
 const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, CreatureDirection direction, TextureInfo::CoordinateType coordinateType) const
 {
-
     auto &fg = this->frameGroup(frameGroupId);
 
-    uint32_t spriteIndex = std::min<uint32_t>(to_underlying(direction), static_cast<uint32_t>(fg.spriteInfo.spriteIds.size()) - 1);
+    // TODO Determine how to get sprite index based on direction
+    // uint32_t spriteIndex = std::min<uint32_t>(to_underlying(direction), static_cast<uint32_t>(fg.spriteInfo.spriteIds.size()) - 1);
+    uint32_t spriteIndex = std::min<uint32_t>(0, static_cast<uint32_t>(fg.spriteInfo.spriteIds.size()) - 1);
     auto spriteId = fg.spriteInfo.spriteIds.at(spriteIndex);
 
     TextureAtlas *atlas = getTextureAtlas(spriteId);
@@ -712,19 +728,6 @@ const std::vector<FrameGroup> &CreatureAppearance::frameGroups() const noexcept
 void CreatureAppearance::cacheNonMovingRenderSizes() const
 {
     nonMovingCreatureRenderType = checkTransparency();
-}
-
-Pixel getPixel(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels)
-{
-    int i = (atlasWidth - y) * (atlasWidth * 4) + x * 4;
-
-    Pixel pixel{};
-    pixel.r = pixels.at(i);
-    pixel.g = pixels.at(i + 1);
-    pixel.b = pixels.at(i + 2);
-    pixel.a = pixels.at(i + 3);
-
-    return pixel;
 }
 
 bool isMagenta(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels)

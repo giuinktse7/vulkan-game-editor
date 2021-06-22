@@ -4,6 +4,17 @@
 
 ## Map Rendering
 
+- [ ] Render creature outfits by creating a copy of the relevant atlases and multiplying in pixel colors.
+  - Yellow: head
+  - Red: body
+  - Green: legs
+  - Blue: feet
+  When requesting a sprite for a CreatureType:
+    - The CreatureType makes copy of its required texture atlases and updates color of all(to start with?) its outfits based on their color templates.
+    - TextureAtlas has template instantiations, either in a static TextureAtlas::instatiations `map (id -> std::vector<pair<lookHash, Texture>>)` or stored as a variable in a TextureAtlas.
+    - Or maybe each atlas stores its "default instantiation" as the first item in a vector of `std::pair<LookHash, Texture>`. Then you need a TextureAtlas and the
+    LookHash to get a texture from the atlas. In default case, we always take the first texture (default instantiation).
+    - Must also handle the case where the creature has the look of an item
 - [x] ~~Implement animation~~
 - [x] ~~Handle stackable appearances~~
 - [x] ~~Handle appearances with elevation~~

@@ -638,6 +638,8 @@ void MainWindow::initializePaletteWindow()
             goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(id, name, looktype))));
         };
 
+        goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::creatureType("test"))));
+        // addTestCreatureBrush("nomad", "Nomad", 146);
         addTestCreatureBrush("rat", "Rat", 21);
         addTestCreatureBrush("bear", "Bear", 16);
         addTestCreatureBrush("cyclops", "Cyclops", 22);

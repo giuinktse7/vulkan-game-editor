@@ -103,3 +103,38 @@ glm::vec4 TextureWindow::asVec4() const noexcept
 {
     return glm::vec4(x0, y0, x1, y1);
 }
+
+Pixel getPixelFromBMPTexture(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels)
+{
+    int i = (atlasWidth - y) * (atlasWidth * 4) + x * 4;
+
+    // Because the texture is stored in the BMP format, pixels are read in reverse order (as BGRA instead of ARGB)
+    Pixel pixel{};
+    pixel.parts._b = pixels.at(i);
+    pixel.parts._g = pixels.at(i + 1);
+    pixel.parts._r = pixels.at(i + 2);
+    pixel.parts._a = pixels.at(i + 3);
+
+    return pixel;
+}
+
+// See https://stackoverflow.com/questions/45041273/how-to-correctly-multiply-two-colors-with-byte-components#comment77056973_45041273
+Pixel Pixel::multiply(const Pixel &other)
+{
+    return {
+        (uint8_t)((r() * other.r() + 0xFF) >> 8),
+        (uint8_t)((g() * other.g() + 0xFF) >> 8),
+        (uint8_t)((b() * other.b() + 0xFF) >> 8),
+        (uint8_t)((a() * other.a() + 0xFF) >> 8)};
+}
+
+void multiplyPixelInBMP(int x, int y, int atlasWidth, std::vector<uint8_t> &pixels, const Pixel &pixel)
+{
+    int i = (atlasWidth - y) * (atlasWidth * 4) + x * 4;
+
+    // Because the texture is stored in the BMP format, pixels are read in reverse order (as BGRA instead of ARGB)
+    pixels[i] = (uint8_t)((pixels[i] * pixel.b() + 0xFF) >> 8);
+    pixels[i + 1] = (uint8_t)((pixels[i + 1] * pixel.g() + 0xFF) >> 8);
+    pixels[i + 2] = (uint8_t)((pixels[i + 2] * pixel.r() + 0xFF) >> 8);
+    pixels[i + 3] = (uint8_t)((pixels[i + 3] * pixel.a() + 0xFF) >> 8);
+}
