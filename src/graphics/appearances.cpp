@@ -84,11 +84,6 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
 
     textureAtlasSpriteRanges.reserve(5000);
 
-    /* 
-      NOTE: This id (Texture atlas ID) is used to index texture resources (see MapRenderer::textureResources).
-      Because it is used to index a vector in the renderer, it has to stay within [0, amountOfTextureAtlases)
-  */
-    uint32_t id = 0;
     for (const auto &entry : catalogJson)
     {
         if (entry.at("type") == "sprite")
@@ -106,7 +101,6 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
             compressedBuffer.buffer = File::read(absolutePath.string());
 
             Appearances::textureAtlases[lastSpriteId] = std::make_unique<TextureAtlas>(
-                id,
                 std::move(compressedBuffer),
                 TextureAtlasSize.width,
                 TextureAtlasSize.height,
@@ -116,8 +110,6 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
                 filename);
 
             Appearances::textureAtlasSpriteRanges.emplace_back<SpriteRange>({firstSpriteId, lastSpriteId});
-
-            ++id;
         }
     }
 
@@ -563,7 +555,7 @@ const TextureInfo CreatureAppearance::getTextureInfoBySpriteIdTEST(int offset) c
 {
     auto &fg = this->frameGroup(0);
 
-    auto spriteId = fg.spriteInfo.spriteIds.at(offset);
+    auto spriteId = fg.getSpriteId(offset);
 
     TextureAtlas *atlas = getTextureAtlas(spriteId);
 
@@ -577,11 +569,10 @@ const TextureInfo CreatureAppearance::getTextureInfoBySpriteIdTEST(int offset) c
 const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, CreatureDirection direction, TextureInfo::CoordinateType coordinateType) const
 {
     auto &fg = this->frameGroup(frameGroupId);
+    uint8_t layers = fg.spriteInfo.layers;
 
-    // TODO Determine how to get sprite index based on direction
-    // uint32_t spriteIndex = std::min<uint32_t>(to_underlying(direction), static_cast<uint32_t>(fg.spriteInfo.spriteIds.size()) - 1);
-    uint32_t spriteIndex = std::min<uint32_t>(0, static_cast<uint32_t>(fg.spriteInfo.spriteIds.size()) - 1);
-    auto spriteId = fg.spriteInfo.spriteIds.at(spriteIndex);
+    uint32_t spriteIndex = to_underlying(direction) * layers;
+    uint32_t spriteId = fg.getSpriteId(spriteIndex);
 
     TextureAtlas *atlas = getTextureAtlas(spriteId);
 
@@ -688,7 +679,7 @@ void CreatureAppearance::cacheTextureAtlas(uint32_t spriteId)
     // If nothing is cached, cache the TextureAtlas for the first sprite ID in the appearance.
     if (_atlases.front() == nullptr)
     {
-        uint32_t firstSpriteId = _frameGroups.at(0).spriteInfo.spriteIds.at(0);
+        uint32_t firstSpriteId = _frameGroups.at(0).getSpriteId(0);
         _atlases.front() = Appearances::getTextureAtlas(firstSpriteId);
     }
 
@@ -760,13 +751,12 @@ bool transparentRegion(int fromX, int fromY, int width, int height, int atlasWid
 CreatureAppearance::NonMovingCreatureRenderType CreatureAppearance::checkTransparency() const
 {
     auto &fg = this->frameGroup(0);
-
     if (fg.spriteInfo.spriteIds.size() <= to_underlying(CreatureDirection::North))
     {
         return NonMovingCreatureRenderType::Full;
     }
 
-    auto spriteId = fg.spriteInfo.spriteIds.at(to_underlying(CreatureDirection::North));
+    auto spriteId = fg.getSpriteId(to_underlying(CreatureDirection::North));
     TextureAtlas *atlas = getTextureAtlas(spriteId);
 
     const auto &pixels = atlas->getOrCreateTexture().pixels();

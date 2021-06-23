@@ -17,8 +17,11 @@ struct SpriteInfo
     std::vector<uint32_t> spriteIds;
     uint32_t boundingSquare;
 
+    // For a creature SpriteInfo: maybe patternWidth is the amount of directions?
     uint8_t patternWidth = 1;
+    // For a creature SpriteInfo: maybe patternHeight is the amount of addons(base_outfit, addon1, addon2)?
     uint8_t patternHeight = 1;
+    // For a creature SpriteInfo: maybe patternDepth is the amount of distinct player positions (standing, mounted)?
     uint8_t patternDepth = 1;
     uint8_t patternSize = 1;
     uint8_t layers = 1;

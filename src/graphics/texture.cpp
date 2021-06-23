@@ -20,22 +20,31 @@
 #pragma warning(disable : 26812)
 #pragma warning(pop)
 
+uint32_t Texture::_nextTextureId = 0;
+
 std::unordered_map<SolidColor, std::unique_ptr<Texture>> solidColorTextures;
 
+uint32_t Texture::nextTextureId()
+{
+    uint32_t id = _nextTextureId++;
+    return id;
+}
+
 Texture::Texture(uint32_t width, uint32_t height, std::vector<uint8_t> &&pixels)
-    : _width(width), _height(height)
+    : _id(nextTextureId()), _width(width), _height(height)
 {
     this->_pixels = std::move(pixels);
 }
 
 Texture::Texture(uint32_t width, uint32_t height, uint8_t *pixels)
-    : _width(width), _height(height)
+    : _id(nextTextureId()), _width(width), _height(height)
 {
     uint64_t sizeInBytes = (static_cast<uint64_t>(_width) * _height) * 4;
     this->_pixels = std::vector<uint8_t>(pixels, pixels + sizeInBytes);
 }
 
 Texture::Texture(const std::string &filename)
+    : _id(nextTextureId())
 {
     int width, height, channels;
 
@@ -59,9 +68,9 @@ Texture::Texture(const std::string &filename)
     stbi_image_free(pixels);
 }
 
-TextureWindow Texture::getTextureWindow() const noexcept
+Texture Texture::deepCopy() const
 {
-    return TextureWindow{0.0f, 0.0f, 1.0f, 1.0f};
+    return Texture(_width, _height, copyPixels());
 }
 
 uint32_t asArgb(SolidColor color) noexcept
@@ -106,7 +115,7 @@ glm::vec4 TextureWindow::asVec4() const noexcept
 
 Pixel getPixelFromBMPTexture(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels)
 {
-    int i = (atlasWidth - y) * (atlasWidth * 4) + x * 4;
+    int i = 4 * ((atlasWidth - y - 1) * (atlasWidth) + x);
 
     // Because the texture is stored in the BMP format, pixels are read in reverse order (as BGRA instead of ARGB)
     Pixel pixel{};
@@ -130,11 +139,16 @@ Pixel Pixel::multiply(const Pixel &other)
 
 void multiplyPixelInBMP(int x, int y, int atlasWidth, std::vector<uint8_t> &pixels, const Pixel &pixel)
 {
-    int i = (atlasWidth - y) * (atlasWidth * 4) + x * 4;
+    int i = 4 * ((atlasWidth - y - 1) * (atlasWidth) + x);
 
     // Because the texture is stored in the BMP format, pixels are read in reverse order (as BGRA instead of ARGB)
     pixels[i] = (uint8_t)((pixels[i] * pixel.b() + 0xFF) >> 8);
     pixels[i + 1] = (uint8_t)((pixels[i + 1] * pixel.g() + 0xFF) >> 8);
     pixels[i + 2] = (uint8_t)((pixels[i + 2] * pixel.r() + 0xFF) >> 8);
     pixels[i + 3] = (uint8_t)((pixels[i + 3] * pixel.a() + 0xFF) >> 8);
+
+    // pixels[i] = (uint8_t)((pixels[i] * pixel.b()) / 255);
+    // pixels[i + 1] = (uint8_t)((pixels[i + 1] * pixel.g()) / 255);
+    // pixels[i + 2] = (uint8_t)((pixels[i + 2] * pixel.r()) / 255);
+    // pixels[i + 3] = (uint8_t)((pixels[i + 3] * pixel.a()) / 255);
 }

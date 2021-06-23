@@ -962,7 +962,7 @@ DrawInfo::Object MapRenderer::getItemDrawInfo(const Item &item, const Position &
     info.position = position;
     info.color = getItemDrawColor(item, position, drawFlags);
     info.textureInfo = item.getTextureInfo(position);
-    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas->getOrCreateTexture());
     info.width = info.textureInfo.atlas->spriteWidth;
     info.height = info.textureInfo.atlas->spriteHeight;
 
@@ -974,7 +974,15 @@ DrawInfo::Creature MapRenderer::creatureDrawInfo(const Creature &creature, const
     DrawInfo::Creature info;
     info.color = getCreatureDrawColor(creature, position, drawFlags);
     info.textureInfo = creature.getTextureInfo();
-    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+    if (creature.creatureType.hasColorVariation())
+    {
+        uint32_t variationId = creature.creatureType.outfitId();
+        info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas->getTexture(variationId));
+    }
+    else
+    {
+        info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas->getOrCreateTexture());
+    }
     info.position = position;
     info.width = info.textureInfo.atlas->spriteWidth;
     info.height = info.textureInfo.atlas->spriteHeight;
@@ -988,7 +996,7 @@ DrawInfo::Object MapRenderer::itemTypeDrawInfo(const ItemType &itemType, const P
     info.position = position;
     info.color = getItemTypeDrawColor(drawFlags);
     info.textureInfo = itemType.getTextureInfo(position);
-    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas->getOrCreateTexture());
     info.width = info.textureInfo.atlas->spriteWidth;
     info.height = info.textureInfo.atlas->spriteHeight;
 
@@ -997,20 +1005,31 @@ DrawInfo::Object MapRenderer::itemTypeDrawInfo(const ItemType &itemType, const P
 
 VkDescriptorSet MapRenderer::objectDescriptorSet(TextureAtlas *atlas) const
 {
+    return objectDescriptorSet(atlas->getOrCreateTexture());
+}
+
+VkDescriptorSet MapRenderer::objectDescriptorSet(const Texture &texture) const
+{
     VulkanTexture::Descriptor descriptor;
     descriptor.layout = textureDescriptorSetLayout;
     descriptor.pool = descriptorPool;
+    uint32_t id = texture.id();
 
-    VulkanTexture &vulkanTexture = vulkanTexturesForAppearances.at(atlas->id());
+    if (vulkanTexturesForAppearances.size() < id)
+    {
+        vulkanTexturesForAppearances.resize(vulkanTexturesForAppearances.size() * 1.25);
+    }
+
+    VulkanTexture &vulkanTexture = vulkanTexturesForAppearances.at(id);
 
     if (!vulkanTexture.hasResources())
     {
         if (vulkanTexture.unused)
         {
-            activeTextureAtlasIds.emplace_back(atlas->id());
+            activeTextureAtlasIds.emplace_back(id);
         }
 
-        vulkanTexture.initResources(*atlas, vulkanInfo, descriptor);
+        vulkanTexture.initResources(texture, vulkanInfo, descriptor);
     }
 
     return vulkanTexture.descriptorSet();
@@ -1504,11 +1523,6 @@ VulkanTexture::~VulkanTexture()
     {
         releaseResources();
     }
-}
-
-void VulkanTexture::initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, const VulkanTexture::Descriptor descriptor)
-{
-    initResources(atlas.getOrCreateTexture(), vulkanInfo, descriptor);
 }
 
 void VulkanTexture::initResources(const Texture &texture, VulkanInfo &vulkanInfo, const VulkanTexture::Descriptor descriptor)

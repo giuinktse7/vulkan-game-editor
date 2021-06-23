@@ -7,6 +7,7 @@
 
 #include "frame_group.h"
 #include "graphics/texture_atlas.h"
+#include "outfit.h"
 #include "util.h"
 
 class CreatureAppearance;
@@ -22,23 +23,6 @@ enum class CreatureDirection : uint8_t
     East = 1,
     South = 2,
     West = 3
-};
-
-struct Outfit
-{
-    struct Look
-    {
-        uint16_t type;
-        uint8_t item;
-        uint8_t addon;
-        uint8_t head;
-        uint8_t body;
-        uint8_t legs;
-        uint8_t feet;
-    } look;
-
-    Outfit(uint16_t looktype);
-    Outfit(Look look);
 };
 
 class CreatureType
@@ -58,12 +42,26 @@ class CreatureType
     const FrameGroup &frameGroup(size_t index) const;
     const std::vector<FrameGroup> &frameGroups() const noexcept;
     TextureAtlas *getTextureAtlas(uint32_t spriteId) const;
+    TextureAtlas *getTextureAtlas(uint32_t frameGroupId, CreatureDirection direction) const;
+    uint32_t getSpriteIndex(uint32_t frameGroupId, CreatureDirection direction) const;
+    uint32_t getSpriteId(uint32_t frameGroupId, CreatureDirection direction) const;
+    uint32_t getSpriteId(uint32_t spriteIndex) const;
+
+    uint16_t getSpriteWidth() const;
+    uint16_t getSpriteHeight() const;
+    uint16_t getAtlasWidth() const;
+
+    uint32_t getIndex(const FrameGroup &frameGroup, uint8_t patternX, uint8_t patternY, uint8_t patternZ) const;
 
     const TextureInfo getTextureInfo() const;
     const TextureInfo getTextureInfo(uint32_t frameGroupId, CreatureDirection direction) const;
     const TextureInfo getTextureInfo(uint32_t frameGroupId, CreatureDirection direction, TextureInfo::CoordinateType coordinateType) const;
 
+    bool hasColorVariation() const;
+
     CreatureAppearance *appearance = nullptr;
+
+    uint32_t outfitId() const noexcept;
 
   private:
     Outfit outfit;
@@ -82,6 +80,13 @@ class Creatures
     static const CreatureType *creatureType(uint16_t looktype);
 
     static bool isValidLooktype(uint16_t looktype);
+
+    static constexpr CreatureDirection directions[] = {
+        CreatureDirection::North,
+        CreatureDirection::East,
+        CreatureDirection::South,
+        CreatureDirection::West,
+    };
 
     static constexpr uint32_t TemplateOutfitLookupTable[] = {
         0xFFFFFF,

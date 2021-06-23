@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     Config config = configResult.unwrap();
     config.loadOrTerminate();
 
-    testApplyAtlasTemplate();
+    // testApplyAtlasTemplate();
 
     BrushLoader brushLoader;
     brushLoader.load(std::format("data/clients/{}/palettes/palettes.json", clientPath));
@@ -173,31 +173,37 @@ int main(int argc, char *argv[])
     return app.run();
 }
 
-void testApplyAtlasTemplate()
-{
-    auto nomadType = Creatures::addCreatureType("test", "Test", 146);
-    Creature nomad(*nomadType);
+// void testApplyAtlasTemplate()
+// {
+//     auto nomadType = Creatures::addCreatureType("test", "Test", 146);
+//     Creature nomad(*nomadType);
 
-    int spriteOffset = 0;
+//     Outfit::Look look;
+//     look.type = 146;
+//     look.addon = 0;
+//     look.setHead(77);
+//     look.setBody(125);
+//     look.setLegs(22);
+//     look.setFeet(77);
 
-    auto spriteId = nomadType->frameGroup(0).spriteInfo.spriteIds.at(spriteOffset);
-    TextureAtlas *atlas = nomadType->appearance->getTextureAtlas(spriteId);
+//     int spriteOffset = 0;
 
-    auto const [spriteX, spriteY] = offsetFromSpriteId(atlas, spriteId);
-    auto const [templateX, templateY] = offsetFromSpriteId(atlas, spriteId + 1);
+//     auto spriteIndex = nomadType->getSpriteIndex(0, CreatureDirection::North);
+//     auto spriteId = nomadType->frameGroup(0).getSpriteId(spriteIndex);
 
-    auto &pixels = atlas->getOrCreateTexture().mutablePixelsTEST();
+//     // TODO Assumes that template is always at index + 1. Maybe not correct.
+//     auto templateSpriteId = nomadType->frameGroup(0).getSpriteId(spriteIndex + 1);
 
-    Outfit::Look look;
-    look.type = 146;
-    look.addon = 0;
-    look.head = 77;
-    look.body = 125;
-    look.legs = 22;
-    look.feet = 77;
+//     TextureAtlas *targetAtlas = nomadType->appearance->getTextureAtlas(spriteId);
+//     TextureAtlas *templateAtlas = nomadType->appearance->getTextureAtlas(spriteId);
 
-    applyTemplate(spriteX, spriteY, templateX, templateY, atlas->spriteWidth, atlas->spriteHeight, atlas->width, pixels, Outfit(look));
-}
+//     auto const [spriteX, spriteY] = offsetFromSpriteId(atlas, spriteId);
+//     auto const [templateX, templateY] = offsetFromSpriteId(atlas, spriteId + 1);
+
+//     auto &pixels = atlas->getOrCreateTexture().mutablePixelsTEST();
+
+//     applyTemplate(spriteX, spriteY, templateX, templateY, atlas->spriteWidth, atlas->spriteHeight, atlas->width, pixels, Outfit(look));
+// }
 
 std::pair<int, int> offsetFromSpriteId(TextureAtlas *atlas, uint32_t spriteId)
 {
@@ -207,56 +213,6 @@ std::pair<int, int> offsetFromSpriteId(TextureAtlas *atlas, uint32_t spriteId)
     auto topLeftY = atlas->spriteHeight * (spriteIndex / atlas->rows);
 
     return {topLeftX, topLeftY};
-}
-
-void applyTemplate(int spriteX, int spriteY, int templateX, int templateY, int width, int height, int atlasWidth, std::vector<uint8_t> &pixels, const Outfit &outfit)
-{
-    auto lookPixel = [](uint8_t look) -> Pixel {
-        uint8_t r = (Creatures::TemplateOutfitLookupTable[look] & 0xFF0000) >> 16;
-        uint8_t g = (Creatures::TemplateOutfitLookupTable[look] & 0xFF00) >> 8;
-        uint8_t b = (Creatures::TemplateOutfitLookupTable[look] & 0xFF);
-        return {r, g, b, 255};
-    };
-
-    auto head = lookPixel(outfit.look.head);
-    auto body = lookPixel(outfit.look.body);
-    auto legs = lookPixel(outfit.look.legs);
-    auto feet = lookPixel(outfit.look.feet);
-
-    for (int y = spriteY; y < spriteY + height; ++y)
-    {
-        int ty = templateY + y - spriteY;
-        for (int x = spriteX; x < spriteX + width; ++x)
-        {
-            int tx = templateX + x - spriteX;
-
-            auto pixel = getPixelFromBMPTexture(tx, ty, atlasWidth, pixels);
-            if (pixel == Pixels::Yellow)
-            {
-                multiplyPixelInBMP(x, y, atlasWidth, pixels, head);
-            }
-            else if (pixel == Pixels::Red)
-            {
-                multiplyPixelInBMP(x, y, atlasWidth, pixels, body);
-            }
-            else if (pixel == Pixels::Green)
-            {
-                multiplyPixelInBMP(x, y, atlasWidth, pixels, legs);
-            }
-            else if (pixel == Pixels::Blue)
-            {
-                multiplyPixelInBMP(x, y, atlasWidth, pixels, feet);
-            }
-            else if (pixel == Pixels::Magenta)
-            {
-                // Magenta
-            }
-            else
-            {
-                VME_LOG_D(std::format("{},{}: {},{},{},{}", tx, ty, pixel.r(), pixel.g(), pixel.b(), pixel.a()));
-            }
-        }
-    }
 }
 
 void TemporaryTest::loadAllTexturesIntoMemory()

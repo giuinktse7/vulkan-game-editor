@@ -34,9 +34,10 @@ class Texture
     Texture(uint32_t width, uint32_t height, uint8_t *pixels);
     Texture(uint32_t width, uint32_t height, std::vector<uint8_t> &&pixels);
 
-    TextureWindow getTextureWindow() const noexcept;
     inline int width() const noexcept;
     inline int height() const noexcept;
+
+    Texture deepCopy() const;
 
     std::vector<uint8_t> copyPixels() const;
     inline const std::vector<uint8_t> &pixels() const noexcept
@@ -54,7 +55,19 @@ class Texture
     static Texture *getSolidTexture(SolidColor color);
     static Texture &getOrCreateSolidTexture(SolidColor color);
 
+    /*
+		An auto-incrementing id (used for vector indexing)
+	*/
+    uint32_t id() const noexcept
+    {
+        return _id;
+    }
+
   private:
+    static uint32_t nextTextureId();
+    static uint32_t _nextTextureId;
+
+    uint32_t _id;
     std::vector<uint8_t> _pixels;
 
     uint32_t _width;

@@ -7,6 +7,7 @@
 #include <variant>
 
 #include "../const.h"
+#include "../outfit.h"
 #include "compression.h"
 #include "texture.h"
 
@@ -45,10 +46,18 @@ struct LZMACompressedBuffer
     std::vector<uint8_t> buffer;
 };
 
+struct TextureAtlasVariation
+{
+    TextureAtlasVariation(uint32_t id, Texture texture);
+
+    uint32_t id;
+    Texture texture;
+};
+
 struct TextureAtlas
 {
   public:
-    TextureAtlas(uint32_t id, LZMACompressedBuffer &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, uint32_t lastSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile);
+    TextureAtlas(LZMACompressedBuffer &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, uint32_t lastSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile);
 
     std::filesystem::path sourceFile;
 
@@ -66,7 +75,16 @@ struct TextureAtlas
 
     DrawOffset drawOffset;
 
+    TextureAtlasVariation *getVariation(uint32_t id);
+
+    std::pair<int, int> textureOffset(uint32_t spriteId);
+
+    bool hasColorVariation(uint32_t variationId) const;
+
+    void overlay(TextureAtlas *templateAtlas, uint32_t variationId, uint32_t templateSpriteId, uint32_t targetSpriteId, Outfit::Look look);
+
     glm::vec4 getFragmentBounds(const TextureWindow window) const;
+    const TextureWindow getTextureWindow(uint32_t spriteId, uint32_t variationId, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
     const TextureWindow getTextureWindow(uint32_t spriteId, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
     const TextureWindow getTextureWindowTopLeft(uint32_t spriteId) const;
     const std::pair<TextureWindow, TextureWindow> getTextureWindowTopLeftBottomRight(uint32_t spriteId) const;
@@ -81,17 +99,14 @@ struct TextureAtlas
 
     WorldPosition worldPosOffset() const noexcept;
 
-    void decompressTexture();
+    void decompressTexture() const;
     Texture *getTexture();
     Texture &getOrCreateTexture();
-
-    /*
-		The ID is generated based on when the texture atlas was added to the texture atlases list.
-		The Texture atlas ID's begin at 0 and end at (amountOfAtlases - 1).
-	*/
-    inline uint32_t id() const;
+    Texture &getTexture(uint32_t variationId);
 
   private:
+    Texture &getOrCreateTexture() const;
+
     struct InternalTextureInfo
     {
         float x;
@@ -100,16 +115,10 @@ struct TextureAtlas
         float height;
     };
 
-    TextureAtlas::InternalTextureInfo internalTextureInfoNormalized(uint32_t spriteId) const;
+    InternalTextureInfo internalTextureInfoNormalized(uint32_t spriteId) const;
+    void validateBmp(std::vector<uint8_t> &decompressed) const;
 
-    uint32_t _id;
+    mutable std::variant<LZMACompressedBuffer, Texture> texture;
 
-    std::variant<LZMACompressedBuffer, Texture> texture;
-
-    void validateBmp(std::vector<uint8_t> &decompressed);
+    mutable std::unique_ptr<std::vector<TextureAtlasVariation>> variations;
 };
-
-inline uint32_t TextureAtlas::id() const
-{
-    return _id;
-}

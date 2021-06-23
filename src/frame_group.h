@@ -18,6 +18,8 @@ struct FrameGroup
     uint32_t id;
     SpriteInfo spriteInfo;
 
+    uint32_t getSpriteId(uint32_t spriteIndex) const;
+
     FrameGroup(const FrameGroup &) = delete;
     FrameGroup(FrameGroup &&) = default;
 };

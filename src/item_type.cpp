@@ -95,10 +95,8 @@ const uint32_t ItemType::getPatternIndexForSubtype(uint8_t subtype) const
 
 uint32_t ItemType::getSpriteId(const Position &pos) const
 {
-    const SpriteInfo &spriteInfo = appearance->getSpriteInfo();
-
     uint32_t spriteIndex = usesSubType() ? 0 : getPatternIndex(pos);
-    return spriteInfo.spriteIds.at(spriteIndex);
+    return appearance->getSpriteInfo().spriteIds.at(spriteIndex);
 }
 
 const TextureInfo ItemType::getTextureInfo(TextureInfo::CoordinateType coordinateType) const

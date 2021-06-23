@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "../creature.h"
 #include "../debug.h"
 #include "../file.h"
 #include "../logger.h"
@@ -25,8 +26,8 @@ namespace
     constexpr uint32_t OFFSET_OF_BMP_START_OFFSET = 10;
 } // namespace
 
-TextureAtlas::TextureAtlas(uint32_t id, LZMACompressedBuffer &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, uint32_t lastSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile)
-    : sourceFile(sourceFile), width(width), height(height), firstSpriteId(firstSpriteId), lastSpriteId(lastSpriteId), _id(id), texture(std::move(buffer))
+TextureAtlas::TextureAtlas(LZMACompressedBuffer &&buffer, uint32_t width, uint32_t height, uint32_t firstSpriteId, uint32_t lastSpriteId, SpriteLayout spriteLayout, std::filesystem::path sourceFile)
+    : sourceFile(sourceFile), width(width), height(height), firstSpriteId(firstSpriteId), lastSpriteId(lastSpriteId), texture(std::move(buffer))
 {
     switch (spriteLayout)
     {
@@ -119,6 +120,101 @@ const TextureWindow TextureAtlas::getTextureWindow(uint32_t spriteId, TextureInf
     }
 }
 
+const TextureWindow TextureAtlas::getTextureWindow(uint32_t spriteId, uint32_t variationId, TextureInfo::CoordinateType coordinateType) const
+{
+    // TODO Implement?
+    ABORT_PROGRAM("Not implemented.");
+}
+
+void TextureAtlas::overlay(TextureAtlas *templateAtlas, uint32_t variationId, uint32_t templateSpriteId, uint32_t targetSpriteId, Outfit::Look look)
+{
+    DEBUG_ASSERT(templateAtlas->width == width, "Inconsistent atlas widths.");
+    auto const [templateX, templateY] = templateAtlas->textureOffset(templateSpriteId);
+    auto const [targetX, targetY] = textureOffset(targetSpriteId);
+
+    auto atlasWidth = templateAtlas->width;
+
+    const auto &templatePixels = templateAtlas->getOrCreateTexture().pixels();
+    auto &targetPixels = getVariation(variationId)->texture.mutablePixelsTEST();
+
+    auto lookPixel = [](uint8_t _look) -> Pixel {
+        uint8_t r = (Creatures::TemplateOutfitLookupTable[_look] & 0xFF0000) >> 16;
+        uint8_t g = (Creatures::TemplateOutfitLookupTable[_look] & 0xFF00) >> 8;
+        uint8_t b = (Creatures::TemplateOutfitLookupTable[_look] & 0xFF);
+        return {r, g, b, 255};
+    };
+
+    auto head = lookPixel(look.head());
+    auto body = lookPixel(look.body());
+    auto legs = lookPixel(look.legs());
+    auto feet = lookPixel(look.feet());
+
+    for (int y = targetY; y < targetY + spriteHeight; ++y)
+    {
+        int ty = templateY + y - targetY;
+        for (int x = targetX; x < targetX + spriteWidth; ++x)
+        {
+            int tx = templateX + x - targetX;
+
+            auto pixel = getPixelFromBMPTexture(tx, ty, atlasWidth, templatePixels);
+            if (pixel == Pixels::Yellow)
+            {
+                multiplyPixelInBMP(x, y, atlasWidth, targetPixels, head);
+            }
+            else if (pixel == Pixels::Red)
+            {
+                multiplyPixelInBMP(x, y, atlasWidth, targetPixels, body);
+            }
+            else if (pixel == Pixels::Green)
+            {
+                multiplyPixelInBMP(x, y, atlasWidth, targetPixels, legs);
+            }
+            else if (pixel == Pixels::Blue)
+            {
+                multiplyPixelInBMP(x, y, atlasWidth, targetPixels, feet);
+            }
+            else if (pixel == Pixels::Magenta)
+            {
+                // Magenta
+            }
+            else
+            {
+                VME_LOG_D(std::format("{},{}: {},{},{},{}", tx, ty, pixel.r(), pixel.g(), pixel.b(), pixel.a()));
+            }
+        }
+    }
+}
+
+TextureAtlasVariation *TextureAtlas::getVariation(uint32_t id)
+{
+    if (!variations)
+    {
+        variations = std::make_unique<std::vector<TextureAtlasVariation>>();
+    }
+
+    auto found = std::find_if(variations->begin(), variations->end(), [id](const auto &variation) {
+        return variation.id == id;
+    });
+
+    if (found != variations->end())
+    {
+        return &(*found);
+    }
+
+    auto &variation = variations->emplace_back(id, getOrCreateTexture().deepCopy());
+    return &variation;
+}
+
+std::pair<int, int> TextureAtlas::textureOffset(uint32_t spriteId)
+{
+    int spriteIndex = spriteId - firstSpriteId;
+
+    auto topLeftX = spriteWidth * (spriteIndex % columns);
+    auto topLeftY = spriteHeight * (spriteIndex / rows);
+
+    return {topLeftX, topLeftY};
+}
+
 const TextureWindow TextureAtlas::getTextureWindowTopLeft(uint32_t spriteId) const
 {
     auto info = internalTextureInfoNormalized(spriteId);
@@ -169,7 +265,7 @@ uint32_t readU32(std::vector<uint8_t> &buffer, uint32_t offset)
     return value;
 }
 
-void TextureAtlas::validateBmp(std::vector<uint8_t> &decompressed)
+void TextureAtlas::validateBmp(std::vector<uint8_t> &decompressed) const
 {
     uint32_t width = readU32(decompressed, 0x12);
     if (width != TextureAtlasSize.width)
@@ -190,16 +286,16 @@ void TextureAtlas::validateBmp(std::vector<uint8_t> &decompressed)
     }
 }
 
-void fixMagenta(std::vector<uint8_t> &buffer, uint32_t offset)
-{
-    for (auto cursor = 0; cursor < buffer.size() - 4 - offset; cursor += 4)
-    {
-        if (readU32(buffer, offset + cursor) == 0xFF00FF)
-        {
-            std::fill(buffer.begin() + offset + cursor, buffer.begin() + offset + cursor + 3, 0);
-        }
-    }
-}
+// void fixMagenta(std::vector<uint8_t> &buffer, uint32_t offset)
+// {
+//     for (auto cursor = 0; cursor < buffer.size() - 4 - offset; cursor += 4)
+//     {
+//         if (readU32(buffer, offset + cursor) == 0xFF00FF)
+//         {
+//             std::fill(buffer.begin() + offset + cursor, buffer.begin() + offset + cursor + 3, 0);
+//         }
+//     }
+// }
 
 Texture *TextureAtlas::getTexture()
 {
@@ -211,7 +307,7 @@ bool TextureAtlas::isCompressed() const
     return std::holds_alternative<LZMACompressedBuffer>(texture);
 }
 
-void TextureAtlas::decompressTexture()
+void TextureAtlas::decompressTexture() const
 {
     DEBUG_ASSERT(std::holds_alternative<LZMACompressedBuffer>(texture), "Tried to decompress a TextureAtlas that does not contain CompressedBytes.");
 
@@ -224,7 +320,27 @@ void TextureAtlas::decompressTexture()
     texture = Texture(this->width, this->height, std::vector<uint8_t>(decompressed.begin() + offset, decompressed.end()));
 }
 
-Texture &TextureAtlas::getOrCreateTexture()
+Texture &TextureAtlas::getTexture(uint32_t variationId)
+{
+    if (!variations)
+    {
+        ABORT_PROGRAM("No variations.");
+    }
+
+    auto found = std::find_if(variations->begin(), variations->end(), [variationId](const auto &variation) {
+        return variation.id == variationId;
+    });
+
+    if (found == variations->end())
+    {
+        ABORT_PROGRAM(std::format("The TextureAtlas did not have a Texture variation with id '{}'", variationId));
+    }
+
+    auto &result = (*found).texture;
+    return result;
+}
+
+Texture &TextureAtlas::getOrCreateTexture() const
 {
     if (std::holds_alternative<LZMACompressedBuffer>(texture))
     {
@@ -232,6 +348,11 @@ Texture &TextureAtlas::getOrCreateTexture()
     }
 
     return std::get<Texture>(this->texture);
+}
+
+Texture &TextureAtlas::getOrCreateTexture()
+{
+    return const_cast<const TextureAtlas *>(this)->getOrCreateTexture();
 }
 
 glm::vec4 TextureAtlas::getFragmentBounds(const TextureWindow window) const
@@ -250,4 +371,21 @@ glm::vec4 TextureAtlas::getFragmentBounds(const TextureWindow window) const
 WorldPosition TextureAtlas::worldPosOffset() const noexcept
 {
     return WorldPosition(drawOffset.x * SPRITE_SIZE, drawOffset.y * SPRITE_SIZE);
+}
+
+bool TextureAtlas::hasColorVariation(uint32_t variationId) const
+{
+    if (!variations)
+        return false;
+
+    auto found = std::find_if(variations->begin(), variations->end(), [variationId](const auto &variation) {
+        return variation.id == variationId;
+    });
+
+    return found != variations->end();
+}
+
+TextureAtlasVariation::TextureAtlasVariation(uint32_t id, Texture texture)
+    : id(id), texture(texture)
+{
 }

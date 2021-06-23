@@ -140,6 +140,7 @@ set(CommonSources
     src/random.h
     src/selection.h
     src/tile.h
+    src/outfit.h
     src/tile_location.h
     src/minimap.h
     src/time_point.h
@@ -181,6 +182,7 @@ set(CommonSources
     src/item_animation.cpp
     src/file.cpp
     src/editor_action.cpp
+    src/frame_group.cpp
     src/graphics/appearances.cpp
     src/graphics/buffer.cpp
     src/graphics/compression.cpp

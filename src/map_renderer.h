@@ -177,11 +177,13 @@ class VulkanTexture
     ~VulkanTexture();
 
     VulkanTexture(const VulkanTexture &other) = delete;
-    VulkanTexture &operator=(const ItemType &other) = delete;
+    VulkanTexture &operator=(const VulkanTexture &other) = delete;
+
+    VulkanTexture(VulkanTexture &&other) noexcept = default;
+    VulkanTexture &operator=(VulkanTexture &&other) noexcept = default;
 
     bool unused = true;
 
-    void initResources(TextureAtlas &atlas, VulkanInfo &vulkanInfo, const VulkanTexture::Descriptor descriptor);
     void initResources(const Texture &texture, VulkanInfo &vulkanInfo, const VulkanTexture::Descriptor descriptor);
     void releaseResources();
 
@@ -345,6 +347,7 @@ class MapRenderer
     glm::vec4 getCreatureDrawColor(const Creature &creature, const Position &position, uint32_t drawFlags) const;
     glm::vec4 getItemTypeDrawColor(uint32_t drawFlags);
 
+    VkDescriptorSet objectDescriptorSet(const Texture &texture) const;
     VkDescriptorSet objectDescriptorSet(TextureAtlas *atlas) const;
 
     void issueDraw(const DrawInfo::Base &info, const WorldPosition &worldPos);

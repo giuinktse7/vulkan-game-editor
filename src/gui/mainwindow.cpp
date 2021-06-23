@@ -638,7 +638,15 @@ void MainWindow::initializePaletteWindow()
             goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(id, name, looktype))));
         };
 
-        goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::creatureType("test"))));
+        // goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::creatureType("test"))));
+        Outfit outfit(146);
+
+        outfit.look.setHead(77);
+        outfit.look.setBody(77);
+        outfit.look.setLegs(77);
+        outfit.look.setFeet(77);
+        goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType("nomad", "Nomad", outfit))));
+
         // addTestCreatureBrush("nomad", "Nomad", 146);
         addTestCreatureBrush("rat", "Rat", 21);
         addTestCreatureBrush("bear", "Bear", 16);
