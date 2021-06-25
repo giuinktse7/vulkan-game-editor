@@ -17,8 +17,6 @@ class CreatureBrush final : public Brush
 
     void apply(MapView &mapView, const Position &position, Direction direction) override;
 
-    BrushResource brushResource() const override;
-
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
 
@@ -30,6 +28,7 @@ class CreatureBrush final : public Brush
     std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction) const override;
     const std::string getDisplayId() const override;
 
-  private:
     const CreatureType *const creatureType;
+
+  private:
 };

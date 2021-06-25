@@ -24,15 +24,6 @@ void CreatureBrush::apply(MapView &mapView, const Position &position, Direction 
     mapView.addCreature(position, std::move(creature));
 }
 
-BrushResource CreatureBrush::brushResource() const
-{
-    BrushResource resource{};
-    resource.type = BrushResourceType::Creature;
-    resource.id = creatureType->looktype();
-    resource.variant = to_underlying(Direction::South);
-    return resource;
-}
-
 BrushType CreatureBrush::type() const
 {
     return BrushType::Creature;

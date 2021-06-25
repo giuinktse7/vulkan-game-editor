@@ -33,11 +33,6 @@ void GroundBrush::setIconServerId(uint32_t serverId)
     _iconServerId = serverId;
 }
 
-BrushResource GroundBrush::brushResource() const
-{
-    return _brushResource;
-}
-
 void GroundBrush::initialize()
 {
     // Sort by weights descending to optimize iteration in sampleServerId() for the most common cases.
@@ -51,10 +46,6 @@ void GroundBrush::initialize()
     }
 
     _nextId = sampleServerId();
-
-    _brushResource.id = _iconServerId;
-    _brushResource.type = BrushResourceType::ItemType;
-    _brushResource.variant = 0;
 }
 
 void GroundBrush::apply(MapView &mapView, const Position &position, Direction direction)

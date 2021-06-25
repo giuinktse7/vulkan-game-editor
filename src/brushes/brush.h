@@ -128,8 +128,6 @@ class Brush
 
     virtual void apply(MapView &mapView, const Position &position, Direction direction) = 0;
 
-    virtual BrushResource brushResource() const = 0;
-
     virtual const std::string getDisplayId() const = 0;
 
     const std::string &name() const noexcept;

@@ -81,8 +81,6 @@ class DoodadBrush final : public Brush
     DoodadBrush(std::string id, const std::string &name, DoodadAlternative &&alternative, uint32_t iconServerId);
     DoodadBrush(std::string id, const std::string &name, std::vector<DoodadAlternative> &&alternatives, uint32_t iconServerId);
 
-    BrushResource brushResource() const override;
-
     void apply(MapView &mapView, const Position &position, Direction direction) override;
     uint32_t iconServerId() const;
     bool erasesItem(uint32_t serverId) const override;
@@ -106,7 +104,4 @@ class DoodadBrush final : public Brush
     uint32_t _iconServerId;
 
     std::vector<ItemPreviewInfo> _nextGroup;
-
-    // Info that lets the GUI know how to draw the brush
-    BrushResource _brushResource;
 };

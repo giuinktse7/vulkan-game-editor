@@ -11,10 +11,6 @@ RawBrush::RawBrush(ItemType *itemType)
     : Brush(itemType->name()), _itemType(itemType)
 {
     DEBUG_ASSERT(_itemType != nullptr, "Invalid itemType. No ItemType for server ID " + std::to_string(itemType->id));
-
-    _brushResource.id = itemType->id;
-    _brushResource.type = BrushResourceType::ItemType;
-    _brushResource.variant = 0;
 }
 
 void RawBrush::apply(MapView &mapView, const Position &position, Direction direction)
@@ -33,11 +29,6 @@ void RawBrush::apply(MapView &mapView, const Position &position, Direction direc
     }
 
     mapView.addItem(position, Item(_itemType->id));
-}
-
-BrushResource RawBrush::brushResource() const
-{
-    return _brushResource;
 }
 
 RawBrush RawBrush::fromServerId(uint32_t serverId)

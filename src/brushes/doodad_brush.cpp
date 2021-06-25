@@ -79,10 +79,6 @@ void DoodadBrush::initialize()
     }
 
     _nextGroup = alternatives.at(alternateIndex).sample(_name);
-
-    _brushResource.id = _iconServerId;
-    _brushResource.type = BrushResourceType::ItemType;
-    _brushResource.variant = 0;
 }
 
 std::vector<ItemPreviewInfo> DoodadBrush::sampleGroup()
@@ -199,9 +195,4 @@ std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo(Direction directio
 const std::string DoodadBrush::getDisplayId() const
 {
     return _name;
-}
-
-BrushResource DoodadBrush::brushResource() const
-{
-    return _brushResource;
 }

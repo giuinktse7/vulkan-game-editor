@@ -28,7 +28,6 @@ class GroundBrush final : public Brush
 
     void apply(MapView &mapView, const Position &position, Direction direction) override;
     uint32_t iconServerId() const;
-    BrushResource brushResource() const override;
 
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
@@ -56,7 +55,4 @@ class GroundBrush final : public Brush
 
     uint32_t totalWeight = 0;
     uint32_t _nextId;
-
-    // Info that lets the GUI know how to draw the brush
-    BrushResource _brushResource;
 };

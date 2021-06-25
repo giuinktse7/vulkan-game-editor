@@ -19,6 +19,11 @@
 #include "../qt/logging.h"
 #include "main_application.h"
 
+#include "../brushes/creature_brush.h"
+#include "../brushes/doodad_brush.h"
+#include "../brushes/ground_brush.h"
+#include "../brushes/raw_brush.h"
+
 std::unordered_map<uint32_t, QPixmap> GuiImageCache::serverIdToPixmap;
 std::unordered_map<uint32_t, std::unique_ptr<QImage>> GuiImageCache::textureIdToQImage;
 
@@ -141,25 +146,49 @@ ItemImageData QtUtil::itemImageData(uint32_t serverId, uint8_t subtype)
     return itemImageData(info);
 }
 
+QString QtUtil::getItemTypeResourcePath(uint32_t serverId, uint8_t subtype)
+{
+    if (subtype == 0)
+    {
+        return QString::fromStdString(std::format("image://itemTypes/{}", serverId));
+    }
+    else
+    {
+        return QString::fromStdString(std::format("image://itemTypes/{}:{}", serverId, static_cast<int>(subtype)));
+    }
+}
+
+QString QtUtil::getCreatureTypeResourcePath(const CreatureType &creatureType, Direction direction)
+{
+    return QString::fromStdString(std::format("image://creatureLooktypes/{}:{}", creatureType.id(), to_underlying(direction)));
+}
+
 QString QtUtil::resourcePath(Brush *brush)
 {
-    auto resource = brush->brushResource();
-    switch (resource.type)
+    switch (brush->type())
     {
-        case BrushResourceType::ItemType:
-            if (resource.variant != 0)
-            {
-                auto s = std::format("image://itemTypes/{}:{}", resource.id, static_cast<int>(resource.variant));
-                return QString::fromStdString(s);
-            }
-            else
-            {
-                auto s = std::format("image://itemTypes/{}", resource.id);
-                return QString::fromStdString(s);
-            }
-        case BrushResourceType::Creature:
-            auto s = std::format("image://creatureLooktypes/{}:{}", resource.id, static_cast<int>(resource.variant));
-            return QString::fromStdString(s);
+        case BrushType::Raw:
+        {
+            auto rawBrush = static_cast<RawBrush *>(brush);
+            return getItemTypeResourcePath(rawBrush->serverId());
+        }
+        case BrushType::Ground:
+        {
+            auto groundBrush = static_cast<GroundBrush *>(brush);
+            return getItemTypeResourcePath(groundBrush->iconServerId());
+        }
+        case BrushType::Doodad:
+        {
+            auto doodadBrush = static_cast<DoodadBrush *>(brush);
+            return getItemTypeResourcePath(doodadBrush->iconServerId());
+        }
+        case BrushType::Creature:
+        {
+            auto creatureBrush = static_cast<CreatureBrush *>(brush);
+            return getCreatureTypeResourcePath(*creatureBrush->creatureType);
+        }
+        default:
+            break;
     }
 
     ABORT_PROGRAM("Could not determine resource type.");
@@ -167,16 +196,18 @@ QString QtUtil::resourcePath(Brush *brush)
 
 ItemImageData QtUtil::itemImageData(Brush *brush)
 {
-    auto resource = brush->brushResource();
-    switch (resource.type)
+    switch (brush->type())
     {
-        case BrushResourceType::ItemType:
-            return itemImageData(resource.id, resource.variant);
-        case BrushResourceType::Creature:
-            DEBUG_ASSERT(resource.variant >= 0 && resource.variant <= 3, std::format("Invalid creature direction: {}", resource.variant));
-            const CreatureType *creatureType = Creatures::creatureType(resource.id);
-
-            auto info = Creatures::creatureType(resource.id)->getTextureInfo(0, static_cast<Direction>(resource.variant), TextureInfo::CoordinateType::Unnormalized);
+        case BrushType::Raw:
+            return itemImageData(static_cast<RawBrush *>(brush)->serverId());
+        case BrushType::Ground:
+            return itemImageData(static_cast<GroundBrush *>(brush)->iconServerId());
+        case BrushType::Doodad:
+            return itemImageData(static_cast<DoodadBrush *>(brush)->iconServerId());
+        case BrushType::Creature:
+        {
+            auto creatureType = static_cast<CreatureBrush *>(brush)->creatureType;
+            auto info = creatureType->getTextureInfo(0, static_cast<Direction>(Direction::South), TextureInfo::CoordinateType::Unnormalized);
 
             if (creatureType->hasColorVariation())
             {
@@ -186,6 +217,9 @@ ItemImageData QtUtil::itemImageData(Brush *brush)
             {
                 return itemImageData(info);
             }
+        }
+        default:
+            break;
     }
 }
 
@@ -261,6 +295,26 @@ QPixmap QtUtil::thingPixmap(const TextureInfo &info)
     return thingPixmap(info.window, info.atlas->getOrCreateTexture(), info.atlas->spriteWidth, info.atlas->spriteHeight);
 }
 
+QPixmap QtUtil::creaturePixmap(const CreatureType *creatureType, Direction direction)
+{
+    if (!creatureType)
+    {
+        return blackSquarePixmap();
+    }
+
+    auto info = creatureType->getTextureInfo(0, direction, TextureInfo::CoordinateType::Unnormalized);
+
+    if (creatureType->hasColorVariation())
+    {
+        TextureAtlas *atlas = info.atlas;
+        return thingPixmap(info.window, atlas->getTexture(creatureType->outfitId()), atlas->spriteWidth, atlas->spriteHeight);
+    }
+    else
+    {
+        return thingPixmap(info);
+    }
+}
+
 QPixmap QtUtil::creaturePixmap(uint32_t looktype, Direction direction)
 {
     auto creatureType = Creatures::creatureType(looktype);
@@ -304,31 +358,43 @@ std::optional<int> QtUtil::ScrollState::scroll(QWheelEvent *event)
 
 QPixmap CreatureImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
 {
+    /*
+        Parts are: looktype:outfitId:direction
+        looktype: looktypeID (int) or creatureType id (string)
+    */
     auto parts = id.split(':');
+
+    if (parts.size() != 1 && parts.size() != 2)
+    {
+        ABORT_PROGRAM(std::format("Malformed looktype resource id: {}. Must be [looktype] or [looktype:outfitId:direction]."));
+    }
 
     uint32_t looktype;
     uint8_t direction = to_underlying(Direction::South);
 
     bool success = false;
+    bool ok = false;
 
-    // No direction if only one part
+    const CreatureType *creatureType;
+
+    looktype = parts.at(0).toInt(&ok);
+    creatureType = ok ? Creatures::creatureType(looktype) : Creatures::creatureType(parts.at(0).toStdString());
+    if (!creatureType)
+    {
+        ABORT_PROGRAM(std::format("Invalid creature type or creature type ID: {}", parts.at(0).toStdString()));
+    }
+
     if (parts.size() == 1)
     {
-        looktype = parts.at(0).toInt(&success);
+        success = true;
     }
-    else
+    else if (parts.size() == 2)
     {
-        DEBUG_ASSERT(parts.size() == 2, "Must have 2 parts here; a looktype and a direction id");
-        bool ok;
-        looktype = parts.at(0).toInt(&ok);
-        if (ok)
+        int parsedDirection = parts.at(1).toInt(&success);
+        if (success)
         {
-            int parsedSubtype = parts.at(1).toInt(&success);
-            if (success)
-            {
-                DEBUG_ASSERT(0 <= direction && direction <= 3, "direction id out of bounds.");
-                direction = static_cast<uint8_t>(parsedSubtype);
-            }
+            DEBUG_ASSERT(0 <= direction && direction <= 3, "direction id out of bounds.");
+            direction = static_cast<uint8_t>(parsedDirection);
         }
     }
 
@@ -339,7 +405,7 @@ QPixmap CreatureImageProvider::requestPixmap(const QString &id, QSize *size, con
         return pixmap;
     }
 
-    return QtUtil::creaturePixmap(looktype, static_cast<Direction>(direction));
+    return QtUtil::creaturePixmap(creatureType, static_cast<Direction>(direction));
 }
 
 QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)

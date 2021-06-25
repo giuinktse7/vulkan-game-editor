@@ -160,7 +160,11 @@ namespace QtUtil
     QPixmap itemPixmap(uint32_t serverId, uint8_t subtype = 0);
     QPixmap itemPixmap(const Position &pos, const Item &item);
 
+    QString getItemTypeResourcePath(uint32_t serverId, uint8_t subtype = 0);
+    QString getCreatureTypeResourcePath(const CreatureType &creatureType, Direction direction = Direction::South);
+
     QPixmap creaturePixmap(uint32_t looktype, Direction direction);
+    QPixmap creaturePixmap(const CreatureType *creatureType, Direction direction);
 
     QPixmap thingPixmap(const TextureInfo &info);
     QPixmap thingPixmap(const TextureWindow &textureWindow, const Texture &texture, uint16_t spriteWidth, uint16_t spriteHeight);

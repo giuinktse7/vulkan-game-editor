@@ -14,8 +14,6 @@ class RawBrush final : public Brush
     // Uses the item name as brush name
     static RawBrush fromServerId(uint32_t serverId);
 
-    BrushResource brushResource() const override;
-
     void apply(MapView &mapView, const Position &position, Direction direction) override;
     uint32_t iconServerId() const;
     bool erasesItem(uint32_t serverId) const override;
@@ -30,7 +28,4 @@ class RawBrush final : public Brush
 
   private:
     ItemType *_itemType;
-
-    // Info that lets the GUI know how to draw the brush
-    BrushResource _brushResource;
 };
