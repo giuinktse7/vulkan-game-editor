@@ -20,7 +20,7 @@
 #include "main_application.h"
 
 std::unordered_map<uint32_t, QPixmap> GuiImageCache::serverIdToPixmap;
-std::unordered_map<TextureAtlas *, std::unique_ptr<QImage>> GuiImageCache::atlasToQImage;
+std::unordered_map<uint32_t, std::unique_ptr<QImage>> GuiImageCache::textureIdToQImage;
 
 namespace
 {
@@ -48,17 +48,17 @@ const QPixmap &GuiImageCache::get(uint32_t serverId)
     return serverIdToPixmap.at(serverId);
 }
 
-QImage *GuiImageCache::getOrCreateQImageForAtlas(TextureAtlas *atlas)
+QImage *GuiImageCache::getOrCreateQImageForTexture(const Texture &texture)
 {
-    auto found = atlasToQImage.find(atlas);
-    if (found == atlasToQImage.end())
+    auto found = textureIdToQImage.find(texture.id());
+    if (found == textureIdToQImage.end())
     {
-        const uint8_t *pixelData = atlas->getOrCreateTexture().pixels().data();
+        const uint8_t *pixelData = texture.pixels().data();
         auto image = std::make_unique<QImage>(pixelData, 12 * 32, 12 * 32, 384 * 4, QImage::Format::Format_ARGB32);
-        atlasToQImage.try_emplace(atlas, std::move(image));
+        textureIdToQImage.try_emplace(texture.id(), std::move(image));
     }
 
-    return atlasToQImage.at(atlas).get();
+    return textureIdToQImage.at(texture.id()).get();
 }
 
 namespace
@@ -174,33 +174,30 @@ ItemImageData QtUtil::itemImageData(Brush *brush)
             return itemImageData(resource.id, resource.variant);
         case BrushResourceType::Creature:
             DEBUG_ASSERT(resource.variant >= 0 && resource.variant <= 3, std::format("Invalid creature direction: {}", resource.variant));
-            auto info = Creatures::creatureType(resource.id)->getTextureInfo(0, static_cast<CreatureDirection>(resource.variant), TextureInfo::CoordinateType::Unnormalized);
-            return itemImageData(info);
+            const CreatureType *creatureType = Creatures::creatureType(resource.id);
+
+            auto info = Creatures::creatureType(resource.id)->getTextureInfo(0, static_cast<Direction>(resource.variant), TextureInfo::CoordinateType::Unnormalized);
+
+            if (creatureType->hasColorVariation())
+            {
+                return itemImageData(info.window, info.atlas->getTexture(creatureType->outfitId()));
+            }
+            else
+            {
+                return itemImageData(info);
+            }
     }
+}
+
+ItemImageData QtUtil::itemImageData(const TextureWindow &window, const Texture &texture)
+{
+    QImage *image = GuiImageCache::getOrCreateQImageForTexture(texture);
+    return {QRect(window.x0, window.y0, window.x1, window.y1), image};
 }
 
 ItemImageData QtUtil::itemImageData(const TextureInfo &info)
 {
-    TextureAtlas *atlas = info.atlas;
-    QRect textureRegion(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
-
-    QImage *image = GuiImageCache::getOrCreateQImageForAtlas(info.atlas);
-
-    // if (atlas->spriteWidth == 32 && atlas->spriteHeight == 32)
-    // {
-    return {textureRegion, image};
-    // }
-    // else if (atlas->spriteWidth == 64 && atlas->spriteHeight == 64)
-    // {
-    //     return {textureRegion, image};
-    // }
-    // else
-    // {
-    //     QImage sprite = image
-    //                         .copy(textureRegion)
-    //                         .mirrored();
-    //     return QPixmap::fromImage(image.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    // }
+    return itemImageData(info.window, info.atlas->getOrCreateTexture());
 }
 
 QPixmap QtUtil::itemPixmap(uint32_t serverId, uint8_t subtype)
@@ -223,20 +220,18 @@ QPixmap QtUtil::itemPixmap(const Position &pos, const Item &item)
     return thingPixmap(info);
 }
 
-QPixmap QtUtil::thingPixmap(const TextureInfo &info)
+QPixmap QtUtil::thingPixmap(const TextureWindow &textureWindow, const Texture &texture, uint16_t spriteWidth, uint16_t spriteHeight)
 {
-    TextureAtlas *atlas = info.atlas;
+    const uint8_t *pixelData = texture.pixels().data();
 
-    const uint8_t *pixelData = atlas->getOrCreateTexture().pixels().data();
-
-    QRect textureRegion(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
+    QRect textureRegion(textureWindow.x0, textureWindow.y0, textureWindow.x1, textureWindow.y1);
 
     QImage sprite = QImage(pixelData, 12 * 32, 12 * 32, 384 * 4, QImage::Format::Format_ARGB32)
                         .copy(textureRegion)
                         .mirrored();
 
-    auto width = atlas->spriteWidth;
-    auto height = atlas->spriteHeight;
+    auto width = spriteWidth;
+    auto height = spriteHeight;
 
     if (width == 32 && height == 32)
     {
@@ -261,7 +256,12 @@ QPixmap QtUtil::thingPixmap(const TextureInfo &info)
     }
 }
 
-QPixmap QtUtil::creaturePixmap(uint32_t looktype, CreatureDirection direction)
+QPixmap QtUtil::thingPixmap(const TextureInfo &info)
+{
+    return thingPixmap(info.window, info.atlas->getOrCreateTexture(), info.atlas->spriteWidth, info.atlas->spriteHeight);
+}
+
+QPixmap QtUtil::creaturePixmap(uint32_t looktype, Direction direction)
 {
     auto creatureType = Creatures::creatureType(looktype);
     if (!creatureType)
@@ -270,7 +270,16 @@ QPixmap QtUtil::creaturePixmap(uint32_t looktype, CreatureDirection direction)
     }
 
     auto info = creatureType->getTextureInfo(0, direction, TextureInfo::CoordinateType::Unnormalized);
-    return thingPixmap(info);
+
+    if (creatureType->hasColorVariation())
+    {
+        TextureAtlas *atlas = info.atlas;
+        return thingPixmap(info.window, atlas->getTexture(creatureType->outfitId()), atlas->spriteWidth, atlas->spriteHeight);
+    }
+    else
+    {
+        return thingPixmap(info);
+    }
 }
 
 MainApplication *QtUtil::qtApp()
@@ -298,7 +307,7 @@ QPixmap CreatureImageProvider::requestPixmap(const QString &id, QSize *size, con
     auto parts = id.split(':');
 
     uint32_t looktype;
-    uint8_t direction = to_underlying(CreatureDirection::South);
+    uint8_t direction = to_underlying(Direction::South);
 
     bool success = false;
 
@@ -330,7 +339,7 @@ QPixmap CreatureImageProvider::requestPixmap(const QString &id, QSize *size, con
         return pixmap;
     }
 
-    return QtUtil::creaturePixmap(looktype, static_cast<CreatureDirection>(direction));
+    return QtUtil::creaturePixmap(looktype, static_cast<Direction>(direction));
 }
 
 QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)

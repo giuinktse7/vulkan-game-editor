@@ -355,7 +355,7 @@ void MapRenderer::drawCurrentAction()
                 {
                     if (mapView->underMouse())
                     {
-                        drawBrushPreview(action.brush, pos);
+                        drawBrushPreview(action.brush, pos, action.direction);
                     }
                 }
             },
@@ -418,7 +418,12 @@ void MapRenderer::drawPreview(ThingDrawInfo drawInfo, const Position &position)
                 DrawInfo::Creature info;
                 info.color = colors::ItemPreview;
                 info.textureInfo = draw.creatureType->getTextureInfo(0, draw.direction);
-                info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+
+                auto texture = draw.creatureType->hasColorVariation()
+                                   ? info.textureInfo.getTexture(draw.creatureType->outfitId())
+                                   : info.textureInfo.getTexture();
+
+                info.descriptorSet = objectDescriptorSet(texture);
                 info.position = drawPos;
                 info.width = info.textureInfo.atlas->spriteWidth;
                 info.height = info.textureInfo.atlas->spriteHeight;
@@ -627,9 +632,9 @@ void MapRenderer::issueDraw(const DrawInfo::Base &info, const WorldPosition &wor
     vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
 }
 
-void MapRenderer::drawBrushPreview(Brush *brush, const Position &position)
+void MapRenderer::drawBrushPreview(Brush *brush, const Position &position, Direction direction)
 {
-    for (const auto preview : brush->getPreviewTextureInfo())
+    for (const auto preview : brush->getPreviewTextureInfo(direction))
         drawPreview(preview, position);
 }
 
@@ -658,7 +663,11 @@ void MapRenderer::drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &
                     DrawInfo::Creature info;
                     info.color = colors::ItemPreview;
                     info.textureInfo = draw.creatureType->getTextureInfo(0, draw.direction);
-                    info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
+                    auto texture = draw.creatureType->hasColorVariation()
+                                       ? info.textureInfo.getTexture(draw.creatureType->outfitId())
+                                       : info.textureInfo.getTexture();
+
+                    info.descriptorSet = objectDescriptorSet(texture);
 
                     info.width = info.textureInfo.atlas->spriteWidth;
                     info.height = info.textureInfo.atlas->spriteHeight;
@@ -974,15 +983,13 @@ DrawInfo::Creature MapRenderer::creatureDrawInfo(const Creature &creature, const
     DrawInfo::Creature info;
     info.color = getCreatureDrawColor(creature, position, drawFlags);
     info.textureInfo = creature.getTextureInfo();
-    if (creature.creatureType.hasColorVariation())
-    {
-        uint32_t variationId = creature.creatureType.outfitId();
-        info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas->getTexture(variationId));
-    }
-    else
-    {
-        info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas->getOrCreateTexture());
-    }
+
+    auto texture = creature.creatureType.hasColorVariation()
+                       ? info.textureInfo.getTexture(creature.creatureType.outfitId())
+                       : info.textureInfo.getTexture();
+
+    info.descriptorSet = objectDescriptorSet(texture);
+
     info.position = position;
     info.width = info.textureInfo.atlas->spriteWidth;
     info.height = info.textureInfo.atlas->spriteHeight;

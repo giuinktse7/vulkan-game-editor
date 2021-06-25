@@ -191,6 +191,8 @@ class MapView : public Nano::Observer<>
     Tile *singleSelectedTile();
     bool singleItemSelected() const;
 
+    void rotateBrush();
+
     /**
 	 * Returns the only selected item if there is **exactly one** selected item.
 	 * Returns nullptr otherwise.

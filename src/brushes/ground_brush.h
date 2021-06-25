@@ -26,7 +26,7 @@ class GroundBrush final : public Brush
     GroundBrush(std::string id, const std::string &name, std::vector<WeightedItemId> &&weightedIds);
     GroundBrush(std::string id, const std::string &name, std::vector<WeightedItemId> &&weightedIds, uint32_t iconServerId);
 
-    void apply(MapView &mapView, const Position &position) override;
+    void apply(MapView &mapView, const Position &position, Direction direction) override;
     uint32_t iconServerId() const;
     BrushResource brushResource() const override;
 
@@ -40,7 +40,7 @@ class GroundBrush final : public Brush
 
     std::string brushId() const noexcept;
 
-    std::vector<ThingDrawInfo> getPreviewTextureInfo() const override;
+    std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction) const override;
 
     const std::string getDisplayId() const override;
 

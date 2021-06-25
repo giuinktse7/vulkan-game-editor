@@ -164,8 +164,8 @@ int main(int argc, char *argv[])
     // int rat = 21;
     // checkCreature(rat);
 
-    // Creatures::creatureType(rat)->checkTransparency(CreatureDirection::North);
-    // Creatures::creatureType(rat)->checkTransparency(CreatureDirection::East);
+    // Creatures::creatureType(rat)->checkTransparency(Direction::North);
+    // Creatures::creatureType(rat)->checkTransparency(Direction::East);
 
     // int cyclops = 22;
     // checkCreature(cyclops);
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
 
 //     int spriteOffset = 0;
 
-//     auto spriteIndex = nomadType->getSpriteIndex(0, CreatureDirection::North);
+//     auto spriteIndex = nomadType->getSpriteIndex(0, Direction::North);
 //     auto spriteId = nomadType->frameGroup(0).getSpriteId(spriteIndex);
 
 //     // TODO Assumes that template is always at index + 1. Maybe not correct.
@@ -233,7 +233,7 @@ void TemporaryTest::loadAllTexturesIntoMemory()
         auto creatureType = Creatures::creatureType(looktype);
         if (creatureType)
         {
-            creatureType->getTextureInfo(0, CreatureDirection::North).atlas->getOrCreateTexture();
+            creatureType->getTextureInfo(0, Direction::North).atlas->getOrCreateTexture();
         }
     }
     VME_LOG("loadTextures() ms: " << start.elapsedMillis());
@@ -278,7 +278,7 @@ std::shared_ptr<Map> TemporaryTest::makeTestMap2()
     //         if (newCreature)
     //         {
     //             auto &creature = newCreature.value();
-    //             creature.setDirection(CreatureDirection::South);
+    //             creature.setDirection(Direction::South);
     //             map->getTile(pos)->setCreature(std::move(creature));
     //             VME_LOG_D(outfitId);
     //         }

@@ -638,14 +638,15 @@ void MainWindow::initializePaletteWindow()
             goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(id, name, looktype))));
         };
 
-        // goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::creatureType("test"))));
-        Outfit outfit(146);
+        goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+            "colorful_nomad",
+            "Colorful Nomad",
+            Outfit(146, 116, 68, 68, 68)))));
 
-        outfit.look.setHead(77);
-        outfit.look.setBody(77);
-        outfit.look.setLegs(77);
-        outfit.look.setFeet(77);
-        goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType("nomad", "Nomad", outfit))));
+        goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+            "nomad",
+            "Nomad",
+            Outfit(146, 114, 20, 22, 2)))));
 
         // addTestCreatureBrush("nomad", "Nomad", 146);
         addTestCreatureBrush("rat", "Rat", 21);
@@ -738,6 +739,13 @@ QMenuBar *MainWindow::createMenuBar()
             this->currentMapView()->requestDraw();
         });
         editMenu->addAction(paste);
+
+        // Brush actions
+        editMenu->addSeparator();
+
+        auto rotateBrush = new MenuAction(tr("Rotate brush"), Qt::Key_R, this);
+        connect(rotateBrush, &QWidgetAction::triggered, [this] { this->currentMapView()->rotateBrush(); });
+        editMenu->addAction(rotateBrush);
     }
 
     // Map

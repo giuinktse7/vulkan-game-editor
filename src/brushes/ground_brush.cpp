@@ -57,7 +57,7 @@ void GroundBrush::initialize()
     _brushResource.variant = 0;
 }
 
-void GroundBrush::apply(MapView &mapView, const Position &position)
+void GroundBrush::apply(MapView &mapView, const Position &position, Direction direction)
 {
     mapView.addItem(position, Item(nextServerId()));
 }
@@ -118,7 +118,7 @@ void GroundBrush::setName(std::string name)
     _name = name;
 }
 
-std::vector<ThingDrawInfo> GroundBrush::getPreviewTextureInfo() const
+std::vector<ThingDrawInfo> GroundBrush::getPreviewTextureInfo(Direction direction) const
 {
     return std::vector<ThingDrawInfo>{DrawItemType(_nextId, PositionConstants::Zero)};
 }

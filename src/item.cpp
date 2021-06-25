@@ -122,7 +122,7 @@ const uint32_t Item::getPatternIndex(const Position &pos) const
     }
 }
 
-void Item::setCount(uint8_t count) noexcept
+void Item::setCount(uint8_t count)
 {
     DEBUG_ASSERT(count >= 1 && count <= 100, "Count must be in [1, 100].");
     bool changed = count != _subtype;

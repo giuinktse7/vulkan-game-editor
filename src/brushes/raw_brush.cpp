@@ -17,7 +17,7 @@ RawBrush::RawBrush(ItemType *itemType)
     _brushResource.variant = 0;
 }
 
-void RawBrush::apply(MapView &mapView, const Position &position)
+void RawBrush::apply(MapView &mapView, const Position &position, Direction direction)
 {
     if (!_itemType)
     {
@@ -70,7 +70,7 @@ BrushType RawBrush::type() const
     return BrushType::Raw;
 }
 
-std::vector<ThingDrawInfo> RawBrush::getPreviewTextureInfo() const
+std::vector<ThingDrawInfo> RawBrush::getPreviewTextureInfo(Direction direction) const
 {
     return std::vector<ThingDrawInfo>{DrawItemType(_itemType, PositionConstants::Zero)};
 }

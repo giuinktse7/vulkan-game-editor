@@ -7,6 +7,9 @@
 #include <glm/vec4.hpp>
 #include <memory>
 
+class TextureAtlas;
+struct Pixel;
+
 enum class SolidColor : uint32_t
 {
     Black = 0xFF000000,
@@ -45,11 +48,6 @@ class Texture
         return _pixels;
     }
 
-    inline std::vector<uint8_t> &mutablePixelsTEST() noexcept
-    {
-        return _pixels;
-    }
-
     inline uint32_t sizeInBytes() const;
 
     static Texture *getSolidTexture(SolidColor color);
@@ -63,7 +61,14 @@ class Texture
         return _id;
     }
 
+    bool finalized() const noexcept;
+    void finalize();
+
   private:
+    friend class TextureAtlas;
+
+    Pixel getPixel(int x, int y) const;
+    void multiplyPixel(int x, int y, Pixel pixel);
     static uint32_t nextTextureId();
     static uint32_t _nextTextureId;
 
@@ -72,6 +77,9 @@ class Texture
 
     uint32_t _width;
     uint32_t _height;
+
+    // A texture marked as finalized can no longer be changed.
+    bool _finalized = false;
 };
 
 struct Pixel

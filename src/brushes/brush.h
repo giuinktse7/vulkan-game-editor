@@ -109,12 +109,12 @@ struct DrawItemType
 
 struct DrawCreatureType
 {
-    DrawCreatureType(const CreatureType *creatureType, Position relativePosition, CreatureDirection direction = CreatureDirection::South)
+    DrawCreatureType(const CreatureType *creatureType, Position relativePosition, Direction direction = Direction::South)
         : creatureType(creatureType), relativePosition(relativePosition), direction(direction) {}
 
     const CreatureType *creatureType;
     Position relativePosition;
-    CreatureDirection direction;
+    Direction direction;
 };
 
 using ThingDrawInfo = std::variant<DrawItemType, DrawCreatureType>;
@@ -126,7 +126,7 @@ class Brush
 
     virtual ~Brush() = default;
 
-    virtual void apply(MapView &mapView, const Position &position) = 0;
+    virtual void apply(MapView &mapView, const Position &position, Direction direction) = 0;
 
     virtual BrushResource brushResource() const = 0;
 
@@ -136,7 +136,7 @@ class Brush
 
     static BrushSearchResult search(std::string searchString);
 
-    virtual std::vector<ThingDrawInfo> getPreviewTextureInfo() const = 0;
+    virtual std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction = Direction::South) const = 0;
 
     virtual bool erasesItem(uint32_t serverId) const = 0;
     virtual BrushType type() const = 0;

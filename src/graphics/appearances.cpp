@@ -566,7 +566,7 @@ const TextureInfo CreatureAppearance::getTextureInfoBySpriteIdTEST(int offset) c
     return info;
 }
 
-const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, CreatureDirection direction, TextureInfo::CoordinateType coordinateType) const
+const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, Direction direction, TextureInfo::CoordinateType coordinateType) const
 {
     auto &fg = this->frameGroup(frameGroupId);
     uint8_t layers = fg.spriteInfo.layers;
@@ -594,8 +594,8 @@ const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, Crea
             case NonMovingCreatureRenderType::Half:
                 // switch (direction)
                 // {
-                //     case CreatureDirection::North:
-                //     case CreatureDirection::South:
+                //     case Direction::North:
+                //     case Direction::South:
                 //     {
                 //         auto width = info.window.x1;
                 //         info.window.x0 += width / 2;
@@ -604,8 +604,8 @@ const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, Crea
                 //         info.window.x1 /= 2;
                 //     }
                 //     break;
-                //     case CreatureDirection::East:
-                //     case CreatureDirection::West:
+                //     case Direction::East:
+                //     case Direction::West:
                 //     {
                 //         auto height = info.window.y1;
                 //         info.window.y0 += height / 2;
@@ -751,12 +751,12 @@ bool transparentRegion(int fromX, int fromY, int width, int height, int atlasWid
 CreatureAppearance::NonMovingCreatureRenderType CreatureAppearance::checkTransparency() const
 {
     auto &fg = this->frameGroup(0);
-    if (fg.spriteInfo.spriteIds.size() <= to_underlying(CreatureDirection::North))
+    if (fg.spriteInfo.spriteIds.size() <= to_underlying(Direction::North))
     {
         return NonMovingCreatureRenderType::Full;
     }
 
-    auto spriteId = fg.getSpriteId(to_underlying(CreatureDirection::North));
+    auto spriteId = fg.getSpriteId(to_underlying(Direction::North));
     TextureAtlas *atlas = getTextureAtlas(spriteId);
 
     const auto &pixels = atlas->getOrCreateTexture().pixels();

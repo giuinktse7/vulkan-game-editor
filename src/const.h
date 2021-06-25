@@ -10,6 +10,14 @@ constexpr int GROUND_FLOOR = 7;
 constexpr int MapTileSize = 32;
 constexpr int SpriteSize = 32;
 
+enum class Direction
+{
+    North = 0,
+    East = 1,
+    South = 2,
+    West = 3
+};
+
 enum class ItemSlot : uint8_t
 {
     TwoHanded = 0,

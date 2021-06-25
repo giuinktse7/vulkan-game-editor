@@ -41,7 +41,8 @@ enum class ShortcutAction
     ResetZoom,
     FloorUp,
     FloorDown,
-    LowerFloorShade
+    LowerFloorShade,
+    Rotate
 };
 
 class VulkanWindow : public QVulkanWindow

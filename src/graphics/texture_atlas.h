@@ -33,6 +33,9 @@ struct TextureInfo
 
     TextureAtlas *atlas;
     TextureWindow window;
+
+    const Texture &getTexture() const;
+    const Texture &getTexture(uint32_t textureVariationId) const;
 };
 
 struct DrawOffset
@@ -52,6 +55,10 @@ struct TextureAtlasVariation
 
     uint32_t id;
     Texture texture;
+    /*
+
+    */
+    bool locked;
 };
 
 struct TextureAtlas

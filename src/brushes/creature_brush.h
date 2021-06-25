@@ -15,7 +15,7 @@ class CreatureBrush final : public Brush
   public:
     CreatureBrush(CreatureType *creatureType);
 
-    void apply(MapView &mapView, const Position &position) override;
+    void apply(MapView &mapView, const Position &position, Direction direction) override;
 
     BrushResource brushResource() const override;
 
@@ -27,7 +27,7 @@ class CreatureBrush final : public Brush
 
     const std::string &id() const noexcept;
 
-    std::vector<ThingDrawInfo> getPreviewTextureInfo() const override;
+    std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction) const override;
     const std::string getDisplayId() const override;
 
   private:

@@ -378,7 +378,7 @@ class MapRenderer
 
     bool shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter = {}) const noexcept;
 
-    void drawBrushPreview(Brush *brush, const Position &position);
+    void drawBrushPreview(Brush *brush, const Position &position, Direction direction = Direction::South);
     void drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos);
     void drawPreview(ThingDrawInfo drawInfo, const Position &position);
 

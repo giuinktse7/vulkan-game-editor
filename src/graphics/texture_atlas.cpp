@@ -134,20 +134,15 @@ void TextureAtlas::overlay(TextureAtlas *templateAtlas, uint32_t variationId, ui
 
     auto atlasWidth = templateAtlas->width;
 
-    const auto &templatePixels = templateAtlas->getOrCreateTexture().pixels();
-    auto &targetPixels = getVariation(variationId)->texture.mutablePixelsTEST();
+    const auto &templateTexture = templateAtlas->getOrCreateTexture();
+    auto &targetTexture = getVariation(variationId)->texture;
 
-    auto lookPixel = [](uint8_t _look) -> Pixel {
-        uint8_t r = (Creatures::TemplateOutfitLookupTable[_look] & 0xFF0000) >> 16;
-        uint8_t g = (Creatures::TemplateOutfitLookupTable[_look] & 0xFF00) >> 8;
-        uint8_t b = (Creatures::TemplateOutfitLookupTable[_look] & 0xFF);
-        return {r, g, b, 255};
-    };
+    DEBUG_ASSERT(!targetTexture.finalized(), "Target texture is finalized.");
 
-    auto head = lookPixel(look.head());
-    auto body = lookPixel(look.body());
-    auto legs = lookPixel(look.legs());
-    auto feet = lookPixel(look.feet());
+    auto head = Creatures::getColorFromLookupTable(look.head());
+    auto body = Creatures::getColorFromLookupTable(look.body());
+    auto legs = Creatures::getColorFromLookupTable(look.legs());
+    auto feet = Creatures::getColorFromLookupTable(look.feet());
 
     for (int y = targetY; y < targetY + spriteHeight; ++y)
     {
@@ -156,22 +151,22 @@ void TextureAtlas::overlay(TextureAtlas *templateAtlas, uint32_t variationId, ui
         {
             int tx = templateX + x - targetX;
 
-            auto pixel = getPixelFromBMPTexture(tx, ty, atlasWidth, templatePixels);
+            auto pixel = templateTexture.getPixel(tx, ty);
             if (pixel == Pixels::Yellow)
             {
-                multiplyPixelInBMP(x, y, atlasWidth, targetPixels, head);
+                targetTexture.multiplyPixel(x, y, head);
             }
             else if (pixel == Pixels::Red)
             {
-                multiplyPixelInBMP(x, y, atlasWidth, targetPixels, body);
+                targetTexture.multiplyPixel(x, y, body);
             }
             else if (pixel == Pixels::Green)
             {
-                multiplyPixelInBMP(x, y, atlasWidth, targetPixels, legs);
+                targetTexture.multiplyPixel(x, y, legs);
             }
             else if (pixel == Pixels::Blue)
             {
-                multiplyPixelInBMP(x, y, atlasWidth, targetPixels, feet);
+                targetTexture.multiplyPixel(x, y, feet);
             }
             else if (pixel == Pixels::Magenta)
             {
@@ -388,4 +383,14 @@ bool TextureAtlas::hasColorVariation(uint32_t variationId) const
 TextureAtlasVariation::TextureAtlasVariation(uint32_t id, Texture texture)
     : id(id), texture(texture)
 {
+}
+
+const Texture &TextureInfo::getTexture() const
+{
+    return atlas->getOrCreateTexture();
+}
+
+const Texture &TextureInfo::getTexture(uint32_t textureVariationId) const
+{
+    return atlas->getTexture(textureVariationId);
 }

@@ -2,6 +2,7 @@
 
 #include "../vendor/rollbear-visit/visit.hpp"
 #include "brushes/brush.h"
+#include "brushes/creature_brush.h"
 #include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
 #include "const.h"
@@ -511,6 +512,18 @@ std::shared_ptr<Item> MapView::dropItem(Tile *tile, Item *item)
 //>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+void MapView::rotateBrush()
+{
+    std::visit(
+        util::overloaded{
+            [this](MouseAction::MapBrush &brush) {
+                brush.rotateClockwise();
+                this->requestDraw();
+            },
+            [](const auto &arg) {}},
+        editorAction.action());
+}
+
 void MapView::setViewportSize(int width, int height)
 {
     camera.setSize(width, height);
@@ -906,7 +919,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                     {
                         if (!action.area)
                         {
-                            action.brush->apply(*this, pos);
+                            action.brush->apply(*this, pos, action.direction);
                         }
                     }
                 },
@@ -1031,7 +1044,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                             // Require non-negative positions
                             if (position.x >= 0 && position.y >= 0)
                             {
-                                action.brush->apply(*this, position);
+                                action.brush->apply(*this, position, action.direction);
                             }
                         }
                     }

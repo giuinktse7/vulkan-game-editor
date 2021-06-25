@@ -86,19 +86,26 @@ struct MouseAction
 
     struct MapBrush
     {
+
         MapBrush(uint32_t serverId);
         MapBrush(Brush *brush);
+
+        void rotateClockwise();
+
         Brush *brush;
+
         /*
-      If true, the raw item is currently being drag in an area. Once released,
-      each position of the area has an item of serverId added.
-    */
+            If true, the raw item is currently being drag in an area. Once released,
+            each position of the area has an item of serverId added.
+        */
         bool area = false;
 
         /**
-     * If true, this action erases rather than adds items
-     */
+         *  If true, this action erases instead of adding
+         */
         bool erase = false;
+
+        Direction direction = Direction::South;
     };
 
     struct Select : public MoveAction

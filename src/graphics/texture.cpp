@@ -113,42 +113,40 @@ glm::vec4 TextureWindow::asVec4() const noexcept
     return glm::vec4(x0, y0, x1, y1);
 }
 
-Pixel getPixelFromBMPTexture(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels)
+Pixel Texture::getPixel(int x, int y) const
 {
-    int i = 4 * ((atlasWidth - y - 1) * (atlasWidth) + x);
+    int i = 4 * ((_width - y - 1) * (_width) + x);
 
     // Because the texture is stored in the BMP format, pixels are read in reverse order (as BGRA instead of ARGB)
     Pixel pixel{};
-    pixel.parts._b = pixels.at(i);
-    pixel.parts._g = pixels.at(i + 1);
-    pixel.parts._r = pixels.at(i + 2);
-    pixel.parts._a = pixels.at(i + 3);
+    pixel.parts._b = _pixels.at(i);
+    pixel.parts._g = _pixels.at(i + 1);
+    pixel.parts._r = _pixels.at(i + 2);
+    pixel.parts._a = _pixels.at(i + 3);
 
     return pixel;
 }
 
 // See https://stackoverflow.com/questions/45041273/how-to-correctly-multiply-two-colors-with-byte-components#comment77056973_45041273
-Pixel Pixel::multiply(const Pixel &other)
+void Texture::multiplyPixel(int x, int y, Pixel pixel)
 {
-    return {
-        (uint8_t)((r() * other.r() + 0xFF) >> 8),
-        (uint8_t)((g() * other.g() + 0xFF) >> 8),
-        (uint8_t)((b() * other.b() + 0xFF) >> 8),
-        (uint8_t)((a() * other.a() + 0xFF) >> 8)};
-}
-
-void multiplyPixelInBMP(int x, int y, int atlasWidth, std::vector<uint8_t> &pixels, const Pixel &pixel)
-{
-    int i = 4 * ((atlasWidth - y - 1) * (atlasWidth) + x);
+    DEBUG_ASSERT(!_finalized, "Texture is finalized.");
+    int i = 4 * ((_width - y - 1) * (_width) + x);
 
     // Because the texture is stored in the BMP format, pixels are read in reverse order (as BGRA instead of ARGB)
-    pixels[i] = (uint8_t)((pixels[i] * pixel.b() + 0xFF) >> 8);
-    pixels[i + 1] = (uint8_t)((pixels[i + 1] * pixel.g() + 0xFF) >> 8);
-    pixels[i + 2] = (uint8_t)((pixels[i + 2] * pixel.r() + 0xFF) >> 8);
-    pixels[i + 3] = (uint8_t)((pixels[i + 3] * pixel.a() + 0xFF) >> 8);
+    _pixels[i] = (uint8_t)((_pixels[i] * pixel.b() + 0xFF) >> 8);
+    _pixels[i + 1] = (uint8_t)((_pixels[i + 1] * pixel.g() + 0xFF) >> 8);
+    _pixels[i + 2] = (uint8_t)((_pixels[i + 2] * pixel.r() + 0xFF) >> 8);
+    _pixels[i + 3] = (uint8_t)((_pixels[i + 3] * pixel.a() + 0xFF) >> 8);
+}
 
-    // pixels[i] = (uint8_t)((pixels[i] * pixel.b()) / 255);
-    // pixels[i + 1] = (uint8_t)((pixels[i + 1] * pixel.g()) / 255);
-    // pixels[i + 2] = (uint8_t)((pixels[i + 2] * pixel.r()) / 255);
-    // pixels[i + 3] = (uint8_t)((pixels[i + 3] * pixel.a()) / 255);
+void Texture::finalize()
+{
+    DEBUG_ASSERT(!_finalized, "Texture is already finalized.");
+    _finalized = true;
+}
+
+bool Texture::finalized() const noexcept
+{
+    return _finalized;
 }

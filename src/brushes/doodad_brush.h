@@ -83,7 +83,7 @@ class DoodadBrush final : public Brush
 
     BrushResource brushResource() const override;
 
-    void apply(MapView &mapView, const Position &position) override;
+    void apply(MapView &mapView, const Position &position, Direction direction) override;
     uint32_t iconServerId() const;
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
@@ -91,7 +91,7 @@ class DoodadBrush final : public Brush
 
     const std::string &id() const noexcept;
 
-    std::vector<ThingDrawInfo> getPreviewTextureInfo() const override;
+    std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction) const override;
 
   private:
     void initialize();

@@ -70,7 +70,7 @@ class Item
     void setDescription(std::string &&description);
     void setAttribute(ItemAttribute &&attribute);
     inline void setSubtype(uint8_t subtype) noexcept;
-    void setCount(uint8_t count) noexcept;
+    void setCount(uint8_t count);
     inline void setCharges(uint8_t charges) noexcept;
 
     Container *getOrCreateContainer();

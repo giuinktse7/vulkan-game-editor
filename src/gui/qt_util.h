@@ -40,10 +40,10 @@ struct GuiImageCache
     static void initialize();
     static const QPixmap &get(uint32_t serverId);
     static void cachePixmapForServerId(uint32_t serverId);
-    static QImage *getOrCreateQImageForAtlas(TextureAtlas *atlas);
+    static QImage *getOrCreateQImageForTexture(const Texture &texture);
 
     static std::unordered_map<uint32_t, QPixmap> serverIdToPixmap;
-    static std::unordered_map<TextureAtlas *, std::unique_ptr<QImage>> atlasToQImage;
+    static std::unordered_map<uint32_t, std::unique_ptr<QImage>> textureIdToQImage;
 };
 
 struct ItemImageData
@@ -160,13 +160,15 @@ namespace QtUtil
     QPixmap itemPixmap(uint32_t serverId, uint8_t subtype = 0);
     QPixmap itemPixmap(const Position &pos, const Item &item);
 
-    QPixmap creaturePixmap(uint32_t looktype, CreatureDirection direction);
+    QPixmap creaturePixmap(uint32_t looktype, Direction direction);
 
     QPixmap thingPixmap(const TextureInfo &info);
+    QPixmap thingPixmap(const TextureWindow &textureWindow, const Texture &texture, uint16_t spriteWidth, uint16_t spriteHeight);
 
     ItemImageData itemImageData(Brush *brush);
     ItemImageData itemImageData(uint32_t serverId, uint8_t subtype = 0);
     ItemImageData itemImageData(const TextureInfo &info);
+    ItemImageData itemImageData(const TextureWindow &window, const Texture &texture);
     MainApplication *qtApp();
 
     QString resourcePath(Brush *brush);

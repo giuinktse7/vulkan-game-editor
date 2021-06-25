@@ -29,8 +29,9 @@ DoodadBrush::DoodadBrush(std::string id, const std::string &name, std::vector<Do
     initialize();
 }
 
-void DoodadBrush::apply(MapView &mapView, const Position &position)
+void DoodadBrush::apply(MapView &mapView, const Position &position, Direction direction)
 {
+    // TODO Use direction for doodad brush
     auto group = sampleGroup();
 
     for (const auto &entry : group)
@@ -183,7 +184,7 @@ const std::string &DoodadBrush::id() const noexcept
     return _id;
 }
 
-std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo() const
+std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo(Direction direction) const
 {
     std::vector<ThingDrawInfo> previewInfo;
 

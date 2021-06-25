@@ -17,14 +17,6 @@ namespace tibia::protobuf::appearances
     class Appearance;
 }
 
-enum class CreatureDirection : uint8_t
-{
-    North = 0,
-    East = 1,
-    South = 2,
-    West = 3
-};
-
 class CreatureType
 {
   public:
@@ -42,9 +34,9 @@ class CreatureType
     const FrameGroup &frameGroup(size_t index) const;
     const std::vector<FrameGroup> &frameGroups() const noexcept;
     TextureAtlas *getTextureAtlas(uint32_t spriteId) const;
-    TextureAtlas *getTextureAtlas(uint32_t frameGroupId, CreatureDirection direction) const;
-    uint32_t getSpriteIndex(uint32_t frameGroupId, CreatureDirection direction) const;
-    uint32_t getSpriteId(uint32_t frameGroupId, CreatureDirection direction) const;
+    TextureAtlas *getTextureAtlas(uint32_t frameGroupId, Direction direction) const;
+    uint32_t getSpriteIndex(uint32_t frameGroupId, Direction direction) const;
+    uint32_t getSpriteId(uint32_t frameGroupId, Direction direction) const;
     uint32_t getSpriteId(uint32_t spriteIndex) const;
 
     uint16_t getSpriteWidth() const;
@@ -54,8 +46,8 @@ class CreatureType
     uint32_t getIndex(const FrameGroup &frameGroup, uint8_t patternX, uint8_t patternY, uint8_t patternZ) const;
 
     const TextureInfo getTextureInfo() const;
-    const TextureInfo getTextureInfo(uint32_t frameGroupId, CreatureDirection direction) const;
-    const TextureInfo getTextureInfo(uint32_t frameGroupId, CreatureDirection direction, TextureInfo::CoordinateType coordinateType) const;
+    const TextureInfo getTextureInfo(uint32_t frameGroupId, Direction direction) const;
+    const TextureInfo getTextureInfo(uint32_t frameGroupId, Direction direction, TextureInfo::CoordinateType coordinateType) const;
 
     bool hasColorVariation() const;
 
@@ -81,12 +73,23 @@ class Creatures
 
     static bool isValidLooktype(uint16_t looktype);
 
-    static constexpr CreatureDirection directions[] = {
-        CreatureDirection::North,
-        CreatureDirection::East,
-        CreatureDirection::South,
-        CreatureDirection::West,
+    static constexpr Direction directions[] = {
+        Direction::North,
+        Direction::East,
+        Direction::South,
+        Direction::West,
     };
+
+    static Pixel getColorFromLookupTable(uint8_t looktype);
+
+  private:
+    friend class CreatureType;
+    Creatures()
+    {
+        // Empty
+    }
+
+    static vme_unordered_map<std::string, std::unique_ptr<CreatureType>> _creatureTypes;
 
     static constexpr uint32_t TemplateOutfitLookupTable[] = {
         0xFFFFFF,
@@ -223,15 +226,6 @@ class Creatures
         0x7F002A,
         0x7F0000,
     };
-
-  private:
-    friend class CreatureType;
-    Creatures()
-    {
-        // Empty
-    }
-
-    static vme_unordered_map<std::string, std::unique_ptr<CreatureType>> _creatureTypes;
 };
 
 class Creature
@@ -249,7 +243,7 @@ class Creature
     std::string name() const noexcept;
     bool hasName() const noexcept;
 
-    void setDirection(CreatureDirection direction);
+    void setDirection(Direction direction);
 
     const TextureInfo getTextureInfo() const;
 
@@ -258,7 +252,7 @@ class Creature
     bool selected = false;
 
   private:
-    CreatureDirection _direction = CreatureDirection::South;
+    Direction _direction = Direction::South;
 };
 
 inline const std::string &CreatureType::id() const noexcept
@@ -282,20 +276,20 @@ inline CreatureType *Creatures::creatureType(const std::string &id)
     return result == _creatureTypes.end() ? nullptr : result->second.get();
 }
 
-inline std::ostream &operator<<(std::ostream &os, const CreatureDirection &direction)
+inline std::ostream &operator<<(std::ostream &os, const Direction &direction)
 {
     switch (direction)
     {
-        case CreatureDirection::North:
+        case Direction::North:
             os << "North";
             break;
-        case CreatureDirection::East:
+        case Direction::East:
             os << "East";
             break;
-        case CreatureDirection::South:
+        case Direction::South:
             os << "South";
             break;
-        case CreatureDirection::West:
+        case Direction::West:
             os << "West";
             break;
     }

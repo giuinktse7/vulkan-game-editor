@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "logger.h"
+
 struct Outfit
 {
     struct Look
@@ -64,6 +66,15 @@ struct Outfit
     Outfit(uint16_t looktype)
     {
         look.type = looktype;
+    }
+
+    Outfit(uint16_t looktype, uint8_t lookhead, uint8_t lookbody, uint8_t looklegs, uint8_t lookfeet)
+    {
+        look.type = looktype;
+        look.data.looks.head = lookhead;
+        look.data.looks.body = lookbody;
+        look.data.looks.legs = looklegs;
+        look.data.looks.feet = lookfeet;
     }
 
     Outfit(Look look)
