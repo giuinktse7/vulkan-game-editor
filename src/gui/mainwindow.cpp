@@ -641,7 +641,7 @@ void MainWindow::initializePaletteWindow()
         goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
             "colorful_nomad",
             "Colorful Nomad",
-            Outfit(146, 116, 68, 68, 68)))));
+            Outfit(146, 116, 68, 68, 68, Outfit::Addon::First | Outfit::Addon::Second, 379)))));
 
         goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
             "nomad",

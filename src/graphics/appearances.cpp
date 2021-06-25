@@ -551,27 +551,11 @@ CreatureAppearance::CreatureAppearance(const proto::Appearance &appearance)
     }
 }
 
-const TextureInfo CreatureAppearance::getTextureInfoBySpriteIdTEST(int offset) const
-{
-    auto &fg = this->frameGroup(0);
-
-    auto spriteId = fg.getSpriteId(offset);
-
-    TextureAtlas *atlas = getTextureAtlas(spriteId);
-
-    TextureInfo info;
-    info.atlas = atlas;
-    info.window = atlas->getTextureWindow(spriteId, TextureInfo::CoordinateType::Normalized);
-
-    return info;
-}
-
-const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, Direction direction, TextureInfo::CoordinateType coordinateType) const
+const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, uint32_t spriteIndex, TextureInfo::CoordinateType coordinateType) const
 {
     auto &fg = this->frameGroup(frameGroupId);
     uint8_t layers = fg.spriteInfo.layers;
 
-    uint32_t spriteIndex = to_underlying(direction) * layers;
     uint32_t spriteId = fg.getSpriteId(spriteIndex);
 
     TextureAtlas *atlas = getTextureAtlas(spriteId);
@@ -632,6 +616,16 @@ const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, Dire
     }
 
     return info;
+}
+
+const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, Direction direction, TextureInfo::CoordinateType coordinateType) const
+{
+    auto &fg = this->frameGroup(frameGroupId);
+    uint8_t layers = fg.spriteInfo.layers;
+
+    uint32_t spriteIndex = to_underlying(direction) * layers;
+
+    return getTextureInfo(frameGroupId, spriteIndex, coordinateType);
 }
 
 TextureAtlas *CreatureAppearance::getTextureAtlas(uint32_t spriteId) const

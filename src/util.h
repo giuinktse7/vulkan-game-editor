@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "concepts.h"
+#include "debug.h"
 
 #include "../vendor/tsl/robin_map.h"
 #include "../vendor/tsl/robin_set.h"

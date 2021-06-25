@@ -437,6 +437,57 @@ void MapRenderer::drawPreview(ThingDrawInfo drawInfo, const Position &position)
         drawInfo);
 }
 
+void MapRenderer::drawCreatureType(const CreatureType &creatureType, const Position position, Direction direction, glm::vec4 color)
+{
+    auto drawPart = [this, position, color](const CreatureType *creatureType, int posture, int addonType, Direction direction) {
+        if (!insideMap(position))
+        {
+            return;
+        }
+
+        DrawInfo::Creature info;
+        info.color = color;
+        info.textureInfo = creatureType->getTextureInfo(0, posture, addonType, direction);
+
+        auto texture = creatureType->hasColorVariation()
+                           ? info.textureInfo.getTexture(creatureType->outfitId())
+                           : info.textureInfo.getTexture();
+
+        info.descriptorSet = objectDescriptorSet(texture);
+        info.position = position;
+        info.width = info.textureInfo.atlas->spriteWidth;
+        info.height = info.textureInfo.atlas->spriteHeight;
+
+        this->drawCreature(info);
+    };
+
+    uint8_t posture = creatureType.hasMount() ? 1 : 0;
+
+    // Mount?
+    if (creatureType.hasMount())
+    {
+        // Draw mount first
+        drawPart(Creatures::creatureType(creatureType.mountLooktype()), 0, 0, direction);
+
+        drawPart(&creatureType, 1, 0, direction);
+    }
+    else
+    {
+        // No mount, draw the base outfit
+        drawPart(&creatureType, posture, 0, direction);
+    }
+
+    // Addons?
+    if (creatureType.hasAddon(Outfit::Addon::First))
+    {
+        drawPart(&creatureType, posture, 1, direction);
+    }
+    if (creatureType.hasAddon(Outfit::Addon::Second))
+    {
+        drawPart(&creatureType, posture, 2, direction);
+    }
+}
+
 void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
 {
     if (pos.x < 0 || pos.x > mapView->mapWidth() || pos.y < 0 || pos.y > mapView->mapHeight())
@@ -578,23 +629,9 @@ void MapRenderer::drawTile(Tile *tile, uint32_t flags, const Position offset, co
     if (tile->hasCreature())
     {
         auto &creature = *tile->creature();
-        drawCreature(creatureDrawInfo(creature, position, flags));
-
-        // auto drawTest = [this, &creature, position, flags](int offset) {
-        //     DrawInfo::Creature info;
-        //     info.color = getCreatureDrawColor(creature, position, flags);
-        //     info.textureInfo = creature.creatureType.appearance->getTextureInfoBySpriteIdTEST(offset);
-        //     info.descriptorSet = objectDescriptorSet(info.textureInfo.atlas);
-        //     info.position = position;
-        //     info.width = info.textureInfo.atlas->spriteWidth;
-        //     info.height = info.textureInfo.atlas->spriteHeight;
-
-        //     WorldPosition worldPos = (info.position + Position(info.textureInfo.atlas->drawOffset.x, info.textureInfo.atlas->drawOffset.y, 0)).worldPos();
-
-        //     issueDraw(info, worldPos);
-        // };
-
-        // drawTest(2);
+        auto color = getCreatureDrawColor(creature, position, flags);
+        drawCreatureType(creature.creatureType, position, creature.direction(), color);
+        // drawCreature(creatureDrawInfo(creature, position, flags));
     }
 }
 

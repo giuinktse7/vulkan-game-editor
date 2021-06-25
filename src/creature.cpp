@@ -6,6 +6,7 @@
 #include <set>
 
 vme_unordered_map<std::string, std::unique_ptr<CreatureType>> Creatures::_creatureTypes;
+vme_unordered_map<uint16_t, std::string> Creatures::_looktypeToIdIndex;
 
 CreatureType *Creatures::addCreatureType(std::string id, std::string name, Outfit outfit)
 {
@@ -15,69 +16,98 @@ CreatureType *Creatures::addCreatureType(std::string id, std::string name, Outfi
         return nullptr;
     }
 
+    if (creatureType(id))
+    {
+        VME_LOG_ERROR(std::format("A creature type with id '{}' already exists."));
+        return nullptr;
+    }
+
+    // Add creature type for the mount if it doesn't exist yet
+    if (outfit.look.mount != 0 && creatureType(outfit.look.mount) == nullptr)
+    {
+        std::string mountId = std::format("mount_looktype_{}", outfit.look.mount);
+        std::string mountName = std::format("Mount (looktype {})", outfit.look.mount);
+        Creatures::addCreatureType(mountId, mountName, Outfit(379));
+    }
+
+    // Index it by looktype if it only consists of a looktype and nothing else (no colors/mount/addons)
+    if (outfit.isOnlyLooktype())
+    {
+        _looktypeToIdIndex.emplace(outfit.look.type, id);
+    }
+
     _creatureTypes.emplace(id, std::make_unique<CreatureType>(id, name, outfit));
     auto creatureType = _creatureTypes.at(id).get();
 
-    auto variationId = outfit.id();
-
-    // TODO Check that the Texture Atlases have not already been supplied with a variant for this outfit.
-    // If they have, then the colors will be multiplied more than once resulting in incorrect colors.
-
     // Layers > 1 means we have a template. If so, instantiate the necessary atlas templates for this creature type
-    if (creatureType->frameGroup(0).spriteInfo.layers > 1)
+    bool multiLayer = creatureType->frameGroup(0).spriteInfo.layers > 1;
+    bool needsTemplate = creatureType->outfitId() != 0;
+    if (multiLayer && needsTemplate)
     {
-        std::vector<Texture *> textures;
-
-        auto &frameGroup = creatureType->frameGroup(0);
-        uint8_t postureCount = frameGroup.spriteInfo.patternDepth;
-        uint8_t addonCount = frameGroup.spriteInfo.patternHeight; // Includes "no addon (base outfit)"
-        uint8_t directionCount = frameGroup.spriteInfo.patternWidth;
-
-        for (uint8_t postureType = 0; postureType < postureCount; ++postureType)
-        {
-            for (uint8_t addonType = 0; addonType < addonCount; ++addonType)
-            {
-                for (uint8_t direction = 0; direction < directionCount; ++direction)
-                {
-                    uint32_t spriteIndex = creatureType->getIndex(frameGroup, direction, addonType, postureType);
-
-                    uint32_t spriteId = frameGroup.getSpriteId(spriteIndex);
-                    uint32_t templateSpriteId = frameGroup.getSpriteId(spriteIndex + 1);
-
-                    TextureAtlas *targetAtlas = creatureType->getTextureAtlas(spriteId);
-                    auto &targetTexture = targetAtlas->getVariation(variationId)->texture;
-
-                    if (targetTexture.finalized())
-                    {
-                        continue;
-                    }
-
-                    // Add texture to the list of textures to be finalized once we have finished with all the overlays
-                    auto found = std::find_if(textures.begin(), textures.end(), [&targetTexture](const Texture *texture) {
-                        return texture->id() == targetTexture.id();
-                    });
-                    if (found == textures.end())
-                    {
-                        textures.push_back(&targetTexture);
-                    }
-
-                    TextureAtlas *templateAtlas = creatureType->getTextureAtlas(templateSpriteId);
-
-                    targetAtlas->overlay(templateAtlas, variationId, templateSpriteId, spriteId, outfit.look);
-                }
-            }
-        }
-
-        for (Texture *texture : textures)
-        {
-            texture->finalize();
-        }
+        createTextureVariation(creatureType, outfit);
     }
 
     return creatureType;
 }
 
-uint32_t CreatureType::getIndex(const FrameGroup &frameGroup, uint8_t direction, uint8_t addonType, uint8_t creaturePosture) const
+void Creatures::createTextureVariation(CreatureType *creatureType, const Outfit &outfit)
+{
+    std::vector<Texture *> textures;
+
+    auto &frameGroup = creatureType->frameGroup(0);
+    uint8_t postureCount = frameGroup.spriteInfo.patternDepth;
+    uint8_t addonCount = frameGroup.spriteInfo.patternHeight; // Includes "no addon (base outfit)"
+    uint8_t directionCount = frameGroup.spriteInfo.patternWidth;
+
+    auto variationId = outfit.id();
+
+    for (uint8_t postureType = 0; postureType < postureCount; ++postureType)
+    {
+        for (uint8_t addonType = 0; addonType < addonCount; ++addonType)
+        {
+            for (uint8_t direction = 0; direction < directionCount; ++direction)
+            {
+                uint32_t spriteIndex = creatureType->getIndex(frameGroup, postureType, addonType, direction);
+
+                uint32_t spriteId = frameGroup.getSpriteId(spriteIndex);
+                uint32_t templateSpriteId = frameGroup.getSpriteId(spriteIndex + 1);
+
+                TextureAtlas *targetAtlas = creatureType->getTextureAtlas(spriteId);
+                auto &targetTexture = targetAtlas->getVariation(variationId)->texture;
+
+                if (targetTexture.finalized())
+                {
+                    continue;
+                }
+
+                // Add texture to the list of textures to be finalized once we have finished with all the overlays
+                auto found = std::find_if(textures.begin(), textures.end(), [&targetTexture](const Texture *texture) {
+                    return texture->id() == targetTexture.id();
+                });
+                if (found == textures.end())
+                {
+                    textures.push_back(&targetTexture);
+                }
+
+                TextureAtlas *templateAtlas = creatureType->getTextureAtlas(templateSpriteId);
+
+                targetAtlas->overlay(templateAtlas, variationId, templateSpriteId, spriteId, outfit.look);
+            }
+        }
+    }
+
+    for (Texture *texture : textures)
+    {
+        texture->finalize();
+    }
+}
+
+uint32_t CreatureType::getIndex(const FrameGroup &frameGroup, uint8_t creaturePosture, uint8_t addonType, Direction direction) const
+{
+    return getIndex(frameGroup, creaturePosture, addonType, to_underlying(direction));
+}
+
+uint32_t CreatureType::getIndex(const FrameGroup &frameGroup, uint8_t creaturePosture, uint8_t addonType, uint8_t direction) const
 {
     uint8_t directions = frameGroup.spriteInfo.patternWidth;
     uint8_t addons = frameGroup.spriteInfo.patternHeight;
@@ -85,6 +115,21 @@ uint32_t CreatureType::getIndex(const FrameGroup &frameGroup, uint8_t direction,
     uint8_t layers = frameGroup.spriteInfo.layers;
 
     return layers * (directions * (creaturePosture * addons + addonType) + direction);
+}
+
+bool CreatureType::hasAddon(Outfit::Addon addon) const
+{
+    return (_outfit.look.addon & addon) != Outfit::Addon::None;
+}
+
+bool CreatureType::hasMount() const
+{
+    return _outfit.look.mount != 0;
+}
+
+uint16_t CreatureType::mountLooktype() const
+{
+    return _outfit.look.mount;
 }
 
 bool Creatures::isValidLooktype(uint16_t looktype)
@@ -104,28 +149,35 @@ CreatureType::CreatureType(std::string id, std::string name, uint16_t looktype)
     : CreatureType(id, name, Outfit(looktype)) {}
 
 CreatureType::CreatureType(std::string id, std::string name, Outfit outfit)
-    : _id(id), _name(name), outfit(outfit), appearance(Appearances::getCreatureAppearance(outfit.look.type))
+    : _id(id), _name(name), _outfit(outfit), appearance(Appearances::getCreatureAppearance(outfit.look.type))
 {
     appearance->cacheTextureAtlases();
 }
 
 CreatureType::CreatureType(CreatureType &&other) noexcept
     : appearance(other.appearance),
-      outfit(other.outfit),
+      _outfit(other._outfit),
       _id(other._id),
       _name(other._name) {}
 
 const CreatureType *Creatures::creatureType(uint16_t looktype)
 {
-    auto found = std::find_if(_creatureTypes.begin(), _creatureTypes.end(), [looktype](const auto &pair) {
-        return pair.second->looktype() == looktype;
-    });
-    if (found != _creatureTypes.end())
+    auto id = _looktypeToIdIndex.find(looktype);
+    if (id == _looktypeToIdIndex.end())
     {
-        return found->second.get();
+        return nullptr;
     }
 
-    return nullptr;
+    return creatureType(id.value());
+    // auto found = std::find_if(_creatureTypes.begin(), _creatureTypes.end(), [looktype](const auto &pair) {
+    //     return pair.second->looktype() == looktype;
+    // });
+    // if (found != _creatureTypes.end())
+    // {
+    //     return found->second.get();
+    // }
+
+    // return nullptr;
 }
 
 uint16_t CreatureType::getSpriteWidth() const
@@ -187,6 +239,12 @@ const TextureInfo CreatureType::getTextureInfo(uint32_t frameGroupId, Direction 
     return appearance->getTextureInfo(frameGroupId, direction, coordinateType);
 }
 
+const TextureInfo CreatureType::getTextureInfo(uint32_t frameGroupId, int posture, int addonType, Direction direction, TextureInfo::CoordinateType coordinateType) const
+{
+    uint32_t index = getIndex(frameGroup(frameGroupId), posture, addonType, direction);
+    return appearance->getTextureInfo(frameGroupId, index, coordinateType);
+}
+
 const std::vector<FrameGroup> &CreatureType::frameGroups() const noexcept
 {
     return appearance->frameGroups();
@@ -194,7 +252,7 @@ const std::vector<FrameGroup> &CreatureType::frameGroups() const noexcept
 
 uint32_t CreatureType::outfitId() const noexcept
 {
-    return outfit.id();
+    return _outfit.id();
 }
 
 bool CreatureType::hasColorVariation() const
@@ -249,4 +307,9 @@ std::string Creature::name() const noexcept
 const TextureInfo Creature::getTextureInfo() const
 {
     return creatureType.getTextureInfo(0, _direction);
+}
+
+Direction Creature::direction() const noexcept
+{
+    return _direction;
 }

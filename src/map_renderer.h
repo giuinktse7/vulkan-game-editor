@@ -373,6 +373,7 @@ class MapRenderer
     void drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
 
     void drawCreature(const DrawInfo::Creature &info);
+    void drawCreatureType(const CreatureType &creatureType, const Position position, Direction direction, glm::vec4 color);
 
     void drawRectangle(DrawInfo::Rectangle &info);
 

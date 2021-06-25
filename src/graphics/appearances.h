@@ -147,7 +147,7 @@ class CreatureAppearance
     const TextureInfo getTextureInfo() const;
     const TextureInfo getTextureInfo(uint32_t frameGroupId, Direction direction) const;
     const TextureInfo getTextureInfo(uint32_t frameGroupId, Direction direction, TextureInfo::CoordinateType coordinateType) const;
-    const TextureInfo getTextureInfoBySpriteIdTEST(int offset) const;
+    const TextureInfo getTextureInfo(uint32_t frameGroupId, uint32_t spriteIndex, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
 
   private:
     void cacheTextureAtlas(uint32_t spriteId);

@@ -3,9 +3,17 @@
 #include <stdint.h>
 
 #include "logger.h"
+#include "util.h"
 
 struct Outfit
 {
+    enum class Addon : uint8_t
+    {
+        None = 0,
+        First = 1,
+        Second = 1 << 1
+    };
+
     struct Look
     {
         void setHead(uint8_t head)
@@ -43,8 +51,9 @@ struct Outfit
         }
 
         uint16_t type = 0;
+        uint16_t mount = 0;
         uint8_t item = 0;
-        uint8_t addon = 0;
+        Addon addon = Addon::None;
         union
         {
             struct
@@ -63,20 +72,29 @@ struct Outfit
         return look.data.id;
     }
 
+    bool isOnlyLooktype() const noexcept
+    {
+        return look.data.id == 0 && look.addon == Addon::None && look.mount == 0 && look.item == 0 && look.type != 0;
+    }
+
     Outfit(uint16_t looktype)
     {
         look.type = looktype;
     }
 
-    Outfit(uint16_t looktype, uint8_t lookhead, uint8_t lookbody, uint8_t looklegs, uint8_t lookfeet)
+    Outfit(uint16_t looktype, uint8_t lookhead, uint8_t lookbody, uint8_t looklegs, uint8_t lookfeet, Addon addons = Outfit::Addon::None, uint16_t mountType = 0)
     {
         look.type = looktype;
         look.data.looks.head = lookhead;
         look.data.looks.body = lookbody;
         look.data.looks.legs = looklegs;
         look.data.looks.feet = lookfeet;
+        look.addon = addons;
+        look.mount = mountType;
     }
 
     Outfit(Look look)
         : look(look) {}
 };
+
+VME_ENUM_OPERATORS(Outfit::Addon)

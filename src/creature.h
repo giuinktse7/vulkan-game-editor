@@ -43,11 +43,24 @@ class CreatureType
     uint16_t getSpriteHeight() const;
     uint16_t getAtlasWidth() const;
 
-    uint32_t getIndex(const FrameGroup &frameGroup, uint8_t patternX, uint8_t patternY, uint8_t patternZ) const;
+    uint32_t getIndex(const FrameGroup &frameGroup, uint8_t creaturePosture, uint8_t addonType, uint8_t direction) const;
+    uint32_t getIndex(const FrameGroup &frameGroup, uint8_t creaturePosture, uint8_t addonType, Direction direction) const;
 
     const TextureInfo getTextureInfo() const;
     const TextureInfo getTextureInfo(uint32_t frameGroupId, Direction direction) const;
     const TextureInfo getTextureInfo(uint32_t frameGroupId, Direction direction, TextureInfo::CoordinateType coordinateType) const;
+
+    const TextureInfo getTextureInfo(uint32_t frameGroupId, int posture, int addonType, Direction direction, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
+
+    const Outfit &outfit() const noexcept
+    {
+        return _outfit;
+    }
+
+    bool hasAddon(Outfit::Addon addon) const;
+    bool hasMount() const;
+
+    uint16_t mountLooktype() const;
 
     bool hasColorVariation() const;
 
@@ -56,7 +69,7 @@ class CreatureType
     uint32_t outfitId() const noexcept;
 
   private:
-    Outfit outfit;
+    Outfit _outfit;
     std::string _id;
     std::string _name;
 
@@ -89,7 +102,14 @@ class Creatures
         // Empty
     }
 
+    static void createTextureVariation(CreatureType *creatureType, const Outfit &outfit);
+
     static vme_unordered_map<std::string, std::unique_ptr<CreatureType>> _creatureTypes;
+
+    /**
+        For quick lookup by id. Only creaturetypes that have nothing except a looktype are indexed.
+    */
+    static vme_unordered_map<uint16_t, std::string> _looktypeToIdIndex;
 
     static constexpr uint32_t TemplateOutfitLookupTable[] = {
         0xFFFFFF,
@@ -244,6 +264,7 @@ class Creature
     bool hasName() const noexcept;
 
     void setDirection(Direction direction);
+    Direction direction() const noexcept;
 
     const TextureInfo getTextureInfo() const;
 
@@ -267,7 +288,7 @@ inline const std::string &CreatureType::name() const noexcept
 
 inline uint16_t CreatureType::looktype() const noexcept
 {
-    return outfit.look.type;
+    return _outfit.look.type;
 }
 
 inline CreatureType *Creatures::creatureType(const std::string &id)
