@@ -92,8 +92,10 @@ class ObjectAppearance
 
     size_t frameGroupCount() const;
 
+    const std::string &name() const noexcept;
+    void setName(std::string name);
+
     uint32_t clientId;
-    std::string name;
 
     QuadrantRenderType quadrantRenderType = QuadrantRenderType::Full;
 
@@ -131,6 +133,8 @@ class ObjectAppearance
   private:
     std::vector<FrameGroup> frameGroups;
     AppearanceFlag flags;
+
+    std::string _name;
 };
 
 class CreatureAppearance
@@ -149,6 +153,9 @@ class CreatureAppearance
     const TextureInfo getTextureInfo(uint32_t frameGroupId, Direction direction, TextureInfo::CoordinateType coordinateType) const;
     const TextureInfo getTextureInfo(uint32_t frameGroupId, uint32_t spriteIndex, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
 
+    uint32_t getIndex(const FrameGroup &frameGroup, uint8_t creaturePosture, uint8_t addonType, uint8_t direction) const;
+    uint32_t getIndex(const FrameGroup &frameGroup, uint8_t creaturePosture, uint8_t addonType, Direction direction) const;
+
   private:
     void cacheTextureAtlas(uint32_t spriteId);
 
@@ -166,8 +173,8 @@ class CreatureAppearance
      * Checks transparency for quadrants in the sprite. Might help with rendering down-scaled (e.g. 64x32 -> 32x32)
      * images in a better way in the UI.
      */
-    NonMovingCreatureRenderType checkTransparency() const;
-    void cacheNonMovingRenderSizes() const;
+    NonMovingCreatureRenderType checkTransparency(uint8_t postureId) const;
+    void cacheNonMovingRenderSizes(uint8_t postureId) const;
 
     uint32_t _id;
 
@@ -175,7 +182,8 @@ class CreatureAppearance
     std::array<TextureAtlas *, CachedTextureAtlasAmount> _atlases = {};
     std::vector<FrameGroup> _frameGroups;
 
-    mutable std::optional<NonMovingCreatureRenderType> nonMovingCreatureRenderType;
+    // Index is posture ID
+    mutable std::vector<std::optional<NonMovingCreatureRenderType>> nonMovingCreatureRenderTypeByPosture;
 };
 
 class Appearances

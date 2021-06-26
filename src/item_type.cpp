@@ -303,12 +303,12 @@ std::string ItemType::getPluralName() const
 
     if (!showCount)
     {
-        return appearance->name;
+        return _name;
     }
 
     std::string str;
-    str.reserve(appearance->name.length() + 1);
-    str.assign(appearance->name);
+    str.reserve(_name.length() + 1);
+    str.assign(_name);
     str += 's';
     return str;
 }
@@ -318,9 +318,14 @@ uint32_t ItemType::clientId() const noexcept
     return appearance->clientId;
 }
 
+void ItemType::setName(std::string name) noexcept
+{
+    _name = name;
+}
+
 const std::string &ItemType::name() const noexcept
 {
-    return appearance->name;
+    return _name;
 }
 
 bool ItemType::isGround() const noexcept

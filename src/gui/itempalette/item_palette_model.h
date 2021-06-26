@@ -9,6 +9,9 @@
 class ItemType;
 class Tileset;
 class Brush;
+struct QtTextureArea;
+class QPainter;
+class QPoint;
 
 namespace ItemPaletteUI
 {
@@ -34,6 +37,7 @@ namespace ItemPaletteUI
         Q_OBJECT
       public:
         static const int HighlightRole = Qt::UserRole + 1;
+        static const int BrushRole = Qt::UserRole + 2;
 
         TilesetModel(QObject *parent = nullptr);
 
@@ -61,6 +65,8 @@ namespace ItemPaletteUI
         Q_OBJECT
       public:
         explicit ItemDelegate(QObject *parent = nullptr);
+
+        void paintTextureArea(QPainter *painter, const QPoint topLeft, const QtTextureArea &textureArea) const;
 
         void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
         QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const;

@@ -27,7 +27,7 @@ CreatureType *Creatures::addCreatureType(std::string id, std::string name, Outfi
     {
         std::string mountId = std::format("mount_looktype_{}", outfit.look.mount);
         std::string mountName = std::format("Mount (looktype {})", outfit.look.mount);
-        Creatures::addCreatureType(mountId, mountName, Outfit(379));
+        Creatures::addCreatureType(mountId, mountName, Outfit(outfit.look.mount));
     }
 
     // Index it by looktype if it only consists of a looktype and nothing else (no colors/mount/addons)
@@ -111,7 +111,6 @@ uint32_t CreatureType::getIndex(const FrameGroup &frameGroup, uint8_t creaturePo
 {
     uint8_t directions = frameGroup.spriteInfo.patternWidth;
     uint8_t addons = frameGroup.spriteInfo.patternHeight;
-    uint8_t patternDepth = frameGroup.spriteInfo.patternHeight;
     uint8_t layers = frameGroup.spriteInfo.layers;
 
     return layers * (directions * (creaturePosture * addons + addonType) + direction);

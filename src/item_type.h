@@ -385,6 +385,8 @@ class ItemType
     [[nodiscard]] const std::string &name() const noexcept;
     [[nodiscard]] uint32_t clientId() const noexcept;
 
+    void setName(std::string name) noexcept;
+
     bool isGround() const noexcept;
     bool isContainer() const noexcept;
     bool isSplash() const noexcept;
@@ -486,6 +488,8 @@ class ItemType
     void cacheTextureAtlas(uint32_t spriteId);
 
     uint8_t getFluidPatternOffset(FluidType fluidType) const;
+
+    std::string _name;
 };
 
 inline bool ItemType::isBorder() const noexcept

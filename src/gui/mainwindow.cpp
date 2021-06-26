@@ -26,6 +26,7 @@
 #include "../save_map.h"
 #include "../util.h"
 #include "border_layout.h"
+#include "gui_thing_image.h"
 #include "itempalette/item_palette_model.h"
 #include "itempalette/item_palette_window.h"
 #include "main_application.h"
@@ -486,7 +487,7 @@ void MainWindow::registerPropertyItemListeners()
 
 void MainWindow::initializePaletteWindow()
 {
-    GuiImageCache::initialize();
+    GUIImageCache::initialize();
 
     _paletteWindow = new ItemPaletteWindow(&editorAction, this);
 
@@ -623,7 +624,7 @@ void MainWindow::initializePaletteWindow()
     {
         ItemPalette &creaturePalette = *ItemPalettes::getById("creature");
 
-        auto &goblinTileset = creaturePalette.addTileset(Tileset("goblin", "Goblins"));
+        auto &otherTileset = creaturePalette.addTileset(Tileset("other", "Other"));
 
         // for (int i = 0; i < 1400; ++i)
         // {
@@ -634,21 +635,28 @@ void MainWindow::initializePaletteWindow()
         //     }
         // }
 
-        const auto addTestCreatureBrush = [&goblinTileset](std::string id, std::string name, int looktype) {
-            goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(id, name, looktype))));
+        const auto addTestCreatureBrush = [&otherTileset](std::string id, std::string name, int looktype) {
+            otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(id, name, looktype))));
         };
 
-        goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
             "colorful_nomad",
             "Colorful Nomad",
-            Outfit(146, 116, 68, 68, 68, Outfit::Addon::First | Outfit::Addon::Second, 379)))));
+            // Outfit(150, 116, 68, 68, 68, Outfit::Addon::First | Outfit::Addon::Second, 370)))));
+            Outfit(150, 116, 68, 68, 68, Outfit::Addon::None, 370)))));
+        // Outfit(150, 116, 68, 68, 68, Outfit::Addon::None)))));
 
-        goblinTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+            "colorful_nomad_2",
+            "Colorful Nomad 2",
+            // Outfit(150, 116, 68, 68, 68, Outfit::Addon::First | Outfit::Addon::Second, 370)))));
+            Outfit(150, 116, 68, 68, 68, Outfit::Addon::None)))));
+
+        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
             "nomad",
             "Nomad",
             Outfit(146, 114, 20, 22, 2)))));
 
-        // addTestCreatureBrush("nomad", "Nomad", 146);
         addTestCreatureBrush("rat", "Rat", 21);
         addTestCreatureBrush("bear", "Bear", 16);
         addTestCreatureBrush("cyclops", "Cyclops", 22);

@@ -10,7 +10,9 @@
 #include "../../item_location.h"
 #include "../../qt/logging.h"
 #include "../draggable_item.h"
+#include "../gui_thing_image.h"
 #include "../mainwindow.h"
+
 
 namespace ItemPropertyName
 {

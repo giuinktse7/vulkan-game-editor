@@ -212,7 +212,7 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
 
     ItemType &it = *Items::items.getItemTypeByServerId(id);
 
-    it.appearance->name = itemNode.attribute("name").as_string();
+    it.setName(itemNode.attribute("name").as_string());
     // it.editorsuffix = itemNode.attribute("editorsuffix").as_string();
 
     pugi::xml_attribute attribute;
@@ -278,7 +278,7 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
         {
             if ((attribute = itemAttributesNode.attribute("value")))
             {
-                it.appearance->name = attribute.as_string();
+                it.setName(attribute.as_string());
             }
         }
         else if (key == "description")
@@ -765,9 +765,9 @@ void Items::OtbReader::readNodes()
             itemType->wareId = wareId;
             itemType->maxTextLen = maxTextLen;
 
-            if (itemType->appearance->name.size() == 0 && name.size() != 0)
+            if (itemType->name().size() == 0 && name.size() != 0)
             {
-                itemType->appearance->name = std::move(name);
+                itemType->setName(std::move(name));
             }
         }
 
@@ -777,7 +777,7 @@ void Items::OtbReader::readNodes()
     } while (!nodeEnd());
 }
 
-const std::vector<ItemType>& Items::getItemTypes() const
+const std::vector<ItemType> &Items::getItemTypes() const
 {
     return itemTypes;
 }

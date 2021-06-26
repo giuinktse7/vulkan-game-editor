@@ -8,6 +8,7 @@
 #include "../qt/logging.h"
 #include "../tile.h"
 #include "../util.h"
+#include "gui_thing_image.h"
 #include "main_application.h"
 #include "qt_util.h"
 
@@ -250,7 +251,7 @@ Item *ItemDrag::MapItem::item() const
 
 QPixmap ItemDrag::MapItem::pixmap() const
 {
-    return QtUtil::itemPixmap(tile->position(), *_item);
+    return GUIThingImage::itemPixmap(tile->position(), *_item);
 }
 
 QDataStream &ItemDrag::MapItem::serializeInto(QDataStream &dataStream) const
@@ -286,7 +287,7 @@ Item &ItemDrag::ContainerItemDrag::draggedItem() const
 QPixmap ItemDrag::ContainerItemDrag::pixmap() const
 {
     const auto &item = draggedItem();
-    return QtUtil::itemPixmap(item.serverId(), item.subtype());
+    return GUIThingImage::itemPixmap(item.serverId(), item.subtype());
 }
 
 Item *ItemDrag::ContainerItemDrag::item() const

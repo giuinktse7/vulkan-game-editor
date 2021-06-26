@@ -89,6 +89,7 @@ std::optional<Config::Error> Config::load()
 
     Items::loadFromOtb(_dataFolder / "items.otb");
     Items::loadFromXml(_dataFolder / "items.xml");
+    VME_LOG_D("Crate name: " << Items::items.getItemTypeByServerId(1739)->name());
     Items::loadMissingItemTypes();
 
     VME_LOG_D("Items: " << Items::items.size());

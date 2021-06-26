@@ -34,26 +34,6 @@ namespace
     constexpr int DefaultMinimumAngleDelta = 15;
 } // namespace
 
-struct GuiImageCache
-{
-
-    static void initialize();
-    static const QPixmap &get(uint32_t serverId);
-    static void cachePixmapForServerId(uint32_t serverId);
-    static QImage *getOrCreateQImageForTexture(const Texture &texture);
-
-    static std::unordered_map<uint32_t, QPixmap> serverIdToPixmap;
-    static std::unordered_map<uint32_t, std::unique_ptr<QImage>> textureIdToQImage;
-};
-
-struct ItemImageData
-{
-    QRect rect;
-    QImage *image;
-};
-
-Q_DECLARE_METATYPE(ItemImageData);
-
 namespace QtUtil
 {
     /**
@@ -157,22 +137,9 @@ namespace QtUtil
         return VME::MouseEvent(pos, buttons, modifiers);
     }
 
-    QPixmap itemPixmap(uint32_t serverId, uint8_t subtype = 0);
-    QPixmap itemPixmap(const Position &pos, const Item &item);
-
     QString getItemTypeResourcePath(uint32_t serverId, uint8_t subtype = 0);
     QString getCreatureTypeResourcePath(const CreatureType &creatureType, Direction direction = Direction::South);
 
-    QPixmap creaturePixmap(uint32_t looktype, Direction direction);
-    QPixmap creaturePixmap(const CreatureType *creatureType, Direction direction);
-
-    QPixmap thingPixmap(const TextureInfo &info);
-    QPixmap thingPixmap(const TextureWindow &textureWindow, const Texture &texture, uint16_t spriteWidth, uint16_t spriteHeight);
-
-    ItemImageData itemImageData(Brush *brush);
-    ItemImageData itemImageData(uint32_t serverId, uint8_t subtype = 0);
-    ItemImageData itemImageData(const TextureInfo &info);
-    ItemImageData itemImageData(const TextureWindow &window, const Texture &texture);
     MainApplication *qtApp();
 
     QString resourcePath(Brush *brush);
@@ -187,25 +154,6 @@ namespace QtUtil
         virtual bool eventFilter(QObject *obj, QEvent *event) = 0;
     };
 } // namespace QtUtil
-
-// Images
-class ItemTypeImageProvider : public QQuickImageProvider
-{
-  public:
-    ItemTypeImageProvider()
-        : QQuickImageProvider(QQuickImageProvider::Pixmap) {}
-
-    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override;
-};
-
-class CreatureImageProvider : public QQuickImageProvider
-{
-  public:
-    CreatureImageProvider()
-        : QQuickImageProvider(QQuickImageProvider::Pixmap) {}
-
-    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override;
-};
 
 class QmlApplicationContext : public QObject
 {

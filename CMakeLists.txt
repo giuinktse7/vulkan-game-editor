@@ -273,6 +273,7 @@ set(GuiSources
     src/gui/map_view_widget.h
     src/gui/menu.h
     src/gui/qt_util.h
+    src/gui/gui_thing_image.h
     src/gui/vulkan_window.h
     src/gui/map_tab_widget.h
     src/map_renderer.h
@@ -297,6 +298,7 @@ set(GuiSources
     src/gui/map_view_widget.cpp
     src/gui/menu.cpp
     src/gui/qt_util.cpp
+    src/gui/gui_thing_image.cpp
     src/gui/vulkan_window.cpp
     src/gui/map_tab_widget.cpp
     src/map_renderer.cpp

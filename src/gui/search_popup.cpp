@@ -7,8 +7,10 @@
 #include <QQuickItem>
 #include <QWidget>
 
+#include "gui_thing_image.h"
 #include "mainwindow.h"
 #include "qt_util.h"
+
 
 SearchPopupView::SearchPopupView(QUrl filepath, MainWindow *mainWindow)
     : _filepath(filepath), mainWindow(mainWindow), _wrapperWidget(nullptr)

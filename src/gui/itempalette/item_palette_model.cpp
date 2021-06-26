@@ -5,7 +5,13 @@
 #include "../../debug.h"
 #include "../../items.h"
 #include "../../tileset.h"
+#include "../gui_thing_image.h"
 #include "../qt_util.h"
+
+#include "../../brushes/creature_brush.h"
+#include "../../brushes/doodad_brush.h"
+#include "../../brushes/ground_brush.h"
+#include "../../brushes/raw_brush.h"
 
 using TilesetModel = ItemPaletteUI::TilesetModel;
 // using ModelItem = ItemPaletteUI::ModelItem;
@@ -54,10 +60,10 @@ QVariant TilesetModel::data(const QModelIndex &index, int role) const
     if (index.row() < 0 || index.row() >= _tileset->size())
         return QVariant();
 
-    if (role == Qt::DisplayRole)
+    if (role == BrushRole)
     {
         Brush *brush = _tileset->get(index.row());
-        return QVariant::fromValue(QtUtil::itemImageData(brush));
+        return QVariant::fromValue(brush);
     }
     else if (role == TilesetModel::HighlightRole)
     {
@@ -83,6 +89,17 @@ void ItemDelegate::setHighlightPenOpacity(float opacity) const
     highlightBorderPen.setColor(color);
 }
 
+void ItemDelegate::paintTextureArea(QPainter *painter, const QPoint topLeft, const QtTextureArea &textureArea) const
+{
+    QImage image = textureArea.image->copy(textureArea.rect).mirrored();
+    if (textureArea.rect.width() > 32 || textureArea.rect.height() > 32)
+    {
+        image = image.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    }
+
+    painter->drawImage(topLeft, image);
+}
+
 void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     // TODO Add option for rendering as a list with names
@@ -90,17 +107,48 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     // painter->drawPixmap(4, option.rect.y(), data.pixmap);
     // qDebug() << "Delegate::paint: " << option.rect;
 
-    ItemImageData imageData = qvariant_cast<ItemImageData>(index.data(Qt::DisplayRole));
+    QPoint topLeft = option.rect.topLeft();
 
-    // painter->drawPixmap(option.rect.x(), option.rect.y(), qvariant_cast<QPixmap>(index.data(Qt::DisplayRole)));
-    if (imageData.rect.width() > 32 || imageData.rect.height() > 32)
+    Brush *b = qvariant_cast<Brush *>(index.data(TilesetModel::BrushRole));
+
+    switch (b->type())
     {
-        // painter->drawImage(option.rect.topLeft(), imageData.image->copy(imageData.rect).mirrored().scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-        painter->drawImage(option.rect.topLeft(), imageData.image->copy(imageData.rect).mirrored().scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    }
-    else
-    {
-        painter->drawImage(option.rect.topLeft(), imageData.image->copy(imageData.rect).mirrored());
+        case BrushType::Raw:
+        {
+            auto brush = static_cast<RawBrush *>(b);
+            QtTextureArea textureArea = GUIThingImage::getItemTypeTexture(*brush->itemType());
+            paintTextureArea(painter, topLeft, textureArea);
+            break;
+        }
+        case BrushType::Ground:
+        {
+            auto brush = static_cast<GroundBrush *>(b);
+            QtTextureArea textureArea = GUIThingImage::getItemTypeTexture(brush->iconServerId());
+            paintTextureArea(painter, topLeft, textureArea);
+            break;
+        }
+        case BrushType::Doodad:
+        {
+            auto brush = static_cast<DoodadBrush *>(b);
+            QtTextureArea textureArea = GUIThingImage::getItemTypeTexture(brush->iconServerId());
+            paintTextureArea(painter, topLeft, textureArea);
+            break;
+        }
+        case BrushType::Creature:
+        {
+            auto brush = static_cast<CreatureBrush *>(b);
+            // std::vector<QtTextureArea> textureArea = GUIThingImage::getCreatureTypeTextures(*brush->creatureType, Direction::South);
+            QtTextureArea textureArea = GUIThingImage::getCreatureTypeTextures(*brush->creatureType, Direction::South);
+            paintTextureArea(painter, topLeft, textureArea);
+
+            // for (const auto &area : textureArea)
+            // {
+            //     paintTextureArea(painter, topLeft, area);
+            // }
+            break;
+        }
+        default:
+            break;
     }
 
     bool ok;

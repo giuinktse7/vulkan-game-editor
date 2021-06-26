@@ -303,7 +303,7 @@ SpriteAnimation Appearances::parseSpriteAnimation(const proto::SpriteAnimation &
 ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
 {
     this->clientId = protobufAppearance.id();
-    this->name = protobufAppearance.name();
+    this->setName(protobufAppearance.name());
 
     if (protobufAppearance.frame_group_size() == 1)
     {
@@ -501,7 +501,7 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
 
 ObjectAppearance::ObjectAppearance(ObjectAppearance &&other) noexcept
     : clientId(other.clientId),
-      name(std::move(other.name)),
+      _name(std::move(other._name)),
       flagData(std::move(other.flagData)),
       frameGroups(std::move(other.frameGroups)),
       flags(std::move(other.flags)) {}
@@ -536,6 +536,16 @@ size_t ObjectAppearance::frameGroupCount() const
     return frameGroups.size();
 }
 
+const std::string &ObjectAppearance::name() const noexcept
+{
+    return _name;
+}
+
+void ObjectAppearance::setName(std::string name)
+{
+    _name = name;
+}
+
 CreatureAppearance::CreatureAppearance(const proto::Appearance &appearance)
     : _id(appearance.id())
 {
@@ -549,6 +559,15 @@ CreatureAppearance::CreatureAppearance(const proto::Appearance &appearance)
                                                static_cast<uint32_t>(frameGroup.id()),
                                                Appearances::parseSpriteInfo(spriteInfo)});
     }
+}
+
+uint8_t getPostureIdByIndex(const FrameGroup &fg, uint32_t spriteIndex)
+{
+    uint8_t directions = fg.spriteInfo.patternWidth;
+    uint8_t addons = fg.spriteInfo.patternHeight;
+    uint8_t layers = fg.spriteInfo.layers;
+
+    return spriteIndex / (layers * directions * addons);
 }
 
 const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, uint32_t spriteIndex, TextureInfo::CoordinateType coordinateType) const
@@ -566,12 +585,18 @@ const TextureInfo CreatureAppearance::getTextureInfo(uint32_t frameGroupId, uint
 
     if (coordinateType == TextureInfo::CoordinateType::Unnormalized)
     {
-        if (!nonMovingCreatureRenderType.has_value())
+        uint8_t postureId = getPostureIdByIndex(fg, spriteIndex);
+        if (nonMovingCreatureRenderTypeByPosture.size() <= postureId)
         {
-            cacheNonMovingRenderSizes();
+            nonMovingCreatureRenderTypeByPosture.resize(postureId + 1);
         }
 
-        switch (*nonMovingCreatureRenderType)
+        if (!nonMovingCreatureRenderTypeByPosture.at(postureId).has_value())
+        {
+            cacheNonMovingRenderSizes(postureId);
+        }
+
+        switch (*nonMovingCreatureRenderTypeByPosture.at(postureId))
         {
             case NonMovingCreatureRenderType::Full:
                 break;
@@ -710,9 +735,9 @@ const std::vector<FrameGroup> &CreatureAppearance::frameGroups() const noexcept
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-void CreatureAppearance::cacheNonMovingRenderSizes() const
+void CreatureAppearance::cacheNonMovingRenderSizes(uint8_t postureId) const
 {
-    nonMovingCreatureRenderType = checkTransparency();
+    nonMovingCreatureRenderTypeByPosture.at(postureId) = checkTransparency(postureId);
 }
 
 bool isMagenta(int x, int y, int atlasWidth, const std::vector<uint8_t> &pixels)
@@ -742,7 +767,21 @@ bool transparentRegion(int fromX, int fromY, int width, int height, int atlasWid
     return true;
 }
 
-CreatureAppearance::NonMovingCreatureRenderType CreatureAppearance::checkTransparency() const
+uint32_t CreatureAppearance::getIndex(const FrameGroup &frameGroup, uint8_t creaturePosture, uint8_t addonType, Direction direction) const
+{
+    return getIndex(frameGroup, creaturePosture, addonType, to_underlying(direction));
+}
+
+uint32_t CreatureAppearance::getIndex(const FrameGroup &frameGroup, uint8_t creaturePosture, uint8_t addonType, uint8_t direction) const
+{
+    uint8_t directions = frameGroup.spriteInfo.patternWidth;
+    uint8_t addons = frameGroup.spriteInfo.patternHeight;
+    uint8_t layers = frameGroup.spriteInfo.layers;
+
+    return layers * (directions * (creaturePosture * addons + addonType) + direction);
+}
+
+CreatureAppearance::NonMovingCreatureRenderType CreatureAppearance::checkTransparency(uint8_t postureId) const
 {
     auto &fg = this->frameGroup(0);
     if (fg.spriteInfo.spriteIds.size() <= to_underlying(Direction::North))
@@ -750,7 +789,15 @@ CreatureAppearance::NonMovingCreatureRenderType CreatureAppearance::checkTranspa
         return NonMovingCreatureRenderType::Full;
     }
 
-    auto spriteId = fg.getSpriteId(to_underlying(Direction::North));
+    uint8_t postureCount = fg.spriteInfo.patternDepth;
+
+    // Outfit with mount variation (are there other possibilities for patternDepth > 1?)
+    if (postureId > 0)
+    {
+        return NonMovingCreatureRenderType::Full;
+    }
+
+    auto spriteId = fg.getSpriteId(getIndex(fg, postureId, 0, 0));
     TextureAtlas *atlas = getTextureAtlas(spriteId);
 
     const auto &pixels = atlas->getOrCreateTexture().pixels();

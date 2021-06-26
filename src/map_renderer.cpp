@@ -409,26 +409,7 @@ void MapRenderer::drawPreview(ThingDrawInfo drawInfo, const Position &position)
             },
             [this, position](const DrawCreatureType &draw) {
                 auto drawPos = position + draw.relativePosition;
-
-                if (!insideMap(drawPos))
-                {
-                    return;
-                }
-
-                DrawInfo::Creature info;
-                info.color = colors::ItemPreview;
-                info.textureInfo = draw.creatureType->getTextureInfo(0, draw.direction);
-
-                auto texture = draw.creatureType->hasColorVariation()
-                                   ? info.textureInfo.getTexture(draw.creatureType->outfitId())
-                                   : info.textureInfo.getTexture();
-
-                info.descriptorSet = objectDescriptorSet(texture);
-                info.position = drawPos;
-                info.width = info.textureInfo.atlas->spriteWidth;
-                info.height = info.textureInfo.atlas->spriteHeight;
-
-                this->drawCreature(info);
+                drawCreatureType(*draw.creatureType, drawPos, draw.direction, colors::ItemPreview);
             },
 
             [](const auto &arg) {
