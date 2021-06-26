@@ -60,21 +60,21 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
 {
     switch (action)
     {
-        case ShortcutAction::Pan:
-        {
-            bool panning = mapView->editorAction.is<MouseAction::Pan>();
-            if (panning || QApplication::mouseButtons() & Qt::MouseButton::LeftButton)
-            {
-                break;
-            }
+        // case ShortcutAction::Pan:
+        // {
+        //     bool panning = mapView->editorAction.is<MouseAction::Pan>();
+        //     if (panning || QApplication::mouseButtons() & Qt::MouseButton::LeftButton)
+        //     {
+        //         break;
+        //     }
 
-            setCursor(Qt::OpenHandCursor);
+        //     setCursor(Qt::OpenHandCursor);
 
-            MouseAction::Pan pan;
-            mapView->editorAction.setIfUnlocked(pan);
-            mapView->requestDraw();
-            break;
-        }
+        //     MouseAction::Pan pan;
+        //     mapView->editorAction.setIfUnlocked(pan);
+        //     mapView->requestDraw();
+        //     break;
+        // }
         case ShortcutAction::EyeDropper:
         {
             const Item *topItem = mapView->map()->getTopItem(mapView->mouseGamePos());
@@ -130,16 +130,16 @@ void VulkanWindow::shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event
 {
     switch (action)
     {
-        case ShortcutAction::Pan:
-        {
-            auto pan = mapView->editorAction.as<MouseAction::Pan>();
-            if (pan)
-            {
-                unsetCursor();
-                mapView->editorAction.setPrevious();
-            }
-            break;
-        }
+        // case ShortcutAction::Pan:
+        // {
+        //     auto pan = mapView->editorAction.as<MouseAction::Pan>();
+        //     if (pan)
+        //     {
+        //         unsetCursor();
+        //         mapView->editorAction.setPrevious();
+        //     }
+        //     break;
+        // }
         default:
             break;
     }
@@ -389,8 +389,15 @@ bool VulkanWindow::event(QEvent *event)
     switch (event->type())
     {
         case QEvent::Enter:
+        {
+            bool panning = mapView->editorAction.is<MouseAction::Pan>();
+            if (panning)
+            {
+                setCursor(Qt::OpenHandCursor);
+            }
             mapView->setUnderMouse(true);
             break;
+        }
 
         case QEvent::DragEnter:
             dragEnterEvent(static_cast<QDragEnterEvent *>(event));
@@ -403,8 +410,11 @@ bool VulkanWindow::event(QEvent *event)
             break;
 
         case QEvent::Leave:
+        {
+
             mapView->setUnderMouse(false);
             break;
+        }
 
         case QEvent::DragLeave:
             dragLeaveEvent(static_cast<QDragLeaveEvent *>(event));

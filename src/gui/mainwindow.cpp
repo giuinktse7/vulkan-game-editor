@@ -287,7 +287,7 @@ bool MainWindow::event(QEvent *e)
 {
     // if (!(e->type() == QEvent::UpdateRequest) && !(e->type() == QEvent::MouseMove))
     // {
-    //   qDebug() << "[MainWindow] " << e->type();
+    //     qDebug() << "[MainWindow] " << e->type();
     // }
 
     return QWidget::event(e);
@@ -773,6 +773,28 @@ QMenuBar *MainWindow::createMenuBar()
 
         auto zoomOut = new MenuAction(tr("Zoom out"), Qt::CTRL | Qt::Key_Minus, this);
         viewMenu->addAction(zoomOut);
+
+        auto pan = new MenuAction(tr("Pan"), Qt::Key_Space, this);
+        connect(pan, &QWidgetAction::triggered, [this] {
+            auto mapView = currentMapView();
+            bool panning = mapView->editorAction.is<MouseAction::Pan>();
+            if (panning || QApplication::mouseButtons() & Qt::MouseButton::LeftButton)
+            {
+                return;
+            }
+
+            if (mapView->underMouse())
+            {
+                currentVulkanWindow()->setCursor(Qt::OpenHandCursor);
+            }
+
+            MouseAction::Pan pan;
+            mapView->editorAction.setIfUnlocked(pan);
+            mapView->requestDraw();
+
+            this->currentVulkanWindow()->requestActivate();
+        });
+        viewMenu->addAction(pan);
     }
 
     // Window

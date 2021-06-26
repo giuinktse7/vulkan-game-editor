@@ -91,16 +91,36 @@ void MainApplication::loadStyleSheet(const QString &path)
 
 bool MainApplication::EventFilter::eventFilter(QObject *target, QEvent *event)
 {
-    if (event->type() == QEvent::MouseButtonPress)
+    switch (event->type())
     {
-        auto object = target;
-        while (object && !object->isWindowType())
+        case QEvent::MouseButtonPress:
         {
-            object = object->parent();
+            auto object = target;
+            while (object && !object->isWindowType())
+            {
+                object = object->parent();
+            }
+            if (object)
+            {
+                mainApplication->mainWindow.windowPressEvent(static_cast<QWindow *>(object), static_cast<QMouseEvent *>(event));
+            }
+            break;
         }
-        if (object)
+        case QEvent::KeyRelease:
         {
-            mainApplication->mainWindow.windowPressEvent(static_cast<QWindow *>(object), static_cast<QMouseEvent *>(event));
+            auto e = static_cast<QKeyEvent *>(event);
+
+            if (e->key() == Qt::Key_Space && !e->isAutoRepeat())
+            {
+                auto mapView = mainApplication->mainWindow.currentMapView();
+                auto pan = mapView->editorAction.as<MouseAction::Pan>();
+                if (pan)
+                {
+                    mainApplication->mainWindow.currentVulkanWindow()->unsetCursor();
+                    mapView->editorAction.setPrevious();
+                }
+            }
+            break;
         }
     }
 
