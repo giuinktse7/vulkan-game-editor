@@ -30,6 +30,8 @@ class QPoint;
 class QEvent;
 QT_END_NAMESPACE
 
+class QtContextMenu;
+
 enum class ShortcutAction
 {
     Undo,
@@ -62,21 +64,6 @@ class VulkanWindow : public QVulkanWindow
       private:
         VulkanWindow &window;
         MapRenderer renderer;
-    };
-
-    class ContextMenu : public QMenu
-    {
-      public:
-        ContextMenu(VulkanWindow *window, QWidget *widget);
-
-        QRect relativeGeometry() const;
-        QRect localGeometry() const;
-
-      protected:
-        void mousePressEvent(QMouseEvent *event) override;
-
-      private:
-        bool selfClicked(QPoint pos) const;
     };
 
     VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction);
@@ -137,6 +124,8 @@ class VulkanWindow : public QVulkanWindow
     void shortcutPressedEvent(ShortcutAction action, QKeyEvent *event = nullptr);
     void shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event = nullptr);
 
+    void reopenContextMenuRequest(QPoint globalPos);
+
     void onVisibilityChanged(QWindow::Visibility visibility);
 
     void mapItemDragStartEvent(Tile *tile, Item *item);
@@ -171,10 +160,30 @@ class VulkanWindow : public QVulkanWindow
     std::unique_ptr<MapView> mapView;
 
     QVulkanWindowRenderer *renderer = nullptr;
-    ContextMenu *contextMenu = nullptr;
+    QtContextMenu *contextMenu = nullptr;
 
     // Holds the current scroll amount. (see wheelEvent)
     int scrollAngleBuffer = 0;
 
     std::optional<ItemDrag::DragOperation> dragOperation;
+};
+
+class QtContextMenu : public QMenu
+{
+    Q_OBJECT
+  signals:
+    void reopenRequest(QPoint globalPos);
+
+  public:
+    QtContextMenu(VulkanWindow *window, QWidget *widget);
+
+    QRect relativeGeometry() const;
+    QRect localGeometry() const;
+
+  protected:
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+
+  private:
+    bool selfClicked(QPoint pos) const;
 };

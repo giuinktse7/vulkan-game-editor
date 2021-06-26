@@ -41,7 +41,10 @@ VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
     connect(this, &VulkanWindow::scrollEvent, [=](int scrollDelta) { this->mapView->zoom(scrollDelta); });
     mapView->onMapItemDragStart<&VulkanWindow::mapItemDragStartEvent>(this);
 
-    setShortcut(Qt::Key_Space, ShortcutAction::Pan);
+    contextMenu = new QtContextMenu(this, widget);
+    connect(contextMenu, &QtContextMenu::reopenRequest, this, &VulkanWindow::reopenContextMenuRequest);
+
+    // setShortcut(Qt::Key_Space, ShortcutAction::Pan);
     setShortcut(Qt::Key_I, ShortcutAction::EyeDropper);
     setShortcut(Qt::Key_Escape, ShortcutAction::Escape);
     setShortcut(Qt::Key_Delete, ShortcutAction::Delete);
@@ -154,11 +157,9 @@ void VulkanWindow::mousePressEvent(QMouseEvent *event)
 
     switch (event->button())
     {
-        case Qt::MouseButton::RightButton:
-            showContextMenu(event->globalPosition().toPoint());
-            break;
+
         case Qt::MouseButton::LeftButton:
-            if (contextMenu)
+            if (!contextMenu->isHidden())
             {
                 closeContextMenu();
             }
@@ -200,24 +201,34 @@ void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 
 void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-    // VME_LOG_D("VulkanWindow::mouseReleaseEvent");
-    // Propagate drag operation
-    if (dragOperation)
+    if (event->button() == Qt::MouseButton::RightButton)
     {
-        bool accepted = dragOperation->sendDropEvent(event);
-        if (!accepted)
+        if (contextMenu->isHidden())
         {
-            mapView->editorAction.as<MouseAction::DragDropItem>()->moveDelta.emplace(PositionConstants::Zero);
+            showContextMenu(event->globalPosition().toPoint());
+        }
+    }
+    else if (event->button() == Qt::MouseButton::LeftButton)
+    {
+        // VME_LOG_D("VulkanWindow::mouseReleaseEvent");
+        // Propagate drag operation
+        if (dragOperation)
+        {
+            bool accepted = dragOperation->sendDropEvent(event);
+            if (!accepted)
+            {
+                mapView->editorAction.as<MouseAction::DragDropItem>()->moveDelta.emplace(PositionConstants::Zero);
+            }
+
+            mapView->editorAction.unlock();
+            mapView->editorAction.setPrevious();
+
+            dragOperation.reset();
         }
 
-        mapView->editorAction.unlock();
-        mapView->editorAction.setPrevious();
-
-        dragOperation.reset();
+        mouseState.buttons = event->buttons();
+        mapView->mouseReleaseEvent(QtUtil::vmeMouseEvent(event));
     }
-
-    mouseState.buttons = event->buttons();
-    mapView->mouseReleaseEvent(QtUtil::vmeMouseEvent(event));
 }
 
 void VulkanWindow::wheelEvent(QWheelEvent *event)
@@ -484,20 +495,30 @@ QRect VulkanWindow::localGeometry() const
 
 void VulkanWindow::closeContextMenu()
 {
-    VME_LOG_D("VulkanWindow::closeContextMenu");
     contextMenu->close();
-    contextMenu = nullptr;
+}
+
+void VulkanWindow::reopenContextMenuRequest(QPoint globalPos)
+{
+    if (!localGeometry().contains(mapFromGlobal(globalPos)))
+    {
+        contextMenu->close();
+        return;
+    }
+    else
+    {
+        showContextMenu(globalPos);
+    }
 }
 
 void VulkanWindow::showContextMenu(QPoint position)
 {
-    if (contextMenu)
-    {
-        closeContextMenu();
-    }
+    auto menu = contextMenu;
+    menu->close();
+    menu->clear();
 
-    ContextMenu *menu = new ContextMenu(this, widget);
-    // widget->setStyleSheet("background-color:green;");
+    // TODO Select the top thing that is right-clicked
+    // TODO Make context menu change depending on the item that is being clicked
 
     QAction *cut = new QAction(tr("Cut"), menu);
     cut->setShortcut(Qt::CTRL | Qt::Key_X);
@@ -515,11 +536,6 @@ void VulkanWindow::showContextMenu(QPoint position)
     del->setShortcut(Qt::Key_Delete);
     menu->addAction(del);
 
-    this->contextMenu = menu;
-
-    menu->connect(menu, &QMenu::aboutToHide, [this] {
-        this->contextMenu = nullptr;
-    });
     menu->popup(position);
 }
 
@@ -553,21 +569,47 @@ bool VulkanWindow::containsMouse() const
 //>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>
 
-VulkanWindow::ContextMenu::ContextMenu(VulkanWindow *window, QWidget *widget)
+QtContextMenu::QtContextMenu(VulkanWindow *window, QWidget *widget)
     : QMenu(widget)
 {
 }
 
-bool VulkanWindow::ContextMenu::selfClicked(QPoint pos) const
+bool QtContextMenu::selfClicked(QPoint pos) const
 {
     return localGeometry().contains(pos);
 }
 
-void VulkanWindow::ContextMenu::mousePressEvent(QMouseEvent *event)
+void QtContextMenu::mouseReleaseEvent(QMouseEvent *event)
+{
+    switch (event->button())
+    {
+        case Qt::MouseButton::RightButton:
+            if (!isHidden())
+            {
+                hide();
+            }
+            break;
+    }
+
+    QMenu::mousePressEvent(event);
+}
+
+void QtContextMenu::mousePressEvent(QMouseEvent *event)
 {
     event->ignore();
-    QMenu::mousePressEvent(event);
+    switch (event->button())
+    {
+        case Qt::MouseButton::RightButton:
+        {
+            if (!selfClicked(event->pos()))
+            {
+                emit reopenRequest(event->globalPos());
+            }
+            break;
+        }
+    }
 
+    QMenu::mousePressEvent(event);
     // // Propagate the click event to the map window if appropriate
     // if (!selfClicked(event->pos()))
     // {
@@ -587,11 +629,11 @@ void VulkanWindow::ContextMenu::mousePressEvent(QMouseEvent *event)
     // }
 }
 
-QRect VulkanWindow::ContextMenu::localGeometry() const
+QRect QtContextMenu::localGeometry() const
 {
     return QRect(QPoint(0, 0), QPoint(width(), height()));
 }
-QRect VulkanWindow::ContextMenu::relativeGeometry() const
+QRect QtContextMenu::relativeGeometry() const
 {
     VME_LOG_D("relativeGeometry");
     //  VME_LOG_D(parentWidget()->pos());

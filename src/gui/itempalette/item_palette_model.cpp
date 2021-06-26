@@ -14,7 +14,6 @@
 #include "../../brushes/raw_brush.h"
 
 using TilesetModel = ItemPaletteUI::TilesetModel;
-// using ModelItem = ItemPaletteUI::ModelItem;
 using ItemDelegate = ItemPaletteUI::ItemDelegate;
 using HighlightAnimation = ItemPaletteUI::HighlightAnimation;
 
