@@ -30,14 +30,10 @@ class QPoint;
 class QEvent;
 QT_END_NAMESPACE
 
-class QtContextMenu;
-
 enum class ShortcutAction
 {
     Undo,
     Redo,
-    Pan,
-    EyeDropper,
     Escape,
     Delete,
     ResetZoom,
@@ -90,6 +86,8 @@ class VulkanWindow : public QVulkanWindow
     void closeContextMenu();
 
     QRect localGeometry() const;
+
+    void eyedrop(const Position position) const;
 
     util::Size vulkanSwapChainImageSize() const;
 

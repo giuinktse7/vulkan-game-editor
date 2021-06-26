@@ -748,6 +748,16 @@ QMenuBar *MainWindow::createMenuBar()
         });
         editMenu->addAction(paste);
 
+        auto eyeDropper = new MenuAction(tr("Eyedropper"), Qt::Key_I, this);
+        connect(eyeDropper, &QWidgetAction::triggered, [this] {
+            MapView *mapView = currentMapView();
+            if (mapView->underMouse())
+            {
+                currentVulkanWindow()->eyedrop(mapView->mouseGamePos());
+            }
+        });
+        editMenu->addAction(eyeDropper);
+
         // Brush actions
         editMenu->addSeparator();
 

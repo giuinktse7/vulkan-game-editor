@@ -208,6 +208,21 @@ bool Map::hasTile(const Position pos) const
     return floor->getTileLocation(pos.x, pos.y).tile() != nullptr;
 }
 
+TileThing Map::getTopThing(const Position pos)
+{
+    return const_cast<const Map *>(this)->getTopThing(pos);
+}
+
+const TileThing Map::getTopThing(const Position pos) const
+{
+    Tile *tile = getTile(pos);
+
+    if (!tile)
+        return std::monostate{};
+
+    return tile->getTopThing();
+}
+
 Item *Map::getTopItem(const Position pos)
 {
     return const_cast<Item *>(const_cast<const Map *>(this)->getTopItem(pos));

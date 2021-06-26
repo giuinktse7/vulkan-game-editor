@@ -15,7 +15,9 @@
 #include <QQuickView>
 #include <QWidget>
 
+#include "../../vendor/rollbear-visit/visit.hpp"
 #include "../brushes/brush.h"
+#include "../brushes/creature_brush.h"
 #include "../item_location.h"
 #include "../logger.h"
 #include "../map_renderer.h"
@@ -44,8 +46,6 @@ VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
     contextMenu = new QtContextMenu(this, widget);
     connect(contextMenu, &QtContextMenu::reopenRequest, this, &VulkanWindow::reopenContextMenuRequest);
 
-    // setShortcut(Qt::Key_Space, ShortcutAction::Pan);
-    setShortcut(Qt::Key_I, ShortcutAction::EyeDropper);
     setShortcut(Qt::Key_Escape, ShortcutAction::Escape);
     setShortcut(Qt::Key_Delete, ShortcutAction::Delete);
     setShortcut(Qt::ControlModifier, Qt::Key_0, ShortcutAction::ResetZoom);
@@ -63,36 +63,6 @@ void VulkanWindow::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
 {
     switch (action)
     {
-        // case ShortcutAction::Pan:
-        // {
-        //     bool panning = mapView->editorAction.is<MouseAction::Pan>();
-        //     if (panning || QApplication::mouseButtons() & Qt::MouseButton::LeftButton)
-        //     {
-        //         break;
-        //     }
-
-        //     setCursor(Qt::OpenHandCursor);
-
-        //     MouseAction::Pan pan;
-        //     mapView->editorAction.setIfUnlocked(pan);
-        //     mapView->requestDraw();
-        //     break;
-        // }
-        case ShortcutAction::EyeDropper:
-        {
-            const Item *topItem = mapView->map()->getTopItem(mapView->mouseGamePos());
-            if (topItem && !mapView->editorAction.locked())
-            {
-                bool success = mainWindow->selectBrush(Brush::getOrCreateRawBrush(topItem->serverId()));
-                // If the brush was not found in any tileset in any palette
-                if (!success)
-                {
-                    mapView->editorAction.setRawBrush(topItem->serverId());
-                }
-                mapView->requestDraw();
-            }
-            break;
-        }
         case ShortcutAction::Escape:
             mapView->escapeEvent();
             break;
@@ -455,6 +425,33 @@ bool VulkanWindow::event(QEvent *event)
     }
 
     return QVulkanWindow::event(event);
+}
+
+void VulkanWindow::eyedrop(const Position position) const
+{
+    TileThing topThing = mapView->map()->getTopThing(position);
+
+    rollbear::visit(
+        util::overloaded{
+            [this](Item *item) {
+                bool success = mainWindow->selectBrush(Brush::getOrCreateRawBrush(item->serverId()));
+
+                // If the brush was not found in any tileset in any palette
+                if (!success)
+                {
+                    mapView->editorAction.setRawBrush(item->serverId());
+                }
+
+                mapView->requestDraw();
+            },
+            [this](Creature *creature) {
+                mainWindow->selectBrush(Brush::getCreatureBrush(creature->creatureType.id()));
+                mapView->requestDraw();
+            },
+
+            [](const auto &arg) {
+            }},
+        topThing);
 }
 
 void VulkanWindow::lostFocus()

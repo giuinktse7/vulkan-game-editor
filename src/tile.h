@@ -12,7 +12,7 @@
 class MapView;
 class TileLocation;
 
-using TileThing = std::variant<Item *, Creature *>;
+using TileThing = std::variant<std::monostate, Item *, Creature *>;
 
 class Tile
 {

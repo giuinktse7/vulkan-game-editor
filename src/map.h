@@ -52,6 +52,9 @@ class Map
     const Item *getTopItem(const Position pos) const;
     Item *getTopItem(const Position pos);
 
+    const TileThing getTopThing(const Position pos) const;
+    TileThing getTopThing(const Position pos);
+
     /*
 		Remove and release ownership of the tile
 	*/
