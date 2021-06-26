@@ -23,6 +23,8 @@
 
 class MainWindow;
 class Item;
+struct Position;
+class QtContextMenu;
 
 QT_BEGIN_NAMESPACE
 class QWidget;

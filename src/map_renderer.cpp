@@ -418,9 +418,9 @@ void MapRenderer::drawPreview(ThingDrawInfo drawInfo, const Position &position)
         drawInfo);
 }
 
-void MapRenderer::drawCreatureType(const CreatureType &creatureType, const Position position, Direction direction, glm::vec4 color)
+void MapRenderer::drawCreatureType(const CreatureType &creatureType, const Position position, Direction direction, glm::vec4 color, const DrawOffset &drawOffset)
 {
-    auto drawPart = [this, position, color](const CreatureType *creatureType, int posture, int addonType, Direction direction) {
+    auto drawPart = [this, position, color, drawOffset](const CreatureType *creatureType, int posture, int addonType, Direction direction) {
         if (!insideMap(position))
         {
             return;
@@ -438,6 +438,7 @@ void MapRenderer::drawCreatureType(const CreatureType &creatureType, const Posit
         info.position = position;
         info.width = info.textureInfo.atlas->spriteWidth;
         info.height = info.textureInfo.atlas->spriteHeight;
+        info.drawOffset = drawOffset;
 
         this->drawCreature(info);
     };
@@ -611,7 +612,7 @@ void MapRenderer::drawTile(Tile *tile, uint32_t flags, const Position offset, co
     {
         auto &creature = *tile->creature();
         auto color = getCreatureDrawColor(creature, position, flags);
-        drawCreatureType(creature.creatureType, position, creature.direction(), color);
+        drawCreatureType(creature.creatureType, position, creature.direction(), color, worldPosOffset);
         // drawCreature(creatureDrawInfo(creature, position, flags));
     }
 }
@@ -737,6 +738,11 @@ void MapRenderer::drawOverlayItemType(uint32_t serverId, const WorldPosition pos
 void MapRenderer::drawCreature(const DrawInfo::Creature &info)
 {
     WorldPosition worldPos = (info.position + Position(info.textureInfo.atlas->drawOffset.x, info.textureInfo.atlas->drawOffset.y, 0)).worldPos();
+
+    // Add draw offsets like elevation
+    worldPos.x += std::clamp(info.drawOffset.x, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
+    worldPos.y += std::clamp(info.drawOffset.y, -MaxDrawOffsetPixels, MaxDrawOffsetPixels);
+
     issueDraw(info, worldPos);
 }
 
