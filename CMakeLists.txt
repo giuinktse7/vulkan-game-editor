@@ -59,7 +59,7 @@ find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_signal_slot.hpp")
 
 find_package(
   Qt6
-  COMPONENTS Core Widgets Qml Quick SvgWidgets
+  COMPONENTS Core Widgets Qml Quick SvgWidgets QuickControls2
   REQUIRED)
 
 set(CommonSources
@@ -324,7 +324,7 @@ target_compile_features(gui PRIVATE cxx_std_20)
 
 # QT
 target_link_libraries(gui PUBLIC Qt6::Core Qt6::Widgets Qt6::Qml Qt6::Quick
-                                 Qt6::SvgWidgets)
+                                 Qt6::SvgWidgets Qt6::QuickControls2)
 
 # set_target_properties(gui PROPERTIES CMAKE_INCLUDE_CURRENT_DIR ON
 # CMAKE_AUTOMOC ON) End QT

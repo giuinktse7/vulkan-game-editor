@@ -13,6 +13,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLoggingCategory>
+#include <QQuickStyle>
 #include <QQuickWindow>
 #include <QStyleFactory>
 
@@ -71,6 +72,8 @@ int main(int argc, char *argv[])
         VME_LOG(configResult.unwrapErr().show());
         return EXIT_FAILURE;
     }
+
+    QQuickStyle::setStyle("Fusion");
 
     Config config = configResult.unwrap();
     config.loadOrTerminate();

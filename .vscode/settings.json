@@ -171,7 +171,9 @@
     "qqmlengine": "cpp",
     "qobject": "cpp",
     "qimage": "cpp",
-    "qquickimageprovider": "cpp"
+    "qquickimageprovider": "cpp",
+    "qstylefactory": "cpp",
+    "qquickstyle": "cpp"
   },
   "files.exclude": {
     "**/.git": true,
