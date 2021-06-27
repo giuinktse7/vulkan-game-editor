@@ -4,6 +4,8 @@
 
 .metals
 
+.vscode
+
 debug
 release
 build/main_autogen
