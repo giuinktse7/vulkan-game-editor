@@ -24,6 +24,7 @@ class Camera
 
         uint32_t gameWidth() const;
         uint32_t gameHeight() const;
+        Position midPoint() const;
     };
 
     Camera();

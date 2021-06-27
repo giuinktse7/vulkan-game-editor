@@ -61,6 +61,8 @@ class Item
     uint16_t uniqueId() const;
     std::optional<std::string> text() const;
 
+    uint8_t minimapColor() const;
+
     void setActionId(uint16_t id);
     void setUniqueId(uint16_t id);
     void clearText();

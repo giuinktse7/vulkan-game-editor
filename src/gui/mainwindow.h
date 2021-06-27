@@ -33,6 +33,7 @@ class SearchPopupWidget;
 #include "../map_copy_buffer.h"
 #include "../signal.h"
 #include "gui.h"
+#include "minimap.h"
 #include "qt_util.h"
 #include "vulkan_window.h"
 
@@ -62,6 +63,8 @@ class MainWindow : public QWidget, public Nano::Observer<>
 
     void windowPressEvent(QWindow *window, QMouseEvent *event);
 
+    void requestMinimapUpdate();
+
     EditorAction editorAction;
 
   protected:
@@ -88,9 +91,12 @@ class MainWindow : public QWidget, public Nano::Observer<>
 
     void registerPropertyItemListeners();
 
+    void toggleMinimapWidget();
+
     MapTabWidget *mapTabs = nullptr;
     ItemPropertyWindow *propertyWindow = nullptr;
     ItemPaletteWindow *_paletteWindow = nullptr;
+    MinimapWidget *_minimapWidget = nullptr;
 
     BorderLayout *rootLayout = nullptr;
 

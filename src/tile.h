@@ -47,6 +47,8 @@ class Tile
     Item *firstSelectedItem();
     const Item *firstSelectedItem() const;
 
+    uint8_t minimapColor() const;
+
     TileThing getTopThing() const;
     Item *getTopItem() const;
     bool hasTopItem() const;

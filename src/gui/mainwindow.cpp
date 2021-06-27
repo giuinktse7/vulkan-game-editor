@@ -188,7 +188,8 @@ MainWindow::MainWindow(QWidget *parent)
       rootLayout(new BorderLayout),
       positionStatus(new QLabel),
       zoomStatus(new QLabel),
-      topItemInfo(new QLabel)
+      topItemInfo(new QLabel),
+      _minimapWidget(new MinimapWidget(this))
 {
 }
 
@@ -456,8 +457,6 @@ void MainWindow::registerPropertyItemListeners()
         {
             item->setActionId(actionId);
         }
-
-        mapView.requestDraw();
     });
 
     connect(propertyWindow, &ItemPropertyWindow::subtypeChanged, [this](Item *item, int subtype, bool shouldCommit) {
@@ -788,8 +787,7 @@ QMenuBar *MainWindow::createMenuBar()
     // Window
     {
         auto windowMenu = menuBar->addMenu(tr("Window"));
-
-        addMenuItem(windowMenu, "Minimap", Qt::Key_M, []() {});
+        addMenuItem(windowMenu, "Minimap", Qt::Key_M, [this]() { this->_minimapWidget->toggle(); });
     }
 
     // Floor
@@ -830,6 +828,14 @@ QMenuBar *MainWindow::createMenuBar()
     }
 
     return menuBar;
+}
+
+void MainWindow::requestMinimapUpdate()
+{
+    if (_minimapWidget->isVisible())
+    {
+        _minimapWidget->update();
+    }
 }
 
 void MainWindow::setVulkanInstance(QVulkanInstance *instance)

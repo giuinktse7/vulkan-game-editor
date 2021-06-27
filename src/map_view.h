@@ -71,6 +71,7 @@ class MapView : public Nano::Observer<>
 	*/
     void escapeEvent();
     void requestDraw();
+    void requestMinimapDraw();
 
     /**
 	 * Shorthand method for comitting actions within a group. Equivalent to:
@@ -116,6 +117,8 @@ class MapView : public Nano::Observer<>
     void floorUp();
     void floorDown();
     void setFloor(int floor);
+
+    const Camera &camera() const noexcept;
 
     void translateX(WorldPosition::value_type x);
     void translateY(WorldPosition::value_type y);
@@ -169,6 +172,7 @@ class MapView : public Nano::Observer<>
     inline bool hasOption(ViewOption option) const noexcept;
 
     MapRegion mapRegion() const;
+    MapRegion mapRegion(int8_t floor) const;
 
     inline uint32_t x() const noexcept;
     inline uint32_t y() const noexcept;
@@ -243,6 +247,9 @@ class MapView : public Nano::Observer<>
     void onDrawRequested(T *instance);
 
     template <auto MemberFunction, typename T>
+    void onDrawMinimapRequest(T *instance);
+
+    template <auto MemberFunction, typename T>
     void onMapItemDragStart(T *instance);
 
     template <auto MemberFunction, typename T>
@@ -275,6 +282,7 @@ class MapView : public Nano::Observer<>
     Nano::Signal<void(Tile *tile, Item *item)> mapItemDragStart;
     Nano::Signal<void(MapView *mapView, const Tile *tile, TileThing tileThing)> selectedTileThingClicked;
     Nano::Signal<void()> drawRequest;
+    Nano::Signal<void()> drawMinimapRequest;
     Nano::Signal<void()> undoRedoPerformed;
 
     /**
@@ -291,7 +299,7 @@ class MapView : public Nano::Observer<>
 
     std::unique_ptr<UIUtils> uiUtils;
 
-    Camera camera;
+    Camera _camera;
 
     ViewOption _viewOptions = ViewOption::None;
 
@@ -353,12 +361,12 @@ inline std::ostream &operator<<(std::ostream &os, const util::Rectangle<int> &re
 
 inline const Camera::Viewport &MapView::getViewport() const noexcept
 {
-    return camera.viewport();
+    return _camera.viewport();
 }
 
 inline Position MapView::cameraPosition() const noexcept
 {
-    return camera.position();
+    return _camera.position();
 }
 
 inline ScreenPosition MapView::mousePos() const
@@ -389,17 +397,17 @@ inline Position MapView::toPosition(util::Point<T> point) const
 
 inline uint32_t MapView::x() const noexcept
 {
-    return static_cast<uint32_t>(camera.worldPosition().x);
+    return static_cast<uint32_t>(_camera.worldPosition().x);
 }
 
 inline uint32_t MapView::y() const noexcept
 {
-    return static_cast<uint32_t>(camera.worldPosition().y);
+    return static_cast<uint32_t>(_camera.worldPosition().y);
 }
 
 inline int MapView::z() const noexcept
 {
-    return camera.z();
+    return _camera.z();
 }
 
 inline int MapView::floor() const noexcept
@@ -437,6 +445,12 @@ template <auto MemberFunction, typename T>
 void MapView::onDrawRequested(T *instance)
 {
     drawRequest.connect<MemberFunction>(instance);
+}
+
+template <auto MemberFunction, typename T>
+void MapView::onDrawMinimapRequest(T *instance)
+{
+    drawMinimapRequest.connect<MemberFunction>(instance);
 }
 
 template <auto MemberFunction, typename T>

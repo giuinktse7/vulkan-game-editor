@@ -142,7 +142,7 @@ set(CommonSources
     src/tile.h
     src/outfit.h
     src/tile_location.h
-    src/minimap.h
+    src/minimap_colors.h
     src/time_point.h
     src/creature.h
     src/town.h
@@ -216,7 +216,6 @@ set(CommonSources
     src/selection.cpp
     src/tile.cpp
     src/tile_location.cpp
-    src/minimap.cpp
     src/time_point.cpp
     src/creature.cpp
     src/town.cpp
@@ -286,6 +285,7 @@ set(GuiSources
     src/gui/itempalette/item_palette_window.h
     src/gui/itempalette/item_palette_model.h
     src/gui/search_popup.h
+    src/gui/minimap.h
     src/main.h
     src/main.cpp
     src/gui/main_application.cpp
@@ -310,6 +310,7 @@ set(GuiSources
     src/gui/itempalette/item_palette_window.cpp
     src/gui/itempalette/item_palette_model.cpp
     src/gui/search_popup.cpp
+    src/gui/minimap.cpp
     src/qt/qt_vulkan_info.cpp)
 
 # NOTE: All files that use the QT framework must be in the `gui` library,

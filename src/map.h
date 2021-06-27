@@ -45,6 +45,8 @@ class Map
 
     MapRegion getRegion(Position from, Position to) const noexcept;
 
+    bool contains(const Position &position) const noexcept;
+
     TileLocation *getTileLocation(int x, int y, int z) const;
     TileLocation *getTileLocation(const Position &pos) const;
     bool hasTile(const Position pos) const;
@@ -239,6 +241,15 @@ class MapRegion
         void updateValue();
     };
 
+    const Position getFrom() const
+    {
+        return from;
+    }
+    const Position getTo() const
+    {
+        return to;
+    }
+
     Iterator begin()
     {
         return Iterator(map, from, to, false);
@@ -327,10 +338,13 @@ class MapIterator
 class MapArea
 {
   public:
-    MapArea(Position from, Position to);
+    MapArea(const Map &map, Position from, Position to);
 
     Position from;
     Position to;
+
+    // If the [from, to] region is not contained within the map
+    bool empty = false;
 
     class iterator
     {
@@ -398,6 +412,11 @@ class MapArea
 
     iterator begin()
     {
+        if (empty)
+        {
+            return end();
+        }
+
         return iterator(from, to);
     }
 

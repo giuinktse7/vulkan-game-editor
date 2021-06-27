@@ -21,6 +21,7 @@
 
 #include "../qt/logging.h"
 #include "border_layout.h"
+#include "mainwindow.h"
 
 constexpr int MinimumStepSizeInPixels = MapTileSize / 3;
 constexpr int DefaultSingleStepSize = MapTileSize;
@@ -73,6 +74,7 @@ MapViewWidget::MapViewWidget(VulkanWindow *window, QWidget *parent)
 {
     mapView->onViewportChanged<&MapViewWidget::viewportChanged>(this);
     mapView->onDrawRequested<&MapViewWidget::mapViewDrawRequested>(this);
+    mapView->onDrawMinimapRequest<&MapViewWidget::mapViewMinimapDrawRequested>(this);
     mapView->selection().onChanged<&MapViewWidget::selectionChanged>(this);
     mapView->onUndoRedo<&MapViewWidget::undoRedoPerformed>(this);
 
@@ -168,6 +170,11 @@ void MapViewWidget::viewportChanged(const Camera::Viewport &viewport)
 void MapViewWidget::mapViewDrawRequested()
 {
     vulkanWindow->requestUpdate();
+}
+
+void MapViewWidget::mapViewMinimapDrawRequested()
+{
+    vulkanWindow->mainWindow->requestMinimapUpdate();
 }
 
 void MapViewWidget::selectionChanged()

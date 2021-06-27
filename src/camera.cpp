@@ -94,3 +94,8 @@ uint32_t Camera::Viewport::gameHeight() const
 {
     return static_cast<uint32_t>(std::ceil(height / (zoom * MapTileSize)));
 }
+
+Position Camera::Viewport::midPoint() const
+{
+    return WorldPosition(x + width / 2, y + height / 2).toPos(z);
+}

@@ -334,7 +334,7 @@ void MapRenderer::drawCurrentAction()
                         {
                             auto [from, to] = mapView->getDragPoints().value();
                             int floor = mapView->floor();
-                            auto area = MapArea(from.toPos(floor), to.toPos(floor));
+                            auto area = MapArea(*mapView->map(), from.toPos(floor), to.toPos(floor));
 
                             std::vector<ThingDrawInfo> previews;
 

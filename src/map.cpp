@@ -99,6 +99,11 @@ MapRegion Map::getRegion(Position from, Position to) const noexcept
     return MapRegion(*this, from, to);
 }
 
+bool Map::contains(const Position &position) const noexcept
+{
+    return 0 <= position.x && position.x <= width() && 0 <= position.y && position.y <= height();
+}
+
 Tile &Map::getOrCreateTile(const Position &pos)
 {
     DEBUG_ASSERT(root.isRoot(), "Only root nodes can create a tile.");
@@ -572,10 +577,19 @@ void MapRegion::Iterator::updateValue()
 //>>>>>>>>>>>MapArea>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-MapArea::MapArea(Position from, Position to)
-    : from(from), to(to)
+MapArea::MapArea(const Map &map, Position from, Position to)
 {
-    DEBUG_ASSERT(from.x >= 0 && from.y >= 0 && to.x >= 0 && to.y >= 0, "Position x, y must be positive");
+    auto width = map.width();
+    auto height = map.height();
+
+    this->from = Position(std::clamp<Position::value_type>(from.x, 0, width), std::clamp<Position::value_type>(from.y, 0, height), from.z);
+    this->to = Position(std::clamp<Position::value_type>(to.x, 0, width), std::clamp<Position::value_type>(to.y, 0, height), to.z);
+
+    // Skip iterating if there can't be any positions in [from, to]
+    if (!map.contains(from) && !map.contains(to) && this->from.x == this->to.x && this->from.y == this->to.y)
+    {
+        empty = true;
+    }
 }
 
 MapArea::iterator::iterator(Position from, Position to)

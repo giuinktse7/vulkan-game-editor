@@ -204,6 +204,11 @@ uint16_t Item::uniqueId() const
     return found->second.as<int>();
 }
 
+uint8_t Item::minimapColor() const
+{
+    return static_cast<uint8_t>(itemType->appearance->flagData.automapColor);
+}
+
 std::optional<std::string> Item::text() const
 {
 

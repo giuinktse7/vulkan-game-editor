@@ -1,6 +1,7 @@
 #include "tile.h"
 
 #include <numeric>
+#include <ranges>
 
 #include "items.h"
 #include "tile_location.h"
@@ -519,6 +520,20 @@ TileThing Tile::getTopThing() const
     {
         return getTopItem();
     }
+}
+
+uint8_t Tile::minimapColor() const
+{
+    for (const auto &item : std::ranges::views::reverse(_items))
+    {
+        uint8_t color = item->minimapColor();
+        if (color != 0)
+        {
+            return color;
+        }
+    }
+
+    return hasGround() ? _ground->minimapColor() : 0;
 }
 
 bool Tile::topThingSelected() const

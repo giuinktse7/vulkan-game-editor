@@ -2,12 +2,6 @@
 
 #include <sstream>
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>Compile-time Minimap colors>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
 struct RGBA
 {
     int r;
@@ -18,24 +12,24 @@ struct RGBA
 
 struct MinimapColor
 {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-    uint8_t alpha;
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t a;
     uint32_t rgba;
 
     constexpr MinimapColor(uint8_t r, uint8_t g, uint8_t b)
-        : red(r), green(g), blue(b), alpha(0xFF), rgba(r << 24 | g << 16 | b << 8 | alpha)
+        : r(r), g(g), b(b), a(0xFF), rgba(r << 24 | g << 16 | b << 8 | a)
     {
     }
 
     constexpr RGBA rgbaInfo() const noexcept
     {
-        return {red, green, blue, alpha};
+        return {r, g, b, a};
     }
 
     constexpr MinimapColor()
-        : red(0), green(0), blue(0), alpha(0xFF), rgba(0x000000FF)
+        : r(0), g(0), b(0), a(0xFF), rgba(0x000000FF)
     {
     }
 };
@@ -63,13 +57,7 @@ struct ConstexprColors
     MinimapColor colors[256];
 };
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>End of Compile-time Minimap colors>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-class Minimap
+class MinimapColors
 {
   public:
     static constexpr ConstexprColors colors{};
@@ -79,6 +67,6 @@ class Minimap
 
 inline std::ostream &operator<<(std::ostream &os, const MinimapColor &color)
 {
-    os << "(" << color.red << ", " << color.green << ", " << color.blue << ", " << color.alpha << ")";
+    os << "(" << color.r << ", " << color.g << ", " << color.b << ", " << color.a << ")";
     return os;
 }

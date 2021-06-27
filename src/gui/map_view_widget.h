@@ -36,6 +36,7 @@ class MapViewWidget : public QWidget, public Nano::Observer<>
 
     void viewportChanged(const Camera::Viewport &viewport);
     void mapViewDrawRequested();
+    void mapViewMinimapDrawRequested();
     void selectionChanged();
     void undoRedoPerformed();
 

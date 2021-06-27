@@ -27,13 +27,14 @@ MapView::MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action, std::sh
       uiUtils(std::move(uiUtils))
 {
     instances.emplace(this);
-    camera.onViewportChanged<&MapView::cameraViewportChangedEvent>(this);
+    _camera.onViewportChanged<&MapView::cameraViewportChangedEvent>(this);
 }
 
 void MapView::cameraViewportChangedEvent()
 {
-    viewportChange.fire(camera.viewport());
+    viewportChange.fire(_camera.viewport());
     requestDraw();
+    requestMinimapDraw();
 }
 
 MapView::~MapView()
@@ -53,6 +54,7 @@ void MapView::undo()
     if (changed)
     {
         requestDraw();
+        requestMinimapDraw();
         undoRedoPerformed.fire();
     }
 }
@@ -63,6 +65,7 @@ void MapView::redo()
     if (changed)
     {
         requestDraw();
+        requestMinimapDraw();
         undoRedoPerformed.fire();
     }
 }
@@ -408,6 +411,7 @@ void MapView::deleteSelectedItems()
 
     history.endTransaction(TransactionType::RemoveMapItem);
     requestDraw();
+    requestMinimapDraw();
 }
 
 void MapView::selectRegion(const Position &from, const Position &to)
@@ -456,7 +460,7 @@ void MapView::fillRegion(const Position &from, const Position &to, uint32_t serv
     Action action(ActionType::SetTile);
     action.reserve(Position::tilesInRegion(from, to));
 
-    for (const auto &pos : MapArea(from, to))
+    for (const auto &pos : MapArea(*_map, from, to))
     {
         auto location = _map->getTileLocation(pos);
 
@@ -477,7 +481,7 @@ void MapView::fillRegion(const Position &from, const Position &to, std::function
     Action action(ActionType::SetTile);
     action.reserve(Position::tilesInRegion(from, to));
 
-    for (const auto &pos : MapArea(from, to))
+    for (const auto &pos : MapArea(*_map, from, to))
     {
         auto location = _map->getTileLocation(pos);
 
@@ -518,7 +522,7 @@ void MapView::rotateBrush()
         util::overloaded{
             [this](MouseAction::MapBrush &brush) {
                 brush.rotateClockwise();
-                this->requestDraw();
+                requestDraw();
             },
             [](const auto &arg) {}},
         editorAction.action());
@@ -526,7 +530,7 @@ void MapView::rotateBrush()
 
 void MapView::setViewportSize(int width, int height)
 {
-    camera.setSize(width, height);
+    _camera.setSize(width, height);
 }
 
 void MapView::setDragStart(WorldPosition position)
@@ -549,9 +553,9 @@ void MapView::setDragStart(WorldPosition position)
 
 util::Rectangle<int> MapView::getGameBoundingRect() const
 {
-    Position position = camera.position();
+    Position position = _camera.position();
 
-    const Camera::Viewport &viewport = camera.viewport();
+    const Camera::Viewport &viewport = _camera.viewport();
     util::Rectangle<int> rect;
     rect.x1 = position.x;
     rect.y1 = position.y;
@@ -575,11 +579,21 @@ std::optional<std::pair<WorldPosition, WorldPosition>> MapView::getDragPoints() 
 
 MapRegion MapView::mapRegion() const
 {
-    Position from(camera.position());
+    Position from(_camera.position());
     from.z = from.z <= GROUND_FLOOR ? GROUND_FLOOR : MAP_LAYERS - 1;
 
-    const Camera::Viewport &viewport = camera.viewport();
-    Position to(from.x + viewport.gameWidth(), from.y + viewport.gameHeight(), camera.z());
+    const Camera::Viewport &viewport = _camera.viewport();
+    Position to(from.x + viewport.gameWidth(), from.y + viewport.gameHeight(), _camera.z());
+
+    return _map->getRegion(from, to);
+}
+
+MapRegion MapView::mapRegion(int8_t floor) const
+{
+    Position from(_camera.position());
+
+    const Camera::Viewport &viewport = _camera.viewport();
+    Position to(from.x + viewport.gameWidth(), from.y + viewport.gameHeight(), _camera.z());
 
     return _map->getRegion(from, to);
 }
@@ -765,6 +779,7 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
         editorAction.action());
 
     requestDraw();
+    requestMinimapDraw();
 }
 
 void MapView::setPanOffset(MouseAction::Pan &action, const ScreenPosition &offset)
@@ -772,8 +787,8 @@ void MapView::setPanOffset(MouseAction::Pan &action, const ScreenPosition &offse
     if (!action.active())
         return;
 
-    auto newX = static_cast<WorldPosition::value_type>(std::round(offset.x / camera.zoomFactor()));
-    auto newY = static_cast<WorldPosition::value_type>(std::round(offset.y / camera.zoomFactor()));
+    auto newX = static_cast<WorldPosition::value_type>(std::round(offset.x / _camera.zoomFactor()));
+    auto newY = static_cast<WorldPosition::value_type>(std::round(offset.y / _camera.zoomFactor()));
 
     auto newPosition = action.cameraOrigin.value() + WorldPosition(-newX, -newY);
 
@@ -788,7 +803,7 @@ void MapView::setPanOffset(MouseAction::Pan &action, const ScreenPosition &offse
         newPosition.y = 0;
     }
 
-    camera.setWorldPosition(newPosition);
+    _camera.setWorldPosition(newPosition);
 }
 
 void MapView::startItemDrag(Tile *tile, Item *item)
@@ -928,7 +943,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                     editorAction.lock();
 
                     pan.mouseOrigin = event.pos();
-                    pan.cameraOrigin = camera.worldPosition();
+                    pan.cameraOrigin = _camera.worldPosition();
                 },
                 [this, event](MouseAction::PasteMapBuffer &paste) {
                     std::vector<Position> positions;
@@ -1047,6 +1062,8 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                                 action.brush->apply(*this, position, action.direction);
                             }
                         }
+
+                        requestMinimapDraw();
                     }
                 },
 
@@ -1118,6 +1135,7 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
                         Position deltaPos = select.moveDelta.value();
                         moveSelection(deltaPos);
                         requestDraw();
+                        requestMinimapDraw();
 
                         select.reset();
                         editorAction.unlock();
@@ -1209,12 +1227,12 @@ void MapView::toggleViewOption(ViewOption option)
 
 void MapView::setX(WorldPosition::value_type x)
 {
-    camera.setX(x);
+    _camera.setX(x);
 }
 
 void MapView::setY(WorldPosition::value_type y)
 {
-    camera.setY(y);
+    _camera.setY(y);
 }
 
 void MapView::floorUp()
@@ -1229,7 +1247,7 @@ void MapView::floorDown()
 
 void MapView::setFloor(int floor)
 {
-    camera.setZ(floor);
+    _camera.setZ(floor);
 }
 
 void MapView::zoom(int delta)
@@ -1248,51 +1266,57 @@ void MapView::zoom(int delta)
     }
 
     requestDraw();
+    requestMinimapDraw();
 }
 
 void MapView::zoomOut()
 {
-    camera.zoomOut(mousePos());
+    _camera.zoomOut(mousePos());
 }
 
 void MapView::zoomIn()
 {
-    camera.zoomIn(mousePos());
+    _camera.zoomIn(mousePos());
 }
 
 void MapView::resetZoom()
 {
-    camera.resetZoom(mousePos());
+    _camera.resetZoom(mousePos());
 }
 
 float MapView::getZoomFactor() const noexcept
 {
-    return camera.zoomFactor();
+    return _camera.zoomFactor();
 }
 
 void MapView::translateCamera(WorldPosition delta)
 {
-    camera.translate(delta);
+    _camera.translate(delta);
 }
 
 void MapView::translateX(WorldPosition::value_type x)
 {
-    camera.setX(camera.x() + x);
+    _camera.setX(_camera.x() + x);
 }
 
 void MapView::translateY(WorldPosition::value_type y)
 {
-    camera.setY(camera.y() + y);
+    _camera.setY(_camera.y() + y);
 }
 
 void MapView::translateZ(int z)
 {
-    camera.translateZ(z);
+    _camera.translateZ(z);
 }
 
 void MapView::requestDraw()
 {
     drawRequest.fire();
+}
+
+void MapView::requestMinimapDraw()
+{
+    drawMinimapRequest.fire();
 }
 
 void MapView::setUnderMouse(bool underMouse)
@@ -1305,6 +1329,11 @@ void MapView::setUnderMouse(bool underMouse)
     {
         requestDraw();
     }
+}
+
+const Camera &MapView::camera() const noexcept
+{
+    return _camera;
 }
 
 void MapView::perfTest()

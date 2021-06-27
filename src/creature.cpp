@@ -141,6 +141,7 @@ Pixel Creatures::getColorFromLookupTable(uint8_t look)
     uint8_t r = (TemplateOutfitLookupTable[look] & 0xFF0000) >> 16;
     uint8_t g = (TemplateOutfitLookupTable[look] & 0xFF00) >> 8;
     uint8_t b = (TemplateOutfitLookupTable[look] & 0xFF);
+
     return {r, g, b, 255};
 }
 
