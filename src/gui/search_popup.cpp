@@ -11,7 +11,6 @@
 #include "mainwindow.h"
 #include "qt_util.h"
 
-
 SearchPopupView::SearchPopupView(QUrl filepath, MainWindow *mainWindow)
     : _filepath(filepath), mainWindow(mainWindow), _wrapperWidget(nullptr)
 {
@@ -109,7 +108,7 @@ SearchPopupWidget::SearchPopupWidget(MainWindow *mainWindow)
     auto wrapperWidget = searchPopupView->wrapInWidget();
 
     wrapperWidget->setFixedWidth(mainWindow->width() * 0.6);
-    wrapperWidget->setMinimumHeight(300);
+    wrapperWidget->setMinimumHeight(400);
     // wrapperWidget->setMaximumHeight(mainWindow->height() * 0.6);
     // searchPopupWidget->setFixedWidth(300);
     // searchPopupWidget->setFixedHeight(300);

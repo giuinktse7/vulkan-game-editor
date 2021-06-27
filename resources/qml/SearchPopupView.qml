@@ -368,15 +368,25 @@ Rectangle {
 
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                Layout.margins: 30;
+                Layout.topMargin: 0;
+                Layout.bottomMargin: 4;
 
                 model: root.searchResults;
 
-                cellWidth: 85
-                cellHeight: 85
 
-                readonly property int cellHSpacing: 14;
-                readonly property int cellVSpacing: 14;
+                 // The standard size
+                property var idealCellHeight: 85
+                property var idealCellWidth: 85
+
+                // The actual cell height is always as desired, but the cell width
+                // is calculated from the current width of the view and how many cells fit
+                cellHeight: idealCellHeight
+                cellWidth: {
+                    return width / Math.floor(width / idealCellWidth)
+                }
+
+                readonly property int cellHSpacing: 28;
+                readonly property int cellVSpacing: 28;
 
                 focus: true
                 clip: true
@@ -384,6 +394,7 @@ Rectangle {
 
                 ScrollBar.vertical: ScrollBar {
                     interactive: true
+                    policy: ScrollBar.AlwaysOn
                 }
                 // ScrollIndicator.vertical: ScrollIndicator { }
 
@@ -395,7 +406,7 @@ Rectangle {
                     propagateComposedEvents: true
                     onWheel: e => {
                         const scrollBar = searchResultList.ScrollBar.vertical
-                        const newPos = scrollBar.position - Math.sign(e.angleDelta.y) * 0.06;
+                        const newPos = scrollBar.position - Math.sign(e.angleDelta.y) * 0.1;
 
                         scrollBar.position = Math.max(0, Math.min(newPos, 1 - scrollBar.size));
                         e.accepted = true;
@@ -414,8 +425,19 @@ Rectangle {
                         required property string name
                         required property string resourceString
 
-                        width: childrenRect.width;
-                        height: childrenRect.height;
+                        Rectangle {
+                            anchors.centerIn: parent
+                            color: "blue"
+                        }
+
+
+                        // anchors.centerIn: parent
+                        width: searchResultList.idealCellWidth
+                        height: searchResultList.cellHeight
+                        // width: searchResultList.idealCellWidth // - 20 (suggestion)
+                        // height: searchResultList.cellHeight // - 20 (suggestion)
+                        // width: childrenRect.width;
+                        // height: childrenRect.height;
 
                         hoverEnabled: true
 
@@ -431,8 +453,9 @@ Rectangle {
                         }
 
                         Column {
-                            width: searchResultList.cellWidth - searchResultList.cellHSpacing;
-                            height: searchResultList.cellHeight - searchResultList.cellVSpacing;
+                            anchors.centerIn: parent
+                            width: brush.width /2;
+                            height: brush.height /2;
 
                             Rectangle {
                                 anchors.horizontalCenter: parent.horizontalCenter;
