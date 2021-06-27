@@ -454,8 +454,8 @@ Rectangle {
 
                         Column {
                             anchors.centerIn: parent
-                            width: brush.width /2;
-                            height: brush.height /2;
+                            width: brush.width - 20;
+                            height: brush.height - 20;
 
                             Rectangle {
                                 anchors.horizontalCenter: parent.horizontalCenter;
@@ -468,7 +468,8 @@ Rectangle {
                                 border.width: 1;
 
                                 Image {
-                                anchors.centerIn: parent
+                                    smooth: false;
+                                    anchors.horizontalCenter: parent.horizontalCenter;
                                     source: brush.resourceString;
                                 }
                             }
