@@ -23,9 +23,16 @@ class MenuAction : public QWidgetAction
 
     MenuAction(const QString &text, QObject *parent = nullptr);
     MenuAction(const QString &text, const QKeySequence &shortcut, QObject *parent = nullptr);
-    ~MenuAction();
-    QWidget *createWidget(QWidget *parent);
+    QWidget *createWidget(QWidget *parent) override;
 
   private:
     QString text;
+};
+
+class MenuSeparator : public QWidgetAction
+{
+    Q_OBJECT
+  public:
+    MenuSeparator(QObject *parent = nullptr);
+    QWidget *createWidget(QWidget *parent) override;
 };

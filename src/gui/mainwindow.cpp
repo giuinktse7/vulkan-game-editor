@@ -9,6 +9,7 @@
 #include <QMouseEvent>
 #include <QPlainTextEdit>
 #include <QQuickView>
+#include <QShortcut>
 #include <QSlider>
 #include <QStackedLayout>
 #include <QVariant>
@@ -683,61 +684,45 @@ QMenuBar *MainWindow::createMenuBar()
 {
     QMenuBar *menuBar = new QMenuBar;
 
+    const auto addMenuItem = [this](QMenu *menu, const char *text, const QKeySequence &shortcut, std::function<void()> f = nullptr) {
+        auto action = new MenuAction(tr(text), shortcut, menu);
+        if (f)
+        {
+            connect(action, &QWidgetAction::triggered, f);
+        }
+        menu->addAction(action);
+        return action;
+    };
+
     // File
     {
         auto fileMenu = menuBar->addMenu(tr("File"));
 
-        auto newMap = new MenuAction(tr("New Map"), Qt::CTRL | Qt::Key_N, this);
-        connect(newMap, &QWidgetAction::triggered, [this] { this->addMapTab(); });
-        fileMenu->addAction(newMap);
-
-        auto saveMap = new MenuAction(tr("Save"), Qt::CTRL | Qt::Key_S, this);
-        connect(saveMap, &QWidgetAction::triggered, [this] { SaveMap::saveMap(*(currentMapView()->map())); });
-        fileMenu->addAction(saveMap);
-
-        auto closeMap = new MenuAction(tr("Close"), Qt::CTRL | Qt::Key_W, this);
-        connect(closeMap, &QWidgetAction::triggered, mapTabs, &MapTabWidget::removeCurrentTab);
-        fileMenu->addAction(closeMap);
+        addMenuItem(fileMenu, "New Map", Qt::CTRL | Qt::Key_N, [this] { this->addMapTab(); });
+        addMenuItem(fileMenu, "Save", Qt::CTRL | Qt::Key_S, [this] { SaveMap::saveMap(*(currentMapView()->map())); });
+        addMenuItem(fileMenu, "Close", Qt::CTRL | Qt::Key_W, [this] { mapTabs->removeCurrentTab(); });
     }
 
     // Edit
     {
         auto editMenu = menuBar->addMenu(tr("Edit"));
 
-        auto undo = new MenuAction(tr("Undo"), Qt::CTRL | Qt::Key_Z, this);
-        connect(undo, &QWidgetAction::triggered, [this] { this->currentMapView()->undo(); });
-        editMenu->addAction(undo);
+        addMenuItem(editMenu, "Undo", Qt::CTRL | Qt::Key_Z, [this] { this->currentMapView()->undo(); });
+        addMenuItem(editMenu, "Redo", Qt::CTRL | Qt::SHIFT | Qt::Key_Z, [this] { this->currentMapView()->redo(); });
 
-        auto redo = new MenuAction(tr("Redo"), Qt::CTRL | Qt::SHIFT | Qt::Key_Z, this);
-        connect(redo, &QWidgetAction::triggered, [this] { this->currentMapView()->redo(); });
-        editMenu->addAction(redo);
-
-        editMenu->addSeparator();
-
-        auto jumpToBrush = new MenuAction(tr("Jump to brush..."), Qt::Key_J, this);
-        connect(jumpToBrush, &QWidgetAction::triggered, [this] {
+        addMenuItem(editMenu, "Jump to brush...", Qt::Key_J, [this] {
             auto mainLayout = static_cast<MainLayout *>(layout());
             setSearchVisible(!mainLayout->isSearchVisible());
         });
-        editMenu->addAction(jumpToBrush);
 
-        auto temp = new MenuAction(tr("Temp debug"), Qt::Key_K, this);
-        connect(temp, &QWidgetAction::triggered, [this] {
-            VME_LOG_D(".");
+        addMenuItem(editMenu, "Temp debug", Qt::Key_K, [this] { VME_LOG("."); });
+        editMenu->addAction(new MenuSeparator(this));
+
+        addMenuItem(editMenu, "Cut", Qt::CTRL | Qt::Key_X, [this] {});
+        addMenuItem(editMenu, "Copy", Qt::CTRL | Qt::Key_C, [this] {
+            this->mapCopyBuffer.copySelection(*this->currentMapView());
         });
-        editMenu->addAction(temp);
-
-        editMenu->addSeparator();
-
-        auto cut = new MenuAction(tr("Cut"), Qt::CTRL | Qt::Key_X, this);
-        editMenu->addAction(cut);
-
-        auto copy = new MenuAction(tr("Copy"), Qt::CTRL | Qt::Key_C, this);
-        connect(copy, &QWidgetAction::triggered, [this] { this->mapCopyBuffer.copySelection(*this->currentMapView()); });
-        editMenu->addAction(copy);
-
-        auto paste = new MenuAction(tr("Paste"), Qt::CTRL | Qt::Key_V, this);
-        connect(paste, &QWidgetAction::triggered, [this] {
+        addMenuItem(editMenu, "Paste", Qt::CTRL | Qt::Key_V, [this] {
             if (this->mapCopyBuffer.empty() || !this->currentMapView())
             {
                 return;
@@ -746,46 +731,40 @@ QMenuBar *MainWindow::createMenuBar()
             this->editorAction.set(MouseAction::PasteMapBuffer(&this->mapCopyBuffer));
             this->currentMapView()->requestDraw();
         });
-        editMenu->addAction(paste);
 
-        auto eyeDropper = new MenuAction(tr("Eyedropper"), Qt::Key_I, this);
-        connect(eyeDropper, &QWidgetAction::triggered, [this] {
+        auto eyeDropper = new QShortcut(Qt::Key_I, this);
+        connect(eyeDropper, &QShortcut::activated, [this]() {
             MapView *mapView = currentMapView();
             if (mapView->underMouse())
             {
                 currentVulkanWindow()->eyedrop(mapView->mouseGamePos());
             }
         });
-        editMenu->addAction(eyeDropper);
+
+        editMenu->addAction(new MenuSeparator(this));
 
         // Brush actions
-        editMenu->addSeparator();
-
-        auto rotateBrush = new MenuAction(tr("Rotate brush"), Qt::Key_R, this);
-        connect(rotateBrush, &QWidgetAction::triggered, [this] { this->currentMapView()->rotateBrush(); });
-        editMenu->addAction(rotateBrush);
+        addMenuItem(editMenu, "Rotate brush", Qt::Key_R, [this] {
+            this->currentMapView()->rotateBrush();
+        });
     }
 
     // Map
     {
         auto mapMenu = menuBar->addMenu(tr("Map"));
 
-        auto editTowns = new MenuAction(tr("Edit Towns"), Qt::CTRL | Qt::Key_T, this);
-        mapMenu->addAction(editTowns);
+        addMenuItem(mapMenu, "Edit Towns", Qt::CTRL | Qt::Key_T, []() {});
     }
 
     // View
     {
         auto viewMenu = menuBar->addMenu(tr("View"));
 
-        auto zoomIn = new MenuAction(tr("Zoom in"), Qt::CTRL | Qt::Key_Plus, this);
-        viewMenu->addAction(zoomIn);
+        addMenuItem(viewMenu, "Zoom in", Qt::CTRL | Qt::Key_Plus, []() {});
+        addMenuItem(viewMenu, "Zoom out", Qt::CTRL | Qt::Key_Minus, []() {});
 
-        auto zoomOut = new MenuAction(tr("Zoom out"), Qt::CTRL | Qt::Key_Minus, this);
-        viewMenu->addAction(zoomOut);
-
-        auto pan = new MenuAction(tr("Pan"), Qt::Key_Space, this);
-        connect(pan, &QWidgetAction::triggered, [this] {
+        auto pan = new QShortcut(Qt::Key_Space, this);
+        connect(pan, &QShortcut::activated, [this]() {
             auto mapView = currentMapView();
             bool panning = mapView->editorAction.is<MouseAction::Pan>();
             if (panning || QApplication::mouseButtons() & Qt::MouseButton::LeftButton)
@@ -798,21 +777,19 @@ QMenuBar *MainWindow::createMenuBar()
                 currentVulkanWindow()->setCursor(Qt::OpenHandCursor);
             }
 
-            MouseAction::Pan pan;
-            mapView->editorAction.setIfUnlocked(pan);
+            MouseAction::Pan panAction;
+            mapView->editorAction.setIfUnlocked(panAction);
             mapView->requestDraw();
 
             this->currentVulkanWindow()->requestActivate();
         });
-        viewMenu->addAction(pan);
     }
 
     // Window
     {
         auto windowMenu = menuBar->addMenu(tr("Window"));
 
-        auto minimap = new MenuAction(tr("Minimap"), Qt::Key_M, this);
-        windowMenu->addAction(minimap);
+        addMenuItem(windowMenu, "Minimap", Qt::Key_M, []() {});
     }
 
     // Floor
@@ -834,13 +811,10 @@ QMenuBar *MainWindow::createMenuBar()
         connect(reloadStyles, &QAction::triggered, [=] { QtUtil::qtApp()->loadStyleSheet(":/vme/style/qss/default.qss"); });
         reloadMenu->addAction(reloadStyles);
 
-        QAction *reloadPropertyQml = new QAction(tr("Reload Properties QML"), this);
-        reloadPropertyQml->setShortcut(Qt::Key_F5);
-        connect(reloadPropertyQml, &QAction::triggered, [=] {
+        addMenuItem(reloadMenu, "Reload Properties QML", Qt::Key_F5, [this]() {
             propertyWindow->reloadSource();
             searchPopupWidget->popupView()->reloadSource();
         });
-        reloadMenu->addAction(reloadPropertyQml);
     }
 
     {

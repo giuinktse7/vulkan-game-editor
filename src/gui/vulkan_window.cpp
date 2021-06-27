@@ -127,7 +127,6 @@ void VulkanWindow::mousePressEvent(QMouseEvent *event)
 
     switch (event->button())
     {
-
         case Qt::MouseButton::LeftButton:
             if (!contextMenu->isHidden())
             {
