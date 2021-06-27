@@ -115,35 +115,29 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
         case BrushType::Raw:
         {
             auto brush = static_cast<RawBrush *>(b);
-            QtTextureArea textureArea = GUIThingImage::getItemTypeTexture(*brush->itemType());
-            paintTextureArea(painter, topLeft, textureArea);
+            QImage image = GUIThingImage::getItemTypeImage(*brush->itemType());
+            painter->drawImage(topLeft, image);
             break;
         }
         case BrushType::Ground:
         {
             auto brush = static_cast<GroundBrush *>(b);
-            QtTextureArea textureArea = GUIThingImage::getItemTypeTexture(brush->iconServerId());
-            paintTextureArea(painter, topLeft, textureArea);
+            QImage image = GUIThingImage::getItemTypeImage(brush->iconServerId());
+            painter->drawImage(topLeft, image);
             break;
         }
         case BrushType::Doodad:
         {
             auto brush = static_cast<DoodadBrush *>(b);
-            QtTextureArea textureArea = GUIThingImage::getItemTypeTexture(brush->iconServerId());
-            paintTextureArea(painter, topLeft, textureArea);
+            QImage image = GUIThingImage::getItemTypeImage(brush->iconServerId());
+            painter->drawImage(topLeft, image);
             break;
         }
         case BrushType::Creature:
         {
             auto brush = static_cast<CreatureBrush *>(b);
-            // std::vector<QtTextureArea> textureArea = GUIThingImage::getCreatureTypeTextures(*brush->creatureType, Direction::South);
-            QtTextureArea textureArea = GUIThingImage::getCreatureTypeTextures(*brush->creatureType, Direction::South);
-            paintTextureArea(painter, topLeft, textureArea);
-
-            // for (const auto &area : textureArea)
-            // {
-            //     paintTextureArea(painter, topLeft, area);
-            // }
+            QImage image = GUIThingImage::getCreatureTypeImage(*brush->creatureType, Direction::South);
+            painter->drawImage(topLeft, image);
             break;
         }
         default:

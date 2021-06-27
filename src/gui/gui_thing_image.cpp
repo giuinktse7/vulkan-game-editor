@@ -59,12 +59,11 @@ QImage *GUIImageCache::getOrCreateQImageForTexture(const Texture &texture)
     return textureIdToQImage.at(texture.id()).get();
 }
 
-QtTextureArea GUIThingImage::getCreatureTypeTextures(const CreatureType &creatureType, Direction direction)
+QImage GUIThingImage::getCreatureTypeImage(const CreatureType &creatureType, Direction direction)
 {
-    // TODO Fix memory leak caused by usage of 'new' here
-    QImage *image = new QImage(QSize(32, 32), QImage::Format::Format_ARGB32);
-    image->fill(QColor("transparent"));
-    QPainter painter(image);
+    QImage image(QSize(32, 32), QImage::Format::Format_ARGB32);
+    image.fill(QColor("transparent"));
+    QPainter painter(&image);
 
     auto getLayer = [&painter](const CreatureType *creatureType, int posture, int addonType, Direction direction) {
         auto info = creatureType->getTextureInfo(0, posture, addonType, direction, TextureInfo::CoordinateType::Unnormalized);
@@ -110,21 +109,32 @@ QtTextureArea GUIThingImage::getCreatureTypeTextures(const CreatureType &creatur
         getLayer(&creatureType, posture, 2, direction);
     }
 
-    return QtTextureArea(QRect(0, 0, 32, 32), image);
+    return image.mirrored();
 }
 
-QtTextureArea GUIThingImage::getItemTypeTexture(const ItemType &itemType, uint8_t subtype)
+QImage GUIThingImage::getItemTypeImage(const ItemType &itemType, uint8_t subtype)
 {
     TextureInfo info = itemType.getTextureInfo(TextureInfo::CoordinateType::Unnormalized);
-    return QtTextureArea(info.window, info.getTexture());
+
+    QRect rect(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
+    QImage *textureImage = GUIImageCache::getOrCreateQImageForTexture(info.getTexture());
+
+    QImage image = textureImage->copy(rect).mirrored();
+
+    if (rect.width() > 32 || rect.height() > 32)
+    {
+        image = image.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    }
+
+    return image;
 }
 
-QtTextureArea GUIThingImage::getItemTypeTexture(uint32_t serverId, uint8_t subtype)
+QImage GUIThingImage::getItemTypeImage(uint32_t serverId, uint8_t subtype)
 {
     auto itemType = Items::items.getItemTypeByServerId(serverId);
     DEBUG_ASSERT(itemType != nullptr, std::format("Invalid ItemType serverId: {}", serverId));
 
-    return getItemTypeTexture(*itemType, subtype);
+    return getItemTypeImage(*itemType, subtype);
 }
 
 QPixmap GUIThingImage::itemPixmap(uint32_t serverId, uint8_t subtype)
@@ -297,8 +307,8 @@ QPixmap CreatureImageProvider::requestPixmap(const QString &id, QSize *size, con
         return GUIImageCache::blackSquarePixmap();
     }
 
-    auto textureArea = GUIThingImage::getCreatureTypeTextures(*creatureType, static_cast<Direction>(direction));
-    return QPixmap::fromImage(textureArea.image->copy(textureArea.rect).mirrored());
+    QImage image = GUIThingImage::getCreatureTypeImage(*creatureType, static_cast<Direction>(direction));
+    return QPixmap::fromImage(image);
 }
 
 QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
@@ -337,5 +347,8 @@ QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, con
         return GUIImageCache::blackSquarePixmap();
     }
 
-    return GUIThingImage::itemPixmap(serverId, subtype);
+    QPixmap result = QPixmap::fromImage(GUIThingImage::getItemTypeImage(serverId, subtype));
+    auto a = result.width();
+    auto b = result.height();
+    return result;
 }

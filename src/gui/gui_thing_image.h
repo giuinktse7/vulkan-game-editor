@@ -47,9 +47,9 @@ struct GUIImageCache
 class GUIThingImage
 {
   public:
-    static QtTextureArea getCreatureTypeTextures(const CreatureType &creatureType, Direction direction);
-    static QtTextureArea getItemTypeTexture(const ItemType &itemType, uint8_t subtype = 0);
-    static QtTextureArea getItemTypeTexture(uint32_t serverId, uint8_t subtype = 0);
+    static QImage getCreatureTypeImage(const CreatureType &creatureType, Direction direction);
+    static QImage getItemTypeImage(const ItemType &itemType, uint8_t subtype = 0);
+    static QImage getItemTypeImage(uint32_t serverId, uint8_t subtype = 0);
 
     static QPixmap itemPixmap(uint32_t serverId, uint8_t subtype = 0);
     static QPixmap itemPixmap(const Position &pos, const Item &item);
