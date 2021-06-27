@@ -307,8 +307,7 @@ QPixmap CreatureImageProvider::requestPixmap(const QString &id, QSize *size, con
         return GUIImageCache::blackSquarePixmap();
     }
 
-    QImage image = GUIThingImage::getCreatureTypeImage(*creatureType, static_cast<Direction>(direction));
-    return QPixmap::fromImage(image);
+    return QPixmap::fromImage(GUIThingImage::getCreatureTypeImage(*creatureType, static_cast<Direction>(direction)));
 }
 
 QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
@@ -347,8 +346,5 @@ QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, con
         return GUIImageCache::blackSquarePixmap();
     }
 
-    QPixmap result = QPixmap::fromImage(GUIThingImage::getItemTypeImage(serverId, subtype));
-    auto a = result.width();
-    auto b = result.height();
-    return result;
+    return QPixmap::fromImage(GUIThingImage::getItemTypeImage(serverId, subtype));
 }
