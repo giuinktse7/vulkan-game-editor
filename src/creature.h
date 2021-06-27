@@ -20,8 +20,6 @@ namespace tibia::protobuf::appearances
 class CreatureType
 {
   public:
-    void cacheTextureAtlases();
-
     CreatureType(std::string id, std::string name, uint16_t looktype);
     CreatureType(std::string id, std::string name, Outfit outfit);
 
@@ -37,7 +35,6 @@ class CreatureType
     TextureAtlas *getTextureAtlas(uint32_t frameGroupId, Direction direction) const;
     uint32_t getSpriteIndex(uint32_t frameGroupId, Direction direction) const;
     uint32_t getSpriteId(uint32_t frameGroupId, Direction direction) const;
-    uint32_t getSpriteId(uint32_t spriteIndex) const;
 
     uint16_t getSpriteWidth() const;
     uint16_t getSpriteHeight() const;
