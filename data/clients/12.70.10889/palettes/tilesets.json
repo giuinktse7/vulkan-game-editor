@@ -28,8 +28,15 @@
                                 106,
                                 108,
                                 109,
-                                919,
-                                1071,
+
+                                // Mountains
+                                919, // Gray Mountain (raised)
+                                13145, // Gray Mountain (ground+raised)
+                                1071, // Sandstone Mountain (raised)
+
+                                19143, // Green Mountain (ground)
+                                19148, // Brown Mountain (ground)
+                                21199, // Sand Mountain (ground)
 
                                 // Sand
                                 231,
@@ -40,6 +47,9 @@
 
                                 // Darker sand
                                 [12912, 12933],
+
+                                // Gray sand
+                                [21605, 21612],
 
                                 280,
                                 351,
@@ -59,8 +69,19 @@
                                 3139,
                                 [3216, 3217],
 
-                                406,
-                                407,
+                                // New wooden floor
+                                18117,
+
+                                // Grimy wooden plank
+                                [18764, 18769],
+
+                                [19796, 19798], // Parquet floor
+                                [19824, 19827], // Terracotta
+
+                                18864, // Reddish wooden planks
+
+                                406, // White marble floor
+                                407, // Black marble floor
 
                                 // Sandstone tiles
                                 412,
@@ -103,9 +124,20 @@
 
                                 7272, // Raft
 
-                                671,
+                                671, // Ice
+                                18296, // Ice stone floor
+
                                 [708, 711], // Tar
-                                724,
+
+                                724, // Cobbled pavement
+                                [19744, 19748], // Cobblestone
+                                [19785, 19790], // Plaster
+
+                                // Stone pebble floor
+                                [22159, 22166],
+                                [22167, 22174],
+                                [22175, 22182],
+
                                 791,
                                 804,
                                 806,
@@ -155,7 +187,14 @@
                                 // Rice/dirty water
                                 13863,
 
-                                [4691, 4712], // Swamp
+                                // Swamp
+                                [4691, 4701],
+                                [4749, 4755],
+
+                                [4702, 4712], // Darker Swamp
+
+                                [18581, 18590], // Even Darker Swamp
+
                                 [3263, 3265], // Jungle grass and jungle dirt
                                 6389, // Stony floor
                                 [5814, 5815], // Small lava cracks
@@ -175,6 +214,17 @@
                                 // Gravel
                                 4566,
                                 [4570, 4579],
+
+                                // Branches
+                                [20771, 20775],
+
+                                // Forest floor
+                                [20776, 20781],
+
+                                [20832, 20837], // Leaves
+                                [20877, 20882], // Teal leaves
+
+                                [21155, 21158], // Small brook
 
                                 // Dark rock
                                 [9068, 9072],
@@ -207,11 +257,72 @@
                                 [14801, 14811],
                                 14874,
 
+                                // Wet temple floor
+                                [14904, 14927],
+                                [14929, 14930],
+
+                                // Cracked wet temple floor
+                                [14931, 14939],
+
+                                // Ornamented wet temple floor
+                                [15540, 15543],
+
+                                // Turqoise sea floor
+                                [15006, 15011],
+
+                                // Brown sea floor
+                                [15232, 15237],
+
+                                // Sea floor ripples/bubbles
+                                15028,
+
+                                // Shallow water
+                                [15401, 15402],
+
+                                // Crystal floor
+                                [17436, 17443],
+
+                                // Basalt floor
+                                [17625, 17628],
+
+                                // Mold floor
+                                [17647, 17652],
+
+                                // Mossy floor
+                                [17665, 17672],
+
+                                // Crystal glass floor
+                                [18000, 18004],
+
+                                // Mushroom sponge
+                                [18053, 18055],
+
+                                // Stone floor
+                                [18162, 18171],
+
+                                // Muddy floor
+                                [18560, 18567],
+
+                                // Wasteland
+                                [21892, 21911],
+                                [21942, 21949],
+
+                                21592, // Smoke
+
                                 // Mill board
                                 [967, 1015],
 
                                 // Tic-Tac-Toe board
-                                [1016, 1024]
+                                [1016, 1024],
+
+                                // Cake tile
+                                [13077, 13082],
+
+                                // Small brook
+                                [21811, 21812],
+                                [21825, 21826],
+                                [22346, 22349],
+                                [22305, 22307]
                             ]
                         }
                     ]
