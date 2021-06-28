@@ -1,5 +1,7 @@
 # TODO
 
+## Crashes
+
 ## Rendering
 
 ## Map Rendering
@@ -21,17 +23,9 @@
       - [ ] Implement rendering for animations through MapView::requestUpdate().
       - [x] Only update visible animations.
       - [ ] Do not render animations when zoomed out further than a certain level.
+- [ ] Light effects (For example from torches)
 
 ## Editing functionality
-
-- [ ] BUG:
-
-            1. Open bag with bag B in first slot.
-            2. Move second item X to first slot.
-            3. place X into B.
-            4. Undo.
-
-      Crashes because when (2) is committed, it uses index=1 for B instead of index=0.
 
 - [ ] topItem selected: RELEASE deselects, but ONLY if mouse has been outside of this tile since the PRESS event.
 - [ ] Reorder items on a tile.

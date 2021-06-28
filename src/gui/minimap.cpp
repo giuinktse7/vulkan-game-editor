@@ -83,8 +83,6 @@ void MinimapWidget::update()
     auto from = Position(std::max(0, fromX), std::max(0, fromY), viewportMidPoint.z);
     auto to = viewportMidPoint + delta;
 
-    VME_LOG_D("From: " << from << ", To: " << to);
-
     for (auto &tileLocation : mapView->map()->getRegion(from, to))
     {
         if (!tileLocation.hasTile())

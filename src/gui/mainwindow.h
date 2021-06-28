@@ -39,7 +39,7 @@ class SearchPopupWidget;
 
 #define QT_MANAGED_POINTER(cls, ...) new cls(__VA_ARGS__);
 
-class MainWindow : public QWidget, public Nano::Observer<>
+class MainWindow : public QWidget
 {
     Q_OBJECT
 

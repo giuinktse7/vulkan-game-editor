@@ -53,6 +53,7 @@ class MapViewWidget : public QWidget, public Nano::Observer<>
     void undoRedoEvent(MapView &mapView);
 
   private:
+    // QT calls delete for this value when the MapViewWidget is destroyed.
     VulkanWindow *vulkanWindow;
 
     QtScrollBar *hbar;

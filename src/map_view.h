@@ -31,7 +31,7 @@ struct ItemDropEvent
     MapView *mapView;
 };
 
-class MapView : public Nano::Observer<>
+class MapView
 {
 
   public:
@@ -278,13 +278,6 @@ class MapView : public Nano::Observer<>
 
     void setPanOffset(MouseAction::Pan &action, const ScreenPosition &offset);
 
-    Nano::Signal<void(const Camera::Viewport &)> viewportChange;
-    Nano::Signal<void(Tile *tile, Item *item)> mapItemDragStart;
-    Nano::Signal<void(MapView *mapView, const Tile *tile, TileThing tileThing)> selectedTileThingClicked;
-    Nano::Signal<void()> drawRequest;
-    Nano::Signal<void()> drawMinimapRequest;
-    Nano::Signal<void()> undoRedoPerformed;
-
     /**
  		*	Keeps track of all MapView instances. This is necessary for QT to
 		* validate MapView pointers in a QVariant.
@@ -311,6 +304,13 @@ class MapView : public Nano::Observer<>
 
     bool _prevUnderMouse = false;
     bool _underMouse = false;
+
+    Nano::Signal<void(const Camera::Viewport &)> viewportChange;
+    Nano::Signal<void(Tile *tile, Item *item)> mapItemDragStart;
+    Nano::Signal<void(MapView *mapView, const Tile *tile, TileThing tileThing)> selectedTileThingClicked;
+    Nano::Signal<void()> drawRequest;
+    Nano::Signal<void()> drawMinimapRequest;
+    Nano::Signal<void()> undoRedoPerformed;
 };
 
 inline const Map *MapView::map() const noexcept
