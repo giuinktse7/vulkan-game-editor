@@ -1,5 +1,10 @@
 # TODO
 
+## Palettes
+
+- tilesets.json
+  - Continue grounds at 13585 in RME (13145 is done)
+
 ## Crashes
 
 ## Rendering
@@ -19,10 +24,11 @@
 - [x] ~~Feature?: When removing in area (Drag while Ctrl+Shift), show selection rectangle (red tinted?) with the selected item at mouse cursor ONLY.~~
 - [x] ~~Feature: Instant feedback for what items will be removed when removing in area (Drag while Ctrl+Shift).~~
 - [ ] Animations
-
-      - [ ] Implement rendering for animations through MapView::requestUpdate().
-      - [x] Only update visible animations.
-      - [ ] Do not render animations when zoomed out further than a certain level.
+  - Implementation:
+    - When rendering map, store the lowest animation delay D for next animation for any rendered item.
+    - If any animation was found, queue another render with delay D. Otherwise, no render queueing is necessary.
+  - [x] Only update visible animations.
+  - [ ] Do not render animations when zoomed out further than a certain level.
 - [ ] Light effects (For example from torches)
 
 ## Editing functionality
@@ -33,26 +39,19 @@
 - [x] ~~Move selected items~~
 - [x] ~~topItem **not** selected: PRESS selects.~~
 - [x] ~~BUG: A selection can be moved out of bounds. It should clamp to the map size, [and maybe to max/min floor?]~~
-      This would require the editor to know about different item groups, like what items are grass borders.
 
 ## Optimization
 
-- [ ] Optimize Move actions of large areas by moving map nodes instead of individual tiles.
-
 ### GUI
 
-- [ ]
-  BUG: Minimize and then returning to the window (maximizing) does not retain
-  the correct window/widget focus.
-- [x] ~~Handle map keyboard events through the scrollbar widget~~
 - [ ] Draggable split views. [QSplitter](https://doc.qt.io/qt-5/qsplitter.html#details).
-      Subclass [QTabBar](https://doc.qt.io/qt-5/qtabbar.html) to implement dragging of tabs. [Drag and drop](https://doc.qt.io/qt-5/dnd.html).
+  Subclass [QTabBar](https://doc.qt.io/qt-5/qtabbar.html) to implement dragging of tabs. [Drag and drop](https://doc.qt.io/qt-5/dnd.html).
 
-      **Note**: Might possibly have to enable drag events on source and/or target widget. See [this](https://forum.qt.io/topic/67542/drag-tabs-between-qtabwidgets/4).
+  **Note**: Might possibly have to enable drag events on source and/or target widget. See [this](https://forum.qt.io/topic/67542/drag-tabs-between-qtabwidgets/4).
 
 ## General
 
-- [ ] System for custom keybindings
+- [ ] System for customizable keybindings
 
 ## Map
 
