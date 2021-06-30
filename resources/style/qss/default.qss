@@ -16,12 +16,12 @@ QMenu {
   margin: 0;
 }
 
-QMenu::item::selected {
+.menu-item::selected {
   background-color: #C6C6C6;
 }
 
 .menu-item > QLabel {
-  font: 9pt "Arial";
+  /* font: 9pt "Arial"; */
   margin: 0;
   padding: 4px 12px;
   /* padding: 7px 14px; */
