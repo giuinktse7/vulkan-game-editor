@@ -23,7 +23,6 @@ namespace MapHistory
         auto locationTile = location.tile();
         if (locationTile)
         {
-            // locationTile->destroyEntities();
             location.swapTile(tile);
         }
         else
@@ -31,8 +30,8 @@ namespace MapHistory
             location.setTile(std::move(tile));
             tile.reset();
         }
-
-        location.tile()->movedInMap();
+        // Not necessary when items are stored as pointers
+        // location.tile()->movedInMap();
 
         mapView.selection().setSelected(position, selected);
     }
