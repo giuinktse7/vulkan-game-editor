@@ -127,13 +127,11 @@ namespace MapHistory
     {
         if (std::holds_alternative<Position>(data))
         {
-            data = getMap(mapView)->dropTile(std::get<Position>(data));
+            data = removeMapTile(mapView, std::get<Position>(data));
         }
         else
         {
             auto &tile = std::get<std::unique_ptr<Tile>>(data);
-            // if (tile)
-            // tile->initEntities();
 
             swapMapTile(mapView, std::move(tile));
         }
@@ -387,7 +385,7 @@ namespace MapHistory
         Map *map = getMap(mapView);
         Position fromPos = fromTile.position();
         Position toPos = toTile.position();
-            
+
         Tile &from = mapView.getOrCreateTile(fromPos);
         Tile &to = mapView.getOrCreateTile(toPos);
 
