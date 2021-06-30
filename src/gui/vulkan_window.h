@@ -84,7 +84,7 @@ class VulkanWindow : public QVulkanWindow
     QWidget *wrapInWidget(QWidget *parent = nullptr);
     void lostFocus();
 
-    void showContextMenu(QPoint position);
+    void openContextMenu(QPoint position);
     void closeContextMenu();
 
     QRect localGeometry() const;
@@ -125,6 +125,7 @@ class VulkanWindow : public QVulkanWindow
     void shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event = nullptr);
 
     void reopenContextMenuRequest(QPoint globalPos);
+    void onLeftMouseReleaseOutside(QMouseEvent *event);
 
     void onVisibilityChanged(QWindow::Visibility visibility);
 
@@ -173,6 +174,7 @@ class QtContextMenu : public QMenu
     Q_OBJECT
   signals:
     void reopenRequest(QPoint globalPos);
+    void leftMouseReleaseOutside(QMouseEvent *event);
 
   public:
     QtContextMenu(VulkanWindow *window, QWidget *widget);

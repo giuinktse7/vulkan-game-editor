@@ -683,7 +683,7 @@ QMenuBar *MainWindow::createMenuBar()
 {
     QMenuBar *menuBar = new QMenuBar;
 
-    const auto addMenuItem = [this](QMenu *menu, const char *text, const QKeySequence &shortcut, std::function<void()> f = nullptr) {
+    const auto addMenuItem = [this](QMenu *menu, const char *text, const QKeySequence shortcut = 0, std::function<void()> f = nullptr) {
         auto action = new MenuAction(tr(text), shortcut, menu);
         if (f)
         {
@@ -717,7 +717,14 @@ QMenuBar *MainWindow::createMenuBar()
         addMenuItem(editMenu, "Temp debug", Qt::Key_K, [this] { VME_LOG("."); });
         editMenu->addAction(new MenuSeparator(this));
 
-        addMenuItem(editMenu, "Cut", Qt::CTRL | Qt::Key_X, [this] {});
+        addMenuItem(editMenu, "Cut", Qt::CTRL | Qt::Key_X, [this] {
+            MapView *mapView = this->currentMapView();
+            if (mapView)
+            {
+                this->mapCopyBuffer.copySelection(*mapView);
+                mapView->deleteSelectedItems();
+            }
+        });
         addMenuItem(editMenu, "Copy", Qt::CTRL | Qt::Key_C, [this] {
             this->mapCopyBuffer.copySelection(*this->currentMapView());
         });
@@ -805,9 +812,7 @@ QMenuBar *MainWindow::createMenuBar()
     {
         auto reloadMenu = menuBar->addMenu(tr("Reload"));
 
-        QAction *reloadStyles = new QAction(tr("Reload styles"), this);
-        connect(reloadStyles, &QAction::triggered, [=] { QtUtil::qtApp()->loadStyleSheet(":/vme/style/qss/default.qss"); });
-        reloadMenu->addAction(reloadStyles);
+        addMenuItem(reloadMenu, "Reload styles", 0, []() { QtUtil::qtApp()->loadStyleSheet(":/vme/style/qss/default.qss"); });
 
         addMenuItem(reloadMenu, "Reload Properties QML", Qt::Key_F5, [this]() {
             propertyWindow->reloadSource();
@@ -841,4 +846,23 @@ void MainWindow::requestMinimapUpdate()
 void MainWindow::setVulkanInstance(QVulkanInstance *instance)
 {
     vulkanInstance = instance;
+}
+
+void MainWindow::copySelection()
+{
+    MapView *mapView = currentMapView();
+    if (mapView)
+    {
+        mapCopyBuffer.copySelection(*mapView);
+    }
+}
+
+bool MainWindow::hasCopyBuffer() const
+{
+    return !mapCopyBuffer.empty();
+}
+
+MapCopyBuffer &MainWindow::getMapCopyBuffer()
+{
+    return mapCopyBuffer;
 }

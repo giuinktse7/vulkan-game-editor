@@ -13,7 +13,6 @@
 #include "../gui_thing_image.h"
 #include "../mainwindow.h"
 
-
 namespace ItemPropertyName
 {
     constexpr auto Stackable = "isStackable";
@@ -450,7 +449,7 @@ void ItemPropertyWindow::resetFocus()
 
 void ItemPropertyWindow::setCount(uint8_t count)
 {
-    VME_LOG_D("ItemPropertyWindow::setCount: " << int(count));
+    // VME_LOG_D("ItemPropertyWindow::setCount: " << int(count));
     auto countInput = child(ObjectName::CountInput);
     countInput->setProperty("value", count);
 }

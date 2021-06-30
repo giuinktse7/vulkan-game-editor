@@ -822,6 +822,11 @@ void MapView::startItemDrag(Tile *tile, Item *item)
     mapItemDragStart.fire(tile, item);
 }
 
+void MapView::selectTopThing(const Position &position)
+{
+    selectTopThing(position, true);
+}
+
 void MapView::selectTopThing(const Position &position, bool isNewSelection)
 {
     Tile *tile = getTile(position);

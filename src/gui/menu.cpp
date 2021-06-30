@@ -19,7 +19,10 @@ MenuAction::MenuAction(const QString &text, const QKeySequence &shortcut, QObjec
     : QWidgetAction(parent),
       text(text)
 {
-    setShortcut(shortcut);
+    if (shortcut != 0)
+    {
+        setShortcut(shortcut);
+    }
 }
 
 MenuAction::MenuAction(const QString &text, QObject *parent)

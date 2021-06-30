@@ -45,6 +45,7 @@ VulkanWindow::VulkanWindow(std::shared_ptr<Map> map, EditorAction &editorAction)
 
     contextMenu = new QtContextMenu(this, widget);
     connect(contextMenu, &QtContextMenu::reopenRequest, this, &VulkanWindow::reopenContextMenuRequest);
+    connect(contextMenu, &QtContextMenu::leftMouseReleaseOutside, this, &VulkanWindow::onLeftMouseReleaseOutside);
 
     setShortcut(Qt::Key_Escape, ShortcutAction::Escape);
     setShortcut(Qt::Key_Delete, ShortcutAction::Delete);
@@ -174,7 +175,7 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
     {
         if (contextMenu->isHidden())
         {
-            showContextMenu(event->globalPosition().toPoint());
+            openContextMenu(event->globalPosition().toPoint());
         }
     }
     else if (event->button() == Qt::MouseButton::LeftButton)
@@ -503,34 +504,110 @@ void VulkanWindow::reopenContextMenuRequest(QPoint globalPos)
     }
     else
     {
-        showContextMenu(globalPos);
+        openContextMenu(globalPos);
     }
 }
 
-void VulkanWindow::showContextMenu(QPoint position)
+void VulkanWindow::onLeftMouseReleaseOutside(QMouseEvent *event)
+{
+    QPoint mapScreenPos = mapFromGlobal(event->globalPos());
+
+    if (localGeometry().contains(mapScreenPos))
+    {
+        Position pos = mapView->toPosition(util::Point(mapScreenPos.x(), mapScreenPos.y()));
+        mapView->editorAction.reset();
+
+        VME::MouseButtons buttons = enum_conversion::vmeButtons(event->buttons());
+        VME::ModifierKeys modifiers = enum_conversion::vmeModifierKeys(event->modifiers());
+
+        ScreenPosition mouseEventPos(mapScreenPos.x(), mapScreenPos.y());
+        mapView->mousePressEvent(VME::MouseEvent(mouseEventPos, buttons, modifiers));
+    }
+}
+
+void VulkanWindow::openContextMenu(QPoint position)
 {
     auto menu = contextMenu;
     menu->close();
     menu->clear();
 
+    Position gamePos = mapView->mouseGamePos();
+
+    auto addAction = [menu](QString text, QKeySequence shortcut = 0, std::function<void()> f = nullptr) -> QAction * {
+        QAction *action = new QAction(text, menu);
+        if (f)
+        {
+            connect(action, &QAction::triggered, f);
+        }
+        if (shortcut != 0)
+        {
+            action->setShortcut(shortcut);
+        }
+
+        menu->addAction(action);
+        return action;
+    };
+
+    auto addDisabledAction = [menu](QString text, QKeySequence shortcut = 0) -> QAction * {
+        QAction *action = new QAction(text, menu);
+        if (shortcut != 0)
+        {
+            action->setShortcut(shortcut);
+        }
+        action->setDisabled(true);
+
+        menu->addAction(action);
+        return action;
+    };
+
+    Tile *tile = mapView->getTile(gamePos);
+    if (tile)
+    {
+        mapView->selectTopThing(gamePos);
+
+        // Cut Copy Copy Position Paste Delete, Browse Field
+        addAction("Cut", Qt::CTRL | Qt::Key_X, [this]() {
+            mainWindow->copySelection();
+            mapView->deleteSelectedItems();
+        });
+        addAction("Copy", Qt::CTRL | Qt::Key_C, [this]() { mainWindow->copySelection(); });
+        addAction("Copy Position");
+        addAction("Paste", Qt::CTRL | Qt::Key_V, [this]() {
+            if (mainWindow->hasCopyBuffer() && mapView)
+            {
+                this->editorAction.set(MouseAction::PasteMapBuffer(&mainWindow->getMapCopyBuffer()));
+                mapView->requestDraw();
+            }
+        });
+
+        addAction("Delete", Qt::Key_Delete, [this]() { mapView->deleteSelectedItems(); });
+    }
+    else
+    {
+        mapView->commitTransaction(TransactionType::Selection, [this] { mapView->clearSelection(); });
+        addDisabledAction("Cut", Qt::CTRL | Qt::Key_X);
+        addDisabledAction("Copy", Qt::CTRL | Qt::Key_C);
+        addAction("Copy Position");
+        if (mainWindow->hasCopyBuffer())
+        {
+            VME_LOG_D("has copy buffer");
+            addAction("Paste", Qt::CTRL | Qt::Key_V, [this]() {
+                if (mainWindow->hasCopyBuffer() && mapView)
+                {
+                    this->editorAction.set(MouseAction::PasteMapBuffer(&mainWindow->getMapCopyBuffer()));
+                    mapView->requestDraw();
+                }
+            });
+        }
+        else
+        {
+            addDisabledAction("Paste", Qt::CTRL | Qt::Key_V);
+        }
+        addDisabledAction("Delete", Qt::Key_Delete);
+    }
+
     // TODO Select the top thing that is right-clicked
     // TODO Make context menu change depending on the item that is being clicked
-
-    QAction *cut = new QAction(tr("Cut"), menu);
-    cut->setShortcut(Qt::CTRL | Qt::Key_X);
-    menu->addAction(cut);
-
-    QAction *copy = new QAction(tr("Copy"), menu);
-    copy->setShortcut(Qt::CTRL | Qt::Key_C);
-    menu->addAction(copy);
-
-    QAction *paste = new QAction(tr("Paste"), menu);
-    paste->setShortcut(Qt::CTRL | Qt::Key_V);
-    menu->addAction(paste);
-
-    QAction *del = new QAction(tr("Delete"), menu);
-    del->setShortcut(Qt::Key_Delete);
-    menu->addAction(del);
 
     menu->popup(position);
 }
@@ -587,12 +664,11 @@ void QtContextMenu::mouseReleaseEvent(QMouseEvent *event)
             break;
     }
 
-    QMenu::mousePressEvent(event);
+    QMenu::mouseReleaseEvent(event);
 }
 
 void QtContextMenu::mousePressEvent(QMouseEvent *event)
 {
-    event->ignore();
     switch (event->button())
     {
         case Qt::MouseButton::RightButton:
@@ -600,6 +676,14 @@ void QtContextMenu::mousePressEvent(QMouseEvent *event)
             if (!selfClicked(event->pos()))
             {
                 emit reopenRequest(event->globalPos());
+            }
+            break;
+        }
+        case Qt::MouseButton::LeftButton:
+        {
+            if (!selfClicked(event->pos()))
+            {
+                emit leftMouseReleaseOutside(event);
             }
             break;
         }

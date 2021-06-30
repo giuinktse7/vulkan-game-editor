@@ -67,6 +67,12 @@ class MainWindow : public QWidget
 
     EditorAction editorAction;
 
+    MapCopyBuffer &getMapCopyBuffer();
+
+    bool hasCopyBuffer() const;
+
+    void copySelection();
+
   protected:
     void mousePressEvent(QMouseEvent *event) override;
     bool event(QEvent *event) override;
@@ -90,8 +96,6 @@ class MainWindow : public QWidget
     void initializePaletteWindow();
 
     void registerPropertyItemListeners();
-
-    void toggleMinimapWidget();
 
     MapTabWidget *mapTabs = nullptr;
     ItemPropertyWindow *propertyWindow = nullptr;

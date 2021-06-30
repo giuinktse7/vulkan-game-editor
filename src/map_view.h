@@ -99,7 +99,7 @@ class MapView
     void selectTopItem(const Position pos);
     void deselectTopItem(const Tile &tile);
 
-    void selectTopThing(const Position &position, bool isNewSelection);
+    void selectTopThing(const Position &position);
 
     void selectTile(const Tile &tile);
     void selectTile(const Position &pos);
@@ -273,6 +273,8 @@ class MapView
     void fillRegion(const Position &from, const Position &to, uint32_t serverId);
     void fillRegion(const Position &from, const Position &to, std::function<uint32_t()> itemSupplier);
     void endCurrentAction(VME::ModifierKeys modifiers);
+
+    void selectTopThing(const Position &position, bool isNewSelection);
 
     void cameraViewportChangedEvent();
 
