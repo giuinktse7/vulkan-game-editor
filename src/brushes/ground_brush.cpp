@@ -50,6 +50,7 @@ void GroundBrush::initialize()
 
 void GroundBrush::apply(MapView &mapView, const Position &position, Direction direction)
 {
+    // TODO Implement the apply correctly for AutoBorder
     mapView.addItem(position, Item(nextServerId()));
 }
 

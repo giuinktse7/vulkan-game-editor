@@ -8,6 +8,8 @@
 #include "../tileset.h"
 #include "ground_brush.h"
 
+class BorderBrush;
+
 class BrushLoader
 {
   public:
@@ -23,6 +25,8 @@ class BrushLoader
 
     void parseCreatures(const nlohmann::json &creaturesJson);
     void parseCreature(const nlohmann::json &creatureJson);
+
+    BorderBrush parseBorderBrush(const nlohmann::json &borderJson);
 
     std::stack<std::string> stackTrace;
 };

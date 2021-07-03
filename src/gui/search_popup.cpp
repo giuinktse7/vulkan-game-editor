@@ -242,27 +242,35 @@ void FilteredSearchModel::setSourceModel(QAbstractItemModel *model)
 
 void FilteredSearchModel::setFilter(QString s)
 {
+    BrushType brushType;
     if (s == "raw")
     {
-        setPredicate([](Brush *brush) { return brush->type() == BrushType::Raw; });
+        brushType = BrushType::Raw;
     }
     else if (s == "ground")
     {
-        setPredicate([](Brush *brush) { return brush->type() == BrushType::Ground; });
+        brushType = BrushType::Ground;
+    }
+    else if (s == "border")
+    {
+        brushType = BrushType::Border;
     }
     else if (s == "doodad")
     {
-        setPredicate([](Brush *brush) { return brush->type() == BrushType::Doodad; });
+        brushType = BrushType::Doodad;
     }
     else if (s == "creature")
     {
-        setPredicate([](Brush *brush) { return brush->type() == BrushType::Creature; });
+        brushType = BrushType::Creature;
     }
     else
     {
         VME_LOG_ERROR("FilteredSearchModel::setFilter Unknown filter type: " << s.toStdString());
         reset();
+        return;
     }
+
+    setPredicate([brushType](Brush *brush) { return brush->type() == brushType; });
 }
 
 void FilteredSearchModel::setPredicate(std::function<bool(Brush *)> predicate)

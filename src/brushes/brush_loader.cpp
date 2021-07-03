@@ -9,6 +9,7 @@
 #include "../item_palette.h"
 #include "../logger.h"
 #include "../time_point.h"
+#include "border_brush.h"
 #include "brush.h"
 
 using json = nlohmann::json;
@@ -126,7 +127,7 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
         auto brushType = parseBrushType(getString(brush, "type"));
         if (!brushType)
         {
-            throw json::type_error::create(302, std::format("The type must be one of ['ground', 'doodad', 'wall]."));
+            throw json::type_error::create(302, std::format("The type must be one of ['ground', 'doodad', 'wall', 'border']."));
         }
 
         switch (*brushType)
@@ -134,9 +135,13 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
             case BrushType::Ground:
             {
                 auto groundBrush = parseGroundBrush(brush);
-                VME_LOG_D("ID: " << groundBrush.brushId());
                 Brush::addGroundBrush(std::move(groundBrush));
                 break;
+            }
+            case BrushType::Border:
+            {
+                auto borderBrush = parseBorderBrush(brush);
+                Brush::addBorderBrush(std::move(borderBrush));
             }
 
             default:
@@ -148,13 +153,13 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
 
 GroundBrush BrushLoader::parseGroundBrush(const json &brush)
 {
-    auto id = brush.at("id").get<std::string>();
-    auto name = brush.at("name").get<std::string>();
+    json id = brush.at("id").get<std::string>();
+    json name = brush.at("name").get<std::string>();
 
-    auto lookId = getInt(brush, "lookId");
-    auto zOrder = getInt(brush, "zOrder");
+    int lookId = getInt(brush, "lookId");
+    int zOrder = getInt(brush, "zOrder");
 
-    auto items = brush.at("items");
+    json items = brush.at("items");
 
     std::vector<WeightedItemId> weightedIds;
 
@@ -170,6 +175,42 @@ GroundBrush BrushLoader::parseGroundBrush(const json &brush)
     groundBrush.setIconServerId(lookId);
     groundBrush.setName(name);
     return groundBrush;
+}
+
+BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
+{
+    json id = brush.at("id").get<std::string>();
+    json name = brush.at("name").get<std::string>();
+
+    auto lookId = getInt(brush, "lookId");
+
+    const json &items = brush.at("items");
+
+    const json &straight = items.at("straight");
+    const json &corner = items.at("corner");
+    const json &diagonal = items.at("diagonal");
+
+    std::array<uint32_t, 12> borderIds;
+
+    borderIds[to_underlying(BorderType::North)] = getInt(straight, "n");
+    borderIds[to_underlying(BorderType::East)] = getInt(straight, "e");
+    borderIds[to_underlying(BorderType::South)] = getInt(straight, "s");
+    borderIds[to_underlying(BorderType::West)] = getInt(straight, "w");
+
+    borderIds[to_underlying(BorderType::NorthWestCorner)] = getInt(corner, "nw");
+    borderIds[to_underlying(BorderType::NorthEastCorner)] = getInt(corner, "ne");
+    borderIds[to_underlying(BorderType::SouthEastCorner)] = getInt(corner, "se");
+    borderIds[to_underlying(BorderType::SouthWestCorner)] = getInt(corner, "sw");
+
+    borderIds[to_underlying(BorderType::NorthWestDiagonal)] = getInt(diagonal, "nw");
+    borderIds[to_underlying(BorderType::NorthEastDiagonal)] = getInt(diagonal, "ne");
+    borderIds[to_underlying(BorderType::SouthEastDiagonal)] = getInt(diagonal, "se");
+    borderIds[to_underlying(BorderType::SouthWestDiagonal)] = getInt(diagonal, "sw");
+
+    auto borderBrush = BorderBrush(id, name, borderIds);
+    borderBrush.setIconServerId(lookId);
+
+    return borderBrush;
 }
 
 void BrushLoader::parseTilesets(const nlohmann::json &tilesetsJson)

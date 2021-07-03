@@ -8,10 +8,12 @@
 #include "../gui_thing_image.h"
 #include "../qt_util.h"
 
+#include "../../brushes/border_brush.h"
 #include "../../brushes/creature_brush.h"
 #include "../../brushes/doodad_brush.h"
 #include "../../brushes/ground_brush.h"
 #include "../../brushes/raw_brush.h"
+
 
 using TilesetModel = ItemPaletteUI::TilesetModel;
 using ItemDelegate = ItemPaletteUI::ItemDelegate;
@@ -122,6 +124,13 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
         case BrushType::Ground:
         {
             auto brush = static_cast<GroundBrush *>(b);
+            QImage image = GUIThingImage::getItemTypeImage(brush->iconServerId());
+            painter->drawImage(topLeft, image);
+            break;
+        }
+        case BrushType::Border:
+        {
+            auto brush = static_cast<BorderBrush *>(b);
             QImage image = GUIThingImage::getItemTypeImage(brush->iconServerId());
             painter->drawImage(topLeft, image);
             break;

@@ -17,16 +17,21 @@ class Tileset;
 class MapView;
 class RawBrush;
 class GroundBrush;
+class BorderBrush;
 class DoodadBrush;
 class CreatureBrush;
 class ItemType;
 class Brush;
+
+#include <cstddef> // For std::ptrdiff_t
+#include <iterator> // For std::forward_iterator_tag
 
 enum class BrushType
 {
     Creature,
     Doodad,
     Ground,
+    Border,
     Raw,
 };
 
@@ -57,6 +62,10 @@ inline std::optional<BrushType> parseBrushType(const std::string &rawType)
     else if (rawType == "creature")
     {
         return BrushType::Creature;
+    }
+    else if (rawType == "border")
+    {
+        return BrushType::Border;
     }
     else
     {
@@ -145,6 +154,8 @@ class Brush
     static GroundBrush *addGroundBrush(GroundBrush &&brush);
     static GroundBrush *getGroundBrush(const std::string &id);
 
+    static BorderBrush *addBorderBrush(BorderBrush &&brush);
+
     static DoodadBrush *addDoodadBrush(std::unique_ptr<DoodadBrush> &&brush);
     static DoodadBrush *addDoodadBrush(DoodadBrush &&brush);
     static DoodadBrush *getDoodadBrush(const std::string &id);
@@ -162,12 +173,21 @@ class Brush
 
     static bool brushSorter(const Brush *leftBrush, const Brush *rightBrush);
 
+    /* Should only be used to fill brush palettes
+       TODO: Use iterator instead of returning a reference to the underlying map
+    */
+    static vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> &getGroundBrushes();
+    static vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> &getBorderBrushes();
+
   protected:
     // ServerId -> Brush
     static vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> rawBrushes;
 
     // BrushId -> Brush
     static vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> groundBrushes;
+
+    // BrushId -> Brush
+    static vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> borderBrushes;
 
     // BrushId -> Brush
     static vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> doodadBrushes;

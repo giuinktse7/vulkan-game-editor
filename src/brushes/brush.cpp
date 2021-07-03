@@ -2,6 +2,7 @@
 
 #include "../creature.h"
 #include "../items.h"
+#include "border_brush.h"
 #include "creature_brush.h"
 #include "doodad_brush.h"
 #include "ground_brush.h"
@@ -12,6 +13,7 @@
 
 vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> Brush::rawBrushes;
 vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> Brush::groundBrushes;
+vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> Brush::borderBrushes;
 vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> Brush::doodadBrushes;
 vme_unordered_map<std::string, std::unique_ptr<CreatureBrush>> Brush::creatureBrushes;
 
@@ -65,6 +67,24 @@ GroundBrush *Brush::addGroundBrush(std::unique_ptr<GroundBrush> &&brush)
     auto result = groundBrushes.emplace(brushId, std::move(brush));
 
     return static_cast<GroundBrush *>(result.first.value().get());
+}
+
+BorderBrush *Brush::addBorderBrush(BorderBrush &&brush)
+{
+    std::string brushId = brush.brushId();
+
+    auto found = borderBrushes.find(brushId);
+    if (found != borderBrushes.end())
+    {
+        VME_LOG_ERROR(std::format(
+            "Could not add border brush '{}' with id '{}'. A border brush with id '{}' (named '{}') already exists.",
+            brush.name(), brushId, brushId, found->second->name()));
+        return nullptr;
+    }
+
+    auto result = borderBrushes.emplace(brushId, std::make_unique<BorderBrush>(std::move(brush)));
+
+    return static_cast<BorderBrush *>(result.first.value().get());
 }
 
 GroundBrush *Brush::getGroundBrush(const std::string &id)
@@ -253,6 +273,16 @@ bool Brush::matchSorter(std::pair<int, Brush *> &lhs, const std::pair<int, Brush
 
     // Same brushes but not of type Raw, use match score
     return lhs.first < rhs.first;
+}
+
+vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> &Brush::getGroundBrushes()
+{
+    return groundBrushes;
+}
+
+vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> &Brush::getBorderBrushes()
+{
+    return borderBrushes;
 }
 
 DrawItemType::DrawItemType(uint32_t serverId, Position relativePosition)

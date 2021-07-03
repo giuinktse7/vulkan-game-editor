@@ -10,6 +10,22 @@ constexpr int GROUND_FLOOR = 7;
 constexpr int MapTileSize = 32;
 constexpr int SpriteSize = 32;
 
+enum class BorderType
+{
+    North = 0,
+    East = 1,
+    South = 2,
+    West = 3,
+    NorthWestCorner = 4,
+    NorthEastCorner = 5,
+    SouthEastCorner = 6,
+    SouthWestCorner = 7,
+    NorthWestDiagonal = 8,
+    NorthEastDiagonal = 9,
+    SouthEastDiagonal = 10,
+    SouthWestDiagonal = 11,
+};
+
 enum class Direction
 {
     North = 0,

@@ -82,6 +82,7 @@ int main(int argc, char *argv[])
     BrushLoader brushLoader;
     brushLoader.load(std::format("data/clients/{}/palettes/palettes.json", clientPath));
     brushLoader.load(std::format("data/clients/{}/palettes/grounds.json", clientPath));
+    brushLoader.load(std::format("data/clients/{}/palettes/borders.json", clientPath));
     brushLoader.load(std::format("data/clients/{}/palettes/tilesets.json", clientPath));
     brushLoader.load(std::format("data/clients/{}/palettes/creatures.json", clientPath));
 
@@ -390,7 +391,6 @@ void MainUtils::printOutfitAtlases(std::vector<uint32_t> outfitIds)
         VME_LOG(atlas->sourceFile);
     }
 }
-
 
 void TemporaryTest::testOctree()
 {

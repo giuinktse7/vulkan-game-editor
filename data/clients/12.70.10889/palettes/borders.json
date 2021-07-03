@@ -1,0 +1,15 @@
+{
+    "brushes": [
+        {
+            "id": "normal_grass_border",
+            "name": "Normal grass border",
+            "type": "border",
+            "lookId": 4550,
+            "items": {
+                "straight": { "n": 4542, "e": 4543, "s": 4544, "w": 4545 },
+                "corner": { "nw": 4546, "ne": 4547, "sw": 4548, "se": 4549 },
+                "diagonal": { "nw": 4550, "ne": 4551, "sw": 4552, "se": 4553 }
+            }
+        }
+    ]
+}

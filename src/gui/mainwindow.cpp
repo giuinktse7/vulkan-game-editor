@@ -20,6 +20,8 @@
 #pragma clang diagnostic pop
 
 #include "../../vendor/rollbear-visit/visit.hpp"
+#include "../brushes/border_brush.h"
+#include "../brushes/creature_brush.h"
 #include "../brushes/ground_brush.h"
 #include "../graphics/appearance_types.h"
 #include "../item_location.h"
@@ -40,7 +42,6 @@
 #include "split_widget.h"
 #include "vulkan_window.h"
 
-#include "../brushes/creature_brush.h"
 
 MainLayout::MainLayout(QWidget *mainWidget)
     : mainWidget(mainWidget)
@@ -599,24 +600,24 @@ void MainWindow::initializePaletteWindow()
     {
         ItemPalette &terrainPalette = *ItemPalettes::getById("terrain");
 
-        auto &groundTileset = terrainPalette.addTileset(Tileset("grounds", "Grounds"));
-
-        auto grassBrush = Brush::getGroundBrush("normal_grass");
-        if (grassBrush)
+        // Grounds
         {
-            groundTileset.addBrush(grassBrush);
+            auto &groundTileset = terrainPalette.addTileset(Tileset("grounds", "Grounds"));
+            auto &brushes = Brush::getGroundBrushes();
+            for (auto &brush : brushes)
+            {
+                groundTileset.addBrush(brush.second.get());
+            }
         }
 
-        auto driedGrassBrush = Brush::getGroundBrush("dried_grass");
-        if (driedGrassBrush)
+        // Borders
         {
-            groundTileset.addBrush(driedGrassBrush);
-        }
-
-        auto rockSoilBrush = Brush::getGroundBrush("rock_soil");
-        if (rockSoilBrush)
-        {
-            groundTileset.addBrush(rockSoilBrush);
+            auto &borderTileset = terrainPalette.addTileset(Tileset("borders", "Borders"));
+            auto &brushes = Brush::getBorderBrushes();
+            for (auto &brush : brushes)
+            {
+                borderTileset.addBrush(brush.second.get());
+            }
         }
     }
 
