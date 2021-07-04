@@ -1058,13 +1058,14 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                     else
                     {
                         DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::BrushAction), "Incorrect transaction type.");
-
+                        lastBrushDragPosition = _previousMouseGamePos;
                         for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
                         {
                             // Require non-negative positions
                             if (position.x >= 0 && position.y >= 0)
                             {
                                 action.brush->apply(*this, position, action.direction);
+                                lastBrushDragPosition = position;
                             }
                         }
 
@@ -1099,6 +1100,7 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
         }
     }
 
+    lastBrushDragPosition.reset();
     requestDraw();
 }
 
@@ -1334,6 +1336,11 @@ void MapView::setUnderMouse(bool underMouse)
     {
         requestDraw();
     }
+}
+
+std::optional<Position> MapView::getLastBrushDragPosition() const noexcept
+{
+    return lastBrushDragPosition;
 }
 
 const Camera &MapView::camera() const noexcept

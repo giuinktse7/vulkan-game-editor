@@ -215,6 +215,8 @@ class MapView
     inline bool underMouse() const noexcept;
     inline bool prevUnderMouse() const noexcept;
 
+    std::optional<Position> getLastBrushDragPosition() const noexcept;
+
     bool isEmpty(const Position position) const;
 
     Position cameraPosition() const noexcept;
@@ -301,6 +303,11 @@ class MapView
     bool canRender = false;
 
     Position _previousMouseGamePos;
+
+    /**
+     * When dragging with a brush, this keeps track of the latest position that the brush was applied to.
+     */
+    std::optional<Position> lastBrushDragPosition;
 
     Overlay _overlay;
 
