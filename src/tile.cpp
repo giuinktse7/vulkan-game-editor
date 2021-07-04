@@ -3,6 +3,7 @@
 #include <numeric>
 #include <ranges>
 
+#include "brushes/border_brush.h"
 #include "items.h"
 #include "tile_location.h"
 
@@ -723,4 +724,75 @@ void Tile::movedInMap()
 void Tile::swapCreature(std::unique_ptr<Creature> &creature)
 {
     _creature.swap(creature);
+}
+
+bool Tile::containsBorder(const BorderBrush *brush) const
+{
+    Brush *centerBrush = brush->centerBrush();
+    if (centerBrush && _ground && centerBrush->erasesItem(_ground->serverId()))
+    {
+        return true;
+    }
+
+    for (const auto &item : _items)
+    {
+        if (brush->includes(item->serverId()))
+        {
+            return true;
+        }
+        else if (!item->itemType->isBorder())
+        {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+uint32_t Tile::getBorderServerId(const BorderBrush *brush) const
+{
+    Brush *centerBrush = brush->centerBrush();
+    if (centerBrush && _ground && centerBrush->erasesItem(_ground->serverId()))
+    {
+        return _ground->serverId();
+    }
+
+    for (const auto &item : _items)
+    {
+        if (brush->includes(item->serverId()))
+        {
+            return item->serverId();
+        }
+        else if (!item->itemType->isBorder())
+        {
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+TileCover Tile::getTileCover(const BorderBrush *brush) const
+{
+    Brush *centerBrush = brush->centerBrush();
+    if (centerBrush && _ground && centerBrush->erasesItem(_ground->serverId()))
+    {
+        return TILE_COVER_FULL;
+    }
+
+    TileCover result = TILE_COVER_NONE;
+
+    for (const auto &item : _items)
+    {
+        if (brush->includes(item->serverId()))
+        {
+            result |= brush->getTileCover(item->serverId());
+        }
+        else if (!item->itemType->isBorder())
+        {
+            return result;
+        }
+    }
+
+    return result;
 }

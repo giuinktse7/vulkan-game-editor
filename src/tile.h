@@ -11,6 +11,8 @@
 
 class MapView;
 class TileLocation;
+class BorderBrush;
+enum TileCover;
 
 using TileThing = std::variant<std::monostate, Item *, Creature *>;
 
@@ -39,7 +41,6 @@ class Tile
 
     void movedInMap();
 
-    bool hasSelection() const;
     bool topItemSelected() const;
     bool topThingSelected() const;
     bool allSelected() const;
@@ -51,9 +52,7 @@ class Tile
 
     TileThing getTopThing() const;
     Item *getTopItem() const;
-    bool hasTopItem() const;
     inline Item *ground() const noexcept;
-    inline bool hasGround() const noexcept;
 
     std::optional<size_t> indexOf(Item *item) const;
     Item *itemAt(size_t index);
@@ -100,7 +99,17 @@ class Tile
     void setCreatureSelected(bool selected);
 
     bool isEmpty() const;
+
+    bool hasSelection() const;
+    bool hasTopItem() const;
+    bool containsBorder(const BorderBrush *brush) const;
+
+    // Returns 0 if the border is not present on the tile
+    uint32_t getBorderServerId(const BorderBrush *brush) const;
+    TileCover getTileCover(const BorderBrush *brush) const;
     bool hasItems() const;
+    inline bool hasGround() const noexcept;
+    inline bool hasCreature() const noexcept;
 
     int getTopElevation() const;
 
@@ -131,7 +140,6 @@ class Tile
     void swapCreature(std::unique_ptr<Creature> &creature);
     std::unique_ptr<Creature> dropCreature();
     inline Creature *creature() const noexcept;
-    inline bool hasCreature() const noexcept;
 
     inline Position position() const noexcept
     {
