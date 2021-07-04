@@ -42,7 +42,7 @@ void GroundBrush::initialize()
     {
         totalWeight += entry.weight;
         entry.weight = totalWeight;
-        serverIds.emplace(entry.id);
+        _serverIds.emplace(entry.id);
     }
 
     _nextId = sampleServerId();
@@ -66,7 +66,7 @@ BrushType GroundBrush::type() const
 
 bool GroundBrush::erasesItem(uint32_t serverId) const
 {
-    return serverIds.find(serverId) != serverIds.end();
+    return _serverIds.find(serverId) != _serverIds.end();
 }
 
 uint32_t GroundBrush::nextServerId()
@@ -118,4 +118,9 @@ std::vector<ThingDrawInfo> GroundBrush::getPreviewTextureInfo(Direction directio
 const std::string GroundBrush::getDisplayId() const
 {
     return id;
+}
+
+const std::unordered_set<uint32_t> &GroundBrush::serverIds() const
+{
+    return _serverIds;
 }

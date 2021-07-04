@@ -43,11 +43,13 @@ class GroundBrush final : public Brush
 
     const std::string getDisplayId() const override;
 
+    const std::unordered_set<uint32_t> &serverIds() const;
+
   private:
     void initialize();
     uint32_t sampleServerId();
 
-    std::unordered_set<uint32_t> serverIds;
+    std::unordered_set<uint32_t> _serverIds;
     std::vector<WeightedItemId> _weightedIds;
 
     std::string id;
