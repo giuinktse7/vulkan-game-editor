@@ -192,20 +192,26 @@ BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
 
     std::array<uint32_t, 12> borderIds;
 
-    borderIds[to_underlying(BorderType::North)] = getInt(straight, "n");
-    borderIds[to_underlying(BorderType::East)] = getInt(straight, "e");
-    borderIds[to_underlying(BorderType::South)] = getInt(straight, "s");
-    borderIds[to_underlying(BorderType::West)] = getInt(straight, "w");
+    auto setBorderId = [&borderIds](BorderType borderType, uint32_t serverId) {
+        // -1 because first value in BorderType is BorderType::None
+        int index = to_underlying(borderType) - 1;
+        borderIds[index] = serverId;
+    };
 
-    borderIds[to_underlying(BorderType::NorthWestCorner)] = getInt(corner, "nw");
-    borderIds[to_underlying(BorderType::NorthEastCorner)] = getInt(corner, "ne");
-    borderIds[to_underlying(BorderType::SouthEastCorner)] = getInt(corner, "se");
-    borderIds[to_underlying(BorderType::SouthWestCorner)] = getInt(corner, "sw");
+    setBorderId(BorderType::North, getInt(straight, "n"));
+    setBorderId(BorderType::East, getInt(straight, "e"));
+    setBorderId(BorderType::South, getInt(straight, "s"));
+    setBorderId(BorderType::West, getInt(straight, "w"));
 
-    borderIds[to_underlying(BorderType::NorthWestDiagonal)] = getInt(diagonal, "nw");
-    borderIds[to_underlying(BorderType::NorthEastDiagonal)] = getInt(diagonal, "ne");
-    borderIds[to_underlying(BorderType::SouthEastDiagonal)] = getInt(diagonal, "se");
-    borderIds[to_underlying(BorderType::SouthWestDiagonal)] = getInt(diagonal, "sw");
+    setBorderId(BorderType::NorthWestCorner, getInt(corner, "nw"));
+    setBorderId(BorderType::NorthEastCorner, getInt(corner, "ne"));
+    setBorderId(BorderType::SouthEastCorner, getInt(corner, "se"));
+    setBorderId(BorderType::SouthWestCorner, getInt(corner, "sw"));
+
+    setBorderId(BorderType::NorthWestDiagonal, getInt(diagonal, "nw"));
+    setBorderId(BorderType::NorthEastDiagonal, getInt(diagonal, "ne"));
+    setBorderId(BorderType::SouthEastDiagonal, getInt(diagonal, "se"));
+    setBorderId(BorderType::SouthWestDiagonal, getInt(diagonal, "sw"));
 
     auto borderBrush = BorderBrush(id, name, borderIds);
     borderBrush.setIconServerId(lookId);
