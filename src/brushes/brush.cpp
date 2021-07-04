@@ -66,7 +66,15 @@ GroundBrush *Brush::addGroundBrush(std::unique_ptr<GroundBrush> &&brush)
 
     auto result = groundBrushes.emplace(brushId, std::move(brush));
 
-    return static_cast<GroundBrush *>(result.first.value().get());
+    auto groundBrush = static_cast<GroundBrush *>(result.first.value().get());
+
+    // Store brush in the item type
+    for (uint32_t serverId : groundBrush->serverIds())
+    {
+        Items::items.getItemTypeByServerId(serverId)->brush = groundBrush;
+    }
+
+    return groundBrush;
 }
 
 BorderBrush *Brush::addBorderBrush(BorderBrush &&brush)
@@ -84,7 +92,15 @@ BorderBrush *Brush::addBorderBrush(BorderBrush &&brush)
 
     auto result = borderBrushes.emplace(brushId, std::make_unique<BorderBrush>(std::move(brush)));
 
-    return static_cast<BorderBrush *>(result.first.value().get());
+    auto borderBrush = static_cast<BorderBrush *>(result.first.value().get());
+
+    // Store brush in the item type
+    for (uint32_t serverId : borderBrush->serverIds())
+    {
+        Items::items.getItemTypeByServerId(serverId)->brush = borderBrush;
+    }
+
+    return borderBrush;
 }
 
 GroundBrush *Brush::getGroundBrush(const std::string &id)

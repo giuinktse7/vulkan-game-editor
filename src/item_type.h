@@ -14,6 +14,7 @@
 
 class ObjectAppearance;
 struct SpriteAnimation;
+class Brush;
 class RawBrush;
 
 enum class ItemDataType
@@ -441,7 +442,9 @@ class ItemType
     // std::string runeSpellName;
 
     ObjectAppearance *appearance = nullptr;
-    RawBrush *rawBrush = nullptr;
+
+    // Ground/border/wall brush
+    Brush *brush = nullptr;
 
     ItemType::Group group = ItemType::Group::None;
     ItemTypes_t type = ItemTypes_t::None;
