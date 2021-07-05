@@ -42,7 +42,6 @@
 #include "split_widget.h"
 #include "vulkan_window.h"
 
-
 MainLayout::MainLayout(QWidget *mainWidget)
     : mainWidget(mainWidget)
 {
@@ -676,7 +675,8 @@ void MainWindow::initializePaletteWindow()
     });
     // Brush *testBrush = Brush::getOrCreateRawBrush(2016);
     // Brush *testBrush = Brush::getOrCreateRawBrush(2005);
-    Brush *testBrush = Brush::getOrCreateRawBrush(1892);
+    // Brush *testBrush = Brush::getOrCreateRawBrush(1892);
+    Brush *testBrush = Brush::getBorderBrush("normal_grass_border");
     _paletteWindow->selectBrush(testBrush);
 }
 

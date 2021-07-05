@@ -10,21 +10,72 @@ constexpr int GROUND_FLOOR = 7;
 constexpr int MapTileSize = 32;
 constexpr int SpriteSize = 32;
 
+enum class TileQuadrant
+{
+    TopLeft,
+    TopRight,
+    BottomRight,
+    BottomLeft
+};
+
 enum class BorderType
 {
-    North = 0,
-    East = 1,
-    South = 2,
-    West = 3,
-    NorthWestCorner = 4,
-    NorthEastCorner = 5,
-    SouthEastCorner = 6,
-    SouthWestCorner = 7,
-    NorthWestDiagonal = 8,
-    NorthEastDiagonal = 9,
-    SouthEastDiagonal = 10,
-    SouthWestDiagonal = 11,
+    None = 0,
+    North = 1,
+    East = 2,
+    South = 3,
+    West = 4,
+    NorthWestCorner = 5,
+    NorthEastCorner = 6,
+    SouthEastCorner = 7,
+    SouthWestCorner = 8,
+    NorthWestDiagonal = 9,
+    NorthEastDiagonal = 10,
+    SouthEastDiagonal = 11,
+    SouthWestDiagonal = 12,
+    Center = 13
 };
+
+enum TileCover
+{
+    TILE_COVER_NONE = 0,
+    TILE_COVER_FULL = 1,
+    TILE_COVER_NORTH = 1 << 1,
+    TILE_COVER_EAST = 1 << 2,
+    TILE_COVER_SOUTH = 1 << 3,
+    TILE_COVER_WEST = 1 << 4,
+    TILE_COVER_NORTH_WEST = 1 << 5,
+    TILE_COVER_NORTH_EAST = 1 << 6,
+    TILE_COVER_SOUTH_WEST = 1 << 7,
+    TILE_COVER_SOUTH_EAST = 1 << 8,
+    TILE_COVER_NORTH_WEST_CORNER = 1 << 9,
+    TILE_COVER_NORTH_EAST_CORNER = 1 << 10,
+    TILE_COVER_SOUTH_WEST_CORNER = 1 << 11,
+    TILE_COVER_SOUTH_EAST_CORNER = 1 << 12,
+};
+
+inline constexpr TileCover &operator|=(TileCover &lhs, const TileCover rhs)
+{
+    lhs = static_cast<TileCover>(lhs | rhs);
+    return lhs;
+}
+
+inline constexpr TileCover &operator&=(TileCover &lhs, const TileCover rhs)
+{
+    lhs = static_cast<TileCover>(lhs & rhs);
+    return lhs;
+}
+
+inline constexpr TileCover &operator&=(TileCover &lhs, int x)
+{
+    lhs = static_cast<TileCover>(lhs & x);
+    return lhs;
+}
+
+inline constexpr TileCover operator|(const TileCover &lhs, const TileCover &rhs)
+{
+    return static_cast<TileCover>(lhs | static_cast<std::underlying_type_t<TileCover>>(rhs));
+}
 
 enum class Direction
 {
@@ -277,103 +328,4 @@ enum RaceType_t : uint8_t
     RACE_UNDEAD,
     RACE_FIRE,
     RACE_ENERGY,
-};
-enum FluidColors_t : uint8_t
-{
-    FLUID_EMPTY,
-    FLUID_BLUE,
-    FLUID_RED,
-    FLUID_BROWN,
-    FLUID_GREEN,
-    FLUID_YELLOW,
-    FLUID_WHITE,
-    FLUID_PURPLE,
-};
-
-enum FluidTypes_t : uint8_t
-{
-    FLUID_NONE = FLUID_EMPTY,
-    FLUID_WATER = FLUID_BLUE,
-    FLUID_BLOOD = FLUID_RED,
-    FLUID_BEER = FLUID_BROWN,
-    FLUID_SLIME = FLUID_GREEN,
-    FLUID_LEMONADE = FLUID_YELLOW,
-    FLUID_MILK = FLUID_WHITE,
-    FLUID_MANA = FLUID_PURPLE,
-
-    FLUID_LIFE = FLUID_RED + 8,
-    FLUID_OIL = FLUID_BROWN + 8,
-    FLUID_URINE = FLUID_YELLOW + 8,
-    FLUID_COCONUTMILK = FLUID_WHITE + 8,
-    FLUID_WINE = FLUID_PURPLE + 8,
-
-    FLUID_MUD = FLUID_BROWN + 16,
-    FLUID_FRUITJUICE = FLUID_YELLOW + 16,
-
-    FLUID_LAVA = FLUID_RED + 24,
-    FLUID_RUM = FLUID_BROWN + 24,
-    FLUID_SWAMP = FLUID_GREEN + 24,
-
-    FLUID_TEA = FLUID_BROWN + 32,
-
-    FLUID_MEAD = FLUID_BROWN + 40,
-};
-
-const uint8_t reverseFluidMap[] = {
-    FLUID_EMPTY,
-    FLUID_WATER,
-    FLUID_MANA,
-    FLUID_BEER,
-    FLUID_EMPTY,
-    FLUID_BLOOD,
-    FLUID_SLIME,
-    FLUID_EMPTY,
-    FLUID_LEMONADE,
-    FLUID_MILK,
-};
-
-const uint8_t clientToServerFluidMap[] = {
-    FLUID_EMPTY,
-    FLUID_WATER,
-    FLUID_MANA,
-    FLUID_BEER,
-    FLUID_MUD,
-    FLUID_BLOOD,
-    FLUID_SLIME,
-    FLUID_RUM,
-    FLUID_LEMONADE,
-    FLUID_MILK,
-    FLUID_WINE,
-    FLUID_LIFE,
-    FLUID_URINE,
-    FLUID_OIL,
-    FLUID_FRUITJUICE,
-    FLUID_COCONUTMILK,
-    FLUID_TEA,
-    FLUID_MEAD,
-};
-
-enum ClientFluidTypes_t : uint8_t
-{
-    CLIENTFLUID_EMPTY = 0,
-    CLIENTFLUID_BLUE = 1,
-    CLIENTFLUID_PURPLE = 2,
-    CLIENTFLUID_BROWN_1 = 3,
-    CLIENTFLUID_BROWN_2 = 4,
-    CLIENTFLUID_RED = 5,
-    CLIENTFLUID_GREEN = 6,
-    CLIENTFLUID_BROWN = 7,
-    CLIENTFLUID_YELLOW = 8,
-    CLIENTFLUID_WHITE = 9,
-};
-
-const uint8_t fluidMap[] = {
-    CLIENTFLUID_EMPTY,
-    CLIENTFLUID_BLUE,
-    CLIENTFLUID_RED,
-    CLIENTFLUID_BROWN_1,
-    CLIENTFLUID_GREEN,
-    CLIENTFLUID_YELLOW,
-    CLIENTFLUID_WHITE,
-    CLIENTFLUID_PURPLE,
 };

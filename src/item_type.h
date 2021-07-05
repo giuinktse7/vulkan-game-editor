@@ -151,7 +151,7 @@ enum class FluidColor : uint8_t
 
 enum class FluidType : uint8_t
 {
-    None = FLUID_EMPTY,
+    None = 0,
     Water = static_cast<uint8_t>(FluidColor::Blue),
     Blood = static_cast<uint8_t>(FluidColor::Red),
     Beer = static_cast<uint8_t>(FluidColor::Brown),

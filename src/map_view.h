@@ -216,6 +216,7 @@ class MapView
     inline bool prevUnderMouse() const noexcept;
 
     std::optional<Position> getLastBrushDragPosition() const noexcept;
+    std::optional<TileQuadrant> getLastClickedTileQuadrant() const noexcept;
 
     bool isEmpty(const Position position) const;
 
@@ -282,6 +283,8 @@ class MapView
 
     void setPanOffset(MouseAction::Pan &action, const ScreenPosition &offset);
 
+    void setLastTileQuadrant(const WorldPosition worldPos);
+
     /**
  		*	Keeps track of all MapView instances. This is necessary for QT to
 		* validate MapView pointers in a QVariant.
@@ -308,6 +311,11 @@ class MapView
      * When dragging with a brush, this keeps track of the latest position that the brush was applied to.
      */
     std::optional<Position> lastBrushDragPosition;
+
+    /**
+     * 
+     */
+    std::optional<TileQuadrant> lastClickedTileQuadrant;
 
     Overlay _overlay;
 

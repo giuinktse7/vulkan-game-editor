@@ -1,6 +1,7 @@
 #include "map_view.h"
 
 #include "../vendor/rollbear-visit/visit.hpp"
+#include "brushes/border_brush.h"
 #include "brushes/brush.h"
 #include "brushes/creature_brush.h"
 #include "brushes/ground_brush.h"
@@ -827,6 +828,37 @@ void MapView::selectTopThing(const Position &position)
     selectTopThing(position, true);
 }
 
+void MapView::setLastTileQuadrant(const WorldPosition worldPos)
+{
+    auto dx = worldPos.x % MapTileSize;
+    auto dy = worldPos.y % MapTileSize;
+
+    int midPoint = MapTileSize / 2;
+
+    if (dx < midPoint)
+    {
+        if (dy < midPoint)
+        {
+            lastClickedTileQuadrant = TileQuadrant::TopLeft;
+        }
+        else
+        {
+            lastClickedTileQuadrant = TileQuadrant::BottomLeft;
+        }
+    }
+    else
+    {
+        if (dy < midPoint)
+        {
+            lastClickedTileQuadrant = TileQuadrant::TopRight;
+        }
+        else
+        {
+            lastClickedTileQuadrant = TileQuadrant::BottomRight;
+        }
+    }
+}
+
 void MapView::selectTopThing(const Position &position, bool isNewSelection)
 {
     Tile *tile = getTile(position);
@@ -922,6 +954,9 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
                     action.area = event.modifiers() & VME::ModifierKeys::Shift;
                     action.erase = event.modifiers() & VME::ModifierKeys::Ctrl;
+
+                    WorldPosition worldPos = event.pos().worldPos(*this);
+                    setLastTileQuadrant(worldPos);
 
                     history.beginTransaction(TransactionType::BrushAction);
 
@@ -1061,13 +1096,28 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                     {
                         DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::BrushAction), "Incorrect transaction type.");
                         lastBrushDragPosition = _previousMouseGamePos;
-                        for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
+
+                        if (action.brush->type() == BrushType::Border)
                         {
-                            // Require non-negative positions
-                            if (position.x >= 0 && position.y >= 0)
+                            for (const auto position : Position::bresenHamsWithCorners(this->_previousMouseGamePos, pos))
                             {
-                                action.brush->apply(*this, position, action.direction);
-                                lastBrushDragPosition = position;
+                                // Require non-negative positions
+                                if (position.x >= 0 && position.y >= 0)
+                                {
+                                    action.brush->apply(*this, position, action.direction);
+                                    lastBrushDragPosition = position;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
+                            {
+                                // Require non-negative positions
+                                if (position.x >= 0 && position.y >= 0)
+                                {
+                                    action.brush->apply(*this, position, action.direction);
+                                }
                             }
                         }
 
@@ -1135,6 +1185,11 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
                     history.endTransaction(TransactionType::BrushAction);
                     editorAction.unlock();
                 }
+
+                // if (action.brush->type() == BrushType::Border)
+                // {
+                //     BorderBrush::resetState();
+                // }
             },
 
             [this](MouseAction::Select &select) {
@@ -1326,6 +1381,11 @@ void MapView::requestDraw()
 void MapView::requestMinimapDraw()
 {
     drawMinimapRequest.fire();
+}
+
+std::optional<TileQuadrant> MapView::getLastClickedTileQuadrant() const noexcept
+{
+    return lastClickedTileQuadrant;
 }
 
 void MapView::setUnderMouse(bool underMouse)
