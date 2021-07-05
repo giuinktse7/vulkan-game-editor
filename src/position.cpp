@@ -107,6 +107,65 @@ std::vector<Position> Position::bresenHams(Position from, Position to)
     }
 }
 
+std::vector<Position> Position::bresenHamsWithCorners(Position from, Position to)
+{
+    DEBUG_ASSERT(from.z == to.z, "from and to must be on the same floor.");
+    std::vector<Position> result;
+    if (from == to)
+        return result;
+
+    int x0 = from.x;
+    int y0 = from.y;
+    int x1 = to.x;
+    int y1 = to.y;
+
+    int z = from.z;
+
+    int dx = std::abs(x1 - x0);
+    int sx = x0 < x1 ? 1 : -1;
+
+    int dy = -std::abs(y1 - y0);
+    int sy = y0 < y1 ? 1 : -1;
+
+    auto place = [&result, z](int x, int y) {
+        if (!result.empty())
+        {
+            auto last = result.back();
+            if (!(last.x == x && last.y == y))
+            {
+                result.emplace_back(x, y, z);
+            }
+        }
+        else
+        {
+            result.emplace_back(x, y, z);
+        }
+    };
+
+    int err = dx + dy;
+    while (true)
+    {
+        if (!(x0 == from.x && y0 == from.y))
+            place(x0, y0);
+        if (x0 == x1 && y0 == y1)
+            return result;
+
+        int e2 = 2 * err;
+        if (e2 >= dy)
+        {
+            err += dy;
+            x0 += sx;
+            place(x0, y0);
+        }
+        if (e2 <= dx)
+        {
+            err += dx;
+            y0 += sy;
+            place(x0, y0);
+        }
+    }
+}
+
 uint32_t Position::tilesInRegion(const Position &from, const Position &to)
 {
     uint32_t dx = static_cast<uint32_t>(std::max(1, std::abs(to.x - from.x)));
