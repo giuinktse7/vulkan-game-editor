@@ -155,6 +155,7 @@ class Brush
     static GroundBrush *getGroundBrush(const std::string &id);
 
     static BorderBrush *addBorderBrush(BorderBrush &&brush);
+    static BorderBrush *getBorderBrush(const std::string &id);
 
     static DoodadBrush *addDoodadBrush(std::unique_ptr<DoodadBrush> &&brush);
     static DoodadBrush *addDoodadBrush(DoodadBrush &&brush);

@@ -182,6 +182,17 @@ CreatureBrush *Brush::getCreatureBrush(const std::string &id)
     return static_cast<CreatureBrush *>(found->second.get());
 }
 
+BorderBrush *Brush::getBorderBrush(const std::string &id)
+{
+    auto found = borderBrushes.find(id);
+    if (found == borderBrushes.end())
+    {
+        return nullptr;
+    }
+
+    return static_cast<BorderBrush *>(found->second.get());
+}
+
 const vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> &Brush::getRawBrushes()
 {
     return rawBrushes;
