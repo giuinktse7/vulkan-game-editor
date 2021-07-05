@@ -1002,8 +1002,10 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
         rollbear::visit(
             util::overloaded{
                 [this, &pos, newTile](MouseAction::Select &select) {
-                    if (!newTile)
+                    if (!newTile || !hasSelection())
+                    {
                         return;
+                    }
 
                     if (select.moveOrigin.has_value())
                     {
