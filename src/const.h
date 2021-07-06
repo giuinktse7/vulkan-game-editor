@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "debug.h"
+
 // Map constants
 constexpr uint16_t MAP_TREE_CHILDREN_COUNT = 16;
 constexpr uint16_t MAP_LAYERS = 16;
@@ -35,47 +37,6 @@ enum class BorderType
     SouthWestDiagonal = 12,
     Center = 13
 };
-
-enum TileCover
-{
-    TILE_COVER_NONE = 0,
-    TILE_COVER_FULL = 1,
-    TILE_COVER_NORTH = 1 << 1,
-    TILE_COVER_EAST = 1 << 2,
-    TILE_COVER_SOUTH = 1 << 3,
-    TILE_COVER_WEST = 1 << 4,
-    TILE_COVER_NORTH_WEST = 1 << 5,
-    TILE_COVER_NORTH_EAST = 1 << 6,
-    TILE_COVER_SOUTH_WEST = 1 << 7,
-    TILE_COVER_SOUTH_EAST = 1 << 8,
-    TILE_COVER_NORTH_WEST_CORNER = 1 << 9,
-    TILE_COVER_NORTH_EAST_CORNER = 1 << 10,
-    TILE_COVER_SOUTH_WEST_CORNER = 1 << 11,
-    TILE_COVER_SOUTH_EAST_CORNER = 1 << 12,
-};
-
-inline constexpr TileCover &operator|=(TileCover &lhs, const TileCover rhs)
-{
-    lhs = static_cast<TileCover>(lhs | rhs);
-    return lhs;
-}
-
-inline constexpr TileCover &operator&=(TileCover &lhs, const TileCover rhs)
-{
-    lhs = static_cast<TileCover>(lhs & rhs);
-    return lhs;
-}
-
-inline constexpr TileCover &operator&=(TileCover &lhs, int x)
-{
-    lhs = static_cast<TileCover>(lhs & x);
-    return lhs;
-}
-
-inline constexpr TileCover operator|(const TileCover &lhs, const TileCover &rhs)
-{
-    return static_cast<TileCover>(lhs | static_cast<std::underlying_type_t<TileCover>>(rhs));
-}
 
 enum class Direction
 {

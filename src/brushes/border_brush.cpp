@@ -13,24 +13,33 @@ std::optional<TileQuadrant> BorderBrush::previousQuadrant;
 BorderExpandDirection BorderBrush::currDir;
 std::optional<BorderExpandDirection> BorderBrush::prevDir;
 
+namespace TileCoverShortHands
+{
+    constexpr TileCover None = TileCovers::None;
+    constexpr TileCover Full = TileCovers::Full;
+    constexpr TileCover North = TileCovers::North;
+    constexpr TileCover East = TileCovers::East;
+    constexpr TileCover South = TileCovers::South;
+    constexpr TileCover West = TileCovers::West;
+    constexpr TileCover NorthWest = TileCovers::NorthWest;
+    constexpr TileCover NorthEast = TileCovers::NorthEast;
+    constexpr TileCover SouthWest = TileCovers::SouthWest;
+    constexpr TileCover SouthEast = TileCovers::SouthEast;
+    constexpr TileCover NorthWestCorner = TileCovers::NorthWestCorner;
+    constexpr TileCover NorthEastCorner = TileCovers::NorthEastCorner;
+    constexpr TileCover SouthWestCorner = TileCovers::SouthWestCorner;
+    constexpr TileCover SouthEastCorner = TileCovers::SouthEastCorner;
+
+    constexpr TileCover Corners = TileCovers::Corners;
+    constexpr TileCover FullNorth = TileCovers::FullNorth;
+    constexpr TileCover FullEast = TileCovers::FullEast;
+    constexpr TileCover FullSouth = TileCovers::FullSouth;
+    constexpr TileCover FullWest = TileCovers::FullWest;
+    constexpr TileCover Diagonals = TileCovers::Diagonals;
+}; // namespace TileCoverShortHands
+
 bool isRight(TileQuadrant quadrant);
 bool isTop(TileQuadrant quadrant);
-
-namespace
-{
-    constexpr TileCover TileCoverCorner = TILE_COVER_NORTH_EAST_CORNER | TILE_COVER_NORTH_WEST_CORNER | TILE_COVER_SOUTH_EAST_CORNER | TILE_COVER_SOUTH_WEST_CORNER;
-    constexpr TileCover TileCoverNorth = TILE_COVER_NORTH | TILE_COVER_NORTH_EAST | TILE_COVER_NORTH_WEST;
-    constexpr TileCover TileCoverEast = TILE_COVER_EAST | TILE_COVER_NORTH_EAST | TILE_COVER_SOUTH_EAST;
-    constexpr TileCover TileCoverSouth = TILE_COVER_SOUTH | TILE_COVER_SOUTH_EAST | TILE_COVER_SOUTH_WEST;
-    constexpr TileCover TileCoverWest = TILE_COVER_WEST | TILE_COVER_SOUTH_WEST | TILE_COVER_NORTH_WEST;
-    constexpr TileCover TileCoverDiagonals = TILE_COVER_NORTH_WEST | TILE_COVER_NORTH_EAST | TILE_COVER_SOUTH_EAST | TILE_COVER_SOUTH_WEST;
-} // namespace
-
-TileCover mirrorEast(TileCover tileCover);
-TileCover mirrorWest(TileCover tileCover);
-TileCover mirrorNorth(TileCover tileCover);
-TileCover mirrorSouth(TileCover tileCover);
-TileCover unifyTileCover(TileCover c);
 
 BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, Brush *centerBrush)
     : Brush(name), id(id), borderData(borderIds, centerBrush)
@@ -431,25 +440,6 @@ void BorderBrush::fixBordersAtOffset(MapView &mapView, const Position &position,
     }
 }
 
-void BorderBrush::placeBorderOnEmptyCover(MapView &mapView, const Position position)
-{
-    switch (*mapView.getLastClickedTileQuadrant())
-    {
-        case TileQuadrant::TopLeft:
-            apply(mapView, position, BorderType::NorthWestCorner);
-            break;
-        case TileQuadrant::TopRight:
-            apply(mapView, position, BorderType::NorthEastCorner);
-            break;
-        case TileQuadrant::BottomRight:
-            apply(mapView, position, BorderType::SouthEastCorner);
-            break;
-        case TileQuadrant::BottomLeft:
-            apply(mapView, position, BorderType::SouthWestCorner);
-            break;
-    }
-}
-
 void BorderBrush::apply(MapView &mapView, const Position &position, BorderType borderType)
 {
     if (borderType == BorderType::Center)
@@ -569,175 +559,25 @@ bool BorderData::is(uint32_t serverId, BorderType borderType) const
     return getServerId(borderType) == serverId;
 }
 
-TileCover mirrorEast(TileCover tileCover)
+bool NeighborMap::isExpanded(int x, int y) const
 {
-    if (tileCover & (TILE_COVER_FULL | TILE_COVER_EAST | TILE_COVER_NORTH_EAST | TILE_COVER_SOUTH_EAST))
-    {
-        return TILE_COVER_WEST;
-    }
-
-    TileCover result = TILE_COVER_NONE;
-    if (tileCover & (TILE_COVER_NORTH | TILE_COVER_NORTH_EAST_CORNER | TILE_COVER_NORTH_WEST))
-    {
-        result |= TILE_COVER_NORTH_WEST_CORNER;
-    }
-    if (tileCover & (TILE_COVER_SOUTH | TILE_COVER_SOUTH_EAST_CORNER | TILE_COVER_SOUTH_WEST))
-    {
-        result |= TILE_COVER_SOUTH_WEST_CORNER;
-    }
-
-    return result;
-}
-
-TileCover mirrorWest(TileCover tileCover)
-{
-    if (tileCover & (TILE_COVER_FULL | TILE_COVER_WEST | TILE_COVER_NORTH_WEST | TILE_COVER_SOUTH_WEST))
-    {
-        return TILE_COVER_EAST;
-    }
-
-    TileCover result = TILE_COVER_NONE;
-    if (tileCover & (TILE_COVER_NORTH | TILE_COVER_NORTH_WEST_CORNER | TILE_COVER_NORTH_EAST))
-    {
-        result |= TILE_COVER_NORTH_EAST_CORNER;
-    }
-    if (tileCover & (TILE_COVER_SOUTH | TILE_COVER_SOUTH_WEST_CORNER | TILE_COVER_SOUTH_EAST))
-    {
-        result |= TILE_COVER_SOUTH_EAST_CORNER;
-    }
-
-    return result;
-}
-
-TileCover mirrorNorth(TileCover tileCover)
-{
-    if (tileCover & (TILE_COVER_FULL | TILE_COVER_NORTH | TILE_COVER_NORTH_WEST | TILE_COVER_NORTH_EAST))
-    {
-        return TILE_COVER_SOUTH;
-    }
-
-    TileCover result = TILE_COVER_NONE;
-    if (tileCover & (TILE_COVER_EAST | TILE_COVER_NORTH_EAST_CORNER | TILE_COVER_SOUTH_EAST))
-    {
-        result |= TILE_COVER_SOUTH_EAST_CORNER;
-    }
-    if (tileCover & (TILE_COVER_WEST | TILE_COVER_NORTH_WEST_CORNER | TILE_COVER_SOUTH_WEST))
-    {
-        result |= TILE_COVER_SOUTH_WEST_CORNER;
-    }
-
-    return result;
-}
-
-TileCover mirrorSouth(TileCover tileCover)
-{
-    if (tileCover & (TILE_COVER_FULL | TILE_COVER_SOUTH | TILE_COVER_SOUTH_WEST | TILE_COVER_SOUTH_EAST))
-    {
-        return TILE_COVER_NORTH;
-    }
-
-    TileCover result = TILE_COVER_NONE;
-    if (tileCover & (TILE_COVER_EAST | TILE_COVER_SOUTH_EAST_CORNER | TILE_COVER_NORTH_EAST))
-    {
-        result |= TILE_COVER_NORTH_EAST_CORNER;
-    }
-    else if (tileCover & (TILE_COVER_WEST | TILE_COVER_SOUTH_WEST_CORNER | TILE_COVER_NORTH_WEST))
-    {
-        result |= TILE_COVER_NORTH_WEST_CORNER;
-    }
-
-    return result;
-}
-
-inline void setTileCoverFlag(TileCover cover, TileCover flag, bool value)
-{
-    typedef std::underlying_type<TileCover>::type ut;
-    auto x = to_underlying(cover);
-    x ^= (-static_cast<ut>(value) ^ static_cast<ut>(cover)) & flag;
-    cover = static_cast<TileCover>(x);
-}
-
-void clearCoverFlags(TileCover &cover, TileCover flags)
-{
-    cover &= ~flags;
-}
-
-TileCover unifyTileCover(TileCover c)
-{
-    if (c & TILE_COVER_FULL)
-        return TILE_COVER_FULL;
-
-    bool north = c & (TILE_COVER_NORTH | TILE_COVER_NORTH_EAST | TILE_COVER_NORTH_WEST);
-    bool east = c & (TILE_COVER_EAST | TILE_COVER_NORTH_EAST | TILE_COVER_SOUTH_EAST);
-    bool south = c & (TILE_COVER_SOUTH | TILE_COVER_SOUTH_EAST | TILE_COVER_SOUTH_WEST);
-    bool west = c & (TILE_COVER_WEST | TILE_COVER_NORTH_WEST | TILE_COVER_SOUTH_WEST);
-
-    if (north && east && south && west)
-    {
-        return TILE_COVER_FULL;
-    }
-
-    TileCover clear = TILE_COVER_NONE;
-
-    if (north)
-    {
-        if (!(west || east))
-        {
-            clear |= TILE_COVER_NORTH_EAST_CORNER | TILE_COVER_NORTH_WEST_CORNER;
-        }
-        else
-        {
-            if (east)
-            {
-                c |= TILE_COVER_NORTH_EAST;
-                clear |= TILE_COVER_NORTH | TILE_COVER_EAST | TILE_COVER_NORTH_WEST_CORNER | TILE_COVER_NORTH_EAST_CORNER | TILE_COVER_SOUTH_EAST_CORNER;
-            }
-            if (west)
-            {
-                c |= TILE_COVER_NORTH_WEST;
-                clear |= TILE_COVER_NORTH | TILE_COVER_WEST | TILE_COVER_NORTH_WEST_CORNER | TILE_COVER_SOUTH_WEST_CORNER | TILE_COVER_NORTH_EAST_CORNER;
-            }
-        }
-    }
-
-    if (south)
-    {
-        if (!(west || east))
-        {
-            clear |= TILE_COVER_SOUTH_WEST_CORNER | TILE_COVER_SOUTH_EAST_CORNER;
-        }
-        else
-        {
-            if (east)
-            {
-                c |= TILE_COVER_SOUTH_EAST;
-                clear |= TILE_COVER_SOUTH | TILE_COVER_EAST | TILE_COVER_SOUTH_WEST_CORNER | TILE_COVER_SOUTH_EAST_CORNER | TILE_COVER_NORTH_EAST_CORNER;
-            }
-            if (west)
-            {
-                c |= TILE_COVER_SOUTH_WEST;
-                clear |= TILE_COVER_SOUTH | TILE_COVER_WEST | TILE_COVER_SOUTH_WEST_CORNER | TILE_COVER_SOUTH_EAST_CORNER | TILE_COVER_NORTH_WEST_CORNER;
-            }
-        }
-    }
-
-    if (c & TILE_COVER_WEST)
-    {
-        clear |= TILE_COVER_NORTH_WEST_CORNER | TILE_COVER_SOUTH_WEST_CORNER;
-    }
-    if (c & TILE_COVER_EAST)
-    {
-        clear |= TILE_COVER_NORTH_EAST_CORNER | TILE_COVER_SOUTH_EAST_CORNER;
-    }
-
-    clearCoverFlags(c, clear);
-
-    return c;
+    auto found = std::find_if(expandedCovers.begin(), expandedCovers.end(), [x, y](const ExpandedTileBlock &block) { return block.x == x && block.y == y; });
+    return found != expandedCovers.end();
 }
 
 bool NeighborMap::hasExpandedCover() const noexcept
 {
-    return expanded.hasExpanded;
+    return !expandedCovers.empty();
+}
+
+void NeighborMap::addExpandedCover(int x, int y, TileCover originalCover)
+{
+    expandedCovers.emplace_back(ExpandedTileBlock{x, y, originalCover});
+}
+
+TileCover &NeighborMap::at(int x, int y)
+{
+    return data[index(x, y)];
 }
 
 TileCover &NeighborMap::at(int x, int y)

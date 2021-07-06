@@ -140,6 +140,7 @@ set(CommonSources
     src/random.h
     src/selection.h
     src/tile.h
+    src/tile_cover.h
     src/outfit.h
     src/tile_location.h
     src/minimap_colors.h
@@ -217,6 +218,7 @@ set(CommonSources
     src/selection.cpp
     src/tile.cpp
     src/tile_location.cpp
+    src/tile_cover.cpp
     src/time_point.cpp
     src/creature.cpp
     src/town.cpp
