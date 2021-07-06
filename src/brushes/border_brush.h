@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 
+#include "../tile_cover.h"
 #include "brush.h"
 
 struct Position;
@@ -21,21 +22,25 @@ enum class BorderExpandDirection
     None
 };
 
+struct ExpandedTileBlock
+{
+    int x = 0;
+    int y = 0;
+    TileCover originalCover = TILE_COVER_NONE;
+};
+
 struct NeighborMap
 {
-    struct
-    {
-        int x = 0;
-        int y = 0;
-        TileCover originalCover = TILE_COVER_NONE;
-        bool hasExpanded = false;
-    } expanded;
 
-    bool hasExpandedCover() const noexcept;
-
+    TileCover at(int x, int y) const;
     TileCover &at(int x, int y);
-
     void set(int x, int y, TileCover tileCover);
+
+    bool isExpanded(int x, int y) const;
+    bool hasExpandedCover() const noexcept;
+    void addExpandedCover(int x, int y, TileCover originalCover);
+
+    std::vector<ExpandedTileBlock> expandedCovers;
 
   private:
     int index(int x, int y) const;
@@ -100,15 +105,16 @@ class BorderBrush final : public Brush
     TileCover getTileCoverAt(const Map &map, const Position position) const;
 
     void initialize();
-    uint32_t sampleServerId();
 
     void expandCenter(NeighborMap &neighbors, TileQuadrant tileQuadrant);
     void expandNorth(NeighborMap &neighbors);
+    void expandSouth(NeighborMap &neighbors);
     void expandWest(NeighborMap &neighbors);
 
     void fixBordersAtOffset(MapView &mapView, const Position &position, NeighborMap &neighbors, int x, int y);
+    void fixBorderEdgeCases(int x, int y, TileCover &cover, const NeighborMap &neighbors);
 
-    void placeBorderOnEmptyCover(MapView &mapView, const Position position);
+    TileQuadrant getQuadrant(int dx, int dy);
 
     static TileQuadrant currQuadrant;
     static std::optional<TileQuadrant> previousQuadrant;
