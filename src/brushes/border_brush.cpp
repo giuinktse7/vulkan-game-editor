@@ -149,17 +149,21 @@ void BorderBrush::apply(MapView &mapView, const Position &position, Direction di
         Position expandDirection = position - *lastPos;
         DEBUG_ASSERT(expandDirection != PositionConstants::Zero, "Should not be able to be zero here");
 
-        if (expandDirection.y == -1)
+        if (expandDirection.x == -1)
+        {
+            expandWest(neighbors);
+        }
+        else if (expandDirection.x == 1)
+        {
+            expandEast(neighbors);
+        }
+        else if (expandDirection.y == -1)
         {
             expandNorth(neighbors);
         }
         else if (expandDirection.y == 1)
         {
             expandSouth(neighbors);
-        }
-        else if (expandDirection.x == -1)
-        {
-            expandWest(neighbors);
         }
     }
 
@@ -238,7 +242,12 @@ void BorderBrush::expandNorth(NeighborMap &neighbors)
     }
     else if (prevQuadrant == BottomLeft)
     {
-        if (southCover & South)
+        if (prevDir == Dir::East & !(southCover & FullWest))
+        {
+            expanded |= SouthEast;
+            currQuadrant = BottomRight;
+        }
+        else if (southCover & South)
         {
             expanded |= SouthWest;
         }
@@ -265,7 +274,7 @@ void BorderBrush::expandSouth(NeighborMap &neighbors)
     TileQuadrant prevQuadrant = *previousQuadrant;
     currQuadrant = isRight(prevQuadrant) ? TopRight : TopLeft;
 
-    currDir = Dir::North;
+    currDir = Dir::South;
 
     TileCover &northCover = neighbors.at(0, -1);
     TileCover originalCover = northCover;
@@ -313,6 +322,62 @@ void BorderBrush::expandSouth(NeighborMap &neighbors)
     }
 }
 
+void BorderBrush::expandEast(NeighborMap &neighbors)
+{
+    using namespace TileCoverShortHands;
+    using Dir = BorderExpandDirection;
+    using TileQuadrant::TopLeft, TileQuadrant::TopRight, TileQuadrant::BottomRight, TileQuadrant::BottomLeft;
+
+    TileQuadrant prevQuadrant = *previousQuadrant;
+    currQuadrant = isTop(prevQuadrant) ? TopLeft : BottomLeft;
+
+    currDir = Dir::East;
+
+    TileCover &westCover = neighbors.at(-1, 0);
+    TileCover originalCover = westCover;
+
+    TileCover expanded = None;
+    if (prevQuadrant == TopLeft)
+    {
+        if (prevDir == Dir::South && !(westCover & FullSouth))
+        {
+            expanded |= SouthWest;
+            currQuadrant = BottomLeft;
+        }
+        else if (westCover & West)
+        {
+            expanded |= NorthWest;
+        }
+        else if (westCover & (SouthWest | NorthWestCorner))
+        {
+            expanded |= North;
+        }
+    }
+    else if (prevQuadrant == BottomLeft)
+    {
+        if (prevDir == Dir::North && !(westCover & FullNorth))
+        {
+            expanded |= NorthWest;
+            currQuadrant = TopLeft;
+        }
+        else if (westCover & West)
+        {
+            expanded |= SouthWest;
+        }
+        else if (westCover & (NorthWest | SouthWestCorner))
+        {
+            expanded |= South;
+        }
+    }
+
+    if (expanded != None)
+    {
+        westCover |= expanded;
+        westCover = TileCovers::unifyTileCover(westCover, currQuadrant);
+        neighbors.addExpandedCover(-1, 0, originalCover);
+    }
+}
+
 void BorderBrush::expandWest(NeighborMap &neighbors)
 {
     using namespace TileCoverShortHands;
@@ -330,7 +395,12 @@ void BorderBrush::expandWest(NeighborMap &neighbors)
     TileCover expanded = None;
     if (prevQuadrant == TopRight)
     {
-        if (cover & East)
+        if (prevDir == Dir::South && !(cover & FullNorth))
+        {
+            expanded |= SouthEast;
+            currQuadrant = BottomRight;
+        }
+        else if (cover & East)
         {
             expanded |= NorthEast;
         }

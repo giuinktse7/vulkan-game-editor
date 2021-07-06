@@ -108,6 +108,7 @@ class BorderBrush final : public Brush
 
     void expandCenter(NeighborMap &neighbors, TileQuadrant tileQuadrant);
     void expandNorth(NeighborMap &neighbors);
+    void expandEast(NeighborMap &neighbors);
     void expandSouth(NeighborMap &neighbors);
     void expandWest(NeighborMap &neighbors);
 
