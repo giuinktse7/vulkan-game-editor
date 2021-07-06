@@ -5,6 +5,63 @@ void TileCovers::clearCoverFlags(TileCover &cover, TileCover flags)
     cover &= ~flags;
 }
 
+void TileCovers::eraseSide(TileCover &cover, TileCover side)
+{
+    DEBUG_ASSERT(side == North || side == East || side == South || side == West, "Invalid side.");
+    if (side == North)
+    {
+        if (cover & NorthEast)
+        {
+            cover |= East;
+        }
+        else if (cover & NorthWest)
+        {
+            cover |= West;
+        }
+
+        clearCoverFlags(cover, FullNorth);
+    }
+    else if (side == East)
+    {
+        if (cover & NorthEast)
+        {
+            cover |= North;
+        }
+        else if (cover & SouthEast)
+        {
+            cover |= South;
+        }
+
+        clearCoverFlags(cover, FullEast);
+    }
+    else if (side == South)
+    {
+        if (cover & SouthEast)
+        {
+            cover |= East;
+        }
+        else if (cover & SouthWest)
+        {
+            cover |= West;
+        }
+
+        clearCoverFlags(cover, FullSouth);
+    }
+    else if (side == West)
+    {
+        if (cover & SouthWest)
+        {
+            cover |= South;
+        }
+        else if (cover & NorthWest)
+        {
+            cover |= North;
+        }
+
+        clearCoverFlags(cover, FullWest);
+    }
+}
+
 TileCover TileCovers::mergeTileCover(TileCover a, TileCover b)
 {
     if (!(a & Diagonals))

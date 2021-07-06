@@ -64,6 +64,7 @@ class TileCovers
 {
   public:
     static void clearCoverFlags(TileCover &cover, TileCover flags);
+    static void eraseSide(TileCover &cover, TileCover side);
     static TileCover mirrorEast(TileCover source, TileCover cover);
     static TileCover mirrorWest(TileCover source, TileCover cover);
     static TileCover mirrorNorth(TileCover tileCover);
