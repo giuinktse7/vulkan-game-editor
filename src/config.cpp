@@ -7,7 +7,7 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 
-// #include "../vendor/sol/sol.hpp"
+bool Settings::LOCK_BORDER_BRUSH_SIDE = true;
 
 namespace
 {

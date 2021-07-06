@@ -41,3 +41,8 @@ class Config
 
     bool _loaded;
 };
+
+struct Settings
+{
+    static bool LOCK_BORDER_BRUSH_SIDE;
+};
