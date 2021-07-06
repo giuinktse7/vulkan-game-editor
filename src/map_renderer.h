@@ -41,6 +41,32 @@ namespace colors
 
 } // namespace colors
 
+struct RectangleDrawInfo
+{
+    RectangleDrawInfo(SolidColor color, SolidColor borderColor, WorldPosition position, int width, int height, float opacity = 1.0f);
+
+    static RectangleDrawInfo border(SolidColor color, WorldPosition position, int width, int height, float opacity = 1.0f);
+    static RectangleDrawInfo border(SolidColor color, WorldPosition position, int size, float opacity = 1.0f);
+
+    static RectangleDrawInfo solid(SolidColor color, WorldPosition position, int width, int height, float opacity = 1.0f);
+    static RectangleDrawInfo solid(SolidColor color, WorldPosition position, int size, float opacity = 1.0f);
+
+    std::optional<SolidColor> color;
+    std::optional<SolidColor> borderColor;
+    WorldPosition position = {0, 0};
+
+    // Width in pixels
+    int width = 0;
+
+    // Height in pixels
+    int height = 0;
+
+    float opacity;
+
+  private:
+    RectangleDrawInfo();
+};
+
 namespace DrawInfo
 {
     struct Base
@@ -337,8 +363,11 @@ class MapRenderer
     void drawPreviewItem(uint32_t serverId, Position pos);
     void drawMovingSelection();
     void drawMapOverlay();
+
+    void drawRectangle(const RectangleDrawInfo &info);
+
     void drawRectangle(const Texture &texture, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
-    void drawSolidRectangle(const SolidColor color, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
+    void drawRectangle(const Texture &texture, const WorldPosition from, int width, int height, float opacity = 1.0f);
 
     DrawInfo::Object getItemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags);
     DrawInfo::Object itemTypeDrawInfo(const ItemType &itemType, const Position &position, uint32_t drawFlags);
@@ -350,8 +379,6 @@ class MapRenderer
 
     VkDescriptorSet objectDescriptorSet(const Texture &texture) const;
     VkDescriptorSet objectDescriptorSet(TextureAtlas *atlas) const;
-
-    void issueDraw(const DrawInfo::Base &info, const WorldPosition &worldPos);
 
     /**
 	 * @predicate An Item predicate. Items for which predicate(item) is false will not be rendered.
@@ -376,13 +403,14 @@ class MapRenderer
     void drawCreature(const DrawInfo::Creature &info);
     void drawCreatureType(const CreatureType &creatureType, const Position position, Direction direction, glm::vec4 color, const DrawOffset &drawOffset = DrawOffset{0, 0});
 
-    void drawRectangle(DrawInfo::Rectangle &info);
-
     bool shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter = {}) const noexcept;
 
     void drawBrushPreview(Brush *brush, const Position &position, Direction direction = Direction::South);
     void drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos);
     void drawPreview(ThingDrawInfo drawInfo, const Position &position);
+
+    void issueDraw(const DrawInfo::Base &info, const WorldPosition &worldPos);
+    void issueRectangleDraw(DrawInfo::Rectangle &info);
 
     VkDescriptorSet currentDescriptorSet;
 

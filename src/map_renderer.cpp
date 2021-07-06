@@ -325,7 +325,9 @@ void MapRenderer::drawCurrentAction()
                     if (mapView->draggingWithSubtract())
                     {
                         const auto [from, to] = mapView->getDragPoints().value();
-                        drawSolidRectangle(SolidColor::Red, from, to, 0.2f);
+                        Texture &texture = Texture::getOrCreateSolidTexture(SolidColor::Red);
+
+                        drawRectangle(texture, from, to, 0.2f);
                         drawBrushPreviewAtWorldPos(action.brush, to);
                     }
                     else
@@ -651,10 +653,101 @@ void MapRenderer::issueDraw(const DrawInfo::Base &info, const WorldPosition &wor
     vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
 }
 
+void MapRenderer::issueRectangleDraw(DrawInfo::Rectangle &info)
+{
+    PushConstantData pushConstant{};
+
+    if (std::holds_alternative<const Texture *>(info.texture))
+    {
+        pushConstant.textureQuad = {0, 0, 1, 1};
+        pushConstant.fragQuad = {0, 0, 1, 1};
+    }
+    else if (std::holds_alternative<TextureInfo>(info.texture))
+    {
+        const TextureInfo textureInfo = std::get<TextureInfo>(info.texture);
+        pushConstant.textureQuad = textureInfo.window.asVec4();
+        pushConstant.fragQuad = textureInfo.atlas->getFragmentBounds(textureInfo.window);
+    }
+
+    auto [x1, y1] = info.from;
+    auto [x2, y2] = info.to;
+
+    // Handle the possible quadrants to draw the texture correctly
+    if (x1 > x2)
+    {
+        std::swap(x1, x2);
+        if (y1 > y2)
+        {
+            std::swap(y1, y2);
+        }
+    }
+    else if (x1 < x2 && y1 > y2)
+    {
+        std::swap(y1, y2);
+    }
+
+    glm::vec4 pos{};
+    pos.x = x1;
+    pos.y = y1;
+    pushConstant.pos = pos;
+
+    glm::vec4 size{};
+    size.x = std::abs(x2 - x1);
+    size.y = std::abs(y2 - y1);
+    pushConstant.size = size;
+    pushConstant.color = info.color;
+
+    vulkanInfo.vkCmdBindDescriptorSets(
+        _currentFrame->commandBuffer,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        pipelineLayout,
+        1,
+        1,
+        &info.descriptorSet,
+        0,
+        nullptr);
+
+    vulkanInfo.vkCmdPushConstants(_currentFrame->commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantData), &pushConstant);
+    vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
+}
+
 void MapRenderer::drawBrushPreview(Brush *brush, const Position &position, Direction direction)
 {
-    for (const auto preview : brush->getPreviewTextureInfo(direction))
-        drawPreview(preview, position);
+    if (brush->type() == BrushType::Border)
+    {
+        auto mouseWorldPos = mapView->mousePos().worldPos(*mapView);
+        int borderWidth = 1;
+        int quadrantSide = MapTileSize / 2 - borderWidth;
+
+        int dx = borderWidth;
+        int dy = borderWidth;
+        switch (mouseWorldPos.tileQuadrant())
+        {
+            case TileQuadrant::TopLeft:
+                break;
+            case TileQuadrant::TopRight:
+                dx += quadrantSide;
+                break;
+            case TileQuadrant::BottomRight:
+                dx += quadrantSide;
+                dy += quadrantSide;
+                break;
+            case TileQuadrant::BottomLeft:
+                dy += quadrantSide;
+                break;
+        }
+        auto worldPos = position.worldPos();
+
+        auto quadrantSquare = RectangleDrawInfo::solid(SolidColor::Green, worldPos + WorldPosition(dx, dy), quadrantSide, 0.35f);
+        auto tileBorder = RectangleDrawInfo::border(SolidColor::Green, worldPos, MapTileSize, 0.35f);
+        drawRectangle(quadrantSquare);
+        drawRectangle(tileBorder);
+    }
+    else
+    {
+        for (const auto preview : brush->getPreviewTextureInfo(direction))
+            drawPreview(preview, position);
+    }
 }
 
 void MapRenderer::drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos)
@@ -746,68 +839,37 @@ void MapRenderer::drawCreature(const DrawInfo::Creature &info)
     issueDraw(info, worldPos);
 }
 
-void MapRenderer::drawRectangle(DrawInfo::Rectangle &info)
+void MapRenderer::drawRectangle(const RectangleDrawInfo &info)
 {
-    PushConstantData pushConstant{};
+    // Draw border
+    if (info.borderColor)
+    {
+        auto pos = info.position;
+        Texture &texture = Texture::getOrCreateSolidTexture(*info.borderColor);
+        // Top
+        drawRectangle(texture, pos, info.width, 1, info.opacity);
 
-    if (std::holds_alternative<const Texture *>(info.texture))
-    {
-        pushConstant.textureQuad = {0, 0, 1, 1};
-        pushConstant.fragQuad = {0, 0, 1, 1};
-    }
-    else if (std::holds_alternative<TextureInfo>(info.texture))
-    {
-        const TextureInfo textureInfo = std::get<TextureInfo>(info.texture);
-        pushConstant.textureQuad = textureInfo.window.asVec4();
-        pushConstant.fragQuad = textureInfo.atlas->getFragmentBounds(textureInfo.window);
-    }
+        // Right
+        drawRectangle(texture, pos + WorldPosition(info.width - 1, 1), 1, info.height - 2, info.opacity);
 
-    auto [x1, y1] = info.from;
-    auto [x2, y2] = info.to;
+        // Bottom
+        drawRectangle(texture, pos + WorldPosition(0, info.height - 1), info.width, 1, info.opacity);
 
-    // Handle the possible quadrants to draw the texture correctly
-    if (x1 > x2)
-    {
-        std::swap(x1, x2);
-        if (y1 > y2)
-        {
-            std::swap(y1, y2);
-        }
-    }
-    else if (x1 < x2 && y1 > y2)
-    {
-        std::swap(y1, y2);
+        // Left
+        drawRectangle(texture, pos + WorldPosition(0, 1), 1, info.height - 2, info.opacity);
     }
 
-    glm::vec4 pos{};
-    pos.x = x1;
-    pos.y = y1;
-    pushConstant.pos = pos;
+    if (info.color)
+    {
+        Texture &texture = Texture::getOrCreateSolidTexture(*info.color);
 
-    glm::vec4 size{};
-    size.x = std::abs(x2 - x1);
-    size.y = std::abs(y2 - y1);
-    pushConstant.size = size;
-    pushConstant.color = info.color;
-
-    vulkanInfo.vkCmdBindDescriptorSets(
-        _currentFrame->commandBuffer,
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipelineLayout,
-        1,
-        1,
-        &info.descriptorSet,
-        0,
-        nullptr);
-
-    vulkanInfo.vkCmdPushConstants(_currentFrame->commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantData), &pushConstant);
-    vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
+        drawRectangle(texture, info.position, info.width, info.height, info.opacity);
+    }
 }
 
-void MapRenderer::drawSolidRectangle(const SolidColor color, const WorldPosition from, const WorldPosition to, float opacity)
+void MapRenderer::drawRectangle(const Texture &texture, const WorldPosition from, int width, int height, float opacity)
 {
-    Texture &texture = Texture::getOrCreateSolidTexture(color);
-    drawRectangle(texture, from, to, opacity);
+    drawRectangle(texture, from, from + WorldPosition(width, height), opacity);
 }
 
 void MapRenderer::drawRectangle(const Texture &texture, const WorldPosition from, const WorldPosition to, float opacity)
@@ -827,7 +889,7 @@ void MapRenderer::drawRectangle(const Texture &texture, const WorldPosition from
     info.color = colors::opacity(opacity);
     info.descriptorSet = vulkanTexture.descriptorSet();
 
-    drawRectangle(info);
+    issueRectangleDraw(info);
 }
 
 glm::vec4 MapRenderer::getItemDrawColor(const Item &item, const Position &position, uint32_t drawFlags)
@@ -1758,4 +1820,41 @@ VkImageView VulkanTexture::createImageView(VkImage image, VkFormat format)
     }
 
     return imageView;
+}
+
+RectangleDrawInfo::RectangleDrawInfo(SolidColor color, SolidColor borderColor, WorldPosition position, int width, int height, float opacity)
+    : color(color), borderColor(borderColor), position(position), width(width), height(height), opacity(opacity) {}
+
+RectangleDrawInfo::RectangleDrawInfo() {}
+
+RectangleDrawInfo RectangleDrawInfo::border(SolidColor color, WorldPosition position, int width, int height, float opacity)
+{
+    RectangleDrawInfo info;
+    info.borderColor = color;
+    info.position = position;
+    info.width = width;
+    info.height = height;
+    info.opacity = opacity;
+    return info;
+}
+
+RectangleDrawInfo RectangleDrawInfo::border(SolidColor color, WorldPosition position, int size, float opacity)
+{
+    return border(color, position, size, size, opacity);
+}
+
+RectangleDrawInfo RectangleDrawInfo::solid(SolidColor color, WorldPosition position, int width, int height, float opacity)
+{
+    RectangleDrawInfo info;
+    info.color = color;
+    info.position = position;
+    info.width = width;
+    info.height = height;
+    info.opacity = opacity;
+    return info;
+}
+
+RectangleDrawInfo RectangleDrawInfo::solid(SolidColor color, WorldPosition position, int size, float opacity)
+{
+    return solid(color, position, size, size, opacity);
 }
