@@ -14,10 +14,8 @@ enum class SolidColor : uint32_t
 {
     Black = 0xFF000000,
     Blue = 0xFF039BE5,
-    Blue2 = 0xFF0000FF,
     Red = 0xFFFF0000,
-    Green = 0xFF00FF00,
-    Test = 0xFFAA0000
+    Green = 0xFF00FF00
 };
 
 struct TextureWindow
