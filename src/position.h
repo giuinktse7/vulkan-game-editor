@@ -149,6 +149,8 @@ struct WorldPosition : public BasePosition<int32_t>
     Position toPos(const MapView &mapView) const;
     Position toPos(int floor) const;
 
+    TileQuadrant tileQuadrant() const;
+
     WorldPosition &operator+=(const WorldPosition &rhs)
     {
         this->x += rhs.x;

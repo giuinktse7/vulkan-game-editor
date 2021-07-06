@@ -306,6 +306,7 @@ class MapView
     bool canRender = false;
 
     Position _previousMouseGamePos;
+    TileQuadrant _previousMouseMoveTileQuadrant = TileQuadrant::TopLeft;
 
     /**
      * When dragging with a brush, this keeps track of the latest position that the brush was applied to.

@@ -830,33 +830,7 @@ void MapView::selectTopThing(const Position &position)
 
 void MapView::setLastTileQuadrant(const WorldPosition worldPos)
 {
-    auto dx = worldPos.x % MapTileSize;
-    auto dy = worldPos.y % MapTileSize;
-
-    int midPoint = MapTileSize / 2;
-
-    if (dx < midPoint)
-    {
-        if (dy < midPoint)
-        {
-            lastClickedTileQuadrant = TileQuadrant::TopLeft;
-        }
-        else
-        {
-            lastClickedTileQuadrant = TileQuadrant::BottomLeft;
-        }
-    }
-    else
-    {
-        if (dy < midPoint)
-        {
-            lastClickedTileQuadrant = TileQuadrant::TopRight;
-        }
-        else
-        {
-            lastClickedTileQuadrant = TileQuadrant::BottomRight;
-        }
-    }
+    lastClickedTileQuadrant = worldPos.tileQuadrant();
 }
 
 void MapView::selectTopThing(const Position &position, bool isNewSelection)
@@ -1019,13 +993,17 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
 void MapView::mouseMoveEvent(VME::MouseEvent event)
 {
-    Position pos = event.pos().toPos(*this);
+    WorldPosition worldPos = event.pos().worldPos(*this);
+    Position pos = worldPos.toPos(floor());
+    TileQuadrant quadrant = worldPos.tileQuadrant();
 
     bool newTile = _previousMouseGamePos != pos;
+    bool newQuadrant = _previousMouseMoveTileQuadrant != quadrant;
+    _previousMouseMoveTileQuadrant = quadrant;
 
     if (!isDragging())
     {
-        if (newTile)
+        if (newTile || newQuadrant)
             requestDraw();
 
         _previousMouseGamePos = pos;

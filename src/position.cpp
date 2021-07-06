@@ -174,3 +174,20 @@ uint32_t Position::tilesInRegion(const Position &from, const Position &to)
 
     return dx * dy * dz;
 }
+
+TileQuadrant WorldPosition::tileQuadrant() const
+{
+    auto dx = x % MapTileSize;
+    auto dy = y % MapTileSize;
+
+    int midPoint = MapTileSize / 2;
+
+    if (dx < midPoint)
+    {
+        return dy < midPoint ? TileQuadrant::TopLeft : TileQuadrant::BottomLeft;
+    }
+    else
+    {
+        return dy < midPoint ? TileQuadrant::TopRight : TileQuadrant::BottomRight;
+    }
+}
