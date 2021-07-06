@@ -66,7 +66,7 @@ namespace enum_conversion
             constexpr BitFlagConversionTable();
             To arr[size];
 
-            constexpr void add(const From from, const To to) noexcept;
+            constexpr void add(const From from, const To to);
             constexpr To from(From from) const;
         };
 
@@ -77,7 +77,7 @@ namespace enum_conversion
         }
 
         template <typename From, typename To, size_t size>
-        constexpr void BitFlagConversionTable<From, To, size>::add(const From from, const To to) noexcept
+        constexpr void BitFlagConversionTable<From, To, size>::add(const From from, const To to)
         {
             if (!exactlyOneBitSet((int)from))
             {
