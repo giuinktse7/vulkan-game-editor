@@ -26,7 +26,7 @@ enum class ItemDataType
     Container
 };
 
-enum FloorChange : uint8_t
+enum class FloorChange : uint8_t
 {
     Down,
     West,
