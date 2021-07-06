@@ -1,7 +1,9 @@
 #include "mainwindow.h"
 
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonportable-include-path"
+#endif
 
 #include <QLabel>
 #include <QMenu>
@@ -17,7 +19,9 @@
 #include <QWidget>
 #include <QWindow>
 
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
 
 #include "../../vendor/rollbear-visit/visit.hpp"
 #include "../brushes/border_brush.h"
