@@ -738,10 +738,20 @@ void MapRenderer::drawBrushPreview(Brush *brush, const Position &position, Direc
         }
         auto worldPos = position.worldPos();
 
-        auto quadrantSquare = RectangleDrawInfo::solid(SolidColor::Green, worldPos + WorldPosition(dx, dy), quadrantSide, 0.35f);
-        auto tileBorder = RectangleDrawInfo::border(SolidColor::Green, worldPos, MapTileSize, 0.35f);
-        drawRectangle(quadrantSquare);
-        drawRectangle(tileBorder);
+        // TODO Fix border drawing when zoomed out. For now, we disable rectangle border drawing when zoomed out.
+        // If fix by using a different shader, then we need a new shader pipeline (shaders are part of the pipeline state).
+        if (mapView->getZoomFactor() >= 1)
+        {
+            auto quadrantSquare = RectangleDrawInfo::solid(SolidColor::Green, worldPos + WorldPosition(dx, dy), quadrantSide, 0.35f);
+            auto tileBorder = RectangleDrawInfo::border(SolidColor::Green, worldPos, MapTileSize, 0.35f);
+            drawRectangle(quadrantSquare);
+            drawRectangle(tileBorder);
+        }
+        else
+        {
+            auto square = RectangleDrawInfo::solid(SolidColor::Green, worldPos, MapTileSize, 0.35f);
+            drawRectangle(square);
+        }
     }
     else
     {
@@ -857,6 +867,39 @@ void MapRenderer::drawRectangle(const RectangleDrawInfo &info)
 
         // Left
         drawRectangle(texture, pos + WorldPosition(0, 1), 1, info.height - 2, info.opacity);
+
+        // {
+        //     // Debug RED
+        //     Texture &red = Texture::getOrCreateSolidTexture(SolidColor::Red);
+        //     auto offset = WorldPosition(0, 1);
+        //     // Top
+        //     drawRectangle(red, pos + offset, info.width / 2, 1, info.opacity);
+
+        //     // Bottom
+        //     drawRectangle(red, pos + offset + WorldPosition(0, info.height - 1), info.width / 2, 1, info.opacity);
+        // }
+
+        // {
+        //     // Debug YELLOW
+        //     Texture &red = Texture::getOrCreateSolidTexture(SolidColor::Yellow);
+        //     auto offset = WorldPosition(0, 2);
+        //     // Top
+        //     drawRectangle(red, pos + offset, info.width / 2, 1, info.opacity);
+
+        //     // Bottom
+        //     drawRectangle(red, pos + offset + WorldPosition(0, info.height - 1), info.width / 2, 1, info.opacity);
+        // }
+
+        // {
+        //     // Debug BLUE
+        //     Texture &blue = Texture::getOrCreateSolidTexture(SolidColor::Blue);
+        //     auto offset = WorldPosition(info.width / 2, -1);
+        //     // Top
+        //     drawRectangle(blue, pos + offset, info.width / 2, 1, info.opacity);
+
+        //     // Bottom
+        //     drawRectangle(blue, pos + offset + WorldPosition(0, info.height - 1), info.width / 2, 1, info.opacity);
+        // }
     }
 
     if (info.color)
