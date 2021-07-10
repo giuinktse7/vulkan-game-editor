@@ -5,60 +5,85 @@ void TileCovers::clearCoverFlags(TileCover &cover, TileCover flags)
     cover &= ~flags;
 }
 
-void TileCovers::eraseSide(TileCover &cover, TileCover side)
+void TileCovers::eraseSide(TileCover &cover, TileCover side, TileCover preferredDiagonal)
 {
+    DEBUG_ASSERT((preferredDiagonal == None) || exactlyOneSet(preferredDiagonal & Diagonals), "Preferred diagonal must be None or have exactly one diagonal set.");
     DEBUG_ASSERT(side == North || side == East || side == South || side == West, "Invalid side.");
-    if (side == North)
+    // Handle cases where cover is full tile
+    if (cover & Full)
     {
-        if (cover & NorthEast)
+        cover = None;
+        if (side == North)
         {
-            cover |= East;
+            cover |= (preferredDiagonal & (NorthWest | SouthWest)) ? SouthWest | East : SouthEast | West;
         }
-        else if (cover & NorthWest)
+        else if (side == East)
         {
-            cover |= West;
+            cover |= (preferredDiagonal & (NorthEast | NorthWest)) ? NorthWest | South : SouthWest | North;
         }
-
-        clearCoverFlags(cover, FullNorth);
+        else if (side == South)
+        {
+            cover |= (preferredDiagonal & (NorthWest | SouthWest)) ? NorthWest | East : NorthEast | West;
+        }
+        else if (side == West)
+        {
+            cover |= (preferredDiagonal & (NorthEast | NorthWest)) ? NorthEast | South : SouthEast | North;
+        }
     }
-    else if (side == East)
+    else
     {
-        if (cover & NorthEast)
+        if (side == North)
         {
-            cover |= North;
-        }
-        else if (cover & SouthEast)
-        {
-            cover |= South;
-        }
+            if (cover & NorthEast)
+            {
+                cover |= East;
+            }
+            else if (cover & NorthWest)
+            {
+                cover |= West;
+            }
 
-        clearCoverFlags(cover, FullEast);
-    }
-    else if (side == South)
-    {
-        if (cover & SouthEast)
-        {
-            cover |= East;
+            clearCoverFlags(cover, FullNorth);
         }
-        else if (cover & SouthWest)
+        else if (side == East)
         {
-            cover |= West;
-        }
+            if (cover & NorthEast)
+            {
+                cover |= North;
+            }
+            else if (cover & SouthEast)
+            {
+                cover |= South;
+            }
 
-        clearCoverFlags(cover, FullSouth);
-    }
-    else if (side == West)
-    {
-        if (cover & SouthWest)
-        {
-            cover |= South;
+            clearCoverFlags(cover, FullEast);
         }
-        else if (cover & NorthWest)
+        else if (side == South)
         {
-            cover |= North;
-        }
+            if (cover & SouthEast)
+            {
+                cover |= East;
+            }
+            else if (cover & SouthWest)
+            {
+                cover |= West;
+            }
 
-        clearCoverFlags(cover, FullWest);
+            clearCoverFlags(cover, FullSouth);
+        }
+        else if (side == West)
+        {
+            if (cover & SouthWest)
+            {
+                cover |= South;
+            }
+            else if (cover & NorthWest)
+            {
+                cover |= North;
+            }
+
+            clearCoverFlags(cover, FullWest);
+        }
     }
 }
 
@@ -161,34 +186,67 @@ TileCover TileCovers::unifyTileCover(TileCover cover, TileQuadrant quadrant, Til
     }
     else
     {
-        if (cover & North)
+        int sides = static_cast<bool>(cover & North) + static_cast<bool>(cover & East) + static_cast<bool>(cover & South) + static_cast<bool>(cover & West);
+        if (sides == 2)
         {
-            if (cover & East)
+            if (cover & North)
             {
-                cover |= NorthEast;
-                clear |= North | East;
+                if (cover & East)
+                {
+                    cover |= NorthEast;
+                    clear |= North | East;
+                }
+                else if (cover & West)
+                {
+                    cover |= NorthWest;
+                    clear |= North | West;
+                }
             }
-            else if (cover & West)
+            else if (cover & South)
             {
-                cover |= NorthWest;
-                clear |= North | West;
+                if (cover & East)
+                {
+                    cover |= SouthEast;
+                    clear |= South | East;
+                }
+                else if (cover & West)
+                {
+                    cover |= SouthWest;
+                    clear |= South | West;
+                }
             }
         }
-        else if (cover & South)
+        else
         {
-            if (cover & East)
+            if (preferredDiagonal != None)
             {
-                cover |= SouthEast;
-                clear |= South | East;
-            }
-            else if (cover & West)
-            {
-                cover |= SouthWest;
-                clear |= South | West;
+                if (preferredDiagonal == NorthWest && (cover & North) && (cover & West))
+                {
+                    cover |= NorthWest;
+                    clear |= North | West;
+                }
+                else if (preferredDiagonal == NorthEast && (cover & North) && (cover & East))
+                {
+                    cover |= NorthEast;
+                    clear |= North | East;
+                }
+                else if (preferredDiagonal == SouthEast && (cover & South) && (cover & East))
+                {
+                    cover |= SouthEast;
+                    clear |= South | East;
+                }
+                else if (preferredDiagonal == SouthWest && (cover & South) && (cover & West))
+                {
+                    cover |= SouthWest;
+                    clear |= South | West;
+                }
             }
         }
 
-        clearCoverFlags(cover, clear);
+        if (clear != None)
+        {
+            clearCoverFlags(cover, clear);
+        }
     }
 
     auto finalDiagonals = cover & Diagonals;
@@ -297,4 +355,44 @@ TileCover TileCovers::mirrorSouth(TileCover tileCover)
     }
 
     return result;
+}
+
+bool TileCovers::hasFullSide(TileCover cover, TileCover side)
+{
+    DEBUG_ASSERT(side & (North | East | South | West), "Invalid side");
+    switch (side)
+    {
+        case North:
+            return cover & FullNorth;
+        case East:
+            return cover & FullEast;
+        case South:
+            return cover & FullSouth;
+        case West:
+            return cover & FullWest;
+        default:
+            return false;
+    }
+}
+
+TileCover TileCovers::getFull(TileCover side)
+{
+    DEBUG_ASSERT(side & (North | East | South | West), "Invalid side");
+    switch (side)
+    {
+        case North:
+            return FullNorth;
+        case East:
+            return FullEast;
+        case South:
+            return FullSouth;
+        case West:
+            return FullWest;
+    }
+}
+
+TileCover TileCovers::addNonMasked(TileCover current, TileCover committed, TileCover mask)
+{
+    auto m = current & (~mask);
+    return committed | m;
 }

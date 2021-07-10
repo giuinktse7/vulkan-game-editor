@@ -64,7 +64,7 @@ class TileCovers
 {
   public:
     static void clearCoverFlags(TileCover &cover, TileCover flags);
-    static void eraseSide(TileCover &cover, TileCover side);
+    static void eraseSide(TileCover &cover, TileCover side, TileCover preferredDiagonal = TILE_COVER_NONE);
     static TileCover mirrorEast(TileCover source, TileCover cover);
     static TileCover mirrorWest(TileCover source, TileCover cover);
     static TileCover mirrorNorth(TileCover tileCover);
@@ -76,6 +76,10 @@ class TileCovers
         auto bits = static_cast<std::underlying_type_t<TileCover>>(cover);
         return bits && !(bits & (bits - 1));
     }
+
+    static bool hasFullSide(TileCover cover, TileCover side);
+    static TileCover getFull(TileCover side);
+    static TileCover addNonMasked(TileCover current, TileCover committed, TileCover mask);
 
     static constexpr TileCover None = TILE_COVER_NONE;
     static constexpr TileCover Full = TILE_COVER_FULL;
