@@ -128,6 +128,10 @@ class BorderBrush final : public Brush
     void fixBordersAtOffset(MapView &mapView, const Position &position, NeighborMap &neighbors, int x, int y);
     void fixBorderEdgeCases(int x, int y, TileCover &cover, const NeighborMap &neighbors);
 
+    void quadrantChangeInFirstTile(TileCover cover, TileCover &nextCover, TileQuadrant prevQuadrant, TileQuadrant currQuadrant);
+
+    bool isGeneral() const noexcept;
+
     static TileInfo tileInfo;
 
     static BorderExpandDirection currDir;
