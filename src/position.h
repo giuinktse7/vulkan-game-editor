@@ -114,10 +114,26 @@ struct PositionHash
 
 struct ScreenPosition : public BasePosition<int>
 {
+    using value_type = int;
+
     ScreenPosition();
     ScreenPosition(int x, int y);
     WorldPosition worldPos(const MapView &mapView) const;
     Position toPos(const MapView &mapView) const;
+
+    ScreenPosition &operator+=(const ScreenPosition &rhs)
+    {
+        this->x += rhs.x;
+        this->y += rhs.y;
+        return *this;
+    }
+
+    friend ScreenPosition operator+(const ScreenPosition &lhs, const ScreenPosition rhs)
+    {
+        ScreenPosition pos(lhs);
+        pos += rhs;
+        return pos;
+    }
 
     ScreenPosition &operator-=(const ScreenPosition &rhs)
     {
@@ -148,6 +164,7 @@ struct WorldPosition : public BasePosition<int32_t>
 
     Position toPos(const MapView &mapView) const;
     Position toPos(int floor) const;
+    ScreenPosition toScreenPos(const MapView &mapView) const;
 
     TileQuadrant tileQuadrant() const;
 

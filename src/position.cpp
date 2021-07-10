@@ -27,6 +27,15 @@ WorldPosition::WorldPosition(WorldPosition::value_type x, WorldPosition::value_t
 WorldPosition::WorldPosition()
     : BasePosition(0, 0) {}
 
+ScreenPosition WorldPosition::toScreenPos(const MapView &mapView) const
+{
+    // TODO Improve this function (if possible?) Right now, it does not appear to work correctly with zoom
+    ScreenPosition::value_type newX = std::lroundf((this->x - mapView.x()) * mapView.getZoomFactor());
+    ScreenPosition::value_type newY = std::lroundf((this->y - mapView.y()) * mapView.getZoomFactor());
+
+    return ScreenPosition(newX, newY);
+}
+
 WorldPosition ScreenPosition::worldPos(const MapView &mapView) const
 {
     WorldPosition::value_type newX = std::lroundf(mapView.x() + this->x / mapView.getZoomFactor());
