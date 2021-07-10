@@ -42,7 +42,13 @@ class Config
     bool _loaded;
 };
 
+enum class BorderBrushVariation
+{
+    Detailed,
+    General
+};
+
 struct Settings
 {
-    static bool LOCK_BORDER_BRUSH_SIDE;
+    static BorderBrushVariation BORDER_BRUSH_VARIATION;
 };

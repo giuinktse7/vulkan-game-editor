@@ -7,7 +7,7 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 
-bool Settings::LOCK_BORDER_BRUSH_SIDE = true;
+BorderBrushVariation Settings::BORDER_BRUSH_VARIATION = BorderBrushVariation::General;
 
 namespace
 {
