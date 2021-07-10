@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "debug.h"
+#include "util.h"
 
 // Map constants
 constexpr uint16_t MAP_TREE_CHILDREN_COUNT = 16;
@@ -14,11 +15,12 @@ constexpr int SpriteSize = 32;
 
 enum class TileQuadrant
 {
-    TopLeft,
-    TopRight,
-    BottomRight,
-    BottomLeft
+    TopLeft = 1,
+    TopRight = 1 << 1,
+    BottomRight = 1 << 2,
+    BottomLeft = 1 << 3
 };
+VME_ENUM_OPERATORS(TileQuadrant)
 
 enum class BorderType
 {
