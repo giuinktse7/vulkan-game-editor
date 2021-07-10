@@ -832,6 +832,12 @@ QMenuBar *MainWindow::createMenuBar()
     }
 
     {
+        QAction *runBorderTest = new QAction(tr("Run border test"), this);
+        connect(runBorderTest, &QAction::triggered, [=] { currentMapView()->testBordering(); });
+        menuBar->addAction(runBorderTest);
+    }
+
+    {
         QAction *runTest = new QAction(tr("Run MapView test"), this);
         connect(runTest, &QAction::triggered, [=] { currentMapView()->perfTest(); });
         menuBar->addAction(runTest);

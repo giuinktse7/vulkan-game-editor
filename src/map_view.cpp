@@ -12,6 +12,27 @@
 
 using namespace MapHistory;
 
+inline std::ostream &operator<<(std::ostream &os, const TileQuadrant &quadrant)
+{
+    switch (quadrant)
+    {
+        case TileQuadrant::TopLeft:
+            os << "TopLeft";
+            break;
+        case TileQuadrant::TopRight:
+            os << "TopRight";
+            break;
+        case TileQuadrant::BottomRight:
+            os << "BottomRight";
+            break;
+        case TileQuadrant::BottomLeft:
+            os << "BottomLeft";
+            break;
+    }
+
+    return os;
+}
+
 std::unordered_set<MapView *> MapView::instances;
 
 MapView::MapView(std::unique_ptr<UIUtils> uiUtils, EditorAction &action)
@@ -828,10 +849,12 @@ void MapView::selectTopThing(const Position &position)
     selectTopThing(position, true);
 }
 
-void MapView::setLastTileQuadrant(const WorldPosition worldPos)
+void MapView::setLastClickedTileQuadrant(const WorldPosition worldPos)
 {
-    lastClickedTileQuadrant = worldPos.tileQuadrant();
-}
+    TileQuadrant quadrant = worldPos.tileQuadrant();
+    lastClickedTileQuadrant = quadrant;
+    mouseDownTileQuadrant = quadrant;
+};
 
 void MapView::selectTopThing(const Position &position, bool isNewSelection)
 {
@@ -891,6 +914,9 @@ void MapView::mousePressEvent(VME::MouseEvent event)
     if (event.buttons() & VME::MouseButtons::LeftButton)
     {
         Position pos = event.pos().toPos(*this);
+        WorldPosition worldPos = event.pos().worldPos(*this);
+
+        setLastClickedTileQuadrant(worldPos);
 
         std::visit(
             util::overloaded{
@@ -928,9 +954,6 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
                     action.area = event.modifiers() & VME::ModifierKeys::Shift;
                     action.erase = event.modifiers() & VME::ModifierKeys::Ctrl;
-
-                    WorldPosition worldPos = event.pos().worldPos(*this);
-                    setLastTileQuadrant(worldPos);
 
                     history.beginTransaction(TransactionType::BrushAction);
 
@@ -983,7 +1006,6 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
             editorAction.action());
 
-        auto worldPos = event.pos().worldPos(*this);
         setDragStart(worldPos);
 
         _previousMouseGamePos = pos;
@@ -996,10 +1018,10 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
     WorldPosition worldPos = event.pos().worldPos(*this);
     Position pos = worldPos.toPos(floor());
     TileQuadrant quadrant = worldPos.tileQuadrant();
+    // VME_LOG_D("MapView::mouseMoveEvent quadrant: " << quadrant);
 
     bool newTile = _previousMouseGamePos != pos;
     bool newQuadrant = _previousMouseMoveTileQuadrant != quadrant;
-    _previousMouseMoveTileQuadrant = quadrant;
 
     if (!isDragging())
     {
@@ -1007,11 +1029,15 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
             requestDraw();
 
         _previousMouseGamePos = pos;
+        _previousMouseMoveTileQuadrant = quadrant;
+
         return;
     }
 
     if (event.buttons() & VME::MouseButtons::LeftButton)
     {
+        mouseDownTileQuadrant = quadrant;
+
         rollbear::visit(
             util::overloaded{
                 [this, &pos, newTile](MouseAction::Select &select) {
@@ -1054,11 +1080,9 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                     }
                 },
 
-                [this, pos, &event, newTile](const MouseAction::MapBrush &action) {
-                    if (!newTile || action.area)
-                    {
+                [this, pos, newQuadrant, &event, newTile](const MouseAction::MapBrush &action) {
+                    if (action.area)
                         return;
-                    }
 
                     if (event.modifiers() & VME::ModifierKeys::Ctrl)
                     {
@@ -1073,11 +1097,25 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                     else
                     {
                         DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::BrushAction), "Incorrect transaction type.");
-                        lastBrushDragPosition = _previousMouseGamePos;
-
                         if (action.brush->type() == BrushType::Border)
                         {
-                            for (const auto position : Position::bresenHamsWithCorners(this->_previousMouseGamePos, pos))
+                            if (!newTile)
+                            {
+                                if (newQuadrant)
+                                {
+                                    auto brush = static_cast<BorderBrush *>(action.brush);
+                                    brush->quadrantChanged(*this, pos, _previousMouseMoveTileQuadrant, *mouseDownTileQuadrant);
+                                }
+
+                                return;
+                            }
+
+                            auto positions = Position::bresenHamsWithCorners(this->_previousMouseGamePos, pos);
+                            // if (positions.size() > 1)
+                            // {
+                            //     VME_LOG_D("Bresenhams from " << positions.front() << " to " << positions.back());
+                            // }
+                            for (const auto position : positions)
                             {
                                 // Require non-negative positions
                                 if (position.x >= 0 && position.y >= 0)
@@ -1089,6 +1127,11 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                         }
                         else
                         {
+                            if (!newTile)
+                            {
+                                return;
+                            }
+
                             for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
                             {
                                 // Require non-negative positions
@@ -1115,6 +1158,9 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
     }
 
     _previousMouseGamePos = pos;
+    _previousMouseMoveTileQuadrant = quadrant;
+    lastBrushDragPosition = pos;
+
     requestDraw();
 }
 
@@ -1128,6 +1174,9 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
         {
             endDragging(event.modifiers());
         }
+
+        mouseDownTileQuadrant.reset();
+        lastClickedTileQuadrant.reset();
     }
 
     lastBrushDragPosition.reset();
@@ -1366,6 +1415,11 @@ std::optional<TileQuadrant> MapView::getLastClickedTileQuadrant() const noexcept
     return lastClickedTileQuadrant;
 }
 
+std::optional<TileQuadrant> MapView::getMouseDownTileQuadrant() const noexcept
+{
+    return mouseDownTileQuadrant;
+}
+
 void MapView::setUnderMouse(bool underMouse)
 {
     _prevUnderMouse = _underMouse;
@@ -1405,4 +1459,65 @@ void MapView::perfTest()
     });
 
     requestDraw();
+}
+
+void MapView::testBordering()
+{
+    const auto testDiagonalQuadrantAndExpandEast = [this]() {
+        Position pos(14, 4, 7);
+        {
+            auto screenPos = pos.worldPos().toScreenPos(*this) + ScreenPosition(0, 16);
+            auto event = VME::MouseEvent(screenPos, VME::MouseButton::NoButton, VME::ModifierKeys::None);
+
+            // Fix mouse
+            mouseMoveEvent(event);
+
+            // Click
+            event = VME::MouseEvent(screenPos, VME::MouseButton::LeftButton, VME::ModifierKeys::None);
+            mousePressEvent(event);
+        }
+        {
+            // Move quadrant
+            auto screenPos = pos.worldPos().toScreenPos(*this) + ScreenPosition(16, 0);
+            auto event = VME::MouseEvent(screenPos, VME::MouseButton::LeftButton, VME::ModifierKeys::None);
+            mouseMoveEvent(event);
+
+            // Expand east
+            screenPos += ScreenPosition(16, 0);
+            event = VME::MouseEvent(screenPos, VME::MouseButton::LeftButton, VME::ModifierKeys::None);
+            mouseMoveEvent(event);
+
+            // Release mouse
+            event = VME::MouseEvent(screenPos, VME::MouseButton::NoButton, VME::ModifierKeys::None);
+            mouseReleaseEvent(event);
+        }
+    };
+
+    Position pos(14, 4, 7);
+    {
+        auto screenPos = pos.worldPos().toScreenPos(*this) + ScreenPosition(0, 16);
+        auto event = VME::MouseEvent(screenPos, VME::MouseButton::NoButton, VME::ModifierKeys::None);
+
+        // Fix mouse
+        mouseMoveEvent(event);
+
+        // Click
+        event = VME::MouseEvent(screenPos, VME::MouseButton::LeftButton, VME::ModifierKeys::None);
+        mousePressEvent(event);
+    }
+    {
+        // Move quadrant to top-right
+        auto screenPos = pos.worldPos().toScreenPos(*this) + ScreenPosition(16, 0);
+        auto event = VME::MouseEvent(screenPos, VME::MouseButton::LeftButton, VME::ModifierKeys::None);
+        mouseMoveEvent(event);
+
+        // Move quadrant to bottom-right
+        screenPos += ScreenPosition(0, 16);
+        event = VME::MouseEvent(screenPos, VME::MouseButton::LeftButton, VME::ModifierKeys::None);
+        mouseMoveEvent(event);
+
+        // Release mouse
+        event = VME::MouseEvent(screenPos, VME::MouseButton::NoButton, VME::ModifierKeys::None);
+        mouseReleaseEvent(event);
+    }
 }

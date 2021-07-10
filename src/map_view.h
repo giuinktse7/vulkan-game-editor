@@ -52,6 +52,7 @@ class MapView
 
     // Only for testing
     void perfTest();
+    void testBordering();
 
     inline const Map *map() const noexcept;
 
@@ -217,6 +218,7 @@ class MapView
 
     std::optional<Position> getLastBrushDragPosition() const noexcept;
     std::optional<TileQuadrant> getLastClickedTileQuadrant() const noexcept;
+    std::optional<TileQuadrant> getMouseDownTileQuadrant() const noexcept;
 
     bool isEmpty(const Position position) const;
 
@@ -283,7 +285,7 @@ class MapView
 
     void setPanOffset(MouseAction::Pan &action, const ScreenPosition &offset);
 
-    void setLastTileQuadrant(const WorldPosition worldPos);
+    void setLastClickedTileQuadrant(const WorldPosition worldPos);
 
     /**
  		*	Keeps track of all MapView instances. This is necessary for QT to
@@ -307,6 +309,7 @@ class MapView
 
     Position _previousMouseGamePos;
     TileQuadrant _previousMouseMoveTileQuadrant = TileQuadrant::TopLeft;
+    std::optional<TileQuadrant> mouseDownTileQuadrant;
 
     /**
      * When dragging with a brush, this keeps track of the latest position that the brush was applied to.
