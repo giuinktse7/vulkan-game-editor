@@ -79,7 +79,7 @@ namespace MapHistory
         void addAction(MapHistory::Action &&action);
 
         Transaction(Transaction &&other) noexcept;
-        Transaction &operator=(Transaction &&other);
+        Transaction &operator=(Transaction &&other) noexcept;
 
         void commit(MapView &mapView);
 

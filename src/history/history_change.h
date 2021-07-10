@@ -74,23 +74,6 @@ namespace MapHistory
         std::variant<std::unique_ptr<Tile>, Position> data;
     };
 
-    class ModifyItem : public ChangeItem
-    {
-      public:
-        ModifyItem(ItemLocation &&location, ItemMutation::Mutation &&mutation);
-        ModifyItem(ItemLocation &&location, const ItemMutation::Mutation &mutation);
-
-        void commit(MapView &mapView) override;
-        void undo(MapView &mapView) override;
-
-        // Test item caching
-        Item *item;
-
-      private:
-        ItemLocation location;
-        ItemMutation::Mutation mutation;
-    };
-
     class ModifyItem_v2 : public ChangeItem
     {
       public:
@@ -437,7 +420,6 @@ namespace MapHistory
             MoveFromMapToContainer,
             MoveFromContainerToMap,
             MoveFromContainerToContainer,
-            ModifyItem,
             ModifyItem_v2,
             SetCreature,
             std::unique_ptr<ChangeItem>>;

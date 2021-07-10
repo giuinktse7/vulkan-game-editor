@@ -29,7 +29,7 @@ struct ContainerChange
     uint8_t index;
 
     // Only applicable for move in same container
-    uint8_t toIndex;
+    uint8_t toIndex = 0;
 
   private:
     ContainerChange(ContainerChangeType type, uint8_t index);

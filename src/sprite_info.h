@@ -15,7 +15,7 @@ struct SpriteInfo
     SpriteAnimation *animation() const;
 
     std::vector<uint32_t> spriteIds;
-    uint32_t boundingSquare;
+    uint32_t boundingSquare = 0;
 
     // For a creature SpriteInfo: maybe patternWidth is the amount of directions?
     uint8_t patternWidth = 1;
@@ -26,7 +26,7 @@ struct SpriteInfo
     uint8_t patternSize = 1;
     uint8_t layers = 1;
 
-    bool isOpaque;
+    bool isOpaque = false;
 
   private:
     friend class ObjectAppearance;

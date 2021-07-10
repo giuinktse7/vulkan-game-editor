@@ -27,6 +27,7 @@ namespace OTB
         uint32_t majorVersion = 0xFFFFFFFF;
         int minorVersion = 0x0;
         uint32_t buildNumber = 0;
+        // Unused, but necessary to read OTB correctly (See Items.cpp, Items::OtbReader::readRoot)
         uint8_t CSDVersion[128];
 
         std::string show() const;

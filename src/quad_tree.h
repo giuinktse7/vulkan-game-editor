@@ -50,9 +50,9 @@ namespace quadtree
             Children(NodeType type);
             ~Children();
 
-            Children(Children &&other);
+            Children(Children &&other) noexcept;
 
-            Children &operator=(Children &&other);
+            Children &operator=(Children &&other) noexcept;
 
             void construct();
             void destruct();

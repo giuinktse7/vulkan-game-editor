@@ -18,7 +18,7 @@ namespace MapHistory
     {
     }
 
-    Transaction &Transaction::operator=(Transaction &&other)
+    Transaction &Transaction::operator=(Transaction &&other) noexcept
     {
         type = other.type;
         actions = std::move(other.actions);

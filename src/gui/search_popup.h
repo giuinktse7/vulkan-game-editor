@@ -56,7 +56,7 @@ class FilteredSearchModel : public QSortFilterProxyModel
     std::function<bool(Brush *)> predicate = acceptAll;
 
     SearchResultModel *_searchModel = nullptr;
-    ItemTypeImageProvider *thingImageProvider;
+    ItemTypeImageProvider *thingImageProvider = nullptr;
 
     std::optional<BrushType> parseBrushType(QString raw);
 };
@@ -95,7 +95,7 @@ class SearchResultModel : public QAbstractListModel
   private:
     std::optional<BrushSearchResult> _searchResults;
 
-    ItemTypeImageProvider *thingImageProvider;
+    ItemTypeImageProvider *thingImageProvider = nullptr;
 };
 
 class SearchPopupView : public QQuickView

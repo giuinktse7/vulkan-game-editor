@@ -230,11 +230,11 @@ class MapRegion
             {
                 int x = 0;
                 int y = 0;
-                quadtree::Node *node;
-            } chunk;
+                quadtree::Node *node = nullptr;
+            } chunk = {};
         } state;
 
-        Pointer value;
+        Pointer value = nullptr;
         bool isEnd;
 
         void nextChunk();
@@ -402,7 +402,7 @@ class MapArea
             bool x;
             bool y;
             bool z;
-        } increasing;
+        } increasing = {};
 
         bool isEnd = false;
 

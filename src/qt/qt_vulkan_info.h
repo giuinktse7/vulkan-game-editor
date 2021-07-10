@@ -269,8 +269,8 @@ class QtVulkanInfo : public VulkanInfo
     }
 
   private:
-    VulkanWindow *window;
+    VulkanWindow *window = nullptr;
 
-    QVulkanDeviceFunctions *df;
-    QVulkanFunctions *f;
+    QVulkanDeviceFunctions *df = nullptr;
+    QVulkanFunctions *f = nullptr;
 };

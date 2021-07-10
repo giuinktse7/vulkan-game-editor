@@ -186,7 +186,7 @@ Node::Children::Children(Node::NodeType type)
     construct();
 }
 
-Node::Children::Children(Children &&other)
+Node::Children::Children(Children &&other) noexcept
     : _type(other._type)
 {
     construct();
@@ -207,7 +207,7 @@ Node::Children::Children(Children &&other)
     }
 }
 
-Node::Children &Node::Children::operator=(Children &&other)
+Node::Children &Node::Children::operator=(Children &&other) noexcept
 {
     if (_type != other._type)
     {

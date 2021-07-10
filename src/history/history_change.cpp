@@ -927,32 +927,6 @@ namespace MapHistory
         updateSelection(mapView, position);
     }
 
-    ModifyItem::ModifyItem(ItemLocation &&location, ItemMutation::Mutation &&mutation)
-        : location(std::move(location)), mutation(std::move(mutation)) {}
-
-    ModifyItem::ModifyItem(ItemLocation &&location, const ItemMutation::Mutation &mutation)
-        : location(std::move(location)), mutation(mutation) {}
-
-    void ModifyItem::commit(MapView &mapView)
-    {
-        // auto item = location.item(mapView);
-        std::visit(
-            [this](ItemMutation::BaseMutation &itemMutation) {
-                itemMutation.commit(this->item);
-            },
-            mutation);
-    }
-
-    void ModifyItem::undo(MapView &mapView)
-    {
-        // auto item = location.item(mapView);
-        std::visit(
-            [this](ItemMutation::BaseMutation &itemMutation) {
-                itemMutation.undo(this->item);
-            },
-            mutation);
-    }
-
     ModifyItem_v2::ModifyItem_v2(Item *item, ItemMutation::Mutation &&mutation)
         : item(item), mutation(std::move(mutation)) {}
 

@@ -55,10 +55,6 @@ struct TextureAtlasVariation
 
     uint32_t id;
     Texture texture;
-    /*
-
-    */
-    bool locked;
 };
 
 struct TextureAtlas
