@@ -35,3 +35,14 @@ Random &Random::global()
 {
     return globalRandom;
 }
+
+Random::Random(const Random &other)
+    : randomEngine(other.randomEngine), distribution(other.distribution) {}
+
+Random &Random::operator=(const Random &other)
+{
+    this->randomEngine = other.randomEngine;
+    this->distribution = other.distribution;
+
+    return *this;
+}

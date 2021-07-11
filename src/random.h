@@ -13,8 +13,8 @@ class Random
     Random(uint32_t seed);
     Random();
 
-    Random(const Random &other) = delete;
-    Random &operator=(const Random &other) = delete;
+    Random(const Random &other);
+    Random &operator=(const Random &other);
 
     /*
 		Random double in range [0, 1].
