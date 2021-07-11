@@ -19,6 +19,8 @@
 #include "signal.h"
 #include "util.h"
 
+class GroundBrush;
+
 namespace MapHistory
 {
     class ChangeItem;
@@ -146,6 +148,7 @@ class MapView
 
     void addItem(const Position &position, uint16_t id);
     void addItem(const Position &pos, Item &&item);
+    void addItem(Tile &tile, Item &&item);
 
     void addCreature(const Position &pos, Creature &&creature);
 
@@ -277,6 +280,7 @@ class MapView
     void removeItemsInRegion(const Position &from, const Position &to, std::function<bool(const Item &)> predicate);
     void fillRegion(const Position &from, const Position &to, uint32_t serverId);
     void fillRegion(const Position &from, const Position &to, std::function<uint32_t()> itemSupplier);
+    void fillRegionByGroundBrush(const Position &from, const Position &to, GroundBrush *brush);
     void endCurrentAction(VME::ModifierKeys modifiers);
 
     void selectTopThing(const Position &position, bool isNewSelection);

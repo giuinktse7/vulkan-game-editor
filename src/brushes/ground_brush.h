@@ -2,11 +2,14 @@
 
 #include <string>
 #include <unordered_set>
+#include <variant>
 
+#include "../random.h"
 #include "brush.h"
 
 struct Position;
 class MapView;
+class Tile;
 
 /**
  * Ground Brush
@@ -35,7 +38,7 @@ class GroundBrush final : public Brush
     void setIconServerId(uint32_t serverId);
     void setName(std::string name);
 
-    uint32_t nextServerId();
+    uint32_t nextServerId() const;
 
     std::string brushId() const noexcept;
 
@@ -45,9 +48,15 @@ class GroundBrush final : public Brush
 
     const std::unordered_set<uint32_t> &serverIds() const;
 
+    static void restrictReplacement(const Tile *tile);
+    static void disableReplacement();
+    static void resetReplacementFilter();
+
+    static bool mayPlaceOnTile(Tile &tile);
+
   private:
     void initialize();
-    uint32_t sampleServerId();
+    uint32_t sampleServerId() const;
 
     std::unordered_set<uint32_t> _serverIds;
     std::vector<WeightedItemId> _weightedIds;
@@ -56,5 +65,11 @@ class GroundBrush final : public Brush
     uint32_t _iconServerId;
 
     uint32_t totalWeight = 0;
-    uint32_t _nextId;
+
+    /*
+      std::monostate   -> May replace any ground
+      uint32_t         -> May only replace that ground ID
+      GroundBrush*     -> May replace any ground tile that is part of the brush
+    */
+    static std::variant<std::monostate, uint32_t, const GroundBrush *> replacementFilter;
 };

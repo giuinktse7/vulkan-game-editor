@@ -10,6 +10,8 @@
 #include "../random.h"
 #include "../tile.h"
 
+std::variant<std::monostate, uint32_t, const GroundBrush *> GroundBrush::replacementFilter = std::monostate{};
+
 GroundBrush::GroundBrush(std::string id, const std::string &name, std::vector<WeightedItemId> &&weightedIds)
     : Brush(name), _weightedIds(std::move(weightedIds)), id(id), _iconServerId(_weightedIds.at(0).id)
 {
@@ -44,14 +46,57 @@ void GroundBrush::initialize()
         entry.weight = totalWeight;
         _serverIds.emplace(entry.id);
     }
-
-    _nextId = sampleServerId();
 }
 
 void GroundBrush::apply(MapView &mapView, const Position &position, Direction direction)
 {
     // TODO Implement the apply correctly for AutoBorder
-    mapView.addItem(position, Item(nextServerId()));
+
+    Tile &tile = mapView.getOrCreateTile(position);
+    if (mayPlaceOnTile(tile))
+    {
+        mapView.addItem(position, Item(nextServerId()));
+    }
+}
+
+bool GroundBrush::mayPlaceOnTile(Tile &tile)
+{
+    if (replacementFilter.index() == 0)
+    {
+        return true;
+    }
+
+    bool result = false;
+    std::visit(
+        util::overloaded{
+            [&tile, &result](uint32_t serverId) {
+                Item *ground = tile.ground();
+                if (ground && ground->serverId() == serverId)
+                {
+                    result = true;
+                }
+            },
+            [&tile, &result](const GroundBrush *groundBrush) {
+                if (groundBrush)
+                {
+                    if (tile.hasGround() && groundBrush == tile.ground()->itemType->brush)
+                    {
+                        result = true;
+                    }
+                }
+                else
+                {
+                    // Only tiles without ground
+                    if (!tile.hasGround())
+                    {
+                        result = true;
+                    }
+                }
+            },
+            [](const auto &arg) {}},
+        replacementFilter);
+
+    return result;
 }
 
 uint32_t GroundBrush::iconServerId() const
@@ -69,16 +114,12 @@ bool GroundBrush::erasesItem(uint32_t serverId) const
     return _serverIds.find(serverId) != _serverIds.end();
 }
 
-uint32_t GroundBrush::nextServerId()
+uint32_t GroundBrush::nextServerId() const
 {
-    uint32_t result = _nextId;
-
-    _nextId = sampleServerId();
-
-    return result;
+    return sampleServerId();
 }
 
-uint32_t GroundBrush::sampleServerId()
+uint32_t GroundBrush::sampleServerId() const
 {
     uint32_t weight = Random::global().nextInt<uint32_t>(static_cast<uint32_t>(0), totalWeight);
 
@@ -112,7 +153,7 @@ void GroundBrush::setName(std::string name)
 
 std::vector<ThingDrawInfo> GroundBrush::getPreviewTextureInfo(Direction direction) const
 {
-    return std::vector<ThingDrawInfo>{DrawItemType(_nextId, PositionConstants::Zero)};
+    return std::vector<ThingDrawInfo>{DrawItemType(_iconServerId, PositionConstants::Zero)};
 }
 
 const std::string GroundBrush::getDisplayId() const
@@ -123,4 +164,34 @@ const std::string GroundBrush::getDisplayId() const
 const std::unordered_set<uint32_t> &GroundBrush::serverIds() const
 {
     return _serverIds;
+}
+
+void GroundBrush::restrictReplacement(const Tile *tile)
+{
+    if (!tile || !tile->ground())
+    {
+        replacementFilter = static_cast<const GroundBrush *>(nullptr);
+        return;
+    }
+
+    Item *ground = tile->ground();
+    auto tileGroundBrush = ground->itemType->brush;
+    if (tileGroundBrush && tileGroundBrush->type() == BrushType::Ground)
+    {
+        replacementFilter = static_cast<GroundBrush *>(tileGroundBrush);
+    }
+    else
+    {
+        replacementFilter = ground->serverId();
+    }
+}
+
+void GroundBrush::disableReplacement()
+{
+    replacementFilter = static_cast<const GroundBrush *>(nullptr);
+}
+
+void GroundBrush::resetReplacementFilter()
+{
+    replacementFilter = std::monostate{};
 }

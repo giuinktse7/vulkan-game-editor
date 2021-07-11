@@ -198,16 +198,20 @@ void MapView::endTransaction(TransactionType transactionType)
     history.endTransaction(transactionType);
 }
 
-void MapView::addItem(const Position &pos, Item &&item)
+void MapView::addItem(Tile &tile, Item &&item)
 {
-    Tile &currentTile = _map->getOrCreateTile(pos);
-    Tile newTile = currentTile.deepCopy();
+    Tile newTile = tile.deepCopy();
     newTile.addItem(std::move(item));
 
     Action action(ActionType::SetTile);
     action.addChange(SetTile(std::move(newTile)));
 
     history.commit(std::move(action));
+}
+
+void MapView::addItem(const Position &pos, Item &&item)
+{
+    addItem(_map->getOrCreateTile(pos), std::move(item));
 }
 
 void MapView::addItem(const Position &pos, uint16_t id)
@@ -490,6 +494,36 @@ void MapView::fillRegion(const Position &from, const Position &to, uint32_t serv
         newTile.addItem(Item(serverId));
 
         action.changes.emplace_back<SetTile>(std::move(newTile));
+    }
+
+    history.commit(std::move(action));
+    history.endTransaction(TransactionType::AddMapItem);
+}
+
+void MapView::fillRegionByGroundBrush(const Position &from, const Position &to, GroundBrush *brush)
+{
+    history.beginTransaction(TransactionType::AddMapItem);
+
+    Action action(ActionType::SetTile);
+    action.reserve(Position::tilesInRegion(from, to));
+
+    MapView &mapView = *this;
+
+    for (const auto &pos : MapArea(*_map, from, to))
+    {
+        auto location = _map->getTileLocation(pos);
+        if (!location || !location->hasTile())
+        {
+            auto tile = Tile(pos);
+            tile.addItem(Item(brush->nextServerId()));
+            action.changes.emplace_back<SetTile>(std::move(tile));
+        }
+        else if (GroundBrush::mayPlaceOnTile(*location->tile()))
+        {
+            auto tile = getTile(pos)->deepCopy();
+            tile.addItem(Item(brush->nextServerId()));
+            action.changes.emplace_back<SetTile>(std::move(tile));
+        }
     }
 
     history.commit(std::move(action));
@@ -784,11 +818,11 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
                             case BrushType::Ground:
                             {
                                 auto groundBrush = static_cast<GroundBrush *>(brush.brush);
-                                fillRegion(from, to, [groundBrush]() { return groundBrush->nextServerId(); });
+                                fillRegionByGroundBrush(from, to, groundBrush);
                                 break;
                             }
                             default:
-                                // TODO Handle cases other than RawItem
+                                // TODO Handle other cases
                                 NOT_IMPLEMENTED_ABORT();
                         }
                     }
@@ -969,6 +1003,23 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                     }
                     else
                     {
+                        if (action.brush->type() == BrushType::Ground)
+                        {
+                            bool restrictGround = event.modifiers() & VME::ModifierKeys::Alt;
+                            if (restrictGround)
+                            {
+                                if (action.area)
+                                {
+                                    GroundBrush::disableReplacement();
+                                }
+                                else
+                                {
+                                    const Tile *tile = getTile(pos);
+                                    GroundBrush::restrictReplacement(tile);
+                                }
+                            }
+                        }
+
                         if (!action.area)
                         {
                             action.brush->apply(*this, pos, action.direction);
@@ -1180,6 +1231,16 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
     }
 
     lastBrushDragPosition.reset();
+
+    // Clear GroundBrush filter
+    if (editorAction.is<MouseAction::MapBrush>())
+    {
+        auto *action = editorAction.as<MouseAction::MapBrush>();
+        if (action->brush->type() == BrushType::Ground)
+        {
+            GroundBrush::resetReplacementFilter();
+        }
+    }
     requestDraw();
 }
 
@@ -1212,11 +1273,6 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
                     history.endTransaction(TransactionType::BrushAction);
                     editorAction.unlock();
                 }
-
-                // if (action.brush->type() == BrushType::Border)
-                // {
-                //     BorderBrush::resetState();
-                // }
             },
 
             [this](MouseAction::Select &select) {
