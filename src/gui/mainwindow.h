@@ -19,6 +19,7 @@ class QTabWidget;
 class QPushButton;
 class BorderLayout;
 class QWindow;
+class QVBoxLayout;
 class QMenuBar;
 class QListView;
 QT_END_NAMESPACE
@@ -102,7 +103,8 @@ class MainWindow : public QWidget
     ItemPaletteWindow *_paletteWindow = nullptr;
     MinimapWidget *_minimapWidget = nullptr;
 
-    BorderLayout *rootLayout = nullptr;
+    // BorderLayout *rootLayout = nullptr;
+    QVBoxLayout *rootLayout = nullptr;
 
     QLabel *positionStatus = nullptr;
     QLabel *zoomStatus = nullptr;

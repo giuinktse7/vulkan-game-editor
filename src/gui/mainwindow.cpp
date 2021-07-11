@@ -14,6 +14,7 @@
 #include <QShortcut>
 #include <QSlider>
 #include <QStackedLayout>
+#include <QVBoxLayout>
 #include <QVariant>
 #include <QVulkanInstance>
 #include <QWidget>
@@ -189,7 +190,7 @@ void MainWindow::mapTabChangedEvent(int index)
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent),
       _paletteWindow(nullptr),
-      rootLayout(new BorderLayout),
+      rootLayout(new QVBoxLayout),
       positionStatus(new QLabel),
       zoomStatus(new QLabel),
       topItemInfo(new QLabel),
@@ -381,16 +382,19 @@ void MainWindow::initializeUI()
     registerPropertyItemListeners();
 
     QMenuBar *menu = createMenuBar();
+    rootLayout->setContentsMargins(0, 0, 0, 0);
+    rootLayout->setSpacing(0);
     rootLayout->setMenuBar(menu);
 
     Splitter *splitter = new Splitter();
-    rootLayout->addWidget(splitter, BorderLayout::Position::Center);
+    rootLayout->addWidget(splitter);
 
     initializePaletteWindow();
 
     splitter->addWidget(_paletteWindow);
     splitter->addWidget(mapTabs);
     splitter->setStretchFactor(1, 1);
+    splitter->setSizePolicy(QSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding));
 
     {
         auto container = propertyWindow->wrapInWidget();
@@ -404,8 +408,12 @@ void MainWindow::initializeUI()
     splitter->setSizes(QList<int>({200, 760, 240}));
 
     QWidget *bottomStatusBar = new QWidget;
+    bottomStatusBar->setSizePolicy(QSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum));
+
     QHBoxLayout *bottomLayout = new QHBoxLayout;
     bottomStatusBar->setLayout(bottomLayout);
+    bottomLayout->setContentsMargins(14, 4, 14, 4);
+    bottomLayout->setSpacing(0);
 
     positionStatus->setText("");
     bottomLayout->addWidget(positionStatus);
@@ -416,7 +424,7 @@ void MainWindow::initializeUI()
     topItemInfo->setText("");
     bottomLayout->addWidget(topItemInfo);
 
-    rootLayout->addWidget(bottomStatusBar, BorderLayout::Position::South);
+    rootLayout->addWidget(bottomStatusBar);
 
     searchPopupWidget = new SearchPopupWidget(this);
 
