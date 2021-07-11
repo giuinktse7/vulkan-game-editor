@@ -7,7 +7,7 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 
-BorderBrushVariation Settings::BORDER_BRUSH_VARIATION = BorderBrushVariation::General;
+BorderBrushVariationType Settings::BORDER_BRUSH_VARIATION = BorderBrushVariationType::Detailed;
 
 namespace
 {

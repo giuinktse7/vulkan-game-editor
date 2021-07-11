@@ -18,13 +18,21 @@ class MapView;
 class RawBrush;
 class GroundBrush;
 class BorderBrush;
+class Map;
 class DoodadBrush;
 class CreatureBrush;
+enum TileCover;
 class ItemType;
 class Brush;
 
 #include <cstddef> // For std::ptrdiff_t
 #include <iterator> // For std::forward_iterator_tag
+
+struct ExpandedTileBlock
+{
+    int x = 0;
+    int y = 0;
+};
 
 enum class BrushType
 {
@@ -199,4 +207,25 @@ class Brush
     std::string _name;
     Tileset *_tileset = nullptr;
     static bool matchSorter(std::pair<int, Brush *> &lhs, const std::pair<int, Brush *> &rhs);
+};
+
+struct NeighborMap
+{
+    NeighborMap(const Position &position, BorderBrush *brush, const Map &map);
+    TileCover at(int x, int y) const;
+    TileCover &at(int x, int y);
+    TileCover &center();
+    void set(int x, int y, TileCover tileCover);
+
+    bool isExpanded(int x, int y) const;
+    bool hasExpandedCover() const noexcept;
+    void addExpandedCover(int x, int y);
+
+    std::vector<ExpandedTileBlock> expandedCovers;
+
+  private:
+    int index(int x, int y) const;
+    TileCover getTileCoverAt(BorderBrush *brush, const Map &map, const Position position) const;
+
+    std::array<TileCover, 25> data;
 };

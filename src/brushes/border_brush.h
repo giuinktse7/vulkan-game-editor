@@ -1,10 +1,12 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include <optional>
 #include <string>
 
 #include "../tile_cover.h"
+#include "border_brush_variation.h"
 #include "brush.h"
 
 struct Position;
@@ -12,42 +14,7 @@ class MapView;
 class Map;
 class GroundBrush;
 class RawBrush;
-
-enum class BorderExpandDirection
-{
-    North,
-    East,
-    South,
-    West,
-    None
-};
-
-struct ExpandedTileBlock
-{
-    int x = 0;
-    int y = 0;
-};
-
-struct NeighborMap
-{
-    NeighborMap(const Position &position, BorderBrush *brush, const Map &map);
-    TileCover at(int x, int y) const;
-    TileCover &at(int x, int y);
-    TileCover &center();
-    void set(int x, int y, TileCover tileCover);
-
-    bool isExpanded(int x, int y) const;
-    bool hasExpandedCover() const noexcept;
-    void addExpandedCover(int x, int y);
-
-    std::vector<ExpandedTileBlock> expandedCovers;
-
-  private:
-    int index(int x, int y) const;
-    TileCover getTileCoverAt(BorderBrush *brush, const Map &map, const Position position) const;
-
-    std::array<TileCover, 25> data;
-};
+class GeneralBorderBrush;
 
 struct BorderData
 {
@@ -100,13 +67,8 @@ class BorderBrush final : public Brush
     TileQuadrant getNeighborQuadrant(int dx, int dy);
 
   private:
-    struct TileInfo
-    {
-        TileQuadrant prevQuadrant;
-        TileQuadrant quadrant;
-        TileQuadrant borderStartQuadrant;
-        TileCover cover = TILE_COVER_NONE;
-    };
+    friend class GeneralBorderBrush;
+    friend class DetailedBorderBrush;
 
     BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, Brush *centerBrush);
 
@@ -117,22 +79,14 @@ class BorderBrush final : public Brush
 
     void initialize();
 
-    void expandCenter(NeighborMap &neighbors, TileQuadrant tileQuadrant);
-    void expandNorth(NeighborMap &neighbors);
-    void expandEast(NeighborMap &neighbors);
-    void expandSouth(NeighborMap &neighbors);
-    void expandWest(NeighborMap &neighbors);
-
     void updateCenter(NeighborMap &neighbors);
 
     void fixBordersAtOffset(MapView &mapView, const Position &position, NeighborMap &neighbors, int x, int y);
     void fixBorderEdgeCases(int x, int y, TileCover &cover, const NeighborMap &neighbors);
 
-    void quadrantChangeInFirstTile(TileCover cover, TileCover &nextCover, TileQuadrant prevQuadrant, TileQuadrant currQuadrant);
+    static void quadrantChangeInFirstTile(TileCover cover, TileCover &nextCover, TileQuadrant prevQuadrant, TileQuadrant currQuadrant);
 
-    bool isGeneral() const noexcept;
-
-    static TileInfo tileInfo;
+    static TileBorderInfo tileInfo;
 
     static BorderExpandDirection currDir;
     static std::optional<BorderExpandDirection> prevDir;
@@ -143,6 +97,8 @@ class BorderBrush final : public Brush
     uint32_t _iconServerId;
 
     BorderData borderData;
+
+    static std::unique_ptr<BorderBrushVariation> brushVariation;
 
     /*
     None = 0,

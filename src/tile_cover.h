@@ -22,6 +22,14 @@ enum TileCover
     TILE_COVER_SOUTH_EAST_CORNER = 1 << 12,
 };
 
+struct TileBorderInfo
+{
+    TileQuadrant prevQuadrant;
+    TileQuadrant quadrant;
+    TileQuadrant borderStartQuadrant;
+    TileCover cover = TILE_COVER_NONE;
+};
+
 inline constexpr TileCover operator~(const TileCover &lhs)
 {
     return static_cast<TileCover>(~static_cast<std::underlying_type_t<TileCover>>(lhs));
@@ -103,3 +111,28 @@ class TileCovers
     static constexpr TileCover FullWest = TILE_COVER_FULL | TILE_COVER_WEST | TILE_COVER_SOUTH_WEST | TILE_COVER_NORTH_WEST;
     static constexpr TileCover Diagonals = TILE_COVER_NORTH_WEST | TILE_COVER_NORTH_EAST | TILE_COVER_SOUTH_EAST | TILE_COVER_SOUTH_WEST;
 };
+
+namespace TileCoverShortHands
+{
+    constexpr TileCover None = TileCovers::None;
+    constexpr TileCover Full = TileCovers::Full;
+    constexpr TileCover North = TileCovers::North;
+    constexpr TileCover East = TileCovers::East;
+    constexpr TileCover South = TileCovers::South;
+    constexpr TileCover West = TileCovers::West;
+    constexpr TileCover NorthWest = TileCovers::NorthWest;
+    constexpr TileCover NorthEast = TileCovers::NorthEast;
+    constexpr TileCover SouthWest = TileCovers::SouthWest;
+    constexpr TileCover SouthEast = TileCovers::SouthEast;
+    constexpr TileCover NorthWestCorner = TileCovers::NorthWestCorner;
+    constexpr TileCover NorthEastCorner = TileCovers::NorthEastCorner;
+    constexpr TileCover SouthWestCorner = TileCovers::SouthWestCorner;
+    constexpr TileCover SouthEastCorner = TileCovers::SouthEastCorner;
+
+    constexpr TileCover Corners = TileCovers::Corners;
+    constexpr TileCover FullNorth = TileCovers::FullNorth;
+    constexpr TileCover FullEast = TileCovers::FullEast;
+    constexpr TileCover FullSouth = TileCovers::FullSouth;
+    constexpr TileCover FullWest = TileCovers::FullWest;
+    constexpr TileCover Diagonals = TileCovers::Diagonals;
+}; // namespace TileCoverShortHands

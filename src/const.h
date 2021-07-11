@@ -40,6 +40,15 @@ enum class BorderType
     Center = 13
 };
 
+enum class BorderExpandDirection
+{
+    North,
+    East,
+    South,
+    West,
+    None
+};
+
 enum class Direction
 {
     North = 0,

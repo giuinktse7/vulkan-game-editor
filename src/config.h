@@ -42,7 +42,7 @@ class Config
     bool _loaded;
 };
 
-enum class BorderBrushVariation
+enum class BorderBrushVariationType
 {
     Detailed,
     General
@@ -50,5 +50,5 @@ enum class BorderBrushVariation
 
 struct Settings
 {
-    static BorderBrushVariation BORDER_BRUSH_VARIATION;
+    static BorderBrushVariationType BORDER_BRUSH_VARIATION;
 };

@@ -2,11 +2,14 @@
 
 #include "../creature.h"
 #include "../items.h"
+#include "../map.h"
+#include "../tile.h"
 #include "border_brush.h"
 #include "creature_brush.h"
 #include "doodad_brush.h"
 #include "ground_brush.h"
 #include "raw_brush.h"
+
 
 #define FTS_FUZZY_MATCH_IMPLEMENTATION
 #include "../../vendor/fts_fuzzy_match/fts_fuzzy_match.h"
@@ -317,3 +320,73 @@ DrawItemType::DrawItemType(uint32_t serverId, Position relativePosition)
 
 DrawItemType::DrawItemType(ItemType *itemType, Position relativePosition)
     : itemType(itemType), relativePosition(relativePosition) {}
+
+NeighborMap::NeighborMap(const Position &position, BorderBrush *brush, const Map &map)
+{
+    for (int dy = -2; dy <= 2; ++dy)
+    {
+        for (int dx = -2; dx <= 2; ++dx)
+        {
+            TileCover tileCover = getTileCoverAt(brush, map, position + Position(dx, dy, 0));
+            TileQuadrant quadrant = brush->getNeighborQuadrant(dx, dy);
+            tileCover = TileCovers::unifyTileCover(tileCover, quadrant);
+
+            auto diagonals = tileCover & TileCovers::Diagonals;
+            DEBUG_ASSERT((diagonals == TileCovers::None) || TileCovers::exactlyOneSet(diagonals & TileCovers::Diagonals), "Preferred diagonal must be None or have exactly one diagonal set.");
+
+            set(dx, dy, tileCover);
+        }
+    }
+}
+
+TileCover NeighborMap::getTileCoverAt(BorderBrush *brush, const Map &map, const Position position) const
+{
+    Tile *tile = map.getTile(position);
+    if (!tile)
+    {
+        return TILE_COVER_NONE;
+    }
+
+    return tile->getTileCover(brush);
+}
+
+bool NeighborMap::isExpanded(int x, int y) const
+{
+    auto found = std::find_if(expandedCovers.begin(), expandedCovers.end(), [x, y](const ExpandedTileBlock &block) { return block.x == x && block.y == y; });
+    return found != expandedCovers.end();
+}
+
+bool NeighborMap::hasExpandedCover() const noexcept
+{
+    return !expandedCovers.empty();
+}
+
+void NeighborMap::addExpandedCover(int x, int y)
+{
+    expandedCovers.emplace_back(ExpandedTileBlock{x, y});
+}
+
+TileCover &NeighborMap::at(int x, int y)
+{
+    return data[index(x, y)];
+}
+
+TileCover &NeighborMap::center()
+{
+    return data[12];
+}
+
+TileCover NeighborMap::at(int x, int y) const
+{
+    return data[index(x, y)];
+}
+
+void NeighborMap::set(int x, int y, TileCover tileCover)
+{
+    data[index(x, y)] = tileCover;
+}
+
+int NeighborMap::index(int x, int y) const
+{
+    return (y + 2) * 5 + (x + 2);
+}
