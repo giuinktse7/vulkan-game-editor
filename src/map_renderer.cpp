@@ -8,6 +8,7 @@
 #include "brushes/brush.h"
 #include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
+#include "config.h"
 #include "debug.h"
 #include "file.h"
 #include "graphics/appearances.h"
@@ -713,6 +714,10 @@ void MapRenderer::issueRectangleDraw(DrawInfo::Rectangle &info)
 
 void MapRenderer::drawBrushPreview(Brush *brush, const Position &position, Direction direction)
 {
+    SolidColor color = Settings::BORDER_BRUSH_VARIATION == BorderBrushVariationType::Detailed
+                           ? SolidColor::Green
+                           : SolidColor::MaterialUIBlue600;
+
     if (brush->type() == BrushType::Border)
     {
         auto mouseWorldPos = mapView->mousePos().worldPos(*mapView);
@@ -742,14 +747,14 @@ void MapRenderer::drawBrushPreview(Brush *brush, const Position &position, Direc
         // If fix by using a different shader, then we need a new shader pipeline (shaders are part of the pipeline state).
         if (mapView->getZoomFactor() >= 1)
         {
-            auto quadrantSquare = RectangleDrawInfo::solid(SolidColor::Green, worldPos + WorldPosition(dx, dy), quadrantSide, 0.35f);
-            auto tileBorder = RectangleDrawInfo::border(SolidColor::Green, worldPos, MapTileSize, 0.35f);
+            auto quadrantSquare = RectangleDrawInfo::solid(color, worldPos + WorldPosition(dx, dy), quadrantSide, 0.35f);
+            auto tileBorder = RectangleDrawInfo::border(color, worldPos, MapTileSize, 0.35f);
             drawRectangle(quadrantSquare);
             drawRectangle(tileBorder);
         }
         else
         {
-            auto square = RectangleDrawInfo::solid(SolidColor::Green, worldPos, MapTileSize, 0.35f);
+            auto square = RectangleDrawInfo::solid(color, worldPos, MapTileSize, 0.35f);
             drawRectangle(square);
         }
     }

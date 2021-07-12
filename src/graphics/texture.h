@@ -16,7 +16,11 @@ enum class SolidColor : uint32_t
     Blue = 0xFF039BE5,
     Red = 0xFFFF0000,
     Green = 0xFF00FF00,
-    Yellow = 0xFFFFFF00
+    Yellow = 0xFFFFFF00,
+    Orange = 0xFFFFA500,
+
+    // https://materialui.co/colors
+    MaterialUIBlue600 = 0xFF1E88E5,
 };
 
 struct TextureWindow
