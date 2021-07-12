@@ -265,7 +265,7 @@ void MapRenderer::drawMap()
     if (selectAction && selectAction->area)
         flags |= ItemDrawFlags::ActiveSelectionArea;
 
-    for (auto &tileLocation : view.mapRegion())
+    for (auto &tileLocation : view.mapRegion(1, 1))
     {
         if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
             continue;

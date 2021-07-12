@@ -633,13 +633,16 @@ std::optional<std::pair<WorldPosition, WorldPosition>> MapView::getDragPoints() 
     return result;
 }
 
-MapRegion MapView::mapRegion() const
+MapRegion MapView::mapRegion(int padTilesX, int padTilesY) const
 {
     Position from(_camera.position());
     from.z = from.z <= GROUND_FLOOR ? GROUND_FLOOR : MAP_LAYERS - 1;
 
     const Camera::Viewport &viewport = _camera.viewport();
-    Position to(from.x + viewport.gameWidth(), from.y + viewport.gameHeight(), _camera.z());
+
+    auto toX = std::min<Position::value_type>(from.x + viewport.gameWidth() + padTilesX, _map->width());
+    auto toY = std::min<Position::value_type>(from.y + viewport.gameHeight() + padTilesY, _map->height());
+    Position to(toX, toY, _camera.z());
 
     return _map->getRegion(from, to);
 }

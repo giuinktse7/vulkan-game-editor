@@ -175,7 +175,7 @@ class MapView
     inline ViewOption viewOptions() const noexcept;
     inline bool hasOption(ViewOption option) const noexcept;
 
-    MapRegion mapRegion() const;
+    MapRegion mapRegion(int padTilesX = 0, int padTilesY = 0) const;
     MapRegion mapRegion(int8_t floor) const;
 
     inline uint32_t x() const noexcept;
