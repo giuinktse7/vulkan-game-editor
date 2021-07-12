@@ -722,12 +722,12 @@ QMenuBar *MainWindow::createMenuBar()
         addMenuItem(editMenu, "Undo", Qt::CTRL | Qt::Key_Z, [this] { this->currentMapView()->undo(); });
         addMenuItem(editMenu, "Redo", Qt::CTRL | Qt::SHIFT | Qt::Key_Z, [this] { this->currentMapView()->redo(); });
 
-        addMenuItem(editMenu, "Jump to brush...", Qt::Key_J, [this] {
+        addMenuItem(editMenu, "Jump To Brush...", Qt::Key_J, [this] {
             auto mainLayout = static_cast<MainLayout *>(layout());
             setSearchVisible(!mainLayout->isSearchVisible());
         });
 
-        addMenuItem(editMenu, "Temp debug", Qt::Key_K, [this] { VME_LOG("."); });
+        addMenuItem(editMenu, "Temp Debug", Qt::Key_K, [this] { VME_LOG("."); });
         editMenu->addAction(new MenuSeparator(this));
 
         addMenuItem(editMenu, "Cut", Qt::CTRL | Qt::Key_X, [this] {
@@ -779,8 +779,8 @@ QMenuBar *MainWindow::createMenuBar()
     {
         auto viewMenu = menuBar->addMenu(tr("View"));
 
-        addMenuItem(viewMenu, "Zoom in", Qt::CTRL | Qt::Key_Plus, []() {});
-        addMenuItem(viewMenu, "Zoom out", Qt::CTRL | Qt::Key_Minus, []() {});
+        addMenuItem(viewMenu, "Zoom In", Qt::CTRL | Qt::Key_Plus, []() {});
+        addMenuItem(viewMenu, "Zoom Out", Qt::CTRL | Qt::Key_Minus, []() {});
 
         auto pan = new QShortcut(Qt::Key_Space, this);
         connect(pan, &QShortcut::activated, [this]() {
@@ -825,7 +825,7 @@ QMenuBar *MainWindow::createMenuBar()
     {
         auto reloadMenu = menuBar->addMenu(tr("Reload"));
 
-        addMenuItem(reloadMenu, "Reload styles", 0, []() { QtUtil::qtApp()->loadStyleSheet(":/vme/style/qss/default.qss"); });
+        addMenuItem(reloadMenu, "Reload Styles", 0, []() { QtUtil::qtApp()->loadStyleSheet(":/vme/style/qss/default.qss"); });
 
         addMenuItem(reloadMenu, "Reload Properties QML", Qt::Key_F5, [this]() {
             propertyWindow->reloadSource();
@@ -834,19 +834,19 @@ QMenuBar *MainWindow::createMenuBar()
     }
 
     {
-        QAction *debug = new QAction(tr("Toggle debug"), this);
+        QAction *debug = new QAction(tr("Toggle Debug"), this);
         connect(debug, &QAction::triggered, [=] { DEBUG_FLAG_ACTIVE = !DEBUG_FLAG_ACTIVE; });
         menuBar->addAction(debug);
     }
 
     {
-        QAction *runBorderTest = new QAction(tr("Run border test"), this);
+        QAction *runBorderTest = new QAction(tr("Run Border Test"), this);
         connect(runBorderTest, &QAction::triggered, [=] { currentMapView()->testBordering(); });
         menuBar->addAction(runBorderTest);
     }
 
     {
-        QAction *runTest = new QAction(tr("Run MapView test"), this);
+        QAction *runTest = new QAction(tr("Run MapView Test"), this);
         connect(runTest, &QAction::triggered, [=] { currentMapView()->perfTest(); });
         menuBar->addAction(runTest);
     }
