@@ -9,7 +9,7 @@
 #include "raw_brush.h"
 
 TileBorderInfo BorderBrush::tileInfo = {};
-std::unique_ptr<BorderBrushVariation> BorderBrush::brushVariation = std::make_unique<GeneralBorderBrush>();
+BorderBrushVariation *BorderBrush::brushVariation = &DetailedBorderBrush::instance;
 
 BorderExpandDirection BorderBrush::currDir;
 std::optional<BorderExpandDirection> BorderBrush::prevDir;
@@ -144,24 +144,29 @@ void BorderBrush::initialize()
     }
 
     std::sort(sortedServerIds.begin(), sortedServerIds.end());
-
-    // TODO TEMP for debugging, remove!
-    borderData.centerBrush = Brush::getGroundBrush("normal_grass");
 }
 
 void BorderBrush::apply(MapView &mapView, const Position &position, Direction direction)
 {
     using Dir = BorderExpandDirection;
 
+    auto mouseQuadrant = mapView.getMouseDownTileQuadrant();
+
+    // Need a mouse quadrant to apply
+    if (!mouseQuadrant)
+    {
+        return;
+    }
+
     const Map &map = *mapView.map();
-    NeighborMap neighbors(position, this, map);
+    BorderNeighborMap neighbors(position, this, map);
 
     std::string dirName = "None";
 
-    std::optional<Position> lastPos = mapView.getLastBrushDragPosition();
-    auto mouseQuadrant = mapView.getMouseDownTileQuadrant();
+    Position prevPos = mapView.getLastBrushDragPosition().value_or(position);
+    Position expandDirection = position - prevPos;
 
-    if (!lastPos && mouseQuadrant)
+    if (expandDirection == PositionConstants::Zero)
     {
         TileQuadrant quadrant = *mouseQuadrant;
         brushVariation->expandCenter(neighbors, tileInfo, quadrant);
@@ -175,8 +180,6 @@ void BorderBrush::apply(MapView &mapView, const Position &position, Direction di
     else
     {
         prevDir = currDir;
-        Position expandDirection = position - *lastPos;
-        DEBUG_ASSERT(expandDirection != PositionConstants::Zero, "Should not be able to be zero here");
 
         if (expandDirection.x == -1)
         {
@@ -204,7 +207,7 @@ void BorderBrush::apply(MapView &mapView, const Position &position, Direction di
         }
     }
 
-    VME_LOG_D("Apply " << dirName << " :: " << position << "\tborderStart: " << tileInfo.borderStartQuadrant);
+    // VME_LOG_D("Apply " << dirName << " :: " << position << "\tborderStart: " << tileInfo.borderStartQuadrant);
 
     updateCenter(neighbors);
 
@@ -213,11 +216,11 @@ void BorderBrush::apply(MapView &mapView, const Position &position, Direction di
     tileInfo.cover = neighbors.center();
     tileInfo.prevQuadrant = tileInfo.quadrant;
 
-    VME_LOG_D("Set to " << tileInfo.quadrant << " in apply");
+    // VME_LOG_D("Set to " << tileInfo.quadrant << " in apply");
 
-    if (mouseQuadrant && tileInfo.borderStartQuadrant != *mouseQuadrant)
+    if (tileInfo.borderStartQuadrant != *mouseQuadrant)
     {
-        quadrantChanged(mapView, position, tileInfo.borderStartQuadrant, *mouseQuadrant);
+        quadrantChanged(mapView, position, neighbors, tileInfo.borderStartQuadrant, *mouseQuadrant);
     }
 }
 
@@ -299,8 +302,13 @@ void BorderBrush::quadrantChangeInFirstTile(TileCover cover, TileCover &nextCove
 void BorderBrush::quadrantChanged(MapView &mapView, const Position &position, TileQuadrant prevQuadrant, TileQuadrant currQuadrant)
 {
     const Map &map = *mapView.map();
-    NeighborMap neighbors(position, this, map);
+    BorderNeighborMap neighbors(position, this, map);
 
+    quadrantChanged(mapView, position, neighbors, prevQuadrant, currQuadrant);
+}
+
+void BorderBrush::quadrantChanged(MapView &mapView, const Position &position, BorderNeighborMap &neighbors, TileQuadrant prevQuadrant, TileQuadrant currQuadrant)
+{
     TileCover &center = neighbors.center();
     TileCover nextCenter = brushVariation->quadrantChanged(neighbors, tileInfo, currDir, prevQuadrant, currQuadrant);
 
@@ -316,7 +324,7 @@ void BorderBrush::quadrantChanged(MapView &mapView, const Position &position, Ti
     tileInfo.quadrant = currQuadrant;
 }
 
-void BorderBrush::updateCenter(NeighborMap &neighbors)
+void BorderBrush::updateCenter(BorderNeighborMap &neighbors)
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
@@ -389,7 +397,7 @@ void BorderBrush::updateCenter(NeighborMap &neighbors)
     }
 }
 
-void BorderBrush::fixBorders(MapView &mapView, const Position &position, NeighborMap &neighbors)
+void BorderBrush::fixBorders(MapView &mapView, const Position &position, BorderNeighborMap &neighbors)
 {
     for (int dy = -1; dy <= 1; ++dy)
     {
@@ -403,7 +411,7 @@ void BorderBrush::fixBorders(MapView &mapView, const Position &position, Neighbo
     }
 }
 
-void BorderBrush::fixBorderEdgeCases(int x, int y, TileCover &cover, const NeighborMap &neighbors)
+void BorderBrush::fixBorderEdgeCases(int x, int y, TileCover &cover, const BorderNeighborMap &neighbors)
 {
     // Two of the same diagonal in a row
     if (cover & TILE_COVER_SOUTH_WEST)
@@ -417,7 +425,7 @@ void BorderBrush::fixBorderEdgeCases(int x, int y, TileCover &cover, const Neigh
     }
 }
 
-void BorderBrush::fixBordersAtOffset(MapView &mapView, const Position &position, NeighborMap &neighbors, int x, int y)
+void BorderBrush::fixBordersAtOffset(MapView &mapView, const Position &position, BorderNeighborMap &neighbors, int x, int y)
 {
     using namespace TileCoverShortHands;
 
@@ -426,18 +434,25 @@ void BorderBrush::fixBordersAtOffset(MapView &mapView, const Position &position,
     auto currentCover = neighbors.at(x, y);
 
     TileCover cover = None;
-    cover |= TileCovers::mirrorNorth(neighbors.at(x, y + 1));
-    cover |= TileCovers::mirrorEast(cover, neighbors.at(x - 1, y));
-    cover |= TileCovers::mirrorSouth(neighbors.at(x, y - 1));
-    cover |= TileCovers::mirrorWest(cover, neighbors.at(x + 1, y));
-
-    // Do not use a mirrored diagonal if we already have a diagonal.
-    if (currentCover & Diagonals)
+    if (currentCover == Full)
     {
-        cover &= ~(Diagonals);
+        cover = Full;
     }
+    else
+    {
+        cover |= TileCovers::mirrorNorth(neighbors.at(x, y + 1));
+        cover |= TileCovers::mirrorEast(cover, neighbors.at(x - 1, y));
+        cover |= TileCovers::mirrorSouth(neighbors.at(x, y - 1));
+        cover |= TileCovers::mirrorWest(cover, neighbors.at(x + 1, y));
 
-    cover = TileCovers::mergeTileCover(cover, currentCover);
+        // Do not use a mirrored diagonal if we already have a diagonal.
+        if (currentCover & Diagonals)
+        {
+            cover &= ~(Diagonals);
+        }
+
+        cover = TileCovers::mergeTileCover(cover, currentCover);
+    }
 
     // Compute preferred diagonal
     TileCover preferredDiagonal = currentCover & Diagonals;
@@ -481,11 +496,9 @@ void BorderBrush::fixBordersAtOffset(MapView &mapView, const Position &position,
         return;
     }
 
-    std::vector<BorderType> borders;
-
     if (cover & Full)
     {
-        borders.emplace_back(BorderType::Center);
+        apply(mapView, pos, BorderType::Center);
     }
     else
     {
@@ -555,9 +568,10 @@ void BorderBrush::apply(MapView &mapView, const Position &position, BorderType b
 {
     if (borderType == BorderType::Center)
     {
-        if (borderData.centerBrush)
+        Brush *centerBrush = borderData.getCenterBrush();
+        if (centerBrush)
         {
-            borderData.centerBrush->apply(mapView, position, Direction::South);
+            centerBrush->apply(mapView, position, Direction::South);
         }
     }
     else
@@ -605,8 +619,13 @@ TileQuadrant BorderBrush::getNeighborQuadrant(int dx, int dy)
 
 bool BorderBrush::includes(uint32_t serverId) const
 {
-    bool asBorder = std::binary_search(sortedServerIds.begin(), sortedServerIds.end(), serverId);
-    return asBorder || (borderData.centerBrush && borderData.centerBrush->erasesItem(serverId));
+    auto centerBrush = borderData.getCenterBrush();
+    return hasBorder(serverId) || (centerBrush && centerBrush->erasesItem(serverId));
+}
+
+bool BorderBrush::hasBorder(uint32_t serverId) const
+{
+    return std::binary_search(sortedServerIds.begin(), sortedServerIds.end(), serverId);
 }
 
 bool BorderBrush::erasesItem(uint32_t serverId) const
@@ -650,9 +669,29 @@ const std::vector<uint32_t> &BorderBrush::serverIds() const
     return sortedServerIds;
 }
 
+uint32_t BorderBrush::getServerId(BorderType borderType) const noexcept
+{
+    return borderData.getServerId(borderType);
+}
+
 Brush *BorderBrush::centerBrush() const
 {
-    return borderData.centerBrush;
+    return borderData.getCenterBrush();
+}
+
+Brush *BorderData::getCenterBrush() const
+{
+    if (_centerBrush)
+        return _centerBrush;
+
+    if (centerGroundId)
+    {
+        _centerBrush = Brush::getGroundBrush(*centerGroundId);
+        centerGroundId.reset();
+        return _centerBrush;
+    }
+
+    return nullptr;
 }
 
 BorderType BorderData::getBorderType(uint32_t serverId) const
@@ -665,6 +704,7 @@ BorderType BorderData::getBorderType(uint32_t serverId) const
         }
     }
 
+    auto centerBrush = getCenterBrush();
     if (centerBrush && centerBrush->erasesItem(serverId))
     {
         return BorderType::Center;
@@ -686,7 +726,7 @@ TileCover BorderBrush::getTileCover(uint32_t serverId) const
     return borderTypeToTileCover[to_underlying(borderType)];
 }
 
-uint32_t BorderData::getServerId(BorderType borderType) const
+uint32_t BorderData::getServerId(BorderType borderType) const noexcept
 {
     // -1 because index zero in BorderType is BorderType::None
     return borderIds[to_underlying(borderType) - 1];
@@ -701,6 +741,7 @@ bool BorderData::is(uint32_t serverId, BorderType borderType) const
 {
     if (borderType == BorderType::Center)
     {
+        auto centerBrush = getCenterBrush();
         return centerBrush && centerBrush->erasesItem(serverId);
     }
 
@@ -718,4 +759,42 @@ bool isLeft(TileQuadrant quadrant)
 bool isTop(TileQuadrant quadrant)
 {
     return quadrant == TileQuadrant::TopLeft || quadrant == TileQuadrant::TopRight;
+}
+
+void BorderBrush::setBrushVariation(BorderBrushVariationType brushVariationType)
+{
+    Settings::BORDER_BRUSH_VARIATION = brushVariationType;
+
+    switch (brushVariationType)
+    {
+        case BorderBrushVariationType::General:
+            brushVariation = &GeneralBorderBrush::instance;
+            break;
+        case BorderBrushVariationType::Detailed:
+            brushVariation = &DetailedBorderBrush::instance;
+            break;
+    }
+}
+
+void BorderData::setCenterGroundId(const std::string &id)
+{
+    centerGroundId = id;
+}
+
+void BorderBrush::setCenterGroundId(const std::string &id)
+{
+    borderData.setCenterGroundId(id);
+}
+
+uint32_t BorderBrush::preferredZOrder() const
+{
+    auto centerBrush = borderData.getCenterBrush();
+    if (centerBrush && centerBrush->type() == BrushType::Ground)
+    {
+        return static_cast<GroundBrush *>(centerBrush)->zOrder();
+    }
+    else
+    {
+        return 0;
+    }
 }

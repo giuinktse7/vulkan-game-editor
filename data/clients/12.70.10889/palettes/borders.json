@@ -9,7 +9,20 @@
                 "straight": { "n": 4542, "e": 4543, "s": 4544, "w": 4545 },
                 "corner": { "nw": 4546, "ne": 4547, "sw": 4548, "se": 4549 },
                 "diagonal": { "nw": 4550, "ne": 4551, "sw": 4552, "se": 4553 }
-            }
+            },
+            "centerGroundId": "normal_grass"
+        },
+        {
+            "id": "dried_grass_border",
+            "name": "Dried grass border",
+            "type": "border",
+            "lookId": 8355,
+            "items": {
+                "straight": { "n": 8349, "e": 8360, "s": 8359, "w": 8350 },
+                "corner": { "nw": 8351, "ne": 8352, "sw": 8353, "se": 8354 },
+                "diagonal": { "nw": 8355, "ne": 8356, "sw": 8357, "se": 8358 }
+            },
+            "centerGroundId": "dried_grass"
         }
     ]
 }

@@ -12,7 +12,17 @@
 class MapView;
 class TileLocation;
 class BorderBrush;
+class GroundBrush;
 enum TileCover;
+struct TileBorderBlock;
+
+struct BorderZOrderBlock
+{
+    BorderZOrderBlock(TileCover cover, BorderBrush *brush);
+
+    TileCover cover;
+    BorderBrush *brush;
+};
 
 using TileThing = std::variant<std::monostate, Item *, Creature *>;
 
@@ -74,6 +84,7 @@ class Tile
     void moveItems(Tile &other);
     void moveItemsWithBroadcast(Tile &other);
     void moveSelected(Tile &other);
+    void clearBorders();
 
     const std::vector<std::shared_ptr<Item>>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
 
@@ -107,9 +118,14 @@ class Tile
     // Returns 0 if the border is not present on the tile
     uint32_t getBorderServerId(const BorderBrush *brush) const;
     TileCover getTileCover(const BorderBrush *brush) const;
+
+    TileBorderBlock getFullBorderTileCover(TileCover excludeMask) const;
+
     bool hasItems() const;
     inline bool hasGround() const noexcept;
     inline bool hasCreature() const noexcept;
+
+    GroundBrush *groundBrush() const;
 
     int getTopElevation() const;
 

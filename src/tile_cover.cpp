@@ -255,6 +255,26 @@ TileCover TileCovers::unifyTileCover(TileCover cover, TileQuadrant quadrant, Til
     return cover;
 }
 
+TileCover TileCovers::mirrorEast(TileCover cover)
+{
+    if (cover & FullEast)
+    {
+        return West;
+    }
+
+    TileCover result = None;
+    if (cover & (North | NorthEastCorner | NorthWest))
+    {
+        result |= NorthWestCorner;
+    }
+    if (cover & (South | SouthEastCorner | SouthWest))
+    {
+        result |= SouthWestCorner;
+    }
+
+    return result;
+}
+
 TileCover TileCovers::mirrorEast(TileCover source, TileCover cover)
 {
     if (cover & SouthEast)
@@ -315,6 +335,26 @@ TileCover TileCovers::mirrorWest(TileCover source, TileCover cover)
 
         return result;
     }
+}
+
+TileCover TileCovers::mirrorWest(TileCover cover)
+{
+    if (cover & FullWest)
+    {
+        return East;
+    }
+
+    TileCover result = None;
+    if (cover & (North | NorthWestCorner | NorthEast))
+    {
+        result |= NorthEastCorner;
+    }
+    if (cover & (South | SouthWestCorner | SouthEast))
+    {
+        result |= SouthEastCorner;
+    }
+
+    return result;
 }
 
 TileCover TileCovers::mirrorNorth(TileCover tileCover)

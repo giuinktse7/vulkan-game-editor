@@ -6,6 +6,7 @@
 #include "brushes/creature_brush.h"
 #include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
+#include "config.h"
 #include "const.h"
 #include "items.h"
 #include "time_point.h"
@@ -209,6 +210,22 @@ void MapView::addItem(Tile &tile, Item &&item)
     history.commit(std::move(action));
 }
 
+void MapView::setGround(Tile &tile, Item &&ground, bool clearBorders)
+{
+    Tile newTile = tile.deepCopy();
+
+    if (clearBorders)
+    {
+        newTile.clearBorders();
+    }
+    newTile.addItem(std::move(ground));
+
+    Action action(ActionType::SetTile);
+    action.addChange(SetTile(std::move(newTile)));
+
+    history.commit(std::move(action));
+}
+
 void MapView::addItem(const Position &pos, Item &&item)
 {
     addItem(_map->getOrCreateTile(pos), std::move(item));
@@ -290,6 +307,23 @@ void MapView::removeItems(const Tile &tile, std::function<bool(const Item &)> pr
         action.addChange(SetTile(std::move(newTile)));
 
         history.commit(std::move(action));
+    }
+}
+
+void MapView::removeItemsWithBorderize(const Tile &tile, std::function<bool(const Item &)> predicate)
+{
+    Tile newTile = tile.deepCopy();
+    if (newTile.removeItemsIf(predicate) > 0)
+    {
+        Action action(ActionType::ModifyTile);
+        action.addChange(SetTile(std::move(newTile)));
+
+        history.commit(std::move(action));
+    }
+
+    if (Settings::AUTO_BORDER && !newTile.hasGround())
+    {
+        GroundBrush::borderize(*this, tile.position());
     }
 }
 
@@ -473,7 +507,7 @@ void MapView::removeItemsInRegion(const Position &from, const Position &to, std:
     for (auto &tileLocation : this->_map->getRegion(from, to))
     {
         if (tileLocation.hasTile())
-            removeItems(*tileLocation.tile(), predicate);
+            removeItemsWithBorderize(*tileLocation.tile(), predicate);
     }
 
     history.endTransaction(TransactionType::RemoveMapItem);
@@ -504,29 +538,50 @@ void MapView::fillRegionByGroundBrush(const Position &from, const Position &to, 
 {
     history.beginTransaction(TransactionType::AddMapItem);
 
-    Action action(ActionType::SetTile);
-    action.reserve(Position::tilesInRegion(from, to));
+    bool hasPlacementRestriction = GroundBrush::hasReplacementFilter();
 
     MapView &mapView = *this;
 
-    for (const auto &pos : MapArea(*_map, from, to))
+    if (Settings::AUTO_BORDER)
     {
-        auto location = _map->getTileLocation(pos);
-        if (!location || !location->hasTile())
+        for (const auto &pos : MapArea(*_map, from, to))
         {
-            auto tile = Tile(pos);
-            tile.addItem(Item(brush->nextServerId()));
-            action.changes.emplace_back<SetTile>(std::move(tile));
-        }
-        else if (GroundBrush::mayPlaceOnTile(*location->tile()))
-        {
-            auto tile = getTile(pos)->deepCopy();
-            tile.addItem(Item(brush->nextServerId()));
-            action.changes.emplace_back<SetTile>(std::move(tile));
+            auto location = _map->getTileLocation(pos);
+            if (!location || !location->hasTile() || GroundBrush::mayPlaceOnTile(*location->tile()))
+            {
+                brush->apply(mapView, pos, Direction::South);
+            }
+            else
+            {
+                GroundBrush::borderize(mapView, pos);
+            }
         }
     }
+    else
+    {
+        Action action(ActionType::SetTile);
+        action.reserve(Position::tilesInRegion(from, to));
 
-    history.commit(std::move(action));
+        for (const auto &pos : MapArea(*_map, from, to))
+        {
+            auto location = _map->getTileLocation(pos);
+            if (!location || !location->hasTile())
+            {
+                auto tile = Tile(pos);
+                tile.addItem(Item(brush->nextServerId()));
+                action.changes.emplace_back<SetTile>(std::move(tile));
+            }
+            else if (GroundBrush::mayPlaceOnTile(*location->tile()))
+            {
+                auto tile = getTile(pos)->deepCopy();
+                tile.addItem(Item(brush->nextServerId()));
+                action.changes.emplace_back<SetTile>(std::move(tile));
+            }
+        }
+
+        history.commit(std::move(action));
+    }
+
     history.endTransaction(TransactionType::AddMapItem);
 }
 
@@ -996,12 +1051,15 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
                     if (action.erase)
                     {
-                        const Tile *tile = getTile(pos);
-                        if (tile)
+                        if (!action.area)
                         {
-                            removeItems(*tile, [action](const Item &item) {
-                                return action.brush->erasesItem(item.serverId());
-                            });
+                            const Tile *tile = getTile(pos);
+                            if (tile)
+                            {
+                                removeItemsWithBorderize(*tile, [action](const Item &item) {
+                                    return action.brush->erasesItem(item.serverId());
+                                });
+                            }
                         }
                     }
                     else
@@ -1143,7 +1201,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                         const Tile *tile = getTile(pos);
                         if (tile)
                         {
-                            removeItems(*tile, [action](const Item &item) {
+                            removeItemsWithBorderize(*tile, [action](const Item &item) {
                                 return action.brush->erasesItem(item.serverId());
                             });
                         }
@@ -1509,6 +1567,10 @@ void MapView::perfTest()
     // Position to(400, 400, 7);
     Position to(2000, 2000, 7);
 
+    // > 1min with autoborder
+    // fillRegionByGroundBrush(from, to, Brush::getGroundBrush("normal_grass"));
+
+    // < 2s without autoborder
     fillRegion(from, to, 4526);
 
     VME_LOG("fillRegion finished in " << start.elapsedMillis() << " ms.");

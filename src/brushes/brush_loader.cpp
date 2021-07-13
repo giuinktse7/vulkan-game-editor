@@ -171,9 +171,39 @@ GroundBrush BrushLoader::parseGroundBrush(const json &brush)
         weightedIds.emplace_back(id, chance);
     }
 
-    auto groundBrush = GroundBrush(id, std::move(weightedIds));
+    auto groundBrush = GroundBrush(id, std::move(weightedIds), zOrder);
     groundBrush.setIconServerId(lookId);
     groundBrush.setName(name);
+
+    if (brush.contains("borders"))
+    {
+        json borders = asArray(brush, "borders");
+
+        stackTrace.emplace("borders");
+
+        for (auto &border : borders)
+        {
+            // TODO Implement inner border
+            std::string align = border.at("align").get<std::string>();
+            std::string borderId = border.at("id").get<std::string>();
+
+            BorderBrush *brush = Brush::getBorderBrush(borderId);
+            if (!brush)
+            {
+                throw json::type_error::create(302, std::format("There is no border brush with id '{}'", borderId));
+            }
+
+            // TODO make it possible for a ground to have more than one border. The borders should be chosen based on
+            // what other ground(s) our ground is adjacent to.
+
+            GroundBorder groundBorder{};
+            groundBorder.brush = brush;
+            groundBrush.addBorder(groundBorder);
+        }
+
+        stackTrace.pop();
+    }
+
     return groundBrush;
 }
 
@@ -215,6 +245,12 @@ BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
 
     auto borderBrush = BorderBrush(id, name, borderIds);
     borderBrush.setIconServerId(lookId);
+
+    if (brush.contains("centerGroundId"))
+    {
+        std::string groundId = brush.at("centerGroundId").get<std::string>();
+        borderBrush.setCenterGroundId(groundId);
+    }
 
     return borderBrush;
 }

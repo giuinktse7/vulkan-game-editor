@@ -236,7 +236,7 @@ void MapRenderer::drawMap()
     MapView &view = *mapView;
 
     ItemPredicate filter = nullptr;
-    if (mapView->draggingWithSubtract())
+    if (mapView->draggingWithSubtract() && !Settings::AUTO_BORDER)
     {
         auto [from, to] = mapView->getDragPoints().value();
         Region2D dragRegion(from.toPos(view.floor()), to.toPos(view.floor()));

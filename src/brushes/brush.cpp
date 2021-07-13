@@ -10,7 +10,6 @@
 #include "ground_brush.h"
 #include "raw_brush.h"
 
-
 #define FTS_FUZZY_MATCH_IMPLEMENTATION
 #include "../../vendor/fts_fuzzy_match/fts_fuzzy_match.h"
 
@@ -321,7 +320,7 @@ DrawItemType::DrawItemType(uint32_t serverId, Position relativePosition)
 DrawItemType::DrawItemType(ItemType *itemType, Position relativePosition)
     : itemType(itemType), relativePosition(relativePosition) {}
 
-NeighborMap::NeighborMap(const Position &position, BorderBrush *brush, const Map &map)
+BorderNeighborMap::BorderNeighborMap(const Position &position, BorderBrush *brush, const Map &map)
 {
     for (int dy = -2; dy <= 2; ++dy)
     {
@@ -339,7 +338,7 @@ NeighborMap::NeighborMap(const Position &position, BorderBrush *brush, const Map
     }
 }
 
-TileCover NeighborMap::getTileCoverAt(BorderBrush *brush, const Map &map, const Position position) const
+TileCover BorderNeighborMap::getTileCoverAt(BorderBrush *brush, const Map &map, const Position position) const
 {
     Tile *tile = map.getTile(position);
     if (!tile)
@@ -350,43 +349,43 @@ TileCover NeighborMap::getTileCoverAt(BorderBrush *brush, const Map &map, const 
     return tile->getTileCover(brush);
 }
 
-bool NeighborMap::isExpanded(int x, int y) const
+bool BorderNeighborMap::isExpanded(int x, int y) const
 {
     auto found = std::find_if(expandedCovers.begin(), expandedCovers.end(), [x, y](const ExpandedTileBlock &block) { return block.x == x && block.y == y; });
     return found != expandedCovers.end();
 }
 
-bool NeighborMap::hasExpandedCover() const noexcept
+bool BorderNeighborMap::hasExpandedCover() const noexcept
 {
     return !expandedCovers.empty();
 }
 
-void NeighborMap::addExpandedCover(int x, int y)
+void BorderNeighborMap::addExpandedCover(int x, int y)
 {
     expandedCovers.emplace_back(ExpandedTileBlock{x, y});
 }
 
-TileCover &NeighborMap::at(int x, int y)
+TileCover &BorderNeighborMap::at(int x, int y)
 {
     return data[index(x, y)];
 }
 
-TileCover &NeighborMap::center()
+TileCover &BorderNeighborMap::center()
 {
     return data[12];
 }
 
-TileCover NeighborMap::at(int x, int y) const
+TileCover BorderNeighborMap::at(int x, int y) const
 {
     return data[index(x, y)];
 }
 
-void NeighborMap::set(int x, int y, TileCover tileCover)
+void BorderNeighborMap::set(int x, int y, TileCover tileCover)
 {
     data[index(x, y)] = tileCover;
 }
 
-int NeighborMap::index(int x, int y) const
+int BorderNeighborMap::index(int x, int y) const
 {
     return (y + 2) * 5 + (x + 2);
 }

@@ -8,6 +8,7 @@
 #include <sstream>
 
 BorderBrushVariationType Settings::BORDER_BRUSH_VARIATION = BorderBrushVariationType::Detailed;
+bool Settings::AUTO_BORDER = true;
 
 namespace
 {
@@ -81,20 +82,15 @@ std::optional<Config::Error> Config::load()
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    // g_ecs.registerComponent<ItemAnimationComponent>();
-    // g_ecs.registerSystem<ItemAnimationSystem>();
-
     Appearances::loadTextureAtlases(_assetFolder / CatalogContentFile, _assetFolder);
     Appearances::loadAppearanceData(_dataFolder / AppearancesFile);
 
     Items::loadFromOtb(_dataFolder / "items.otb");
     Items::loadFromXml(_dataFolder / "items.xml");
-    VME_LOG_D("Crate name: " << Items::items.getItemTypeByServerId(1739)->name());
     Items::loadMissingItemTypes();
 
-    VME_LOG_D("Items: " << Items::items.size());
-    VME_LOG_D("Client ids: " << Appearances::objectCount());
-    VME_LOG_D("Highest client id: " << Items::items.highestClientId);
+    VME_LOG_D(std::format("Items: {} (highest server ID: {})", Items::items.size(), Items::items.highestServerId));
+    VME_LOG_D("Client object count: " << Appearances::objectCount());
 
     _loaded = true;
     return result;

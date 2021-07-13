@@ -6,7 +6,31 @@
 #include "border_brush.h"
 #include "brush.h"
 
+GeneralBorderBrush GeneralBorderBrush::instance;
+DetailedBorderBrush DetailedBorderBrush::instance;
+
 using TileQuadrant::TopLeft, TileQuadrant::TopRight, TileQuadrant::BottomRight, TileQuadrant::BottomLeft;
+
+inline std::ostream &operator<<(std::ostream &os, const TileQuadrant &quadrant)
+{
+    switch (quadrant)
+    {
+        case TopLeft:
+            os << "TopLeft";
+            break;
+        case TopRight:
+            os << "TopRight";
+            break;
+        case BottomRight:
+            os << "BottomRight";
+            break;
+        case BottomLeft:
+            os << "BottomLeft";
+            break;
+    }
+
+    return os;
+}
 
 bool isTop(TileQuadrant quadrant);
 bool isLeft(TileQuadrant quadrant);
@@ -18,7 +42,7 @@ bool isRight(TileQuadrant quadrant);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-TileCover GeneralBorderBrush::quadrantChanged(NeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection currDir, TileQuadrant prevQuadrant, TileQuadrant currQuadrant) const
+TileCover GeneralBorderBrush::quadrantChanged(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection currDir, TileQuadrant prevQuadrant, TileQuadrant currQuadrant) const
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
@@ -116,7 +140,7 @@ TileCover GeneralBorderBrush::quadrantChanged(NeighborMap &neighbors, TileBorder
 #undef whenTarget
 }
 
-void GeneralBorderBrush::expandCenter(NeighborMap &neighbors, TileBorderInfo &tileInfo, TileQuadrant tileQuadrant) const
+void GeneralBorderBrush::expandCenter(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, TileQuadrant tileQuadrant) const
 {
     using namespace TileCoverShortHands;
 
@@ -149,7 +173,7 @@ void GeneralBorderBrush::expandCenter(NeighborMap &neighbors, TileBorderInfo &ti
     }
 }
 
-void GeneralBorderBrush::expandNorth(NeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
+void GeneralBorderBrush::expandNorth(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
@@ -245,7 +269,7 @@ void GeneralBorderBrush::expandNorth(NeighborMap &neighbors, TileBorderInfo &til
     }
 }
 
-void GeneralBorderBrush::expandSouth(NeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
+void GeneralBorderBrush::expandSouth(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
@@ -342,7 +366,7 @@ void GeneralBorderBrush::expandSouth(NeighborMap &neighbors, TileBorderInfo &til
     }
 }
 
-void GeneralBorderBrush::expandEast(NeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
+void GeneralBorderBrush::expandEast(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
@@ -445,7 +469,7 @@ void GeneralBorderBrush::expandEast(NeighborMap &neighbors, TileBorderInfo &tile
     }
 }
 
-void GeneralBorderBrush::expandWest(NeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
+void GeneralBorderBrush::expandWest(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
@@ -553,16 +577,10 @@ void GeneralBorderBrush::expandWest(NeighborMap &neighbors, TileBorderInfo &tile
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-TileCover DetailedBorderBrush::quadrantChanged(NeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection currDir, TileQuadrant prevQuadrant, TileQuadrant currQuadrant) const
+TileCover DetailedBorderBrush::quadrantChanged(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection currDir, TileQuadrant prevQuadrant, TileQuadrant currQuadrant) const
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
-
-#define whenTarget(targetQuad, newCover)         \
-    if (currQuadrant == (targetQuad))            \
-    {                                            \
-        nextCover = tileInfo.cover | (newCover); \
-    }
 
     TileCover cover = neighbors.center();
 
@@ -573,85 +591,60 @@ TileCover DetailedBorderBrush::quadrantChanged(NeighborMap &neighbors, TileBorde
 
     TileCover nextCover = TileCovers::mergeTileCover(cover, tileInfo.cover);
 
-    if (currQuadrant == tileInfo.borderStartQuadrant)
-    {
-        nextCover = tileInfo.cover;
-    }
-    else if (currDir == Dir::None)
+    if (currDir == Dir::None)
     {
         BorderBrush::quadrantChangeInFirstTile(cover, nextCover, prevQuadrant, currQuadrant);
     }
-    else if (currDir == Dir::North)
+    else
     {
-        if (tileInfo.borderStartQuadrant == BottomLeft)
+        TileQuadrant borderStart = tileInfo.borderStartQuadrant;
+        TileQuadrant quadrants = prevQuadrant | currQuadrant;
+        if (quadrants == (TopLeft | TopRight))
         {
-            whenTarget(TopLeft, West)                                                  // ◰
-                else whenTarget(TopRight, NorthWest)                                   // ◳
-                else whenTarget(BottomRight, tileInfo.cover & West ? West : NorthWest) // ◲
-        }
-        else if (tileInfo.borderStartQuadrant == BottomRight)
-        {
-            whenTarget(TopLeft, NorthEast)                                            // ◰
-                else whenTarget(TopRight, East)                                       // ◳
-                else whenTarget(BottomLeft, tileInfo.cover & East ? East : NorthEast) // ◱
-        }
-    }
-    else if (currDir == Dir::East)
-    {
-        if (tileInfo.borderStartQuadrant == BottomLeft)
-        {
-            whenTarget(TopLeft, tileInfo.cover & South ? South : SouthEast) // ◰
-                else whenTarget(TopRight, SouthEast)                        // ◳
-                else whenTarget(BottomRight, South)                         // ◲
-        }
-        else if (tileInfo.borderStartQuadrant == TopLeft)
-        {
-            whenTarget(TopRight, North)                                                 // ◳
-                else whenTarget(BottomRight, NorthEast)                                 // ◲
-                else whenTarget(BottomLeft, tileInfo.cover & North ? North : NorthEast) // ◱
-        }
-    }
-    else if (currDir == Dir::West)
-    {
-        if (tileInfo.borderStartQuadrant == TopRight)
-        {
-            whenTarget(TopLeft, North)                                                   // ◰
-                else whenTarget(BottomLeft, NorthWest)                                   // ◱
-                else whenTarget(BottomRight, tileInfo.cover & North ? North : NorthWest) // ◲
-        }
-        else if (tileInfo.borderStartQuadrant == BottomRight)
-        {
-            whenTarget(TopLeft, SouthWest)                                            // ◰
-                else whenTarget(TopRight, tileInfo.cover & South ? South : SouthWest) // ◳
-                else whenTarget(BottomLeft, South)                                    // ◱
-        }
-    }
-    else if (currDir == Dir::South)
-    {
-        if (tileInfo.borderStartQuadrant == TopLeft)
-        {
-            if (currQuadrant == TopRight)
+            bool valid = !(currDir == Dir::South && !(neighbors.at(1, 0) & (FullSouth | SouthWestCorner)));
+
+            if (currDir != Dir::South)
             {
-                auto x = true;
+                nextCover |= North;
             }
-            whenTarget(TopRight, tileInfo.cover & West ? West : SouthWest) // ◳
-                else whenTarget(BottomRight, SouthWest)                    // ◲
-                else whenTarget(BottomLeft, West)                          // ◱
         }
-        else if (tileInfo.borderStartQuadrant == TopRight)
+        else if (quadrants == (TopRight | BottomRight))
         {
-            whenTarget(TopLeft, tileInfo.cover & East ? East : SouthEast) // ◰
-                else whenTarget(BottomRight, East)                        // ◲
-                else whenTarget(BottomLeft, SouthEast)                    // ◱
+            if (currDir != Dir::West)
+            {
+                nextCover |= East;
+            }
+        }
+        else if (quadrants == (BottomRight | BottomLeft))
+        {
+            TileCover part = South;
+            if (currDir == Dir::North)
+            {
+                bool prevLeft = isLeft(prevQuadrant);
+                TileCover corner = prevLeft ? SouthEastCorner : SouthWestCorner;
+                int dx = prevLeft ? -1 : 1;
+
+                if (!(neighbors.at(dx, 0) & (FullSouth | corner)))
+                {
+                    part = corner;
+                }
+            }
+
+            nextCover |= part;
+        }
+        else if (quadrants == (BottomLeft | TopLeft))
+        {
+            if (currDir != Dir::East)
+            {
+                nextCover |= West;
+            }
         }
     }
 
     return nextCover;
-
-#undef whenTarget
 }
 
-void DetailedBorderBrush::expandCenter(NeighborMap &neighbors, TileBorderInfo &tileInfo, TileQuadrant tileQuadrant) const
+void DetailedBorderBrush::expandCenter(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, TileQuadrant tileQuadrant) const
 {
     using namespace TileCoverShortHands;
 
@@ -684,7 +677,7 @@ void DetailedBorderBrush::expandCenter(NeighborMap &neighbors, TileBorderInfo &t
     }
 }
 
-void DetailedBorderBrush::expandNorth(NeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
+void DetailedBorderBrush::expandNorth(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
@@ -692,38 +685,23 @@ void DetailedBorderBrush::expandNorth(NeighborMap &neighbors, TileBorderInfo &ti
     TileBorderInfo prevTile = tileInfo;
 
     tileInfo.quadrant = isRight(prevTile.quadrant) ? BottomRight : BottomLeft;
-    tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant;
-
-    if (prevDir == Dir::None)
-    {
-        tileInfo.borderStartQuadrant = isRight(prevTile.prevQuadrant) ? BottomRight : BottomLeft;
-    }
-    else if (prevDir == Dir::North)
-    {
-        tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant;
-    }
-    else if (prevDir == Dir::East)
-    {
-        tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant == TopLeft ? BottomLeft : BottomRight;
-    }
-    else if (prevDir == Dir::South)
-    {
-        tileInfo.borderStartQuadrant = isLeft(tileInfo.quadrant) ? BottomLeft : BottomRight;
-    }
-    else if (prevDir == Dir::West)
-    {
-        tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant == BottomRight ? BottomLeft : BottomRight;
-    }
+    tileInfo.borderStartQuadrant = tileInfo.quadrant;
 
     TileCover &southCover = neighbors.at(0, 1);
     TileCover nextSouthCover = southCover;
 
     TileCover &self = neighbors.center();
     TileCover originalSelf = self;
-    if (nextSouthCover == Full)
-        return;
 
-    self |= tileInfo.borderStartQuadrant == BottomLeft ? SouthWestCorner : SouthEastCorner;
+    if (nextSouthCover == Full)
+    {
+        return;
+    }
+
+    if (self != Full)
+    {
+        self |= tileInfo.borderStartQuadrant == BottomLeft ? SouthWestCorner : SouthEastCorner;
+    }
 
     if (prevTile.quadrant == BottomRight)
     {
@@ -780,7 +758,7 @@ void DetailedBorderBrush::expandNorth(NeighborMap &neighbors, TileBorderInfo &ti
     }
 }
 
-void DetailedBorderBrush::expandEast(NeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
+void DetailedBorderBrush::expandEast(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
@@ -788,34 +766,7 @@ void DetailedBorderBrush::expandEast(NeighborMap &neighbors, TileBorderInfo &til
     TileBorderInfo prevTile = tileInfo;
 
     tileInfo.quadrant = isTop(prevTile.quadrant) ? TopLeft : BottomLeft;
-    tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant;
-
-    // Get border start
-    if (prevDir == Dir::None)
-    {
-        bool forceSouth = prevTile.prevQuadrant == BottomLeft && prevTile.quadrant == TopRight && !isTop(prevTile.borderStartQuadrant);
-        tileInfo.borderStartQuadrant = (isTop(prevTile.prevQuadrant) && !forceSouth) ? TopLeft : BottomLeft;
-    }
-    else if (prevDir == Dir::North)
-    {
-        tileInfo.borderStartQuadrant = isLeft(prevTile.borderStartQuadrant) ? TopLeft : BottomLeft;
-    }
-    else if (prevDir == Dir::East)
-    {
-        tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant;
-    }
-    else if (prevDir == Dir::South)
-    {
-        tileInfo.borderStartQuadrant = isLeft(prevTile.borderStartQuadrant) ? BottomLeft : TopLeft;
-    }
-    else if (prevDir == Dir::West)
-    {
-        bool prevStartTop = isTop(prevTile.borderStartQuadrant);
-        bool currTop = isTop(tileInfo.quadrant);
-
-        // Loop around the previous tile if prevTop & currTop differ, either from top-right (←, ↓, →) or from bottom-left (←, ↑, →)
-        tileInfo.borderStartQuadrant = currTop ^ (prevStartTop != currTop) ? TopLeft : BottomLeft;
-    }
+    tileInfo.borderStartQuadrant = tileInfo.quadrant;
 
     TileCover &self = neighbors.center();
     TileCover originalSelf = self;
@@ -828,7 +779,10 @@ void DetailedBorderBrush::expandEast(NeighborMap &neighbors, TileBorderInfo &til
         return;
     }
 
-    self |= isTop(tileInfo.borderStartQuadrant) ? NorthWestCorner : SouthWestCorner;
+    if (self != Full)
+    {
+        self |= isTop(tileInfo.borderStartQuadrant) ? NorthWestCorner : SouthWestCorner;
+    }
 
     if (prevTile.quadrant == TopLeft)
     {
@@ -874,7 +828,7 @@ void DetailedBorderBrush::expandEast(NeighborMap &neighbors, TileBorderInfo &til
     }
 }
 
-void DetailedBorderBrush::expandSouth(NeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
+void DetailedBorderBrush::expandSouth(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
@@ -882,28 +836,8 @@ void DetailedBorderBrush::expandSouth(NeighborMap &neighbors, TileBorderInfo &ti
     TileBorderInfo prevTile = tileInfo;
 
     tileInfo.quadrant = isRight(prevTile.quadrant) ? TopRight : TopLeft;
+    tileInfo.borderStartQuadrant = tileInfo.quadrant;
 
-    if (prevDir == Dir::None)
-    {
-        bool forceWest = prevTile.prevQuadrant == TopLeft && prevTile.quadrant == BottomRight && isLeft(prevTile.borderStartQuadrant);
-        tileInfo.borderStartQuadrant = (isRight(prevTile.prevQuadrant) && !forceWest) ? TopRight : TopLeft;
-    }
-    else if (prevDir == Dir::North)
-    {
-        tileInfo.borderStartQuadrant = isLeft(tileInfo.quadrant) ? TopLeft : TopRight;
-    }
-    else if (prevDir == Dir::East)
-    {
-        tileInfo.borderStartQuadrant = isTop(prevTile.borderStartQuadrant) ? TopRight : TopLeft;
-    }
-    else if (prevDir == Dir::South)
-    {
-        tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant;
-    }
-    else if (prevDir == Dir::West)
-    {
-        tileInfo.borderStartQuadrant = isTop(prevTile.borderStartQuadrant) ? TopLeft : TopRight;
-    }
     TileCover &self = neighbors.at(0, 0);
     TileCover originalSelf = self;
 
@@ -914,7 +848,10 @@ void DetailedBorderBrush::expandSouth(NeighborMap &neighbors, TileBorderInfo &ti
         return;
     }
 
-    self |= tileInfo.borderStartQuadrant == TopLeft ? NorthWestCorner : NorthEastCorner;
+    if (self != Full)
+    {
+        self |= tileInfo.borderStartQuadrant == TopLeft ? NorthWestCorner : NorthEastCorner;
+    }
 
     if (prevTile.quadrant == TopRight)
     {
@@ -962,7 +899,7 @@ void DetailedBorderBrush::expandSouth(NeighborMap &neighbors, TileBorderInfo &ti
     }
 }
 
-void DetailedBorderBrush::expandWest(NeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
+void DetailedBorderBrush::expandWest(BorderNeighborMap &neighbors, TileBorderInfo &tileInfo, BorderExpandDirection prevDir) const
 {
     using namespace TileCoverShortHands;
     using Dir = BorderExpandDirection;
@@ -970,32 +907,7 @@ void DetailedBorderBrush::expandWest(NeighborMap &neighbors, TileBorderInfo &til
     TileBorderInfo prevTile = tileInfo;
 
     tileInfo.quadrant = isTop(prevTile.quadrant) ? TopRight : BottomRight;
-    tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant;
-
-    if (prevDir == Dir::None)
-    {
-        tileInfo.borderStartQuadrant = isTop(prevTile.prevQuadrant) ? TopRight : BottomRight;
-    }
-    else if (prevDir == Dir::North)
-    {
-        tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant == BottomLeft ? BottomRight : TopRight;
-    }
-    else if (prevDir == Dir::East)
-    {
-        bool prevStartTop = isTop(prevTile.borderStartQuadrant);
-        bool currTop = isTop(tileInfo.quadrant);
-
-        // Loop around the previous tile if prevTop & currTop differ, either from top-left (→, ↓, ←)  or from bottom-left (→, ↑, ←)
-        tileInfo.borderStartQuadrant = currTop ^ (prevStartTop != currTop) ? BottomRight : TopRight;
-    }
-    else if (prevDir == Dir::South)
-    {
-        tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant == TopLeft ? TopRight : BottomRight;
-    }
-    else if (prevDir == Dir::West)
-    {
-        tileInfo.borderStartQuadrant = prevTile.borderStartQuadrant;
-    }
+    tileInfo.borderStartQuadrant = tileInfo.quadrant;
 
     TileCover &eastCover = neighbors.at(1, 0);
     if (eastCover == Full)
@@ -1006,7 +918,10 @@ void DetailedBorderBrush::expandWest(NeighborMap &neighbors, TileBorderInfo &til
 
     TileCover nextEastCover = eastCover;
 
-    self |= tileInfo.borderStartQuadrant == BottomRight ? SouthEastCorner : NorthEastCorner;
+    if (self != Full)
+    {
+        self |= tileInfo.borderStartQuadrant == BottomRight ? SouthEastCorner : NorthEastCorner;
+    }
 
     if (prevTile.quadrant == TopRight)
     {

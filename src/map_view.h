@@ -149,6 +149,7 @@ class MapView
     void addItem(const Position &position, uint16_t id);
     void addItem(const Position &pos, Item &&item);
     void addItem(Tile &tile, Item &&item);
+    void setGround(Tile &tile, Item &&ground, bool clearBorders = false);
 
     void addCreature(const Position &pos, Creature &&creature);
 
@@ -158,6 +159,7 @@ class MapView
     void removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices);
     void removeSelectedItems(const Tile &tile);
     void removeItems(const Tile &tile, std::function<bool(const Item &)> p);
+    void removeItemsWithBorderize(const Tile &tile, std::function<bool(const Item &)> p);
     void removeItem(Tile &tile, Item *item);
     void removeItem(Tile &tile, std::function<bool(const Item &)> p);
 

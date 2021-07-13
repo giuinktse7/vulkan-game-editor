@@ -28,6 +28,7 @@
 #include "../brushes/border_brush.h"
 #include "../brushes/creature_brush.h"
 #include "../brushes/ground_brush.h"
+#include "../config.h"
 #include "../graphics/appearance_types.h"
 #include "../item_location.h"
 #include "../qt/logging.h"
@@ -763,8 +764,30 @@ QMenuBar *MainWindow::createMenuBar()
         editMenu->addAction(new MenuSeparator(this));
 
         // Brush actions
-        addMenuItem(editMenu, "Rotate brush", Qt::Key_R, [this] {
+        addMenuItem(editMenu, "Rotate Brush", Qt::Key_R, [this] {
             this->currentMapView()->rotateBrush();
+        });
+
+        auto brushOptionMenu = editMenu->addMenu(tr("Border Options"));
+
+        addMenuItem(brushOptionMenu, "Cycle Border Mode", Qt::Key_B, [this] {
+            auto action = this->editorAction.as<MouseAction::MapBrush>();
+            if (action)
+            {
+                if (action->brush->type() == BrushType::Border)
+                {
+                    auto brushType = Settings::BORDER_BRUSH_VARIATION == BorderBrushVariationType::General
+                                         ? BorderBrushVariationType::Detailed
+                                         : BorderBrushVariationType::General;
+
+                    BorderBrush::setBrushVariation(brushType);
+                    this->currentMapView()->requestDraw();
+                }
+            }
+        });
+
+        addMenuItem(brushOptionMenu, "Toggle Automatic Bordering", Qt::Key_A, [this] {
+            Settings::AUTO_BORDER = !Settings::AUTO_BORDER;
         });
     }
 

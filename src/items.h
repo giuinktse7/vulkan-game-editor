@@ -49,7 +49,6 @@ class Items
     // The key is an entity ID for the container item.
     std::unordered_map<uint32_t, Nano::Signal<void(ContainerChange)>> containerSignals;
 
-    uint32_t highestClientId = 0;
     uint32_t highestServerId = 0;
 
     uint32_t createItemGid();

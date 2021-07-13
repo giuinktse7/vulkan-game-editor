@@ -209,9 +209,9 @@ class Brush
     static bool matchSorter(std::pair<int, Brush *> &lhs, const std::pair<int, Brush *> &rhs);
 };
 
-struct NeighborMap
+struct BorderNeighborMap
 {
-    NeighborMap(const Position &position, BorderBrush *brush, const Map &map);
+    BorderNeighborMap(const Position &position, BorderBrush *brush, const Map &map);
     TileCover at(int x, int y) const;
     TileCover &at(int x, int y);
     TileCover &center();

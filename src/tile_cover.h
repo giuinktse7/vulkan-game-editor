@@ -73,10 +73,12 @@ class TileCovers
   public:
     static void clearCoverFlags(TileCover &cover, TileCover flags);
     static void eraseSide(TileCover &cover, TileCover side, TileCover preferredDiagonal = TILE_COVER_NONE);
-    static TileCover mirrorEast(TileCover source, TileCover cover);
-    static TileCover mirrorWest(TileCover source, TileCover cover);
     static TileCover mirrorNorth(TileCover tileCover);
+    static TileCover mirrorEast(TileCover cover);
+    static TileCover mirrorEast(TileCover source, TileCover cover);
     static TileCover mirrorSouth(TileCover tileCover);
+    static TileCover mirrorWest(TileCover cover);
+    static TileCover mirrorWest(TileCover source, TileCover cover);
     static TileCover unifyTileCover(TileCover cover, TileQuadrant quadrant, TileCover preferredDiagonal = TILE_COVER_NONE);
     static TileCover mergeTileCover(TileCover a, TileCover b);
     static bool exactlyOneSet(TileCover cover)

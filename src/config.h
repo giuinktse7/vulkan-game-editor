@@ -51,4 +51,5 @@ enum class BorderBrushVariationType
 struct Settings
 {
     static BorderBrushVariationType BORDER_BRUSH_VARIATION;
+    static bool AUTO_BORDER;
 };

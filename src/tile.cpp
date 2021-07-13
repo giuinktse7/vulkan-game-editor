@@ -4,6 +4,7 @@
 #include <ranges>
 
 #include "brushes/border_brush.h"
+#include "brushes/ground_brush.h"
 #include "items.h"
 #include "tile_location.h"
 
@@ -78,6 +79,42 @@ void Tile::removeItem(size_t index)
 {
     deselectItemAtIndex(index);
     _items.erase(_items.begin() + index);
+}
+
+void Tile::clearBorders()
+{
+    auto it = _items.begin();
+    while (it != _items.end())
+    {
+        if (!(*it)->itemType->isBorder())
+        {
+            _items = {it, _items.end()};
+            return;
+        }
+
+        ++it;
+    }
+}
+
+GroundBrush *Tile::groundBrush() const
+{
+    if (_ground)
+    {
+        Brush *brush = _ground->itemType->brush;
+        if (brush)
+        {
+            DEBUG_ASSERT(brush->type() == BrushType::Ground, "Incorrect brush type!");
+            return static_cast<GroundBrush *>(brush);
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 void Tile::removeItem(Item *item)
@@ -795,4 +832,53 @@ TileCover Tile::getTileCover(const BorderBrush *brush) const
     }
 
     return result;
+}
+
+TileBorderBlock Tile::getFullBorderTileCover(TileCover excludeMask) const
+{
+    if (excludeMask == TILE_COVER_WEST)
+    {
+        bool dbg = true;
+    }
+    TileBorderBlock block;
+    if (_ground)
+    {
+        Brush *brush = _ground->itemType->brush;
+        if (brush && brush->type() == BrushType::Ground)
+        {
+            auto *groundBrush = static_cast<GroundBrush *>(brush);
+            block.ground = groundBrush;
+        }
+    }
+
+    for (const auto &item : _items)
+    {
+        if (!item->itemType->isBorder())
+            return block;
+        auto brush = item->itemType->brush;
+
+        if (brush)
+        {
+            DEBUG_ASSERT(brush->type() == BrushType::Border, "Incorrect brush type!");
+            auto borderBrush = static_cast<BorderBrush *>(brush);
+            auto cover = borderBrush->getTileCover(item->serverId());
+            cover &= ~(excludeMask);
+
+            if (cover != TILE_COVER_NONE)
+            {
+                block.add(cover, borderBrush);
+            }
+        }
+    }
+
+    return block;
+}
+
+BorderZOrderBlock::BorderZOrderBlock(TileCover cover, BorderBrush *brush)
+    : cover(cover), brush(brush)
+{
+    // Necessary to make sure center is instantiated
+    // Brush *center = brush->centerBrush();
+
+    DEBUG_ASSERT(brush != nullptr, "nullptr brush");
 }

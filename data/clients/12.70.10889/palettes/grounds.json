@@ -5,7 +5,7 @@
             "name": "Grass",
             "type": "ground",
             "lookId": 4526,
-            "zOrder": 3200,
+            "zOrder": 1000,
             "items": [
                 { "id": 4526, "chance": 300 },
                 { "id": 4527, "chance": 10 },
@@ -23,6 +23,12 @@
                 { "id": 4539, "chance": 20 },
                 { "id": 4540, "chance": 20 },
                 { "id": 4541, "chance": 20 }
+            ],
+            "borders": [
+                {
+                    "align": "outer",
+                    "id": "normal_grass_border"
+                }
             ]
         },
         {
@@ -30,19 +36,25 @@
             "name": "Dried Grass",
             "type": "ground",
             "lookId": 8326,
-            "zOrder": 2900,
+            "zOrder": 990,
             "items": [
-                { "id": 8326, "chance": 25 },
-                { "id": 8327, "chance": 25 },
-                { "id": 8328, "chance": 25 },
-                { "id": 8329, "chance": 25 },
-                { "id": 8330, "chance": 25 },
-                { "id": 8331, "chance": 25 },
-                { "id": 8332, "chance": 25 },
-                { "id": 8333, "chance": 25 },
-                { "id": 8334, "chance": 25 },
-                { "id": 8347, "chance": 25 },
-                { "id": 8348, "chance": 25 }
+                { "id": 8326, "chance": 1 },
+                { "id": 8327, "chance": 1 },
+                { "id": 8328, "chance": 1 },
+                { "id": 8329, "chance": 1 },
+                { "id": 8330, "chance": 1 },
+                { "id": 8331, "chance": 1 },
+                { "id": 8332, "chance": 1 },
+                { "id": 8333, "chance": 1 },
+                { "id": 8334, "chance": 1 },
+                { "id": 8347, "chance": 1 },
+                { "id": 8348, "chance": 1 }
+            ],
+            "borders": [
+                {
+                    "align": "outer",
+                    "id": "dried_grass_border"
+                }
             ]
         },
         {
@@ -50,7 +62,7 @@
             "name": "Rock Soil",
             "type": "ground",
             "lookId": 4405,
-            "zOrder": 5,
+            "zOrder": 900,
             "items": [
                 { "id": 4405, "chance": 1 },
                 { "id": 4406, "chance": 1 },

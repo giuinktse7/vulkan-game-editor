@@ -30,6 +30,8 @@ namespace MapHistory
         bool hasCurrentTransaction() const;
         bool hasCurrentTransactionType(TransactionType transactionType) const;
 
+        Action *getLatestAction();
+
       private:
         std::optional<Transaction> currentTransaction;
         std::vector<Transaction> transactions;
@@ -37,7 +39,5 @@ namespace MapHistory
         MapView *mapView;
 
         size_t insertionIndex;
-
-        Action *getLatestAction();
     };
 } // namespace MapHistory
