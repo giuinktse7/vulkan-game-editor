@@ -74,11 +74,6 @@ set(CommonSources
     src/otbm.h
     src/debug.h
     src/definitions.h
-    src/ecs/component_array.h
-    src/ecs/ecs.h
-    src/ecs/ecs_system.h
-    src/ecs/entity.h
-    src/ecs/item_animation_component.h
     src/item_animation.h
     src/file.h
     src/frame_group.h
@@ -179,9 +174,6 @@ set(CommonSources
     src/history/item_mutation.cpp
     src/camera.cpp
     src/otbm.cpp
-    src/ecs/ecs.cpp
-    src/ecs/entity.cpp
-    src/ecs/item_animation_component.cpp
     src/item_animation.cpp
     src/file.cpp
     src/editor_action.cpp
