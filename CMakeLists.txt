@@ -153,6 +153,7 @@ set(CommonSources
     src/brushes/ground_brush.h
     src/brushes/border_brush.h
     src/brushes/border_brush_variation.h
+    src/brushes/wall_brush.h
     src/brushes/doodad_brush.h
     src/brushes/creature_brush.h
     src/brushes/brush_loader.h
@@ -223,6 +224,7 @@ set(CommonSources
     src/brushes/raw_brush.cpp
     src/brushes/ground_brush.cpp
     src/brushes/border_brush.cpp
+    src/brushes/wall_brush.cpp
     src/brushes/border_brush_variation.cpp
     src/brushes/doodad_brush.cpp
     src/brushes/creature_brush.cpp

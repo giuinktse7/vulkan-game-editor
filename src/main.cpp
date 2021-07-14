@@ -63,9 +63,10 @@ int main(int argc, char *argv[])
 
     MainApplication app(argc, argv);
 
-    std::string clientPath = "12.70.10889";
+    std::string version = "12.70.10889";
+    std::string clientPath = std::format("data/clients/{}", version);
 
-    auto configResult = Config::create(clientPath);
+    auto configResult = Config::create(version);
     if (configResult.isErr())
     {
         VME_LOG(configResult.unwrapErr().show());
@@ -80,11 +81,12 @@ int main(int argc, char *argv[])
     // testApplyAtlasTemplate();
 
     BrushLoader brushLoader;
-    brushLoader.load(std::format("data/clients/{}/palettes/palettes.json", clientPath));
-    brushLoader.load(std::format("data/clients/{}/palettes/borders.json", clientPath));
-    brushLoader.load(std::format("data/clients/{}/palettes/grounds.json", clientPath));
-    brushLoader.load(std::format("data/clients/{}/palettes/tilesets.json", clientPath));
-    brushLoader.load(std::format("data/clients/{}/palettes/creatures.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/palettes.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/borders.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/grounds.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/walls.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/creatures.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/tilesets.json", clientPath));
 
     // TemporaryTest::loadAllTexturesIntoMemory();
 

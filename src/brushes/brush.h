@@ -18,9 +18,10 @@ class MapView;
 class RawBrush;
 class GroundBrush;
 class BorderBrush;
-class Map;
+class WallBrush;
 class DoodadBrush;
 class CreatureBrush;
+class Map;
 enum TileCover;
 class ItemType;
 class Brush;
@@ -41,6 +42,7 @@ enum class BrushType
     Ground,
     Border,
     Raw,
+    Wall
 };
 
 struct BrushSearchResult
@@ -51,35 +53,9 @@ struct BrushSearchResult
     int groundCount = 0;
     int doodadCount = 0;
     int creatureCount = 0;
+    int borderCount = 0;
+    int wallCount = 0;
 };
-
-inline std::optional<BrushType> parseBrushType(const std::string &rawType)
-{
-    if (rawType == "ground")
-    {
-        return BrushType::Ground;
-    }
-    else if (rawType == "raw")
-    {
-        return BrushType::Raw;
-    }
-    else if (rawType == "doodad")
-    {
-        return BrushType::Doodad;
-    }
-    else if (rawType == "creature")
-    {
-        return BrushType::Creature;
-    }
-    else if (rawType == "border")
-    {
-        return BrushType::Border;
-    }
-    else
-    {
-        return std::nullopt;
-    }
-}
 
 struct WeightedItemId
 {
@@ -153,6 +129,8 @@ class Brush
 
     virtual std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction = Direction::South) const = 0;
 
+    static std::optional<BrushType> parseBrushType(std::string s);
+
     virtual bool erasesItem(uint32_t serverId) const = 0;
     virtual BrushType type() const = 0;
 
@@ -168,6 +146,8 @@ class Brush
     static DoodadBrush *addDoodadBrush(std::unique_ptr<DoodadBrush> &&brush);
     static DoodadBrush *addDoodadBrush(DoodadBrush &&brush);
     static DoodadBrush *getDoodadBrush(const std::string &id);
+
+    static WallBrush *addWallBrush(WallBrush &&brush);
 
     static CreatureBrush *addCreatureBrush(std::unique_ptr<CreatureBrush> &&brush);
     static CreatureBrush *addCreatureBrush(CreatureBrush &&brush);
@@ -187,6 +167,7 @@ class Brush
     */
     static vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> &getGroundBrushes();
     static vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> &getBorderBrushes();
+    static vme_unordered_map<std::string, std::unique_ptr<WallBrush>> &getWallBrushes();
 
   protected:
     // ServerId -> Brush
@@ -197,6 +178,9 @@ class Brush
 
     // BrushId -> Brush
     static vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> borderBrushes;
+
+    // BrushId -> Brush
+    static vme_unordered_map<std::string, std::unique_ptr<WallBrush>> wallBrushes;
 
     // BrushId -> Brush
     static vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> doodadBrushes;

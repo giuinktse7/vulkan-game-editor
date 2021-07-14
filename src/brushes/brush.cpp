@@ -9,6 +9,7 @@
 #include "doodad_brush.h"
 #include "ground_brush.h"
 #include "raw_brush.h"
+#include "wall_brush.h"
 
 #define FTS_FUZZY_MATCH_IMPLEMENTATION
 #include "../../vendor/fts_fuzzy_match/fts_fuzzy_match.h"
@@ -16,6 +17,7 @@
 vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> Brush::rawBrushes;
 vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> Brush::groundBrushes;
 vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> Brush::borderBrushes;
+vme_unordered_map<std::string, std::unique_ptr<WallBrush>> Brush::wallBrushes;
 vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> Brush::doodadBrushes;
 vme_unordered_map<std::string, std::unique_ptr<CreatureBrush>> Brush::creatureBrushes;
 
@@ -77,6 +79,27 @@ GroundBrush *Brush::addGroundBrush(std::unique_ptr<GroundBrush> &&brush)
     }
 
     return groundBrush;
+}
+
+WallBrush *Brush::addWallBrush(WallBrush &&brush)
+{
+    std::string brushId = brush.brushId();
+
+    auto found = wallBrushes.find(brushId);
+    if (found != wallBrushes.end())
+    {
+        VME_LOG_ERROR(std::format(
+            "Could not add wall brush '{}' with id '{}'. A wall brush with id '{}' (named '{}') already exists.",
+            brush.name(), brushId, brushId, found->second->name()));
+        return nullptr;
+    }
+
+    auto result = wallBrushes.emplace(brushId, std::make_unique<WallBrush>(std::move(brush)));
+
+    auto wallBrush = (result.first.value().get());
+    wallBrush->finalize();
+
+    return wallBrush;
 }
 
 BorderBrush *Brush::addBorderBrush(BorderBrush &&brush)
@@ -312,6 +335,32 @@ vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> &Brush::getGroundBr
 vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> &Brush::getBorderBrushes()
 {
     return borderBrushes;
+}
+
+vme_unordered_map<std::string, std::unique_ptr<WallBrush>> &Brush::getWallBrushes()
+{
+    return wallBrushes;
+}
+
+std::optional<BrushType> Brush::parseBrushType(std::string s)
+{
+    switch (string_hash(s.c_str()))
+    {
+        case "ground"_sh:
+            return BrushType::Ground;
+        case "raw"_sh:
+            return BrushType::Raw;
+        case "doodad"_sh:
+            return BrushType::Doodad;
+        case "creature"_sh:
+            return BrushType::Creature;
+        case "border"_sh:
+            return BrushType::Border;
+        case "wall"_sh:
+            return BrushType::Wall;
+        default:
+            return std::nullopt;
+    }
 }
 
 DrawItemType::DrawItemType(uint32_t serverId, Position relativePosition)

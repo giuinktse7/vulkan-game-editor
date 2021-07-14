@@ -242,28 +242,8 @@ void FilteredSearchModel::setSourceModel(QAbstractItemModel *model)
 
 void FilteredSearchModel::setFilter(QString s)
 {
-    BrushType brushType;
-    if (s == "raw")
-    {
-        brushType = BrushType::Raw;
-    }
-    else if (s == "ground")
-    {
-        brushType = BrushType::Ground;
-    }
-    else if (s == "border")
-    {
-        brushType = BrushType::Border;
-    }
-    else if (s == "doodad")
-    {
-        brushType = BrushType::Doodad;
-    }
-    else if (s == "creature")
-    {
-        brushType = BrushType::Creature;
-    }
-    else
+    std::optional<BrushType> brushType = Brush::parseBrushType(s.toStdString());
+    if (!brushType)
     {
         VME_LOG_ERROR("FilteredSearchModel::setFilter Unknown filter type: " << s.toStdString());
         reset();
@@ -338,24 +318,5 @@ int FilteredSearchModel::creatureCount() const
 
 std::optional<BrushType> FilteredSearchModel::parseBrushType(QString rawBrushType)
 {
-    if (rawBrushType == "raw")
-    {
-        return BrushType::Raw;
-    }
-    else if (rawBrushType == "ground")
-    {
-        return BrushType::Ground;
-    }
-    else if (rawBrushType == "doodad")
-    {
-        return BrushType::Doodad;
-    }
-    else if (rawBrushType == "creature")
-    {
-        return BrushType::Creature;
-    }
-    else
-    {
-        return std::nullopt;
-    }
+    return Brush::parseBrushType(rawBrushType.toStdString());
 }

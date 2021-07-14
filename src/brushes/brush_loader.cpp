@@ -11,18 +11,26 @@
 #include "../time_point.h"
 #include "border_brush.h"
 #include "brush.h"
+#include "ground_brush.h"
+#include "wall_brush.h"
 
 using json = nlohmann::json;
 
 std::string joinStack(std::stack<std::string> &stack, std::string delimiter)
 {
     auto stackCopy = stack;
-    std::ostringstream ss;
+    std::stack<std::string> reversed;
     while (!stackCopy.empty())
     {
-        ss << stackCopy.top();
+        reversed.push(stackCopy.top());
         stackCopy.pop();
-        if (!stackCopy.empty())
+    }
+    std::ostringstream ss;
+    while (!reversed.empty())
+    {
+        ss << reversed.top();
+        reversed.pop();
+        if (!reversed.empty())
             ss << delimiter;
     }
 
@@ -108,6 +116,12 @@ bool BrushLoader::load(std::filesystem::path path)
     return true;
 }
 
+void BrushLoader::logError(std::string message)
+{
+    std::string stack = joinStack(stackTrace, " -> ");
+    VME_LOG_ERROR(std::format("{}: {}", stack, message));
+}
+
 void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
 {
     stackTrace.emplace("/brushes");
@@ -124,7 +138,7 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
 
         stackTrace.emplace(std::format("Brush '{}'", brush.at("id").get<std::string>()));
 
-        auto brushType = parseBrushType(getString(brush, "type"));
+        auto brushType = Brush::parseBrushType(getString(brush, "type"));
         if (!brushType)
         {
             throw json::type_error::create(302, std::format("The type must be one of ['ground', 'doodad', 'wall', 'border']."));
@@ -142,13 +156,181 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
             {
                 auto borderBrush = parseBorderBrush(brush);
                 Brush::addBorderBrush(std::move(borderBrush));
+                break;
+            }
+            case BrushType::Wall:
+            {
+                auto wallBrush = parseWallBrush(brush);
+                Brush::addWallBrush(std::move(wallBrush));
+                break;
             }
 
             default:
                 break;
         }
+
+        stackTrace.pop();
     }
     stackTrace.pop();
+}
+
+std::optional<DoorType> getDoorType(std::string raw)
+{
+    switch (string_hash(raw.c_str()))
+    {
+        case "normal"_sh:
+            return DoorType::Normal;
+        case "locked"_sh:
+            return DoorType::Locked;
+        case "quest"_sh:
+            return DoorType::Quest;
+        case "magic"_sh:
+            return DoorType::Magic;
+        default:
+            return std::nullopt;
+    }
+}
+
+std::optional<WindowType> getWindowType(std::string raw)
+{
+    switch (string_hash(raw.c_str()))
+    {
+        case "normal"_sh:
+        case "window"_sh:
+            return WindowType::Normal;
+        case "hatch"_sh:
+        case "hatch_window"_sh:
+            return WindowType::Hatch;
+        default:
+            return std::nullopt;
+    }
+}
+
+WallBrush BrushLoader::parseWallBrush(const json &brush)
+{
+    std::string id = brush.at("id").get<std::string>();
+    std::string name = brush.at("name").get<std::string>();
+
+    int lookId = getInt(brush, "lookId");
+
+    WallBrush::StraightPart horizontalPart;
+    WallBrush::StraightPart verticalPart;
+    WallBrush::Part cornerPart;
+    WallBrush::Part polePart;
+
+    /*
+        Accepted formats:
+            - "root": <integer>
+            - "root": [<integer>|{"id": <integer>, "chance": <integer>}]
+    */
+    auto parseItems = [this](const json &root, WallBrush::Part *part) {
+        if (root.is_number_integer())
+        {
+            int id = root.get<int>();
+            part->items.emplace_back(id, 1);
+        }
+        else
+        {
+            for (auto &item : root)
+            {
+                if (item.is_number_integer())
+                {
+                    int id = item.get<int>();
+                    part->items.emplace_back(id, 1);
+                }
+
+                int id = getInt(item, "id");
+                int chance = getInt(item, "chance");
+
+                part->items.emplace_back(id, chance);
+            }
+        }
+    };
+
+    auto parseStraightPart = [this, &parseItems](const json &root, WallBrush::StraightPart &part) {
+        std::vector<WeightedItemId> weightedIds;
+
+        stackTrace.emplace("items");
+        {
+            json items = root.at("items");
+
+            parseItems(items, &part);
+        }
+        stackTrace.pop();
+
+        stackTrace.emplace("doors");
+        {
+            json doors = root.at("doors");
+
+            for (auto &door : doors)
+            {
+                int id = getInt(door, "id");
+                std::string rawDoorType = jsonGetOrDefault<std::string>(door, "type", "normal");
+                std::optional<DoorType> doorType = getDoorType(rawDoorType);
+                if (!doorType)
+                {
+                    logError(std::format("Incorrect door type: {}. Must be one of ['normal', 'locked', 'quest', 'magic']", rawDoorType));
+                    continue;
+                }
+
+                bool open = jsonGetOrDefault<bool>(door, "open", false);
+                part.doors.emplace_back(id, *doorType, open);
+            }
+        }
+        stackTrace.pop();
+
+        stackTrace.emplace("windows");
+        {
+            json windows = root.at("windows");
+
+            for (auto &window : windows)
+            {
+                int id = getInt(window, "id");
+                std::string rawWindowType = window["type"].get<std::string>();
+                std::optional<WindowType> windowType = getWindowType(rawWindowType);
+                if (!windowType)
+                {
+                    logError(std::format("Incorrect window type: {}. Must be one of ['normal', 'window', 'hatch', 'hatch_window']", rawWindowType));
+                    continue;
+                }
+
+                bool open = jsonGetOrDefault(window, "open", false);
+
+                part.windows.emplace_back(id, *windowType, open);
+            }
+        }
+    };
+
+    stackTrace.emplace("walls");
+    {
+        json walls = brush.at("walls");
+
+        stackTrace.emplace("horizontal");
+        json horizontal = walls.at("horizontal");
+        parseStraightPart(horizontal, horizontalPart);
+        stackTrace.pop();
+
+        stackTrace.emplace("vertical");
+        json vertical = walls.at("vertical");
+        parseStraightPart(vertical, verticalPart);
+        stackTrace.pop();
+
+        stackTrace.emplace("corner");
+        json corner = walls.at("corner");
+        parseItems(corner, &cornerPart);
+        stackTrace.pop();
+
+        stackTrace.emplace("pole");
+        json pole = walls.at("pole");
+        parseItems(corner, &polePart);
+        stackTrace.pop();
+    }
+    stackTrace.pop();
+
+    WallBrush wallbrush = WallBrush(id, name, std::move(horizontalPart), std::move(verticalPart), std::move(cornerPart), std::move(polePart));
+    wallbrush.setIconServerId(lookId);
+
+    return wallbrush;
 }
 
 GroundBrush BrushLoader::parseGroundBrush(const json &brush)
@@ -379,6 +561,8 @@ void BrushLoader::parseCreature(const nlohmann::json &creatureJson)
     auto name = getString(creatureJson, "name");
     auto type = getString(creatureJson, "type");
     int looktype = getInt(creatureJson, "looktype");
+
+    stackTrace.pop();
 }
 
 void BrushLoader::parsePalettes(const nlohmann::json &paletteJson)
@@ -402,4 +586,6 @@ void BrushLoader::parsePalettes(const nlohmann::json &paletteJson)
 
         ItemPalettes::createPalette(id, name);
     }
+
+    stackTrace.pop();
 }

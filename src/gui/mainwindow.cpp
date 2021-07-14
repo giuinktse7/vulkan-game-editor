@@ -28,6 +28,7 @@
 #include "../brushes/border_brush.h"
 #include "../brushes/creature_brush.h"
 #include "../brushes/ground_brush.h"
+#include "../brushes/wall_brush.h"
 #include "../config.h"
 #include "../graphics/appearance_types.h"
 #include "../item_location.h"
@@ -47,6 +48,7 @@
 #include "search_popup.h"
 #include "split_widget.h"
 #include "vulkan_window.h"
+
 
 MainLayout::MainLayout(QWidget *mainWidget)
     : mainWidget(mainWidget)
@@ -629,6 +631,16 @@ void MainWindow::initializePaletteWindow()
             for (auto &brush : brushes)
             {
                 borderTileset.addBrush(brush.second.get());
+            }
+        }
+
+        // Walls
+        {
+            auto &wallTileset = terrainPalette.addTileset(Tileset("walls", "Walls"));
+            auto &brushes = Brush::getWallBrushes();
+            for (auto &brush : brushes)
+            {
+                wallTileset.addBrush(brush.second.get());
             }
         }
     }

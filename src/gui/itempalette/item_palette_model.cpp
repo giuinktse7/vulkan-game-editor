@@ -13,7 +13,7 @@
 #include "../../brushes/doodad_brush.h"
 #include "../../brushes/ground_brush.h"
 #include "../../brushes/raw_brush.h"
-
+#include "../../brushes/wall_brush.h"
 
 using TilesetModel = ItemPaletteUI::TilesetModel;
 using ItemDelegate = ItemPaletteUI::ItemDelegate;
@@ -131,6 +131,13 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
         case BrushType::Border:
         {
             auto brush = static_cast<BorderBrush *>(b);
+            QImage image = GUIThingImage::getItemTypeImage(brush->iconServerId());
+            painter->drawImage(topLeft, image);
+            break;
+        }
+        case BrushType::Wall:
+        {
+            auto brush = static_cast<WallBrush *>(b);
             QImage image = GUIThingImage::getItemTypeImage(brush->iconServerId());
             painter->drawImage(topLeft, image);
             break;

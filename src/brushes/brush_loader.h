@@ -6,9 +6,10 @@
 #include <string>
 
 #include "../tileset.h"
-#include "ground_brush.h"
 
 class BorderBrush;
+class GroundBrush;
+class WallBrush;
 
 class BrushLoader
 {
@@ -27,6 +28,22 @@ class BrushLoader
     void parseCreature(const nlohmann::json &creatureJson);
 
     BorderBrush parseBorderBrush(const nlohmann::json &borderJson);
+    WallBrush parseWallBrush(const nlohmann::json &wallJson);
+
+    void logError(std::string message);
 
     std::stack<std::string> stackTrace;
 };
+
+template <typename T>
+inline T jsonGetOrDefault(const nlohmann::json &j, std::string key, T defaultValue)
+{
+    if (j.contains(key))
+    {
+        return j.at(key).get<T>();
+    }
+    else
+    {
+        return defaultValue;
+    }
+}

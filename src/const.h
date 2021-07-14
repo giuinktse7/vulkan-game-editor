@@ -13,6 +13,20 @@ constexpr int GROUND_FLOOR = 7;
 constexpr int MapTileSize = 32;
 constexpr int SpriteSize = 32;
 
+enum class WindowType
+{
+    Normal,
+    Hatch
+};
+
+enum class DoorType
+{
+    Normal,
+    Locked,
+    Quest,
+    Magic
+};
+
 enum class TileQuadrant
 {
     TopLeft = 1,
