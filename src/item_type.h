@@ -395,6 +395,7 @@ class ItemType
     bool isFluidContainer() const noexcept;
     bool isCorpse() const noexcept;
     bool isWriteable() const noexcept;
+    bool isBottom() const noexcept;
 
     bool isDoor() const noexcept;
     bool isMagicField() const noexcept;

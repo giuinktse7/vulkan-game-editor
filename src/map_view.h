@@ -146,10 +146,13 @@ class MapView
 
     void moveSelection(const Position &offset);
 
-    void addItem(const Position &position, uint16_t id);
+    void addItem(const Position &position, uint32_t id);
     void addItem(const Position &pos, Item &&item);
     void addItem(Tile &tile, Item &&item);
     void setGround(Tile &tile, Item &&ground, bool clearBorders = false);
+
+    void setBottomItem(const Position &position, Item &&item);
+    void setBottomItem(const Tile &tile, Item &&item);
 
     void addCreature(const Position &pos, Creature &&creature);
 

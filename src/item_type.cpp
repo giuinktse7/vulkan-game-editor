@@ -431,3 +431,8 @@ bool ItemType::isStackable() const noexcept
 {
     return stackable;
 }
+
+bool ItemType::isBottom() const noexcept
+{
+    return hasFlag(AppearanceFlag::Bottom);
+}

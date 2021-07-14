@@ -231,7 +231,7 @@ void MapView::addItem(const Position &pos, Item &&item)
     addItem(_map->getOrCreateTile(pos), std::move(item));
 }
 
-void MapView::addItem(const Position &pos, uint16_t id)
+void MapView::addItem(const Position &pos, uint32_t id)
 {
     if (!Items::items.validItemType(id) || pos.x < 0 || pos.y < 0)
         return;
@@ -296,6 +296,25 @@ void MapView::removeItem(Tile &tile, std::function<bool(const Item &)> predicate
     // TODO Commit this to history
 
     tile.removeItem(predicate);
+}
+
+void MapView::setBottomItem(const Position &position, Item &&item)
+{
+    Tile &tile = getOrCreateTile(position);
+    setBottomItem(tile, std::move(item));
+}
+
+void MapView::setBottomItem(const Tile &tile, Item &&item)
+{
+    Tile newTile = tile.deepCopy();
+
+    newTile.clearBottomItems();
+    newTile.addItem(std::move(item));
+
+    Action action(ActionType::SetTile);
+    action.addChange(SetTile(std::move(newTile)));
+
+    history.commit(std::move(action));
 }
 
 void MapView::removeItems(const Tile &tile, std::function<bool(const Item &)> predicate)

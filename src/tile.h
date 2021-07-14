@@ -85,6 +85,7 @@ class Tile
     void moveItemsWithBroadcast(Tile &other);
     void moveSelected(Tile &other);
     void clearBorders();
+    void clearBottomItems();
 
     const std::vector<std::shared_ptr<Item>>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
 

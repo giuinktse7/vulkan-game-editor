@@ -23,12 +23,14 @@ void RawBrush::apply(MapView &mapView, const Position &position, Direction direc
 
     Tile &tile = mapView.getOrCreateTile(position);
 
-    if (_itemType->stackOrder == TileStackOrder::Bottom && tile.hasItems())
+    if (_itemType->stackOrder == TileStackOrder::Bottom)
     {
-        mapView.removeItems(tile, [](const Item &item) { return item.isBottom(); });
+        mapView.setBottomItem(tile, Item(_itemType->id));
     }
-
-    mapView.addItem(position, Item(_itemType->id));
+    else
+    {
+        mapView.addItem(tile, Item(_itemType->id));
+    }
 }
 
 RawBrush RawBrush::fromServerId(uint32_t serverId)

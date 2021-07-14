@@ -81,6 +81,40 @@ void Tile::removeItem(size_t index)
     _items.erase(_items.begin() + index);
 }
 
+void Tile::clearBottomItems()
+{
+    if (_items.empty())
+        return;
+
+    using iterator = std::vector<std::shared_ptr<Item>>::iterator;
+    bool hasStart = false;
+    iterator start;
+    auto it = _items.begin();
+
+    for (; it != _items.end(); ++it)
+    {
+        ItemType *itemType = (*it)->itemType;
+        if (!itemType->isBorder())
+        {
+            if (!hasStart)
+            {
+                start = it;
+                hasStart = true;
+            }
+
+            if (!itemType->isBottom())
+            {
+                break;
+            }
+        }
+    }
+
+    if (hasStart)
+    {
+        _items.erase(start, it);
+    }
+}
+
 void Tile::clearBorders()
 {
     auto it = _items.begin();
