@@ -307,7 +307,29 @@ namespace util
 
         return result;
     }
+
 } // namespace util
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>Allows switch cases on simple strings>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+constexpr inline auto string_hash(const char *s)
+{
+    unsigned long long hash{}, c{};
+    for (auto p = s; *p; ++p, ++c)
+    {
+        hash += *p << c;
+    }
+    return hash;
+}
+
+constexpr inline auto operator"" _sh(const char *s, size_t)
+{
+    return string_hash(s);
+}
 
 namespace vme
 {
