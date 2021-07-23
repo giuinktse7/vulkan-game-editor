@@ -18,6 +18,7 @@
 #include <QStyleFactory>
 
 #include "config.h"
+#include "file.h"
 #include "graphics/appearances.h"
 #include "gui/main_application.h"
 #include "gui/map_tab_widget.h"
@@ -37,6 +38,7 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <numeric>
+#include <regex>
 
 #include "lua/luascript_interface.h"
 
@@ -498,4 +500,96 @@ void TemporaryTest::testOctree()
     tree.clear();
 
     VME_LOG("Clear in " << clearStart.elapsedMicros() << " us. Size: " << tree.size() << ", contains: " << tree.contains(Position(10, 10, 7)));
+}
+
+/**
+ * Generates items.xml-compliant XML rows for item names based on a file with the structure:
+ * [<Client ID>] <item name>
+ * [<Client ID>] <item name>
+ * [<Client ID>] <item name>
+ * ...
+ */
+void generateItemXmlNames(std::string inputPath, std::string outputPath)
+{
+    std::regex regexPattern("\\[([0-9]+)\\] (.+)");
+
+    std::ifstream file(inputPath);
+
+    std::stringstream s("", std::ios_base::app | std::ios_base::out);
+
+    int prevId = -1;
+    int consecutive = 0;
+    std::string prevName;
+
+    auto flush = [&prevId, &consecutive, &prevName, &s]() {
+        if (prevId == -1)
+        {
+            return;
+        }
+        if (consecutive == 0)
+        {
+            s << std::format("<item id=\"{}\" name=\"{}\" />", prevId, prevName) << std::endl;
+        }
+        else
+        {
+            int from = prevId - consecutive;
+            int to = prevId;
+            s << std::format("<item fromid=\"{}\" toid=\"{}\" name=\"{}\" />", from, to, prevName) << std::endl;
+        }
+    };
+
+    std::string line;
+    while (std::getline(file, line))
+    {
+        if (line.empty())
+            continue;
+
+        std::smatch match;
+        std::regex_search(line, match, regexPattern);
+        int clientId = std::stoi(match[1]);
+        std::string itemName = match[2];
+
+        if (itemName.starts_with("a "))
+        {
+            itemName.erase(0, 2);
+        }
+        else if (itemName.starts_with("an "))
+        {
+            itemName.erase(0, 3);
+        }
+
+        auto itemType = Items::items.getItemTypeByClientId(clientId);
+        if (itemType && itemType->name().empty())
+        {
+            uint32_t serverId = itemType->id;
+            if (prevName == itemName && prevId != -1 && prevId == serverId - 1)
+            {
+                ++consecutive;
+            }
+            else
+            {
+                flush();
+                consecutive = 0;
+            }
+
+            prevId = serverId;
+            prevName = itemName;
+        }
+        else
+        {
+            flush();
+            consecutive = 0;
+            prevId = -1;
+        }
+    }
+
+    flush();
+
+    std::fstream outFile;
+    outFile.open(outputPath, std::ios::out);
+    if (outFile)
+    {
+        outFile << s.str();
+        outFile.close();
+    }
 }

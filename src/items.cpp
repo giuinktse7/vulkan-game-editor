@@ -124,6 +124,9 @@ bool Items::validItemType(uint32_t serverId) const
 
 ItemType *Items::getItemTypeByClientId(uint32_t clientId)
 {
+    if (!clientIdToServerId.contains(clientId))
+        return nullptr;
+
     uint32_t id = clientIdToServerId.at(clientId);
     if (id >= itemTypes.size())
         return nullptr;

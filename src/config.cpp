@@ -86,8 +86,8 @@ std::optional<Config::Error> Config::load()
     Appearances::loadAppearanceData(_dataFolder / AppearancesFile);
 
     Items::loadFromOtb(_dataFolder / "items.otb");
-    Items::loadFromXml(_dataFolder / "items.xml");
     Items::loadMissingItemTypes();
+    Items::loadFromXml(_dataFolder / "items.xml");
 
     VME_LOG_D(std::format("Items: {} (highest server ID: {})", Items::items.size(), Items::items.highestServerId));
     VME_LOG_D("Client object count: " << Appearances::objectCount());
