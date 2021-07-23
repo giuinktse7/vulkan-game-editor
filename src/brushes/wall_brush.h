@@ -7,6 +7,7 @@
 #include "brush.h"
 
 struct Position;
+struct WallNeighborMap;
 
 class WallBrush final : public Brush
 {
@@ -33,6 +34,7 @@ class WallBrush final : public Brush
 
     struct Part
     {
+        uint32_t totalWeight = 0;
         std::vector<WeightedItemId> items;
     };
 
@@ -49,8 +51,14 @@ class WallBrush final : public Brush
     void erase(MapView &mapView, const Position &position, Direction direction) override;
 
     std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction) const override;
+    std::vector<ThingDrawInfo> getPreviewTextureInfo(Position from, Position to) const;
+
+    void applyInRectangleArea(MapView &mapView, const Position &from, const Position &to);
+
     const std::string getDisplayId() const override;
     bool erasesItem(uint32_t serverId) const override;
+    bool includes(uint32_t serverId) const;
+
     BrushType type() const override;
 
     std::string brushId() const noexcept;
@@ -65,6 +73,11 @@ class WallBrush final : public Brush
     const std::vector<uint32_t> serverIds() const;
 
   private:
+    const Part &getPart(WallType type) const;
+    uint32_t sampleServerId(WallType type) const;
+
+    void connectWalls(MapView &mapView, WallNeighborMap &neighbors, const Position &center);
+
     std::unordered_set<uint32_t> _serverIds;
 
     std::string id;
@@ -74,4 +87,19 @@ class WallBrush final : public Brush
     StraightPart vertical;
     Part corner;
     Part pole;
+};
+
+struct WallNeighborMap
+{
+    WallNeighborMap(const WallBrush *brush, const Position &position, const Map &map);
+    bool at(int x, int y) const;
+
+    void set(int x, int y, bool value);
+
+    bool hasWall(int x, int y) const;
+
+  private:
+    int index(int x, int y) const;
+
+    std::array<bool, 25> data{};
 };

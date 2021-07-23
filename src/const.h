@@ -27,6 +27,14 @@ enum class DoorType
     Magic
 };
 
+enum class WallType
+{
+    Horizontal,
+    Vertical,
+    Corner,
+    Pole
+};
+
 enum class TileQuadrant
 {
     TopLeft = 1,

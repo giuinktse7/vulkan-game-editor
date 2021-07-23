@@ -908,6 +908,18 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
                                 fillRegionByGroundBrush(from, to, groundBrush);
                                 break;
                             }
+                            case BrushType::Wall:
+                            {
+                                auto wallBrush = static_cast<WallBrush *>(brush.brush);
+
+                                history.beginTransaction(TransactionType::AddMapItem);
+
+                                wallBrush->applyInRectangleArea(*this, from, to);
+
+                                history.endTransaction(TransactionType::AddMapItem);
+
+                                break;
+                            }
                             default:
                                 // TODO Handle other cases
                                 NOT_IMPLEMENTED_ABORT();
@@ -1261,11 +1273,21 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                                 }
                                 break;
                             }
-                        else
-                        {
-                            if (!newTile)
+                            case BrushType::Wall:
                             {
-                                return;
+                                if (!newTile)
+                                {
+                                    return;
+                                }
+                                for (const auto position : Position::bresenHamsWithCorners(this->_previousMouseGamePos, pos))
+                                {
+                                    // Require non-negative positions
+                                    if (position.x >= 0 && position.y >= 0)
+                                    {
+                                        action.brush->apply(*this, position, action.direction);
+                                    }
+                                }
+                                break;
                             }
                             default:
                             {

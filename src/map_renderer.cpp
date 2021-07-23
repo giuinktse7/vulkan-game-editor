@@ -8,6 +8,7 @@
 #include "brushes/brush.h"
 #include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
+#include "brushes/wall_brush.h"
 #include "config.h"
 #include "debug.h"
 #include "file.h"
@@ -333,24 +334,42 @@ void MapRenderer::drawCurrentAction()
                     }
                     else
                     {
-                        if (action.brush->type() == BrushType::Raw || action.brush->type() == BrushType::Ground)
+                        switch (action.brush->type())
                         {
-                            auto [from, to] = mapView->getDragPoints().value();
-                            int floor = mapView->floor();
-                            auto area = MapArea(*mapView->map(), from.toPos(floor), to.toPos(floor));
-
-                            std::vector<ThingDrawInfo> previews;
-
-                            for (auto &pos : area)
+                            case BrushType::Raw:
+                            case BrushType::Ground:
                             {
-                                previews.push_back(action.brush->getPreviewTextureInfo().at(0));
-                                drawPreview(action.brush->getPreviewTextureInfo().at(0), pos);
+                                auto [from, to] = mapView->getDragPoints().value();
+                                int floor = mapView->floor();
+                                auto area = MapArea(*mapView->map(), from.toPos(floor), to.toPos(floor));
+
+                                for (auto &pos : area)
+                                {
+                                    drawPreview(action.brush->getPreviewTextureInfo().at(0), pos);
+                                }
+                                break;
                             }
-                        }
-                        else
-                        {
-                            // TODO Area drag with other brush
-                            NOT_IMPLEMENTED_ABORT();
+                            case BrushType::Wall:
+                            {
+                                auto wallBrush = static_cast<WallBrush *>(action.brush);
+                                auto [from, to] = mapView->getDragPoints().value();
+                                int floor = mapView->floor();
+
+                                auto fromPos = from.toPos(floor);
+                                auto toPos = to.toPos(floor);
+
+                                auto previews = wallBrush->getPreviewTextureInfo(fromPos, toPos);
+                                for (const auto &preview : previews)
+                                {
+                                    drawPreview(preview, fromPos);
+                                }
+
+                                break;
+                            }
+                            default:
+                                // TODO Area drag with other brush
+                                NOT_IMPLEMENTED_ABORT();
+                                break;
                         }
                     }
                 }
