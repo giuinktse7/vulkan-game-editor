@@ -46,6 +46,8 @@ class WallBrush final : public Brush
     WallBrush(std::string id, const std::string &name, StraightPart &&horizontal, StraightPart &&vertical, Part &&corner, Part &&pole);
 
     void apply(MapView &mapView, const Position &position, Direction direction) override;
+    void erase(MapView &mapView, const Position &position, Direction direction) override;
+
     std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction) const override;
     const std::string getDisplayId() const override;
     bool erasesItem(uint32_t serverId) const override;

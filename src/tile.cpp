@@ -5,6 +5,7 @@
 
 #include "brushes/border_brush.h"
 #include "brushes/ground_brush.h"
+#include "brushes/wall_brush.h"
 #include "items.h"
 #include "tile_location.h"
 
@@ -766,6 +767,12 @@ const std::vector<std::shared_ptr<Item>>::const_iterator Tile::findItem(std::fun
     return std::find_if(_items.begin(), _items.end(), [predicate](const std::shared_ptr<Item> &item) { return predicate(*item); });
 }
 
+const Item *Tile::getItem(std::function<bool(const Item &)> predicate) const
+{
+    auto found = findItem(predicate);
+    return (found != _items.end()) ? (*found).get() : nullptr;
+}
+
 std::optional<size_t> Tile::indexOf(Item *item) const
 {
     auto found = findItem([item](const Item &_item) { return item == &_item; });
@@ -795,6 +802,24 @@ void Tile::movedInMap()
 void Tile::swapCreature(std::unique_ptr<Creature> &creature)
 {
     _creature.swap(creature);
+}
+
+bool Tile::hasWall(const WallBrush *brush) const
+{
+    for (auto it = _items.rbegin(); it != _items.rend(); ++it)
+    {
+        if (brush->includes((*it)->serverId()))
+        {
+            return true;
+        }
+        // Borders should always be below walls
+        else if ((*it)->itemType->isBorder())
+        {
+            return false;
+        }
+    }
+
+    return false;
 }
 
 bool Tile::containsBorder(const BorderBrush *brush) const

@@ -322,7 +322,7 @@ WallBrush BrushLoader::parseWallBrush(const json &brush)
 
         stackTrace.emplace("pole");
         json pole = walls.at("pole");
-        parseItems(corner, &polePart);
+        parseItems(pole, &polePart);
         stackTrace.pop();
     }
     stackTrace.pop();

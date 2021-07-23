@@ -18,8 +18,7 @@ WallBrush::WallBrush(std::string id, const std::string &name, StraightPart &&hor
     add_to_ids(this->vertical.doors);
     add_to_ids(this->vertical.windows);
 
-    add_to_ids(this->corner.items);
-    add_to_ids(this->pole.items);
+void WallBrush::erase(MapView &mapView, const Position &position, Direction direction)
 }
 
 void WallBrush::apply(MapView &mapView, const Position &position, Direction direction)

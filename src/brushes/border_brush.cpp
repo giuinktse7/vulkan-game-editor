@@ -564,6 +564,28 @@ void BorderBrush::fixBordersAtOffset(MapView &mapView, const Position &position,
     }
 }
 
+void BorderBrush::erase(MapView &mapView, const Position &position, Direction direction)
+{
+    Tile &tile = mapView.getOrCreateTile(position);
+
+    if (Settings::AUTO_BORDER)
+    {
+        mapView.removeItemsWithBorderize(tile, [this](const Item &item) { return this->erasesItem(item.serverId()); });
+    }
+    else
+    {
+        switch (Settings::BORDER_BRUSH_VARIATION)
+        {
+            case BorderBrushVariationType::Detailed:
+                // TODO Only erase borders that overlap the hovered quadrant
+                mapView.removeItems(tile, [this](const Item &item) { return this->erasesItem(item.serverId()); });
+                break;
+            default:
+                mapView.removeItems(tile, [this](const Item &item) { return this->erasesItem(item.serverId()); });
+        }
+    }
+}
+
 void BorderBrush::apply(MapView &mapView, const Position &position, BorderType borderType)
 {
     if (borderType == BorderType::Center)

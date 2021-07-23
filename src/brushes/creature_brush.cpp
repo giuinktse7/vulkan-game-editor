@@ -17,6 +17,21 @@ bool CreatureBrush::erasesItem(uint32_t serverId) const
     return false;
 }
 
+void CreatureBrush::erase(MapView &mapView, const Position &position, Direction direction)
+{
+    Tile *tile = mapView.getTile(position);
+    if (!tile)
+    {
+        return;
+    }
+
+    Creature *creature = tile->creature();
+    if (creature && (&creature->creatureType == this->creatureType))
+    {
+        tile->removeCreature();
+    }
+}
+
 void CreatureBrush::apply(MapView &mapView, const Position &position, Direction direction)
 {
     auto creature = Creature(*creatureType);

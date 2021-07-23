@@ -15,6 +15,8 @@ class RawBrush final : public Brush
     static RawBrush fromServerId(uint32_t serverId);
 
     void apply(MapView &mapView, const Position &position, Direction direction) override;
+    void erase(MapView &mapView, const Position &position, Direction direction) override;
+
     uint32_t iconServerId() const;
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;

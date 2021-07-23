@@ -6,6 +6,7 @@
 #include "brushes/creature_brush.h"
 #include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
+#include "brushes/wall_brush.h"
 #include "config.h"
 #include "const.h"
 #include "items.h"
@@ -315,6 +316,15 @@ void MapView::setBottomItem(const Tile &tile, Item &&item)
     action.addChange(SetTile(std::move(newTile)));
 
     history.commit(std::move(action));
+}
+
+void MapView::removeItems(const Position &position, std::function<bool(const Item &)> predicate)
+{
+    Tile *tile = getTile(position);
+    if (!tile)
+        return;
+
+    removeItems(*tile, predicate);
 }
 
 void MapView::removeItems(const Tile &tile, std::function<bool(const Item &)> predicate)
@@ -1075,9 +1085,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                             const Tile *tile = getTile(pos);
                             if (tile)
                             {
-                                removeItemsWithBorderize(*tile, [action](const Item &item) {
-                                    return action.brush->erasesItem(item.serverId());
-                                });
+                                action.brush->erase(*this, pos, action.direction);
                             }
                         }
                     }
@@ -1220,57 +1228,62 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                         const Tile *tile = getTile(pos);
                         if (tile)
                         {
-                            removeItemsWithBorderize(*tile, [action](const Item &item) {
-                                return action.brush->erasesItem(item.serverId());
-                            });
+                            action.brush->erase(*this, pos, action.direction);
                         }
                     }
                     else
                     {
                         DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::BrushAction), "Incorrect transaction type.");
-                        if (action.brush->type() == BrushType::Border)
+                        switch (action.brush->type())
                         {
-                            if (!newTile)
+                            case BrushType::Border:
                             {
-                                if (newQuadrant)
+                                if (!newTile)
                                 {
-                                    auto brush = static_cast<BorderBrush *>(action.brush);
-                                    brush->quadrantChanged(*this, pos, _previousMouseMoveTileQuadrant, *mouseDownTileQuadrant);
+                                    if (newQuadrant)
+                                    {
+                                        auto brush = static_cast<BorderBrush *>(action.brush);
+                                        brush->quadrantChanged(*this, pos, _previousMouseMoveTileQuadrant, *mouseDownTileQuadrant);
+                                    }
+
+                                    return;
                                 }
 
-                                return;
-                            }
-
-                            auto positions = Position::bresenHamsWithCorners(this->_previousMouseGamePos, pos);
-                            // if (positions.size() > 1)
-                            // {
-                            //     VME_LOG_D("Bresenhams from " << positions.front() << " to " << positions.back());
-                            // }
-                            for (const auto position : positions)
-                            {
-                                // Require non-negative positions
-                                if (position.x >= 0 && position.y >= 0)
+                                auto positions = Position::bresenHamsWithCorners(this->_previousMouseGamePos, pos);
+                                for (const auto position : positions)
                                 {
-                                    action.brush->apply(*this, position, action.direction);
-                                    lastBrushDragPosition = position;
+                                    // Require non-negative positions
+                                    if (position.x >= 0 && position.y >= 0)
+                                    {
+                                        action.brush->apply(*this, position, action.direction);
+                                        lastBrushDragPosition = position;
+                                    }
                                 }
+                                break;
                             }
-                        }
                         else
                         {
                             if (!newTile)
                             {
                                 return;
                             }
-
-                            for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
+                            default:
                             {
-                                // Require non-negative positions
-                                if (position.x >= 0 && position.y >= 0)
+                                if (!newTile)
                                 {
-                                    action.brush->apply(*this, position, action.direction);
+                                    return;
+                                }
+
+                                for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
+                                {
+                                    // Require non-negative positions
+                                    if (position.x >= 0 && position.y >= 0)
+                                    {
+                                        action.brush->apply(*this, position, action.direction);
+                                    }
                                 }
                             }
+                            break;
                         }
 
                         requestMinimapDraw();

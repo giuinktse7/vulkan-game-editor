@@ -55,6 +55,8 @@ class BorderBrush final : public Brush
     void fixBorders(MapView &mapView, const Position &position, BorderNeighborMap &neighbors);
 
     void apply(MapView &mapView, const Position &position, Direction direction) override;
+    void erase(MapView &mapView, const Position &position, Direction direction) override;
+
     void quadrantChanged(MapView &mapView, const Position &position, TileQuadrant prevQuadrant, TileQuadrant currQuadrant);
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;

@@ -13,6 +13,13 @@ RawBrush::RawBrush(ItemType *itemType)
     DEBUG_ASSERT(_itemType != nullptr, "Invalid itemType. No ItemType for server ID " + std::to_string(itemType->id));
 }
 
+void RawBrush::erase(MapView &mapView, const Position &position, Direction direction)
+{
+    mapView.removeItems(position, [this](const Item &item) {
+        return item.serverId() == this->serverId();
+    });
+}
+
 void RawBrush::apply(MapView &mapView, const Position &position, Direction direction)
 {
     if (!_itemType)

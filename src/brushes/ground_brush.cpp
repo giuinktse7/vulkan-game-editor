@@ -52,6 +52,12 @@ void GroundBrush::initialize()
     }
 }
 
+void GroundBrush::erase(MapView &mapView, const Position &position, Direction direction)
+{
+    Tile &tile = mapView.getOrCreateTile(position);
+    mapView.removeItemsWithBorderize(tile, [this](const Item &item) { return this->erasesItem(item.serverId()); });
+}
+
 void GroundBrush::apply(MapView &mapView, const Position &position, Direction direction)
 {
     Tile &tile = mapView.getOrCreateTile(position);

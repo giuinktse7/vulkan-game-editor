@@ -46,16 +46,20 @@ class DoodadBrush final : public Brush
 
     struct CompositeTile
     {
+        Position relativePosition() const;
+
         int8_t dx;
         int8_t dy;
         int8_t dz;
 
-        std::vector<uint32_t> serverIds;
+        uint32_t serverId;
     };
 
     struct DoodadComposite final : public DoodadEntry
     {
         DoodadComposite(std::vector<CompositeTile> &&tiles, uint32_t weight);
+
+        Position relativePosition(uint32_t serverId);
 
         std::vector<CompositeTile> tiles;
     };
@@ -82,6 +86,8 @@ class DoodadBrush final : public Brush
     DoodadBrush(std::string id, const std::string &name, std::vector<DoodadAlternative> &&alternatives, uint32_t iconServerId);
 
     void apply(MapView &mapView, const Position &position, Direction direction) override;
+    void erase(MapView &mapView, const Position &position, Direction direction) override;
+
     uint32_t iconServerId() const;
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
@@ -94,6 +100,8 @@ class DoodadBrush final : public Brush
   private:
     void initialize();
     std::vector<ItemPreviewInfo> sampleGroup();
+
+    vme_unordered_map<uint32_t, DoodadComposite *> composites;
 
     std::unordered_set<uint32_t> serverIds;
     std::vector<DoodadAlternative> alternatives;

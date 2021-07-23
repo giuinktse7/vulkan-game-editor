@@ -160,8 +160,9 @@ class MapView
 		otherwise the wrong items could be removed.
 	*/
     void removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices);
+    void removeItems(const Position &position, std::function<bool(const Item &)> predicate);
+    void removeItems(const Tile &tile, std::function<bool(const Item &)> predicate);
     void removeSelectedItems(const Tile &tile);
-    void removeItems(const Tile &tile, std::function<bool(const Item &)> p);
     void removeItemsWithBorderize(const Tile &tile, std::function<bool(const Item &)> p);
     void removeItem(Tile &tile, Item *item);
     void removeItem(Tile &tile, std::function<bool(const Item &)> p);

@@ -120,6 +120,7 @@ class Brush
     virtual ~Brush() = default;
 
     virtual void apply(MapView &mapView, const Position &position, Direction direction) = 0;
+    virtual void erase(MapView &mapView, const Position &position, Direction direction) = 0;
 
     virtual const std::string getDisplayId() const = 0;
 

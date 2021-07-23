@@ -12,6 +12,7 @@
 class MapView;
 class TileLocation;
 class BorderBrush;
+class WallBrush;
 class GroundBrush;
 enum TileCover;
 struct TileBorderBlock;
@@ -87,7 +88,7 @@ class Tile
     void clearBorders();
     void clearBottomItems();
 
-    const std::vector<std::shared_ptr<Item>>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
+    const Item *getItem(std::function<bool(const Item &)> predicate) const;
 
     /**
 	 * @return The amount of removed items
@@ -115,6 +116,7 @@ class Tile
     bool hasSelection() const;
     bool hasTopItem() const;
     bool containsBorder(const BorderBrush *brush) const;
+    bool hasWall(const WallBrush *brush) const;
 
     // Returns 0 if the border is not present on the tile
     uint32_t getBorderServerId(const BorderBrush *brush) const;
@@ -180,6 +182,8 @@ class Tile
 
   private:
     friend class MapView;
+
+    const std::vector<std::shared_ptr<Item>>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
 
     Item *replaceGround(Item &&ground);
     Item *replaceItem(size_t index, Item &&item);

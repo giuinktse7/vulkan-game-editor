@@ -16,6 +16,7 @@ class CreatureBrush final : public Brush
     CreatureBrush(CreatureType *creatureType);
 
     void apply(MapView &mapView, const Position &position, Direction direction) override;
+    void erase(MapView &mapView, const Position &position, Direction direction) override;
 
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;

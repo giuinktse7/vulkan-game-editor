@@ -29,6 +29,58 @@ DoodadBrush::DoodadBrush(std::string id, const std::string &name, std::vector<Do
     initialize();
 }
 
+void DoodadBrush::erase(MapView &mapView, const Position &position, Direction direction)
+{
+    Tile &tile = mapView.getOrCreateTile(position);
+
+    const Item *item = tile.getItem([this](const Item &item) {
+        return this->erasesItem(item.serverId());
+    });
+
+    if (!item)
+    {
+        return;
+    }
+
+    uint32_t serverId = item->serverId();
+
+    // If the item belongs to a composite, then remove the whole composite
+    auto found = composites.find(serverId);
+    if (found != composites.end())
+    {
+        auto composite = found->second;
+        Position zeroPos = position - composite->relativePosition(serverId);
+        for (const auto &tile : composite->tiles)
+        {
+            mapView.removeItems(zeroPos + tile.relativePosition(), [tile](const Item &item) {
+                return item.serverId() == tile.serverId;
+            });
+        }
+    }
+    else
+    {
+        mapView.removeItems(tile, [this](const Item &item) { return this->erasesItem(item.serverId()); });
+    }
+}
+
+Position DoodadBrush::CompositeTile::relativePosition() const
+{
+    return Position(dx, dy, dz);
+}
+
+Position DoodadComposite::relativePosition(uint32_t serverId)
+{
+    for (const auto &tile : tiles)
+    {
+        if (tile.serverId == serverId)
+        {
+            return tile.relativePosition();
+        }
+    }
+
+    ABORT_PROGRAM(std::format("The DoodadComposite did not contain the serverId", serverId));
+}
+
 void DoodadBrush::apply(MapView &mapView, const Position &position, Direction direction)
 {
     // TODO Use direction for doodad brush
@@ -69,9 +121,12 @@ void DoodadBrush::initialize()
                 }
                 case EntryType::Composite:
                 {
-                    for (const auto &tile : static_cast<DoodadComposite *>(choice.get())->tiles)
+
+                    auto composite = static_cast<DoodadComposite *>(choice.get());
+                    for (const auto &tile : composite->tiles)
                     {
-                        std::copy(tile.serverIds.begin(), tile.serverIds.end(), std::inserter(serverIds, serverIds.end()));
+                        composites.emplace(tile.serverId, composite);
+                        serverIds.emplace(tile.serverId);
                     }
                 }
             }
@@ -162,10 +217,7 @@ std::vector<ItemPreviewInfo> DoodadAlternative::sample(const std::string &brushN
                     static_cast<Position::value_type>(tile.dy),
                     static_cast<Position::value_type>(tile.dz));
 
-                for (const auto serverId : tile.serverIds)
-                {
-                    result.emplace_back(serverId, relativePos);
-                }
+                result.emplace_back(tile.serverId, relativePos);
             }
 
             break;
