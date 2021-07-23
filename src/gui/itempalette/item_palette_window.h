@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QListView>
+#include <QTimer>
 
 #include <vector>
 
@@ -9,6 +10,9 @@
 
 class QComboBox;
 class PaletteWidget;
+class QWheelEvent;
+class QFocusEvent;
+class QLabel;
 class EditorAction;
 
 namespace ItemPaletteUI
@@ -30,8 +34,23 @@ class TilesetListView : public QListView
 
     void clear() noexcept;
 
+  protected:
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void wheelEvent(QWheelEvent *e) override;
+    void focusOutEvent(QFocusEvent *e) override;
+    void leaveEvent(QEvent *e) override;
+
   private:
     ItemPaletteUI::TilesetModel *_model;
+
+    bool mayOpenTooltip;
+
+    QPoint tooltipPos;
+    QRect tooltipRect;
+
+    QTimer mouseStopTimer;
+
+    QLabel *tooltip;
 };
 
 class ItemPaletteWindow : public QWidget
@@ -93,7 +112,7 @@ class PaletteWidget : public QWidget
 class TilesetListEventFilter : public QtUtil::EventFilter
 {
   public:
-    TilesetListEventFilter(QObject *parent)
+    TilesetListEventFilter(TilesetListView *parent)
         : QtUtil::EventFilter(parent) {}
 
     bool eventFilter(QObject *obj, QEvent *event) override;

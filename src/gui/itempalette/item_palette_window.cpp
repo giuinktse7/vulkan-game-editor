@@ -1,6 +1,8 @@
 #include "item_palette_window.h"
 
 #include <QComboBox>
+#include <QLabel>
+#include <QToolTip>
 #include <QVBoxLayout>
 
 #include "../../editor_action.h"
@@ -135,12 +137,48 @@ bool ItemPaletteWindow::selectBrush(Brush *brush)
 TilesetListView::TilesetListView(QWidget *parent)
     : QListView(parent)
 {
+    tooltip = new QLabel;
+    tooltip->setStyleSheet("border: 1px solid #3e3d40;");
+    tooltip->setWindowFlag(Qt::ToolTip);
+    tooltip->setContentsMargins(3, 3, 3, 3);
+
+    setMouseTracking(true);
+    mouseStopTimer.setInterval(500);
+    mouseStopTimer.setSingleShot(true);
+    connect(&mouseStopTimer, &QTimer::timeout, [this] {
+        auto pos = QCursor::pos();
+        auto index = indexAt(mapFromGlobal(pos));
+        int hoveredIndex = index.row();
+
+        if (hoveredIndex == -1)
+        {
+            return;
+        }
+
+        if (tooltip->isVisible())
+            return;
+
+        auto data = _model->data(index, TilesetModel::CustomToolTipRole).toString();
+        auto topLeft = pos - QPoint(8, 8);
+        auto bottomRight = pos + QPoint(8, 8);
+        auto rect = QRect(topLeft, bottomRight);
+        // auto rect = this->rect();
+        tooltipPos = pos;
+        tooltipRect = rect;
+
+        tooltip->move(pos + QPoint(10, 16));
+        tooltip->setText(data);
+        tooltip->adjustSize();
+
+        if (tooltip->isHidden())
+            tooltip->show();
+    });
+
     // setAlternatingRowColors(true);
     setFlow(QListView::Flow::LeftToRight);
     setWrapping(true);
     setResizeMode(QListView::ResizeMode::Adjust);
     setItemDelegate(new ItemPaletteUI::ItemDelegate(this));
-    setSpacing(1);
 
     setSelectionBehavior(QAbstractItemView::SelectRows);
 
@@ -331,6 +369,41 @@ void PaletteWidget::setPalette(ItemPalette *palette, Tileset *tileset)
     }
 }
 
+void TilesetListView::focusOutEvent(QFocusEvent *e)
+{
+    tooltip->hide();
+
+    QListView::focusOutEvent(e);
+}
+
+void TilesetListView::wheelEvent(QWheelEvent *e)
+{
+    tooltip->hide();
+
+    QListView::wheelEvent(e);
+}
+
+void TilesetListView::leaveEvent(QEvent *e)
+{
+    mouseStopTimer.stop();
+
+    tooltip->hide();
+
+    QListView::leaveEvent(e);
+}
+
+void TilesetListView::mouseMoveEvent(QMouseEvent *e)
+{
+    mouseStopTimer.start();
+    if (tooltip->isVisible())
+    {
+        if (!tooltipRect.contains(e->globalPos()))
+        {
+            tooltip->hide();
+        }
+    }
+}
+
 bool TilesetListEventFilter::eventFilter(QObject *object, QEvent *event)
 {
     switch (event->type())
@@ -358,7 +431,12 @@ bool TilesetListEventFilter::eventFilter(QObject *object, QEvent *event)
             }
             break;
         }
+        case QEvent::ToolTip:
+            event->setAccepted(true);
+            return true;
+            break;
         default:
+            // qDebug() << "TilesetListEventFilter: " << event;
             break;
     }
 

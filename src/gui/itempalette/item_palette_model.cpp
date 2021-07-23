@@ -19,6 +19,12 @@ using TilesetModel = ItemPaletteUI::TilesetModel;
 using ItemDelegate = ItemPaletteUI::ItemDelegate;
 using HighlightAnimation = ItemPaletteUI::HighlightAnimation;
 
+namespace
+{
+    const int PaddingPx = 1;
+    const int ItemDelegateSideSize = 32 + PaddingPx * 2;
+} // namespace
+
 TilesetModel::TilesetModel(QObject *parent)
     : QAbstractListModel(parent), highlightAnimation(this)
 {
@@ -73,6 +79,21 @@ QVariant TilesetModel::data(const QModelIndex &index, int role) const
             return highlightAnimation.currentValue();
         }
     }
+    else if (role == TilesetModel::CustomToolTipRole)
+    {
+        Brush *brush = _tileset->get(index.row());
+        switch (brush->type())
+        {
+            case BrushType::Raw:
+            {
+                auto rawBrush = static_cast<RawBrush *>(brush);
+                uint32_t id = rawBrush->serverId();
+                return QString::fromStdString(std::format("{} - {}", rawBrush->serverId(), rawBrush->name()));
+            }
+            default:
+                return QString::fromStdString(brush->name());
+        }
+    }
 
     return QVariant();
 }
@@ -108,7 +129,7 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     // painter->drawPixmap(4, option.rect.y(), data.pixmap);
     // qDebug() << "Delegate::paint: " << option.rect;
 
-    QPoint topLeft = option.rect.topLeft();
+    QPoint topLeft = option.rect.topLeft() + QPoint(PaddingPx, PaddingPx);
 
     Brush *b = qvariant_cast<Brush *>(index.data(TilesetModel::BrushRole));
 
@@ -175,7 +196,7 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
 
 QSize ItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    return QSize(32, 32);
+    return QSize(ItemDelegateSideSize, ItemDelegateSideSize);
 }
 
 HighlightAnimation::HighlightAnimation(TilesetModel *model, QObject *parent)

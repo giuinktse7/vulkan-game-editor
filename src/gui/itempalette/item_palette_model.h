@@ -38,6 +38,7 @@ namespace ItemPaletteUI
       public:
         static const int HighlightRole = Qt::UserRole + 1;
         static const int BrushRole = Qt::UserRole + 2;
+        static const int CustomToolTipRole = Qt::UserRole + 3;
 
         TilesetModel(QObject *parent = nullptr);
 
