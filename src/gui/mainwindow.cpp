@@ -49,7 +49,6 @@
 #include "split_widget.h"
 #include "vulkan_window.h"
 
-
 MainLayout::MainLayout(QWidget *mainWidget)
     : mainWidget(mainWidget)
 {
@@ -526,7 +525,7 @@ void MainWindow::initializePaletteWindow()
         auto &allTileset = rawPalette.addTileset(Tileset("all", "All"));
 
         int from = 100;
-        int to = 40000;
+        int to = 45000;
 
 #ifdef _DEBUG_VME
         from = 100;

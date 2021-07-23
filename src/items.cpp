@@ -21,7 +21,7 @@ Items Items::items;
 namespace
 {
     constexpr size_t InitialMaxGuids = static_cast<size_t>(util::power(2, 14));
-    constexpr uint32_t ReservedItemCount = 40000;
+    constexpr uint32_t ReservedItemCount = 45000;
 
     constexpr ClientVersion DefaultVersion = ClientVersion::CLIENT_VERSION_1098;
 
@@ -36,7 +36,7 @@ namespace
         // TODO What is the version range for fluids in [30000, 30100]?
         // else if (id > 30000 && id < 30100) {}
         // Fluids in current version (?), might change in the future
-        else if (40000 < id && id < 40100)
+        else if (50000 < id && id < 50100)
         {
             return true;
         }
