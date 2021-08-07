@@ -11,6 +11,7 @@
 #include "../time_point.h"
 #include "border_brush.h"
 #include "brush.h"
+#include "doodad_brush.h"
 #include "ground_brush.h"
 #include "wall_brush.h"
 
@@ -164,6 +165,15 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
                 Brush::addWallBrush(std::move(wallBrush));
                 break;
             }
+            case BrushType::Doodad:
+            {
+                auto doodadBrush = parseDoodadBrush(brush);
+                if (doodadBrush.has_value())
+                {
+                    Brush::addDoodadBrush(std::move(doodadBrush.value()));
+                }
+                break;
+            }
 
             default:
                 break;
@@ -299,6 +309,7 @@ WallBrush BrushLoader::parseWallBrush(const json &brush)
                 part.windows.emplace_back(id, *windowType, open);
             }
         }
+        stackTrace.pop();
     };
 
     stackTrace.emplace("walls");
@@ -331,6 +342,72 @@ WallBrush BrushLoader::parseWallBrush(const json &brush)
     wallbrush.setIconServerId(lookId);
 
     return wallbrush;
+}
+
+std::optional<DoodadBrush> BrushLoader::parseDoodadBrush(const json &brush)
+{
+    std::vector<DoodadBrush::DoodadAlternative> alternatives;
+
+    std::string id = brush.at("id").get<std::string>();
+    std::string name = brush.at("name").get<std::string>();
+
+    int lookId = getInt(brush, "lookId");
+
+    stackTrace.emplace("alternates");
+    {
+        const json &alternates = brush.at("alternates");
+
+        if (!alternates.is_array())
+        {
+            logError(std::format("Skipping doodad brush with id '{}'. Reason: 'alternates' must be an array.", id));
+            return std::nullopt;
+        }
+
+        for (auto &alternate : alternates)
+        {
+            std::vector<std::unique_ptr<DoodadBrush::DoodadEntry>> choices;
+
+            const json &doodads = alternate.at("doodads");
+            stackTrace.emplace("doodads");
+
+            for (auto &doodad : doodads)
+            {
+                int chance = getInt(doodad, "chance");
+
+                // Single item
+                if (doodad.contains("id"))
+                {
+                    int itemId = getInt(doodad, "id");
+                    choices.emplace_back(std::make_unique<DoodadBrush::DoodadSingle>(itemId, chance));
+                }
+                else
+                { // Composite item
+                    stackTrace.emplace("items");
+                    const json &items = doodad.at("items");
+                    std::vector<DoodadBrush::CompositeTile> tiles;
+
+                    for (auto &item : items)
+                    {
+                        DoodadBrush::CompositeTile tile{};
+                        tile.dx = getInt(item, "x");
+                        tile.dy = getInt(item, "y");
+                        tile.serverId = getInt(item, "id");
+
+                        tiles.emplace_back(std::move(tile));
+                    }
+                    stackTrace.pop();
+
+                    choices.emplace_back(std::make_unique<DoodadBrush::DoodadComposite>(std::move(tiles), chance));
+                }
+            }
+            stackTrace.pop();
+
+            alternatives.emplace_back(DoodadBrush::DoodadAlternative(std::move(choices)));
+        }
+    }
+    stackTrace.pop();
+
+    return DoodadBrush(id, name, std::move(alternatives), lookId);
 }
 
 GroundBrush BrushLoader::parseGroundBrush(const json &brush)

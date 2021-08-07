@@ -338,6 +338,11 @@ bool ItemType::isContainer() const noexcept
     return group == ItemType::Group::Container || appearance->hasFlag(AppearanceFlag::Container);
 }
 
+bool ItemType::isBlocking() const noexcept
+{
+    return appearance->hasFlag(AppearanceFlag::Unpass) || appearance->hasFlag(AppearanceFlag::Unsight);
+}
+
 bool ItemType::isSplash() const noexcept
 {
     return group == ItemType::Group::Splash;

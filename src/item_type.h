@@ -405,6 +405,7 @@ class ItemType
     bool isMailbox() const noexcept;
     bool isTrashHolder() const noexcept;
     bool isBed() const noexcept;
+    bool isBlocking() const noexcept;
 
     bool isRune() const noexcept;
     bool isPickupable() const noexcept;

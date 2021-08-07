@@ -169,6 +169,7 @@ class Brush
     static vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> &getGroundBrushes();
     static vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> &getBorderBrushes();
     static vme_unordered_map<std::string, std::unique_ptr<WallBrush>> &getWallBrushes();
+    static vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> &getDoodadBrushes();
 
   protected:
     // ServerId -> Brush

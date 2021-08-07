@@ -118,6 +118,7 @@ void DoodadBrush::initialize()
                 case EntryType::Single:
                 {
                     serverIds.emplace(static_cast<DoodadSingle *>(choice.get())->serverId);
+                    break;
                 }
                 case EntryType::Composite:
                 {
@@ -128,6 +129,7 @@ void DoodadBrush::initialize()
                         composites.emplace(tile.serverId, composite);
                         serverIds.emplace(tile.serverId);
                     }
+                    break;
                 }
             }
         }

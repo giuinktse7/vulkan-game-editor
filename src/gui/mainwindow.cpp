@@ -27,6 +27,7 @@
 #include "../../vendor/rollbear-visit/visit.hpp"
 #include "../brushes/border_brush.h"
 #include "../brushes/creature_brush.h"
+#include "../brushes/doodad_brush.h"
 #include "../brushes/ground_brush.h"
 #include "../brushes/wall_brush.h"
 #include "../config.h"
@@ -640,6 +641,16 @@ void MainWindow::initializePaletteWindow()
             for (auto &brush : brushes)
             {
                 wallTileset.addBrush(brush.second.get());
+            }
+        }
+
+        // Doodads
+        {
+            auto &doodadTileset = terrainPalette.addTileset(Tileset("doodads", "Doodads"));
+            auto &brushes = Brush::getDoodadBrushes();
+            for (auto &brush : brushes)
+            {
+                doodadTileset.addBrush(brush.second.get());
             }
         }
     }

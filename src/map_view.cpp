@@ -227,8 +227,14 @@ void MapView::setGround(Tile &tile, Item &&ground, bool clearBorders)
     history.commit(std::move(action));
 }
 
-void MapView::addItem(const Position &pos, Item &&item)
+void MapView::addItem(const Position &pos, Item &&item, bool onBlocking)
 {
+    auto &tile = _map->getOrCreateTile(pos);
+    if (!onBlocking && tile.hasBlockingItem())
+    {
+        return;
+    }
+
     addItem(_map->getOrCreateTile(pos), std::move(item));
 }
 

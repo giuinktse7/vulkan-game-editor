@@ -126,6 +126,7 @@ class Tile
 
     bool hasItems() const;
     inline bool hasGround() const noexcept;
+    bool hasBlockingItem() const noexcept;
     inline bool hasCreature() const noexcept;
 
     GroundBrush *groundBrush() const;

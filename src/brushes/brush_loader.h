@@ -2,14 +2,17 @@
 
 #include <filesystem>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <stack>
 #include <string>
+
 
 #include "../tileset.h"
 
 class BorderBrush;
 class GroundBrush;
 class WallBrush;
+class DoodadBrush;
 
 class BrushLoader
 {
@@ -29,6 +32,7 @@ class BrushLoader
 
     BorderBrush parseBorderBrush(const nlohmann::json &borderJson);
     WallBrush parseWallBrush(const nlohmann::json &wallJson);
+    std::optional<DoodadBrush> parseDoodadBrush(const nlohmann::json &doodadJson);
 
     void logError(std::string message);
 

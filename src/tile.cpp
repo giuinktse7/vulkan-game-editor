@@ -595,6 +595,19 @@ TileThing Tile::getTopThing() const
     }
 }
 
+bool Tile::hasBlockingItem() const noexcept
+{
+    for (const auto &item : std::ranges::views::reverse(_items))
+    {
+        if (item->itemType->isBlocking())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 uint8_t Tile::minimapColor() const
 {
     for (const auto &item : std::ranges::views::reverse(_items))

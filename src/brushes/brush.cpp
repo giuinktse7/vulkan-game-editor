@@ -342,6 +342,11 @@ vme_unordered_map<std::string, std::unique_ptr<WallBrush>> &Brush::getWallBrushe
     return wallBrushes;
 }
 
+vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> &Brush::getDoodadBrushes()
+{
+    return doodadBrushes;
+}
+
 std::optional<BrushType> Brush::parseBrushType(std::string s)
 {
     switch (string_hash(s.c_str()))

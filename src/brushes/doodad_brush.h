@@ -48,11 +48,11 @@ class DoodadBrush final : public Brush
     {
         Position relativePosition() const;
 
-        int8_t dx;
-        int8_t dy;
-        int8_t dz;
+        int8_t dx = 0;
+        int8_t dy = 0;
+        int8_t dz = 0;
 
-        uint32_t serverId;
+        uint32_t serverId = 0;
     };
 
     struct DoodadComposite final : public DoodadEntry
