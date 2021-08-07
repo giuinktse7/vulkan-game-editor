@@ -22,7 +22,12 @@
                 { "id": 4538, "chance": 20 },
                 { "id": 4539, "chance": 20 },
                 { "id": 4540, "chance": 20 },
-                { "id": 4541, "chance": 20 }
+                { "id": 4541, "chance": 20 },
+                { "id": 294, "chance": 0 },
+                { "id": 468, "chance": 0 },
+                { "id": 469, "chance": 0 },
+                { "id": 470, "chance": 0 },
+                { "id": 24623, "chance": 0 }
             ],
             "borders": [
                 {
