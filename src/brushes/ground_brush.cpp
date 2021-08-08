@@ -52,13 +52,13 @@ void GroundBrush::initialize()
     }
 }
 
-void GroundBrush::erase(MapView &mapView, const Position &position, Direction direction)
+void GroundBrush::erase(MapView &mapView, const Position &position)
 {
     Tile &tile = mapView.getOrCreateTile(position);
     mapView.removeItemsWithBorderize(tile, [this](const Item &item) { return this->erasesItem(item.serverId()); });
 }
 
-void GroundBrush::apply(MapView &mapView, const Position &position, Direction direction)
+void GroundBrush::apply(MapView &mapView, const Position &position)
 {
     Tile &tile = mapView.getOrCreateTile(position);
 
@@ -368,7 +368,7 @@ void GroundBrush::setName(std::string name)
     _name = name;
 }
 
-std::vector<ThingDrawInfo> GroundBrush::getPreviewTextureInfo(Direction direction) const
+std::vector<ThingDrawInfo> GroundBrush::getPreviewTextureInfo(int variation) const
 {
     return std::vector<ThingDrawInfo>{DrawItemType(_iconServerId, PositionConstants::Zero)};
 }

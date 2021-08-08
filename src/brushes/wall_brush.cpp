@@ -34,7 +34,7 @@ WallBrush::WallBrush(std::string id, const std::string &name, StraightPart &&hor
     initializeWeights(&this->pole);
 }
 
-void WallBrush::erase(MapView &mapView, const Position &position, Direction direction)
+void WallBrush::erase(MapView &mapView, const Position &position)
 {
     Tile &tile = mapView.getOrCreateTile(position);
 
@@ -49,7 +49,7 @@ void WallBrush::erase(MapView &mapView, const Position &position, Direction dire
     }
 }
 
-void WallBrush::apply(MapView &mapView, const Position &position, Direction direction)
+void WallBrush::apply(MapView &mapView, const Position &position)
 {
     if (Settings::AUTO_BORDER)
     {
@@ -163,7 +163,7 @@ uint32_t WallBrush::sampleServerId(WallType type) const
     return part.items.at(0).id;
 }
 
-std::vector<ThingDrawInfo> WallBrush::getPreviewTextureInfo(Direction direction) const
+std::vector<ThingDrawInfo> WallBrush::getPreviewTextureInfo(int variation) const
 {
     return std::vector<ThingDrawInfo>{DrawItemType(_iconServerId, PositionConstants::Zero)};
 }
@@ -244,25 +244,25 @@ void WallBrush::applyInRectangleArea(MapView &mapView, const Position &from, con
     // Top
     for (int x = minX; x <= maxX; ++x)
     {
-        apply(mapView, Position(x, minY, z), Direction::South);
+        apply(mapView, Position(x, minY, z));
     }
 
     // Right
     for (int y = minY + 1; y < maxY; ++y)
     {
-        apply(mapView, Position(maxX, y, z), Direction::South);
+        apply(mapView, Position(maxX, y, z));
     }
 
     // Bottom
     for (int x = minX; x <= maxX; ++x)
     {
-        apply(mapView, Position(x, maxY, z), Direction::South);
+        apply(mapView, Position(x, maxY, z));
     }
 
     // Left
     for (int y = minY + 1; y < maxY; ++y)
     {
-        apply(mapView, Position(minX, y, z), Direction::South);
+        apply(mapView, Position(minX, y, z));
     }
 }
 

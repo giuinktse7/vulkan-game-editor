@@ -12,26 +12,32 @@ MouseAction::MapBrush::MapBrush(Brush *brush)
 MouseAction::MapBrush::MapBrush(uint32_t serverId)
     : brush(Brush::getOrCreateRawBrush(serverId)) {}
 
-void MouseAction::MapBrush::rotateClockwise()
+void MouseAction::MapBrush::nextVariation()
 {
-    Direction newDirection;
-    switch (direction)
+    int prev = variationIndex;
+    variationIndex = (variationIndex + 1) % brush->variationCount();
+    if (prev != variationIndex)
     {
-        case Direction::North:
-            newDirection = Direction::East;
-            break;
-        case Direction::East:
-            newDirection = Direction::South;
-            break;
-        case Direction::South:
-            newDirection = Direction::West;
-            break;
-        case Direction::West:
-            newDirection = Direction::North;
-            break;
+        brush->updatePreview(variationIndex);
+    }
+}
+
+void MouseAction::MapBrush::prevVariation()
+{
+    int prev = variationIndex;
+    if (variationIndex == 0)
+    {
+        variationIndex = brush->variationCount() - 1;
+    }
+    else
+    {
+        variationIndex = (variationIndex - 1) % brush->variationCount();
     }
 
-    direction = newDirection;
+    if (prev != variationIndex)
+    {
+        brush->updatePreview(variationIndex);
+    }
 }
 
 void EditorAction::setRawBrush(uint32_t serverId) noexcept

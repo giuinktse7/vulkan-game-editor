@@ -85,8 +85,8 @@ class DoodadBrush final : public Brush
     DoodadBrush(std::string id, const std::string &name, DoodadAlternative &&alternative, uint32_t iconServerId);
     DoodadBrush(std::string id, const std::string &name, std::vector<DoodadAlternative> &&alternatives, uint32_t iconServerId);
 
-    void apply(MapView &mapView, const Position &position, Direction direction) override;
-    void erase(MapView &mapView, const Position &position, Direction direction) override;
+    void apply(MapView &mapView, const Position &position) override;
+    void erase(MapView &mapView, const Position &position) override;
 
     uint32_t iconServerId() const;
     bool erasesItem(uint32_t serverId) const override;
@@ -95,18 +95,18 @@ class DoodadBrush final : public Brush
 
     const std::string &id() const noexcept;
 
-    std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction) const override;
+    std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const override;
+    void updatePreview(int variation) override;
+    int variationCount() const override;
 
   private:
     void initialize();
-    std::vector<ItemPreviewInfo> sampleGroup();
+    std::vector<ItemPreviewInfo> sampleGroup(int alternateIndex);
 
     vme_unordered_map<uint32_t, DoodadComposite *> composites;
 
     std::unordered_set<uint32_t> serverIds;
     std::vector<DoodadAlternative> alternatives;
-
-    uint8_t alternateIndex = 0;
 
     std::string _id;
     uint32_t _iconServerId;

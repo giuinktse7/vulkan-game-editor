@@ -119,8 +119,8 @@ class Brush
 
     virtual ~Brush() = default;
 
-    virtual void apply(MapView &mapView, const Position &position, Direction direction) = 0;
-    virtual void erase(MapView &mapView, const Position &position, Direction direction) = 0;
+    virtual void apply(MapView &mapView, const Position &position) = 0;
+    virtual void erase(MapView &mapView, const Position &position) = 0;
 
     virtual const std::string getDisplayId() const = 0;
 
@@ -128,7 +128,9 @@ class Brush
 
     static BrushSearchResult search(std::string searchString);
 
-    virtual std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction = Direction::South) const = 0;
+    virtual std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const = 0;
+    virtual void updatePreview(int variation);
+    virtual int variationCount() const;
 
     static std::optional<BrushType> parseBrushType(std::string s);
 

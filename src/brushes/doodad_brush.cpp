@@ -29,7 +29,7 @@ DoodadBrush::DoodadBrush(std::string id, const std::string &name, std::vector<Do
     initialize();
 }
 
-void DoodadBrush::erase(MapView &mapView, const Position &position, Direction direction)
+void DoodadBrush::erase(MapView &mapView, const Position &position)
 {
     Tile &tile = mapView.getOrCreateTile(position);
 
@@ -81,10 +81,10 @@ Position DoodadComposite::relativePosition(uint32_t serverId)
     ABORT_PROGRAM(std::format("The DoodadComposite did not contain the serverId", serverId));
 }
 
-void DoodadBrush::apply(MapView &mapView, const Position &position, Direction direction)
+void DoodadBrush::apply(MapView &mapView, const Position &position)
 {
-    // TODO Use direction for doodad brush
-    auto group = sampleGroup();
+    int alternateIndex = util::modulo(mapView.getBrushVariation(), alternatives.size());
+    auto group = sampleGroup(alternateIndex);
 
     for (const auto &entry : group)
     {
@@ -135,10 +135,10 @@ void DoodadBrush::initialize()
         }
     }
 
-    _nextGroup = alternatives.at(alternateIndex).sample(_name);
+    _nextGroup = alternatives.at(0).sample(_name);
 }
 
-std::vector<ItemPreviewInfo> DoodadBrush::sampleGroup()
+std::vector<ItemPreviewInfo> DoodadBrush::sampleGroup(int alternateIndex)
 {
     std::vector<ItemPreviewInfo> result = _nextGroup;
     _nextGroup = alternatives.at(alternateIndex).sample(_name);
@@ -234,7 +234,18 @@ const std::string &DoodadBrush::id() const noexcept
     return _id;
 }
 
-std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo(Direction direction) const
+int DoodadBrush::variationCount() const
+{
+    return alternatives.size();
+}
+
+void DoodadBrush::updatePreview(int variation)
+{
+    int alternateIndex = util::modulo(variation, alternatives.size());
+    _nextGroup = alternatives.at(alternateIndex).sample(_name);
+}
+
+std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo(int variation) const
 {
     std::vector<ThingDrawInfo> previewInfo;
 

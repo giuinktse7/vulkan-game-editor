@@ -205,7 +205,7 @@ class MapView
     Tile *singleSelectedTile();
     bool singleItemSelected() const;
 
-    void rotateBrush();
+    void rotateBrush(bool forwards = true);
 
     /**
 	 * Returns the only selected item if there is **exactly one** selected item.
@@ -271,6 +271,10 @@ class MapView
 
     template <auto MemberFunction, typename T>
     void onUndoRedo(T *instance);
+
+    int getBrushVariation() const noexcept;
+
+    static Direction getDirection(int variation);
 
     EditorAction &editorAction;
     MapHistory::History history;

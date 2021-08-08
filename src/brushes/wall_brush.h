@@ -47,10 +47,10 @@ class WallBrush final : public Brush
   public:
     WallBrush(std::string id, const std::string &name, StraightPart &&horizontal, StraightPart &&vertical, Part &&corner, Part &&pole);
 
-    void apply(MapView &mapView, const Position &position, Direction direction) override;
-    void erase(MapView &mapView, const Position &position, Direction direction) override;
+    void apply(MapView &mapView, const Position &position) override;
+    void erase(MapView &mapView, const Position &position) override;
 
-    std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction) const override;
+    std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const override;
     std::vector<ThingDrawInfo> getPreviewTextureInfo(Position from, Position to) const;
 
     void applyInRectangleArea(MapView &mapView, const Position &from, const Position &to);

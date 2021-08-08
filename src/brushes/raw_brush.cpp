@@ -13,14 +13,14 @@ RawBrush::RawBrush(ItemType *itemType)
     DEBUG_ASSERT(_itemType != nullptr, "Invalid itemType. No ItemType for server ID " + std::to_string(itemType->id));
 }
 
-void RawBrush::erase(MapView &mapView, const Position &position, Direction direction)
+void RawBrush::erase(MapView &mapView, const Position &position)
 {
     mapView.removeItems(position, [this](const Item &item) {
         return item.serverId() == this->serverId();
     });
 }
 
-void RawBrush::apply(MapView &mapView, const Position &position, Direction direction)
+void RawBrush::apply(MapView &mapView, const Position &position)
 {
     if (!_itemType)
     {
@@ -70,7 +70,7 @@ BrushType RawBrush::type() const
     return BrushType::Raw;
 }
 
-std::vector<ThingDrawInfo> RawBrush::getPreviewTextureInfo(Direction direction) const
+std::vector<ThingDrawInfo> RawBrush::getPreviewTextureInfo(int variation) const
 {
     return std::vector<ThingDrawInfo>{DrawItemType(_itemType, PositionConstants::Zero)};
 }

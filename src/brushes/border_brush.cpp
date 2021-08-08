@@ -146,7 +146,7 @@ void BorderBrush::initialize()
     std::sort(sortedServerIds.begin(), sortedServerIds.end());
 }
 
-void BorderBrush::apply(MapView &mapView, const Position &position, Direction direction)
+void BorderBrush::apply(MapView &mapView, const Position &position)
 {
     using Dir = BorderExpandDirection;
 
@@ -564,7 +564,7 @@ void BorderBrush::fixBordersAtOffset(MapView &mapView, const Position &position,
     }
 }
 
-void BorderBrush::erase(MapView &mapView, const Position &position, Direction direction)
+void BorderBrush::erase(MapView &mapView, const Position &position)
 {
     Tile &tile = mapView.getOrCreateTile(position);
 
@@ -593,7 +593,7 @@ void BorderBrush::apply(MapView &mapView, const Position &position, BorderType b
         Brush *centerBrush = borderData.getCenterBrush();
         if (centerBrush)
         {
-            centerBrush->apply(mapView, position, Direction::South);
+            centerBrush->apply(mapView, position);
         }
     }
     else
@@ -665,7 +665,7 @@ const std::string BorderBrush::getDisplayId() const
     return id;
 }
 
-std::vector<ThingDrawInfo> BorderBrush::getPreviewTextureInfo(Direction direction) const
+std::vector<ThingDrawInfo> BorderBrush::getPreviewTextureInfo(int variation) const
 {
     // TODO improve preview
     return std::vector<ThingDrawInfo>{DrawItemType(_iconServerId, PositionConstants::Zero)};

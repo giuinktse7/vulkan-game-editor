@@ -319,6 +319,7 @@ void MapRenderer::drawCurrentAction()
 
             [this](const MouseAction::MapBrush &action) {
                 Position pos = mapView->mouseGamePos();
+                int variation = mapView->getBrushVariation();
 
                 if (action.area)
                 {
@@ -330,7 +331,7 @@ void MapRenderer::drawCurrentAction()
                         Texture &texture = Texture::getOrCreateSolidTexture(SolidColor::Red);
 
                         drawRectangle(texture, from, to, 0.2f);
-                        drawBrushPreviewAtWorldPos(action.brush, to);
+                        drawBrushPreviewAtWorldPos(action.brush, to, variation);
                     }
                     else
                     {
@@ -345,7 +346,7 @@ void MapRenderer::drawCurrentAction()
 
                                 for (auto &pos : area)
                                 {
-                                    drawPreview(action.brush->getPreviewTextureInfo().at(0), pos);
+                                    drawPreview(action.brush->getPreviewTextureInfo(variation).at(0), pos);
                                 }
                                 break;
                             }
@@ -377,7 +378,8 @@ void MapRenderer::drawCurrentAction()
                 {
                     if (mapView->underMouse())
                     {
-                        drawBrushPreview(action.brush, pos, action.direction);
+                        int variation = mapView->getBrushVariation();
+                        drawBrushPreview(action.brush, pos, variation);
                     }
                 }
             },
@@ -731,7 +733,7 @@ void MapRenderer::issueRectangleDraw(DrawInfo::Rectangle &info)
     vulkanInfo.vkCmdDrawIndexed(_currentFrame->commandBuffer, 6, 1, 0, 0, 0);
 }
 
-void MapRenderer::drawBrushPreview(Brush *brush, const Position &position, Direction direction)
+void MapRenderer::drawBrushPreview(Brush *brush, const Position &position, int variation)
 {
     SolidColor color = Settings::BORDER_BRUSH_VARIATION == BorderBrushVariationType::Detailed
                            ? SolidColor::Green
@@ -779,14 +781,14 @@ void MapRenderer::drawBrushPreview(Brush *brush, const Position &position, Direc
     }
     else
     {
-        for (const auto preview : brush->getPreviewTextureInfo(direction))
+        for (const auto preview : brush->getPreviewTextureInfo(variation))
             drawPreview(preview, position);
     }
 }
 
-void MapRenderer::drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos)
+void MapRenderer::drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos, int variation)
 {
-    for (const auto &drawInfo : brush->getPreviewTextureInfo())
+    for (const auto &drawInfo : brush->getPreviewTextureInfo(variation))
     {
         rollbear::visit(
             util::overloaded{

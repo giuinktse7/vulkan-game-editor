@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <limits>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -308,6 +309,13 @@ namespace util
         return result;
     }
 
+    // https://stackoverflow.com/a/58118871/7157626
+    inline unsigned modulo(int value, unsigned m)
+    {
+        int mod = value % (int)m;
+        m &= mod >> std::numeric_limits<int>::digits;
+        return mod + m;
+    }
 } // namespace util
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

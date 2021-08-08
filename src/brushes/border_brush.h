@@ -54,14 +54,14 @@ class BorderBrush final : public Brush
 
     void fixBorders(MapView &mapView, const Position &position, BorderNeighborMap &neighbors);
 
-    void apply(MapView &mapView, const Position &position, Direction direction) override;
-    void erase(MapView &mapView, const Position &position, Direction direction) override;
+    void apply(MapView &mapView, const Position &position) override;
+    void erase(MapView &mapView, const Position &position) override;
 
     void quadrantChanged(MapView &mapView, const Position &position, TileQuadrant prevQuadrant, TileQuadrant currQuadrant);
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
     const std::string getDisplayId() const override;
-    std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction) const override;
+    std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const override;
 
     uint32_t iconServerId() const;
 

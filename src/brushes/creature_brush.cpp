@@ -17,7 +17,7 @@ bool CreatureBrush::erasesItem(uint32_t serverId) const
     return false;
 }
 
-void CreatureBrush::erase(MapView &mapView, const Position &position, Direction direction)
+void CreatureBrush::erase(MapView &mapView, const Position &position)
 {
     Tile *tile = mapView.getTile(position);
     if (!tile)
@@ -32,9 +32,10 @@ void CreatureBrush::erase(MapView &mapView, const Position &position, Direction 
     }
 }
 
-void CreatureBrush::apply(MapView &mapView, const Position &position, Direction direction)
+void CreatureBrush::apply(MapView &mapView, const Position &position)
 {
     auto creature = Creature(*creatureType);
+    Direction direction = MapView::getDirection(mapView.getBrushVariation());
     creature.setDirection(direction);
     mapView.addCreature(position, std::move(creature));
 }
@@ -44,8 +45,15 @@ BrushType CreatureBrush::type() const
     return BrushType::Creature;
 }
 
-std::vector<ThingDrawInfo> CreatureBrush::getPreviewTextureInfo(Direction direction) const
+int CreatureBrush::variationCount() const
 {
+    // 4 directions
+    return 4;
+}
+
+std::vector<ThingDrawInfo> CreatureBrush::getPreviewTextureInfo(int variation) const
+{
+    auto direction = MapView::getDirection(variation);
     return std::vector<ThingDrawInfo>{DrawCreatureType(creatureType, PositionConstants::Zero, direction)};
 }
 

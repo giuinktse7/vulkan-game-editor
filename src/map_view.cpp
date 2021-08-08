@@ -584,7 +584,7 @@ void MapView::fillRegionByGroundBrush(const Position &from, const Position &to, 
             auto location = _map->getTileLocation(pos);
             if (!location || !location->hasTile() || GroundBrush::mayPlaceOnTile(*location->tile()))
             {
-                brush->apply(mapView, pos, Direction::South);
+                brush->apply(mapView, pos);
             }
             else
             {
@@ -662,13 +662,25 @@ std::shared_ptr<Item> MapView::dropItem(Tile *tile, Item *item)
 //>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-void MapView::rotateBrush()
+void MapView::rotateBrush(bool forwards)
 {
     std::visit(
         util::overloaded{
-            [this](MouseAction::MapBrush &brush) {
-                brush.rotateClockwise();
-                requestDraw();
+            [this, forwards](MouseAction::MapBrush &brush) {
+                int prev = brush.variationIndex;
+                if (forwards)
+                {
+                    brush.nextVariation();
+                }
+                else
+                {
+                    brush.prevVariation();
+                }
+
+                if (brush.variationIndex != prev)
+                {
+                    requestDraw();
+                }
             },
             [](const auto &arg) {}},
         editorAction.action());
@@ -677,6 +689,21 @@ void MapView::rotateBrush()
 void MapView::setViewportSize(int width, int height)
 {
     _camera.setSize(width, height);
+}
+
+Direction MapView::getDirection(int variation)
+{
+    switch (util::modulo(variation, 4))
+    {
+        case 0:
+            return Direction::South;
+        case 1:
+            return Direction::West;
+        case 2:
+            return Direction::North;
+        case 3:
+            return Direction::East;
+    }
 }
 
 void MapView::setDragStart(WorldPosition position)
@@ -1103,7 +1130,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                             const Tile *tile = getTile(pos);
                             if (tile)
                             {
-                                action.brush->erase(*this, pos, action.direction);
+                                action.brush->erase(*this, pos);
                             }
                         }
                     }
@@ -1128,7 +1155,7 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
                         if (!action.area)
                         {
-                            action.brush->apply(*this, pos, action.direction);
+                            action.brush->apply(*this, pos);
                         }
                     }
                 },
@@ -1246,7 +1273,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                         const Tile *tile = getTile(pos);
                         if (tile)
                         {
-                            action.brush->erase(*this, pos, action.direction);
+                            action.brush->erase(*this, pos);
                         }
                     }
                     else
@@ -1273,7 +1300,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                                     // Require non-negative positions
                                     if (position.x >= 0 && position.y >= 0)
                                     {
-                                        action.brush->apply(*this, position, action.direction);
+                                        action.brush->apply(*this, position);
                                         lastBrushDragPosition = position;
                                     }
                                 }
@@ -1290,7 +1317,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                                     // Require non-negative positions
                                     if (position.x >= 0 && position.y >= 0)
                                     {
-                                        action.brush->apply(*this, position, action.direction);
+                                        action.brush->apply(*this, position);
                                     }
                                 }
                                 break;
@@ -1307,7 +1334,7 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                                     // Require non-negative positions
                                     if (position.x >= 0 && position.y >= 0)
                                     {
-                                        action.brush->apply(*this, position, action.direction);
+                                        action.brush->apply(*this, position);
                                     }
                                 }
                             }
@@ -1334,6 +1361,12 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
     lastBrushDragPosition = pos;
 
     requestDraw();
+}
+
+int MapView::getBrushVariation() const noexcept
+{
+    auto *action = editorAction.as<MouseAction::MapBrush>();
+    return action->variationIndex;
 }
 
 void MapView::mouseReleaseEvent(VME::MouseEvent event)

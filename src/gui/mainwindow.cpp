@@ -786,8 +786,13 @@ QMenuBar *MainWindow::createMenuBar()
         editMenu->addAction(new MenuSeparator(this));
 
         // Brush actions
-        addMenuItem(editMenu, "Rotate Brush", Qt::Key_R, [this] {
-            this->currentMapView()->rotateBrush();
+        addMenuItem(editMenu, "Previous Brush Variation", Qt::Key_R, [this] {
+            this->currentMapView()->rotateBrush(false);
+        });
+
+        // Brush actions
+        addMenuItem(editMenu, "Next Brush Variation", Qt::Key_T, [this] {
+            this->currentMapView()->rotateBrush(true);
         });
 
         auto brushOptionMenu = editMenu->addMenu(tr("Border Options"));

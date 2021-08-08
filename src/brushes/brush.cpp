@@ -347,6 +347,16 @@ vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> &Brush::getDoodadBr
     return doodadBrushes;
 }
 
+void Brush::updatePreview(int variation)
+{
+    // Empty
+}
+
+int Brush::variationCount() const
+{
+    return 1;
+}
+
 std::optional<BrushType> Brush::parseBrushType(std::string s)
 {
     switch (string_hash(s.c_str()))

@@ -14,8 +14,8 @@ class RawBrush final : public Brush
     // Uses the item name as brush name
     static RawBrush fromServerId(uint32_t serverId);
 
-    void apply(MapView &mapView, const Position &position, Direction direction) override;
-    void erase(MapView &mapView, const Position &position, Direction direction) override;
+    void apply(MapView &mapView, const Position &position) override;
+    void erase(MapView &mapView, const Position &position) override;
 
     uint32_t iconServerId() const;
     bool erasesItem(uint32_t serverId) const override;
@@ -24,7 +24,7 @@ class RawBrush final : public Brush
     ItemType *itemType() const noexcept;
     uint32_t serverId() const noexcept;
 
-    std::vector<ThingDrawInfo> getPreviewTextureInfo(Direction direction) const override;
+    std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const override;
 
     const std::string getDisplayId() const override;
 

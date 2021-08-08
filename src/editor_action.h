@@ -90,7 +90,8 @@ struct MouseAction
         MapBrush(uint32_t serverId);
         MapBrush(Brush *brush);
 
-        void rotateClockwise();
+        void nextVariation();
+        void prevVariation();
 
         Brush *brush;
 
@@ -105,7 +106,12 @@ struct MouseAction
          */
         bool erase = false;
 
-        Direction direction = Direction::South;
+        /**
+         * Controls brush variation.
+         *  Creatures - rotation
+         *  Doodad - alternates
+         */
+        int variationIndex = 0;
     };
 
     struct Select : public MoveAction
