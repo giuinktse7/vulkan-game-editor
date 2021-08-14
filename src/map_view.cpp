@@ -708,6 +708,11 @@ void MapView::setViewportSize(int width, int height)
     _camera.setSize(width, height);
 }
 
+bool MapView::isValidPos(const Position &position) const
+{
+    return _map->contains(position);
+}
+
 Direction MapView::getDirection(int variation)
 {
     switch (util::modulo(variation, 4))

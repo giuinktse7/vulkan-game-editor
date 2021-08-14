@@ -41,6 +41,9 @@ void DoodadBrush::erase(MapView &mapView, const Position &position)
     {
         auto finalPos = position + relativePos;
 
+        if (!mapView.isValidPos(finalPos))
+            continue;
+
         Tile &tile = mapView.getOrCreateTile(finalPos);
 
         const Item *item = tile.getItem([this](const Item &item) {
@@ -138,6 +141,10 @@ void DoodadBrush::apply(MapView &mapView, const Position &position)
     for (const auto &entry : _buffer)
     {
         const Position finalPos = position + entry.relativePosition;
+
+        if (!mapView.isValidPos(finalPos))
+            continue;
+
         uint32_t serverId = entry.serverId;
 
         bool placeItem = prepareApply(mapView, finalPos);

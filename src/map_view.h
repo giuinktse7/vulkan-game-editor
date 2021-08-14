@@ -280,6 +280,8 @@ class MapView
 
     static Direction getDirection(int variation);
 
+    bool isValidPos(const Position &position) const;
+
     EditorAction &editorAction;
     MapHistory::History history;
 
