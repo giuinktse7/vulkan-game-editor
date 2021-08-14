@@ -28,6 +28,35 @@ class Brush;
 
 #include <cstddef> // For std::ptrdiff_t
 #include <iterator> // For std::forward_iterator_tag
+#include <unordered_set>
+
+class BrushShape
+{
+  public:
+    virtual std::unordered_set<Position> getRelativePositions() const noexcept = 0;
+};
+
+class RectangularBrushShape : public BrushShape
+{
+  public:
+    RectangularBrushShape(uint16_t width, uint16_t height);
+    std::unordered_set<Position> getRelativePositions() const noexcept override;
+
+  private:
+    uint16_t width;
+    uint16_t height;
+};
+
+class CircularBrushShape : public BrushShape
+{
+  public:
+    CircularBrushShape(uint16_t radius);
+    std::unordered_set<Position> getRelativePositions() const noexcept override;
+
+  private:
+    static std::unordered_set<Position> Size3x3;
+    uint16_t radius;
+};
 
 struct ExpandedTileBlock
 {
@@ -158,8 +187,6 @@ class Brush
 
     static const vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> &getRawBrushes();
 
-    static int nextGroundBrushId();
-
     void setTileset(Tileset *tileset) noexcept;
     Tileset *tileset() const noexcept;
 
@@ -173,7 +200,16 @@ class Brush
     static vme_unordered_map<std::string, std::unique_ptr<WallBrush>> &getWallBrushes();
     static vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> &getDoodadBrushes();
 
+    static BrushShape &brushShape() noexcept;
+
+    /**
+     * Takes ownership of the BrushShape pointer
+     */
+    static void setBrushShape(BrushShape *brushShape) noexcept;
+
   protected:
+    static bool matchSorter(std::pair<int, Brush *> &lhs, const std::pair<int, Brush *> &rhs);
+
     // ServerId -> Brush
     static vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> rawBrushes;
 
@@ -194,7 +230,9 @@ class Brush
 
     std::string _name;
     Tileset *_tileset = nullptr;
-    static bool matchSorter(std::pair<int, Brush *> &lhs, const std::pair<int, Brush *> &rhs);
+
+  private:
+    static BrushShape *_brushShape;
 };
 
 struct BorderNeighborMap

@@ -706,12 +706,8 @@ void MainWindow::initializePaletteWindow()
 
     connect(_paletteWindow, &ItemPaletteWindow::brushSelectionEvent, [this](Brush *brush) {
         editorAction.setIfUnlocked(MouseAction::MapBrush(brush));
+        brush->updatePreview(0);
     });
-    // Brush *testBrush = Brush::getOrCreateRawBrush(2016);
-    // Brush *testBrush = Brush::getOrCreateRawBrush(2005);
-    // Brush *testBrush = Brush::getOrCreateRawBrush(1892);
-    Brush *testBrush = Brush::getBorderBrush("normal_grass_border");
-    _paletteWindow->selectBrush(testBrush);
 }
 
 QMenuBar *MainWindow::createMenuBar()

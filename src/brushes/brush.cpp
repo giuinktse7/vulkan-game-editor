@@ -21,6 +21,29 @@ vme_unordered_map<std::string, std::unique_ptr<WallBrush>> Brush::wallBrushes;
 vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> Brush::doodadBrushes;
 vme_unordered_map<std::string, std::unique_ptr<CreatureBrush>> Brush::creatureBrushes;
 
+BrushShape *Brush::_brushShape = new RectangularBrushShape(7, 7);
+
+BrushShape &Brush::brushShape() noexcept
+{
+    return *_brushShape;
+}
+
+void Brush::setBrushShape(BrushShape *brushShape) noexcept
+{
+    delete _brushShape;
+    _brushShape = brushShape;
+}
+
+std::unordered_set<Position> CircularBrushShape::Size3x3 = {
+    Position(1, 0, 0),
+
+    Position(0, 1, 0),
+    Position(1, 1, 0),
+    Position(2, 1, 0),
+
+    Position(1, 2, 0),
+};
+
 Brush::Brush(std::string name)
     : _name(name) {}
 
@@ -458,4 +481,42 @@ void BorderNeighborMap::set(int x, int y, TileCover tileCover)
 int BorderNeighborMap::index(int x, int y) const
 {
     return (y + 2) * 5 + (x + 2);
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>Brush Shapes>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+RectangularBrushShape::RectangularBrushShape(uint16_t width, uint16_t height)
+    : width(width), height(height) {}
+
+std::unordered_set<Position> RectangularBrushShape::getRelativePositions() const noexcept
+{
+    int minX = -width / 2;
+    int maxX = width / 2;
+
+    int minY = -height / 2;
+    int maxY = height / 2;
+
+    std::unordered_set<Position> positions;
+    for (int y = minY; y < maxY; ++y)
+    {
+        for (int x = minX; x < maxX; ++x)
+        {
+            positions.emplace(Position(x, y, 0));
+        }
+    }
+
+    return positions;
+}
+
+CircularBrushShape::CircularBrushShape(uint16_t radius)
+    : radius(radius) {}
+
+std::unordered_set<Position> CircularBrushShape::getRelativePositions() const noexcept
+{
+    // TODO implement other sizes
+    return Size3x3;
 }

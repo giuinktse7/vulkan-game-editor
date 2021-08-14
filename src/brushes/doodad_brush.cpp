@@ -19,52 +19,58 @@ using DoodadComposite = DoodadBrush::DoodadComposite;
 namespace
 {
     constexpr float DefaultThickness = 0.25;
-}
+    constexpr int MaxPreviewRetries = 5;
+} // namespace
 
 DoodadBrush::DoodadBrush(std::string id, const std::string &name, DoodadAlternative &&alternative, uint32_t iconServerId)
-    : Brush(name), _id(id), _iconServerId(iconServerId)
+    : Brush(name), _id(id), _iconServerId(iconServerId), thickness(DefaultThickness)
 {
     alternatives.emplace_back(std::move(alternative));
     initialize();
 }
 
 DoodadBrush::DoodadBrush(std::string id, const std::string &name, std::vector<DoodadAlternative> &&alternatives, uint32_t iconServerId)
-    : Brush(name), alternatives(std::move(alternatives)), _id(id), _iconServerId(iconServerId)
+    : Brush(name), alternatives(std::move(alternatives)), _id(id), _iconServerId(iconServerId), thickness(DefaultThickness)
 {
     initialize();
 }
 
 void DoodadBrush::erase(MapView &mapView, const Position &position)
 {
-    Tile &tile = mapView.getOrCreateTile(position);
-
-    const Item *item = tile.getItem([this](const Item &item) {
-        return this->erasesItem(item.serverId());
-    });
-
-    if (!item)
+    for (const auto &relativePos : Brush::brushShape().getRelativePositions())
     {
-        return;
-    }
+        auto finalPos = position + relativePos;
 
-    uint32_t serverId = item->serverId();
+        Tile &tile = mapView.getOrCreateTile(finalPos);
 
-    // If the item belongs to a composite, then remove the whole composite
-    auto found = composites.find(serverId);
-    if (found != composites.end())
-    {
-        auto composite = found->second;
-        Position zeroPos = position - composite->relativePosition(serverId);
-        for (const auto &tile : composite->tiles)
+        const Item *item = tile.getItem([this](const Item &item) {
+            return this->erasesItem(item.serverId());
+        });
+
+        if (!item)
         {
-            mapView.removeItems(zeroPos + tile.relativePosition(), [tile](const Item &item) {
-                return item.serverId() == tile.serverId;
-            });
+            continue;
         }
-    }
-    else
-    {
-        mapView.removeItems(tile, [this](const Item &item) { return this->erasesItem(item.serverId()); });
+
+        uint32_t serverId = item->serverId();
+
+        // If the item belongs to a composite, then remove the whole composite
+        auto found = composites.find(serverId);
+        if (found != composites.end())
+        {
+            auto composite = found->second;
+            Position zeroPos = finalPos - composite->relativePosition(serverId);
+            for (const auto &tile : composite->tiles)
+            {
+                mapView.removeItems(zeroPos + tile.relativePosition(), [tile](const Item &item) {
+                    return item.serverId() == tile.serverId;
+                });
+            }
+        }
+        else
+        {
+            mapView.removeItems(tile, [this](const Item &item) { return this->erasesItem(item.serverId()); });
+        }
     }
 }
 
@@ -86,12 +92,8 @@ Position DoodadComposite::relativePosition(uint32_t serverId)
     ABORT_PROGRAM(std::format("The DoodadComposite did not contain the serverId", serverId));
 }
 
-void DoodadBrush::apply(MapView &mapView, const Position &position)
+bool DoodadBrush::prepareApply(MapView &mapView, const Position &position)
 {
-    // Take a sample even if it is blocked
-    int alternateIndex = util::modulo(mapView.getBrushVariation(), alternatives.size());
-    auto group = sampleGroup(alternateIndex);
-
     switch (replaceBehavior)
     {
         case ReplaceBehavior::Block:
@@ -105,7 +107,7 @@ void DoodadBrush::apply(MapView &mapView, const Position &position)
 
                 if (blocked)
                 {
-                    return;
+                    return false;
                 }
             }
         }
@@ -124,10 +126,29 @@ void DoodadBrush::apply(MapView &mapView, const Position &position)
             break;
     }
 
-    for (const auto &entry : group)
+    return true;
+}
+
+void DoodadBrush::apply(MapView &mapView, const Position &position)
+{
+    // Take a sample even if it is blocked
+    int alternateIndex = util::modulo(mapView.getBrushVariation(), alternatives.size());
+    auto group = _buffer;
+
+    for (const auto &entry : _buffer)
     {
-        mapView.addItem(position + entry.relativePosition, Item(entry.serverId));
+        const Position finalPos = position + entry.relativePosition;
+        uint32_t serverId = entry.serverId;
+
+        bool placeItem = prepareApply(mapView, finalPos);
+
+        if (placeItem)
+        {
+            mapView.addItem(finalPos, Item(serverId));
+        }
     }
+
+    updatePreview(alternateIndex);
 }
 
 uint32_t DoodadBrush::iconServerId() const
@@ -173,20 +194,12 @@ void DoodadBrush::initialize()
         }
     }
 
-    _nextGroup = alternatives.at(0).sample(_name);
+    _buffer = alternatives.at(0).sample(_name);
 }
 
 std::unordered_set<uint32_t> DoodadBrush::serverIds() const
 {
     return _serverIds;
-}
-
-std::vector<ItemPreviewInfo> DoodadBrush::sampleGroup(int alternateIndex)
-{
-    std::vector<ItemPreviewInfo> result = _nextGroup;
-    _nextGroup = alternatives.at(alternateIndex).sample(_name);
-
-    return result;
 }
 
 DoodadBrush::DoodadSingle::DoodadSingle(uint32_t serverId, uint32_t weight)
@@ -284,15 +297,64 @@ int DoodadBrush::variationCount() const
 
 void DoodadBrush::updatePreview(int variation)
 {
+    _buffer.clear();
+    auto relativePositions = Brush::brushShape().getRelativePositions();
+    std::unordered_set<Position> takenPositions;
+
     int alternateIndex = util::modulo(variation, alternatives.size());
-    _nextGroup = alternatives.at(alternateIndex).sample(_name);
+
+    while (!relativePositions.empty())
+    {
+        auto it = relativePositions.begin();
+        Position relativePos = *it;
+        relativePositions.erase(it);
+
+        // Skip positions based on thickness
+        if (Random::global().nextDouble() > thickness)
+        {
+            continue;
+        }
+
+        int retries = 0;
+        while (retries < MaxPreviewRetries)
+        {
+            bool ok = true;
+            auto sample = alternatives.at(alternateIndex).sample(_name);
+
+            for (const auto &previewInfo : sample)
+            {
+                if (takenPositions.contains(relativePos + previewInfo.relativePosition))
+                {
+                    // Can not place this doodad. Try again.
+                    ++retries;
+                    ok = false;
+                    break;
+                }
+            }
+
+            if (ok)
+            {
+                for (const auto &previewInfo : sample)
+                {
+                    auto finalPos = relativePos + previewInfo.relativePosition;
+                    takenPositions.emplace(finalPos);
+                    relativePositions.erase(previewInfo.relativePosition);
+                    _buffer.emplace_back(ItemPreviewInfo(previewInfo.serverId, finalPos));
+                }
+
+                break;
+            }
+        }
+    }
+
+    this->alternateIndex = alternateIndex;
 }
 
 std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo(int variation) const
 {
     std::vector<ThingDrawInfo> previewInfo;
 
-    std::ranges::transform(_nextGroup, std::back_inserter(previewInfo),
+    std::ranges::transform(_buffer, std::back_inserter(previewInfo),
                            [](const ItemPreviewInfo &info) -> ThingDrawInfo {
                                return DrawItemType(info.serverId, info.relativePosition);
                            });

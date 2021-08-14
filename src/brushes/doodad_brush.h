@@ -119,7 +119,7 @@ class DoodadBrush final : public Brush
 
   private:
     void initialize();
-    std::vector<ItemPreviewInfo> sampleGroup(int alternateIndex);
+    bool prepareApply(MapView &mapView, const Position &position);
 
     vme_unordered_map<uint32_t, DoodadComposite *> composites;
 
@@ -138,5 +138,7 @@ class DoodadBrush final : public Brush
 
     bool replace = false;
 
-    std::vector<ItemPreviewInfo> _nextGroup;
+    std::vector<ItemPreviewInfo> _buffer;
+
+    int alternateIndex = 0;
 };

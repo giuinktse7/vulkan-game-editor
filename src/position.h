@@ -347,3 +347,20 @@ inline std::ostream &operator<<(std::ostream &os, const Region2D<T> &pos)
     os << pos.show();
     return os;
 }
+
+namespace std
+{
+    template <>
+    struct hash<Position>
+    {
+        std::size_t operator()(const Position &pos) const noexcept
+        {
+            size_t hash = 0;
+            util::combineHash(hash, pos.x);
+            util::combineHash(hash, pos.y);
+            util::combineHash(hash, pos.z);
+
+            return hash;
+        }
+    };
+} // namespace std
