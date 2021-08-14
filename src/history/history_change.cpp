@@ -366,8 +366,7 @@ namespace MapHistory
         auto &items = tile.items();
         int count = static_cast<int>(tile.itemCount());
 
-        // The indices need to be in descending order for Move::commit to work.
-        for (int i = count - 1; i >= 0; --i)
+        for (int i = 0; i < count; ++i)
         {
             if (items.at(i)->selected)
                 indices.emplace_back(i);
@@ -395,9 +394,24 @@ namespace MapHistory
 
         if (partialMoveData)
         {
-            for (const auto i : partialMoveData->indices)
+            std::stack<std::shared_ptr<Item>> droppedItems;
+
+            // Reverse iteration because we must start from the highest index. Otherwise, dropping items will cause the
+            // higher indices to become invalid.
+            auto it = partialMoveData->indices.rbegin();
+            while (it != partialMoveData->indices.rend())
             {
-                to.addItem(from.dropItem(i));
+                auto index = *it;
+                droppedItems.push(from.dropItem(index));
+                ++it;
+            }
+
+            // Add the dropped items to the target tile, now in correct order
+            while (!droppedItems.empty())
+            {
+                auto &item = droppedItems.top();
+                to.addItem(std::move(item));
+                droppedItems.pop();
             }
 
             if (partialMoveData->moveFlags & MoveFlags::MoveGround)

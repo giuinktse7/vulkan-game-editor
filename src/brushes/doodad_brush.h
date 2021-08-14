@@ -14,6 +14,20 @@ class DoodadBrush final : public Brush
 {
 
   public:
+    enum class ReplaceBehavior
+    {
+        // Block brush from placing if the tile already has a doodad of this type
+        Block,
+
+        // Replace existing doodad of this type on tile
+        Replace,
+
+        // Add to tile regardless of whether this doodad already exists on the tile.
+        Stack
+    };
+
+    static ReplaceBehavior parseReplaceBehavior(std::string raw);
+
     enum class EntryType
     {
         Single,
@@ -99,17 +113,30 @@ class DoodadBrush final : public Brush
     void updatePreview(int variation) override;
     int variationCount() const override;
 
+    ReplaceBehavior replaceBehavior = ReplaceBehavior::Block;
+
+    std::unordered_set<uint32_t> serverIds() const;
+
   private:
     void initialize();
     std::vector<ItemPreviewInfo> sampleGroup(int alternateIndex);
 
     vme_unordered_map<uint32_t, DoodadComposite *> composites;
 
-    std::unordered_set<uint32_t> serverIds;
+    std::unordered_set<uint32_t> _serverIds;
     std::vector<DoodadAlternative> alternatives;
+
+    /**
+     * Thickness in [0, 1].
+     * 0: Brush never applies.
+     * 1: Brush always applies.
+     */
+    float thickness;
 
     std::string _id;
     uint32_t _iconServerId;
+
+    bool replace = false;
 
     std::vector<ItemPreviewInfo> _nextGroup;
 };

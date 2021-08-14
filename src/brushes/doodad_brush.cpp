@@ -16,6 +16,11 @@ using DoodadAlternative = DoodadBrush::DoodadAlternative;
 using DoodadSingle = DoodadBrush::DoodadSingle;
 using DoodadComposite = DoodadBrush::DoodadComposite;
 
+namespace
+{
+    constexpr float DefaultThickness = 0.25;
+}
+
 DoodadBrush::DoodadBrush(std::string id, const std::string &name, DoodadAlternative &&alternative, uint32_t iconServerId)
     : Brush(name), _id(id), _iconServerId(iconServerId)
 {
@@ -83,8 +88,41 @@ Position DoodadComposite::relativePosition(uint32_t serverId)
 
 void DoodadBrush::apply(MapView &mapView, const Position &position)
 {
+    // Take a sample even if it is blocked
     int alternateIndex = util::modulo(mapView.getBrushVariation(), alternatives.size());
     auto group = sampleGroup(alternateIndex);
+
+    switch (replaceBehavior)
+    {
+        case ReplaceBehavior::Block:
+        {
+            auto *tile = mapView.getTile(position);
+            if (tile)
+            {
+                bool blocked = tile->containsItem([this](const Item &item) {
+                    return item.itemType->brush == this;
+                });
+
+                if (blocked)
+                {
+                    return;
+                }
+            }
+        }
+        case ReplaceBehavior::Replace:
+        {
+            auto *tile = mapView.getTile(position);
+            if (tile)
+            {
+                tile->removeItemsIf([this](const Item &item) {
+                    return item.itemType->brush == this;
+                });
+            }
+        }
+        break;
+        default:
+            break;
+    }
 
     for (const auto &entry : group)
     {
@@ -99,7 +137,7 @@ uint32_t DoodadBrush::iconServerId() const
 
 bool DoodadBrush::erasesItem(uint32_t serverId) const
 {
-    return serverIds.find(serverId) != serverIds.end();
+    return _serverIds.find(serverId) != _serverIds.end();
 }
 
 BrushType DoodadBrush::type() const
@@ -117,7 +155,7 @@ void DoodadBrush::initialize()
             {
                 case EntryType::Single:
                 {
-                    serverIds.emplace(static_cast<DoodadSingle *>(choice.get())->serverId);
+                    _serverIds.emplace(static_cast<DoodadSingle *>(choice.get())->serverId);
                     break;
                 }
                 case EntryType::Composite:
@@ -127,7 +165,7 @@ void DoodadBrush::initialize()
                     for (const auto &tile : composite->tiles)
                     {
                         composites.emplace(tile.serverId, composite);
-                        serverIds.emplace(tile.serverId);
+                        _serverIds.emplace(tile.serverId);
                     }
                     break;
                 }
@@ -136,6 +174,11 @@ void DoodadBrush::initialize()
     }
 
     _nextGroup = alternatives.at(0).sample(_name);
+}
+
+std::unordered_set<uint32_t> DoodadBrush::serverIds() const
+{
+    return _serverIds;
 }
 
 std::vector<ItemPreviewInfo> DoodadBrush::sampleGroup(int alternateIndex)
@@ -260,4 +303,20 @@ std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo(int variation) con
 const std::string DoodadBrush::getDisplayId() const
 {
     return _name;
+}
+
+DoodadBrush::ReplaceBehavior DoodadBrush::parseReplaceBehavior(std::string raw)
+{
+    switch (string_hash(raw.c_str()))
+    {
+        case "block"_sh:
+            return ReplaceBehavior::Block;
+        case "replace"_sh:
+            return ReplaceBehavior::Replace;
+        case "stack"_sh:
+            return ReplaceBehavior::Stack;
+        default:
+            VME_LOG(std::format("Unknown DoodadBrush replace behavior: {}", raw));
+            return ReplaceBehavior::Block;
+    }
 }

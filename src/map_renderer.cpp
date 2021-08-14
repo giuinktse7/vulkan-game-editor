@@ -368,8 +368,8 @@ void MapRenderer::drawCurrentAction()
                                 break;
                             }
                             default:
-                                // TODO Area drag with other brush
-                                NOT_IMPLEMENTED_ABORT();
+                                // TODO Area drag with other brushes
+                                VME_LOG("Area drag with the current brush is not implemented.");
                                 break;
                         }
                     }
@@ -520,7 +520,7 @@ void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
 void MapRenderer::drawMovingSelection()
 {
     // External drag operation (e.g. for dropping an item in a container)
-    if (!mapView->underMouse() && mapView->singleItemSelected())
+    if (!mapView->underMouse() && mapView->singleThingSelected())
     {
         return;
     }

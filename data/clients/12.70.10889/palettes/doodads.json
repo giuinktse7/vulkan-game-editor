@@ -5,6 +5,7 @@
             "name": "Green trees",
             "type": "doodad",
             "lookId": 2700,
+            "thickness": 0.12,
             "alternates": [
                 {
                     "doodads": [
@@ -24,6 +25,7 @@
             "name": "Normal bushes",
             "type": "doodad",
             "lookId": 2767,
+            "thickness": 0.15,
             "alternates": [
                 {
                     "doodads": [
@@ -39,6 +41,24 @@
             "type": "doodad",
             "lookId": 2785,
             "alternates": [{ "doodads": [{ "id": 2785, "chance": 1 }] }, { "doodads": [{ "id": 2786, "chance": 1 }] }]
+        },
+        {
+            "id": "green_grass_tufts",
+            "name": "Green Grass Tufts",
+            "type": "doodad",
+            "lookId": 6216,
+            "replaceBehavior": "block",
+            "thickness": 0.3,
+            "alternates": [
+                {
+                    "doodads": [
+                        { "id": 6216, "chance": 2 },
+                        { "id": 6217, "chance": 12 },
+                        { "id": 6218, "chance": 30 },
+                        { "id": 6219, "chance": 80 }
+                    ]
+                }
+            ]
         },
         {
             "id": "gray_rocks",
