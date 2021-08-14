@@ -31,6 +31,7 @@ class Map
 {
   public:
     Map();
+    Map(std::string name, uint16_t width, uint16_t height);
     Map(uint16_t width, uint16_t height);
     Map(uint16_t width, uint16_t height, uint8_t depth);
 

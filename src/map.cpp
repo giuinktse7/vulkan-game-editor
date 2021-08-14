@@ -16,10 +16,15 @@ constexpr uint16_t DefaultDepth = 16;
 Map::Map()
     : Map(DefaultWidth, DefaultHeight, DefaultDepth) {}
 
-Map::Map(uint16_t width, uint16_t height)
+Map::Map(std::string name, uint16_t width, uint16_t height)
     : _name(""), root(quadtree::Node::NodeType::Root), _size(DefaultWidth, DefaultHeight, DefaultDepth)
 {
     DEBUG_ASSERT(util::powerOf2(_size.width()) && util::powerOf2(_size.height()) && util::powerOf2(_size.depth()), "Width & height must be powers of 2");
+}
+
+Map::Map(uint16_t width, uint16_t height)
+    : Map("", width, height)
+{
 }
 
 Map::Map(uint16_t width, uint16_t height, uint8_t depth)
