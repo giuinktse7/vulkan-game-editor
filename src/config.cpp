@@ -9,6 +9,7 @@
 
 BorderBrushVariationType Settings::BORDER_BRUSH_VARIATION = BorderBrushVariationType::Detailed;
 bool Settings::AUTO_BORDER = true;
+int Settings::UI_CHANGE_TIME_DELAY_MILLIS = 100;
 
 namespace
 {

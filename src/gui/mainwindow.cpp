@@ -197,9 +197,8 @@ MainWindow::MainWindow(QWidget *parent)
       positionStatus(new QLabel),
       zoomStatus(new QLabel),
       topItemInfo(new QLabel),
-      _minimapWidget(new MinimapWidget(this))
-{
-}
+      _minimapWidget(new MinimapWidget(this)),
+      lastUiToggleTime(TimePoint::now()) {}
 
 //>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>
@@ -400,11 +399,11 @@ void MainWindow::initializeUI()
     splitter->setSizePolicy(QSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding));
 
     {
-        auto container = propertyWindow->wrapInWidget();
-        container->setMinimumWidth(240);
-        container->setMaximumWidth(240);
+        propertyWindowContainer = propertyWindow->wrapInWidget();
+        propertyWindowContainer->setMinimumWidth(240);
+        propertyWindowContainer->setMaximumWidth(240);
 
-        splitter->addWidget(container);
+        splitter->addWidget(propertyWindowContainer);
         splitter->setStretchFactor(2, 0);
     }
 
@@ -852,6 +851,15 @@ QMenuBar *MainWindow::createMenuBar()
 
             this->currentVulkanWindow()->requestActivate();
         });
+
+        // Toggle property panel
+        addMenuItem(viewMenu, "Toggle Property Panel", Qt::CTRL | Qt::Key_Q, [this] {
+            if (this->lastUiToggleTime.elapsedMillis() > Settings::UI_CHANGE_TIME_DELAY_MILLIS)
+            {
+                this->lastUiToggleTime = TimePoint::now();
+                setPropertyPanelVisible(!propertyWindowContainer->isVisible());
+            }
+        });
     }
 
     // Window
@@ -902,6 +910,18 @@ QMenuBar *MainWindow::createMenuBar()
     }
 
     return menuBar;
+}
+
+void MainWindow::setPropertyPanelVisible(bool visible)
+{
+    if (visible)
+    {
+        propertyWindowContainer->show();
+    }
+    else
+    {
+        propertyWindowContainer->hide();
+    }
 }
 
 void MainWindow::requestMinimapUpdate()

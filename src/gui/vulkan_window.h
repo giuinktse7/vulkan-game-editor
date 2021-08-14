@@ -109,6 +109,7 @@ class VulkanWindow : public QVulkanWindow
     bool event(QEvent *ev) override;
 
   private:
+    void mouseDoubleClickEvent(QMouseEvent *ev) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

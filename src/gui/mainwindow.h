@@ -33,6 +33,7 @@ class SearchPopupWidget;
 
 #include "../map_copy_buffer.h"
 #include "../signal.h"
+#include "../time_point.h"
 #include "gui.h"
 #include "minimap.h"
 #include "qt_util.h"
@@ -61,6 +62,7 @@ class MainWindow : public QWidget
     bool selectBrush(Brush *brush) noexcept;
 
     void setSearchVisible(bool visible);
+    void setPropertyPanelVisible(bool visible);
 
     void windowPressEvent(QWindow *window, QMouseEvent *event);
 
@@ -100,6 +102,7 @@ class MainWindow : public QWidget
 
     MapTabWidget *mapTabs = nullptr;
     ItemPropertyWindow *propertyWindow = nullptr;
+    QWidget *propertyWindowContainer = nullptr;
     ItemPaletteWindow *_paletteWindow = nullptr;
     MinimapWidget *_minimapWidget = nullptr;
 
@@ -118,6 +121,8 @@ class MainWindow : public QWidget
     MapCopyBuffer mapCopyBuffer;
 
     SearchPopupWidget *searchPopupWidget = nullptr;
+
+    TimePoint lastUiToggleTime;
 };
 
 class MainLayout : public QStackedLayout

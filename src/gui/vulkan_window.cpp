@@ -119,6 +119,14 @@ void VulkanWindow::shortcutReleasedEvent(ShortcutAction action, QKeyEvent *event
     }
 }
 
+void VulkanWindow::mouseDoubleClickEvent(QMouseEvent *ev)
+{
+    if (mapView->singleThingSelected())
+    {
+        mainWindow->setPropertyPanelVisible(true);
+    }
+}
+
 void VulkanWindow::mousePressEvent(QMouseEvent *event)
 {
     bool mouseInside = containsMouse();
