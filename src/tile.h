@@ -68,6 +68,7 @@ class Tile
     std::optional<size_t> indexOf(Item *item) const;
     Item *itemAt(size_t index);
 
+    Item *addBorder(Item &&item, uint32_t zOrder);
     Item *addItem(Item &&item);
     Item *addItem(std::shared_ptr<Item> item);
 
@@ -116,6 +117,7 @@ class Tile
     bool hasSelection() const;
     bool hasTopItem() const;
     bool containsBorder(const BorderBrush *brush) const;
+    bool containsItem(std::function<bool(const Item &)> predicate) const;
     bool hasWall(const WallBrush *brush) const;
 
     // Returns 0 if the border is not present on the tile

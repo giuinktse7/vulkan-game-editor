@@ -146,6 +146,10 @@ class MapView
 
     void moveSelection(const Position &offset);
 
+    /**
+     * Places the border correctly based on border z-order
+     */
+    void addBorder(const Position &position, uint32_t id, uint32_t zOrder);
     void addItem(const Position &position, uint32_t id);
     void addItem(const Position &pos, Item &&item, bool onBlocking = false);
     void addItem(Tile &tile, Item &&item);
@@ -203,7 +207,7 @@ class MapView
     bool singleTileSelected() const;
     const Tile *singleSelectedTile() const;
     Tile *singleSelectedTile();
-    bool singleItemSelected() const;
+    bool singleThingSelected() const;
 
     void rotateBrush(bool forwards = true);
 

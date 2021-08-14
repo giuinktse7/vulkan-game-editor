@@ -333,25 +333,57 @@ Item *Tile::addItem(std::shared_ptr<Item> item)
     }
 }
 
+Item *Tile::addBorder(Item &&item, uint32_t zOrder)
+{
+    DEBUG_ASSERT(item.isBorder(), "addBorder() called on a non-border.");
+
+    if (item.selected)
+        ++_selectionCount;
+
+    if (_items.size() == 0)
+    {
+        auto &newItem = _items.emplace_back(std::make_unique<Item>(std::move(item)));
+        return newItem.get();
+    }
+
+    auto cursor = _items.begin();
+    while (cursor != _items.end() && ((*cursor)->itemType->isBorder() || (*cursor)->itemType->stackOrder <= TileStackOrder::Border))
+    {
+        Brush *brush = (*cursor)->itemType->brush;
+        if (brush && brush->type() == BrushType::Border)
+        {
+            uint32_t brushZOrder = static_cast<BorderBrush *>(brush)->preferredZOrder();
+            if (zOrder < brushZOrder)
+            {
+                // Found our spot
+                break;
+            }
+        }
+
+        ++cursor;
+    }
+
+    auto &newItem = *_items.emplace(cursor, std::make_unique<Item>(std::move(item)));
+    return newItem.get();
+}
+
 Item *Tile::addItem(Item &&item)
 {
     if (item.isGround())
     {
         return replaceGround(std::move(item));
     }
-    else if (_items.size() == 0 || item.isTop() || item.itemType->stackOrder >= _items.back()->itemType->stackOrder)
-    {
-        if (item.selected)
-            ++_selectionCount;
 
+    if (item.selected)
+        ++_selectionCount;
+
+    if (_items.size() == 0 || item.isTop() || item.itemType->stackOrder >= _items.back()->itemType->stackOrder)
+    {
         auto &newItem = _items.emplace_back(std::make_unique<Item>(std::move(item)));
         return newItem.get();
     }
     else
     {
-        if (item.selected)
-            ++_selectionCount;
-
         auto cursor = _items.begin();
         while (cursor != _items.end() && (*cursor)->itemType->stackOrder <= item.itemType->stackOrder)
         {
@@ -773,6 +805,11 @@ const Item *Tile::firstSelectedItem() const
 void Tile::setFlags(uint32_t flags)
 {
     _flags = flags;
+}
+
+bool Tile::containsItem(std::function<bool(const Item &)> predicate) const
+{
+    return findItem(predicate) != _items.end();
 }
 
 const std::vector<std::shared_ptr<Item>>::const_iterator Tile::findItem(std::function<bool(const Item &)> predicate) const

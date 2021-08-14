@@ -159,7 +159,13 @@ DoodadBrush *Brush::addDoodadBrush(std::unique_ptr<DoodadBrush> &&brush)
 
     auto result = doodadBrushes.emplace(brushId, std::move(brush));
 
-    return static_cast<DoodadBrush *>(result.first.value().get());
+    DoodadBrush *doodadBrush = static_cast<DoodadBrush *>(result.first.value().get());
+    for (uint32_t id : doodadBrush->serverIds())
+    {
+        Items::items.getItemTypeByServerId(id)->brush = doodadBrush;
+    }
+
+    return doodadBrush;
 }
 
 DoodadBrush *Brush::getDoodadBrush(const std::string &id)

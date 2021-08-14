@@ -227,6 +227,23 @@ void MapView::setGround(Tile &tile, Item &&ground, bool clearBorders)
     history.commit(std::move(action));
 }
 
+void MapView::addBorder(const Position &pos, uint32_t id, uint32_t zOrder)
+{
+    if (!Items::items.validItemType(id) || pos.x < 0 || pos.y < 0)
+        return;
+
+    auto &tile = _map->getOrCreateTile(pos);
+    Item item = Item(id);
+
+    Tile newTile = tile.deepCopy();
+    newTile.addBorder(std::move(item), zOrder);
+
+    Action action(ActionType::SetTile);
+    action.addChange(SetTile(std::move(newTile)));
+
+    history.commit(std::move(action));
+}
+
 void MapView::addItem(const Position &pos, Item &&item, bool onBlocking)
 {
     auto &tile = _map->getOrCreateTile(pos);
@@ -823,7 +840,7 @@ Tile *MapView::singleSelectedTile()
     return const_cast<Tile *>(const_cast<const MapView *>(this)->singleSelectedTile());
 }
 
-bool MapView::singleItemSelected() const
+bool MapView::singleThingSelected() const
 {
     if (!singleTileSelected())
         return false;

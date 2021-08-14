@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "../config.h"
+#include "../items.h"
 #include "../map_view.h"
 #include "../util.h"
 #include "ground_brush.h"
@@ -144,6 +145,12 @@ void BorderBrush::initialize()
     }
 
     std::sort(sortedServerIds.begin(), sortedServerIds.end());
+
+    auto centerBrush = borderData.getCenterBrush();
+    if (centerBrush && centerBrush->type() == BrushType::Ground)
+    {
+        zOrder = static_cast<GroundBrush *>(centerBrush)->zOrder();
+    }
 }
 
 void BorderBrush::apply(MapView &mapView, const Position &position)
@@ -598,7 +605,7 @@ void BorderBrush::apply(MapView &mapView, const Position &position, BorderType b
     }
     else
     {
-        mapView.addItem(position, borderData.getServerId(borderType));
+        mapView.addBorder(position, borderData.getServerId(borderType), this->preferredZOrder());
     }
 }
 
@@ -810,13 +817,18 @@ void BorderBrush::setCenterGroundId(const std::string &id)
 
 uint32_t BorderBrush::preferredZOrder() const
 {
-    auto centerBrush = borderData.getCenterBrush();
-    if (centerBrush && centerBrush->type() == BrushType::Ground)
+    if (zOrder == std::numeric_limits<uint32_t>::max())
     {
-        return static_cast<GroundBrush *>(centerBrush)->zOrder();
+        auto centerBrush = borderData.getCenterBrush();
+        if (centerBrush && centerBrush->type() == BrushType::Ground)
+        {
+            zOrder = static_cast<GroundBrush *>(centerBrush)->zOrder();
+        }
+        else
+        {
+            zOrder = 0;
+        }
     }
-    else
-    {
-        return 0;
-    }
+
+    return zOrder;
 }

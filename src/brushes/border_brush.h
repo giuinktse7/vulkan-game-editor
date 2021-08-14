@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
@@ -120,6 +121,8 @@ class BorderBrush final : public Brush
 
     std::string id;
     uint32_t _iconServerId;
+
+    mutable uint32_t zOrder = std::numeric_limits<uint32_t>::max();
 
     BorderData borderData;
 

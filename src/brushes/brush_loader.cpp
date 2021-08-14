@@ -407,7 +407,17 @@ std::optional<DoodadBrush> BrushLoader::parseDoodadBrush(const json &brush)
     }
     stackTrace.pop();
 
-    return DoodadBrush(id, name, std::move(alternatives), lookId);
+    DoodadBrush doodadBrush = DoodadBrush(id, name, std::move(alternatives), lookId);
+    if (brush.contains("replaceBehavior"))
+    {
+        const json &replaceBehavior = brush.at("replaceBehavior");
+        if (replaceBehavior.is_string())
+        {
+            doodadBrush.replaceBehavior = DoodadBrush::parseReplaceBehavior(replaceBehavior.get<std::string>());
+        }
+    }
+
+    return doodadBrush;
 }
 
 GroundBrush BrushLoader::parseGroundBrush(const json &brush)
