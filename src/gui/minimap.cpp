@@ -66,21 +66,17 @@ void MinimapWidget::update()
 
     const Camera &camera = mapView->camera();
 
-    // TODO Maybe do this in the map_renderer drawMap() loop?
     canvas = QImage(QSize(_size), QImage::Format::Format_ARGB32);
     canvas.fill(Qt::black);
-    auto canvasWidth = _size.width();
-    auto canvasHeight = _size.height();
-    Position delta = Position(canvasWidth / 2, canvasHeight / 2, 0);
 
-    auto viewportMidPoint = camera.position();
-    viewportMidPoint.x += camera.viewport().gameWidth() / 2;
-    viewportMidPoint.y += camera.viewport().gameHeight() / 2;
+    auto viewportMidPoint = camera.position() + Position(camera.viewport().gameWidth() / 2, camera.viewport().gameHeight() / 2, 0);
 
-    auto fromX = viewportMidPoint.x - delta.x;
-    auto fromY = viewportMidPoint.y - delta.y;
+    Position delta = Position(_size.width() / 2, _size.height() / 2, 0);
 
-    auto from = Position(std::max(0, fromX), std::max(0, fromY), viewportMidPoint.z);
+    int offsetX = viewportMidPoint.x - delta.x;
+    int offsetY = viewportMidPoint.y - delta.y;
+
+    auto from = Position(std::max(0, offsetX), std::max(0, offsetY), viewportMidPoint.z);
     auto to = viewportMidPoint + delta;
 
     for (auto &tileLocation : mapView->map()->getRegion(from, to))
@@ -95,8 +91,9 @@ void MinimapWidget::update()
             auto color = MinimapColors::colors[tile->minimapColor()];
 
             Position tilePos = tile->position();
-            int x = tilePos.x - fromX;
-            int y = tilePos.y - fromY;
+            int x = tilePos.x - offsetX;
+            int y = tilePos.y - offsetY;
+
             canvas.setPixel(x, y, (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b);
         }
     }
