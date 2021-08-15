@@ -149,7 +149,7 @@ class MapView
      */
     void addBorder(const Position &position, uint32_t id, uint32_t zOrder);
     void addItem(const Position &position, uint32_t id);
-    void addItem(const Position &pos, Item &&item, bool onBlocking = false);
+    void addItem(const Position &pos, Item &&item, bool onBlocking = true);
     void addItem(Tile &tile, Item &&item);
     void setGround(Tile &tile, Item &&ground, bool clearBorders = false);
 
