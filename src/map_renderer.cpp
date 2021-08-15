@@ -122,7 +122,7 @@ void MapRenderer::initSwapChainResources(util::Size vulkanSwapChainImageSize)
 
 void MapRenderer::releaseSwapChainResources()
 {
-    mapView->setViewportSize(0, 0);
+    // mapView->setViewportSize(0, 0);
 }
 
 void MapRenderer::releaseResources()
