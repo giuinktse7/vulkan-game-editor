@@ -23,6 +23,18 @@
                 "diagonal": { "nw": 8355, "ne": 8356, "sw": 8357, "se": 8358 }
             },
             "centerGroundId": "dried_grass"
+        },
+        {
+            "id": "sea_border",
+            "name": "Sea border",
+            "type": "border",
+            "lookId": 4651,
+            "items": {
+                "straight": { "n": 4644, "e": 4645, "s": 4646, "w": 4647 },
+                "corner": { "nw": 4652, "ne": 4653, "sw": 4654, "se": 4655 },
+                "diagonal": { "nw": 4648, "ne": 4649, "sw": 4650, "se": 4651 }
+            },
+            "centerGroundId": "sea"
         }
     ]
 }
