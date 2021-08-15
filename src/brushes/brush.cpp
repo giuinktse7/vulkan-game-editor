@@ -386,6 +386,84 @@ int Brush::variationCount() const
     return 1;
 }
 
+GroundBrush *Brush::getGroundBrush(const Tile &tile)
+{
+    if (tile.hasGround())
+    {
+        Brush *brush = tile.ground()->itemType->brush;
+        return (brush && brush->type() == BrushType::Ground) ? static_cast<GroundBrush *>(brush) : nullptr;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+BorderBrush *Brush::getBorderBrush(const Tile &tile)
+{
+    const Item *prev = nullptr;
+    for (const auto &item : tile.items())
+    {
+        if (!item->isBorder())
+        {
+            break;
+        }
+
+        prev = item.get();
+    }
+
+    if (prev && prev->isBorder())
+    {
+        Brush *brush = prev->itemType->brush;
+        if (brush && brush->type() == BrushType::Border)
+        {
+            return static_cast<BorderBrush *>(brush);
+        }
+    }
+
+    return nullptr;
+}
+
+DoodadBrush *Brush::getDoodadBrush(const Tile &tile)
+{
+    for (const auto &item : tile.items())
+    {
+        Brush *brush = item->itemType->brush;
+        if (brush && brush->type() == BrushType::Doodad)
+        {
+            return static_cast<DoodadBrush *>(brush);
+        }
+    }
+
+    return nullptr;
+}
+
+WallBrush *Brush::getWallBrush(const Tile &tile)
+{
+    for (const auto &item : tile.items())
+    {
+        Brush *brush = item->itemType->brush;
+        if (brush && brush->type() == BrushType::Wall)
+        {
+            return static_cast<WallBrush *>(brush);
+        }
+    }
+
+    return nullptr;
+}
+
+CreatureBrush *Brush::getCreatureBrush(const Tile &tile)
+{
+    if (tile.hasCreature())
+    {
+        return Brush::getCreatureBrush(tile.creature()->creatureType.id());
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
 std::optional<BrushType> Brush::parseBrushType(std::string s)
 {
     switch (string_hash(s.c_str()))

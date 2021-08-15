@@ -16,8 +16,12 @@
 #include <QWidget>
 
 #include "../../vendor/rollbear-visit/visit.hpp"
+#include "../brushes/border_brush.h"
 #include "../brushes/brush.h"
 #include "../brushes/creature_brush.h"
+#include "../brushes/doodad_brush.h"
+#include "../brushes/ground_brush.h"
+#include "../brushes/wall_brush.h"
 #include "../item_location.h"
 #include "../logger.h"
 #include "../map_renderer.h"
@@ -183,6 +187,7 @@ void VulkanWindow::mouseReleaseEvent(QMouseEvent *event)
     {
         if (contextMenu->isHidden())
         {
+            editorAction.reset();
             openContextMenu(event->globalPosition().toPoint());
         }
     }
@@ -589,6 +594,52 @@ void VulkanWindow::openContextMenu(QPoint position)
         });
 
         addAction("Delete", Qt::Key_Delete, [this]() { mapView->deleteSelectedItems(); });
+
+        auto addBrushOption = [this, &addAction](QString text, Brush *brush) {
+            addAction(text, 0, [this, brush]() {
+                mainWindow->selectBrush(brush);
+                // this->editorAction.set(MouseAction::MapBrush(brush));
+                mapView->commitTransaction(TransactionType::Selection, [this] { mapView->clearSelection(); });
+            });
+        };
+
+        // Raw brush
+        auto topItem = tile->getTopItem();
+        if (topItem)
+        {
+
+            uint32_t id = topItem->serverId();
+            Brush *brush = Brush::getOrCreateRawBrush(id);
+            addBrushOption("Select RAW", brush);
+        }
+
+        // Wall brush
+        WallBrush *wallBrush = Brush::getWallBrush(*tile);
+        if (wallBrush)
+        {
+            addBrushOption("Select Ground Brush", wallBrush);
+        }
+
+        // Border brush
+        BorderBrush *borderBrush = Brush::getBorderBrush(*tile);
+        if (wallBrush)
+        {
+            addBrushOption("Select Border Brush", borderBrush);
+        }
+
+        // Doodad brush
+        DoodadBrush *doodadBrush = Brush::getDoodadBrush(*tile);
+        if (doodadBrush)
+        {
+            addBrushOption("Select Doodad Brush", doodadBrush);
+        }
+
+        // Ground brush
+        GroundBrush *groundBrush = Brush::getGroundBrush(*tile);
+        if (groundBrush)
+        {
+            addBrushOption("Select Ground Brush", groundBrush);
+        }
     }
     else
     {
@@ -613,9 +664,6 @@ void VulkanWindow::openContextMenu(QPoint position)
         }
         addDisabledAction("Delete", Qt::Key_Delete);
     }
-
-    // TODO Select the top thing that is right-clicked
-    // TODO Make context menu change depending on the item that is being clicked
 
     menu->popup(position);
 }

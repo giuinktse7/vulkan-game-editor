@@ -48,6 +48,7 @@ void EditorAction::setRawBrush(uint32_t serverId) noexcept
 void EditorAction::setBrush(Brush *brush) noexcept
 {
     set(MouseAction::MapBrush(brush));
+    brush->updatePreview(0);
 }
 
 bool MouseAction::MoveAction::isMoving() const

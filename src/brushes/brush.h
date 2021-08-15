@@ -22,6 +22,7 @@ class WallBrush;
 class DoodadBrush;
 class CreatureBrush;
 class Map;
+class Tile;
 enum TileCover;
 class ItemType;
 class Brush;
@@ -191,6 +192,12 @@ class Brush
     Tileset *tileset() const noexcept;
 
     static bool brushSorter(const Brush *leftBrush, const Brush *rightBrush);
+
+    static GroundBrush *getGroundBrush(const Tile &tile);
+    static BorderBrush *getBorderBrush(const Tile &tile);
+    static DoodadBrush *getDoodadBrush(const Tile &tile);
+    static WallBrush *getWallBrush(const Tile &tile);
+    static CreatureBrush *getCreatureBrush(const Tile &tile);
 
     /* Should only be used to fill brush palettes
        TODO: Use iterator instead of returning a reference to the underlying map
