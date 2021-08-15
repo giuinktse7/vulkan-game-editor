@@ -629,6 +629,11 @@ TileThing Tile::getTopThing() const
 
 bool Tile::hasBlockingItem() const noexcept
 {
+    if (!_ground || _ground->itemType->isBlocking())
+    {
+        return true;
+    }
+
     for (const auto &item : std::ranges::views::reverse(_items))
     {
         if (item->itemType->isBlocking())
