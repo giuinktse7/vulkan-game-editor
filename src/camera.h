@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <sstream>
 
 #include "const.h"
 #include "position.h"
@@ -36,7 +37,6 @@ class Camera
     inline void setSize(WorldPosition::value_type width, WorldPosition::value_type height) noexcept;
 
     void translate(WorldPosition delta);
-    void translateZ(int z);
 
     void zoomIn(ScreenPosition zoomOrigin);
     void zoomOut(ScreenPosition zoomOrigin);
@@ -154,4 +154,10 @@ void Camera::onViewportChanged(T *instance)
 inline void Camera::fireViewportChange()
 {
     viewportChange.fire();
+}
+
+inline std::ostream &operator<<(std::ostream &os, const Camera::Viewport &viewport)
+{
+    os << std::format("{{ x: {}, y: {}, w: {}, h: {} }}", viewport.x, viewport.y, viewport.width, viewport.height);
+    return os;
 }

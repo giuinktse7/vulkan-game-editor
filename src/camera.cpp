@@ -52,14 +52,6 @@ void Camera::translate(WorldPosition delta)
     setWorldPosition(WorldPosition(_viewport.x, _viewport.y) + delta);
 }
 
-void Camera::translateZ(int z)
-{
-    int oldFloor = _viewport.z;
-    _viewport.z = std::clamp(static_cast<int>(_viewport.z + z), 0, MAP_LAYERS - 1);
-    if (_viewport.z != oldFloor)
-        fireViewportChange();
-}
-
 void Camera::zoomIn(ScreenPosition zoomOrigin)
 {
     setZoomStep(this->_zoomStep + 1, zoomOrigin);
