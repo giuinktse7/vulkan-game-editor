@@ -434,10 +434,21 @@ GroundBrush BrushLoader::parseGroundBrush(const json &brush)
 
     for (auto &item : items)
     {
-        int id = getInt(item, "id");
         int chance = getInt(item, "chance");
 
-        weightedIds.emplace_back(id, chance);
+        if (item.contains("ids"))
+        {
+            for (auto &id : item.at("ids"))
+            {
+                weightedIds.emplace_back(id, chance);
+            }
+        }
+        else
+        {
+            int id = getInt(item, "id");
+
+            weightedIds.emplace_back(id, chance);
+        }
     }
 
     auto groundBrush = GroundBrush(id, std::move(weightedIds), zOrder);
