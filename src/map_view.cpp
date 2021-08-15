@@ -1617,21 +1617,6 @@ void MapView::translateCamera(WorldPosition delta)
     _camera.translate(delta);
 }
 
-void MapView::translateX(WorldPosition::value_type x)
-{
-    _camera.setX(_camera.x() + x);
-}
-
-void MapView::translateY(WorldPosition::value_type y)
-{
-    _camera.setY(_camera.y() + y);
-}
-
-void MapView::translateZ(int z)
-{
-    _camera.translateZ(z);
-}
-
 void MapView::requestDraw()
 {
     drawRequest.fire();

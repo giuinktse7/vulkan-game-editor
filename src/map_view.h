@@ -123,10 +123,8 @@ class MapView
 
     const Camera &camera() const noexcept;
 
-    void translateX(WorldPosition::value_type x);
-    void translateY(WorldPosition::value_type y);
     void translateCamera(WorldPosition delta);
-    void translateZ(int z);
+
     /**
 	 * Runs f once after the next draw.
 	 */
