@@ -114,7 +114,8 @@ QImage GUIThingImage::getCreatureTypeImage(const CreatureType &creatureType, Dir
 
 QImage GUIThingImage::getItemTypeImage(const ItemType &itemType, uint8_t subtype)
 {
-    TextureInfo info = itemType.getTextureInfo(TextureInfo::CoordinateType::Unnormalized);
+    TextureInfo info = subtype > 1 ? itemType.getTextureInfoForSubtype(subtype, TextureInfo::CoordinateType::Unnormalized)
+                                   : itemType.getTextureInfo(TextureInfo::CoordinateType::Unnormalized);
 
     QRect rect(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
     QImage *textureImage = GUIImageCache::getOrCreateQImageForTexture(info.getTexture());
