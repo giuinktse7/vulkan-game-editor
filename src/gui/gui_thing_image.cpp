@@ -264,29 +264,27 @@ QPixmap GUIThingImage::creaturePixmap(uint32_t looktype, Direction direction)
 QPixmap CreatureImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
 {
     /*
-        Parts are: looktype:outfitId:direction
-        looktype: looktypeID (int) or creatureType id (string)
+        Parts are: creatureTypeId[:direction]
     */
     auto parts = id.split(':');
 
     if (parts.size() != 1 && parts.size() != 2)
     {
-        ABORT_PROGRAM(std::format("Malformed looktype resource id: {}. Must be [looktype] or [looktype:outfitId:direction]."));
+        ABORT_PROGRAM(std::format("Malformed looktype resource id: {}. Must be [creatureTypeId] or [creatureTypeId:direction].", id.toStdString()));
     }
 
-    uint32_t looktype;
     uint8_t direction = to_underlying(Direction::South);
 
     bool success = false;
     bool ok = false;
 
-    const CreatureType *creatureType;
+    std::string creatureTypeId = parts.at(0).toStdString();
+    CreatureType *creatureType = Creatures::creatureType(creatureTypeId);
 
-    looktype = parts.at(0).toInt(&ok);
-    creatureType = ok ? Creatures::creatureType(looktype) : Creatures::creatureType(parts.at(0).toStdString());
     if (!creatureType)
     {
-        ABORT_PROGRAM(std::format("Invalid creature type or creature type ID: {}", parts.at(0).toStdString()));
+        VME_LOG_ERROR(std::format("There is no creatureType with id '{}'", creatureTypeId));
+        return GUIImageCache::blackSquarePixmap();
     }
 
     if (parts.size() == 1)
