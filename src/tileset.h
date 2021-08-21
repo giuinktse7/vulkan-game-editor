@@ -48,5 +48,5 @@ class Tileset
     std::vector<Brush *> brushes;
     vme_unordered_map<Brush *, size_t> brushToIndexMap;
 
-    ItemPalette *_palette;
+    ItemPalette *_palette = nullptr;
 };
