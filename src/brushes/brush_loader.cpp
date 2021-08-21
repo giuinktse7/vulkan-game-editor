@@ -603,7 +603,8 @@ void BrushLoader::parseTileset(const nlohmann::json &tilesetJson)
                     }
                     else
                     {
-                        throw json::type_error::create(302, std::format("Invalid value in serverIds: {}. The values in the serverIds array must be server IDs or arrays of size two as [from_server_id, to_server_id]. For example: 'serverIds: [100, [103, 105]]' will yield ids [100, 103, 104, 105].", idObject.dump(4)));
+                        VME_LOG_ERROR(std::format("Invalid value in serverIds: {}. The values in the serverIds array must be server IDs or arrays of size two as [from_server_id, to_server_id]. For example: 'serverIds: [100, [103, 105]]' will yield ids [100, 103, 104, 105].", idObject.dump(4)));
+                        continue;
                     }
                 }
             }
