@@ -36,6 +36,7 @@ Rectangle {
                 
                 Image {
                     objectName : "property_item_image"
+                    fillMode: Image.PreserveAspectFit
                     width: 32
                     height: 32
                     source: ""
