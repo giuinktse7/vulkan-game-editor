@@ -433,6 +433,15 @@ void MapView::setItemActionId(Item *item, uint16_t actionId)
     history.commit(std::move(action));
 }
 
+void MapView::setSpawnInterval(Creature *creature, int spawnInterval)
+{
+    Action action(
+        ActionType::ModifyCreature,
+        MapHistory::SetCreatureSpawnInterval(creature, spawnInterval));
+
+    history.commit(std::move(action));
+}
+
 void MapView::setSubtype(Item *item, uint8_t subtype)
 {
     Action action(
@@ -878,6 +887,25 @@ Item *MapView::singleSelectedItem()
 {
     const Item *item = const_cast<const MapView *>(this)->singleSelectedItem();
     return const_cast<Item *>(item);
+}
+
+TileThing MapView::singleSelectedThing()
+{
+    if (!singleTileSelected())
+    {
+        return std::monostate{};
+    }
+
+    const Position pos = _selection.onlyPosition().value();
+    Tile *tile = getTile(pos);
+    DEBUG_ASSERT(tile != nullptr, "A tile that has a selection should never be nullptr.");
+
+    if (tile->selectionCount() != 1)
+    {
+        return std::monostate{};
+    }
+
+    return tile->firstSelectedThing();
 }
 
 bool MapView::isEmpty(const Position position) const

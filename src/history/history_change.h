@@ -25,7 +25,8 @@ namespace MapHistory
         CutTile,
         PasteTile,
         Move,
-        ModifyItem
+        ModifyItem,
+        ModifyCreature
     };
 
     class Change;
@@ -86,6 +87,19 @@ namespace MapHistory
       private:
         Item *item;
         ItemMutation::Mutation mutation;
+    };
+
+    class SetCreatureSpawnInterval : public ChangeItem
+    {
+      public:
+        SetCreatureSpawnInterval(Creature *creature, int spawnInterval);
+
+        void commit(MapView &mapView) override;
+        void undo(MapView &mapView) override;
+
+      private:
+        Creature *creature;
+        int spawnInterval;
     };
 
     struct ContainerItemMoveInfo
@@ -421,6 +435,7 @@ namespace MapHistory
             MoveFromContainerToMap,
             MoveFromContainerToContainer,
             ModifyItem_v2,
+            SetCreatureSpawnInterval,
             SetCreature,
             std::unique_ptr<ChangeItem>>;
 

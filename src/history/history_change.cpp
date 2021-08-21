@@ -957,6 +957,23 @@ namespace MapHistory
         std::visit([this](ItemMutation::BaseMutation &itemMutation) { itemMutation.undo(this->item); }, mutation);
     }
 
+    SetCreatureSpawnInterval::SetCreatureSpawnInterval(Creature *creature, int spawnInterval)
+        : creature(creature), spawnInterval(spawnInterval) {}
+
+    void SetCreatureSpawnInterval::commit(MapView &mapView)
+    {
+        int prevInterval = creature->spawnInterval();
+        creature->setSpawnInterval(spawnInterval);
+        spawnInterval = prevInterval;
+    }
+
+    void SetCreatureSpawnInterval::undo(MapView &mapView)
+    {
+        int prevInterval = creature->spawnInterval();
+        creature->setSpawnInterval(spawnInterval);
+        spawnInterval = prevInterval;
+    }
+
     SetCreature::SetCreature(Position position, std::unique_ptr<Creature> &&creature)
         : position(position), creature(std::move(creature)) {}
 

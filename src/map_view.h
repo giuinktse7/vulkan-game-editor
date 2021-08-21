@@ -17,6 +17,7 @@
 #include "position.h"
 #include "selection.h"
 #include "signal.h"
+#include "tile.h"
 #include "util.h"
 
 class GroundBrush;
@@ -134,6 +135,8 @@ class MapView
 
     void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
 
+    void setSpawnInterval(Creature *creature, int spawnInterval);
+
     void setSubtype(Item *item, uint8_t count);
     void setItemActionId(Item *item, uint16_t actionId);
     void setText(Item *item, const std::string &text);
@@ -219,6 +222,11 @@ class MapView
 	 * Returns nullptr otherwise.
 	 */
     Item *singleSelectedItem();
+
+    /**
+     * Returns the only selected thing (or std::monostate if there is zero or more than one selected thing).
+     */
+    TileThing singleSelectedThing();
 
     bool isDragging() const;
     bool hasSelection() const;

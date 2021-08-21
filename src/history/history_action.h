@@ -21,7 +21,8 @@ enum class TransactionType
     AddMapItem,
     RemoveMapItem,
     MoveItems,
-    ModifyItem
+    ModifyItem,
+    ModifyCreature
 };
 
 namespace MapHistory
