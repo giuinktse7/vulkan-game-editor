@@ -193,7 +193,7 @@ void ItemPropertyWindow::setPropertyItemText(QString qtText)
 
 void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
 {
-    if (!state.propertyItem)
+    if (count == 0 || !state.propertyItem)
         return;
 
     // DEBUG_ASSERT(state.propertyItem != nullptr, "No property item.");
@@ -215,6 +215,9 @@ void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
         }
         emit subtypeChanged(item, count, shouldCommit);
     }
+
+    auto itemImage = child(ObjectName::PropertyItemImage);
+    itemImage->setProperty("source", getItemPixmapString(*item));
 
     // Refresh the container UI if necessary
     if (state.holds<FocusedContainer>())
