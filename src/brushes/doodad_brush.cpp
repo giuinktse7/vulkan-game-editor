@@ -151,7 +151,7 @@ void DoodadBrush::apply(MapView &mapView, const Position &position)
 
         if (placeItem)
         {
-            mapView.addItem(finalPos, Item(serverId));
+            mapView.addItem(finalPos, Item(serverId), false);
         }
     }
 
