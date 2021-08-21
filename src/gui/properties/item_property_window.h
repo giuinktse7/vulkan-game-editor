@@ -74,6 +74,7 @@ class ItemPropertyWindow : public QQuickView
     void textChanged(Item *item, const std::string &text);
     void subtypeChanged(Item *item, int subtype, bool shouldCommit);
     void actionIdChanged(Item *item, int actionId, bool shouldCommit);
+    void spawnIntervalChanged(Creature *creature, int spawnInterval, bool shouldCommit);
 
   public:
     ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow);
@@ -88,6 +89,9 @@ class ItemPropertyWindow : public QQuickView
     Q_INVOKABLE void setPropertyItemActionId(int actionId, bool shouldCommit = false);
     Q_INVOKABLE void setPropertyItemText(QString text);
     Q_INVOKABLE QString getItemPixmapString(int serverId, int subtype) const;
+
+    Q_INVOKABLE void setFocusedCreatureSpawnInterval(int spawnInterval, bool shouldCommit = false);
+    QString getCreaturePixmapString(Creature *creature) const;
     QString getItemPixmapString(const Item &item) const;
 
     QWidget *wrapInWidget(QWidget *parent = nullptr);
@@ -97,6 +101,7 @@ class ItemPropertyWindow : public QQuickView
     void refresh();
 
     void focusItem(Item *item, Position &position, MapView &mapView);
+    void focusCreature(Creature *creature, Position &position, MapView &mapView);
     void focusGround(Item *item, Position &position, MapView &mapView);
     void resetFocus();
 
@@ -108,6 +113,16 @@ class ItemPropertyWindow : public QQuickView
     void mouseReleaseEvent(QMouseEvent *event) override;
 
   private:
+    struct FocusedCreature
+    {
+        FocusedCreature(Creature *creature)
+            : creature(creature)
+        {
+        }
+
+        Creature *creature;
+    };
+
     struct FocusedItem
     {
         FocusedItem(Item *item, size_t tileIndex)
@@ -163,6 +178,8 @@ class ItemPropertyWindow : public QQuickView
         ObservableItem trackedGround;
     };
 
+    using FocusedThing = std::variant<std::monostate, FocusedItem, FocusedGround, FocusedContainer, FocusedCreature>;
+
     friend class PropertyWindowEventFilter;
 
     void setMapView(MapView &mapView);
@@ -181,8 +198,10 @@ class ItemPropertyWindow : public QQuickView
     void setFocused(FocusedGround &&ground);
     void setFocused(FocusedItem &&item);
     void setFocused(FocusedContainer &&container);
+    void setFocused(FocusedCreature &&focusedCreature);
 
     void setPropertyItem(Item *item);
+    void setPropertyCreature(Creature *creature);
 
     /**
    * Returns a child from QML with objectName : name
@@ -191,9 +210,10 @@ class ItemPropertyWindow : public QQuickView
 
     struct LatestCommittedPropertyValues
     {
-        uint8_t subtype;
-        int actionId;
-        int uniqueId;
+        uint8_t subtype = 1;
+        int actionId = 0;
+        int uniqueId = 0;
+        int spawnInterval = 60;
     } latestCommittedPropertyValues;
 
     QUrl _filepath;
@@ -210,15 +230,16 @@ class ItemPropertyWindow : public QQuickView
         template <typename T>
         T &focusedAs();
 
-        const std::variant<std::monostate, FocusedItem, FocusedGround, FocusedContainer> &focusedItem() const
+        const FocusedThing &focusedItem() const
         {
-            return _focusedItem;
+            return _focusedThing;
         }
 
         // The setFocused methods should only be called from ItemPropertyWindow::setFocused
         void setFocused(FocusedGround &&ground);
         void setFocused(FocusedItem &&item);
         void setFocused(FocusedContainer &&container);
+        void setFocused(FocusedCreature &&focusedCreature);
 
         void resetFocused();
 
@@ -229,7 +250,7 @@ class ItemPropertyWindow : public QQuickView
         Item *propertyItem = nullptr;
 
       private:
-        std::variant<std::monostate, FocusedItem, FocusedGround, FocusedContainer> _focusedItem;
+        FocusedThing _focusedThing;
 
         // The item that is used for the property window (excluding for container contents)
     };
@@ -249,15 +270,15 @@ inline QObject *ItemPropertyWindow::child(const char *name)
 template <typename T>
 bool ItemPropertyWindow::State::holds()
 {
-    static_assert(util::is_one_of<T, FocusedItem, FocusedGround, FocusedContainer>::value, "T must be FocusedItem or FocusedGround");
+    static_assert(util::is_one_of<T, FocusedItem, FocusedGround, FocusedContainer, FocusedCreature>::value, "T must be FocusedItem, FocusedGround, FocusedContainer or FocusedCreature");
 
-    return std::holds_alternative<T>(_focusedItem);
+    return std::holds_alternative<T>(_focusedThing);
 }
 
 template <typename T>
 T &ItemPropertyWindow::State::focusedAs()
 {
-    static_assert(util::is_one_of<T, FocusedItem, FocusedGround, FocusedContainer>::value, "T must be FocusedItem or FocusedGround");
+    static_assert(util::is_one_of<T, FocusedItem, FocusedGround, FocusedContainer, FocusedCreature>::value, "T must be FocusedItem, FocusedGround, FocusedContainer or FocusedCreature");
 
-    return std::get<T>(_focusedItem);
+    return std::get<T>(_focusedThing);
 }

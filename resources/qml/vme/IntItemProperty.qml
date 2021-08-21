@@ -87,7 +87,7 @@ Column {
             validator: RegularExpressionValidator { regularExpression: /(?:^0|[1-9][0-9]*$)?/ }
 
             onEditingFinished: () => {
-                console.log(parseInt(text))
+                // console.log(parseInt(text))
                 if (parseInt(text) < intItemProperty.from) {
                     text = intItemProperty.from
                 } else if (parseInt(text) > intItemProperty.to) {

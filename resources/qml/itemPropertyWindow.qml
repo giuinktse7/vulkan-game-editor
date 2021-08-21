@@ -15,6 +15,9 @@ Rectangle {
     property bool isFluid: false
     property bool isWriteable: false
 
+    // Possible values: "item" | "creature" | "none"
+    property string thingType: "none"
+
     // border.color: "red"
     // border.width: 2
 
@@ -35,14 +38,36 @@ Rectangle {
                 id: topSegment
                 
                 Image {
-                    objectName : "property_item_image"
+                    objectName : "focused_thing_image"
                     fillMode: Image.PreserveAspectFit
                     width: 32
                     height: 32
                     source: ""
                 }
 
+                Vme.IntItemProperty {
+                    visible: root.thingType == "creature"
+                    Layout.alignment: Qt.AlignHCenter
+
+                    inputWidth: parent.width * 0.4
+                    label: "Spawn Interval"
+                    inputObjectName: "creature_spawn_interval_input"
+                    from: 1
+                    to: 60 * 60 * 24 * 14 // 2 weeks
+
+                    onValueChanged: {
+                        if (visible) {
+                            Context.C_PropertyWindow.setFocusedCreatureSpawnInterval(value);
+                        }
+                    }
+
+                    onEditingFinished: value => {
+                        Context.C_PropertyWindow.setFocusedCreatureSpawnInterval(value, true);
+                    }
+                }
+
                 RowLayout {
+                    visible: root.thingType == "item"
                     width: parent.width
 
                     Vme.IntItemProperty {
@@ -187,6 +212,7 @@ Rectangle {
         Rectangle {
             width: parent.width;
             height: bottomSegment.height
+            visible: root.thingType == "item"
 
             border.color: "red"
 
@@ -310,7 +336,7 @@ Rectangle {
 //             Layout.bottomMargin: 8;
 
 //             Image {
-//                 objectName : "property_item_image"
+//                 objectName : "focused_thing_image"
 //                 width: 32
 //                 height: 32
 //                 source: ""

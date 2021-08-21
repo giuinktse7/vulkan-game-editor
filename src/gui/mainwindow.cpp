@@ -217,8 +217,9 @@ void MainWindow::mapViewSelectedTileThingClicked(MapView *mapView, const Tile *t
                 [this, &position, mapView](Item *item) {
                     propertyWindow->focusItem(item, position, *mapView);
                 },
-                [this, position](const Creature *creature) {
-                    // TODO
+
+                [this, &position, mapView](Creature *creature) {
+                    propertyWindow->focusCreature(creature, position, *mapView);
                 },
 
                 [](const auto &arg) {
@@ -229,16 +230,27 @@ void MainWindow::mapViewSelectedTileThingClicked(MapView *mapView, const Tile *t
 
 void MainWindow::mapViewSelectionChangedEvent(MapView &mapView)
 {
-    // TODO Handle the case where the selected thing is something other than an item (ex. a creature).
-    // All(?) selectable entities should have properties.
-    Item *selectedItem = mapView.singleSelectedItem();
-    if (selectedItem)
+    if (mapView.singleThingSelected())
     {
-        auto position = mapView.singleSelectedTile()->position();
         bool showInPropertyWindow = !(QApplication::keyboardModifiers() & Qt::KeyboardModifier::AltModifier);
         if (showInPropertyWindow)
         {
-            propertyWindow->focusItem(selectedItem, position, mapView);
+            Tile *tile = mapView.singleSelectedTile();
+            auto position = tile->position();
+
+            TileThing thing = tile->firstSelectedThing();
+            rollbear::visit(
+                util::overloaded{
+                    [this, &position, &mapView](Item *item) {
+                        propertyWindow->focusItem(item, position, mapView);
+                    },
+
+                    [this, &position, &mapView](Creature *creature) {
+                        propertyWindow->focusCreature(creature, position, mapView);
+                    },
+
+                    [](const auto &arg) {}},
+                thing);
         }
     }
     else
@@ -496,6 +508,21 @@ void MainWindow::registerPropertyItemListeners()
         mapView.beginTransaction(TransactionType::ModifyItem);
         mapView.setText(item, text);
         mapView.endTransaction(TransactionType::ModifyItem);
+    });
+
+    connect(propertyWindow, &ItemPropertyWindow::spawnIntervalChanged, [this](Creature *creature, int spawnInterval, bool shouldCommit) {
+        MapView &mapView = *currentMapView();
+
+        if (shouldCommit)
+        {
+            mapView.beginTransaction(TransactionType::ModifyCreature);
+            mapView.setSpawnInterval(creature, spawnInterval);
+            mapView.endTransaction(TransactionType::ModifyCreature);
+        }
+        else
+        {
+            creature->setSpawnInterval(spawnInterval);
+        }
     });
 }
 

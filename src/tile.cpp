@@ -807,6 +807,19 @@ const Item *Tile::firstSelectedItem() const
     return nullptr;
 }
 
+TileThing Tile::firstSelectedThing()
+{
+    if (_creature && _creature->selected)
+    {
+        return _creature.get();
+    }
+    else
+    {
+        Item *item = firstSelectedItem();
+        return item;
+    }
+}
+
 void Tile::setFlags(uint32_t flags)
 {
     _flags = flags;

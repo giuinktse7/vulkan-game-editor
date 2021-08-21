@@ -7,6 +7,7 @@
 #include <queue>
 
 #include "../../../vendor/rollbear-visit/visit.hpp"
+#include "../../config.h"
 #include "../../item_location.h"
 #include "../../qt/logging.h"
 #include "../draggable_item.h"
@@ -18,6 +19,7 @@ namespace ItemPropertyName
     constexpr auto Stackable = "isStackable";
     constexpr auto Fluid = "isFluid";
     constexpr auto Writeable = "isWriteable";
+    constexpr auto ThingType = "thingType";
 } // namespace ItemPropertyName
 
 namespace ObjectName
@@ -28,10 +30,20 @@ namespace ObjectName
     constexpr auto FluidTypeInput = "item_fluid_type_input";
     constexpr auto TextInput = "item_text_input";
 
-    constexpr auto PropertyItemImage = "property_item_image";
+    constexpr auto FocusedThingImage = "focused_thing_image";
 
     constexpr auto ItemContainerArea = "item_container_area";
+
+    constexpr auto CreatureSpawnIntervalInput = "creature_spawn_interval_input";
+
 } // namespace ObjectName
+
+namespace QmlFocusedThingType
+{
+    constexpr auto None = "none";
+    constexpr auto Item = "item";
+    constexpr auto Creature = "creature";
+} // namespace QmlFocusedThingType
 
 ItemPropertyWindow::ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow)
     : _filepath(filepath), mainWindow(mainWindow), _wrapperWidget(nullptr)
@@ -51,6 +63,7 @@ ItemPropertyWindow::ItemPropertyWindow(QUrl filepath, MainWindow *mainWindow)
     qmlRegisterSingletonInstance("Vme.context", 1, 0, "C_PropertyWindow", this);
 
     engine()->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
+    engine()->addImageProvider(QLatin1String("creatureLooktypes"), new CreatureImageProvider);
 
     setSource(filepath);
     setResizeMode(ResizeMode::SizeRootObjectToView);
@@ -151,6 +164,30 @@ void ItemPropertyWindow::focusGround(Item *item, Position &position, MapView &ma
     setPropertyItem(item);
 }
 
+void ItemPropertyWindow::setFocusedCreatureSpawnInterval(int spawnInterval, bool shouldCommit)
+{
+    DEBUG_ASSERT(state.holds<FocusedCreature>(), "ItemPropertyWindow::setFocusedCreatureSpawnInterval: State must hold a FocusedCreature.");
+
+    Creature *creature = state.focusedAs<FocusedCreature>().creature;
+
+    if (spawnInterval == latestCommittedPropertyValues.spawnInterval)
+    {
+        // Do not commit if the count is the same as when the item was first focused.
+        emit spawnIntervalChanged(creature, spawnInterval, false);
+    }
+    else
+    {
+        // Necessary to make sure that the correct "old" spawn interval is stored in MapView history
+        if (shouldCommit)
+        {
+            creature->setSpawnInterval(latestCommittedPropertyValues.spawnInterval);
+            latestCommittedPropertyValues.spawnInterval = spawnInterval;
+        }
+
+        emit spawnIntervalChanged(creature, spawnInterval, shouldCommit);
+    }
+}
+
 void ItemPropertyWindow::setPropertyItemActionId(int actionId, bool shouldCommit)
 {
     DEBUG_ASSERT(state.propertyItem != nullptr, "No property item.");
@@ -216,7 +253,7 @@ void ItemPropertyWindow::setPropertyItemCount(int count, bool shouldCommit)
         emit subtypeChanged(item, count, shouldCommit);
     }
 
-    auto itemImage = child(ObjectName::PropertyItemImage);
+    auto itemImage = child(ObjectName::FocusedThingImage);
     itemImage->setProperty("source", getItemPixmapString(*item));
 
     // Refresh the container UI if necessary
@@ -261,26 +298,42 @@ void ItemPropertyWindow::setFluidType(int index)
     }
 }
 
+void ItemPropertyWindow::setPropertyCreature(Creature *creature)
+{
+    latestCommittedPropertyValues.spawnInterval = creature->spawnInterval();
+
+    auto image = child(ObjectName::FocusedThingImage);
+    image->setProperty("source", getCreaturePixmapString(creature));
+
+    rootObject()->setProperty(ItemPropertyName::ThingType, QmlFocusedThingType::Creature);
+
+    auto spawnIntervalInput = child(ObjectName::FocusedThingImage);
+
+    child(ObjectName::CreatureSpawnIntervalInput)->setProperty("text", creature->spawnInterval());
+}
+
 void ItemPropertyWindow::setPropertyItem(Item *item)
 {
+    rootObject()->setProperty(ItemPropertyName::ThingType, QmlFocusedThingType::Item);
+
     latestCommittedPropertyValues.subtype = item->count();
     state.propertyItem = item;
 
     // Update UI
     auto itemtype = item->itemType;
 
-    auto itemImage = child(ObjectName::PropertyItemImage);
+    auto itemImage = child(ObjectName::FocusedThingImage);
     itemImage->setProperty("source", getItemPixmapString(*item));
 
     // ActionID
     auto actionIdInput = child(ObjectName::ActionIdInput);
     setQmlObjectActive(actionIdInput->parent(), true);
-    actionIdInput->setProperty("value", item->actionId());
+    actionIdInput->setProperty("text", item->actionId());
 
     // UniqueID
     auto uniqueIdInput = child(ObjectName::UniqueIdInput);
     setQmlObjectActive(uniqueIdInput->parent(), true);
-    uniqueIdInput->setProperty("value", item->uniqueId());
+    uniqueIdInput->setProperty("text", item->uniqueId());
 
     // Count / charges
     rootObject()->setProperty(ItemPropertyName::Stackable, itemtype->stackable);
@@ -340,6 +393,37 @@ void ItemPropertyWindow::setFocused(FocusedContainer &&container)
     setPropertyItem(item);
 
     show();
+}
+
+void ItemPropertyWindow::setFocused(FocusedCreature &&focusedCreature)
+{
+    Creature *creature = focusedCreature.creature;
+    state.setFocused(std::move(focusedCreature));
+
+    setPropertyCreature(creature);
+
+    show();
+}
+
+void ItemPropertyWindow::focusCreature(Creature *creature, Position &position, MapView &mapView)
+{
+    // Check if the creature is already focused
+    if (state.holds<FocusedCreature>())
+    {
+        auto &focused = state.focusedAs<FocusedCreature>();
+
+        if (focused.creature == creature)
+        {
+            return;
+        }
+    }
+
+    resetFocus();
+
+    setSelectedPosition(position);
+    setMapView(mapView);
+
+    setFocused(FocusedCreature(creature));
 }
 
 void ItemPropertyWindow::focusItem(Item *item, Position &position, MapView &mapView)
@@ -447,6 +531,12 @@ void ItemPropertyWindow::resetFocus()
     hide();
     setCount(1);
 
+    QQuickItem *root = rootObject();
+    root->setProperty(ItemPropertyName::Stackable, false);
+    root->setProperty(ItemPropertyName::Fluid, false);
+    root->setProperty(ItemPropertyName::Writeable, false);
+    root->setProperty(ItemPropertyName::ThingType, QmlFocusedThingType::None);
+
     resetMapView();
 }
 
@@ -454,7 +544,7 @@ void ItemPropertyWindow::setCount(uint8_t count)
 {
     // VME_LOG_D("ItemPropertyWindow::setCount: " << int(count));
     auto countInput = child(ObjectName::CountInput);
-    countInput->setProperty("value", count);
+    countInput->setProperty("text", count);
 }
 
 QWidget *ItemPropertyWindow::wrapInWidget(QWidget *parent)
@@ -489,24 +579,33 @@ QString ItemPropertyWindow::getItemPixmapString(int serverId, int subtype) const
     return QString::fromStdString(serverId != -1 ? "image://itemTypes/" + std::to_string(serverId) + ":" + std::to_string(subtype) : "");
 }
 
+QString ItemPropertyWindow::getCreaturePixmapString(Creature *creature) const
+{
+    return QtUtil::getCreatureTypeResourcePath(creature->creatureType);
+}
+
 void ItemPropertyWindow::State::setFocused(FocusedGround &&ground)
 {
-    _focusedItem.emplace<FocusedGround>(std::move(ground));
+    _focusedThing.emplace<FocusedGround>(std::move(ground));
 }
 
 void ItemPropertyWindow::State::setFocused(FocusedItem &&item)
 {
-    _focusedItem.emplace<FocusedItem>(std::move(item));
+    _focusedThing.emplace<FocusedItem>(std::move(item));
 }
 
 void ItemPropertyWindow::State::setFocused(FocusedContainer &&container)
 {
-    _focusedItem.emplace<FocusedContainer>(std::move(container));
+    _focusedThing.emplace<FocusedContainer>(std::move(container));
+}
+void ItemPropertyWindow::State::setFocused(FocusedCreature &&focusedCreature)
+{
+    _focusedThing.emplace<FocusedCreature>(std::move(focusedCreature));
 }
 
 void ItemPropertyWindow::State::resetFocused()
 {
-    _focusedItem = std::monostate{};
+    _focusedThing = std::monostate{};
     propertyItem = nullptr;
 }
 
@@ -540,6 +639,12 @@ void ItemPropertyWindow::refresh()
 
         auto fluidTypeInput = child(ObjectName::FluidTypeInput);
         fluidTypeInput->setProperty("currentIndex", indexOfFluidType(static_cast<FluidType>(state.propertyItem->subtype())));
+    }
+    else if (state.holds<FocusedCreature>())
+    {
+        auto spawnIntervalInput = child(ObjectName::CreatureSpawnIntervalInput);
+        int spawnInterval = state.focusedAs<FocusedCreature>().creature->spawnInterval();
+        spawnIntervalInput->setProperty("text", spawnInterval);
     }
 }
 
