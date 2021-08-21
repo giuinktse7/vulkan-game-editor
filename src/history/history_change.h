@@ -7,7 +7,7 @@
 #include "../creature.h"
 #include "../item_location.h"
 #include "../tile.h"
-#include "item_mutation.h"
+#include "thing_mutation.h"
 
 class MapView;
 class Map;

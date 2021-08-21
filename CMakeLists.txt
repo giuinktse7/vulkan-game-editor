@@ -68,7 +68,7 @@ set(CommonSources
     src/history/history.h
     src/history/history_action.h
     src/history/history_change.h
-    src/history/item_mutation.h
+    src/history/thing_mutation.h
     src/camera.h
     src/const.h
     src/otbm.h
@@ -172,7 +172,7 @@ set(CommonSources
     src/history/history.cpp
     src/history/history_action.cpp
     src/history/history_change.cpp
-    src/history/item_mutation.cpp
+    src/history/thing_mutation.cpp
     src/camera.cpp
     src/otbm.cpp
     src/item_animation.cpp
