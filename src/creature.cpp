@@ -1,5 +1,6 @@
 #include "creature.h"
 
+#include "config.h"
 #include "graphics/appearances.h"
 #include "logger.h"
 
@@ -267,12 +268,13 @@ bool CreatureType::hasColorVariation() const
 //>>>>>>>>>>>>>>>>>>>>
 
 Creature::Creature(const CreatureType &creatureType)
-    : creatureType(creatureType) {}
+    : creatureType(creatureType), _spawnInterval(Settings::DEFAULT_CREATURE_SPAWN_INTERVAL) {}
 
 Creature::Creature(Creature &&other) noexcept
     : creatureType(other.creatureType),
       selected(other.selected),
-      _direction(other._direction) {}
+      _direction(other._direction),
+      _spawnInterval(other._spawnInterval) {}
 
 std::optional<Creature> Creature::fromOutfitId(uint32_t outfitId)
 {
@@ -312,4 +314,14 @@ const TextureInfo Creature::getTextureInfo() const
 Direction Creature::direction() const noexcept
 {
     return _direction;
+}
+
+int Creature::spawnInterval() const noexcept
+{
+    return _spawnInterval;
+}
+
+void Creature::setSpawnInterval(int spawnInterval)
+{
+    _spawnInterval = spawnInterval;
 }

@@ -263,6 +263,9 @@ class Creature
     void setDirection(Direction direction);
     Direction direction() const noexcept;
 
+    int spawnInterval() const noexcept;
+    void setSpawnInterval(int spawnInterval);
+
     const TextureInfo getTextureInfo() const;
 
     const CreatureType &creatureType;
@@ -271,6 +274,8 @@ class Creature
 
   private:
     Direction _direction = Direction::South;
+
+    int _spawnInterval;
 };
 
 inline const std::string &CreatureType::id() const noexcept
