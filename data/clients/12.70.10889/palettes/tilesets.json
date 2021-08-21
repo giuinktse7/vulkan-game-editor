@@ -424,6 +424,707 @@
                     ]
                 }
             ]
+        },
+        {
+            "id": "walls",
+            "name": "Walls",
+            "palettes": [
+                {
+                    "id": "raw",
+                    "brushes": [
+                        {
+                            "type": "raw",
+                            "serverIds": [
+                                // Brick archway
+                                [1205, 1208],
+                                // Brick wall
+                                [1025, 1027],
+                                1029,
+                                [6281, 6284],
+
+                                // Brick wall windows
+                                [1265, 1266],
+                                [6440, 6443],
+
+                                // Brick wall doors
+                                [5098, 5115],
+
+                                // Horizontal buttress
+                                1215,
+                                7144,
+                                1216,
+
+                                // Vertical buttress
+                                1217,
+                                7143,
+                                1218,
+
+                                // Framework wall
+                                [1036, 1038],
+                                1040,
+                                [5146, 5155],
+                                [1263, 1264],
+                                [6436, 6439],
+                                [1209, 1214],
+                                [1219, 1230],
+                                [5137, 5142],
+
+                                // Stone wall
+                                [1049, 1051],
+                                1053,
+                                [1524, 1531],
+                                [1267, 1268],
+                                [6444, 6447],
+                                [6249, 6266],
+
+                                // Sandstone wall
+                                [1061, 1062],
+                                1064,
+                                [1084, 1088],
+                                [1570, 1577],
+                                [1273, 1274],
+                                [6454, 6457],
+                                [1231, 1248],
+
+                                // Stone wall (Sandstone)
+                                [1100, 1102],
+                                1104,
+                                [1562, 1569],
+                                [1275, 1276],
+                                [6462, 6465],
+
+                                // Metal wall
+                                [1089, 1091],
+                                1093,
+
+                                // White stone wall archways
+                                [9335, 9336],
+                                9140,
+                                [1120, 1127],
+                                [1158, 1163],
+                                // White stone wall
+                                [1111, 1113],
+                                1115,
+                                [1128, 1157],
+                                [1164, 1169],
+                                [1176, 1195],
+                                [9714, 9725],
+
+                                // White stone railing
+                                [1582, 1593],
+                                [5305, 5314],
+
+                                // White stone wall windows
+                                [1269, 1272],
+                                [5303, 5304],
+                                [6448, 6449],
+
+                                // Stone wall <-> White stone wall
+                                [9147, 9152],
+                                // Brick wall <-> White stone wall
+                                [9153, 9158],
+
+                                // White stone wall doors
+                                [1249, 1262],
+                                [5515, 5518],
+
+                                // Paravent
+                                [1170, 1175],
+                                [1594, 1601],
+
+                                // Lava wall
+                                [1196, 1198],
+                                1200,
+                                // Burning wall archways
+                                [7851, 7853],
+
+                                // Stone wall (Liberty Bay wall) archways
+                                [3393, 3396],
+                                [3439, 3446],
+
+                                // Stone wall (Liberty Bay wall)
+                                [3361, 3363],
+                                5520,
+                                [3370, 3375],
+                                [3377, 3381],
+                                [3383, 3391],
+                                [3398, 3409],
+                                [3412, 3420],
+
+                                // Windows
+                                [6466, 6469],
+                                [5256, 5257],
+                                [5400, 5401],
+                                [5478, 5479],
+                                3376,
+                                3382,
+                                3392,
+                                3397,
+                                [3410, 3411],
+                                [3421, 3422],
+
+                                [5116, 5136],
+                                [5143, 5145],
+
+                                // Bamboo wall
+                                [3423, 3425],
+                                3427,
+                                [3434, 3438],
+                                [3447, 3453],
+                                [3794, 3801],
+
+                                // Bamboo wall windows
+                                [6458, 6461],
+
+                                // Bamboo wall door
+                                [3535, 3552],
+
+                                // Bamboo column
+                                [3745, 3755],
+
+                                // Stone wall (Banuta) Archways
+                                3468,
+                                3472,
+                                [3476, 3479],
+
+                                // Stone wall (Banuta)
+                                3460,
+                                3458,
+                                3462,
+                                3461,
+
+                                [3533, 3534],
+                                3463,
+                                3454,
+                                3464,
+                                3473,
+
+                                [3455, 3457],
+                                3459,
+                                [3465, 3466],
+                                [3469, 3470],
+                                [3474, 3475],
+                                [3480, 3495],
+                                [3711, 3714],
+
+                                // Stone wall (Banuta) windows
+                                3471,
+                                3467,
+
+                                // Grass wall
+                                [3496, 3505],
+
+                                // Palisade
+                                [3508, 3511],
+                                [3513, 3519],
+                                [3521, 3522],
+                                [3525, 3530],
+
+                                // Palisade railing
+                                3520,
+                                3512,
+                                3532,
+                                3531,
+
+                                // Wooden wall
+                                [5261, 5263],
+                                5265,
+                                [5272, 5275],
+
+                                // Wooden wall window
+                                [5276, 5277],
+                                [6470, 6473],
+
+                                // Wooden wall door
+                                [5278, 5295],
+
+                                // Tree wall
+                                [6133, 6137],
+                                [6139, 6142],
+                                [6148, 6152],
+
+                                // Tree wall archways
+                                [6175, 6177],
+
+                                // Tree wall windows
+                                [6178, 6179],
+                                [6450, 6453],
+
+                                // Tree wall doors
+                                [6192, 6209],
+
+                                // Bone wall
+                                [6395, 6397],
+                                6399,
+                                [6406, 6407],
+                                [6416, 6422],
+
+                                // Bone wall archways
+                                [6408, 6413],
+
+                                // Bone wall windows
+                                [6414, 6415],
+
+                                // Tendril wall
+                                [6238, 6240],
+                                6242,
+                                [6268, 6270],
+
+                                // Tendril wall archways
+                                [6234, 6237],
+
+                                // Burning wall
+                                [6289, 6290],
+                                [5063, 5067],
+
+                                // Electric sparks
+                                [6116, 6117],
+                                5070,
+
+                                // Energy fence,
+                                [5071, 5073],
+
+                                // Frozen wall
+                                [6739, 6741],
+                                6743,
+
+                                // Frozen wall archways
+                                [7051, 7052],
+
+                                // Frozen wall windows
+                                [7029, 7032],
+
+                                // Frozen wall door
+                                [7033, 7050],
+
+                                // Fur wall
+                                [6773, 6775],
+                                6777,
+                                6780,
+                                6782,
+                                6784,
+                                6786,
+
+                                // Fur wall archways
+                                6792,
+                                [6968, 6969],
+
+                                // Fur wall window
+                                [6788, 6789],
+                                [6790, 6791],
+
+                                // Fur wall doors
+                                [6795, 6803],
+                                [7054, 7057],
+
+                                // Wooden wall
+                                [6839, 6841],
+                                6843,
+                                [6850, 6867],
+
+                                // Wooden wall archways
+                                [6882, 6885],
+
+                                // Wooden wall window
+                                [7025, 7028],
+
+                                // Wooden wall doors
+                                [6891, 6908],
+
+                                // Kazordoon wall
+                                [8475, 8477],
+                                8479,
+                                [8486, 8525],
+
+                                // Kazordoon wall archways
+                                [8534, 8537],
+
+                                // Kazordoon wall doors
+                                [8541, 8558],
+
+                                // Dark stone wall
+                                [9118, 9120],
+                                9122,
+                                [9129, 9133],
+                                [9135, 9139],
+                                [9142, 9143],
+                                [9288, 9289],
+                                [9294, 9303],
+
+                                // Dark stone wall archways
+                                [9159, 9164],
+                                [9286, 9287],
+
+                                // Dark stone wall windows
+                                [9189, 9190],
+
+                                // Dark stone wall doors
+                                [9165, 9182],
+                                [25158, 25165],
+
+                                // Dark stone wall <-> White stone wall
+                                [9183, 9188],
+                                // Dark stone wall <-> lighter stone wall
+                                [9290, 9293],
+
+                                // Iron wall
+                                [9207, 9213],
+                                9215,
+                                [9222, 9223],
+                                [9263, 9266],
+
+                                // Iron wall archways
+                                9285,
+                                [9320, 9326],
+                                9681,
+
+                                // Iron wall doors
+                                [9267, 9284],
+
+                                // Stone wall (Yalahar)
+                                [9370, 9372],
+                                9374,
+                                [9381, 9392],
+                                9423,
+                                [9405, 9414],
+
+                                // Stone wall (Yalahar) (Small tower)
+                                [9393, 9399],
+
+                                // Stone wall (Yalahar) archways
+                                [9523, 9530],
+
+                                // Gate
+                                [9532, 9533],
+
+                                // Limestone wall
+                                [10177, 10179],
+                                10181,
+
+                                // Limestone pillar
+                                [10198, 10207],
+                                [10210, 10212],
+
+                                // Limestone pedestal
+                                [10213, 10217],
+                                10509,
+
+                                // Broken limestone wall
+                                [10188, 10189],
+
+                                // Limestone railing
+                                [10190, 10191],
+                                10194,
+                                10197,
+                                [10373, 10377],
+                                10540,
+
+                                // Limestone wall <-> Stone wall
+                                [10192, 10193],
+                                [10195, 10196],
+
+                                // Limestone wall window
+                                [10486, 10491],
+
+                                // Limestone wall door
+                                [10468, 10485],
+
+                                // Dark framework wall
+                                [10226, 10228],
+                                10230,
+                                [10239, 10248],
+
+                                // Dark framework wall windows
+                                [10262, 10267],
+
+                                // Dark framework wall doors
+                                [10268, 10285],
+
+                                // Stone wall (brownish)
+                                [10249, 10251],
+                                10253,
+
+                                // Stone wall (brownish) <-> Stone wall
+                                [10260, 10261],
+                                [10286, 10287],
+
+                                // Zaoan wall
+                                10662,
+                                10666,
+                                10652,
+                                10668,
+
+                                // Zaoan wall (Red details)
+                                [10650, 10651],
+                                11201,
+                                10654,
+
+                                // Zaoan wall (details)
+                                10661,
+                                10663,
+                                11202,
+                                10667,
+
+                                // Zaoan wall (broken)
+                                10810,
+                                10818,
+                                10814,
+                                10815,
+                                10812,
+                                10820,
+                                10821,
+                                10819,
+                                [10822, 10827],
+                                [10830, 10845],
+
+                                // Zaoan windows
+                                [11064, 11075],
+
+                                // Zaoan doors
+                                [10775, 10777],
+                                [10780, 10786],
+                                [10789, 10792],
+
+                                // Dragon scales wall
+                                [11833, 11835],
+                                11837,
+                                [11844, 11855],
+
+                                // Dragon scales wall windows
+                                [11909, 11909],
+
+                                // Dragon scales wall archways
+                                [11911, 11914],
+
+                                // Dragon scales wall doors
+                                [12092, 12105],
+
+                                // Dragon scales wall railing
+                                [12158, 12164],
+                                [12298, 12299],
+
+                                // Dragon scales wall <-> Jade wall
+                                [11949, 11952],
+
+                                // Jade wall
+                                [11937, 11939],
+                                11941,
+
+                                // Jade wall archways
+                                [11959, 11961],
+
+                                // Jade wall windows
+                                11948,
+
+                                // Jade wall railing
+                                [12229, 12232],
+                                11943,
+
+                                // Jade wall doors
+                                [12188, 12190],
+                                [12193, 12205],
+
+                                // Blueish palisade wall
+                                [12511, 12513],
+                                [12519, 12521],
+                                12534,
+                                12514,
+                                [12517, 12518],
+                                [12522, 12523],
+
+                                // Blueish palisade wall railing
+                                12524,
+                                12515,
+                                12536,
+                                12535,
+
+                                12526,
+                                12529,
+                                [12531, 12532],
+                                12530,
+                                12533,
+
+                                // Dwarven stone wall
+                                [12958, 12960],
+                                12962,
+                                [17223, 17230],
+                                [18200, 18207],
+
+                                // Dwarven stone wall railing
+                                12972,
+                                12975,
+                                [17231, 17232],
+
+                                // Dwarven stone wall archways
+                                12971,
+                                17221,
+                                12974,
+                                17222,
+
+                                // Dwarven stone wall doors
+                                [18208, 18209],
+
+                                // Timber wall
+                                11545,
+                                11547,
+                                11544,
+                                11546,
+
+                                // Timber wall railings
+                                12690,
+                                12693,
+                                12691,
+                                12697,
+                                12685,
+                                11971,
+                                11962,
+                                11970,
+
+                                // Timbers
+                                12024,
+                                12113,
+                                [12686, 12687],
+                                12688,
+                                [12755, 12756],
+                                [12816, 12817],
+                                12165,
+
+                                // Timber wall archways
+                                12286,
+                                12288,
+
+                                // Timber wall windows
+                                12302,
+                                12689,
+
+                                // Timber wall doors
+                                12692,
+                                12695,
+                                12701,
+                                12703,
+                                [13020, 13023],
+
+                                // Wet timber
+                                [20154, 20160],
+
+                                // Light tomb stone wall
+                                [12846, 12847],
+                                13143,
+                                12885,
+                                [12857, 12869],
+
+                                // Light tomb stone wall railing
+                                [12942, 12943],
+
+                                // Light tomb stone wall (leaning)
+                                [12880, 12883],
+
+                                // Light tomb stone wall <-> // Tomb stone wall
+                                [12938, 12941],
+
+                                // Dark tomb stone wall
+                                [12889, 12890],
+                                13144,
+                                12908,
+                                [12891, 12903],
+
+                                // Dark tomb stone wall (leaning)
+                                [12904, 12907],
+
+                                // Dark tomb stone wall railing
+                                [12944, 12945],
+
+                                // Rocky magma wall
+                                [13644, 13646],
+                                13648,
+                                [13658, 13659],
+
+                                // Rocky magma wall railing
+                                13657,
+                                13660,
+                                13656,
+                                13655,
+                                [13665, 13668],
+
+                                // Rocky magma wall archways
+                                [13474, 13475],
+
+                                // Rocky magma wall window
+                                [13663, 13664],
+
+                                // Rocky magma wall <-> White stone wall
+                                13683,
+                                [13685, 13687],
+
+                                // Rocky magma wall borders
+                                13473,
+                                13674,
+                                13679,
+                                13684,
+
+                                // Hive wall
+                                14377,
+                                14371,
+                                14373,
+                                14375,
+                                [14408, 14412],
+                                [14465, 14468],
+                                [14487, 14489],
+
+                                // Hive wall with green stuff
+                                14463,
+                                14466,
+                                14469,
+                                14472,
+                                [14470, 14471],
+                                [14474, 14475],
+                                14477,
+                                [14686, 14693],
+
+                                [14682, 14685],
+
+                                // Hive wall railings
+                                [14382, 14383],
+                                14387,
+                                // Hive wall with green stuff railings
+                                [14479, 14480],
+                                [14481, 14486],
+
+                                // Hive wall archways
+                                [14365, 14369],
+                                [14490, 14493],
+                                [14750, 14771],
+
+                                // Hive wall windows
+                                14372,
+                                14370,
+                                14464,
+                                14467,
+
+                                // Moist wall
+                                14581,
+                                14583,
+                                14587,
+                                14589,
+                                14586,
+                                14591,
+                                [14607, 14608],
+                                [14610, 14612],
+                                [14583, 14584],
+                                14588,
+                                14594,
+                                14609,
+                                14613,
+                                14615,
+                                14616,
+
+                                14618 // Moist wall (full piece)
+                                // Continue: 14598
+                            ]
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }
