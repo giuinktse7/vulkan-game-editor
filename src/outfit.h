@@ -52,7 +52,7 @@ struct Outfit
 
         uint16_t type = 0;
         uint16_t mount = 0;
-        uint8_t item = 0;
+        uint32_t item = 0;
         Addon addon = Addon::None;
         union
         {
@@ -72,9 +72,22 @@ struct Outfit
         return look.data.id;
     }
 
+    bool isItem() const noexcept
+    {
+        return look.item != 0;
+    }
+
     bool isOnlyLooktype() const noexcept
     {
         return look.data.id == 0 && look.addon == Addon::None && look.mount == 0 && look.item == 0 && look.type != 0;
+    }
+
+    static Outfit fromServerId(uint32_t serverId)
+    {
+        Look look;
+        look.item = serverId;
+
+        return Outfit(look);
     }
 
     Outfit(uint16_t looktype)

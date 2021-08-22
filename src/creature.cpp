@@ -2,6 +2,8 @@
 
 #include "config.h"
 #include "graphics/appearances.h"
+#include "item.h"
+#include "items.h"
 #include "logger.h"
 
 #include <set>
@@ -11,10 +13,22 @@ vme_unordered_map<uint16_t, std::string> Creatures::_looktypeToIdIndex;
 
 CreatureType *Creatures::addCreatureType(std::string id, std::string name, Outfit outfit)
 {
-    if (!isValidLooktype(outfit.look.type))
+    // Ensure we do not create a creature type with an invalid outfit
+    if (outfit.isItem())
     {
-        VME_LOG_ERROR(std::format("Cannot create CreatureType for invalid looktype '{}'", outfit.look.type));
-        return nullptr;
+        if (!Items::items.validItemType(outfit.look.item))
+        {
+            VME_LOG_ERROR(std::format("Cannot create CreatureType for outfit with server ID: '{}' because the serverID '{}' does not exist.", outfit.look.item, outfit.look.item));
+            return nullptr;
+        }
+    }
+    else
+    {
+        if (!isValidLooktype(outfit.look.type))
+        {
+            VME_LOG_ERROR(std::format("Cannot create CreatureType for invalid looktype '{}'", outfit.look.type));
+            return nullptr;
+        }
     }
 
     if (creatureType(id))
@@ -42,10 +56,11 @@ CreatureType *Creatures::addCreatureType(std::string id, std::string name, Outfi
 
     // Layers > 1 means we have a template. If so, instantiate the necessary atlas templates for this creature type
     bool multiLayer = creatureType->frameGroup(0).spriteInfo.layers > 1;
-    bool needsTemplate = creatureType->outfitId() != 0;
-    if (multiLayer && needsTemplate)
+    if (multiLayer)
     {
-        createTextureVariation(creatureType, outfit);
+        bool needsTemplate = creatureType->outfitId() != 0;
+        if (needsTemplate)
+            createTextureVariation(creatureType, outfit);
     }
 
     return creatureType;
@@ -150,9 +165,18 @@ CreatureType::CreatureType(std::string id, std::string name, uint16_t looktype)
     : CreatureType(id, name, Outfit(looktype)) {}
 
 CreatureType::CreatureType(std::string id, std::string name, Outfit outfit)
-    : _id(id), _name(name), _outfit(outfit), appearance(Appearances::getCreatureAppearance(outfit.look.type))
+    : _id(id), _name(name), _outfit(outfit)
 {
-    appearance->cacheTextureAtlases();
+    if (_outfit.isItem())
+    {
+        appearance = Appearance(_outfit.look.item);
+    }
+    else
+    {
+        appearance = Appearance(Appearances::getCreatureAppearance(_outfit.look.type));
+    }
+
+    appearance.cacheTextureAtlases();
 }
 
 CreatureType::CreatureType(CreatureType &&other) noexcept
@@ -183,22 +207,22 @@ const CreatureType *Creatures::creatureType(uint16_t looktype)
 
 uint16_t CreatureType::getSpriteWidth() const
 {
-    return appearance->getTextureAtlas(0)->spriteWidth;
+    return appearance.getTextureAtlas(0)->spriteWidth;
 }
 
 uint16_t CreatureType::getSpriteHeight() const
 {
-    return appearance->getTextureAtlas(0)->spriteHeight;
+    return appearance.getTextureAtlas(0)->spriteHeight;
 }
 
 uint16_t CreatureType::getAtlasWidth() const
 {
-    return appearance->getTextureAtlas(0)->width;
+    return appearance.getTextureAtlas(0)->width;
 }
 
 const FrameGroup &CreatureType::frameGroup(size_t index) const
 {
-    return appearance->frameGroup(index);
+    return appearance.frameGroups().at(index);
 }
 
 const TextureInfo CreatureType::getTextureInfo() const
@@ -208,12 +232,12 @@ const TextureInfo CreatureType::getTextureInfo() const
 
 TextureAtlas *CreatureType::getTextureAtlas(uint32_t spriteId) const
 {
-    return appearance->getTextureAtlas(spriteId);
+    return appearance.getTextureAtlas(spriteId);
 }
 
 TextureAtlas *CreatureType::getTextureAtlas(uint32_t frameGroupId, Direction direction) const
 {
-    return appearance->getTextureAtlas(getSpriteId(frameGroupId, direction));
+    return appearance.getTextureAtlas(getSpriteId(frameGroupId, direction));
 }
 
 uint32_t CreatureType::getSpriteIndex(uint32_t frameGroupId, Direction direction) const
@@ -232,23 +256,22 @@ uint32_t CreatureType::getSpriteId(uint32_t frameGroupId, Direction direction) c
 
 const TextureInfo CreatureType::getTextureInfo(uint32_t frameGroupId, Direction direction) const
 {
-    return appearance->getTextureInfo(frameGroupId, direction, TextureInfo::CoordinateType::Normalized);
+    return appearance.getTextureInfo(frameGroupId, direction, TextureInfo::CoordinateType::Normalized);
 }
 
 const TextureInfo CreatureType::getTextureInfo(uint32_t frameGroupId, Direction direction, TextureInfo::CoordinateType coordinateType) const
 {
-    return appearance->getTextureInfo(frameGroupId, direction, coordinateType);
+    return appearance.getTextureInfo(frameGroupId, direction, coordinateType);
 }
 
 const TextureInfo CreatureType::getTextureInfo(uint32_t frameGroupId, int posture, int addonType, Direction direction, TextureInfo::CoordinateType coordinateType) const
 {
-    uint32_t index = getIndex(frameGroup(frameGroupId), posture, addonType, direction);
-    return appearance->getTextureInfo(frameGroupId, index, coordinateType);
+    return appearance.getTextureInfo(frameGroupId, posture, addonType, direction, coordinateType);
 }
 
 const std::vector<FrameGroup> &CreatureType::frameGroups() const noexcept
 {
-    return appearance->frameGroups();
+    return appearance.frameGroups();
 }
 
 uint32_t CreatureType::outfitId() const noexcept
@@ -324,4 +347,94 @@ int Creature::spawnInterval() const noexcept
 void Creature::setSpawnInterval(int spawnInterval)
 {
     _spawnInterval = spawnInterval;
+}
+
+CreatureType::Appearance::Appearance(CreatureAppearance *creatureAppearance)
+    : appearance(creatureAppearance) {}
+
+CreatureType::Appearance::Appearance(uint32_t serverId)
+    : appearance(std::make_shared<Item>(serverId)) {}
+
+void CreatureType::Appearance::cacheTextureAtlases()
+{
+    if (!isItem())
+    {
+        asCreatureAppearance()->cacheTextureAtlases();
+    }
+}
+
+CreatureType::Appearance::Appearance()
+    : appearance(nullptr) {}
+
+const TextureInfo CreatureType::Appearance::getTextureInfo() const
+{
+    return getTextureInfo(0, Direction::South);
+}
+
+const TextureInfo CreatureType::Appearance::getTextureInfo(uint32_t frameGroupId, Direction direction) const
+{
+    return getTextureInfo(frameGroupId, direction, TextureInfo::CoordinateType::Normalized);
+}
+
+const TextureInfo CreatureType::Appearance::getTextureInfo(uint32_t frameGroupId, Direction direction, TextureInfo::CoordinateType coordinateType) const
+{
+    return isItem() ? asItem()->getTextureInfo(PositionConstants::Zero, coordinateType)
+                    : asCreatureAppearance()->getTextureInfo(frameGroupId, direction, coordinateType);
+}
+
+const TextureInfo CreatureType::Appearance::getTextureInfo(uint32_t frameGroupId, int posture, int addonType, Direction direction, TextureInfo::CoordinateType coordinateType) const
+{
+    if (isItem())
+    {
+        return asItem()->getTextureInfo(PositionConstants::Zero, coordinateType);
+    }
+    else
+    {
+        auto &frameGroup = frameGroups().at(frameGroupId);
+        uint32_t index = getIndex(frameGroup, posture, addonType, direction);
+        return asCreatureAppearance()->getTextureInfo(frameGroupId, index, coordinateType);
+    }
+}
+
+bool CreatureType::Appearance::isItem() const noexcept
+{
+    return std::holds_alternative<std::shared_ptr<Item>>(appearance);
+}
+
+Item *CreatureType::Appearance::asItem() const noexcept
+{
+    return std::get<std::shared_ptr<Item>>(appearance).get();
+}
+
+CreatureAppearance *CreatureType::Appearance::asCreatureAppearance() const noexcept
+{
+    return std::get<CreatureAppearance *>(appearance);
+}
+
+uint32_t CreatureType::Appearance::getIndex(const FrameGroup &frameGroup, uint8_t creaturePosture, uint8_t addonType, Direction direction) const
+{
+    if (isItem())
+    {
+        return 0;
+    }
+    else
+    {
+        uint8_t directions = frameGroup.spriteInfo.patternWidth;
+        uint8_t addons = frameGroup.spriteInfo.patternHeight;
+        uint8_t layers = frameGroup.spriteInfo.layers;
+
+        return layers * (directions * (creaturePosture * addons + addonType) + to_underlying(direction));
+    }
+}
+
+TextureAtlas *CreatureType::Appearance::getTextureAtlas(uint32_t spriteId) const
+{
+    return isItem() ? asItem()->itemType->getTextureAtlas(spriteId)
+                    : asCreatureAppearance()->getTextureAtlas(spriteId);
+}
+
+const std::vector<FrameGroup> &CreatureType::Appearance::frameGroups() const noexcept
+{
+    return isItem() ? asItem()->itemType->frameGroups()
+                    : asCreatureAppearance()->frameGroups();
 }

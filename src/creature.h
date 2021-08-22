@@ -3,6 +3,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "frame_group.h"
@@ -11,6 +12,8 @@
 #include "util.h"
 
 class CreatureAppearance;
+class ObjectAppearance;
+class Item;
 
 namespace tibia::protobuf::appearances
 {
@@ -61,14 +64,51 @@ class CreatureType
 
     bool hasColorVariation() const;
 
-    CreatureAppearance *appearance = nullptr;
-
     uint32_t outfitId() const noexcept;
 
   private:
+    enum class AppearanceType
+    {
+        Creature,
+        Object
+    };
+
     Outfit _outfit;
     std::string _id;
     std::string _name;
+
+    /**
+     * Stores the creature appearance. A creature appearance can be either:
+     * 1. A creature-based appearance (CreatureAppearance)
+     * 2. An object-based appearance (ObjectAppearance)
+     */
+    struct Appearance
+    {
+        Appearance(CreatureAppearance *creatureAppearance);
+        Appearance(uint32_t serverId);
+        Appearance();
+
+        void cacheTextureAtlases();
+
+        const TextureInfo getTextureInfo() const;
+        const TextureInfo getTextureInfo(uint32_t frameGroupId, Direction direction) const;
+        const TextureInfo getTextureInfo(uint32_t frameGroupId, Direction direction, TextureInfo::CoordinateType coordinateType) const;
+        const TextureInfo getTextureInfo(uint32_t frameGroupId, int posture, int addonType, Direction direction, TextureInfo::CoordinateType coordinateType) const;
+
+        const std::vector<FrameGroup> &frameGroups() const noexcept;
+
+        uint32_t getIndex(const FrameGroup &frameGroup, uint8_t creaturePosture, uint8_t addonType, Direction direction) const;
+
+        TextureAtlas *getTextureAtlas(uint32_t spriteId) const;
+
+        bool isItem() const noexcept;
+
+        Item *asItem() const noexcept;
+        CreatureAppearance *asCreatureAppearance() const noexcept;
+
+      private:
+        std::variant<std::shared_ptr<Item>, CreatureAppearance *> appearance;
+    } appearance;
 
     // bool _npc;
 };

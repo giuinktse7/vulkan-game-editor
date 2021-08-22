@@ -724,6 +724,8 @@ void MainWindow::initializePaletteWindow()
         addTestCreatureBrush("goblin", "Goblin", 61);
         addTestCreatureBrush("goblin_scavenger", "Goblin Scavenger", 297);
         addTestCreatureBrush("goblin_assassin", "Goblin Assassin", 296);
+
+        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType("mimic", "Mimic", Outfit::fromServerId(1740)))));
     }
 
     for (auto &[k, palette] : ItemPalettes::itemPalettes())

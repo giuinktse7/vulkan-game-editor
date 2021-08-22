@@ -98,6 +98,12 @@ void Items::guidRefCreated(uint32_t id)
 
 void Items::guidRefDestroyed(uint32_t id)
 {
+    // Happens for example when a creature with an item look is destructured
+    if (id >= guidRefCounts.size())
+    {
+        return;
+    }
+
     uint16_t &refCount = guidRefCounts.at(id);
     --refCount;
     if (refCount == 0)
