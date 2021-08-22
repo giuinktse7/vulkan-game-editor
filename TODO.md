@@ -11,16 +11,10 @@
 
 ## Map Rendering
 
-- [ ] Render creature outfits by creating a copy of the relevant atlases and multiplying in pixel colors.
-  - When requesting a sprite for a CreatureType:
-    - [x] TextureAtlas stores texture variations by id (id is created e.g. from outfit look)
-    - [x] When a CreatureType is created, a texture variation is generated using TextureAtlas::overlay()
-  - [x] Must use correct texture variation when rendering a creature
-  - [ ] Must also handle the case where the creature has the look of an item
+- [ ] Add possbility for a CreatureType to have the look of an item
 - [x] ~~Implement animation~~
 - [x] ~~Handle stackable appearances~~
 - [x] ~~Handle appearances with elevation~~
-- [ ] Feature?: Maybe clicking on a selected item should deselect it. If whole tile, the whole tile should maybe be deselected?
 - [x] ~~Feature?: When removing in area (Drag while Ctrl+Shift), show selection rectangle (red tinted?) with the selected item at mouse cursor ONLY.~~
 - [x] ~~Feature: Instant feedback for what items will be removed when removing in area (Drag while Ctrl+Shift).~~
 - [ ] Animations
