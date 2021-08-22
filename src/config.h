@@ -54,4 +54,6 @@ struct Settings
     static bool AUTO_BORDER;
     static int UI_CHANGE_TIME_DELAY_MILLIS;
     static int DEFAULT_CREATURE_SPAWN_INTERVAL;
+
+    static bool HIGHLIGHT_BRUSH_IN_PALETTE_ON_SELECT;
 };

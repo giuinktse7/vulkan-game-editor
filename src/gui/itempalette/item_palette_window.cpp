@@ -5,6 +5,7 @@
 #include <QToolTip>
 #include <QVBoxLayout>
 
+#include "../../config.h"
 #include "../../editor_action.h"
 #include "../../items.h"
 #include "../../logger.h"
@@ -189,10 +190,13 @@ TilesetListView::TilesetListView(QWidget *parent)
 
     auto modelPtr = _model;
     connect(selectionModel(), &QItemSelectionModel::selectionChanged, [modelPtr](const QItemSelection &selected, const QItemSelection &deselected) {
-        auto selectionIndices = selected.indexes();
-        if (!selectionIndices.empty())
+        if (Settings::HIGHLIGHT_BRUSH_IN_PALETTE_ON_SELECT)
         {
-            modelPtr->highlightIndex(selectionIndices.front());
+            auto selectionIndices = selected.indexes();
+            if (!selectionIndices.empty())
+            {
+                modelPtr->highlightIndex(selectionIndices.front());
+            }
         }
 
         auto deselectionIndices = selected.indexes();
