@@ -72,6 +72,9 @@ inline bool operator>(AppearanceFlag a, uint64_t b)
 */
 class ObjectAppearance
 {
+  private:
+    static constexpr size_t CachedTextureAtlasAmount = 5;
+
   public:
     ObjectAppearance(const proto::Appearance &protobufAppearance);
 
@@ -85,15 +88,24 @@ class ObjectAppearance
     const SpriteInfo &getSpriteInfo(size_t frameGroup) const;
     const SpriteInfo &getSpriteInfo() const;
 
+    void cacheTextureAtlases();
+    void cacheTextureAtlas(uint32_t spriteId);
+
     bool hasFlag(AppearanceFlag flag)
     {
         return (flags & flag) > 0ULL;
     }
 
     size_t frameGroupCount() const;
+    const std::vector<FrameGroup> &frameGroups() const noexcept;
 
     const std::string &name() const noexcept;
     void setName(std::string name);
+
+    const std::array<TextureAtlas *, CachedTextureAtlasAmount> &atlases() const
+    {
+        return _atlases;
+    }
 
     uint32_t clientId;
 
@@ -131,7 +143,9 @@ class ObjectAppearance
     } flagData = {};
 
   private:
-    std::vector<FrameGroup> frameGroups;
+    std::array<TextureAtlas *, CachedTextureAtlasAmount> _atlases = {};
+
+    std::vector<FrameGroup> _frameGroups;
     AppearanceFlag flags;
 
     std::string _name;

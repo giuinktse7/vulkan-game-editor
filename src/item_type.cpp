@@ -173,49 +173,17 @@ std::vector<TextureAtlas *> ItemType::getTextureAtlases() const
 
 void ItemType::cacheTextureAtlases()
 {
-    for (int frameGroup = 0; frameGroup < appearance->frameGroupCount(); ++frameGroup)
-    {
-        for (const auto spriteId : appearance->getSpriteInfo(frameGroup).spriteIds)
-        {
-            // Stop if the cache is full
-            if (_atlases.back() != nullptr)
-            {
-                return;
-            }
-            cacheTextureAtlas(spriteId);
-        }
-    }
+    appearance->cacheTextureAtlases();
 }
 
-void ItemType::cacheTextureAtlas(uint32_t spriteId)
+const std::vector<FrameGroup> &ItemType::frameGroups() const noexcept
 {
-    // If nothing is cached, cache the TextureAtlas for the first sprite ID in the appearance.
-    if (_atlases.front() == nullptr)
-        _atlases.front() = Appearances::getTextureAtlas(this->appearance->getFirstSpriteId());
-
-    for (int i = 0; i < _atlases.size(); ++i)
-    {
-        TextureAtlas *&atlas = _atlases[i];
-        // End of current cache reached, caching the atlas
-        if (atlas == nullptr)
-        {
-            atlas = Appearances::getTextureAtlas(spriteId);
-            return;
-        }
-        else
-        {
-            if (atlas->firstSpriteId <= spriteId && spriteId <= atlas->lastSpriteId)
-            {
-                // The TextureAtlas is already cached
-                return;
-            }
-        }
-    }
+    return appearance->frameGroups();
 }
 
 TextureAtlas *ItemType::getTextureAtlas(uint32_t spriteId) const
 {
-    for (const auto atlas : _atlases)
+    for (const auto atlas : appearance->atlases())
     {
         if (atlas == nullptr)
         {
@@ -231,13 +199,19 @@ TextureAtlas *ItemType::getTextureAtlas(uint32_t spriteId) const
     return Appearances::getTextureAtlas(spriteId);
 }
 
+TextureAtlas *ItemType::getFirstTextureAtlas() const noexcept
+{
+    return appearance->atlases().front();
+}
+
 std::vector<const TextureAtlas *> ItemType::atlases() const
 {
     std::vector<const TextureAtlas *> result;
-    for (const auto atlas : _atlases)
+    for (const auto atlas : appearance->atlases())
     {
         if (atlas == nullptr)
             return result;
+
         result.emplace_back(atlas);
     }
 

@@ -3,11 +3,14 @@
 #include <array>
 #include <tuple>
 #include <utility>
+#include <vector>
 
+#include "frame_group.h"
 #include "graphics/appearance_types.h"
 #include "graphics/texture_atlas.h"
 #include "position.h"
 #include "sprite_info.h"
+
 
 #pragma warning(push)
 #pragma warning(disable : 26812)
@@ -376,11 +379,13 @@ class ItemType
     const SpriteInfo &getSpriteInfo(size_t frameGroup) const;
     const SpriteInfo &getSpriteInfo() const;
 
+    const std::vector<FrameGroup> &frameGroups() const noexcept;
+
     // For debugging purposes
     std::vector<TextureAtlas *> getTextureAtlases() const;
 
     TextureAtlas *getTextureAtlas(uint32_t spriteId) const;
-    inline TextureAtlas *getFirstTextureAtlas() const noexcept;
+    TextureAtlas *getFirstTextureAtlas() const noexcept;
     std::vector<const TextureAtlas *> atlases() const;
 
     [[nodiscard]] const std::string &name() const noexcept;
@@ -486,12 +491,6 @@ class ItemType
     bool stackable = false;
 
   private:
-    static constexpr size_t CachedTextureAtlasAmount = 5;
-
-    std::array<TextureAtlas *, CachedTextureAtlasAmount> _atlases = {};
-
-    void cacheTextureAtlas(uint32_t spriteId);
-
     uint8_t getFluidPatternOffset(FluidType fluidType) const;
 
     std::string _name;
@@ -505,11 +504,6 @@ inline bool ItemType::isBorder() const noexcept
 inline bool ItemType::isValid() const noexcept
 {
     return appearance != nullptr;
-}
-
-inline TextureAtlas *ItemType::getFirstTextureAtlas() const noexcept
-{
-    return _atlases.front();
 }
 
 #pragma warning(pop)

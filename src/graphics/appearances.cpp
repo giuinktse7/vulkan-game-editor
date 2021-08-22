@@ -311,9 +311,9 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
         // bool cumulative = protobufAppearance.flags().has_cumulative() && protobufAppearance.flags().cumulative();
 
         auto group = protobufAppearance.frame_group(0);
-        frameGroups.emplace_back(static_cast<FixedFrameGroup>(group.fixed_frame_group()),
-                                 static_cast<uint32_t>(group.id()),
-                                 Appearances::parseSpriteInfo(spriteInfo));
+        _frameGroups.emplace_back(static_cast<FixedFrameGroup>(group.fixed_frame_group()),
+                                  static_cast<uint32_t>(group.id()),
+                                  Appearances::parseSpriteInfo(spriteInfo));
     }
     else
     {
@@ -503,8 +503,50 @@ ObjectAppearance::ObjectAppearance(ObjectAppearance &&other) noexcept
     : clientId(other.clientId),
       _name(std::move(other._name)),
       flagData(std::move(other.flagData)),
-      frameGroups(std::move(other.frameGroups)),
+      _frameGroups(std::move(other._frameGroups)),
       flags(std::move(other.flags)) {}
+
+void ObjectAppearance::cacheTextureAtlases()
+{
+    for (int frameGroup = 0; frameGroup < frameGroupCount(); ++frameGroup)
+    {
+        for (const auto spriteId : getSpriteInfo(frameGroup).spriteIds)
+        {
+            // Stop if the cache is full
+            if (_atlases.back() != nullptr)
+            {
+                return;
+            }
+            cacheTextureAtlas(spriteId);
+        }
+    }
+}
+
+void ObjectAppearance::cacheTextureAtlas(uint32_t spriteId)
+{
+    // If nothing is cached, cache the TextureAtlas for the first sprite ID in the appearance.
+    if (_atlases.front() == nullptr)
+        _atlases.front() = Appearances::getTextureAtlas(getFirstSpriteId());
+
+    for (int i = 0; i < _atlases.size(); ++i)
+    {
+        TextureAtlas *&atlas = _atlases[i];
+        // End of current cache reached, caching the atlas
+        if (atlas == nullptr)
+        {
+            atlas = Appearances::getTextureAtlas(spriteId);
+            return;
+        }
+        else
+        {
+            if (atlas->firstSpriteId <= spriteId && spriteId <= atlas->lastSpriteId)
+            {
+                // The TextureAtlas is already cached
+                return;
+            }
+        }
+    }
+}
 
 uint32_t ObjectAppearance::getFirstSpriteId() const
 {
@@ -513,7 +555,7 @@ uint32_t ObjectAppearance::getFirstSpriteId() const
 
 const SpriteInfo &ObjectAppearance::getSpriteInfo(size_t frameGroup) const
 {
-    return frameGroups.at(frameGroup).spriteInfo;
+    return _frameGroups.at(frameGroup).spriteInfo;
 }
 
 const SpriteInfo &ObjectAppearance::getSpriteInfo() const
@@ -533,7 +575,12 @@ size_t ObjectAppearance::spriteCount(uint32_t frameGroup) const
 
 size_t ObjectAppearance::frameGroupCount() const
 {
-    return frameGroups.size();
+    return _frameGroups.size();
+}
+
+const std::vector<FrameGroup> &ObjectAppearance::frameGroups() const noexcept
+{
+    return _frameGroups;
 }
 
 const std::string &ObjectAppearance::name() const noexcept
