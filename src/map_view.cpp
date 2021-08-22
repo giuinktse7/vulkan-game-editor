@@ -923,6 +923,9 @@ bool MapView::inDragRegion(Position pos) const
     if (!dragRegion)
         return false;
 
+    if (z() != pos.z)
+        return false;
+
     WorldPosition topLeft = pos.worldPos();
     WorldPosition bottomRight(topLeft.x + MapTileSize, topLeft.y + MapTileSize);
 
