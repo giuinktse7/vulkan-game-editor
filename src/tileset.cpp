@@ -59,7 +59,7 @@ void Tileset::addRawBrush(uint32_t serverId)
     {
         auto paletteName = _palette ? _palette->name() : "(No palette)";
         VME_LOG_ERROR("The tileset '" << _name << "' in palette '" << paletteName << "' already contains a brush for serverId " << serverId << ".");
-        return;
+        // return;
     }
 
     brush->setTileset(this);
