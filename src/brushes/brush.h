@@ -1,10 +1,14 @@
 #pragma once
 
+#include <cstddef>  // For std::ptrdiff_t
+#include <iterator> // For std::forward_iterator_tag
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <variant>
 #include <vector>
+
 
 #include "../creature.h"
 #include "../debug.h"
@@ -23,13 +27,9 @@ class DoodadBrush;
 class CreatureBrush;
 class Map;
 class Tile;
-enum TileCover;
+enum TileCover : int;
 class ItemType;
 class Brush;
-
-#include <cstddef> // For std::ptrdiff_t
-#include <iterator> // For std::forward_iterator_tag
-#include <unordered_set>
 
 class BrushShape
 {

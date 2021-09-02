@@ -25,8 +25,8 @@ class Map;
 
 enum class FrameResult
 {
-	Failure = 0,
-	Success = 1
+    Failure = 0,
+    Success = 1
 };
 
 class Engine;
@@ -36,291 +36,291 @@ extern Engine *g_engine;
 namespace engine
 {
 
-	void create();
+    void create();
 
 } // namespace engine
 
 class Engine
 {
-public:
-	Engine();
-	~Engine();
+  public:
+    Engine();
+    ~Engine();
 
-	static const int TILE_SIZE = 32;
-	const glm::vec4 clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+    static const int TILE_SIZE = 32;
+    const glm::vec4 clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-	TimePoint startTime;
+    TimePoint startTime;
 
-	/*
+    /*
 		Used by animators for synchronous animations
 	*/
-	TimePoint currentTime;
-
-	uint32_t currentFrameIndex;
+    TimePoint currentTime;
+
+    uint32_t currentFrameIndex;
 
-	Random random;
-
-	bool debug = false;
+    Random random;
+
+    bool debug = false;
 
-	// Can be set to false if the UI is currently capturing the mouse.
-	bool captureMouse = true;
-	bool captureKeyboard = true;
+    // Can be set to false if the UI is currently capturing the mouse.
+    bool captureMouse = true;
+    bool captureKeyboard = true;
 
-	struct FrameData
-	{
-		VkSemaphore imageAvailableSemaphore = nullptr;
-		VkSemaphore renderCompleteSemaphore = nullptr;
-		VkFence inFlightFence = nullptr;
-	};
+    struct FrameData
+    {
+        VkSemaphore imageAvailableSemaphore = nullptr;
+        VkSemaphore renderCompleteSemaphore = nullptr;
+        VkFence inFlightFence = nullptr;
+    };
 
-	VkInstance &getVkInstance()
-	{
-		return instance;
-	}
+    VkInstance &getVkInstance()
+    {
+        return instance;
+    }
 
-	void setPhysicalDevice(VkPhysicalDevice physicalDevice)
-	{
-		this->physicalDevice = physicalDevice;
-	}
+    void setPhysicalDevice(VkPhysicalDevice physicalDevice)
+    {
+        this->physicalDevice = physicalDevice;
+    }
 
-	VkSurfaceKHR &getSurface()
-	{
-		return surface;
-	}
+    VkSurfaceKHR &getSurface()
+    {
+        return surface;
+    }
 
-	bool &getFramebufferResized()
-	{
-		return framebufferResized;
-	}
+    bool &getFramebufferResized()
+    {
+        return framebufferResized;
+    }
 
-	SwapChain &getSwapChain()
-	{
-		return swapChain;
-	}
+    SwapChain &getSwapChain()
+    {
+        return swapChain;
+    }
 
-	VkPhysicalDevice &getPhysicalDevice()
-	{
-		return physicalDevice;
-	}
+    VkPhysicalDevice &getPhysicalDevice()
+    {
+        return physicalDevice;
+    }
 
-	VkQueue *getGraphicsQueue()
-	{
-		return &graphicsQueue;
-	}
-
-	VkQueue *getPresentQueue()
-	{
-		return &presentQueue;
-	}
-
-	void setFrameBufferResized(bool value)
-	{
-		framebufferResized = value;
-	}
-
-	bool hasFrameBufferResized() const
-	{
-		return framebufferResized;
-	}
-
-	VkDevice &getDevice()
-	{
-		return device;
-	}
-
-	VkCommandPool getCommandPool()
-	{
-		return commandPool;
-	}
-
-	void clearCurrentCommandBuffer()
-	{
-		currentCommandBuffer = nullptr;
-	}
-
-	void createCommandPool();
-
-	void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
-
-	VkCommandBuffer beginSingleTimeCommands();
-	void endSingleTimeCommands(VkCommandBuffer buffer);
-
-	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-
-	void shutdown();
-
-	void WaitUntilDeviceIdle();
-
-	QueueFamilyIndices getQueueFamilyIndices()
-	{
-		return queueFamilyIndices;
-	}
-
-	VkDescriptorSetLayout &getPerTextureDescriptorSetLayout()
-	{
-		return perTextureDescriptorSetLayout;
-	}
-
-	void initialize();
-
-	void createSyncObjects();
-	void cleanupSyncObjects();
-
-	uint32_t getMaxFramesInFlight();
-
-	bool isValidWindowSize();
-
-	void setCursorPos(ScreenPosition pos)
-	{
-		this->prevCursorPos = this->cursorPos;
-		this->cursorPos = pos;
-	}
-
-	ScreenPosition getCursorPos() const
-	{
-		return cursorPos;
-	}
-
-	ScreenPosition getPrevCursorPos() const
-	{
-		return prevCursorPos;
-	}
-
-	VkAllocationCallbacks *getAllocator()
-	{
-		return allocator;
-	}
-
-	uint32_t getImageCount()
-	{
-		return swapChain.getImageCount();
-	}
+    VkQueue *getGraphicsQueue()
+    {
+        return &graphicsQueue;
+    }
+
+    VkQueue *getPresentQueue()
+    {
+        return &presentQueue;
+    }
+
+    void setFrameBufferResized(bool value)
+    {
+        framebufferResized = value;
+    }
+
+    bool hasFrameBufferResized() const
+    {
+        return framebufferResized;
+    }
+
+    VkDevice &getDevice()
+    {
+        return device;
+    }
+
+    VkCommandPool getCommandPool()
+    {
+        return commandPool;
+    }
+
+    void clearCurrentCommandBuffer()
+    {
+        currentCommandBuffer = nullptr;
+    }
+
+    void createCommandPool();
+
+    void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+    VkCommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(VkCommandBuffer buffer);
+
+    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+    void shutdown();
+
+    void WaitUntilDeviceIdle();
+
+    QueueFamilyIndices getQueueFamilyIndices()
+    {
+        return queueFamilyIndices;
+    }
+
+    VkDescriptorSetLayout &getPerTextureDescriptorSetLayout()
+    {
+        return perTextureDescriptorSetLayout;
+    }
+
+    void initialize();
+
+    void createSyncObjects();
+    void cleanupSyncObjects();
+
+    uint32_t getMaxFramesInFlight();
+
+    bool isValidWindowSize();
+
+    void setCursorPos(ScreenPosition pos)
+    {
+        this->prevCursorPos = this->cursorPos;
+        this->cursorPos = pos;
+    }
+
+    ScreenPosition getCursorPos() const
+    {
+        return cursorPos;
+    }
+
+    ScreenPosition getPrevCursorPos() const
+    {
+        return prevCursorPos;
+    }
+
+    VkAllocationCallbacks *getAllocator()
+    {
+        return allocator;
+    }
+
+    uint32_t getImageCount()
+    {
+        return swapChain.getImageCount();
+    }
 
-	uint32_t getMinImageCount()
-	{
-		return swapChain.getMinImageCount();
-	}
+    uint32_t getMinImageCount()
+    {
+        return swapChain.getMinImageCount();
+    }
 
-	uint32_t getWidth()
-	{
-		return swapChain.getExtent().width;
-	}
-	uint32_t getHeight()
-	{
-		return swapChain.getExtent().height;
-	}
+    uint32_t getWidth()
+    {
+        return swapChain.getExtent().width;
+    }
+    uint32_t getHeight()
+    {
+        return swapChain.getExtent().height;
+    }
 
-	bool initFrame();
-	FrameResult nextFrame();
+    bool initFrame();
+    FrameResult nextFrame();
 
-	VkShaderModule createShaderModule(const std::vector<uint8_t> &code);
+    VkShaderModule createShaderModule(const std::vector<uint8_t> &code);
 
-	void resetZoom()
-	{
-		mapView->resetZoom();
-	}
+    void resetZoom()
+    {
+        mapView->resetZoom();
+    }
 
-	void zoomIn()
-	{
-		mapView->zoomIn();
-	}
+    void zoomIn()
+    {
+        mapView->zoomIn();
+    }
 
-	void zoomOut()
-	{
-		mapView->zoomOut();
-	}
+    void zoomOut()
+    {
+        mapView->zoomOut();
+    }
 
-	void translateCamera(glm::vec3 delta);
-	void translateCameraZ(int z);
+    void translateCamera(glm::vec3 delta);
+    void translateCameraZ(int z);
 
-	// VkDescriptorPool &getMapDescriptorPool()
-	// {
-	// 	return mapRenderer->getDescriptorPool();
-	// }
+    // VkDescriptorPool &getMapDescriptorPool()
+    // {
+    // 	return mapRenderer->getDescriptorPool();
+    // }
 
-	// VkDescriptorSetLayout &getTextureDescriptorSetLayout()
-	// {
-	// 	return mapRenderer->getTextureDescriptorSetLayout();
-	// }
+    // VkDescriptorSetLayout &getTextureDescriptorSetLayout()
+    // {
+    // 	return mapRenderer->getTextureDescriptorSetLayout();
+    // }
 
-	const std::optional<uint32_t> getSelectedServerId() const
-	{
-		// TODO
-		return {};
-	}
+    const std::optional<uint32_t> getSelectedServerId() const
+    {
+        // TODO
+        return {};
+    }
 
-	bool hasBrush() const
-	{
-		// TODO
-		return false;
-	}
+    bool hasBrush() const
+    {
+        // TODO
+        return false;
+    }
 
-	MapView *getMapView() const
-	{
-		return mapView.get();
-	}
+    MapView *getMapView() const
+    {
+        return mapView.get();
+    }
 
-private:
-	std::array<FrameData, 3> frames;
-	// Fences for vkAcquireNextImageKHR
-	std::array<VkFence, 3> swapChainImageInFlight;
-	FrameData *currentFrame = nullptr;
+  private:
+    std::array<FrameData, 3> frames;
+    // Fences for vkAcquireNextImageKHR
+    std::array<VkFence, 3> swapChainImageInFlight;
+    FrameData *currentFrame = nullptr;
 
-	ScreenPosition prevCursorPos;
-	ScreenPosition cursorPos;
-	bool isInitialized = false;
+    ScreenPosition prevCursorPos;
+    ScreenPosition cursorPos;
+    bool isInitialized = false;
 
-	int width;
-	int height;
+    int width;
+    int height;
 
-	VkSurfaceKHR surface;
+    VkSurfaceKHR surface;
 
-	VkInstance instance;
-	VkAllocationCallbacks *allocator = NULL;
+    VkInstance instance;
+    VkAllocationCallbacks *allocator = NULL;
 
-	SwapChain swapChain;
+    SwapChain swapChain;
 
-	VkDevice device;
-	VkPhysicalDevice physicalDevice;
+    VkDevice device;
+    VkPhysicalDevice physicalDevice;
 
-	QueueFamilyIndices queueFamilyIndices;
+    QueueFamilyIndices queueFamilyIndices;
 
-	VkQueue graphicsQueue;
-	VkQueue presentQueue;
+    VkQueue graphicsQueue;
+    VkQueue presentQueue;
 
-	std::unique_ptr<MapView> mapView;
-	std::unique_ptr<MapRenderer> mapRenderer;
+    std::unique_ptr<MapView> mapView;
+    std::unique_ptr<MapRenderer> mapRenderer;
 
-	VkDebugUtilsMessengerEXT debugMessenger;
+    VkDebugUtilsMessengerEXT debugMessenger;
 
-	bool framebufferResized = false;
+    bool framebufferResized = false;
 
-	VkCommandPool commandPool;
+    VkCommandPool commandPool;
 
-	std::vector<BoundBuffer> uniformBuffers;
+    std::vector<BoundBuffer> uniformBuffers;
 
-	VkDescriptorSetLayout perTextureDescriptorSetLayout;
-	VkDescriptorSetLayout perFrameDescriptorSetLayout;
+    VkDescriptorSetLayout perTextureDescriptorSetLayout;
+    VkDescriptorSetLayout perFrameDescriptorSetLayout;
 
-	VkCommandBuffer currentCommandBuffer;
+    VkCommandBuffer currentCommandBuffer;
 
-	uint32_t previousFrame;
+    uint32_t previousFrame;
 
-	void createVulkanInstance();
+    void createVulkanInstance();
 
-	static void framebufferResizeCallback(int width, int height);
+    static void framebufferResizeCallback(int width, int height);
 
-	static bool checkValidationLayerSupport();
-	static std::vector<const char *> getRequiredExtensions();
-	static bool chronosOrStandardValidation(std::vector<VkLayerProperties> &props);
-	void createSurface();
+    static bool checkValidationLayerSupport();
+    static std::vector<const char *> getRequiredExtensions();
+    static bool chronosOrStandardValidation(std::vector<VkLayerProperties> &props);
+    void createSurface();
 
-	void setFrameIndex(uint32_t index);
+    void setFrameIndex(uint32_t index);
 
-	void setSurface(VkSurfaceKHR &surface)
-	{
-		this->surface = surface;
-	}
+    void setSurface(VkSurfaceKHR &surface)
+    {
+        this->surface = surface;
+    }
 
-	void recreateSwapChain();
+    void recreateSwapChain();
 };
