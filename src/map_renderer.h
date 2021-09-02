@@ -11,19 +11,18 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "brushes/brush.h"
+#include "editor_action.h"
 #include "graphics/buffer.h"
 #include "graphics/texture.h"
 #include "graphics/texture_atlas.h"
 #include "graphics/vertex.h"
 #include "graphics/vulkan_helpers.h"
-
 #include "item.h"
 #include "items.h"
+#include "map.h"
 #include "time_util.h"
 #include "util.h"
-
-#include "brushes/brush.h"
-#include "map.h"
 
 class MapView;
 
@@ -278,6 +277,8 @@ class MapRenderer
         return _currentFrame;
     }
 
+    bool _containsAnimation = false;
+
   private:
     using ItemPredicate = std::function<bool(const Position, const Item &item)>;
 
@@ -301,42 +302,6 @@ class MapRenderer
         }
     };
 
-    std::unordered_set<TextureWindow, TextureWindowHasher, TextureWindowEqual> testTextureSet;
-
-    bool debug = false;
-    MapView *mapView;
-    VulkanInfo &vulkanInfo;
-    std::array<FrameData, 3> frames;
-
-    // All sprites are drawn using this index buffer
-    BoundBuffer indexBuffer;
-    BoundBuffer vertexBuffer;
-
-    VkFormat colorFormat = VK_FORMAT_UNDEFINED;
-
-    FrameData *_currentFrame = nullptr;
-
-    VkRenderPass renderPass;
-
-    VkDescriptorPool descriptorPool = 0;
-
-    VkPipelineLayout pipelineLayout;
-    VkPipeline graphicsPipeline = 0;
-
-    VkDescriptorSetLayout uboDescriptorSetLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout textureDescriptorSetLayout = VK_NULL_HANDLE;
-
-    // Vulkan texture resources
-    mutable std::vector<uint32_t> activeTextureAtlasIds;
-    mutable std::vector<VulkanTexture> vulkanTexturesForAppearances;
-    /*
-		Resources for general textures such as solid color textures (non-sprites)
-
-		NOTE: Textures from TextureAtlas class should be stored in 'vulkanTexturesForAppearances'.
-	*/
-    std::unordered_map<const Texture *, VulkanTexture> vulkanTextures;
-
-    util::Size vulkanSwapChainImageSize;
     void createRenderPass();
     void createGraphicsPipeline();
     VkShaderModule createShaderModule(const std::vector<uint8_t> &code);
@@ -410,6 +375,43 @@ class MapRenderer
 
     void issueDraw(const DrawInfo::Base &info, const WorldPosition &worldPos);
     void issueRectangleDraw(DrawInfo::Rectangle &info);
+
+    std::unordered_set<TextureWindow, TextureWindowHasher, TextureWindowEqual> testTextureSet;
+
+    bool debug = false;
+    MapView *mapView;
+    VulkanInfo &vulkanInfo;
+    std::array<FrameData, 3> frames;
+
+    // All sprites are drawn using this index buffer
+    BoundBuffer indexBuffer;
+    BoundBuffer vertexBuffer;
+
+    VkFormat colorFormat = VK_FORMAT_UNDEFINED;
+
+    FrameData *_currentFrame = nullptr;
+
+    VkRenderPass renderPass;
+
+    VkDescriptorPool descriptorPool = 0;
+
+    VkPipelineLayout pipelineLayout;
+    VkPipeline graphicsPipeline = 0;
+
+    VkDescriptorSetLayout uboDescriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout textureDescriptorSetLayout = VK_NULL_HANDLE;
+
+    // Vulkan texture resources
+    mutable std::vector<uint32_t> activeTextureAtlasIds;
+    mutable std::vector<VulkanTexture> vulkanTexturesForAppearances;
+    /*
+		Resources for general textures such as solid color textures (non-sprites)
+
+		NOTE: Textures from TextureAtlas class should be stored in 'vulkanTexturesForAppearances'.
+	*/
+    std::unordered_map<const Texture *, VulkanTexture> vulkanTextures;
+
+    util::Size vulkanSwapChainImageSize;
 
     VkDescriptorSet currentDescriptorSet;
 
