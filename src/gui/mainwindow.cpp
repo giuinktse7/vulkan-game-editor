@@ -885,6 +885,20 @@ QMenuBar *MainWindow::createMenuBar()
                 setPropertyPanelVisible(!propertyWindowContainer->isVisible());
             }
         });
+
+        addMenuItem(viewMenu, "Show animations", Qt::Key_L, [this]() {
+            Settings::RENDER_ANIMATIONS = !Settings::RENDER_ANIMATIONS;
+
+            // Re-render if necessary
+            if (Settings::RENDER_ANIMATIONS)
+            {
+                MapView *mapView = currentMapView();
+                if (mapView)
+                {
+                    mapView->requestDraw();
+                }
+            }
+        });
     }
 
     // Window

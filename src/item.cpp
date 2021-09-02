@@ -303,6 +303,11 @@ Container *Item::getOrCreateContainer()
     return container;
 }
 
+bool Item::hasAnimation() const noexcept
+{
+    return _animation.get() != nullptr;
+}
+
 ItemAnimation *Item::animation() const noexcept
 {
     return _animation.get();

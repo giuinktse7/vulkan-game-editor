@@ -172,6 +172,7 @@ void MapRenderer::releaseResources()
 
 void MapRenderer::startNextFrame()
 {
+    _containsAnimation = false;
     // VME_LOG_D("index: " << _currentFrame->currentFrameIndex);
     // VME_LOG("Start next frame");
     updateUniformBuffer();
@@ -594,7 +595,14 @@ void MapRenderer::drawTile(Tile *tile, uint32_t flags, const Position offset, co
     {
         if (shouldDrawItem(position, *groundPtr, flags, filter))
         {
-            groundPtr->animate();
+            if (Settings::RENDER_ANIMATIONS)
+            {
+                if (groundPtr->hasAnimation())
+                {
+                    groundPtr->animate();
+                    _containsAnimation = true;
+                }
+            }
 
             ItemDrawInfo info{};
 
@@ -615,7 +623,14 @@ void MapRenderer::drawTile(Tile *tile, uint32_t flags, const Position offset, co
         if (!shouldDrawItem(position, item, flags, filter))
             continue;
 
-        item.animate();
+        if (Settings::RENDER_ANIMATIONS)
+        {
+            if (item.hasAnimation())
+            {
+                item.animate();
+                _containsAnimation = true;
+            }
+        }
 
         info.drawFlags = flags;
         info.item = &item;
@@ -1404,7 +1419,6 @@ void MapRenderer::createGraphicsPipeline()
 
     if (vulkanInfo.vkCreatePipelineLayout(&pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
     {
-        qDebug() << "failed to create pipeline layout!";
         throw std::runtime_error("failed to create pipeline layout!");
     }
 

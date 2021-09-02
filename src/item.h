@@ -89,6 +89,8 @@ class Item
 
     bool operator==(const Item &rhs) const;
 
+    bool hasAnimation() const noexcept;
+
     ItemAnimation *animation() const noexcept;
     void animate() const;
 

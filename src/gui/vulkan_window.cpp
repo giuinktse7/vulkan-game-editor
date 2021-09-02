@@ -28,6 +28,7 @@
 #include "../map_view.h"
 #include "../position.h"
 #include "../qt/logging.h"
+#include "../settings.h"
 #include "gui.h"
 #include "mainwindow.h"
 #include "qt_util.h"
@@ -823,4 +824,10 @@ void VulkanWindow::Renderer::startNextFrame()
     frame->mouseAction = window.mapView->editorAction.action();
 
     renderer.startNextFrame();
+    if (renderer._containsAnimation && Settings::RENDER_ANIMATIONS)
+    {
+        QTimer::singleShot(50, [this]() {
+            window.requestUpdate();
+        });
+    }
 }
