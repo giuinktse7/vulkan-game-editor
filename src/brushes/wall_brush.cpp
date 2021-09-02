@@ -1,9 +1,9 @@
 #include "wall_brush.h"
 
-#include "../config.h"
 #include "../items.h"
 #include "../map_view.h"
 #include "../random.h"
+#include "../settings.h"
 
 WallBrush::WallBrush(std::string id, const std::string &name, StraightPart &&horizontal, StraightPart &&vertical, Part &&corner, Part &&pole)
     : Brush(name), id(id), horizontal(std::move(horizontal)), vertical(std::move(vertical)), corner(std::move(corner)), pole(std::move(pole))

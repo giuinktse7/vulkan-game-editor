@@ -2,12 +2,13 @@
 
 #include <algorithm>
 
-#include "../config.h"
 #include "../items.h"
 #include "../map_view.h"
+#include "../settings.h"
 #include "../util.h"
 #include "ground_brush.h"
 #include "raw_brush.h"
+
 
 TileBorderInfo BorderBrush::tileInfo = {};
 BorderBrushVariation *BorderBrush::brushVariation = &DetailedBorderBrush::instance;

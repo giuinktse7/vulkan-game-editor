@@ -5,12 +5,13 @@
 #include <QToolTip>
 #include <QVBoxLayout>
 
-#include "../../config.h"
 #include "../../editor_action.h"
 #include "../../items.h"
 #include "../../logger.h"
 #include "../../qt/logging.h"
+#include "../../settings.h"
 #include "../main_application.h"
+
 
 #include "item_palette_model.h"
 

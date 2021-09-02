@@ -9,13 +9,13 @@
 #include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
 #include "brushes/wall_brush.h"
-#include "config.h"
 #include "debug.h"
 #include "file.h"
 #include "graphics/appearances.h"
 #include "logger.h"
 #include "map_view.h"
 #include "position.h"
+#include "settings.h"
 #include "util.h"
 
 /** Order of members matter for this struct due to alignment requirements in the 

@@ -1,18 +1,12 @@
 #include "config.h"
 
-#include "graphics/appearances.h"
-#include "items.h"
-#include "util.h"
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <sstream>
 
-BorderBrushVariationType Settings::BORDER_BRUSH_VARIATION = BorderBrushVariationType::Detailed;
-bool Settings::AUTO_BORDER = true;
-int Settings::UI_CHANGE_TIME_DELAY_MILLIS = 100;
-int Settings::DEFAULT_CREATURE_SPAWN_INTERVAL = 60;
-
-bool Settings::HIGHLIGHT_BRUSH_IN_PALETTE_ON_SELECT = false;
+#include "graphics/appearances.h"
+#include "items.h"
+#include "util.h"
 
 namespace
 {

@@ -4,15 +4,16 @@
 #include <algorithm>
 #include <numeric>
 
-#include "../config.h"
 #include "../debug.h"
 #include "../items.h"
 #include "../map_view.h"
 #include "../position.h"
 #include "../random.h"
+#include "../settings.h"
 #include "../tile.h"
 #include "../tile_cover.h"
 #include "border_brush.h"
+
 
 std::variant<std::monostate, uint32_t, const GroundBrush *> GroundBrush::replacementFilter = std::monostate{};
 

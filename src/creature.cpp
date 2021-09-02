@@ -1,10 +1,10 @@
 #include "creature.h"
 
-#include "config.h"
 #include "graphics/appearances.h"
 #include "item.h"
 #include "items.h"
 #include "logger.h"
+#include "settings.h"
 
 #include <set>
 

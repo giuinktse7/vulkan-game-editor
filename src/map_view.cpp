@@ -7,10 +7,10 @@
 #include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
 #include "brushes/wall_brush.h"
-#include "config.h"
+
 #include "const.h"
 #include "items.h"
-#include "time_point.h"
+#include "settings.h"
 
 using namespace MapHistory;
 
