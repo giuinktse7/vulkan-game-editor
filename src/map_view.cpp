@@ -11,6 +11,7 @@
 #include "const.h"
 #include "items.h"
 #include "settings.h"
+#include "time_util.h"
 
 using namespace MapHistory;
 

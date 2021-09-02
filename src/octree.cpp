@@ -1,7 +1,6 @@
 #include "octree.h"
 
 #include "debug.h"
-#include "time_point.h"
 
 namespace vme
 {

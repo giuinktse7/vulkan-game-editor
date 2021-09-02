@@ -33,7 +33,7 @@ class SearchPopupWidget;
 
 #include "../map_copy_buffer.h"
 #include "../signal.h"
-#include "../time_point.h"
+#include "../time_util.h"
 #include "gui.h"
 #include "minimap.h"
 #include "qt_util.h"

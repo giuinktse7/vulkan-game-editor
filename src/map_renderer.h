@@ -19,8 +19,7 @@
 
 #include "item.h"
 #include "items.h"
-
-#include "editor_action.h"
+#include "time_util.h"
 #include "util.h"
 
 #include "brushes/brush.h"

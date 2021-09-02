@@ -18,7 +18,7 @@
 #include "../map_view.h"
 #include "../position.h"
 #include "../random.h"
-#include "../time_point.h"
+#include "../time_util.h"
 #include "../util.h"
 
 class Map;

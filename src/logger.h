@@ -19,7 +19,6 @@ namespace Logger
     using MainLogger = QDebug;
     MainLogger info();
     MainLogger debug();
-
 #else
     using MainLogger = std::ostream;
     MainLogger &info();

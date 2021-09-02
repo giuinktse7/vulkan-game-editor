@@ -11,7 +11,7 @@
 
 #include "debug.h"
 #include "position.h"
-#include "time_point.h"
+#include "time_util.h"
 #include "util.h"
 
 // HeapNode macro

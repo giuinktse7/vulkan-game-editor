@@ -13,7 +13,7 @@
 #include "../brushes/brush.h"
 #include "../brushes/ground_brush.h"
 #include "../debug.h"
-#include "../time_point.h"
+#include "../time_util.h"
 
 #include "lua_brush.h"
 

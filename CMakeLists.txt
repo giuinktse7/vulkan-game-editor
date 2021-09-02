@@ -64,6 +64,7 @@ find_package(
 
 set(CommonSources
     src/config.h
+    src/settings.h
     src/signal.h
     src/history/history.h
     src/history/history_action.h
@@ -127,6 +128,7 @@ set(CommonSources
     src/map.h
     src/save_map.h
     src/load_map.h
+    src/map_renderer.h
     src/map_copy_buffer.h
     src/map_view.h
     src/otb.h
@@ -139,7 +141,7 @@ set(CommonSources
     src/outfit.h
     src/tile_location.h
     src/minimap_colors.h
-    src/time_point.h
+    src/time_util.h
     src/creature.h
     src/town.h
     src/item_palette.h
@@ -169,6 +171,7 @@ set(CommonSources
     vendor/lzma/LzmaLib.c
     vendor/lzma/Threads.c
     src/config.cpp
+    src/settings.cpp
     src/history/history.cpp
     src/history/history_action.cpp
     src/history/history_change.cpp
@@ -203,6 +206,7 @@ set(CommonSources
     src/map.cpp
     src/save_map.cpp
     src/load_map.cpp
+    src/map_renderer.cpp
     src/map_copy_buffer.cpp
     src/map_view.cpp
     src/otb.cpp
@@ -213,7 +217,7 @@ set(CommonSources
     src/tile.cpp
     src/tile_location.cpp
     src/tile_cover.cpp
-    src/time_point.cpp
+    src/time_util.cpp
     src/creature.cpp
     src/town.cpp
     src/item_palette.cpp
@@ -275,7 +279,6 @@ set(GuiSources
     src/gui/gui_thing_image.h
     src/gui/vulkan_window.h
     src/gui/map_tab_widget.h
-    src/map_renderer.h
     src/qt/qt_vulkan_info.h
     src/gui/draggable_item.h
     src/gui/properties/item_property_window.h
@@ -301,7 +304,6 @@ set(GuiSources
     src/gui/gui_thing_image.cpp
     src/gui/vulkan_window.cpp
     src/gui/map_tab_widget.cpp
-    src/map_renderer.cpp
     src/gui/draggable_item.cpp
     src/gui/properties/item_property_window.cpp
     src/gui/properties/property_container_tree.cpp

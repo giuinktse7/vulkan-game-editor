@@ -11,7 +11,7 @@
 
 #include "../file.h"
 #include "../logger.h"
-#include "../time_point.h"
+#include "../time_util.h"
 #include "../util.h"
 #include "texture_atlas.h"
 

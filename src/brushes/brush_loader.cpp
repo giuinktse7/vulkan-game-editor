@@ -8,7 +8,7 @@
 #include "../debug.h"
 #include "../item_palette.h"
 #include "../logger.h"
-#include "../time_point.h"
+#include "../time_util.h"
 #include "border_brush.h"
 #include "brush.h"
 #include "doodad_brush.h"

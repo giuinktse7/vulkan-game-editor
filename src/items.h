@@ -17,7 +17,7 @@
 #include "otb.h"
 #include "position.h"
 #include "signal.h"
-#include "time_point.h"
+#include "time_util.h"
 
 /* Amount of cached texture atlas pointers that an ItemType can store.
   If the appearance of an ItemType has more than this amount of texture atlases,

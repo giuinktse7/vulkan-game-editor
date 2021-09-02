@@ -31,7 +31,7 @@
 #include "observable_item.h"
 #include "qt/logging.h"
 #include "random.h"
-#include "time_point.h"
+#include "time_util.h"
 #include "util.h"
 
 #include "brushes/brush.h"
