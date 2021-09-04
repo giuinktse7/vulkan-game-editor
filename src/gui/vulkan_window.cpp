@@ -21,6 +21,7 @@
 #include "../brushes/creature_brush.h"
 #include "../brushes/doodad_brush.h"
 #include "../brushes/ground_brush.h"
+#include "../brushes/mountain_brush.h"
 #include "../brushes/wall_brush.h"
 #include "../item_location.h"
 #include "../logger.h"
@@ -640,6 +641,13 @@ void VulkanWindow::openContextMenu(QPoint position)
         if (groundBrush)
         {
             addBrushOption("Select Ground Brush", groundBrush);
+        }
+
+        // Ground brush
+        MountainBrush *mountainBrush = Brush::getMountainBrush(*tile);
+        if (mountainBrush)
+        {
+            addBrushOption("Select Mountain Brush", mountainBrush);
         }
     }
     else

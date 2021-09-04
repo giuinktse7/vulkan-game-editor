@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
     brushLoader.load(std::format("{}/palettes/grounds.json", clientPath));
     brushLoader.load(std::format("{}/palettes/walls.json", clientPath));
     brushLoader.load(std::format("{}/palettes/doodads.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/mountains.json", clientPath));
     brushLoader.load(std::format("{}/palettes/creatures.json", clientPath));
     brushLoader.load(std::format("{}/palettes/tilesets.json", clientPath));
 

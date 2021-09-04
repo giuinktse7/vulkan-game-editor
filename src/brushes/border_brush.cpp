@@ -9,7 +9,6 @@
 #include "ground_brush.h"
 #include "raw_brush.h"
 
-
 TileBorderInfo BorderBrush::tileInfo = {};
 BorderBrushVariation *BorderBrush::brushVariation = &DetailedBorderBrush::instance;
 
@@ -606,7 +605,11 @@ void BorderBrush::apply(MapView &mapView, const Position &position, BorderType b
     }
     else
     {
-        mapView.addBorder(position, borderData.getServerId(borderType), this->preferredZOrder());
+        auto borderItemId = borderData.getServerId(borderType);
+        if (borderItemId)
+        {
+            mapView.addBorder(position, *borderItemId, this->preferredZOrder());
+        }
     }
 }
 
@@ -699,7 +702,7 @@ const std::vector<uint32_t> &BorderBrush::serverIds() const
     return sortedServerIds;
 }
 
-uint32_t BorderBrush::getServerId(BorderType borderType) const noexcept
+std::optional<uint32_t> BorderBrush::getServerId(BorderType borderType) const noexcept
 {
     return borderData.getServerId(borderType);
 }
@@ -756,10 +759,11 @@ TileCover BorderBrush::getTileCover(uint32_t serverId) const
     return borderTypeToTileCover[to_underlying(borderType)];
 }
 
-uint32_t BorderData::getServerId(BorderType borderType) const noexcept
+std::optional<uint32_t> BorderData::getServerId(BorderType borderType) const noexcept
 {
     // -1 because index zero in BorderType is BorderType::None
-    return borderIds[to_underlying(borderType) - 1];
+    uint32_t id = borderIds[to_underlying(borderType) - 1];
+    return id == 0 ? std::nullopt : std::make_optional(id);
 }
 
 std::array<uint32_t, 12> BorderData::getBorderIds() const
@@ -775,7 +779,8 @@ bool BorderData::is(uint32_t serverId, BorderType borderType) const
         return centerBrush && centerBrush->erasesItem(serverId);
     }
 
-    return getServerId(borderType) == serverId;
+    auto borderItemId = getServerId(borderType);
+    return borderItemId && (*borderItemId == serverId);
 }
 
 bool isRight(TileQuadrant quadrant)

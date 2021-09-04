@@ -9,7 +9,6 @@
 #include <variant>
 #include <vector>
 
-
 #include "../creature.h"
 #include "../debug.h"
 #include "../graphics/texture_atlas.h"
@@ -25,6 +24,7 @@ class BorderBrush;
 class WallBrush;
 class DoodadBrush;
 class CreatureBrush;
+class MountainBrush;
 class Map;
 class Tile;
 enum TileCover : int;
@@ -72,7 +72,8 @@ enum class BrushType
     Ground,
     Border,
     Raw,
-    Wall
+    Wall,
+    Mountain
 };
 
 struct BrushSearchResult
@@ -180,6 +181,10 @@ class Brush
     static DoodadBrush *addDoodadBrush(DoodadBrush &&brush);
     static DoodadBrush *getDoodadBrush(const std::string &id);
 
+    static MountainBrush *addMountainBrush(std::unique_ptr<MountainBrush> &&brush);
+    static MountainBrush *addMountainBrush(MountainBrush &&brush);
+    static MountainBrush *getMountainBrush(const std::string &id);
+
     static WallBrush *addWallBrush(WallBrush &&brush);
 
     static CreatureBrush *addCreatureBrush(std::unique_ptr<CreatureBrush> &&brush);
@@ -198,6 +203,7 @@ class Brush
     static DoodadBrush *getDoodadBrush(const Tile &tile);
     static WallBrush *getWallBrush(const Tile &tile);
     static CreatureBrush *getCreatureBrush(const Tile &tile);
+    static MountainBrush *getMountainBrush(const Tile &tile);
 
     /* Should only be used to fill brush palettes
        TODO: Use iterator instead of returning a reference to the underlying map
@@ -206,6 +212,7 @@ class Brush
     static vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> &getBorderBrushes();
     static vme_unordered_map<std::string, std::unique_ptr<WallBrush>> &getWallBrushes();
     static vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> &getDoodadBrushes();
+    static vme_unordered_map<std::string, std::unique_ptr<MountainBrush>> &getMountainBrushes();
 
     static BrushShape &brushShape() noexcept;
 
@@ -234,6 +241,9 @@ class Brush
 
     // BrushId -> Brush
     static vme_unordered_map<std::string, std::unique_ptr<CreatureBrush>> creatureBrushes;
+
+    // BrushId -> Brush
+    static vme_unordered_map<std::string, std::unique_ptr<MountainBrush>> mountainBrushes;
 
     std::string _name;
     Tileset *_tileset = nullptr;

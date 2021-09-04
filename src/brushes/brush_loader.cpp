@@ -13,6 +13,8 @@
 #include "brush.h"
 #include "doodad_brush.h"
 #include "ground_brush.h"
+#include "mountain_brush.h"
+#include "raw_brush.h"
 #include "wall_brush.h"
 
 using json = nlohmann::json;
@@ -61,6 +63,12 @@ int getInt(const json &j, std::string key)
     }
 
     return value.get<int>();
+}
+
+int getIntOrElse(const json &j, std::string key, uint32_t fallback)
+{
+    auto value = j[key];
+    return value.is_number_integer() ? value.get<int>() : 0;
 }
 
 bool BrushLoader::load(std::filesystem::path path)
@@ -171,6 +179,15 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
                 if (doodadBrush.has_value())
                 {
                     Brush::addDoodadBrush(std::move(doodadBrush.value()));
+                }
+                break;
+            }
+            case BrushType::Mountain:
+            {
+                auto mountainBrush = parseMountainBrush(brush);
+                if (mountainBrush.has_value())
+                {
+                    Brush::addMountainBrush(std::move(mountainBrush.value()));
                 }
                 break;
             }
@@ -344,6 +361,55 @@ WallBrush BrushLoader::parseWallBrush(const json &brush)
     return wallbrush;
 }
 
+std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
+{
+    std::string id = brush.at("id").get<std::string>();
+    std::string name = brush.at("name").get<std::string>();
+
+    MountainPart::InnerWall innerWall;
+
+    int lookId = getInt(brush, "lookId");
+
+    stackTrace.emplace("items");
+    {
+        const json &items = brush.at("items");
+
+        if (items.contains("innerWalls"))
+        {
+            stackTrace.emplace("innerWalls");
+            {
+                const json &innerWallsJson = items.at("innerWalls");
+
+                innerWall.east = getIntOrElse(innerWallsJson, "e", 0);
+                innerWall.south = getIntOrElse(innerWallsJson, "s", 0);
+                innerWall.southEast = getIntOrElse(innerWallsJson, "se", 0);
+            }
+            stackTrace.pop();
+        }
+    }
+    stackTrace.pop();
+
+    const json &ground = brush.at("ground");
+    LazyGroundBrush lazyGround = fromJson(ground);
+
+    MountainBrush mountainBrush = MountainBrush(id, name, lazyGround, innerWall, lookId);
+
+    return mountainBrush;
+}
+
+LazyGroundBrush BrushLoader::fromJson(const json &json)
+{
+    if (json.is_number_integer())
+    {
+        RawBrush *brush = static_cast<RawBrush *>(Brush::getOrCreateRawBrush(json.get<int>()));
+        return LazyGroundBrush(brush);
+    }
+    else
+    {
+        return LazyGroundBrush(json.get<std::string>());
+    }
+}
+
 std::optional<DoodadBrush> BrushLoader::parseDoodadBrush(const json &brush)
 {
     std::vector<DoodadBrush::DoodadAlternative> alternatives;
@@ -508,20 +574,20 @@ BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
         borderIds[index] = serverId;
     };
 
-    setBorderId(BorderType::North, getInt(straight, "n"));
-    setBorderId(BorderType::East, getInt(straight, "e"));
-    setBorderId(BorderType::South, getInt(straight, "s"));
-    setBorderId(BorderType::West, getInt(straight, "w"));
+    setBorderId(BorderType::North, getIntOrElse(straight, "n", 0));
+    setBorderId(BorderType::East, getIntOrElse(straight, "e", 0));
+    setBorderId(BorderType::South, getIntOrElse(straight, "s", 0));
+    setBorderId(BorderType::West, getIntOrElse(straight, "w", 0));
 
-    setBorderId(BorderType::NorthWestCorner, getInt(corner, "nw"));
-    setBorderId(BorderType::NorthEastCorner, getInt(corner, "ne"));
-    setBorderId(BorderType::SouthEastCorner, getInt(corner, "se"));
-    setBorderId(BorderType::SouthWestCorner, getInt(corner, "sw"));
+    setBorderId(BorderType::NorthWestCorner, getIntOrElse(corner, "nw", 0));
+    setBorderId(BorderType::NorthEastCorner, getIntOrElse(corner, "ne", 0));
+    setBorderId(BorderType::SouthEastCorner, getIntOrElse(corner, "se", 0));
+    setBorderId(BorderType::SouthWestCorner, getIntOrElse(corner, "sw", 0));
 
-    setBorderId(BorderType::NorthWestDiagonal, getInt(diagonal, "nw"));
-    setBorderId(BorderType::NorthEastDiagonal, getInt(diagonal, "ne"));
-    setBorderId(BorderType::SouthEastDiagonal, getInt(diagonal, "se"));
-    setBorderId(BorderType::SouthWestDiagonal, getInt(diagonal, "sw"));
+    setBorderId(BorderType::NorthWestDiagonal, getIntOrElse(diagonal, "nw", 0));
+    setBorderId(BorderType::NorthEastDiagonal, getIntOrElse(diagonal, "ne", 0));
+    setBorderId(BorderType::SouthEastDiagonal, getIntOrElse(diagonal, "se", 0));
+    setBorderId(BorderType::SouthWestDiagonal, getIntOrElse(diagonal, "sw", 0));
 
     auto borderBrush = BorderBrush(id, name, borderIds);
     borderBrush.setIconServerId(lookId);

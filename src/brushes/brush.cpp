@@ -8,6 +8,7 @@
 #include "creature_brush.h"
 #include "doodad_brush.h"
 #include "ground_brush.h"
+#include "mountain_brush.h"
 #include "raw_brush.h"
 #include "wall_brush.h"
 
@@ -20,6 +21,7 @@ vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> Brush::borderBrushe
 vme_unordered_map<std::string, std::unique_ptr<WallBrush>> Brush::wallBrushes;
 vme_unordered_map<std::string, std::unique_ptr<DoodadBrush>> Brush::doodadBrushes;
 vme_unordered_map<std::string, std::unique_ptr<CreatureBrush>> Brush::creatureBrushes;
+vme_unordered_map<std::string, std::unique_ptr<MountainBrush>> Brush::mountainBrushes;
 
 BrushShape *Brush::_brushShape = new RectangularBrushShape(7, 7);
 
@@ -160,6 +162,46 @@ GroundBrush *Brush::getGroundBrush(const std::string &id)
     }
 
     return static_cast<GroundBrush *>(found->second.get());
+}
+
+MountainBrush *Brush::addMountainBrush(std::unique_ptr<MountainBrush> &&brush)
+{
+    std::string brushId = brush->id();
+
+    auto found = mountainBrushes.find(brushId);
+    if (found != mountainBrushes.end())
+    {
+        VME_LOG_ERROR(std::format(
+            "Could not add doodad brush '{}' with id '{}'. A doodad brush with id '{}' (named '{}') already exists.",
+            brush->name(), brushId, brushId, found->second->name()));
+        return nullptr;
+    }
+
+    auto result = mountainBrushes.emplace(brushId, std::move(brush));
+
+    MountainBrush *mountainBrush = static_cast<MountainBrush *>(result.first.value().get());
+    for (uint32_t id : mountainBrush->serverIds())
+    {
+        Items::items.getItemTypeByServerId(id)->brush = mountainBrush;
+    }
+
+    return mountainBrush;
+}
+
+MountainBrush *Brush::addMountainBrush(MountainBrush &&brush)
+{
+    return addMountainBrush(std::make_unique<MountainBrush>(std::move(brush)));
+}
+
+MountainBrush *Brush::getMountainBrush(const std::string &id)
+{
+    auto found = mountainBrushes.find(id);
+    if (found == mountainBrushes.end())
+    {
+        return nullptr;
+    }
+
+    return static_cast<MountainBrush *>(found->second.get());
 }
 
 DoodadBrush *Brush::addDoodadBrush(DoodadBrush &&brush)
@@ -361,6 +403,11 @@ vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> &Brush::getGroundBr
     return groundBrushes;
 }
 
+vme_unordered_map<std::string, std::unique_ptr<MountainBrush>> &Brush::getMountainBrushes()
+{
+    return mountainBrushes;
+}
+
 vme_unordered_map<std::string, std::unique_ptr<BorderBrush>> &Brush::getBorderBrushes()
 {
     return borderBrushes;
@@ -464,6 +511,20 @@ CreatureBrush *Brush::getCreatureBrush(const Tile &tile)
     }
 }
 
+MountainBrush *Brush::getMountainBrush(const Tile &tile)
+{
+    for (const auto &item : tile.items())
+    {
+        Brush *brush = item->itemType->brush;
+        if (brush && brush->type() == BrushType::Mountain)
+        {
+            return static_cast<MountainBrush *>(brush);
+        }
+    }
+
+    return nullptr;
+}
+
 std::optional<BrushType> Brush::parseBrushType(std::string s)
 {
     switch (string_hash(s.c_str()))
@@ -480,6 +541,8 @@ std::optional<BrushType> Brush::parseBrushType(std::string s)
             return BrushType::Border;
         case "wall"_sh:
             return BrushType::Wall;
+        case "mountain"_sh:
+            return BrushType::Mountain;
         default:
             return std::nullopt;
     }

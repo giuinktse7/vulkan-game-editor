@@ -14,7 +14,6 @@
 #include "../tile_cover.h"
 #include "border_brush.h"
 
-
 std::variant<std::monostate, uint32_t, const GroundBrush *> GroundBrush::replacementFilter = std::monostate{};
 
 GroundBrush::GroundBrush(std::string id, const std::string &name, std::vector<WeightedItemId> &&weightedIds)
@@ -86,7 +85,11 @@ void GroundBrush::apply(MapView &mapView, const Position &position)
 
 void GroundBrush::apply(MapView &mapView, const Position &position, const BorderBrush *brush, BorderType borderType)
 {
-    mapView.addItem(position, brush->getServerId(borderType));
+    auto borderItemId = brush->getServerId(borderType);
+    if (borderItemId)
+    {
+        mapView.addItem(position, *borderItemId);
+    }
 }
 
 void GroundBrush::fixBorders(MapView &mapView, const Position &position, GroundNeighborMap &neighbors)
@@ -725,6 +728,11 @@ void TileBorderBlock::sort()
 uint32_t TileBorderBlock::zOrder() const noexcept
 {
     return ground ? ground->zOrder() : 0;
+}
+
+const std::vector<GroundBorder> &GroundBrush::getBorders() const noexcept
+{
+    return borders;
 }
 
 void GroundBrush::borderize(MapView &mapView, const Position &position)

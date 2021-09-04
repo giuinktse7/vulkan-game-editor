@@ -29,6 +29,7 @@
 #include "../brushes/creature_brush.h"
 #include "../brushes/doodad_brush.h"
 #include "../brushes/ground_brush.h"
+#include "../brushes/mountain_brush.h"
 #include "../brushes/wall_brush.h"
 #include "../graphics/appearance_types.h"
 #include "../item_location.h"
@@ -49,6 +50,7 @@
 #include "search_popup.h"
 #include "split_widget.h"
 #include "vulkan_window.h"
+
 
 MainLayout::MainLayout(QWidget *mainWidget)
     : mainWidget(mainWidget)
@@ -645,6 +647,12 @@ void MainWindow::initializePaletteWindow()
             auto &groundTileset = terrainPalette.addTileset(Tileset("grounds", "Grounds"));
             auto &brushes = Brush::getGroundBrushes();
             for (auto &brush : brushes)
+            {
+                groundTileset.addBrush(brush.second.get());
+            }
+
+            auto &mountainBrushes = Brush::getMountainBrushes();
+            for (auto &brush : mountainBrushes)
             {
                 groundTileset.addBrush(brush.second.get());
             }

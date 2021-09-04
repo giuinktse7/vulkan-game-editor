@@ -2,16 +2,13 @@
 
 ## Palettes
 
-- tilesets.json
-  - Continue grounds at 13585 in RME (13145 is done)
-
 ## Crashes
 
 ## Rendering
 
 ## Map Rendering
 
-- [ ] Add possbility for a CreatureType to have the look of an item
+- [x] Add possbility for a CreatureType to have the look of an item
 - [x] ~~Implement animation~~
 - [x] ~~Handle stackable appearances~~
 - [x] ~~Handle appearances with elevation~~

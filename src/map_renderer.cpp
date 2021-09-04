@@ -368,6 +368,18 @@ void MapRenderer::drawCurrentAction()
 
                                 break;
                             }
+                            case BrushType::Mountain:
+                            {
+                                auto [from, to] = mapView->getDragPoints().value();
+                                int floor = mapView->floor();
+                                auto area = MapArea(*mapView->map(), from.toPos(floor), to.toPos(floor));
+
+                                for (auto &pos : area)
+                                {
+                                    drawPreview(action.brush->getPreviewTextureInfo(variation).at(0), pos);
+                                }
+                                break;
+                            }
                             default:
                                 // TODO Area drag with other brushes
                                 VME_LOG("Area drag with the current brush is not implemented.");

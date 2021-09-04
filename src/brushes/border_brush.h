@@ -27,7 +27,7 @@ struct BorderData
         : borderIds(borderIds), _centerBrush(centerBrush) {}
 
     bool is(uint32_t serverId, BorderType borderType) const;
-    uint32_t getServerId(BorderType borderType) const noexcept;
+    std::optional<uint32_t> getServerId(BorderType borderType) const noexcept;
     BorderType getBorderType(uint32_t serverId) const;
     std::array<uint32_t, 12> getBorderIds() const;
     Brush *getCenterBrush() const;
@@ -35,7 +35,7 @@ struct BorderData
     void setCenterGroundId(const std::string &id);
 
   private:
-    std::array<uint32_t, 12> borderIds;
+    std::array<uint32_t, 12> borderIds = {};
 
     // Must always be a GroundBrush or a RawBrush
     mutable Brush *_centerBrush = nullptr;
@@ -79,7 +79,7 @@ class BorderBrush final : public Brush
 
     const std::vector<uint32_t> &serverIds() const;
 
-    uint32_t getServerId(BorderType borderType) const noexcept;
+    std::optional<uint32_t> getServerId(BorderType borderType) const noexcept;
 
     Brush *centerBrush() const;
 

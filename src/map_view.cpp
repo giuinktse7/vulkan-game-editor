@@ -5,6 +5,7 @@
 #include "brushes/brush.h"
 #include "brushes/creature_brush.h"
 #include "brushes/ground_brush.h"
+#include "brushes/mountain_brush.h"
 #include "brushes/raw_brush.h"
 #include "brushes/wall_brush.h"
 
@@ -647,6 +648,37 @@ void MapView::fillRegionByGroundBrush(const Position &from, const Position &to, 
     history.endTransaction(TransactionType::AddMapItem);
 }
 
+void MapView::fillRegionByMountainBrush(const Position &from, const Position &to, MountainBrush *brush)
+{
+    history.beginTransaction(TransactionType::AddMapItem);
+
+    MapView &mapView = *this;
+
+    if (Settings::AUTO_BORDER)
+    {
+        for (const auto &pos : MapArea(*_map, from, to))
+        {
+            brush->apply(mapView, pos);
+        }
+    }
+    else
+    {
+        Action action(ActionType::SetTile);
+        action.reserve(Position::tilesInRegion(from, to));
+
+        for (const auto &pos : MapArea(*_map, from, to))
+        {
+            auto tile = Tile(pos);
+            tile.addItem(brush->nextGroundServerId());
+            action.changes.emplace_back<SetTile>(std::move(tile));
+        }
+
+        history.commit(std::move(action));
+    }
+
+    history.endTransaction(TransactionType::AddMapItem);
+}
+
 void MapView::fillRegion(const Position &from, const Position &to, std::function<uint32_t()> itemSupplier)
 {
     history.beginTransaction(TransactionType::AddMapItem);
@@ -816,9 +848,19 @@ Tile *MapView::getTile(const Position pos)
     return const_cast<Tile *>(const_cast<const MapView *>(this)->getTile(pos));
 }
 
+bool MapView::hasTile(const Position &pos) const noexcept
+{
+    return _map->hasTile(pos);
+}
+
 Tile &MapView::getOrCreateTile(const Position pos)
 {
     return _map->getOrCreateTile(pos);
+}
+
+void MapView::createTile(const Position pos)
+{
+    return _map->createTile(pos);
 }
 
 bool MapView::draggingWithSubtract() const
@@ -1005,6 +1047,12 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
 
                                 history.endTransaction(TransactionType::AddMapItem);
 
+                                break;
+                            }
+                            case BrushType::Mountain:
+                            {
+                                auto mountainBrush = static_cast<MountainBrush *>(brush.brush);
+                                fillRegionByMountainBrush(from, to, mountainBrush);
                                 break;
                             }
                             default:

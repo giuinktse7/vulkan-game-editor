@@ -21,6 +21,7 @@
 #include "util.h"
 
 class GroundBrush;
+class MountainBrush;
 
 namespace MapHistory
 {
@@ -93,6 +94,8 @@ class MapView
     Tile *getTile(const Position pos) const;
     Tile *getTile(const Position pos);
 
+    bool hasTile(const Position &pos) const noexcept;
+    void createTile(const Position pos);
     Tile &getOrCreateTile(const Position pos);
     void insertTile(Tile &&tile);
     void insertTile(std::unique_ptr<Tile> &&tile);
@@ -303,6 +306,7 @@ class MapView
     void fillRegion(const Position &from, const Position &to, uint32_t serverId);
     void fillRegion(const Position &from, const Position &to, std::function<uint32_t()> itemSupplier);
     void fillRegionByGroundBrush(const Position &from, const Position &to, GroundBrush *brush);
+    void fillRegionByMountainBrush(const Position &from, const Position &to, MountainBrush *brush);
     void endCurrentAction(VME::ModifierKeys modifiers);
 
     void selectTopThing(const Position &position, bool isNewSelection);

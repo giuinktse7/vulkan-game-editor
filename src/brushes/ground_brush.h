@@ -100,6 +100,8 @@ class GroundBrush final : public Brush
 
     BorderBrush *getDefaultOuterBorder() const;
 
+    const std::vector<GroundBorder> &getBorders() const noexcept;
+
   private:
     static void apply(MapView &mapView, const Position &position, const BorderBrush *brush, BorderType borderType);
 
