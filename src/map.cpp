@@ -109,6 +109,21 @@ bool Map::contains(const Position &position) const noexcept
     return 0 <= position.x && position.x <= width() && 0 <= position.y && position.y <= height();
 }
 
+void Map::createTile(const Position &pos)
+{
+    DEBUG_ASSERT(root.isRoot(), "Only root nodes can create a tile.");
+    auto &leaf = root.getLeafWithCreate(pos.x, pos.y);
+
+    DEBUG_ASSERT(leaf.isLeaf(), "The node must be a leaf node.");
+
+    auto &location = leaf.getOrCreateTileLocation(pos);
+
+    if (!location.tile())
+    {
+        location.setTile(std::make_unique<Tile>(location));
+    }
+}
+
 Tile &Map::getOrCreateTile(const Position &pos)
 {
     DEBUG_ASSERT(root.isRoot(), "Only root nodes can create a tile.");

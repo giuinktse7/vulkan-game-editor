@@ -42,6 +42,7 @@ class Map
     MapIterator end() const;
 
     Tile &getOrCreateTile(const Position &pos);
+    void createTile(const Position &pos);
     TileLocation &getOrCreateTileLocation(const Position &pos);
 
     MapRegion getRegion(Position from, Position to) const noexcept;

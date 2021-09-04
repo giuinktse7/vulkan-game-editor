@@ -71,6 +71,7 @@ class Tile
     Item *itemAt(size_t index);
 
     Item *addBorder(Item &&item, uint32_t zOrder);
+    Item *addItem(uint32_t serverId);
     Item *addItem(Item &&item);
     Item *addItem(std::shared_ptr<Item> item);
 

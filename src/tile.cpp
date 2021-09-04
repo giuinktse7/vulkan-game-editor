@@ -293,6 +293,11 @@ void Tile::insertItem(Item &&item, size_t index)
     _items.emplace(_items.begin() + index, std::make_shared<Item>(std::move(item)));
 }
 
+Item *Tile::addItem(uint32_t serverId)
+{
+    return addItem(Item(serverId));
+}
+
 Item *Tile::addItem(std::shared_ptr<Item> item)
 {
     if (item->isGround())
