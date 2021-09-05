@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>  // For std::ptrdiff_t
 #include <iterator> // For std::forward_iterator_tag
 #include <memory>
@@ -13,6 +14,7 @@
 #include "../debug.h"
 #include "../graphics/texture_atlas.h"
 #include "../position.h"
+#include "../tile_cover.h"
 #include "../util.h"
 
 struct Position;
@@ -27,9 +29,52 @@ class CreatureBrush;
 class MountainBrush;
 class Map;
 class Tile;
-enum TileCover : int;
 class ItemType;
 class Brush;
+
+struct BorderData
+{
+    BorderData(std::array<uint32_t, 12> borderIds)
+        : borderIds(borderIds), _centerBrush(nullptr) {}
+
+    BorderData(std::array<uint32_t, 12> borderIds, Brush *centerBrush)
+        : borderIds(borderIds), _centerBrush(centerBrush) {}
+
+    bool is(uint32_t serverId, BorderType borderType) const;
+    std::optional<uint32_t> getServerId(BorderType borderType) const noexcept;
+    BorderType getBorderType(uint32_t serverId) const;
+    std::array<uint32_t, 12> getBorderIds() const;
+    Brush *getCenterBrush() const;
+
+    void setCenterGroundId(const std::string &id);
+
+    static constexpr std::array<TileCover, 14> borderTypeToTileCover = {
+        TILE_COVER_NONE,
+        TILE_COVER_NORTH,
+        TILE_COVER_EAST,
+        TILE_COVER_SOUTH,
+        TILE_COVER_WEST,
+        TILE_COVER_NORTH_WEST_CORNER,
+        TILE_COVER_NORTH_EAST_CORNER,
+        TILE_COVER_SOUTH_EAST_CORNER,
+        TILE_COVER_SOUTH_WEST_CORNER,
+        TILE_COVER_NORTH_WEST,
+        TILE_COVER_NORTH_EAST,
+        TILE_COVER_SOUTH_EAST,
+        TILE_COVER_SOUTH_WEST,
+        TILE_COVER_FULL};
+
+  private:
+    std::array<uint32_t, 12> borderIds = {};
+
+    // Must always be a GroundBrush or a RawBrush
+    mutable Brush *_centerBrush = nullptr;
+
+    /* Used to populate the centerBrush variable with the correct brush (when the brush is loaded, it is possible that
+       the corresponding GroundBrush is not yet loaded, so we cache the brush ID here).
+    */
+    mutable std::optional<std::string> centerGroundId;
+};
 
 class BrushShape
 {
