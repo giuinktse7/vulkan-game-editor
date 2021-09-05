@@ -12,6 +12,7 @@
 class MapView;
 class TileLocation;
 class BorderBrush;
+class MountainBrush;
 class WallBrush;
 class GroundBrush;
 enum TileCover;
@@ -126,6 +127,7 @@ class Tile
     // Returns 0 if the border is not present on the tile
     uint32_t getBorderServerId(const BorderBrush *brush) const;
     TileCover getTileCover(const BorderBrush *brush) const;
+    TileCover getTileCover(const MountainBrush *brush) const;
 
     TileBorderBlock getFullBorderTileCover(TileCover excludeMask) const;
 

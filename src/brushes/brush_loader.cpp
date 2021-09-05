@@ -370,6 +370,8 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
 
     int lookId = getInt(brush, "lookId");
 
+    std::array<uint32_t, 12> outerWalls;
+
     stackTrace.emplace("items");
     {
         const json &items = brush.at("items");
@@ -386,13 +388,21 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
             }
             stackTrace.pop();
         }
+
+        stackTrace.emplace("outerWalls");
+        {
+            const json &outerWallJson = items.at("outerWalls");
+
+            outerWalls = parseBorderIds(outerWallJson);
+        }
+        stackTrace.pop();
     }
     stackTrace.pop();
 
     const json &ground = brush.at("ground");
     LazyGroundBrush lazyGround = fromJson(ground);
 
-    MountainBrush mountainBrush = MountainBrush(id, name, lazyGround, innerWall, lookId);
+    MountainBrush mountainBrush = MountainBrush(id, name, lazyGround, innerWall, BorderData(outerWalls), lookId);
 
     return mountainBrush;
 }
@@ -553,18 +563,11 @@ GroundBrush BrushLoader::parseGroundBrush(const json &brush)
     return groundBrush;
 }
 
-BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
+std::array<uint32_t, 12> BrushLoader::parseBorderIds(const json &borderJson)
 {
-    json id = brush.at("id").get<std::string>();
-    json name = brush.at("name").get<std::string>();
-
-    auto lookId = getInt(brush, "lookId");
-
-    const json &items = brush.at("items");
-
-    const json &straight = items.at("straight");
-    const json &corner = items.at("corner");
-    const json &diagonal = items.at("diagonal");
+    const json &straight = borderJson.at("straight");
+    const json &corner = borderJson.at("corner");
+    const json &diagonal = borderJson.at("diagonal");
 
     std::array<uint32_t, 12> borderIds;
 
@@ -588,6 +591,24 @@ BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
     setBorderId(BorderType::NorthEastDiagonal, getIntOrElse(diagonal, "ne", 0));
     setBorderId(BorderType::SouthEastDiagonal, getIntOrElse(diagonal, "se", 0));
     setBorderId(BorderType::SouthWestDiagonal, getIntOrElse(diagonal, "sw", 0));
+
+    return borderIds;
+}
+
+BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
+{
+    json id = brush.at("id").get<std::string>();
+    json name = brush.at("name").get<std::string>();
+
+    auto lookId = getInt(brush, "lookId");
+
+    const json &items = brush.at("items");
+
+    const json &straight = items.at("straight");
+    const json &corner = items.at("corner");
+    const json &diagonal = items.at("diagonal");
+
+    std::array<uint32_t, 12> borderIds = parseBorderIds(items);
 
     auto borderBrush = BorderBrush(id, name, borderIds);
     borderBrush.setIconServerId(lookId);

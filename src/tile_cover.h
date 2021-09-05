@@ -71,6 +71,7 @@ inline constexpr TileCover operator&(const TileCover &lhs, const TileCover &rhs)
 class TileCovers
 {
   public:
+    static bool contains(TileCover source, TileCover test) noexcept;
     static void clearCoverFlags(TileCover &cover, TileCover flags);
     static void eraseSide(TileCover &cover, TileCover side, TileCover preferredDiagonal = TILE_COVER_NONE);
     static TileCover mirrorNorth(TileCover tileCover);

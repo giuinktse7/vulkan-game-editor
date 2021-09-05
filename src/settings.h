@@ -16,4 +16,6 @@ struct Settings
     static bool HIGHLIGHT_BRUSH_IN_PALETTE_ON_SELECT;
 
     static bool RENDER_ANIMATIONS;
+
+    static bool PLACE_MOUNTAIN_FEATURES;
 };

@@ -712,42 +712,6 @@ Brush *BorderBrush::centerBrush() const
     return borderData.getCenterBrush();
 }
 
-Brush *BorderData::getCenterBrush() const
-{
-    if (_centerBrush)
-        return _centerBrush;
-
-    if (centerGroundId)
-    {
-        _centerBrush = Brush::getGroundBrush(*centerGroundId);
-        centerGroundId.reset();
-        return _centerBrush;
-    }
-
-    return nullptr;
-}
-
-BorderType BorderData::getBorderType(uint32_t serverId) const
-{
-    for (int i = 0; i < borderIds.size(); ++i)
-    {
-        if (borderIds[i] == serverId)
-        {
-            return static_cast<BorderType>(i + 1);
-        }
-    }
-
-    auto centerBrush = getCenterBrush();
-    if (centerBrush && centerBrush->erasesItem(serverId))
-    {
-        return BorderType::Center;
-    }
-    else
-    {
-        return BorderType::None;
-    }
-}
-
 BorderType BorderBrush::getBorderType(uint32_t serverId) const
 {
     return borderData.getBorderType(serverId);
@@ -756,31 +720,7 @@ BorderType BorderBrush::getBorderType(uint32_t serverId) const
 TileCover BorderBrush::getTileCover(uint32_t serverId) const
 {
     BorderType borderType = getBorderType(serverId);
-    return borderTypeToTileCover[to_underlying(borderType)];
-}
-
-std::optional<uint32_t> BorderData::getServerId(BorderType borderType) const noexcept
-{
-    // -1 because index zero in BorderType is BorderType::None
-    uint32_t id = borderIds[to_underlying(borderType) - 1];
-    return id == 0 ? std::nullopt : std::make_optional(id);
-}
-
-std::array<uint32_t, 12> BorderData::getBorderIds() const
-{
-    return borderIds;
-}
-
-bool BorderData::is(uint32_t serverId, BorderType borderType) const
-{
-    if (borderType == BorderType::Center)
-    {
-        auto centerBrush = getCenterBrush();
-        return centerBrush && centerBrush->erasesItem(serverId);
-    }
-
-    auto borderItemId = getServerId(borderType);
-    return borderItemId && (*borderItemId == serverId);
+    return BorderData::borderTypeToTileCover[to_underlying(borderType)];
 }
 
 bool isRight(TileQuadrant quadrant)
@@ -809,11 +749,6 @@ void BorderBrush::setBrushVariation(BorderBrushVariationType brushVariationType)
             brushVariation = &DetailedBorderBrush::instance;
             break;
     }
-}
-
-void BorderData::setCenterGroundId(const std::string &id)
-{
-    centerGroundId = id;
 }
 
 void BorderBrush::setCenterGroundId(const std::string &id)

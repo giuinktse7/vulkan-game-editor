@@ -51,7 +51,6 @@
 #include "split_widget.h"
 #include "vulkan_window.h"
 
-
 MainLayout::MainLayout(QWidget *mainWidget)
     : mainWidget(mainWidget)
 {
@@ -841,6 +840,10 @@ QMenuBar *MainWindow::createMenuBar()
 
                     BorderBrush::setBrushVariation(brushType);
                     this->currentMapView()->requestDraw();
+                }
+                else if (action->brush->type() == BrushType::Mountain)
+                {
+                    Settings::PLACE_MOUNTAIN_FEATURES = !Settings::PLACE_MOUNTAIN_FEATURES;
                 }
             }
         });

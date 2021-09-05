@@ -3,8 +3,10 @@
 #include "graphics/appearances.h"
 #include "item_data.h"
 #include "items.h"
+#include "settings.h"
 #include "sprite_info.h"
 #include "util.h"
+
 
 Item::Item(ItemTypeId itemTypeId)
     : itemType(Items::items.getItemTypeByServerId(itemTypeId)),
@@ -94,7 +96,7 @@ uint32_t Item::getSpriteId(const Position &pos) const
 {
     uint32_t offset = getPatternIndex(pos);
     const SpriteInfo &spriteInfo = itemType->getSpriteInfo(0);
-    if (spriteInfo.hasAnimation() && _animation)
+    if (spriteInfo.hasAnimation() && _animation && Settings::RENDER_ANIMATIONS)
     {
         offset += _animation->state.phaseIndex * spriteInfo.patternSize;
     }

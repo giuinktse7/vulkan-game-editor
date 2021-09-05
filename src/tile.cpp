@@ -5,6 +5,7 @@
 
 #include "brushes/border_brush.h"
 #include "brushes/ground_brush.h"
+#include "brushes/mountain_brush.h"
 #include "brushes/wall_brush.h"
 #include "items.h"
 #include "tile_location.h"
@@ -960,6 +961,27 @@ TileCover Tile::getTileCover(const BorderBrush *brush) const
         else if (!item->itemType->isBorder())
         {
             return result;
+        }
+    }
+
+    return result;
+}
+
+TileCover Tile::getTileCover(const MountainBrush *brush) const
+{
+    Brush *centerBrush = brush->ground();
+    if (centerBrush && _ground && centerBrush->erasesItem(_ground->serverId()))
+    {
+        return TILE_COVER_FULL;
+    }
+
+    TileCover result = TILE_COVER_NONE;
+
+    for (const auto &item : _items)
+    {
+        if (brush->erasesItem(item->serverId()))
+        {
+            result |= brush->getTileCover(item->serverId());
         }
     }
 

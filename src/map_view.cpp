@@ -767,6 +767,8 @@ Direction MapView::getDirection(int variation)
             return Direction::North;
         case 3:
             return Direction::East;
+        default:
+            ABORT_PROGRAM("Unknown direction.");
     }
 }
 

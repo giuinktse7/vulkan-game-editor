@@ -5,6 +5,11 @@ void TileCovers::clearCoverFlags(TileCover &cover, TileCover flags)
     cover &= ~flags;
 }
 
+bool TileCovers::contains(TileCover source, TileCover test) noexcept
+{
+    return ((source & test) == test);
+}
+
 void TileCovers::eraseSide(TileCover &cover, TileCover side, TileCover preferredDiagonal)
 {
     DEBUG_ASSERT((preferredDiagonal == None) || exactlyOneSet(preferredDiagonal & Diagonals), "Preferred diagonal must be None or have exactly one diagonal set.");

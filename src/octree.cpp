@@ -332,7 +332,7 @@ namespace vme
             if (_single.has_value())
                 return *_single;
 
-            VME_LOG_D("Had to use findOnlyPosition()");
+            // VME_LOG_D("Had to use findOnlyPosition()");
 
             auto res = *begin();
             return res;

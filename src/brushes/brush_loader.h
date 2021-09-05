@@ -1,10 +1,12 @@
 #pragma once
 
+#include <array>
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <stack>
 #include <string>
+
 
 #include "../tileset.h"
 
@@ -39,6 +41,8 @@ class BrushLoader
     void logError(std::string message);
 
     static LazyGroundBrush fromJson(const nlohmann::json &json);
+
+    static std::array<uint32_t, 12> parseBorderIds(const nlohmann::json &borderJson);
 
     std::stack<std::string> stackTrace;
 };
