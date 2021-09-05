@@ -230,7 +230,7 @@ bool Map::hasTile(const Position pos) const
 
     Floor *floor = leaf->floor(pos.z);
 
-    return floor->getTileLocation(pos.x, pos.y).tile() != nullptr;
+    return floor && (floor->getTileLocation(pos.x, pos.y).tile() != nullptr);
 }
 
 TileThing Map::getTopThing(const Position pos)
