@@ -118,6 +118,12 @@ void GroundBrush::fixBordersAtOffset(MapView &mapView, const Position &position,
 
     auto pos = position + Position(x, y, 0);
 
+    Tile *tilePtr = mapView.getTile(pos);
+    if (!(tilePtr && tilePtr->ground()))
+    {
+        return;
+    }
+
     auto currentCover = neighbors.at(x, y);
 
     TileBorderBlock cover;
