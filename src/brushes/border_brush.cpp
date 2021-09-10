@@ -122,20 +122,23 @@ bool isTop(TileQuadrant quadrant);
 bool isLeft(TileQuadrant quadrant);
 bool isRight(TileQuadrant quadrant);
 
-BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, Brush *centerBrush)
+BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, GroundBrush *centerBrush)
     : Brush(name), id(id), borderData(borderIds, centerBrush)
 {
     initialize();
 }
 
-BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, GroundBrush *centerBrush)
-    : BorderBrush(id, name, borderIds, static_cast<Brush *>(centerBrush)) {}
-
 BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, RawBrush *centerBrush)
-    : BorderBrush(id, name, borderIds, static_cast<Brush *>(centerBrush)) {}
+    : Brush(name), id(id), borderData(borderIds, centerBrush)
+{
+    initialize();
+}
 
 BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds)
-    : BorderBrush(id, name, borderIds, static_cast<Brush *>(nullptr)) {}
+    : Brush(name), id(id), borderData(borderIds)
+{
+    initialize();
+}
 
 void BorderBrush::initialize()
 {
@@ -146,7 +149,7 @@ void BorderBrush::initialize()
 
     std::sort(sortedServerIds.begin(), sortedServerIds.end());
 
-    auto centerBrush = borderData.getCenterBrush();
+    auto centerBrush = borderData.centerBrush();
     if (centerBrush && centerBrush->type() == BrushType::Ground)
     {
         zOrder = static_cast<GroundBrush *>(centerBrush)->zOrder();
@@ -597,7 +600,7 @@ void BorderBrush::apply(MapView &mapView, const Position &position, BorderType b
 {
     if (borderType == BorderType::Center)
     {
-        Brush *centerBrush = borderData.getCenterBrush();
+        Brush *centerBrush = borderData.centerBrush();
         if (centerBrush)
         {
             centerBrush->apply(mapView, position);
@@ -652,7 +655,7 @@ TileQuadrant BorderBrush::getNeighborQuadrant(int dx, int dy)
 
 bool BorderBrush::includes(uint32_t serverId) const
 {
-    auto centerBrush = borderData.getCenterBrush();
+    auto centerBrush = borderData.centerBrush();
     return hasBorder(serverId) || (centerBrush && centerBrush->erasesItem(serverId));
 }
 
@@ -709,7 +712,7 @@ std::optional<uint32_t> BorderBrush::getServerId(BorderType borderType) const no
 
 Brush *BorderBrush::centerBrush() const
 {
-    return borderData.getCenterBrush();
+    return borderData.centerBrush();
 }
 
 BorderType BorderBrush::getBorderType(uint32_t serverId) const
@@ -720,7 +723,7 @@ BorderType BorderBrush::getBorderType(uint32_t serverId) const
 TileCover BorderBrush::getTileCover(uint32_t serverId) const
 {
     BorderType borderType = getBorderType(serverId);
-    return BorderData::borderTypeToTileCover[to_underlying(borderType)];
+    return TileCovers::fromBorderType(borderType);
 }
 
 bool isRight(TileQuadrant quadrant)
@@ -760,7 +763,7 @@ uint32_t BorderBrush::preferredZOrder() const
 {
     if (zOrder == std::numeric_limits<uint32_t>::max())
     {
-        auto centerBrush = borderData.getCenterBrush();
+        auto centerBrush = borderData.centerBrush();
         if (centerBrush && centerBrush->type() == BrushType::Ground)
         {
             zOrder = static_cast<GroundBrush *>(centerBrush)->zOrder();

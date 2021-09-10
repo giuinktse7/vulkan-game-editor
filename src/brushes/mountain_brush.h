@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <variant>
 
+#include "../lazy_object.h"
 #include "../random.h"
 #include "../tile.h"
 #include "../tile_cover.h"
@@ -15,20 +16,6 @@ class Tile;
 class GroundBrush;
 struct BorderZOrderBlock;
 struct MountainGroundNeighborMap;
-
-struct LazyGroundBrush
-{
-    LazyGroundBrush(RawBrush *brush);
-    LazyGroundBrush(GroundBrush *brush);
-    LazyGroundBrush(std::string groundBrushId);
-
-    Brush *get() const;
-
-    mutable bool evaluated = false;
-
-  private:
-    mutable std::variant<std::string, RawBrush *, GroundBrush *> data;
-};
 
 namespace MountainPart
 {
@@ -48,7 +35,8 @@ class MountainBrush final : public Brush
     static constexpr uint32_t DefaultZOrder = 900;
 
   public:
-    MountainBrush(std::string id, std::string name, LazyGroundBrush ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, uint32_t iconServerId);
+    MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, uint32_t iconServerId);
+    MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, std::string outerBorderBrushId, uint32_t iconServerId);
 
     void borderize(MapView &mapView, MountainGroundNeighborMap &neighbors, Position pos, int dx, int dy);
 
@@ -78,6 +66,8 @@ class MountainBrush final : public Brush
 
     static bool isFeature(TileCover cover);
 
+    void setOuterBorder(std::string outerBorderId);
+
   private:
     void borderize(MapView &mapView, MountainGroundNeighborMap &neighbors, int dx, int dy);
 
@@ -99,9 +89,11 @@ class MountainBrush final : public Brush
     uint32_t _zOrder = DefaultZOrder;
 
     MountainPart::InnerWall innerWall;
-    BorderData mountainBorders;
+    BorderData mountainBorder;
 
-    LazyGroundBrush _ground;
+    std::optional<LazyObject<BorderBrush *>> outerBorder;
+
+    Brush::LazyGround _ground;
 
     static constexpr TileCover features =
         TILE_COVER_WEST | TILE_COVER_NORTH |

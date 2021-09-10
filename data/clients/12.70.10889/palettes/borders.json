@@ -45,8 +45,8 @@
                 "straight": { "n": 4456, "e": 4457, "s": 4458, "w": 4459 },
                 "corner": { "nw": 4460, "ne": 4461, "sw": 4463, "se": 4462 },
                 "diagonal": { "nw": 4464, "ne": 4465, "sw": 4467, "se": 4466 }
-            },
-            "centerGroundId": "gray_mountain"
+            }
+            // "centerGroundId": "gray_mountain"
         }
     ]
 }

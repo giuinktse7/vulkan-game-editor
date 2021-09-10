@@ -632,22 +632,12 @@ int BorderNeighborMap::index(int x, int y) const
 
 void BorderData::setCenterGroundId(const std::string &id)
 {
-    centerGroundId = id;
+    _centerBrush.emplace(Brush::LazyGround(id));
 }
 
-Brush *BorderData::getCenterBrush() const
+Brush *BorderData::centerBrush() const
 {
-    if (_centerBrush)
-        return _centerBrush;
-
-    if (centerGroundId)
-    {
-        _centerBrush = Brush::getGroundBrush(*centerGroundId);
-        centerGroundId.reset();
-        return _centerBrush;
-    }
-
-    return nullptr;
+    return _centerBrush ? _centerBrush->value() : nullptr;
 }
 
 BorderType BorderData::getBorderType(uint32_t serverId) const
@@ -660,8 +650,7 @@ BorderType BorderData::getBorderType(uint32_t serverId) const
         }
     }
 
-    auto centerBrush = getCenterBrush();
-    if (centerBrush && centerBrush->erasesItem(serverId))
+    if (_centerBrush && _centerBrush->value()->erasesItem(serverId))
     {
         return BorderType::Center;
     }
@@ -687,8 +676,7 @@ bool BorderData::is(uint32_t serverId, BorderType borderType) const
 {
     if (borderType == BorderType::Center)
     {
-        auto centerBrush = getCenterBrush();
-        return centerBrush && centerBrush->erasesItem(serverId);
+        return _centerBrush && _centerBrush->value()->erasesItem(serverId);
     }
 
     auto borderItemId = getServerId(borderType);
@@ -732,3 +720,29 @@ std::unordered_set<Position> CircularBrushShape::getRelativePositions() const no
     // TODO implement other sizes
     return Size3x3;
 }
+
+Brush::LazyGround::LazyGround(RawBrush *brush)
+    : LazyObject(brush) {}
+
+Brush::LazyGround::LazyGround(GroundBrush *brush)
+    : LazyObject(brush) {}
+
+Brush::LazyGround::LazyGround(std::string groundBrushId)
+    : LazyObject([groundBrushId]() {
+          GroundBrush *brush = Brush::getGroundBrush(groundBrushId);
+          if (!brush)
+          {
+              ABORT_PROGRAM(std::format("Attempted to retrieve a GroundBrush with id '{}' from a Brush::LazyGround, but the brush did not exist.", groundBrushId));
+          }
+
+          return brush;
+      }) {}
+
+BorderData::BorderData(std::array<uint32_t, 12> borderIds)
+    : borderIds(borderIds) {}
+
+BorderData::BorderData(std::array<uint32_t, 12> borderIds, RawBrush *centerBrush)
+    : borderIds(borderIds), _centerBrush(std::make_optional<Brush::LazyGround>(centerBrush)) {}
+
+BorderData::BorderData(std::array<uint32_t, 12> borderIds, GroundBrush *centerBrush)
+    : borderIds(borderIds), _centerBrush(std::make_optional<Brush::LazyGround>(centerBrush)) {}

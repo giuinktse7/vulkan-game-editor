@@ -441,3 +441,8 @@ TileCover TileCovers::addNonMasked(TileCover current, TileCover committed, TileC
     auto m = current & (~mask);
     return committed | m;
 }
+
+TileCover TileCovers::fromBorderType(BorderType borderType)
+{
+    return borderTypeToTileCover[to_underlying(borderType)];
+}

@@ -13,6 +13,7 @@
 #include "../creature.h"
 #include "../debug.h"
 #include "../graphics/texture_atlas.h"
+#include "../lazy_object.h"
 #include "../position.h"
 #include "../tile_cover.h"
 #include "../util.h"
@@ -31,50 +32,6 @@ class Map;
 class Tile;
 class ItemType;
 class Brush;
-
-struct BorderData
-{
-    BorderData(std::array<uint32_t, 12> borderIds)
-        : borderIds(borderIds), _centerBrush(nullptr) {}
-
-    BorderData(std::array<uint32_t, 12> borderIds, Brush *centerBrush)
-        : borderIds(borderIds), _centerBrush(centerBrush) {}
-
-    bool is(uint32_t serverId, BorderType borderType) const;
-    std::optional<uint32_t> getServerId(BorderType borderType) const noexcept;
-    BorderType getBorderType(uint32_t serverId) const;
-    std::array<uint32_t, 12> getBorderIds() const;
-    Brush *getCenterBrush() const;
-
-    void setCenterGroundId(const std::string &id);
-
-    static constexpr std::array<TileCover, 14> borderTypeToTileCover = {
-        TILE_COVER_NONE,
-        TILE_COVER_NORTH,
-        TILE_COVER_EAST,
-        TILE_COVER_SOUTH,
-        TILE_COVER_WEST,
-        TILE_COVER_NORTH_WEST_CORNER,
-        TILE_COVER_NORTH_EAST_CORNER,
-        TILE_COVER_SOUTH_EAST_CORNER,
-        TILE_COVER_SOUTH_WEST_CORNER,
-        TILE_COVER_NORTH_WEST,
-        TILE_COVER_NORTH_EAST,
-        TILE_COVER_SOUTH_EAST,
-        TILE_COVER_SOUTH_WEST,
-        TILE_COVER_FULL};
-
-  private:
-    std::array<uint32_t, 12> borderIds = {};
-
-    // Must always be a GroundBrush or a RawBrush
-    mutable Brush *_centerBrush = nullptr;
-
-    /* Used to populate the centerBrush variable with the correct brush (when the brush is loaded, it is possible that
-       the corresponding GroundBrush is not yet loaded, so we cache the brush ID here).
-    */
-    mutable std::optional<std::string> centerGroundId;
-};
 
 class BrushShape
 {
@@ -191,6 +148,13 @@ using ThingDrawInfo = std::variant<DrawItemType, DrawCreatureType>;
 class Brush
 {
   public:
+    struct LazyGround : public LazyObject<Brush *>
+    {
+        LazyGround(RawBrush *brush);
+        LazyGround(GroundBrush *brush);
+        LazyGround(std::string groundBrushId);
+    };
+
     Brush(std::string name);
 
     virtual ~Brush() = default;
@@ -316,4 +280,24 @@ struct BorderNeighborMap
     TileCover getTileCoverAt(BorderBrush *brush, const Map &map, const Position position) const;
 
     std::array<TileCover, 25> data;
+};
+
+struct BorderData
+{
+    BorderData(std::array<uint32_t, 12> borderIds);
+    BorderData(std::array<uint32_t, 12> borderIds, RawBrush *centerBrush);
+    BorderData(std::array<uint32_t, 12> borderIds, GroundBrush *centerBrush);
+
+    bool is(uint32_t serverId, BorderType borderType) const;
+    std::optional<uint32_t> getServerId(BorderType borderType) const noexcept;
+    BorderType getBorderType(uint32_t serverId) const;
+    std::array<uint32_t, 12> getBorderIds() const;
+    Brush *centerBrush() const;
+
+    void setCenterGroundId(const std::string &id);
+
+  private:
+    std::array<uint32_t, 12> borderIds = {};
+
+    std::optional<Brush::LazyGround> _centerBrush;
 };

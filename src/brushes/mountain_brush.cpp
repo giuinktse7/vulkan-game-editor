@@ -4,11 +4,18 @@
 #include "../map_view.h"
 #include "../settings.h"
 #include "../tile_cover.h"
+#include "border_brush.h"
 #include "ground_brush.h"
 #include "raw_brush.h"
 
-MountainBrush::MountainBrush(std::string id, std::string name, LazyGroundBrush ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, uint32_t iconServerId)
-    : Brush(name), _id(id), _ground(ground), innerWall(innerWall), mountainBorders(mountainBorders), _iconServerId(iconServerId)
+MountainBrush::MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, uint32_t iconServerId)
+    : Brush(name), _id(id), _ground(ground), innerWall(innerWall), mountainBorder(mountainBorders), _iconServerId(iconServerId)
+{
+    initialize();
+}
+
+MountainBrush::MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, std::string outerBorderBrushId, uint32_t iconServerId)
+    : Brush(name), _id(id), _ground(ground), innerWall(innerWall), mountainBorder(mountainBorders), _iconServerId(iconServerId)
 {
     initialize();
 }
@@ -22,10 +29,23 @@ void MountainBrush::initialize()
     // All innerwall parts must not be set, remove the 0 created by one if it was not set
     _serverIds.erase(0);
 
-    for (const uint32_t serverId : mountainBorders.getBorderIds())
+    for (const uint32_t serverId : mountainBorder.getBorderIds())
     {
         _serverIds.insert(serverId);
     }
+}
+
+void MountainBrush::setOuterBorder(std::string outerBorderId)
+{
+    this->outerBorder = std::make_optional<LazyObject<BorderBrush *>>([outerBorderId]() {
+        BorderBrush *brush = Brush::getBorderBrush(outerBorderId);
+        if (!brush)
+        {
+            ABORT_PROGRAM(std::format("Attempted to retrieve a GroundBrush with id '{}' from a MountainBrush::outerBorder, but the brush did not exist.", outerBorderId));
+        }
+
+        return brush;
+    });
 }
 
 const std::unordered_set<uint32_t> &MountainBrush::serverIds() const
@@ -40,7 +60,7 @@ void MountainBrush::apply(MapView &mapView, const Position &position)
 
     if (Settings::AUTO_BORDER)
     {
-        MountainGroundNeighborMap neighbors = MountainGroundNeighborMap(_ground.get(), position, *mapView.map());
+        MountainGroundNeighborMap neighbors = MountainGroundNeighborMap(_ground.value(), position, *mapView.map());
 
         for (int dy = -1; dy <= 1; ++dy)
         {
@@ -89,8 +109,18 @@ void MountainBrush::apply(MapView &mapView, const Position &position)
 
 void MountainBrush::apply(MapView &mapView, const Position &position, BorderType borderType)
 {
-    auto borderItemId = mountainBorders.getServerId(borderType);
-    if (borderItemId)
+    auto borderItemId = mountainBorder.getServerId(borderType);
+
+    if (outerBorder && borderType != BorderType::Center)
+    {
+        Tile *tile = mapView.getTile(position);
+        if (tile && tile->hasGround())
+        {
+            outerBorder->value()->apply(mapView, position, borderType);
+        }
+    }
+
+    if (borderItemId && (!isFeature(TileCovers::fromBorderType(borderType)) || Settings::PLACE_MOUNTAIN_FEATURES))
     {
         mapView.addItem(position, *borderItemId);
     }
@@ -98,27 +128,27 @@ void MountainBrush::apply(MapView &mapView, const Position &position, BorderType
 
 BorderType MountainBrush::getBorderType(uint32_t serverId) const
 {
-    return mountainBorders.getBorderType(serverId);
+    return mountainBorder.getBorderType(serverId);
 }
 
 TileCover MountainBrush::getTileCover(uint32_t serverId) const
 {
     BorderType borderType = getBorderType(serverId);
-    return BorderData::borderTypeToTileCover[to_underlying(borderType)];
+    return TileCovers::fromBorderType(borderType);
 }
 
 Brush *MountainBrush::ground() const noexcept
 {
-    if (!_ground.evaluated)
+    if (!_ground.hasValue())
     {
-        auto groundBrush = _ground.get();
-        switch (groundBrush->type())
+        auto brush = _ground.value();
+        switch (brush->type())
         {
             case BrushType::Raw:
-                _serverIds.insert(static_cast<RawBrush *>(groundBrush)->serverId());
+                _serverIds.insert(static_cast<RawBrush *>(brush)->serverId());
                 break;
             case BrushType::Ground:
-                for (uint32_t serverId : static_cast<GroundBrush *>(groundBrush)->serverIds())
+                for (uint32_t serverId : static_cast<GroundBrush *>(brush)->serverIds())
                 {
                     _serverIds.insert(serverId);
                 }
@@ -127,10 +157,10 @@ Brush *MountainBrush::ground() const noexcept
                 break;
         }
 
-        return groundBrush;
+        return brush;
     }
 
-    return _ground.get();
+    return _ground.value_unsafe();
 }
 
 uint32_t MountainBrush::iconServerId() const
@@ -233,7 +263,7 @@ void MountainBrush::borderize(MapView &mapView, MountainGroundNeighborMap &neigh
         // Special cases
         if (!Settings::PLACE_MOUNTAIN_FEATURES)
         {
-            cover &= ~MountainBrush::features;
+            // cover &= ~MountainBrush::features;
 
             if ((cover & SouthWest) && !(neighbors.at(dx + 1, dy + 1).hasMountainGround || neighbors.at(dx + 1, dy).hasMountainGround))
             {
@@ -344,17 +374,17 @@ const std::string &MountainBrush::id() const noexcept
 
 void MountainBrush::setGround(RawBrush *brush)
 {
-    this->_ground = LazyGroundBrush(brush);
+    this->_ground = Brush::LazyGround(brush);
 }
 
 void MountainBrush::setGround(GroundBrush *brush)
 {
-    this->_ground = LazyGroundBrush(brush);
+    this->_ground = Brush::LazyGround(brush);
 }
 
 void MountainBrush::setGround(const std::string &groundBrushId)
 {
-    this->_ground = LazyGroundBrush(groundBrushId);
+    this->_ground = Brush::LazyGround(groundBrushId);
 }
 
 MountainWallNeighborMap::MountainWallNeighborMap(MountainBrush *mountainBrush, const Position &position, const Map &map)
@@ -423,50 +453,6 @@ void MountainGroundNeighborMap::set(int x, int y, value_type entry)
 bool MountainPart::InnerWall::contains(uint32_t serverId) const noexcept
 {
     return south == serverId || east == serverId || southEast == serverId;
-}
-
-LazyGroundBrush::LazyGroundBrush(RawBrush *brush)
-{
-    data = brush;
-}
-
-LazyGroundBrush::LazyGroundBrush(GroundBrush *brush)
-{
-    data = brush;
-}
-
-LazyGroundBrush::LazyGroundBrush(std::string groundBrushId)
-{
-    data = groundBrushId;
-}
-
-Brush *LazyGroundBrush::get() const
-{
-    evaluated = true;
-    if (std::holds_alternative<std::string>(data))
-    {
-        const std::string &id = std::get<std::string>(data);
-        GroundBrush *brush = Brush::getGroundBrush(id);
-        if (!brush)
-        {
-            ABORT_PROGRAM(std::format("Attempted to retrieve a GroundBrush with id '{}' from a LazyGroundBrush, but the brush did not exist.", id));
-        }
-
-        data = brush;
-        return brush;
-    }
-    else if (std::holds_alternative<RawBrush *>(data))
-    {
-        return std::get<RawBrush *>(data);
-    }
-    else if (std::holds_alternative<GroundBrush *>(data))
-    {
-        return std::get<GroundBrush *>(data);
-    }
-    else
-    {
-        ABORT_PROGRAM("Unknown variant in LazyGroundBrush");
-    }
 }
 
 MountainGroundNeighborMap::value_type MountainGroundNeighborMap::at(int x, int y) const

@@ -30,11 +30,14 @@ class BorderBrush final : public Brush
     void apply(MapView &mapView, const Position &position) override;
     void erase(MapView &mapView, const Position &position) override;
 
-    void quadrantChanged(MapView &mapView, const Position &position, TileQuadrant prevQuadrant, TileQuadrant currQuadrant);
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
     const std::string getDisplayId() const override;
     std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const override;
+
+    void apply(MapView &mapView, const Position &position, BorderType borderType);
+
+    void quadrantChanged(MapView &mapView, const Position &position, TileQuadrant prevQuadrant, TileQuadrant currQuadrant);
 
     uint32_t iconServerId() const;
 
@@ -65,10 +68,6 @@ class BorderBrush final : public Brush
   private:
     friend class GeneralBorderBrush;
     friend class DetailedBorderBrush;
-
-    BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, Brush *centerBrush);
-
-    void apply(MapView &mapView, const Position &position, BorderType borderType);
 
     void quadrantChanged(MapView &mapView, const Position &position, BorderNeighborMap &neighbors, TileQuadrant prevQuadrant, TileQuadrant currQuadrant);
 

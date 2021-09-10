@@ -88,6 +88,8 @@ class TileCovers
         return bits && !(bits & (bits - 1));
     }
 
+    static TileCover fromBorderType(BorderType borderType);
+
     static bool hasFullSide(TileCover cover, TileCover side);
     static TileCover getFull(TileCover side);
     static TileCover addNonMasked(TileCover current, TileCover committed, TileCover mask);
@@ -113,6 +115,22 @@ class TileCovers
     static constexpr TileCover FullSouth = TILE_COVER_FULL | TILE_COVER_SOUTH | TILE_COVER_SOUTH_EAST | TILE_COVER_SOUTH_WEST;
     static constexpr TileCover FullWest = TILE_COVER_FULL | TILE_COVER_WEST | TILE_COVER_SOUTH_WEST | TILE_COVER_NORTH_WEST;
     static constexpr TileCover Diagonals = TILE_COVER_NORTH_WEST | TILE_COVER_NORTH_EAST | TILE_COVER_SOUTH_EAST | TILE_COVER_SOUTH_WEST;
+
+    static constexpr std::array<TileCover, 14> borderTypeToTileCover = {
+        TILE_COVER_NONE,
+        TILE_COVER_NORTH,
+        TILE_COVER_EAST,
+        TILE_COVER_SOUTH,
+        TILE_COVER_WEST,
+        TILE_COVER_NORTH_WEST_CORNER,
+        TILE_COVER_NORTH_EAST_CORNER,
+        TILE_COVER_SOUTH_EAST_CORNER,
+        TILE_COVER_SOUTH_WEST_CORNER,
+        TILE_COVER_NORTH_WEST,
+        TILE_COVER_NORTH_EAST,
+        TILE_COVER_SOUTH_EAST,
+        TILE_COVER_SOUTH_WEST,
+        TILE_COVER_FULL};
 };
 
 namespace TileCoverShortHands

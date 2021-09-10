@@ -148,6 +148,7 @@ set(CommonSources
     src/tileset.h
     src/type_trait.h
     src/util.h
+    src/lazy_object.h
     src/version.h
     src/octree.h
     src/brushes/brush.h

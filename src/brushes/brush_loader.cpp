@@ -19,6 +19,24 @@
 
 using json = nlohmann::json;
 
+namespace JsonParseMethods
+{
+    Brush::LazyGround fromJson(const json &json)
+    {
+        if (json.is_number_integer())
+        {
+            RawBrush *brush = static_cast<RawBrush *>(Brush::getOrCreateRawBrush(json.get<int>()));
+            return Brush::LazyGround(brush);
+        }
+        else
+        {
+            return Brush::LazyGround(json.get<std::string>());
+        }
+    }
+} // namespace JsonParseMethods
+
+using namespace JsonParseMethods;
+
 std::string joinStack(std::stack<std::string> &stack, std::string delimiter)
 {
     auto stackCopy = stack;
@@ -372,6 +390,8 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
 
     std::array<uint32_t, 12> outerWalls;
 
+    std::string outerBorderId;
+
     stackTrace.emplace("items");
     {
         const json &items = brush.at("items");
@@ -396,28 +416,26 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
             outerWalls = parseBorderIds(outerWallJson);
         }
         stackTrace.pop();
+
+        stackTrace.emplace("outerBorder");
+        {
+            outerBorderId = items.at("outerBorder").get<std::string>();
+        }
+        stackTrace.pop();
     }
     stackTrace.pop();
 
     const json &ground = brush.at("ground");
-    LazyGroundBrush lazyGround = fromJson(ground);
+    Brush::LazyGround lazyGround = fromJson(ground);
 
     MountainBrush mountainBrush = MountainBrush(id, name, lazyGround, innerWall, BorderData(outerWalls), lookId);
 
-    return mountainBrush;
-}
+    if (!outerBorderId.empty())
+    {
+        mountainBrush.setOuterBorder(outerBorderId);
+    }
 
-LazyGroundBrush BrushLoader::fromJson(const json &json)
-{
-    if (json.is_number_integer())
-    {
-        RawBrush *brush = static_cast<RawBrush *>(Brush::getOrCreateRawBrush(json.get<int>()));
-        return LazyGroundBrush(brush);
-    }
-    else
-    {
-        return LazyGroundBrush(json.get<std::string>());
-    }
+    return mountainBrush;
 }
 
 std::optional<DoodadBrush> BrushLoader::parseDoodadBrush(const json &brush)

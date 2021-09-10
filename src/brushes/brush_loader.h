@@ -7,7 +7,6 @@
 #include <stack>
 #include <string>
 
-
 #include "../tileset.h"
 
 class BorderBrush;
@@ -15,7 +14,6 @@ class GroundBrush;
 class WallBrush;
 class DoodadBrush;
 class MountainBrush;
-struct LazyGroundBrush;
 
 class BrushLoader
 {
@@ -39,8 +37,6 @@ class BrushLoader
     std::optional<MountainBrush> parseMountainBrush(const nlohmann::json &mountainJson);
 
     void logError(std::string message);
-
-    static LazyGroundBrush fromJson(const nlohmann::json &json);
 
     static std::array<uint32_t, 12> parseBorderIds(const nlohmann::json &borderJson);
 
