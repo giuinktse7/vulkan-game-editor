@@ -440,6 +440,8 @@ TileCover TileCovers::getFull(TileCover side)
             return FullSouth;
         case West:
             return FullWest;
+        default:
+            ABORT_PROGRAM("Should never happen");
     }
 }
 

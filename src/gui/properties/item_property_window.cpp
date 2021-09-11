@@ -166,7 +166,10 @@ void ItemPropertyWindow::focusGround(Item *item, Position &position, MapView &ma
 
 void ItemPropertyWindow::setFocusedCreatureSpawnInterval(int spawnInterval, bool shouldCommit)
 {
-    DEBUG_ASSERT(state.holds<FocusedCreature>(), "ItemPropertyWindow::setFocusedCreatureSpawnInterval: State must hold a FocusedCreature.");
+    if (!state.holds<FocusedCreature>())
+    {
+        return;
+    }
 
     Creature *creature = state.focusedAs<FocusedCreature>().creature;
 
