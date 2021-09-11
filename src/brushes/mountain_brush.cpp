@@ -59,18 +59,20 @@ void MountainBrush::apply(MapView &mapView, const Position &position)
     Tile &tile = mapView.getOrCreateTile(position);
     mapView.setGround(tile, Item(nextGroundServerId()));
 
-    if (Settings::AUTO_BORDER)
-    {
-        MountainGroundNeighborMap neighbors = MountainGroundNeighborMap(_ground.value(), position, *mapView.map());
+    generalBorderize(mapView, position);
 
-        for (int dy = -1; dy <= 1; ++dy)
-        {
-            for (int dx = -1; dx <= 1; ++dx)
-            {
-                borderize(mapView, neighbors, dx, dy);
-            }
-        }
-    }
+    // if (Settings::AUTO_BORDER)
+    // {
+    //     MountainGroundNeighborMap neighbors = MountainGroundNeighborMap(_ground.value(), position, *mapView.map());
+
+    //     for (int dy = -1; dy <= 1; ++dy)
+    //     {
+    //         for (int dx = -1; dx <= 1; ++dx)
+    //         {
+    //             borderize(mapView, neighbors, dx, dy);
+    //         }
+    //     }
+    // }
 
     // postBorderizePass(mapView, position);
 }
@@ -649,6 +651,11 @@ void MountainPart::BorderBlock::addBorder(TileCover cover, MountainBrush *brush)
     add(TILE_COVER_NONE, cover, brush);
 }
 
+void MountainPart::BorderBlock::add(TileCover cover, MountainBrush *brush)
+{
+    add(cover, cover, brush);
+}
+
 void MountainPart::BorderBlock::add(TileCover featureCover, TileCover borderCover, MountainBrush *brush)
 {
 
@@ -765,10 +772,10 @@ void MountainBrush::generalBorderize(MapView &mapView, const Position &position)
                 fast_eraseInvalidSide(0, 1, FullNorth, South);
                 fast_eraseInvalidSide(-1, 0, FullEast, West);
 
-                fast_removeInvalidBorder(-1, -1, NorthEast | SouthWest | East | South | SouthEastCorner, NorthWestCorner);
-                fast_removeInvalidBorder(1, -1, NorthWest | SouthEast | West | South | SouthWestCorner, NorthEastCorner);
-                fast_removeInvalidBorder(1, 1, NorthWest | SouthWest | West | North | NorthWestCorner, SouthEastCorner);
-                fast_removeInvalidBorder(-1, 1, NorthWest | SouthEast | West | North | NorthEastCorner, SouthWestCorner);
+                fast_removeInvalidBorder(-1, -1, Full | NorthEast | SouthWest | East | South | SouthEastCorner, NorthWestCorner);
+                fast_removeInvalidBorder(1, -1, Full | NorthWest | SouthEast | West | South | SouthWestCorner, NorthEastCorner);
+                fast_removeInvalidBorder(1, 1, Full | NorthWest | SouthWest | West | North | NorthWestCorner, SouthEastCorner);
+                fast_removeInvalidBorder(-1, 1, Full | NorthWest | SouthEast | West | North | NorthEastCorner, SouthWestCorner);
 
                 if (featureRemove != None)
                 {
@@ -889,10 +896,10 @@ void MountainBrush::fixBordersAtOffset(MapView &mapView, const Position &positio
     MountainNeighborMap::mirrorSouth(borderBlock, neighbors.at(x, y - 1));
     MountainNeighborMap::mirrorWest(borderBlock, neighbors.at(x + 1, y));
 
-    // MountainNeighborMap::mirrorNorthWest(cover, neighbors.at(x - 1, y - 1));
-    // MountainNeighborMap::mirrorNorthEast(cover, neighbors.at(x + 1, y - 1));
-    // MountainNeighborMap::mirrorSouthEast(cover, neighbors.at(x + 1, y + 1));
-    // MountainNeighborMap::mirrorSouthWest(cover, neighbors.at(x - 1, y + 1));
+    MountainNeighborMap::mirrorNorthWest(cover, neighbors.at(x - 1, y - 1));
+    MountainNeighborMap::mirrorNorthEast(cover, neighbors.at(x + 1, y - 1));
+    MountainNeighborMap::mirrorSouthEast(cover, neighbors.at(x + 1, y + 1));
+    MountainNeighborMap::mirrorSouthWest(cover, neighbors.at(x - 1, y + 1));
 
     // Do not use a mirrored diagonal if we already have a diagonal.
     for (auto &block : borderBlock.covers)
@@ -1213,6 +1220,32 @@ void MountainNeighborMap::mirrorWest(value_type &source, const value_type &borde
     // addGroundBorder(source, borders, TILE_COVER_SOUTH);
 }
 
+void MountainNeighborMap::addGroundBorder(value_type &self, const value_type &other, TileCover border)
+{
+    if (other.ground)
+    {
+        if (self.ground)
+        {
+            if (self.zOrder() < other.zOrder())
+            {
+                auto brush = other.ground->getBorderTowards(self.ground);
+                if (brush)
+                {
+                    self.add(border, brush);
+                }
+            }
+        }
+        else
+        {
+            auto brush = other.ground;
+            if (brush)
+            {
+                self.add(border, brush);
+            }
+        }
+    }
+}
+
 void MountainNeighborMap::mirrorNorthWest(value_type &source, const value_type &borders)
 {
 }
@@ -1242,5 +1275,15 @@ void MountainBrush::applyFeature(MapView &mapView, const Position &position, Mou
     if (borderItemId && (!isFeature(TileCovers::fromBorderType(borderType)) || Settings::PLACE_MOUNTAIN_FEATURES))
     {
         mapView.addItem(position, *borderItemId);
+    }
+}
+
+void MountainBrush::applyBorder(MapView &mapView, const Position &position, MountainBrush *brush, BorderType borderType)
+{
+    auto borderItemId = brush->outerBorder->value()->getServerId(borderType);
+
+    if (borderItemId && (!isFeature(TileCovers::fromBorderType(borderType)) || Settings::PLACE_MOUNTAIN_FEATURES))
+    {
+        mapView.addBorder(position, *borderItemId, brush->outerBorder->value()->preferredZOrder());
     }
 }

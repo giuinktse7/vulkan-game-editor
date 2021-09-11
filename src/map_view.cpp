@@ -1245,6 +1245,10 @@ void MapView::selectTopThing(const Position &position, bool isNewSelection)
                     {
                         selectTile(*tile);
                     }
+                    else
+                    {
+                        selectTopItem(position);
+                    }
                 }
                 else
                 {

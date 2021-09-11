@@ -50,6 +50,7 @@ namespace MountainPart
 
         const MountainCover *getCover(MountainBrush *brush) const;
 
+        void add(TileCover cover, MountainBrush *brush);
         void add(TileCover featureCover, TileCover borderCover, MountainBrush *brush);
         void addFeature(TileCover cover, MountainBrush *brush);
         void addBorder(TileCover cover, MountainBrush *brush);
@@ -122,6 +123,7 @@ class MountainBrush final : public Brush
 
     void apply(MapView &mapView, const Position &position, BorderType borderType);
     static void applyFeature(MapView &mapView, const Position &position, MountainBrush *brush, BorderType borderType);
+    static void applyBorder(MapView &mapView, const Position &position, MountainBrush *brush, BorderType borderType);
 
     void postBorderizePass(MapView &mapView, const Position &position);
 
