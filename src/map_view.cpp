@@ -366,18 +366,28 @@ void MapView::removeItems(const Tile &tile, std::function<bool(const Item &)> pr
 
 void MapView::removeItemsWithBorderize(const Tile &tile, std::function<bool(const Item &)> predicate)
 {
+
     Tile newTile = tile.deepCopy();
+    bool newTileHasGround = newTile.hasGround();
     if (newTile.removeItemsIf(predicate) > 0)
     {
+        newTileHasGround = newTile.hasGround();
         Action action(ActionType::ModifyTile);
         action.addChange(SetTile(std::move(newTile)));
 
         history.commit(std::move(action));
     }
 
-    if (Settings::AUTO_BORDER && !newTile.hasGround())
+    if (Settings::AUTO_BORDER)
     {
-        GroundBrush::borderize(*this, tile.position());
+        // GroundBrush::borderize(*this, tile.position());
+        MountainBrush::generalBorderize(*this, tile.position());
+
+        // if (tile.hasGround() && !newTileHasGround)
+        // {
+        //     Brush *brush = tile.ground()->itemType->brush;
+        // }
+        // borderize(tile.position());
     }
 }
 
@@ -516,16 +526,45 @@ void MapView::deleteSelectedItems()
     }
 
     history.beginTransaction(TransactionType::RemoveMapItem);
-    for (const auto &pos : _selection)
+
+    if (Settings::AUTO_BORDER)
     {
-        const Tile &tile = *getTile(pos);
-        if (tile.allSelected())
+        std::unordered_set<Position> modifiedPositions;
+
+        for (const auto &pos : _selection)
         {
-            removeTile(tile.position());
+            const Tile &tile = *getTile(pos);
+            if (tile.allSelected())
+            {
+                removeTile(tile.position());
+            }
+            else
+            {
+                removeSelectedItems(tile);
+            }
+
+            modifiedPositions.emplace(pos);
         }
-        else
+
+        for (const auto &pos : modifiedPositions)
         {
-            removeSelectedItems(tile);
+            // GroundBrush::borderize(*this, pos);
+            MountainBrush::generalBorderize(*this, pos);
+        }
+    }
+    else
+    {
+        for (const auto &pos : _selection)
+        {
+            const Tile &tile = *getTile(pos);
+            if (tile.allSelected())
+            {
+                removeTile(tile.position());
+            }
+            else
+            {
+                removeSelectedItems(tile);
+            }
         }
     }
 
@@ -535,6 +574,38 @@ void MapView::deleteSelectedItems()
     history.endTransaction(TransactionType::RemoveMapItem);
     requestDraw();
     requestMinimapDraw();
+}
+
+void MapView::borderize(const Position &position)
+{
+    GroundBrush::borderize(*this, position);
+
+    for (int y = -1; y <= 1; ++y)
+    {
+        for (int x = -1; x <= 1; ++x)
+        {
+            Position pos = position + Position(x, y, 0);
+            if (_map->contains(pos))
+            {
+                Tile *tile = getTile(pos);
+                if (tile)
+                {
+                    Brush *brush = tile->ground()->itemType->brush;
+                    if (brush)
+                    {
+                        switch (brush->type())
+                        {
+                            case BrushType::Mountain:
+                                static_cast<MountainBrush *>(brush)->borderize(*this, pos);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 void MapView::selectRegion(const Position &from, const Position &to)
@@ -1158,7 +1229,8 @@ void MapView::selectTopThing(const Position &position, bool isNewSelection)
     {
         Item *topItem = tile->getTopItem();
 
-        commitTransaction(TransactionType::Selection, [this, position, topItem, isNewSelection] {
+        history.beginTransaction(TransactionType::Selection);
+        {
             if (isNewSelection)
             {
                 clearSelection();
@@ -1166,9 +1238,21 @@ void MapView::selectTopThing(const Position &position, bool isNewSelection)
 
             if (topItem)
             {
-                selectTopItem(position);
+                if (Settings::AUTO_BORDER)
+                {
+                    Brush *brush = topItem->itemType->brush;
+                    if (brush && (brush->type() == BrushType::Mountain || brush->type() == BrushType::Border))
+                    {
+                        selectTile(*tile);
+                    }
+                }
+                else
+                {
+                    selectTopItem(position);
+                }
             }
-        });
+        }
+        history.endTransaction(TransactionType::Selection);
     }
 }
 

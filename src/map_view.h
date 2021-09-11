@@ -299,6 +299,8 @@ class MapView
   private:
     friend class MapHistory::ChangeItem;
 
+    void borderize(const Position &position);
+
     Tile deepCopyTile(const Position position) const;
 
     void selectRegion(const Position &from, const Position &to);

@@ -11,35 +11,50 @@ class LazyObject
         : initializer(initializer) {}
 
     LazyObject(T value)
-        : initializer{}, _value(value) {}
+        : _value(value) {}
+
+    LazyObject(std::function<T()> initializer, std::function<void(T)> onFirstUse)
+        : initializer(initializer), onFirstUse(onFirstUse) {}
+
+    LazyObject(T value, std::function<void(T)> onFirstUse)
+        : initializer{}, onFirstUse(onFirstUse), _value(value) {}
+
+    void setOnFirstUse(std::function<void(T)> onFirstUse)
+    {
+        this->onFirstUse = onFirstUse;
+    }
 
     _NODISCARD constexpr const T &value() const &
     {
-        if (!_value.has_value())
-        {
-            _value = initializer();
-        }
-
+        initialize();
         return _value.value();
     }
 
     _NODISCARD constexpr T &value() &
     {
-        if (!_value.has_value())
-        {
-            _value = initializer();
-        }
-
+        initialize();
         return _value.value();
     }
 
     _NODISCARD constexpr const T &value_unsafe() const &
     {
+        if (!hasBeenUsed)
+        {
+            onFirstUse(_value.value());
+            hasBeenUsed = true;
+        }
+
         return _value.value();
     }
 
     _NODISCARD constexpr T &value_unsafe() &
     {
+        if (!hasBeenUsed)
+        {
+            onFirstUse(_value.value());
+            hasBeenUsed = true;
+        }
+
         return _value.value();
     }
 
@@ -55,21 +70,42 @@ class LazyObject
 
     _NODISCARD constexpr const T &&value() const &&
     {
-        if (!_value.has_value())
-        {
-            _value = initializer();
-        }
-
+        initialize();
         return _value.value();
     }
 
     _NODISCARD constexpr T valueOr(T &&other) const &
     {
+        if (_value)
+        {
+            hasBeenUsed = true;
+        }
+
         return _value.value_or(std::forward<T>(other));
     }
 
   private:
-    std::function<T()> initializer;
+    void initialize() const noexcept
+    {
+        if (!hasBeenUsed)
+        {
+            hasBeenUsed = true;
+            if (initializer)
+            {
+                _value = initializer();
+                initializer = {};
+            }
+            if (onFirstUse)
+            {
+                onFirstUse(_value.value());
+                onFirstUse = {};
+            }
+        }
+    }
+    mutable std::function<void(T)> onFirstUse;
+    mutable std::function<T()> initializer;
+
+    mutable bool hasBeenUsed = false;
 
     mutable std::optional<T> _value;
 };

@@ -990,10 +990,6 @@ TileCover Tile::getTileCover(const MountainBrush *brush) const
 
 TileBorderBlock Tile::getFullBorderTileCover(TileCover excludeMask) const
 {
-    if (excludeMask == TILE_COVER_WEST)
-    {
-        bool dbg = true;
-    }
     TileBorderBlock block;
     if (_ground)
     {

@@ -58,6 +58,16 @@ void GroundBrush::erase(MapView &mapView, const Position &position)
     mapView.removeItemsWithBorderize(tile, [this](const Item &item) { return this->erasesItem(item.serverId()); });
 }
 
+void GroundBrush::applyWithoutBordering(MapView &mapView, const Position &position)
+{
+    Tile &tile = mapView.getOrCreateTile(position);
+
+    if (mayPlaceOnTile(tile))
+    {
+        mapView.setGround(tile, Item(nextServerId()), true);
+    }
+}
+
 void GroundBrush::apply(MapView &mapView, const Position &position)
 {
     Tile &tile = mapView.getOrCreateTile(position);
@@ -118,10 +128,25 @@ void GroundBrush::fixBordersAtOffset(MapView &mapView, const Position &position,
 
     auto pos = position + Position(x, y, 0);
 
+    // Early exits
     Tile *tilePtr = mapView.getTile(pos);
-    if (!(tilePtr && tilePtr->ground()))
+    if (!tilePtr)
     {
         return;
+    }
+    {
+        Item *ground = tilePtr->ground();
+        if (!ground)
+        {
+            return;
+        }
+
+        Brush *groundBrush = ground->itemType->brush;
+        bool isMountain = groundBrush && groundBrush->type() == BrushType::Mountain;
+        if (isMountain)
+        {
+            return;
+        }
     }
 
     auto currentCover = neighbors.at(x, y);

@@ -7,6 +7,7 @@
 
 #include "../debug.h"
 #include "../item_palette.h"
+#include "../items.h"
 #include "../logger.h"
 #include "../time_util.h"
 #include "border_brush.h"
@@ -25,7 +26,8 @@ namespace JsonParseMethods
     {
         if (json.is_number_integer())
         {
-            RawBrush *brush = static_cast<RawBrush *>(Brush::getOrCreateRawBrush(json.get<int>()));
+            int serverId = json.get<int>();
+            RawBrush *brush = static_cast<RawBrush *>(Brush::getOrCreateRawBrush(serverId));
             return Brush::LazyGround(brush);
         }
         else
@@ -381,7 +383,7 @@ WallBrush BrushLoader::parseWallBrush(const json &brush)
 
 std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
 {
-    std::string id = brush.at("id").get<std::string>();
+    std::string mountainBrushId = brush.at("id").get<std::string>();
     std::string name = brush.at("name").get<std::string>();
 
     MountainPart::InnerWall innerWall;
@@ -425,10 +427,39 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
     }
     stackTrace.pop();
 
+    stackTrace.emplace("ground");
     const json &ground = brush.at("ground");
-    Brush::LazyGround lazyGround = fromJson(ground);
 
-    MountainBrush mountainBrush = MountainBrush(id, name, lazyGround, innerWall, BorderData(outerWalls), lookId);
+    auto onFirstGroundUse = [mountainBrushId](const Brush *brush) {
+        MountainBrush *mountainBrush = Brush::getMountainBrush(mountainBrushId);
+        switch (brush->type())
+        {
+            case BrushType::Raw:
+            {
+                uint32_t serverId = static_cast<const RawBrush *>(brush)->serverId();
+                Items::items.getItemTypeByServerId(serverId)->brush = mountainBrush;
+                mountainBrush->addServerId(serverId);
+                break;
+            }
+            case BrushType::Ground:
+            {
+                for (const uint32_t serverId : static_cast<const MountainBrush *>(brush)->serverIds())
+                {
+                    Items::items.getItemTypeByServerId(serverId)->brush = mountainBrush;
+                    mountainBrush->addServerId(serverId);
+                }
+                break;
+            }
+            default:
+                ABORT_PROGRAM("Invalid brush type. Must be Raw or Ground brush.");
+        }
+    };
+
+    auto lazyGround = JsonParseMethods::fromJson(ground);
+    lazyGround.setOnFirstUse(onFirstGroundUse);
+    stackTrace.pop();
+
+    MountainBrush mountainBrush = MountainBrush(mountainBrushId, name, lazyGround, innerWall, BorderData(outerWalls), lookId);
 
     if (!outerBorderId.empty())
     {

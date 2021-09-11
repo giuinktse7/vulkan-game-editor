@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string>
 #include <type_traits>
+
 
 #include "const.h"
 
@@ -93,6 +95,8 @@ class TileCovers
     static bool hasFullSide(TileCover cover, TileCover side);
     static TileCover getFull(TileCover side);
     static TileCover addNonMasked(TileCover current, TileCover committed, TileCover mask);
+
+    static std::string show(TileCover cover);
 
     static constexpr TileCover None = TILE_COVER_NONE;
     static constexpr TileCover Full = TILE_COVER_FULL;

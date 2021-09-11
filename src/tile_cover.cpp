@@ -1,5 +1,7 @@
 #include "tile_cover.h"
 
+#include <sstream>
+
 void TileCovers::clearCoverFlags(TileCover &cover, TileCover flags)
 {
     cover &= ~flags;
@@ -445,4 +447,82 @@ TileCover TileCovers::addNonMasked(TileCover current, TileCover committed, TileC
 TileCover TileCovers::fromBorderType(BorderType borderType)
 {
     return borderTypeToTileCover[to_underlying(borderType)];
+}
+
+std::string TileCovers::show(TileCover cover)
+{
+    std::ostringstream s;
+
+    if (cover & None)
+    {
+        s << "None"
+          << " | ";
+    }
+    if (cover & Full)
+    {
+        s << "Full"
+          << " | ";
+    }
+    if (cover & North)
+    {
+        s << "North"
+          << " | ";
+    }
+    if (cover & East)
+    {
+        s << "East"
+          << " | ";
+    }
+    if (cover & South)
+    {
+        s << "South"
+          << " | ";
+    }
+    if (cover & West)
+    {
+        s << "West"
+          << " | ";
+    }
+    if (cover & NorthWest)
+    {
+        s << "NorthWest"
+          << " | ";
+    }
+    if (cover & NorthEast)
+    {
+        s << "NorthEast"
+          << " | ";
+    }
+    if (cover & SouthWest)
+    {
+        s << "SouthWest"
+          << " | ";
+    }
+    if (cover & SouthEast)
+    {
+        s << "SouthEast"
+          << " | ";
+    }
+    if (cover & NorthWestCorner)
+    {
+        s << "NorthWestCorner"
+          << " | ";
+    }
+    if (cover & NorthEastCorner)
+    {
+        s << "NorthEastCorner"
+          << " | ";
+    }
+    if (cover & SouthWestCorner)
+    {
+        s << "SouthWestCorner"
+          << " | ";
+    }
+    if (cover & SouthEastCorner)
+    {
+        s << "SouthEastCorner"
+          << " | ";
+    }
+
+    return s.str();
 }

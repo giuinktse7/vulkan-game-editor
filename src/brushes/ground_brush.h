@@ -66,6 +66,8 @@ class GroundBrush final : public Brush
     void apply(MapView &mapView, const Position &position) override;
     void erase(MapView &mapView, const Position &position) override;
 
+    void applyWithoutBordering(MapView &mapView, const Position &position);
+
     uint32_t iconServerId() const;
 
     bool erasesItem(uint32_t serverId) const override;
