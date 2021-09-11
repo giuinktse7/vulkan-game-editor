@@ -151,7 +151,7 @@ struct GroundNeighborMap
     std::vector<ExpandedTileBlock> expandedCovers;
     GroundBrush *centerGround;
 
-    static void addGroundBorder(value_type &self, const value_type &other, TileCover border);
+    static void addBorderFromGround(value_type &self, const value_type &other, TileCover border);
 
     static void mirrorNorth(value_type &source, const value_type &borders);
     static void mirrorEast(value_type &source, const value_type &borders);

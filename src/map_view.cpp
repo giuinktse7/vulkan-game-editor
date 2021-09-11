@@ -380,14 +380,7 @@ void MapView::removeItemsWithBorderize(const Tile &tile, std::function<bool(cons
 
     if (Settings::AUTO_BORDER)
     {
-        // GroundBrush::borderize(*this, tile.position());
-        MountainBrush::generalBorderize(*this, tile.position());
-
-        // if (tile.hasGround() && !newTileHasGround)
-        // {
-        //     Brush *brush = tile.ground()->itemType->brush;
-        // }
-        // borderize(tile.position());
+        borderize(tile.position());
     }
 }
 
@@ -548,8 +541,7 @@ void MapView::deleteSelectedItems()
 
         for (const auto &pos : modifiedPositions)
         {
-            // GroundBrush::borderize(*this, pos);
-            MountainBrush::generalBorderize(*this, pos);
+            borderize(pos);
         }
     }
     else
@@ -579,33 +571,7 @@ void MapView::deleteSelectedItems()
 void MapView::borderize(const Position &position)
 {
     GroundBrush::borderize(*this, position);
-
-    for (int y = -1; y <= 1; ++y)
-    {
-        for (int x = -1; x <= 1; ++x)
-        {
-            Position pos = position + Position(x, y, 0);
-            if (_map->contains(pos))
-            {
-                Tile *tile = getTile(pos);
-                if (tile)
-                {
-                    Brush *brush = tile->ground()->itemType->brush;
-                    if (brush)
-                    {
-                        switch (brush->type())
-                        {
-                            case BrushType::Mountain:
-                                static_cast<MountainBrush *>(brush)->borderize(*this, pos);
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                }
-            }
-        }
-    }
+    MountainBrush::generalBorderize(*this, position);
 }
 
 void MapView::selectRegion(const Position &from, const Position &to)

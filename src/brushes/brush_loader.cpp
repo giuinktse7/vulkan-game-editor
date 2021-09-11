@@ -392,8 +392,6 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
 
     std::array<uint32_t, 12> outerWalls;
 
-    std::string outerBorderId;
-
     stackTrace.emplace("items");
     {
         const json &items = brush.at("items");
@@ -416,12 +414,6 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
             const json &outerWallJson = items.at("outerWalls");
 
             outerWalls = parseBorderIds(outerWallJson);
-        }
-        stackTrace.pop();
-
-        stackTrace.emplace("outerBorder");
-        {
-            outerBorderId = items.at("outerBorder").get<std::string>();
         }
         stackTrace.pop();
     }
@@ -460,11 +452,6 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
     stackTrace.pop();
 
     MountainBrush mountainBrush = MountainBrush(mountainBrushId, name, lazyGround, innerWall, BorderData(outerWalls), lookId);
-
-    if (!outerBorderId.empty())
-    {
-        mountainBrush.setOuterBorder(outerBorderId);
-    }
 
     return mountainBrush;
 }

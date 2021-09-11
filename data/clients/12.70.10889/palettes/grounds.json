@@ -87,6 +87,20 @@
                     "id": "sea_border"
                 }
             ]
+        },
+        {
+            "id": "gray_mountain_ground",
+            "name": "Gray Mountain Ground",
+            "type": "ground",
+            "lookId": 919,
+            "zOrder": 10000,
+            "items": [{ "ids": [919], "chance": 1 }],
+            "borders": [
+                {
+                    "align": "outer",
+                    "id": "gray_mountain_wall_thin_border"
+                }
+            ]
         }
     ]
 }

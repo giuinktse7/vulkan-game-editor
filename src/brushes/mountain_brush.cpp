@@ -15,12 +15,6 @@ MountainBrush::MountainBrush(std::string id, std::string name, Brush::LazyGround
     initialize();
 }
 
-MountainBrush::MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, std::string outerBorderBrushId, uint32_t iconServerId)
-    : Brush(name), _id(id), _ground(ground), innerWall(innerWall), mountainBorder(mountainBorders), _iconServerId(iconServerId)
-{
-    initialize();
-}
-
 void MountainBrush::initialize()
 {
     _serverIds.insert(innerWall.east);
@@ -36,19 +30,6 @@ void MountainBrush::initialize()
     }
 }
 
-void MountainBrush::setOuterBorder(std::string outerBorderId)
-{
-    this->outerBorder = std::make_optional<LazyObject<BorderBrush *>>([outerBorderId]() {
-        BorderBrush *brush = Brush::getBorderBrush(outerBorderId);
-        if (!brush)
-        {
-            ABORT_PROGRAM(std::format("Attempted to retrieve a GroundBrush with id '{}' from a MountainBrush::outerBorder, but the brush did not exist.", outerBorderId));
-        }
-
-        return brush;
-    });
-}
-
 const std::unordered_set<uint32_t> &MountainBrush::serverIds() const
 {
     return _serverIds;
@@ -59,69 +40,16 @@ void MountainBrush::apply(MapView &mapView, const Position &position)
     Tile &tile = mapView.getOrCreateTile(position);
     mapView.setGround(tile, Item(nextGroundServerId()));
 
-    generalBorderize(mapView, position);
-
-    // if (Settings::AUTO_BORDER)
-    // {
-    //     MountainGroundNeighborMap neighbors = MountainGroundNeighborMap(_ground.value(), position, *mapView.map());
-
-    //     for (int dy = -1; dy <= 1; ++dy)
-    //     {
-    //         for (int dx = -1; dx <= 1; ++dx)
-    //         {
-    //             borderize(mapView, neighbors, dx, dy);
-    //         }
-    //     }
-    // }
-
-    // postBorderizePass(mapView, position);
+    if (Settings::AUTO_BORDER)
+    {
+        GroundBrush::borderize(mapView, position);
+        generalBorderize(mapView, position);
+    }
 }
-
-// void MountainBrush::postBorderizePass(MapView &mapView, const Position &position)
-// {
-//     using namespace TileCoverShortHands;
-//     auto neighbors = MountainWallNeighborMap(this, position, *mapView.map());
-
-//     for (int dy = -2; dy <= 2; ++dy)
-//     {
-//         for (int dx = -2; dx <= 2; ++dx)
-//         {
-//             Position pos = position + Position(dx, dy, 0);
-//             TileCover &center = neighbors.at(dx, dy);
-//             if ((center & SouthWest) && dx < 2)
-//             {
-//                 TileCover east = neighbors.at(dx + 1, dy);
-//                 if (!(east & (SouthEast | South | SouthWestCorner)))
-//                 {
-//                     center &= ~SouthWest;
-//                     center |= South;
-//                     center |= West;
-
-//                     Tile *tile = mapView.getTile(pos);
-//                     mapView.removeItems(*tile, [this](const Item &item) {
-//                         return item.serverId() == mountainBorders.getServerId(BorderType::SouthWestDiagonal);
-//                     });
-
-//                     apply(mapView, pos, BorderType::West);
-//                     apply(mapView, pos, BorderType::South);
-//                 }
-//             }
-//         }
-//     }
-// }
 
 void MountainBrush::apply(MapView &mapView, const Position &position, BorderType borderType)
 {
     auto borderItemId = mountainBorder.getServerId(borderType);
-
-    if (outerBorder && borderType != BorderType::Center)
-    {
-        Tile *tile = mapView.getTile(position);
-        if (tile && tile->hasGround())
-        {
-            outerBorder->value()->apply(mapView, position, borderType);
-        }
-    }
 
     if (borderItemId && (!isFeature(TileCovers::fromBorderType(borderType)) || Settings::PLACE_MOUNTAIN_FEATURES))
     {
@@ -137,12 +65,6 @@ BorderType MountainBrush::getBorderType(uint32_t serverId) const
 TileCover MountainBrush::getTileCover(uint32_t serverId) const
 {
     BorderType borderType = getBorderType(serverId);
-    return TileCovers::fromBorderType(borderType);
-}
-
-TileCover MountainBrush::getBorderTileCover(uint32_t serverId) const
-{
-    BorderType borderType = outerBorder->value()->getBorderType(serverId);
     return TileCovers::fromBorderType(borderType);
 }
 
@@ -224,138 +146,6 @@ TileCover unifyTileCover(TileCover cover)
     return cover;
 }
 
-void MountainBrush::borderize(MapView &mapView, const Position &position)
-{
-    MountainGroundNeighborMap neighbors = MountainGroundNeighborMap(_ground.value(), position, *mapView.map());
-
-    for (int dy = -1; dy <= 1; ++dy)
-    {
-        for (int dx = -1; dx <= 1; ++dx)
-        {
-            borderize(mapView, neighbors, dx, dy);
-        }
-    }
-}
-
-void MountainBrush::borderize(MapView &mapView, MountainGroundNeighborMap &neighbors, int dx, int dy)
-{
-    using namespace TileCoverShortHands;
-
-    const auto &center = neighbors.at(dx, dy);
-
-    Position pos = neighbors.position + Position(dx, dy, 0);
-
-    if (mapView.hasTile(pos))
-    {
-        // Remove current mountain borders on the tile
-        mapView.removeItems(pos, [this](const Item &item) {
-            uint32_t serverId = item.serverId();
-            return erasesItem(serverId) && !ground()->erasesItem(serverId); });
-    }
-
-    if (center.hasMountainGround)
-    {
-        // Make sure the tile is created
-        if (!mapView.hasTile(pos))
-        {
-            mapView.createTile(pos);
-        }
-
-        bool innerEast = !neighbors.at(dx + 1, dy).hasMountainGround;
-        bool innerSouth = !neighbors.at(dx, dy + 1).hasMountainGround;
-
-        if (innerEast && innerSouth)
-        {
-            mapView.addItem(pos, innerWall.southEast);
-        }
-        else if (innerEast)
-        {
-            mapView.addItem(pos, innerWall.east);
-        }
-        else if (innerSouth)
-        {
-            mapView.addItem(pos, innerWall.south);
-        }
-    }
-    else
-    {
-        TileCover cover = neighbors.getTileCover(dx, dy);
-        cover = unifyTileCover(cover);
-
-        // Special cases
-        if (!Settings::PLACE_MOUNTAIN_FEATURES)
-        {
-            // cover &= ~MountainBrush::features;
-
-            if ((cover & SouthWest) && !(neighbors.at(dx + 1, dy + 1).hasMountainGround || neighbors.at(dx + 1, dy).hasMountainGround))
-            {
-                cover &= ~SouthWest;
-                if (!(cover & FullSouth))
-                {
-                    cover |= South;
-                }
-            }
-
-            if ((cover & NorthEast) && !(neighbors.at(dx + 1, dy + 1).hasMountainGround || neighbors.at(dx, dy + 1).hasMountainGround))
-            {
-                cover &= ~NorthEast;
-                if (!(cover & FullEast))
-                {
-                    cover |= East;
-                }
-            }
-        }
-
-        bool hasFeature = false;
-
-        auto applyIf = [this, &cover, &mapView, &pos, &hasFeature](TileCover req, BorderType borderType, bool feature = false) {
-            if (cover & req)
-            {
-                if (feature)
-                {
-                    if (!hasFeature)
-                    {
-                        apply(mapView, pos, borderType);
-                    }
-
-                    hasFeature = true;
-                }
-                else
-                {
-                    apply(mapView, pos, borderType);
-                }
-            }
-        };
-
-        // Sides
-        applyIf(North, BorderType::North, true);
-        applyIf(West, BorderType::West, true);
-
-        applyIf(NorthWest, BorderType::NorthWestDiagonal, true);
-
-        // Corners
-        if (cover & Corners)
-        {
-            applyIf(NorthEastCorner, BorderType::NorthEastCorner, true);
-            applyIf(NorthWestCorner, BorderType::NorthWestCorner, true);
-            applyIf(SouthWestCorner, BorderType::SouthWestCorner, true);
-        }
-
-        // Diagonals
-        if (cover & Diagonals)
-        {
-            applyIf(NorthEast, BorderType::NorthEastDiagonal);
-            applyIf(SouthWest, BorderType::SouthWestDiagonal);
-            applyIf(SouthEast, BorderType::SouthEastDiagonal);
-        }
-
-        applyIf(East, BorderType::East);
-        applyIf(South, BorderType::South);
-
-        applyIf(SouthEastCorner, BorderType::SouthEastCorner);
-    }
-}
-
 bool MountainBrush::isFeature(TileCover cover)
 {
     DEBUG_ASSERT(TileCovers::exactlyOneSet(cover), "MountainBrush::isFeature: cover must be exactly one cover type.");
@@ -371,7 +161,16 @@ void MountainBrush::erase(MapView &mapView, const Position &position)
 
 bool MountainBrush::erasesItem(uint32_t serverId) const
 {
-    return _serverIds.contains(serverId) || (outerBorder && outerBorder.value().value()->erasesItem(serverId));
+    if (Settings::PLACE_MOUNTAIN_FEATURES)
+    {
+        TileCover cover = TileCovers::fromBorderType(getBorderType(serverId));
+        if (cover != TILE_COVER_NONE && (MountainBrush::Features & cover))
+        {
+            return false;
+        }
+    }
+
+    return _serverIds.contains(serverId);
 }
 
 void MountainBrush::addServerId(uint32_t serverId)
@@ -414,145 +213,9 @@ void MountainBrush::setGround(const std::string &groundBrushId)
     this->_ground = Brush::LazyGround(groundBrushId);
 }
 
-MountainWallNeighborMap::MountainWallNeighborMap(MountainBrush *mountainBrush, const Position &position, const Map &map)
-    : position(position)
-{
-    for (int dy = -2; dy <= 2; ++dy)
-    {
-        for (int dx = -2; dx <= 2; ++dx)
-        {
-            Tile *tile = map.getTile(position + Position(dx, dy, 0));
-            if (!tile)
-            {
-                set(dx, dy, TILE_COVER_NONE);
-            }
-            else
-            {
-                TileCover cover = tile->getTileCover(mountainBrush);
-                cover = unifyTileCover(cover);
-                set(dx, dy, cover);
-            }
-        }
-    }
-}
-
-TileCover MountainWallNeighborMap::at(int x, int y) const
-{
-    return data[index(x, y)];
-}
-
-TileCover &MountainWallNeighborMap::at(int x, int y)
-{
-    return data[index(x, y)];
-}
-
-void MountainWallNeighborMap::set(int x, int y, TileCover cover)
-{
-    data[index(x, y)] = cover;
-}
-
-int MountainWallNeighborMap::index(int x, int y) const
-{
-    return (y + 2) * 5 + (x + 2);
-}
-
-MountainGroundNeighborMap::MountainGroundNeighborMap(Brush *ground, const Position &position, const Map &map)
-    : position(position), ground(ground)
-{
-    for (int dy = -2; dy <= 2; ++dy)
-    {
-        for (int dx = -2; dx <= 2; ++dx)
-        {
-            Tile *tile = map.getTile(position + Position(dx, dy, 0));
-            Entry entry;
-
-            entry.hasMountainGround = tile && tile->hasGround() && ground->erasesItem(tile->ground()->itemType->id);
-            set(dx, dy, entry);
-        }
-    }
-}
-
-void MountainGroundNeighborMap::set(int x, int y, value_type entry)
-{
-    data[index(x, y)] = entry;
-}
-
 bool MountainPart::InnerWall::contains(uint32_t serverId) const noexcept
 {
     return south == serverId || east == serverId || southEast == serverId;
-}
-
-MountainGroundNeighborMap::value_type MountainGroundNeighborMap::at(int x, int y) const
-{
-    return data[index(x, y)];
-}
-
-MountainGroundNeighborMap::value_type &MountainGroundNeighborMap::at(int x, int y)
-{
-    return data[index(x, y)];
-}
-
-int MountainGroundNeighborMap::index(int x, int y) const
-{
-    return (y + 2) * 5 + (x + 2);
-}
-
-TileCover MountainGroundNeighborMap::getTileCover(int dx, int dy) const noexcept
-{
-    using namespace TileCoverShortHands;
-
-    TileCover cover = TILE_COVER_NONE;
-
-    auto includeIfGround = [this, dx, dy, &cover](int offsetX, int offsetY, TileCover part) {
-        if (at(dx + offsetX, dy + offsetY).hasMountainGround)
-        {
-            cover |= part;
-        }
-    };
-
-    includeIfGround(-1, -1, NorthWestCorner);
-    includeIfGround(0, -1, North);
-    includeIfGround(1, -1, NorthEastCorner);
-
-    includeIfGround(-1, 0, West);
-    includeIfGround(1, 0, East);
-
-    includeIfGround(-1, 1, SouthWestCorner);
-    includeIfGround(0, 1, South);
-    includeIfGround(1, 1, SouthEastCorner);
-
-    return cover;
-}
-
-// >>>>>>>>>>>>>>>>>>>>>>>>>
-// >>>>>>>>>>>>>>>>>>>>>>>>>
-// >>>MountainNeighborMap>>>
-// >>>>>>>>>>>>>>>>>>>>>>>>>
-// >>>>>>>>>>>>>>>>>>>>>>>>>
-
-MountainNeighborMap::MountainNeighborMap(const Position &position, const Map &map)
-{
-    for (int dy = -2; dy <= 2; ++dy)
-    {
-        for (int dx = -2; dx <= 2; ++dx)
-        {
-            auto borderBlock = getTileCoverAt(map, position + Position(dx, dy, 0));
-            if (borderBlock)
-            {
-                for (auto &cover : borderBlock->covers)
-                {
-                    cover.featureCover = TileCovers::unifyTileCover(cover.featureCover, TileQuadrant::TopLeft);
-                    cover.borderCover = TileCovers::unifyTileCover(cover.borderCover, TileQuadrant::TopLeft);
-
-                    if (!Settings::PLACE_MOUNTAIN_FEATURES)
-                    {
-                        cover.featureCover &= ~MountainBrush::Features;
-                    }
-                }
-                set(dx, dy, *borderBlock);
-            }
-        }
-    }
 }
 
 bool MountainBrush::isFeature(const ItemType &itemType) const
@@ -561,116 +224,24 @@ bool MountainBrush::isFeature(const ItemType &itemType) const
     return mountainBorder.getBorderType(serverId) != BorderType::None;
 }
 
-bool MountainBrush::isOuterBorder(const ItemType &itemType) const
-{
-    uint32_t serverId = itemType.id;
-    return outerBorder && outerBorder->value()->includes(serverId);
-}
-
-bool MountainNeighborMap::isMountainFeaturePart(const ItemType &itemType) const
-{
-    Brush *brush = itemType.brush;
-    if (!brush || brush->type() != BrushType::Mountain)
-    {
-        return false;
-    }
-
-    return static_cast<MountainBrush *>(brush)->isFeature(itemType);
-}
-
-bool MountainNeighborMap::isMountainOuterBorderPart(const ItemType &itemType) const
-{
-    Brush *brush = itemType.brush;
-    if (!brush || brush->type() != BrushType::Mountain)
-    {
-        return false;
-    }
-
-    return static_cast<MountainBrush *>(brush)->isOuterBorder(itemType);
-}
-
-std::optional<MountainPart::BorderBlock> MountainNeighborMap::getTileCoverAt(const Map &map, const Position position) const
-{
-    Tile *tile = map.getTile(position);
-
-    if (!tile)
-    {
-        return std::nullopt;
-    }
-
-    MountainPart::BorderBlock block;
-    if (tile->hasGround())
-    {
-        Brush *brush = tile->ground()->itemType->brush;
-        if (brush && brush->type() == BrushType::Mountain)
-        {
-            auto *groundBrush = static_cast<MountainBrush *>(brush);
-            block.ground = groundBrush;
-            block.addFeature(TILE_COVER_FULL, groundBrush);
-        }
-    }
-
-    for (const auto &item : tile->items())
-    {
-        const ItemType &itemType = *item->itemType;
-        if (isMountainFeaturePart(itemType))
-        {
-            auto mountainBrush = static_cast<MountainBrush *>(itemType.brush);
-            TileCover cover = mountainBrush->getTileCover(item->serverId());
-            if (cover != TILE_COVER_NONE)
-            {
-                block.addFeature(cover, mountainBrush);
-            }
-        }
-        else if (isMountainOuterBorderPart(itemType))
-        {
-            auto mountainBrush = static_cast<MountainBrush *>(itemType.brush);
-            TileCover cover = mountainBrush->getBorderTileCover(item->serverId());
-            if (cover != TILE_COVER_NONE)
-            {
-                block.addBorder(cover, mountainBrush);
-            }
-        }
-    }
-
-    return block;
-}
-
 void MountainPart::BorderBlock::add(const MountainCover &block)
 {
-    add(block.featureCover, block.borderCover, block.brush);
-}
-
-void MountainPart::BorderBlock::addFeature(TileCover cover, MountainBrush *brush)
-{
-    add(cover, TILE_COVER_NONE, brush);
-}
-
-void MountainPart::BorderBlock::addBorder(TileCover cover, MountainBrush *brush)
-{
-    add(TILE_COVER_NONE, cover, brush);
+    add(block.cover, block.brush);
 }
 
 void MountainPart::BorderBlock::add(TileCover cover, MountainBrush *brush)
 {
-    add(cover, cover, brush);
-}
-
-void MountainPart::BorderBlock::add(TileCover featureCover, TileCover borderCover, MountainBrush *brush)
-{
-
     auto found = std::find_if(covers.begin(), covers.end(), [brush](const MountainCover &block) {
         return block.brush == brush;
     });
 
     if (found != covers.end())
     {
-        found->featureCover |= featureCover;
-        found->borderCover |= borderCover;
+        found->cover |= cover;
     }
     else
     {
-        covers.emplace_back(MountainCover(featureCover, borderCover, brush));
+        covers.emplace_back(MountainCover(cover, brush));
     }
 }
 
@@ -678,7 +249,7 @@ void MountainPart::BorderBlock::merge(const BorderBlock &other)
 {
     for (const auto &border : other.covers)
     {
-        add(border.featureCover, border.borderCover, border.brush);
+        add(border.cover, border.brush);
     }
 }
 
@@ -719,19 +290,14 @@ void MountainBrush::generalBorderize(MapView &mapView, const Position &position)
             for (auto &block : center.covers)
             {
                 TileCover featureRemove = None;
-                TileCover borderRemove = None;
 
 #define fast_removeInvalidBorder(_x, _y, _requiredCover, _removeCover)            \
     do                                                                            \
     {                                                                             \
         auto neighbor = neighbors.at(dx + (_x), dy + (_y)).getCover(block.brush); \
-        if (!(neighbor && (neighbor->featureCover & (_requiredCover))))           \
+        if (!(neighbor && (neighbor->cover & (_requiredCover))))                  \
         {                                                                         \
             featureRemove |= (_removeCover);                                      \
-        }                                                                         \
-        if (!(neighbor && (neighbor->borderCover & (_requiredCover))))            \
-        {                                                                         \
-            borderRemove |= (_removeCover);                                       \
         }                                                                         \
     } while (false)
 
@@ -739,33 +305,11 @@ void MountainBrush::generalBorderize(MapView &mapView, const Position &position)
     do                                                                            \
     {                                                                             \
         auto neighbor = neighbors.at(dx + (_x), dy + (_y)).getCover(block.brush); \
-        if (!(neighbor && (neighbor->featureCover & (_requiredCover))))           \
+        if (!(neighbor && (neighbor->cover & (_requiredCover))))                  \
         {                                                                         \
-            TileCovers::eraseSide(block.featureCover, (_side));                   \
-            TileCovers::eraseSide(block.borderCover, (_side));                    \
+            TileCovers::eraseSide(block.cover, (_side));                          \
         }                                                                         \
     } while (false)
-
-                // const auto removeInvalidBorder = [&neighbors, &block, &featureRemove, &borderRemove, dx, dy](int x, int y, TileCover requiredCover, TileCover removeCover) {
-                //     auto neighbor = neighbors.at(dx + x, dy + y).getCover(block.brush);
-                //     if (!(neighbor && (neighbor->featureCover & requiredCover)))
-                //     {
-                //         featureRemove |= removeCover;
-                //     }
-                //     if (!(neighbor && (neighbor->borderCover & requiredCover)))
-                //     {
-                //         borderRemove |= removeCover;
-                //     }
-                // };
-
-                // const auto eraseInvalidSide = [&neighbors, &block, dx, dy](int x, int y, TileCover requirement, TileCover side) {
-                //     auto neighbor = neighbors.at(dx + x, dy + y).getCover(block.brush);
-                //     if (!(neighbor && (neighbor->featureCover & requirement)))
-                //     {
-                //         TileCovers::eraseSide(block.featureCover, side);
-                //         TileCovers::eraseSide(block.borderCover, side);
-                //     }
-                // };
 
                 fast_eraseInvalidSide(0, -1, FullSouth, North);
                 fast_eraseInvalidSide(1, 0, FullWest, East);
@@ -779,12 +323,7 @@ void MountainBrush::generalBorderize(MapView &mapView, const Position &position)
 
                 if (featureRemove != None)
                 {
-                    block.featureCover &= ~featureRemove;
-                }
-
-                if (borderRemove != None)
-                {
-                    block.borderCover &= ~borderRemove;
+                    block.cover &= ~featureRemove;
                 }
             }
         }
@@ -795,13 +334,15 @@ void MountainBrush::generalBorderize(MapView &mapView, const Position &position)
 
 void MountainBrush::fixBorders(MapView &mapView, const Position &position, MountainNeighborMap &neighbors)
 {
+    // Place north and west first so that mirroring works
+    fixBordersAtOffset(mapView, position, neighbors, 0, -1);
+    fixBordersAtOffset(mapView, position, neighbors, -1, 0);
+
     // Top
     fixBordersAtOffset(mapView, position, neighbors, -1, -1);
-    fixBordersAtOffset(mapView, position, neighbors, 0, -1);
     fixBordersAtOffset(mapView, position, neighbors, 1, -1);
 
     // Middle
-    fixBordersAtOffset(mapView, position, neighbors, -1, 0);
     fixBordersAtOffset(mapView, position, neighbors, 0, 0);
     fixBordersAtOffset(mapView, position, neighbors, 1, 0);
 
@@ -896,22 +437,18 @@ void MountainBrush::fixBordersAtOffset(MapView &mapView, const Position &positio
     MountainNeighborMap::mirrorSouth(borderBlock, neighbors.at(x, y - 1));
     MountainNeighborMap::mirrorWest(borderBlock, neighbors.at(x + 1, y));
 
-    MountainNeighborMap::mirrorNorthWest(cover, neighbors.at(x - 1, y - 1));
-    MountainNeighborMap::mirrorNorthEast(cover, neighbors.at(x + 1, y - 1));
-    MountainNeighborMap::mirrorSouthEast(cover, neighbors.at(x + 1, y + 1));
-    MountainNeighborMap::mirrorSouthWest(cover, neighbors.at(x - 1, y + 1));
+    // MountainNeighborMap::mirrorNorthWest(borderBlock, neighbors.at(x - 1, y - 1));
+    // MountainNeighborMap::mirrorNorthEast(borderBlock, neighbors.at(x + 1, y - 1));
+    // MountainNeighborMap::mirrorSouthEast(borderBlock, neighbors.at(x + 1, y + 1));
+    // MountainNeighborMap::mirrorSouthWest(borderBlock, neighbors.at(x - 1, y + 1));
 
     // Do not use a mirrored diagonal if we already have a diagonal.
     for (auto &block : borderBlock.covers)
     {
         auto current = currentCover.getCover(block.brush);
-        if (current && current->featureCover & Diagonals)
+        if (current && current->cover & Diagonals)
         {
-            block.featureCover &= ~(Diagonals);
-        }
-        if (current && current->borderCover & Diagonals)
-        {
-            block.borderCover &= ~(Diagonals);
+            block.cover &= ~(Diagonals);
         }
     }
 
@@ -945,13 +482,12 @@ void MountainBrush::fixBordersAtOffset(MapView &mapView, const Position &positio
         //             }
         //         }
         //     }
-        cover.featureCover = TileCovers::unifyTileCover(cover.featureCover, TileQuadrant::BottomRight);
-        cover.borderCover = TileCovers::unifyTileCover(cover.borderCover, TileQuadrant::BottomRight);
+        cover.cover = TileCovers::unifyTileCover(cover.cover, TileQuadrant::BottomRight);
 
         // Special cases
         if (!Settings::PLACE_MOUNTAIN_FEATURES)
         {
-            TileCover &featureCover = cover.featureCover;
+            TileCover &featureCover = cover.cover;
             // cover &= ~MountainBrush::features;
 
             if ((featureCover & SouthWest) && !(neighbors.at(x + 1, y + 1).ground || neighbors.at(x + 1, y).ground))
@@ -974,15 +510,11 @@ void MountainBrush::fixBordersAtOffset(MapView &mapView, const Position &positio
         }
     }
 
-    // // fixBorderEdgeCases(x, y, cover, neighbors);
-
     neighbors.set(x, y, borderBlock);
-
-    // borderBlock.sort();
 
     for (const auto &block : borderBlock.covers)
     {
-        auto cover = block.featureCover;
+        auto cover = block.cover;
         auto brush = block.brush;
 
         if (cover & Full)
@@ -991,66 +523,6 @@ void MountainBrush::fixBordersAtOffset(MapView &mapView, const Position &positio
             applyFeature(mapView, pos, brush, BorderType::SouthEastDiagonal);
             return;
         }
-
-        // // Sides
-        // if (cover & North)
-        // {
-        //     applyFeature(mapView, pos, brush, BorderType::North);
-        // }
-        // if (cover & East)
-        // {
-        //     applyFeature(mapView, pos, brush, BorderType::East);
-        // }
-        // if (cover & South)
-        // {
-        //     applyFeature(mapView, pos, brush, BorderType::South);
-        // }
-        // if (cover & West)
-        // {
-        //     applyFeature(mapView, pos, brush, BorderType::West);
-        // }
-
-        // // Diagonals
-        // if (cover & Diagonals)
-        // {
-        //     if (cover & NorthWest)
-        //     {
-        //         applyFeature(mapView, pos, brush, BorderType::NorthWestDiagonal);
-        //     }
-        //     else if (cover & NorthEast)
-        //     {
-        //         applyFeature(mapView, pos, brush, BorderType::NorthEastDiagonal);
-        //     }
-        //     else if (cover & SouthEast)
-        //     {
-        //         applyFeature(mapView, pos, brush, BorderType::SouthEastDiagonal);
-        //     }
-        //     else if (cover & SouthWest)
-        //     {
-        //         applyFeature(mapView, pos, brush, BorderType::SouthWestDiagonal);
-        //     }
-        // }
-
-        // // Corners
-        // if (cover & Corners)
-        // {
-        //     if (cover & NorthEastCorner)
-        //     {
-        //         applyFeature(mapView, pos, brush, BorderType::NorthEastCorner);
-        //     }
-        //     if (cover & NorthWestCorner)
-        //     {
-        //         applyFeature(mapView, pos, brush, BorderType::NorthWestCorner);
-        //     }
-        //     if (cover & SouthEastCorner)
-        //     {
-        //         applyFeature(mapView, pos, brush, BorderType::SouthEastCorner);
-        //     }
-        //     if (cover & SouthWestCorner)
-        //     {
-        //         applyFeature(mapView, pos, brush, BorderType::SouthWestCorner);
-        //     }
-        // }
 
         auto applyIf = [&cover, &mapView, &pos, &brush](TileCover req, BorderType borderType) {
             if (cover & req)
@@ -1088,8 +560,66 @@ void MountainBrush::fixBordersAtOffset(MapView &mapView, const Position &positio
     }
 }
 
-MountainPart::MountainCover::MountainCover(TileCover featureCover, TileCover borderCover, MountainBrush *brush)
-    : featureCover(featureCover), borderCover(borderCover), brush(brush) {}
+uint32_t MountainPart::BorderBlock::zOrder() const noexcept
+{
+    // TODO
+    return 0;
+}
+
+void MountainBrush::applyFeature(MapView &mapView, const Position &position, MountainBrush *brush, BorderType borderType)
+{
+    auto borderItemId = brush->mountainBorder.getServerId(borderType);
+
+    if (borderItemId && (!isFeature(TileCovers::fromBorderType(borderType)) || Settings::PLACE_MOUNTAIN_FEATURES))
+    {
+        mapView.addItem(position, *borderItemId);
+    }
+}
+
+MountainPart::MountainCover::MountainCover(TileCover cover, MountainBrush *brush)
+    : cover(cover), brush(brush) {}
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>
+// >>>>>>>>>>>>>>>>>>>>>>>>>
+// >>>MountainNeighborMap>>>
+// >>>>>>>>>>>>>>>>>>>>>>>>>
+// >>>>>>>>>>>>>>>>>>>>>>>>>
+
+MountainNeighborMap::MountainNeighborMap(const Position &position, const Map &map)
+{
+    TileCover noFeatureMask = ~MountainBrush::Features;
+    for (int dy = -2; dy <= 2; ++dy)
+    {
+        for (int dx = -2; dx <= 2; ++dx)
+        {
+            auto borderBlock = getTileCoverAt(map, position + Position(dx, dy, 0));
+            if (borderBlock)
+            {
+                for (auto &cover : borderBlock->covers)
+                {
+                    cover.cover = TileCovers::unifyTileCover(cover.cover, TileQuadrant::TopLeft);
+
+                    if (!Settings::PLACE_MOUNTAIN_FEATURES)
+                    {
+                        cover.cover &= noFeatureMask;
+                    }
+                }
+                set(dx, dy, *borderBlock);
+            }
+        }
+    }
+}
+
+bool MountainNeighborMap::isMountainFeaturePart(const ItemType &itemType) const
+{
+    Brush *brush = itemType.brush;
+    if (!brush || brush->type() != BrushType::Mountain)
+    {
+        return false;
+    }
+
+    return static_cast<MountainBrush *>(brush)->isFeature(itemType);
+}
 
 MountainPart::BorderBlock &MountainNeighborMap::at(int x, int y)
 {
@@ -1116,13 +646,51 @@ int MountainNeighborMap::index(int x, int y) const
     return (y + 2) * 5 + (x + 2);
 }
 
+std::optional<MountainPart::BorderBlock> MountainNeighborMap::getTileCoverAt(const Map &map, const Position position) const
+{
+    Tile *tile = map.getTile(position);
+
+    if (!tile)
+    {
+        return std::nullopt;
+    }
+
+    MountainPart::BorderBlock block;
+    if (tile->hasGround())
+    {
+        Brush *brush = tile->ground()->itemType->brush;
+        if (brush && brush->type() == BrushType::Mountain)
+        {
+            auto *groundBrush = static_cast<MountainBrush *>(brush);
+            block.ground = groundBrush;
+            block.add(TILE_COVER_FULL, groundBrush);
+            return block;
+        }
+    }
+
+    for (const auto &item : tile->items())
+    {
+        const ItemType &itemType = *item->itemType;
+        if (isMountainFeaturePart(itemType))
+        {
+            auto mountainBrush = static_cast<MountainBrush *>(itemType.brush);
+            TileCover cover = mountainBrush->getTileCover(item->serverId());
+            if (cover != TILE_COVER_NONE)
+            {
+                block.add(cover, mountainBrush);
+            }
+        }
+    }
+
+    return block;
+}
+
 void MountainNeighborMap::mirrorNorth(value_type &source, const value_type &borders)
 {
     if (borders.ground)
     {
         TileCover cover = TileCovers::mirrorNorth(TILE_COVER_FULL);
-        source.addFeature(cover, borders.ground);
-        source.addBorder(cover, borders.ground);
+        source.add(cover, borders.ground);
         return;
     }
 
@@ -1133,9 +701,7 @@ void MountainNeighborMap::mirrorNorth(value_type &source, const value_type &bord
         uint32_t z = 10000;
         if (z > sourceZ)
         {
-
-            source.addFeature(TileCovers::mirrorNorth(cover.featureCover), cover.brush);
-            source.addBorder(TileCovers::mirrorNorth(cover.borderCover), cover.brush);
+            source.add(TileCovers::mirrorNorth(cover.cover), cover.brush);
         }
     }
 
@@ -1147,8 +713,7 @@ void MountainNeighborMap::mirrorEast(value_type &source, const value_type &borde
     if (borders.ground)
     {
         TileCover cover = TileCovers::mirrorEast(TILE_COVER_FULL);
-        source.addFeature(cover, borders.ground);
-        source.addBorder(cover, borders.ground);
+        source.add(cover, borders.ground);
         return;
     }
 
@@ -1160,8 +725,7 @@ void MountainNeighborMap::mirrorEast(value_type &source, const value_type &borde
         if (z > sourceZ)
         {
 
-            source.addFeature(TileCovers::mirrorEast(cover.featureCover), cover.brush);
-            source.addBorder(TileCovers::mirrorEast(cover.borderCover), cover.brush);
+            source.add(TileCovers::mirrorEast(cover.cover), cover.brush);
         }
     }
 
@@ -1173,8 +737,7 @@ void MountainNeighborMap::mirrorSouth(value_type &source, const value_type &bord
     if (borders.ground)
     {
         TileCover cover = TileCovers::mirrorSouth(TILE_COVER_FULL);
-        source.addFeature(cover, borders.ground);
-        source.addBorder(cover, borders.ground);
+        source.add(cover, borders.ground);
         return;
     }
 
@@ -1185,9 +748,7 @@ void MountainNeighborMap::mirrorSouth(value_type &source, const value_type &bord
         uint32_t z = 10000;
         if (z > sourceZ)
         {
-
-            source.addFeature(TileCovers::mirrorSouth(cover.featureCover), cover.brush);
-            source.addBorder(TileCovers::mirrorSouth(cover.borderCover), cover.brush);
+            source.add(TileCovers::mirrorSouth(cover.cover), cover.brush);
         }
     }
 
@@ -1199,8 +760,7 @@ void MountainNeighborMap::mirrorWest(value_type &source, const value_type &borde
     if (borders.ground)
     {
         TileCover cover = TileCovers::mirrorWest(TILE_COVER_FULL);
-        source.addFeature(cover, borders.ground);
-        source.addBorder(cover, borders.ground);
+        source.add(cover, borders.ground);
         return;
     }
 
@@ -1212,36 +772,7 @@ void MountainNeighborMap::mirrorWest(value_type &source, const value_type &borde
         if (z > sourceZ)
         {
 
-            source.addFeature(TileCovers::mirrorWest(cover.featureCover), cover.brush);
-            source.addBorder(TileCovers::mirrorWest(cover.borderCover), cover.brush);
-        }
-    }
-
-    // addGroundBorder(source, borders, TILE_COVER_SOUTH);
-}
-
-void MountainNeighborMap::addGroundBorder(value_type &self, const value_type &other, TileCover border)
-{
-    if (other.ground)
-    {
-        if (self.ground)
-        {
-            if (self.zOrder() < other.zOrder())
-            {
-                auto brush = other.ground->getBorderTowards(self.ground);
-                if (brush)
-                {
-                    self.add(border, brush);
-                }
-            }
-        }
-        else
-        {
-            auto brush = other.ground;
-            if (brush)
-            {
-                self.add(border, brush);
-            }
+            source.add(TileCovers::mirrorWest(cover.cover), cover.brush);
         }
     }
 }
@@ -1256,34 +787,26 @@ void MountainNeighborMap::mirrorNorthEast(value_type &source, const value_type &
 
 void MountainNeighborMap::mirrorSouthEast(value_type &source, const value_type &borders)
 {
+    using namespace TileCoverShortHands;
+
+    if (borders.ground)
+    {
+        source.add(TILE_COVER_SOUTH_EAST_CORNER, borders.ground);
+        return;
+    }
+
+    uint32_t sourceZ = source.zOrder();
+    for (const auto &cover : borders.covers)
+    {
+        // uint32_t z = cover.brush->preferredZOrder();
+        uint32_t z = 99999;
+        if (z > sourceZ && (cover.cover & (Full | NorthWest | SouthWest | West | North | NorthWestCorner)))
+        {
+            source.add(TILE_COVER_SOUTH_EAST_CORNER, cover.brush);
+        }
+    }
 }
 
 void MountainNeighborMap::mirrorSouthWest(value_type &source, const value_type &borders)
 {
-}
-
-uint32_t MountainPart::BorderBlock::zOrder() const noexcept
-{
-    // TODO
-    return 0;
-}
-
-void MountainBrush::applyFeature(MapView &mapView, const Position &position, MountainBrush *brush, BorderType borderType)
-{
-    auto borderItemId = brush->mountainBorder.getServerId(borderType);
-
-    if (borderItemId && (!isFeature(TileCovers::fromBorderType(borderType)) || Settings::PLACE_MOUNTAIN_FEATURES))
-    {
-        mapView.addItem(position, *borderItemId);
-    }
-}
-
-void MountainBrush::applyBorder(MapView &mapView, const Position &position, MountainBrush *brush, BorderType borderType)
-{
-    auto borderItemId = brush->outerBorder->value()->getServerId(borderType);
-
-    if (borderItemId && (!isFeature(TileCovers::fromBorderType(borderType)) || Settings::PLACE_MOUNTAIN_FEATURES))
-    {
-        mapView.addBorder(position, *borderItemId, brush->outerBorder->value()->preferredZOrder());
-    }
 }

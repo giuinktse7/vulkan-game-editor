@@ -15,7 +15,6 @@ class MapView;
 class Tile;
 class GroundBrush;
 struct BorderZOrderBlock;
-struct MountainGroundNeighborMap;
 struct MountainNeighborMap;
 
 namespace MountainPart
@@ -31,10 +30,9 @@ namespace MountainPart
 
     struct MountainCover
     {
-        MountainCover(TileCover featureCover, TileCover borderCover, MountainBrush *brush);
+        MountainCover(TileCover cover, MountainBrush *brush);
 
-        TileCover featureCover;
-        TileCover borderCover;
+        TileCover cover;
         MountainBrush *brush;
     };
 
@@ -51,9 +49,6 @@ namespace MountainPart
         const MountainCover *getCover(MountainBrush *brush) const;
 
         void add(TileCover cover, MountainBrush *brush);
-        void add(TileCover featureCover, TileCover borderCover, MountainBrush *brush);
-        void addFeature(TileCover cover, MountainBrush *brush);
-        void addBorder(TileCover cover, MountainBrush *brush);
 
         void add(const MountainCover &block);
         void merge(const BorderBlock &other);
@@ -69,7 +64,6 @@ class MountainBrush final : public Brush
 
   public:
     MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, uint32_t iconServerId);
-    MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, std::string outerBorderBrushId, uint32_t iconServerId);
 
     static void generalBorderize(MapView &mapView, const Position &position);
 
@@ -96,18 +90,12 @@ class MountainBrush final : public Brush
     uint32_t nextGroundServerId();
 
     TileCover getTileCover(uint32_t serverId) const;
-    TileCover getBorderTileCover(uint32_t serverId) const;
 
     static bool isFeature(TileCover cover);
-
-    void setOuterBorder(std::string outerBorderId);
-
-    void borderize(MapView &mapView, const Position &position);
 
     void addServerId(uint32_t serverId);
 
     bool isFeature(const ItemType &itemType) const;
-    bool isOuterBorder(const ItemType &itemType) const;
 
     static constexpr TileCover Features =
         TILE_COVER_WEST | TILE_COVER_NORTH |
@@ -115,8 +103,6 @@ class MountainBrush final : public Brush
         TILE_COVER_NORTH_WEST_CORNER | TILE_COVER_NORTH_EAST_CORNER | TILE_COVER_SOUTH_WEST_CORNER;
 
   private:
-    void borderize(MapView &mapView, MountainGroundNeighborMap &neighbors, int dx, int dy);
-
     void applyGround(MapView &mapView, const Position &position);
 
     void initialize();
@@ -132,6 +118,8 @@ class MountainBrush final : public Brush
     static void fixBorders(MapView &mapView, const Position &position, MountainNeighborMap &neighbors);
     static void fixBordersAtOffset(MapView &mapView, const Position &position, MountainNeighborMap &neighbors, int x, int y);
 
+    BorderBrush *getBorderTowards(GroundBrush *groundBrush) const;
+
     mutable std::unordered_set<uint32_t> _serverIds;
 
     std::string _id;
@@ -144,58 +132,7 @@ class MountainBrush final : public Brush
     MountainPart::InnerWall innerWall;
     BorderData mountainBorder;
 
-    std::optional<LazyObject<BorderBrush *>> outerBorder;
-
     Brush::LazyGround _ground;
-};
-
-struct MountainGroundNeighborMap
-{
-    struct Entry
-    {
-        bool hasMountainGround = false;
-    };
-
-    using value_type = MountainGroundNeighborMap::Entry;
-
-    MountainGroundNeighborMap(Brush *ground, const Position &position, const Map &map);
-
-    value_type at(int x, int y) const;
-    value_type &at(int x, int y);
-
-    void set(int x, int y, value_type entry);
-
-    TileCover getTileCover(int dx, int dy) const noexcept;
-    TileCover getBorderTileCover(int dx, int dy) const noexcept;
-
-    Position position;
-
-    // Must be a RAW brush or a ground brush
-    Brush *ground;
-
-  private:
-    int index(int x, int y) const;
-
-    std::array<value_type, 25> data;
-};
-
-struct MountainWallNeighborMap
-{
-    using value_type = TileCover;
-
-    MountainWallNeighborMap(MountainBrush *mountainBrush, const Position &position, const Map &map);
-
-    value_type at(int x, int y) const;
-    value_type &at(int x, int y);
-
-    void set(int x, int y, value_type cover);
-
-    Position position;
-
-  private:
-    int index(int x, int y) const;
-
-    std::array<value_type, 25> data;
 };
 
 struct MountainNeighborMap
@@ -215,7 +152,7 @@ struct MountainNeighborMap
 
     std::vector<ExpandedTileBlock> expandedCovers;
 
-    static void addGroundBorder(value_type &self, const value_type &other, TileCover border);
+    static void addBorderFromGround(value_type &self, const value_type &other, TileCover border);
 
     static void mirrorNorth(value_type &source, const value_type &borders);
     static void mirrorEast(value_type &source, const value_type &borders);
@@ -233,7 +170,6 @@ struct MountainNeighborMap
     int index(int x, int y) const;
     std::optional<MountainPart::BorderBlock> getTileCoverAt(const Map &map, const Position position) const;
     bool isMountainFeaturePart(const ItemType &itemType) const;
-    bool isMountainOuterBorderPart(const ItemType &itemType) const;
 
     std::array<value_type, 25> data;
 };

@@ -13,6 +13,7 @@
 #include "../tile.h"
 #include "../tile_cover.h"
 #include "border_brush.h"
+#include "mountain_brush.h"
 
 std::variant<std::monostate, uint32_t, const GroundBrush *> GroundBrush::replacementFilter = std::monostate{};
 
@@ -89,6 +90,8 @@ void GroundBrush::apply(MapView &mapView, const Position &position)
             int zOrder = this->zOrder();
 
             fixBorders(mapView, position, neighbors);
+
+            MountainBrush::generalBorderize(mapView, position);
         }
     }
 }
@@ -568,7 +571,7 @@ int GroundNeighborMap::index(int x, int y) const
     return (y + 2) * 5 + (x + 2);
 }
 
-void GroundNeighborMap::addGroundBorder(value_type &self, const value_type &other, TileCover border)
+void GroundNeighborMap::addBorderFromGround(value_type &self, const value_type &other, TileCover border)
 {
     if (other.ground)
     {
@@ -607,7 +610,7 @@ void GroundNeighborMap::mirrorNorth(TileBorderBlock &source, const TileBorderBlo
         }
     }
 
-    addGroundBorder(source, borders, TILE_COVER_SOUTH);
+    addBorderFromGround(source, borders, TILE_COVER_SOUTH);
 }
 
 void GroundNeighborMap::mirrorEast(TileBorderBlock &source, const TileBorderBlock &borders)
@@ -623,7 +626,7 @@ void GroundNeighborMap::mirrorEast(TileBorderBlock &source, const TileBorderBloc
         }
     }
 
-    addGroundBorder(source, borders, TILE_COVER_WEST);
+    addBorderFromGround(source, borders, TILE_COVER_WEST);
 }
 
 void GroundNeighborMap::mirrorSouth(value_type &source, const value_type &borders)
@@ -639,7 +642,7 @@ void GroundNeighborMap::mirrorSouth(value_type &source, const value_type &border
         }
     }
 
-    addGroundBorder(source, borders, TILE_COVER_NORTH);
+    addBorderFromGround(source, borders, TILE_COVER_NORTH);
 }
 
 void GroundNeighborMap::mirrorWest(value_type &source, const value_type &borders)
@@ -655,7 +658,7 @@ void GroundNeighborMap::mirrorWest(value_type &source, const value_type &borders
         }
     }
 
-    addGroundBorder(source, borders, TILE_COVER_EAST);
+    addBorderFromGround(source, borders, TILE_COVER_EAST);
 }
 
 void GroundNeighborMap::mirrorNorthWest(value_type &source, const value_type &borders)
@@ -672,22 +675,22 @@ void GroundNeighborMap::mirrorNorthWest(value_type &source, const value_type &bo
     //     }
     // }
 
-    addGroundBorder(source, borders, TILE_COVER_NORTH_WEST_CORNER);
+    addBorderFromGround(source, borders, TILE_COVER_NORTH_WEST_CORNER);
 }
 
 void GroundNeighborMap::mirrorNorthEast(value_type &source, const value_type &borders)
 {
-    addGroundBorder(source, borders, TILE_COVER_NORTH_EAST_CORNER);
+    addBorderFromGround(source, borders, TILE_COVER_NORTH_EAST_CORNER);
 }
 
 void GroundNeighborMap::mirrorSouthEast(value_type &source, const value_type &borders)
 {
-    addGroundBorder(source, borders, TILE_COVER_SOUTH_EAST_CORNER);
+    addBorderFromGround(source, borders, TILE_COVER_SOUTH_EAST_CORNER);
 }
 
 void GroundNeighborMap::mirrorSouthWest(value_type &source, const value_type &borders)
 {
-    addGroundBorder(source, borders, TILE_COVER_SOUTH_WEST_CORNER);
+    addBorderFromGround(source, borders, TILE_COVER_SOUTH_WEST_CORNER);
 }
 
 void GroundNeighborMap::addCenterCorners()
@@ -771,9 +774,6 @@ void GroundBrush::borderize(MapView &mapView, const Position &position)
     using namespace TileCoverShortHands;
 
     GroundNeighborMap neighbors(nullptr, position, *mapView.map());
-
-    int dx = -1;
-    int dy = -1;
 
     for (int dx = -1; dx <= 1; ++dx)
     {

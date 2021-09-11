@@ -112,10 +112,15 @@ TileCover TileCovers::mergeTileCover(TileCover a, TileCover b)
 
 TileCover TileCovers::unifyTileCover(TileCover cover, TileQuadrant quadrant, TileCover preferredDiagonal)
 {
-    DEBUG_ASSERT((preferredDiagonal == None) || exactlyOneSet(preferredDiagonal & Diagonals), "Preferred diagonal must be None or have exactly one diagonal set.");
+    // DEBUG_ASSERT((preferredDiagonal == None) || exactlyOneSet(preferredDiagonal & Diagonals), "Preferred diagonal must be None or have exactly one diagonal set.");
 
     if (cover & Full)
         return Full;
+
+    if (exactlyOneSet(cover))
+    {
+        return cover;
+    }
 
     bool north = cover & FullNorth;
     bool east = cover & FullEast;

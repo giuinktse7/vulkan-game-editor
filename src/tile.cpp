@@ -994,10 +994,19 @@ TileBorderBlock Tile::getFullBorderTileCover(TileCover excludeMask) const
     if (_ground)
     {
         Brush *brush = _ground->itemType->brush;
-        if (brush && brush->type() == BrushType::Ground)
+        if (brush)
         {
-            auto *groundBrush = static_cast<GroundBrush *>(brush);
-            block.ground = groundBrush;
+            // We might have to get the ground from a mountain brush
+            if (brush->type() == BrushType::Mountain)
+            {
+                brush = static_cast<MountainBrush *>(brush)->ground();
+            }
+
+            if (brush->type() == BrushType::Ground)
+            {
+                auto *groundBrush = static_cast<GroundBrush *>(brush);
+                block.ground = groundBrush;
+            }
         }
     }
 
