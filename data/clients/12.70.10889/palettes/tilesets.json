@@ -1530,9 +1530,174 @@
                                 [36498, 36501],
 
                                 // Speckled brick wall ramps
-                                [35591, 35598]
+                                [35591, 35598],
+
+                                // Speckled brick wall slants
+                                [35812, 35817],
+                                [35966, 35968],
 
                                 // Ancient wall
+                                35625,
+                                35613,
+                                35640,
+                                35637,
+
+                                // Ancient wall tapestry
+                                35616,
+                                35614,
+                                35618,
+                                35617,
+                                35628,
+                                35630,
+                                35629,
+                                35627,
+
+                                // Ancient wall (blue bottom)
+                                35631,
+                                35619,
+                                35641,
+                                35638,
+
+                                // Ancient wall (orange bottom)
+                                35633,
+                                35622,
+                                35679,
+                                35639,
+
+                                // Ancient wall (with ornaments)
+                                35615,
+                                35620,
+                                35621,
+                                35623,
+                                35624,
+                                35626,
+                                35632,
+                                [35634, 35636],
+
+                                // Ancient wall (archways)
+                                [35642, 35645],
+                                [35702, 35707],
+
+                                // Ancient wall (railings)
+                                35648,
+                                35646,
+                                35651,
+                                35650,
+                                35649,
+                                35693,
+                                35701,
+                                35698,
+                                35694,
+                                35692,
+                                35700,
+                                35697,
+                                35695,
+                                35647,
+                                35699,
+                                35696,
+
+                                // Ancient wall (windows)
+                                35653,
+                                35652,
+                                [35708, 35713],
+
+                                // Ancient wall (ramps)
+                                [35654, 35661],
+
+                                // Ancient wall (broken)
+                                [35662, 35667],
+                                [35975, 35984],
+
+                                // Ancient wall (doors)
+                                [35668, 35673],
+                                [35684, 35691],
+                                [36329, 36332],
+                                [36403, 36406],
+
+                                // Ancient wall (obelisk & slants)
+                                [35674, 35678],
+                                [35682, 35683],
+
+                                // Ancient wall (corner)
+                                [35680, 35681],
+
+                                // Sandstone wall, purple ornament
+                                35830,
+                                35827,
+                                35836,
+                                35834,
+
+                                // Sandstone wall, purple ornament (archway)
+                                35837,
+                                35843,
+
+                                // Sandstone wall, purple ornament (extras/hooks)
+                                [35828, 35829],
+                                [35831, 35833],
+                                35835,
+
+                                // Sandstone wall, purple ornament (green-glow top)
+                                35854,
+                                35851,
+                                35858,
+
+                                // Sandstone wall, purple ornament (green-glow top, extras)
+                                [35852, 35853],
+                                [35855, 35857],
+                                35859,
+
+                                // Sandstone wall, purple-red ornament
+                                35841,
+                                35838,
+                                35848,
+                                35846,
+
+                                // Sandstone wall, purple-red ornament (archway)
+                                [35849, 35850],
+
+                                // Sandstone wall, purple-red ornament (extras/hooks)
+                                [35839, 35840],
+                                35842,
+                                [35844, 35845],
+                                35847,
+
+                                // Sandstone wall, purple ornament (green-glow top)
+                                35863,
+                                35860,
+                                35867,
+                                [35861, 35862],
+                                [35864, 35866],
+                                35868,
+
+                                // Sandstone wall, purple ornament -> purple-red ornament
+                                35870,
+                                35872,
+                                35871,
+                                35869,
+
+                                // Oriental wall ornament
+                                [35916, 35931],
+
+                                // Burnt walls
+                                [36176, 36183],
+
+                                // Stone wall, yellowed
+                                [37254, 37256],
+                                37258,
+                                [37265, 37307],
+
+                                // Linen
+                                [27166, 27171],
+                                [27365, 27408],
+
+                                // Rope (for linen tent)
+                                [27409, 27412],
+                                [27415, 27416],
+
+                                // Wooden pole
+                                [27413, 27414]
+
+                                // NEXT: Dragon lair wall, start serverID 27661
                             ]
                         }
                     ]
