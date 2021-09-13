@@ -1,5 +1,8 @@
 #include "item_type.h"
 
+#include "brushes/border_brush.h"
+#include "brushes/brush.h"
+#include "brushes/ground_brush.h"
 #include "graphics/appearances.h"
 
 const uint32_t ItemType::getPatternIndex(const Position &pos) const
@@ -414,4 +417,72 @@ bool ItemType::isStackable() const noexcept
 bool ItemType::isBottom() const noexcept
 {
     return hasFlag(AppearanceFlag::Bottom);
+}
+
+void ItemType::setFlag(ItemTypeFlag flag) noexcept
+{
+    flags |= flag;
+}
+
+void ItemType::addBrush(Brush *brush)
+{
+    DEBUG_ASSERT(brush != nullptr, "Brush should not be nullptr.");
+    switch (brush->type())
+    {
+        case BrushType::Border:
+            setFlag(ItemTypeFlag::InBorderBrush);
+            borderBrush = static_cast<BorderBrush *>(brush);
+            break;
+        case BrushType::Mountain:
+            setFlag(ItemTypeFlag::InMountainBrush);
+            otherBrush = brush;
+            break;
+        case BrushType::Ground:
+            setFlag(ItemTypeFlag::InGroundBrush);
+            groundBrush = static_cast<GroundBrush *>(brush);
+            break;
+        case BrushType::Wall:
+            setFlag(ItemTypeFlag::InWallBrush);
+            otherBrush = brush;
+            break;
+        default:
+            otherBrush = brush;
+            break;
+    }
+}
+
+Brush *ItemType::getBrush(BrushType type) const noexcept
+{
+    if (type == BrushType::Ground)
+    {
+        return groundBrush;
+    }
+    else if (type == BrushType::Border)
+    {
+        return borderBrush;
+    }
+    else if (otherBrush && otherBrush->type() == type)
+    {
+        return otherBrush;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+Brush *ItemType::brush() const noexcept
+{
+    if (groundBrush)
+    {
+        return groundBrush;
+    }
+    else if (borderBrush)
+    {
+        return borderBrush;
+    }
+    else
+    {
+        return otherBrush;
+    }
 }

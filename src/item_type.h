@@ -11,13 +11,28 @@
 #include "position.h"
 #include "sprite_info.h"
 
-
 #pragma warning(push)
 #pragma warning(disable : 26812)
+
+/**
+ * Flags for fast property checks
+ */
+enum class ItemTypeFlag
+{
+    None = 0,
+    InGroundBrush = 1,
+    InBorderBrush = 1 << 1,
+    InMountainBrush = 1 << 2,
+    InWallBrush = 1 << 3
+};
+VME_ENUM_OPERATORS(ItemTypeFlag);
 
 class ObjectAppearance;
 struct SpriteAnimation;
 class Brush;
+class BorderBrush;
+class GroundBrush;
+enum class BrushType : int;
 class RawBrush;
 
 enum class ItemDataType
@@ -421,6 +436,11 @@ class ItemType
     bool isStackable() const noexcept;
     bool isBorder() const noexcept;
     bool hasFlag(AppearanceFlag flag) const noexcept;
+    inline bool hasFlag(ItemTypeFlag flag) const noexcept;
+
+    Brush *brush() const noexcept;
+
+    Brush *getBrush(BrushType type) const noexcept;
 
     /*
     The items.otb may report a client ID that is incorrect. One such example
@@ -442,6 +462,10 @@ class ItemType
 
     [[nodiscard]] bool alwaysBottomOfTile() const noexcept;
 
+    void setFlag(ItemTypeFlag flag) noexcept;
+
+    void addBrush(Brush *brush);
+
     // std::string editorsuffix;
     std::string article;
     std::string pluralName;
@@ -449,9 +473,6 @@ class ItemType
     // std::string runeSpellName;
 
     ObjectAppearance *appearance = nullptr;
-
-    // Ground/border/wall brush
-    Brush *brush = nullptr;
 
     ItemType::Group group = ItemType::Group::None;
     ItemTypes_t type = ItemTypes_t::None;
@@ -490,20 +511,32 @@ class ItemType
     bool showCount = true;
     bool stackable = false;
 
+    ItemTypeFlag flags = ItemTypeFlag::None;
+
   private:
     uint8_t getFluidPatternOffset(FluidType fluidType) const;
+
+    // Ground/border/wall brush
+    GroundBrush *groundBrush = nullptr;
+    BorderBrush *borderBrush = nullptr;
+    Brush *otherBrush = nullptr;
 
     std::string _name;
 };
 
 inline bool ItemType::isBorder() const noexcept
 {
-    return hasFlag(AppearanceFlag::Border);
+    return hasFlag(AppearanceFlag::Border) || hasFlag(ItemTypeFlag::InBorderBrush);
 }
 
 inline bool ItemType::isValid() const noexcept
 {
     return appearance != nullptr;
+}
+
+inline bool ItemType::hasFlag(ItemTypeFlag flag) const noexcept
+{
+    return to_underlying(flags & flag);
 }
 
 #pragma warning(pop)
