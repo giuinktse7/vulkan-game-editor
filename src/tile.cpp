@@ -136,10 +136,9 @@ GroundBrush *Tile::groundBrush() const
 {
     if (_ground)
     {
-        Brush *brush = _ground->itemType->brush;
+        Brush *brush = _ground->itemType->getBrush(BrushType::Ground);
         if (brush)
         {
-            DEBUG_ASSERT(brush->type() == BrushType::Ground, "Incorrect brush type!");
             return static_cast<GroundBrush *>(brush);
         }
         else
@@ -355,8 +354,8 @@ Item *Tile::addBorder(Item &&item, uint32_t zOrder)
     auto cursor = _items.begin();
     while (cursor != _items.end() && ((*cursor)->itemType->isBorder() || (*cursor)->itemType->stackOrder <= TileStackOrder::Border))
     {
-        Brush *brush = (*cursor)->itemType->brush;
-        if (brush && brush->type() == BrushType::Border)
+        Brush *brush = (*cursor)->itemType->getBrush(BrushType::Border);
+        if (brush)
         {
             uint32_t brushZOrder = static_cast<BorderBrush *>(brush)->preferredZOrder();
             if (zOrder < brushZOrder)
@@ -418,7 +417,7 @@ Item *Tile::replaceGround(Item &&ground)
     else if (!currentSelected && ground.selected)
         ++_selectionCount;
 
-    _ground = std::make_unique<Item>(std::move(ground));
+    _ground = std::make_shared<Item>(std::move(ground));
     return &(*_ground);
 }
 
@@ -426,7 +425,7 @@ Item *Tile::replaceItem(size_t index, Item &&item)
 {
     bool s1 = _items.at(index)->selected;
     bool s2 = item.selected;
-    _items.at(index) = std::make_unique<Item>(std::move(item));
+    _items.at(index) = std::make_shared<Item>(std::move(item));
 
     if (s1 && !s2)
         --_selectionCount;
@@ -434,6 +433,17 @@ Item *Tile::replaceItem(size_t index, Item &&item)
         ++_selectionCount;
 
     return _items.at(index).get();
+}
+
+// TODO Might be incorrect?
+void Tile::replaceItemByServerId(uint32_t serverId, uint32_t newServerId)
+{
+    auto found = std::find_if(_items.begin(), _items.end(), [serverId](const std::shared_ptr<Item> &item) { return item->serverId() == serverId; });
+    if (found != _items.end())
+    {
+        auto newItem = std::make_shared<Item>(newServerId);
+        found->swap(newItem);
+    }
 }
 
 void Tile::setGround(std::shared_ptr<Item> ground)
@@ -993,9 +1003,28 @@ TileBorderBlock Tile::getFullBorderTileCover(TileCover excludeMask) const
     TileBorderBlock block;
     if (_ground)
     {
-        Brush *brush = _ground->itemType->brush;
-        if (brush)
+        ItemType *itemType = _ground->itemType;
+        // Some borders, like shallow water, are ground items
+        // if (itemType->hasFlag(ItemTypeFlag::InBorderBrush))
+        // {
+        //     auto brush = itemType->getBrush(BrushType::Border);
+
+        //     if (brush)
+        //     {
+        //         auto borderBrush = static_cast<BorderBrush *>(brush);
+        //         auto cover = borderBrush->getTileCover(itemType->id);
+        //         cover &= ~(excludeMask);
+
+        //         if (cover != TILE_COVER_NONE)
+        //         {
+        //             block.add(cover, borderBrush);
+        //         }
+        //     }
+        // }
+        if (itemType->hasFlag(ItemTypeFlag::InGroundBrush | ItemTypeFlag::InMountainBrush))
         {
+            Brush *brush = itemType->brush();
+
             // We might have to get the ground from a mountain brush
             if (brush->type() == BrushType::Mountain)
             {
@@ -1012,13 +1041,15 @@ TileBorderBlock Tile::getFullBorderTileCover(TileCover excludeMask) const
 
     for (const auto &item : _items)
     {
-        if (!item->itemType->isBorder())
+        ItemType *itemType = item->itemType;
+
+        if (!itemType->isBorder())
             return block;
-        auto brush = item->itemType->brush;
+
+        auto brush = itemType->getBrush(BrushType::Border);
 
         if (brush)
         {
-            DEBUG_ASSERT(brush->type() == BrushType::Border, "Incorrect brush type!");
             auto borderBrush = static_cast<BorderBrush *>(brush);
             auto cover = borderBrush->getTileCover(item->serverId());
             cover &= ~(excludeMask);
@@ -1033,7 +1064,7 @@ TileBorderBlock Tile::getFullBorderTileCover(TileCover excludeMask) const
     return block;
 }
 
-BorderZOrderBlock::BorderZOrderBlock(TileCover cover, BorderBrush *brush)
+BorderCover::BorderCover(TileCover cover, BorderBrush *brush)
     : cover(cover), brush(brush)
 {
     // Necessary to make sure center is instantiated

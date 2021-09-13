@@ -18,9 +18,9 @@ class GroundBrush;
 enum TileCover;
 struct TileBorderBlock;
 
-struct BorderZOrderBlock
+struct BorderCover
 {
-    BorderZOrderBlock(TileCover cover, BorderBrush *brush);
+    BorderCover(TileCover cover, BorderBrush *brush);
 
     TileCover cover;
     BorderBrush *brush;
@@ -78,6 +78,8 @@ class Tile
 
     void insertItem(std::shared_ptr<Item> item, size_t index);
     void insertItem(Item &&item, size_t index);
+    void replaceItemByServerId(uint32_t serverId, uint32_t newServerId);
+
     void removeItem(size_t index);
     void removeItem(Item *item);
     void removeItem(std::function<bool(const Item &)> predicate);
@@ -87,6 +89,7 @@ class Tile
     void removeCreature();
     std::shared_ptr<Item> dropGround();
     void setGround(std::shared_ptr<Item> ground);
+
     void moveItems(Tile &other);
     void moveItemsWithBroadcast(Tile &other);
     void moveSelected(Tile &other);

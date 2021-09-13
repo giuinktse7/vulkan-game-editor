@@ -229,6 +229,18 @@ void MapView::setGround(Tile &tile, Item &&ground, bool clearBorders)
     history.commit(std::move(action));
 }
 
+void MapView::replaceItemByServerId(Tile &tile, uint32_t oldServerId, uint32_t newServerId)
+{
+    Tile newTile = tile.deepCopy();
+
+    newTile.replaceItemByServerId(oldServerId, newServerId);
+
+    Action action(ActionType::SetTile);
+    action.addChange(SetTile(std::move(newTile)));
+
+    history.commit(std::move(action));
+}
+
 void MapView::addBorder(const Position &pos, uint32_t id, uint32_t zOrder)
 {
     if (!Items::items.validItemType(id) || pos.x < 0 || pos.y < 0)
@@ -1206,8 +1218,7 @@ void MapView::selectTopThing(const Position &position, bool isNewSelection)
             {
                 if (Settings::AUTO_BORDER)
                 {
-                    Brush *brush = topItem->itemType->brush;
-                    if (brush && (brush->type() == BrushType::Mountain || brush->type() == BrushType::Border))
+                    if (topItem->itemType->hasFlag(ItemTypeFlag::InMountainBrush | ItemTypeFlag::InBorderBrush))
                     {
                         selectTile(*tile);
                     }

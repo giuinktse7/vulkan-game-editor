@@ -158,6 +158,7 @@ class MapView
     void addItem(const Position &pos, Item &&item, bool onBlocking = true);
     void addItem(Tile &tile, Item &&item);
     void setGround(Tile &tile, Item &&ground, bool clearBorders = false);
+    void replaceItemByServerId(Tile &tile, uint32_t oldServerId, uint32_t newServerId);
 
     void setBottomItem(const Position &position, Item &&item);
     void setBottomItem(const Tile &tile, Item &&item);
