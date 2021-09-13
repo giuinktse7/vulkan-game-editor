@@ -298,7 +298,7 @@ void WallBrush::finalize()
         ItemType *itemType = Items::items.getItemTypeByServerId(serverId);
         if (itemType)
         {
-            itemType->brush = this;
+            itemType->addBrush(this);
         }
     }
 }

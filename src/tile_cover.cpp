@@ -369,7 +369,7 @@ TileCover TileCovers::mirrorWest(TileCover cover)
     return result;
 }
 
-TileCover TileCovers::mirrorNorth(TileCover tileCover)
+TileCover TileCovers::mirrorNorth(TileCover tileCover, bool corner)
 {
     if (tileCover & FullNorth)
     {
@@ -379,11 +379,11 @@ TileCover TileCovers::mirrorNorth(TileCover tileCover)
     TileCover result = None;
     if (tileCover & (East | NorthEastCorner | SouthEast))
     {
-        result |= SouthEastCorner;
+        result |= corner ? SouthEastCorner : NorthEast;
     }
     if (tileCover & (West | NorthWestCorner | SouthWest))
     {
-        result |= SouthWestCorner;
+        result |= corner ? SouthWestCorner : NorthWest;
     }
 
     return result;
@@ -424,6 +424,45 @@ bool TileCovers::hasFullSide(TileCover cover, TileCover side)
             return cover & FullWest;
         default:
             return false;
+    }
+}
+
+TileCover TileCovers::mirrorXY(TileCover cover)
+{
+    DEBUG_ASSERT(exactlyOneSet(cover), "Must be exactly one set.");
+
+    switch (cover)
+    {
+        case None:
+            return None;
+        case Full:
+            return Full;
+        case North:
+            return South;
+        case East:
+            return West;
+        case South:
+            return North;
+        case West:
+            return East;
+        case NorthWest:
+            return SouthEastCorner;
+        case NorthEast:
+            return SouthWestCorner;
+        case SouthWest:
+            return NorthEastCorner;
+        case SouthEast:
+            return NorthWestCorner;
+        case NorthWestCorner:
+            return SouthEast;
+        case NorthEastCorner:
+            return SouthWest;
+        case SouthWestCorner:
+            return NorthEast;
+        case SouthEastCorner:
+            return NorthWest;
+        default:
+            ABORT_PROGRAM("Should never happen");
     }
 }
 

@@ -34,7 +34,8 @@
                 "corner": { "nw": 4652, "ne": 4653, "sw": 4654, "se": 4655 },
                 "diagonal": { "nw": 4648, "ne": 4649, "sw": 4650, "se": 4651 }
             },
-            "centerGroundId": "sea"
+            "centerGroundId": "sea",
+            "stackBehavior": "clear"
         },
         {
             "id": "gray_mountain_wall_thin_border",
@@ -46,7 +47,6 @@
                 "corner": { "nw": 4460, "ne": 4461, "sw": 4463, "se": 4462 },
                 "diagonal": { "nw": 4464, "ne": 4465, "sw": 4467, "se": 4466 }
             }
-            // "centerGroundId": "gray_mountain"
         },
         {
             "id": "earth_mountain_wall_border",
@@ -58,7 +58,54 @@
                 "corner": { "nw": 8367, "ne": 8369, "sw": 8057, "se": 8366 },
                 "diagonal": { "nw": 8117, "ne": 8118, "sw": 8119, "se": 8120 }
             }
-            // "centerGroundId": "gray_mountain"
+        },
+        {
+            "id": "sand_to_water",
+            "name": "Shallow Water",
+            "type": "border",
+            "lookId": 4640,
+            "items": {
+                "straight": { "n": 4632, "e": 4635, "s": 4634, "w": 4633 },
+                "corner": { "nw": 4643, "ne": 4642, "sw": 4641, "se": 4640 },
+                "diagonal": { "nw": 4639, "ne": 4638, "sw": 4637, "se": 4636 }
+            },
+            "extraItems": {
+                "straight": { "n": [4656, 4660], "e": [4659, 4663], "s": [4657, 4661], "w": [4658, 4662] }
+            },
+            "centerGroundId": "sand",
+            "stackBehavior": "fullGround",
+            "rules": [
+                {
+                    "whenBorder": {
+                        "borderId": "sea_border",
+                        "case": {
+                            "selfEdge": "s",
+                            "borderEdge": "csw",
+                            "actions": [
+                                {
+                                    "type": "replace",
+                                    "target": "other",
+                                    "value": 4657
+                                }
+                            ]
+                        },
+                        "action": "setFull"
+                    }
+                },
+                {}
+            ]
         }
+        // {
+        //     "id": "sand_to_water",
+        //     "name": "Shallow Water",
+        //     "type": "border",
+        //     "lookId": 4640,
+        //     "items": {
+        //         "straight": { "n": 4634, "e": 4633, "s": 4632, "w": 4635 },
+        //         "corner": { "nw": 4636, "ne": 4637, "sw": 4638, "se": 4639 },
+        //         "diagonal": { "nw": 4640, "ne": 4641, "sw": 4642, "se": 4643 }
+        //     },
+        //     "centerGroundId": "sand"
+        // }
     ]
 }

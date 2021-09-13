@@ -1,8 +1,6 @@
 #pragma once
 
 #include <array>
-#include <cstddef>  // For std::ptrdiff_t
-#include <iterator> // For std::forward_iterator_tag
 #include <memory>
 #include <optional>
 #include <string>
@@ -148,9 +146,8 @@ using ThingDrawInfo = std::variant<DrawItemType, DrawCreatureType>;
 class Brush
 {
   public:
-    struct LazyGround : public LazyObject<Brush *>
+    struct LazyGround : public LazyObject<GroundBrush *>
     {
-        LazyGround(RawBrush *brush);
         LazyGround(GroundBrush *brush);
         LazyGround(std::string groundBrushId);
     };
@@ -159,6 +156,7 @@ class Brush
 
     virtual ~Brush() = default;
 
+    virtual void applyWithoutBorderize(MapView &mapView, const Position &position);
     virtual void apply(MapView &mapView, const Position &position) = 0;
     virtual void erase(MapView &mapView, const Position &position) = 0;
 
@@ -285,19 +283,26 @@ struct BorderNeighborMap
 struct BorderData
 {
     BorderData(std::array<uint32_t, 12> borderIds);
-    BorderData(std::array<uint32_t, 12> borderIds, RawBrush *centerBrush);
     BorderData(std::array<uint32_t, 12> borderIds, GroundBrush *centerBrush);
 
     bool is(uint32_t serverId, BorderType borderType) const;
     std::optional<uint32_t> getServerId(BorderType borderType) const noexcept;
     BorderType getBorderType(uint32_t serverId) const;
     std::array<uint32_t, 12> getBorderIds() const;
-    Brush *centerBrush() const;
+    GroundBrush *centerBrush() const;
 
     void setCenterGroundId(const std::string &id);
 
+    void setExtraBorderIds(vme_unordered_map<uint32_t, BorderType> &&extraIds);
+    const vme_unordered_map<uint32_t, BorderType> *getExtraBorderIds() const;
+
   private:
     std::array<uint32_t, 12> borderIds = {};
+
+    /**
+     * Extras border ids that also count as tile cover for this border
+     */
+    std::unique_ptr<vme_unordered_map<uint32_t, BorderType>> extraIds;
 
     std::optional<Brush::LazyGround> _centerBrush;
 };

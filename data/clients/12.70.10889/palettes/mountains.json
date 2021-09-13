@@ -23,7 +23,7 @@
             "id": "earth_mountain",
             "name": "Earth Mountain",
             "type": "mountain",
-            "ground": 10164,
+            "ground": "earth_mountain_ground",
             "lookId": 10164,
             "items": {
                 "innerWalls": {

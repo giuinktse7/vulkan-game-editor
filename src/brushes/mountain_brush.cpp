@@ -9,8 +9,8 @@
 #include "ground_brush.h"
 #include "raw_brush.h"
 
-MountainBrush::MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, uint32_t iconServerId)
-    : Brush(name), _id(id), _ground(ground), innerWall(innerWall), mountainBorder(mountainBorders), _iconServerId(iconServerId)
+MountainBrush::MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData&& mountainBorders, uint32_t iconServerId)
+    : Brush(name), _id(id), _ground(ground), innerWall(innerWall), mountainBorder(std::move(mountainBorders)), _iconServerId(iconServerId)
 {
     initialize();
 }
@@ -47,6 +47,12 @@ void MountainBrush::apply(MapView &mapView, const Position &position)
     }
 }
 
+void MountainBrush::applyWithoutBorderize(MapView &mapView, const Position &position)
+{
+    Tile &tile = mapView.getOrCreateTile(position);
+    mapView.setGround(tile, Item(nextGroundServerId()));
+}
+
 void MountainBrush::apply(MapView &mapView, const Position &position, BorderType borderType)
 {
     auto borderItemId = mountainBorder.getServerId(borderType);
@@ -73,19 +79,9 @@ Brush *MountainBrush::ground() const noexcept
     if (!_ground.hasValue())
     {
         auto brush = _ground.value();
-        switch (brush->type())
+        for (uint32_t serverId : serverIds())
         {
-            case BrushType::Raw:
-                _serverIds.insert(static_cast<RawBrush *>(brush)->serverId());
-                break;
-            case BrushType::Ground:
-                for (uint32_t serverId : static_cast<GroundBrush *>(brush)->serverIds())
-                {
-                    _serverIds.insert(serverId);
-                }
-                break;
-            default:
-                break;
+            _serverIds.insert(serverId);
         }
 
         return brush;
@@ -170,7 +166,7 @@ bool MountainBrush::erasesItem(uint32_t serverId) const
         }
     }
 
-    return _serverIds.contains(serverId);
+    return _serverIds.contains(serverId) || ground()->erasesItem(serverId);
 }
 
 void MountainBrush::addServerId(uint32_t serverId)
@@ -196,11 +192,6 @@ const std::string MountainBrush::getDisplayId() const
 const std::string &MountainBrush::id() const noexcept
 {
     return _id;
-}
-
-void MountainBrush::setGround(RawBrush *brush)
-{
-    this->_ground = Brush::LazyGround(brush);
 }
 
 void MountainBrush::setGround(GroundBrush *brush)
@@ -352,22 +343,6 @@ void MountainBrush::fixBorders(MapView &mapView, const Position &position, Mount
     fixBordersAtOffset(mapView, position, neighbors, 1, 1);
 }
 
-void MountainBrush::applyGround(MapView &mapView, const Position &position)
-{
-    Brush *groundBrush = ground();
-    switch (groundBrush->type())
-    {
-        case BrushType::Raw:
-            static_cast<RawBrush *>(groundBrush)->apply(mapView, position);
-            break;
-        case BrushType::Ground:
-            static_cast<GroundBrush *>(groundBrush)->applyWithoutBordering(mapView, position);
-            break;
-        default:
-            ABORT_PROGRAM("Incorrect brush type in MountainBrush::applyGround");
-    }
-}
-
 void MountainBrush::fixBordersAtOffset(MapView &mapView, const Position &position, MountainNeighborMap &neighbors, int x, int y)
 {
     using namespace TileCoverShortHands;
@@ -378,8 +353,7 @@ void MountainBrush::fixBordersAtOffset(MapView &mapView, const Position &positio
     {
         // Remove current mountain borders on the tile
         mapView.removeItems(*mapView.getTile(pos), [](const Item &item) {
-            Brush *brush = item.itemType->brush;
-            return brush && brush->type() == BrushType::Mountain;
+            return item.itemType->hasFlag(ItemTypeFlag::InMountainBrush);
         });
     }
 
@@ -393,7 +367,7 @@ void MountainBrush::fixBordersAtOffset(MapView &mapView, const Position &positio
             mapView.createTile(pos);
         }
 
-        currentCover.ground->applyGround(mapView, pos);
+        currentCover.ground->ground()->applyWithoutBorderize(mapView, pos);
 
         bool innerEast = !neighbors.at(x + 1, y).ground;
         bool innerSouth = !neighbors.at(x, y + 1).ground;
@@ -418,14 +392,9 @@ void MountainBrush::fixBordersAtOffset(MapView &mapView, const Position &positio
     Tile &tile = mapView.getOrCreateTile(pos);
     {
         Item *ground = tile.ground();
-        if (ground)
+        if (ground && ground->itemType->hasFlag(ItemTypeFlag::InMountainBrush))
         {
-            Brush *groundBrush = ground->itemType->brush;
-            bool isMountain = groundBrush && groundBrush->type() == BrushType::Mountain;
-            if (isMountain)
-            {
-                return;
-            }
+            return;
         }
     }
 
@@ -612,8 +581,8 @@ MountainNeighborMap::MountainNeighborMap(const Position &position, const Map &ma
 
 bool MountainNeighborMap::isMountainFeaturePart(const ItemType &itemType) const
 {
-    Brush *brush = itemType.brush;
-    if (!brush || brush->type() != BrushType::Mountain)
+    Brush *brush = itemType.getBrush(BrushType::Mountain);
+    if (!brush)
     {
         return false;
     }
@@ -658,8 +627,8 @@ std::optional<MountainPart::BorderBlock> MountainNeighborMap::getTileCoverAt(con
     MountainPart::BorderBlock block;
     if (tile->hasGround())
     {
-        Brush *brush = tile->ground()->itemType->brush;
-        if (brush && brush->type() == BrushType::Mountain)
+        Brush *brush = tile->ground()->itemType->getBrush(BrushType::Mountain);
+        if (brush)
         {
             auto *groundBrush = static_cast<MountainBrush *>(brush);
             block.ground = groundBrush;
@@ -673,7 +642,7 @@ std::optional<MountainPart::BorderBlock> MountainNeighborMap::getTileCoverAt(con
         const ItemType &itemType = *item->itemType;
         if (isMountainFeaturePart(itemType))
         {
-            auto mountainBrush = static_cast<MountainBrush *>(itemType.brush);
+            auto mountainBrush = static_cast<MountainBrush *>(itemType.brush());
             TileCover cover = mountainBrush->getTileCover(item->serverId());
             if (cover != TILE_COVER_NONE)
             {

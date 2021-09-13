@@ -14,7 +14,7 @@ struct Position;
 class MapView;
 class Tile;
 class GroundBrush;
-struct BorderZOrderBlock;
+struct BorderCover;
 struct MountainNeighborMap;
 
 namespace MountainPart
@@ -63,11 +63,12 @@ class MountainBrush final : public Brush
     static constexpr uint32_t DefaultZOrder = 900;
 
   public:
-    MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData mountainBorders, uint32_t iconServerId);
+    MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData &&mountainBorders, uint32_t iconServerId);
 
     static void generalBorderize(MapView &mapView, const Position &position);
 
     void apply(MapView &mapView, const Position &position) override;
+    void applyWithoutBorderize(MapView &mapView, const Position &position) override;
     void erase(MapView &mapView, const Position &position) override;
 
     bool erasesItem(uint32_t serverId) const override;
@@ -81,7 +82,6 @@ class MountainBrush final : public Brush
 
     const std::unordered_set<uint32_t> &serverIds() const;
 
-    void setGround(RawBrush *brush);
     void setGround(GroundBrush *brush);
     void setGround(const std::string &groundBrushId);
 

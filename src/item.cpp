@@ -7,7 +7,6 @@
 #include "sprite_info.h"
 #include "util.h"
 
-
 Item::Item(ItemTypeId itemTypeId)
     : itemType(Items::items.getItemTypeByServerId(itemTypeId)),
       _guid(Items::items.createItemGid())
@@ -143,7 +142,7 @@ bool Item::isGround() const noexcept
 
 bool Item::isBorder() const noexcept
 {
-    return itemType->hasFlag(AppearanceFlag::Border);
+    return itemType->isBorder();
 }
 
 bool Item::isBottom() const noexcept

@@ -22,17 +22,38 @@ using json = nlohmann::json;
 
 namespace JsonParseMethods
 {
-    Brush::LazyGround fromJson(const json &json)
+    Brush::LazyGround parseLazyGround(const json &json)
     {
-        if (json.is_number_integer())
+        if (json.is_string())
         {
-            int serverId = json.get<int>();
-            RawBrush *brush = static_cast<RawBrush *>(Brush::getOrCreateRawBrush(serverId));
-            return Brush::LazyGround(brush);
+            return Brush::LazyGround(json.get<std::string>());
         }
         else
         {
-            return Brush::LazyGround(json.get<std::string>());
+            throw json::type_error::create(302, "Invalid ground ID.");
+        }
+    }
+
+    BorderStackBehavior parseBorderStackBehavior(const json &json)
+    {
+        if (json.is_string())
+        {
+            std::string stackBehavior = json.get<std::string>();
+            switch (string_hash(stackBehavior.c_str()))
+            {
+                case "default"_sh:
+                    return BorderStackBehavior::Default;
+                case "clear"_sh:
+                    return BorderStackBehavior::Clear;
+                case "fullGround"_sh:
+                    return BorderStackBehavior::FullGround;
+                default:
+                    throw json::type_error::create(302, std::format("Invalid stack behavior: {}", stackBehavior));
+            }
+        }
+        else
+        {
+            throw json::type_error::create(302, "Invalid stack behavior.");
         }
     }
 } // namespace JsonParseMethods
@@ -429,15 +450,15 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
             case BrushType::Raw:
             {
                 uint32_t serverId = static_cast<const RawBrush *>(brush)->serverId();
-                Items::items.getItemTypeByServerId(serverId)->brush = mountainBrush;
+                Items::items.getItemTypeByServerId(serverId)->addBrush(mountainBrush);
                 mountainBrush->addServerId(serverId);
                 break;
             }
             case BrushType::Ground:
             {
-                for (const uint32_t serverId : static_cast<const MountainBrush *>(brush)->serverIds())
+                for (const uint32_t serverId : static_cast<const GroundBrush *>(brush)->serverIds())
                 {
-                    Items::items.getItemTypeByServerId(serverId)->brush = mountainBrush;
+                    Items::items.getItemTypeByServerId(serverId)->addBrush(mountainBrush);
                     mountainBrush->addServerId(serverId);
                 }
                 break;
@@ -447,7 +468,7 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
         }
     };
 
-    auto lazyGround = JsonParseMethods::fromJson(ground);
+    auto lazyGround = JsonParseMethods::parseLazyGround(ground);
     lazyGround.setOnFirstUse(onFirstGroundUse);
     stackTrace.pop();
 
@@ -575,8 +596,21 @@ GroundBrush BrushLoader::parseGroundBrush(const json &brush)
 
         for (auto &border : borders)
         {
-            // TODO Implement inner border
-            std::string align = border.at("align").get<std::string>();
+            std::string rawAlign = border.at("align").get<std::string>();
+            BorderAlign align;
+
+            switch (string_hash(rawAlign.c_str()))
+            {
+                case "inner"_sh:
+                    align = BorderAlign::Inner;
+                    break;
+                case "outer"_sh:
+                    align = BorderAlign::Outer;
+                    break;
+                default:
+                    throw json::type_error::create(302, std::format("Invalid value for 'align': '{}'. Expected 'inner' or 'outer'.", rawAlign));
+            }
+
             std::string borderId = border.at("id").get<std::string>();
 
             BorderBrush *brush = Brush::getBorderBrush(borderId);
@@ -590,6 +624,21 @@ GroundBrush BrushLoader::parseGroundBrush(const json &brush)
 
             GroundBorder groundBorder{};
             groundBorder.brush = brush;
+            groundBorder.align = align;
+
+            if (border.contains("to"))
+            {
+                std::string toGroundId = border.at("to").get<std::string>();
+                if (toGroundId == "none")
+                {
+                    groundBorder.to = Brush::LazyGround(nullptr);
+                }
+                else
+                {
+                    groundBorder.to = Brush::LazyGround(toGroundId);
+                }
+            }
+
             groundBrush.addBorder(groundBorder);
         }
 
@@ -597,6 +646,89 @@ GroundBrush BrushLoader::parseGroundBrush(const json &brush)
     }
 
     return groundBrush;
+}
+
+vme_unordered_map<uint32_t, BorderType> BrushLoader::parseExtraBorderIds(const json &extrasJson)
+{
+    vme_unordered_map<uint32_t, BorderType> data;
+    const auto parse = [&data](BorderType borderType, const json &json) {
+        if (json.is_number_integer())
+        {
+            data.try_emplace(json.get<int>(), borderType);
+        }
+        else if (json.is_array())
+        {
+            for (const auto &value : json)
+            {
+                data.try_emplace(value.get<int>(), borderType);
+            }
+        }
+    };
+
+    if (extrasJson.contains("straight"))
+    {
+        const json &straight = extrasJson.at("straight");
+        if (straight.contains("n"))
+        {
+            parse(BorderType::North, straight.at("n"));
+        }
+        if (straight.contains("e"))
+        {
+            parse(BorderType::East, straight.at("e"));
+        }
+        if (straight.contains("s"))
+        {
+            parse(BorderType::South, straight.at("s"));
+        }
+        if (straight.contains("w"))
+        {
+            parse(BorderType::West, straight.at("w"));
+        }
+    }
+
+    if (extrasJson.contains("corner"))
+    {
+        const json &corner = extrasJson.at("corner");
+        if (corner.contains("nw"))
+        {
+            parse(BorderType::NorthWestCorner, corner.at("nw"));
+        }
+        if (corner.contains("ne"))
+        {
+            parse(BorderType::NorthEastCorner, corner.at("ne"));
+        }
+        if (corner.contains("sw"))
+        {
+            parse(BorderType::SouthWestCorner, corner.at("sw"));
+        }
+        if (corner.contains("se"))
+        {
+            parse(BorderType::SouthEastCorner, corner.at("se"));
+        }
+    }
+
+    if (extrasJson.contains("diagonal"))
+    {
+        const json &diagonal = extrasJson.at("diagonal");
+        if (diagonal.contains("nw"))
+        {
+            parse(BorderType::NorthWestDiagonal, diagonal.at("nw"));
+        }
+        if (diagonal.contains("ne"))
+        {
+            parse(BorderType::NorthEastDiagonal, diagonal.at("ne"));
+        }
+        if (diagonal.contains("sw"))
+        {
+            parse(BorderType::SouthWestDiagonal, diagonal.at("sw"));
+        }
+        if (diagonal.contains("se"))
+        {
+            parse(BorderType::SouthEastDiagonal, diagonal.at("se"));
+        }
+    }
+
+    return data;
 }
 
 std::array<uint32_t, 12> BrushLoader::parseBorderIds(const json &borderJson)
@@ -653,6 +785,46 @@ BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
     {
         std::string groundId = brush.at("centerGroundId").get<std::string>();
         borderBrush.setCenterGroundId(groundId);
+    }
+
+    if (brush.contains("stackBehavior"))
+    {
+        std::string rawStackBehavior = brush.at("stackBehavior").get<std::string>();
+        borderBrush.setStackBehavior(JsonParseMethods::parseBorderStackBehavior(rawStackBehavior));
+    }
+
+    // TODO TEMP Remove
+    if (id == "sand_to_water")
+    {
+        WhenBorderRule rule;
+        rule.borderId = "sea_border";
+
+        {
+            WhenBorderRule::Case ruleCase;
+            ruleCase.selfEdge = BorderType::South;
+            ruleCase.borderEdge = BorderType::SouthWestCorner;
+
+            ReplaceAction action;
+            action.serverId = 4657;
+            action.replaceSelf = false;
+
+            ruleCase.action = std::make_unique<ReplaceAction>(std::move(action));
+
+            rule.cases.emplace_back(std::move(ruleCase));
+        }
+
+        auto setFullAction = std::make_unique<SetFullAction>();
+        setFullAction->setSelf = true;
+        rule.actions.emplace_back(std::move(setFullAction));
+
+        borderBrush.rules.emplace_back(std::move(rule));
+    }
+
+    if (brush.contains("extraItems"))
+    {
+        stackTrace.emplace("extraItems");
+        borderBrush.getBorderData().setExtraBorderIds(parseExtraBorderIds(brush.at("extraItems")));
+        stackTrace.pop();
     }
 
     return borderBrush;

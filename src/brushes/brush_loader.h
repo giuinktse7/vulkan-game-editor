@@ -8,6 +8,8 @@
 #include <string>
 
 #include "../tileset.h"
+#include "../util.h"
+#include "../const.h"
 
 class BorderBrush;
 class GroundBrush;
@@ -39,6 +41,7 @@ class BrushLoader
     void logError(std::string message);
 
     static std::array<uint32_t, 12> parseBorderIds(const nlohmann::json &borderJson);
+    static vme_unordered_map<uint32_t, BorderType> parseExtraBorderIds(const nlohmann::json &extrasJson);
 
     std::stack<std::string> stackTrace;
 };

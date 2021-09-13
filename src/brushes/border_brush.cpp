@@ -128,12 +128,6 @@ BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uin
     initialize();
 }
 
-BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, RawBrush *centerBrush)
-    : Brush(name), id(id), borderData(borderIds, centerBrush)
-{
-    initialize();
-}
-
 BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds)
     : Brush(name), id(id), borderData(borderIds)
 {
@@ -145,6 +139,15 @@ void BorderBrush::initialize()
     for (uint32_t id : borderData.getBorderIds())
     {
         sortedServerIds.emplace_back(id);
+    }
+
+    const auto &extraIds = borderData.getExtraBorderIds();
+    if (extraIds)
+    {
+        for (const auto &[key, val] : *extraIds)
+        {
+            sortedServerIds.emplace_back(key);
+        }
     }
 
     std::sort(sortedServerIds.begin(), sortedServerIds.end());
@@ -710,7 +713,7 @@ std::optional<uint32_t> BorderBrush::getServerId(BorderType borderType) const no
     return borderData.getServerId(borderType);
 }
 
-Brush *BorderBrush::centerBrush() const
+GroundBrush *BorderBrush::centerBrush() const
 {
     return borderData.centerBrush();
 }
@@ -775,4 +778,71 @@ uint32_t BorderBrush::preferredZOrder() const
     }
 
     return zOrder;
+}
+
+BorderStackBehavior BorderBrush::stackBehavior() const noexcept
+{
+    return _stackBehavior;
+}
+
+void BorderBrush::setStackBehavior(BorderStackBehavior behavior) noexcept
+{
+    _stackBehavior = behavior;
+}
+
+bool BorderRule::Condition::check(const TileBorderBlock &block) const
+{
+    for (const auto &cover : block.covers)
+    {
+        if (cover.brush->brushId() == borderId)
+        {
+            if (this->edges)
+            {
+                return TileCovers::contains(cover.cover, *this->edges);
+            }
+            else
+            {
+                return cover.cover != TILE_COVER_NONE;
+            }
+        }
+    }
+
+    return false;
+}
+
+void BorderRule::apply(MapView &mapView, BorderBrush *brush, const Position &position) const
+{
+    Tile &tile = mapView.getOrCreateTile(position);
+    if (action == "setFull")
+    {
+        mapView.removeItems(tile, [brush](const Item &item) { return brush->erasesItem(item.serverId()); });
+        if (brush->centerBrush())
+        {
+            brush->centerBrush()->applyWithoutBorderize(mapView, position);
+        }
+    }
+}
+
+std::optional<TileCover> WhenBorderRule::check(const TileBorderBlock &block) const
+{
+    for (const auto &cover : block.covers)
+    {
+        if (cover.brush->brushId() == borderId)
+        {
+            return cover.cover;
+        }
+    }
+
+    return std::nullopt;
+}
+
+void ReplaceAction::apply(MapView &mapView, const Position &position, uint32_t oldServerId)
+{
+    Tile &tile = mapView.getOrCreateTile(position);
+    mapView.replaceItemByServerId(tile, oldServerId, serverId);
+}
+
+void SetFullAction::apply(MapView &mapView, const Position &position, GroundBrush *groundBrush)
+{
+    groundBrush->applyWithoutBorderize(mapView, position);
 }

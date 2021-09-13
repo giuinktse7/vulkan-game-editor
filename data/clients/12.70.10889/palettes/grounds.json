@@ -82,6 +82,11 @@
                 { "ids": [5757, 5756, 5755, 5759, 5760, 5758, 5761], "chance": 0 }
             ],
             "borders": [
+                // {
+                //     "align": "outer",
+                //     "to": "sand",
+                //     "id": "sand_to_water"
+                // },
                 {
                     "align": "outer",
                     "id": "sea_border"
@@ -99,6 +104,33 @@
                 {
                     "align": "outer",
                     "id": "gray_mountain_wall_thin_border"
+                }
+            ]
+        },
+        {
+            "id": "earth_mountain_ground",
+            "name": "Earth Mountain Ground",
+            "type": "ground",
+            "lookId": 10164,
+            "zOrder": 10000,
+            "items": [{ "ids": [10164], "chance": 1 }],
+            "borders": []
+        },
+        {
+            "id": "sand",
+            "name": "Sand",
+            "type": "ground",
+            "lookId": 231,
+            "zOrder": 900,
+            "items": [
+                { "ids": [231], "chance": 1 },
+                { "ids": [4632, 4635, 4634, 4633, 4643, 4642, 4641, 4640, 4639, 4638, 4637, 4636], "chance": 0 }
+            ],
+            "borders": [
+                {
+                    "align": "inner",
+                    "id": "sand_to_water",
+                    "to": "sea"
                 }
             ]
         }

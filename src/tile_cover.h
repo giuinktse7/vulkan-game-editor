@@ -3,7 +3,6 @@
 #include <string>
 #include <type_traits>
 
-
 #include "const.h"
 
 enum TileCover
@@ -76,7 +75,7 @@ class TileCovers
     static bool contains(TileCover source, TileCover test) noexcept;
     static void clearCoverFlags(TileCover &cover, TileCover flags);
     static void eraseSide(TileCover &cover, TileCover side, TileCover preferredDiagonal = TILE_COVER_NONE);
-    static TileCover mirrorNorth(TileCover tileCover);
+    static TileCover mirrorNorth(TileCover tileCover, bool corner = true);
     static TileCover mirrorEast(TileCover cover);
     static TileCover mirrorEast(TileCover source, TileCover cover);
     static TileCover mirrorSouth(TileCover tileCover);
@@ -95,6 +94,8 @@ class TileCovers
     static bool hasFullSide(TileCover cover, TileCover side);
     static TileCover getFull(TileCover side);
     static TileCover addNonMasked(TileCover current, TileCover committed, TileCover mask);
+
+    static TileCover mirrorXY(TileCover cover);
 
     static std::string show(TileCover cover);
 

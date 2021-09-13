@@ -13,22 +13,28 @@ struct Position;
 class MapView;
 class Tile;
 class BorderBrush;
-struct BorderZOrderBlock;
+struct BorderCover;
 struct GroundNeighborMap;
 class GroundBrush;
 
+enum class BorderAlign
+{
+    Inner,
+    Outer
+};
+
 struct TileBorderBlock
 {
-    std::vector<BorderZOrderBlock> borders = {};
+    std::vector<BorderCover> covers = {};
     GroundBrush *ground = nullptr;
 
     uint32_t zOrder() const noexcept;
 
-    const BorderZOrderBlock *border(BorderBrush *brush) const;
+    const BorderCover *border(BorderBrush *brush) const;
 
     void add(TileCover cover, BorderBrush *brush);
 
-    void add(const BorderZOrderBlock &block);
+    void add(const BorderCover &block);
     void merge(const TileBorderBlock &other);
 
     void sort();
@@ -37,7 +43,11 @@ struct TileBorderBlock
 struct GroundBorder
 {
     BorderBrush *brush;
-    std::optional<GroundBrush *> to;
+    /**
+     * LazyGround with nullptr corresponds to "none"
+     */
+    std::optional<Brush::LazyGround> to;
+    BorderAlign align = BorderAlign::Outer;
 };
 
 /**
@@ -64,9 +74,9 @@ class GroundBrush final : public Brush
     static void borderize(MapView &mapView, const Position &position);
 
     void apply(MapView &mapView, const Position &position) override;
-    void erase(MapView &mapView, const Position &position) override;
+    void applyWithoutBorderize(MapView &mapView, const Position &position) override;
 
-    void applyWithoutBordering(MapView &mapView, const Position &position);
+    void erase(MapView &mapView, const Position &position) override;
 
     uint32_t iconServerId() const;
 
@@ -97,14 +107,18 @@ class GroundBrush final : public Brush
 
     uint32_t zOrder() const noexcept;
 
-    BorderBrush *getBorderTowards(GroundBrush *groundBrush) const;
-    BorderBrush *getBorderTowards(Tile *tile) const;
+    BorderBrush *getBorderTowards(const GroundBrush *groundBrush, BorderAlign align) const;
+    BorderBrush *getBorderTowards(Tile *tile, BorderAlign align) const;
 
-    BorderBrush *getDefaultOuterBorder() const;
+    BorderBrush *findBorderTowards(const GroundBrush *groundBrush, BorderAlign align) const;
+
+    BorderBrush *getDefaultBorderBrush(BorderAlign align) const;
 
     const std::vector<GroundBorder> &getBorders() const noexcept;
 
   private:
+    void preBorderize(MapView &mapView, const Position &position, GroundNeighborMap &neighbors);
+    void postBorderize(MapView &mapView, const Position &position, GroundNeighborMap &neighbors);
     static void apply(MapView &mapView, const Position &position, const BorderBrush *brush, BorderType borderType);
 
     static void fixBorders(MapView &mapView, const Position &position, GroundNeighborMap &neighbors);
@@ -153,15 +167,15 @@ struct GroundNeighborMap
 
     static void addBorderFromGround(value_type &self, const value_type &other, TileCover border);
 
-    static void mirrorNorth(value_type &source, const value_type &borders);
-    static void mirrorEast(value_type &source, const value_type &borders);
-    static void mirrorSouth(value_type &source, const value_type &borders);
-    static void mirrorWest(value_type &source, const value_type &borders);
+    void mirrorNorth(value_type &source, int dx, int dy);
+    void mirrorEast(value_type &source, const value_type &borders);
+    void mirrorSouth(value_type &source, const value_type &borders);
+    void mirrorWest(value_type &source, const value_type &borders);
 
-    static void mirrorNorthWest(value_type &source, const value_type &borders);
-    static void mirrorNorthEast(value_type &source, const value_type &borders);
-    static void mirrorSouthEast(value_type &source, const value_type &borders);
-    static void mirrorSouthWest(value_type &source, const value_type &borders);
+    void mirrorNorthWest(value_type &source, const value_type &borders);
+    void mirrorNorthEast(value_type &source, const value_type &borders);
+    void mirrorSouthEast(value_type &source, const value_type &borders);
+    void mirrorSouthWest(value_type &source, const value_type &borders);
 
     void addCenterCorners();
 

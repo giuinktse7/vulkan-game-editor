@@ -105,7 +105,7 @@ bool DoodadBrush::prepareApply(MapView &mapView, const Position &position)
             if (tile)
             {
                 bool blocked = tile->containsItem([this](const Item &item) {
-                    return item.itemType->brush == this;
+                    return item.itemType->brush() == this;
                 });
 
                 if (blocked)
@@ -120,7 +120,7 @@ bool DoodadBrush::prepareApply(MapView &mapView, const Position &position)
             if (tile)
             {
                 tile->removeItemsIf([this](const Item &item) {
-                    return item.itemType->brush == this;
+                    return item.itemType->brush() == this;
                 });
             }
         }
