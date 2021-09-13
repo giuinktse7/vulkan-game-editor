@@ -624,7 +624,7 @@ void VulkanWindow::openContextMenu(QPoint position)
 
         // Border brush
         BorderBrush *borderBrush = Brush::getBorderBrush(*tile);
-        if (wallBrush)
+        if (borderBrush)
         {
             addBrushOption("Select Border Brush", borderBrush);
         }
