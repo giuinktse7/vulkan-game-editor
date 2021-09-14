@@ -1108,7 +1108,7 @@ void MapView::endDragging(VME::ModifierKeys modifiers)
                             }
                             default:
                                 // TODO Handle other cases
-                                NOT_IMPLEMENTED_ABORT();
+                                VME_LOG("Drag with this brush is not implemented.");
                         }
                     }
 
