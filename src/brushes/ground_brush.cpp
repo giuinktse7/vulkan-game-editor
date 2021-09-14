@@ -542,6 +542,9 @@ void TileBorderBlock::add(const BorderCover &block)
 
 void TileBorderBlock::add(TileCover cover, BorderBrush *brush)
 {
+    if (cover == TILE_COVER_NONE)
+        return;
+
     auto found = std::find_if(covers.begin(), covers.end(), [brush](const BorderCover &block) {
         return block.brush == brush;
     });
