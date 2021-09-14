@@ -67,6 +67,9 @@ struct RuleAction
 
 struct SetFullAction : public BorderRuleAction
 {
+    SetFullAction(bool setSelf)
+        : BorderRuleAction(Type::SetFull), setSelf(setSelf) {}
+
     SetFullAction()
         : BorderRuleAction(Type::SetFull) {}
 
@@ -77,6 +80,9 @@ struct SetFullAction : public BorderRuleAction
 
 struct ReplaceAction : public BorderRuleAction
 {
+    ReplaceAction(bool replaceSelf, uint32_t serverId)
+        : BorderRuleAction(Type::Replace), replaceSelf(replaceSelf), serverId(serverId) {}
+
     ReplaceAction()
         : BorderRuleAction(Type::Replace) {}
 

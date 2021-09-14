@@ -56,6 +56,47 @@ namespace JsonParseMethods
             throw json::type_error::create(302, "Invalid stack behavior.");
         }
     }
+
+    BorderType parseBorderType(const json &json)
+    {
+        if (json.is_string())
+        {
+            std::string rawBorderType = json.get<std::string>();
+            switch (string_hash(rawBorderType.c_str()))
+            {
+                case "n"_sh:
+                    return BorderType::North;
+                case "e"_sh:
+                    return BorderType::East;
+                case "s"_sh:
+                    return BorderType::South;
+                case "w"_sh:
+                    return BorderType::West;
+                case "csw"_sh:
+                    return BorderType::SouthWestCorner;
+                case "cse"_sh:
+                    return BorderType::SouthEastCorner;
+                case "cnw"_sh:
+                    return BorderType::NorthWestCorner;
+                case "cne"_sh:
+                    return BorderType::NorthEastCorner;
+                case "dsw"_sh:
+                    return BorderType::SouthWestDiagonal;
+                case "dse"_sh:
+                    return BorderType::SouthEastDiagonal;
+                case "dnw"_sh:
+                    return BorderType::NorthWestDiagonal;
+                case "dne"_sh:
+                    return BorderType::NorthEastDiagonal;
+                default:
+                    throw json::type_error::create(302, "parseBorderType: Invalid BorderType. Expected std::string but got something else.");
+            }
+        }
+        else
+        {
+            throw json::type_error::create(302, "parseBorderType: Invalid BorderType. Expected std::string but got something else.");
+        }
+    }
 } // namespace JsonParseMethods
 
 using namespace JsonParseMethods;
@@ -763,6 +804,87 @@ std::array<uint32_t, 12> BrushLoader::parseBorderIds(const json &borderJson)
     return borderIds;
 }
 
+std::unique_ptr<BorderRuleAction> BrushLoader::parseBorderRuleAction(const nlohmann::json &actionJson)
+{
+    std::string type = actionJson.at("type").get<std::string>();
+
+    switch (string_hash(type.c_str()))
+    {
+        case "replace"_sh:
+        {
+            bool replaceSelf = actionJson.at("replaceSelf").get<bool>();
+            uint32_t serverId = actionJson.at("serverId").get<int>();
+
+            ReplaceAction action;
+            action.serverId = 4657;
+            action.replaceSelf = false;
+
+            return std::make_unique<ReplaceAction>(replaceSelf, serverId);
+        }
+        case "setFull"_sh:
+        {
+            bool setSelf = actionJson.at("setSelf").get<bool>();
+
+            return std::make_unique<SetFullAction>(setSelf);
+        }
+        default:
+            throw json::other_error::create(403, std::format("Invalid border rule action type: '{}'. Allowed values: [\"replace\", \"setFull\"]", type));
+    }
+}
+
+void BrushLoader::parseBorderRules(BorderBrush &brush, const json &rules)
+{
+    for (const auto &ruleJson : rules)
+    {
+        WhenBorderRule rule;
+
+        const json &whenBorder = ruleJson.at("whenBorder");
+        stackTrace.emplace("whenBorder");
+        {
+            rule.borderId = whenBorder.at("borderId").get<std::string>();
+            if (whenBorder.contains("cases"))
+            {
+                for (const json &jsonCase : whenBorder.at("cases"))
+                {
+                    WhenBorderRule::Case ruleCase;
+                    stackTrace.emplace("case");
+                    {
+                        ruleCase.selfEdge = parseBorderType(jsonCase.at("selfEdge"));
+                        ruleCase.borderEdge = parseBorderType(jsonCase.at("borderEdge"));
+
+                        const json &actions = jsonCase.at("actions");
+                        stackTrace.emplace("actions");
+                        for (const json &action : actions)
+                        {
+                            ruleCase.action = parseBorderRuleAction(action);
+                            // TODO Allow more than one action
+                            break;
+                        }
+                        stackTrace.pop();
+                    }
+                    stackTrace.pop();
+
+                    rule.cases.emplace_back(std::move(ruleCase));
+                }
+            }
+
+            if (whenBorder.contains("actions"))
+            {
+                const json &actions = whenBorder.at("actions");
+                stackTrace.emplace("actions");
+                for (const json &action : actions)
+                {
+                    rule.actions.emplace_back(parseBorderRuleAction(action));
+                }
+                stackTrace.pop();
+            }
+        }
+        stackTrace.pop();
+
+        brush.rules.emplace_back(std::move(rule));
+    }
+}
+
 BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
 {
     json id = brush.at("id").get<std::string>();
@@ -793,31 +915,11 @@ BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
         borderBrush.setStackBehavior(JsonParseMethods::parseBorderStackBehavior(rawStackBehavior));
     }
 
-    // TODO TEMP Remove
-    if (id == "sand_to_water")
+    if (brush.contains("rules"))
     {
-        WhenBorderRule rule;
-        rule.borderId = "sea_border";
-
-        {
-            WhenBorderRule::Case ruleCase;
-            ruleCase.selfEdge = BorderType::South;
-            ruleCase.borderEdge = BorderType::SouthWestCorner;
-
-            ReplaceAction action;
-            action.serverId = 4657;
-            action.replaceSelf = false;
-
-            ruleCase.action = std::make_unique<ReplaceAction>(std::move(action));
-
-            rule.cases.emplace_back(std::move(ruleCase));
-        }
-
-        auto setFullAction = std::make_unique<SetFullAction>();
-        setFullAction->setSelf = true;
-        rule.actions.emplace_back(std::move(setFullAction));
-
-        borderBrush.rules.emplace_back(std::move(rule));
+        stackTrace.emplace("rules");
+        parseBorderRules(borderBrush, brush.at("rules"));
+        stackTrace.pop();
     }
 
     if (brush.contains("extraItems"))

@@ -78,21 +78,51 @@
                 {
                     "whenBorder": {
                         "borderId": "sea_border",
-                        "case": {
-                            "selfEdge": "s",
-                            "borderEdge": "csw",
-                            "actions": [
-                                {
-                                    "type": "replace",
-                                    "target": "other",
-                                    "value": 4657
-                                }
-                            ]
-                        },
-                        "action": "setFull"
+                        "cases": [
+                            {
+                                "selfEdge": "n",
+                                "borderEdge": "cnw",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4656 }]
+                            },
+                            {
+                                "selfEdge": "n",
+                                "borderEdge": "cne",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4660 }]
+                            },
+                            {
+                                "selfEdge": "s",
+                                "borderEdge": "csw",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4657 }]
+                            },
+                            {
+                                "selfEdge": "s",
+                                "borderEdge": "cse",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4661 }]
+                            },
+                            {
+                                "selfEdge": "e",
+                                "borderEdge": "cse",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4663 }]
+                            },
+                            {
+                                "selfEdge": "e",
+                                "borderEdge": "cne",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4659 }]
+                            },
+                            {
+                                "selfEdge": "w",
+                                "borderEdge": "csw",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4662 }]
+                            },
+                            {
+                                "selfEdge": "w",
+                                "borderEdge": "cnw",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4658 }]
+                            }
+                        ],
+                        "actions": [{ "type": "setFull", "setSelf": true }]
                     }
-                },
-                {}
+                }
             ]
         }
         // {

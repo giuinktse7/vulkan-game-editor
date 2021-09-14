@@ -2,20 +2,22 @@
 
 #include <array>
 #include <filesystem>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <stack>
 #include <string>
 
+#include "../const.h"
 #include "../tileset.h"
 #include "../util.h"
-#include "../const.h"
 
 class BorderBrush;
 class GroundBrush;
 class WallBrush;
 class DoodadBrush;
 class MountainBrush;
+struct BorderRuleAction;
 
 class BrushLoader
 {
@@ -32,6 +34,9 @@ class BrushLoader
 
     void parseCreatures(const nlohmann::json &creaturesJson);
     void parseCreature(const nlohmann::json &creatureJson);
+
+    void parseBorderRules(BorderBrush &brush, const nlohmann::json &ruleJson);
+    std::unique_ptr<BorderRuleAction> parseBorderRuleAction(const nlohmann::json &actionJson);
 
     BorderBrush parseBorderBrush(const nlohmann::json &borderJson);
     WallBrush parseWallBrush(const nlohmann::json &wallJson);
