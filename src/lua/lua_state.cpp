@@ -4,7 +4,32 @@
 #include "../util.h"
 #include "lua_brush.h"
 
-LuaState::LuaState() {}
+#if !defined LUA_VERSION_NUM || LUA_VERSION_NUM == 501
+// From http://lua-users.org/wiki/CompatibilityWithLuaFive
+static void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup)
+{
+    luaL_checkstack(L, nup + 1, "too many upvalues");
+    for (; l->name != NULL; l++)
+    { /* fill the table with given functions */
+        int i;
+        lua_pushstring(L, l->name);
+        for (i = 0; i < nup; i++) /* copy upvalues to the top */
+            lua_pushvalue(L, -(nup + 1));
+        lua_pushcclosure(L, l->func, nup); /* closure with those upvalues */
+        lua_settable(L, -(nup + 3));
+    }
+    lua_pop(L, nup); /* remove upvalues */
+}
+
+bool lua_isinteger(lua_State *L, int index)
+{
+    return static_cast<LuaType>(lua_type(L, index)) == LuaType::Integer;
+}
+#endif
+
+LuaState::LuaState()
+{
+}
 
 LuaState::LuaState(lua_State *L)
     : L(L) {}
@@ -38,7 +63,8 @@ void LuaState::registerClass(lua_State *L, std::string className, lua_CFunction 
         luaL_newmetatable(L, cName);
         int metaTable = lua_gettop(L);
 
-        auto indexFn = [](lua_State *L) {
+        auto indexFn = [](lua_State *L)
+        {
             auto name = luaL_checkstring(L, lua_upvalueindex(1));
             return metaIndex(L, name);
         };
@@ -146,12 +172,14 @@ bool LuaState::registerTable(const std::string &tableName)
 
 LuaType LuaState::getField(int stackOffset, const char *name)
 {
-    return static_cast<LuaType>(lua_getfield(L, stackOffset, name));
+    lua_getfield(L, stackOffset, name);
+    return static_cast<LuaType>(lua_type(L, lua_gettop(L)));
 }
 
 LuaType LuaState::getField(lua_State *L, int stackOffset, const char *name)
 {
-    return static_cast<LuaType>(lua_getfield(L, stackOffset, name));
+    lua_getfield(L, stackOffset, name);
+    return static_cast<LuaType>(lua_type(L, lua_gettop(L)));
 }
 
 bool LuaState::getField(int stackOffset, const char *name, LuaType requiredType)
@@ -180,12 +208,14 @@ std::optional<std::string> LuaState::readTableString(int tableStackOffset, const
 
 LuaType LuaState::getGlobal(const char *name)
 {
-    return static_cast<LuaType>(lua_getglobal(L, name));
+    lua_getglobal(L, name);
+    return static_cast<LuaType>(lua_type(L, lua_gettop(L)));
 }
 
 LuaType LuaState::getGlobal(const std::string &name)
 {
-    return static_cast<LuaType>(lua_getglobal(L, name.c_str()));
+    lua_getglobal(L, name.c_str());
+    return static_cast<LuaType>(lua_type(L, lua_gettop(L)));
 }
 
 int LuaState::topIndex() const
@@ -436,10 +466,10 @@ void LuaState::setMetaTable(lua_State *L, int32_t stackOffset, const std::string
 int LuaState::checkIntField(lua_State *L, const char *fieldName, int stackOffset)
 {
     lua_getfield(L, stackOffset, fieldName);
-    if (!lua_isinteger(L, stackOffset))
-    {
-        luaL_error(L, "Expected integer, but received %s.", toString(L, stackOffset).c_str());
-    }
+    // if (!lua_isinteger(L, stackOffset))
+    // {
+    //     luaL_error(L, "Expected integer, but received %s.", toString(L, stackOffset).c_str());
+    // }
 
     int result = lua_tointeger(L, stackOffset);
     lua_pop(L, 1);

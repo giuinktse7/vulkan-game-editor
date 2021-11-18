@@ -44,7 +44,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 # End QT
 
-include(FindLua)
+# include(FindLua)
 
 find_package(Vulkan REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
@@ -53,9 +53,30 @@ find_package(Stb REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(pugixml CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(Lua REQUIRED)
-# find_package(LuaJIT REQUIRED) find_package(sol2 CONFIG REQUIRED)
+# find_package(Lua REQUIRED) find_package(LuaJIT REQUIRED) find_package(sol2
+# CONFIG REQUIRED)
 find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_signal_slot.hpp")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+set(USE_LUAJIT true)
+
+# Selects LuaJIT if user defines or auto-detected
+if(DEFINED USE_LUAJIT AND NOT USE_LUAJIT)
+  set(FORCE_LUAJIT ${USE_LUAJIT})
+else()
+  find_package(LuaJIT)
+  set(FORCE_LUAJIT ${LuaJIT_FOUND})
+endif()
+option(USE_LUAJIT "Use LuaJIT" ${FORCE_LUAJIT})
+
+if(FORCE_LUAJIT)
+  if(APPLE)
+    set(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000")
+  endif()
+else()
+  find_package(Lua REQUIRED)
+endif()
 
 find_package(
   Qt6
@@ -258,8 +279,8 @@ target_link_libraries(common PRIVATE glm)
 
 target_include_directories(common PUBLIC ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 
-target_include_directories(common PRIVATE ${LUA_INCLUDE_DIR})
-target_link_libraries(common PRIVATE ${LUA_LIBRARIES})
+# target_include_directories(common PRIVATE ${LUA_INCLUDE_DIR})
+# target_link_libraries(common PRIVATE ${LUA_LIBRARIES})
 
 # target_link_libraries(common PRIVATE sol2::sol2)
 
