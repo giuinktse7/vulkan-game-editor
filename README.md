@@ -72,7 +72,7 @@ Build configurations can be changed under `Project -> CMake Settings for VulkanG
 
     ```sh
     # Use the Visual Studio 16 2019 makefile generator, targeting the x64 platform with the ClangCL compiler.
-    cmake ../ -G "Visual Studio 16 2019" -A x64 [-T ClangCL]
+    cmake ../ -G "Visual Studio 17 2022" -A x64 [-T ClangCL]
     ```
 
     **Flags**:
