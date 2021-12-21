@@ -244,14 +244,14 @@ void MapRenderer::drawMap()
         Region2D dragRegion(from.toPos(view.floor()), to.toPos(view.floor()));
         Brush *brush = std::get<MouseAction::MapBrush>(mapView->editorAction.action()).brush;
 
-        filter = [brush, &dragRegion](const Position pos, const Item &item) {
+        filter = [brush, dragRegion](const Position pos, const Item &item) {
             return !(brush->erasesItem(item.serverId()) && dragRegion.contains(pos));
         };
     }
     else if (mapView->editorAction.is<MouseAction::DragDropItem>())
     {
-        auto drag = mapView->editorAction.as<MouseAction::DragDropItem>();
-        filter = [&drag](const Position pos, const Item &item) { return &item != drag->item; };
+        MouseAction::DragDropItem *drag = mapView->editorAction.as<MouseAction::DragDropItem>();
+        filter = [this, drag](const Position pos, const Item &item) { return &item != drag->item; };
     }
 
     bool movingSelection = view.selection().isMoving();
