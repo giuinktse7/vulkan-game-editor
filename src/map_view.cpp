@@ -1180,9 +1180,7 @@ void MapView::selectTopThing(const Position &position, bool isNewSelection)
     Tile *tile = getTile(position);
     if (!tile)
     {
-        commitTransaction(TransactionType::Selection, [this] {
-            clearSelection();
-        });
+        commitTransaction(TransactionType::Selection, [this] { clearSelection(); });
         return;
     }
 
@@ -1245,7 +1243,6 @@ void MapView::selectTopThing(const Position &position, bool isNewSelection)
 
 void MapView::mousePressEvent(VME::MouseEvent event)
 {
-    // VME_LOG_D("MapView::mousePressEvent");
     if (event.buttons() & VME::MouseButtons::LeftButton)
     {
         Position pos = event.pos().toPos(*this);
@@ -1822,9 +1819,7 @@ void MapView::perfTest()
 
     VME_LOG("fillRegion finished in " << start.elapsedMillis() << " ms.");
     TimePoint start2;
-    waitForDraw([start2] {
-        VME_LOG("draw finished in " << start2.elapsedMillis() << " ms.");
-    });
+    waitForDraw([start2] { VME_LOG("draw finished in " << start2.elapsedMillis() << " ms."); });
 
     requestDraw();
 }

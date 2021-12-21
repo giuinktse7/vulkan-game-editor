@@ -572,6 +572,7 @@ Items::OtbReader::OtbReader(const std::string &file)
     cursor = buffer.begin();
     path = file;
 }
+
 void Items::OtbReader::readNodes()
 {
     Items &items = Items::items;

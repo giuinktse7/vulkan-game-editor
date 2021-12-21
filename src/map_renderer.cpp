@@ -251,7 +251,7 @@ void MapRenderer::drawMap()
     else if (mapView->editorAction.is<MouseAction::DragDropItem>())
     {
         MouseAction::DragDropItem *drag = mapView->editorAction.as<MouseAction::DragDropItem>();
-        filter = [this, drag](const Position pos, const Item &item) { return &item != drag->item; };
+        filter = [drag](const Position pos, const Item &item) { return &item != drag->item; };
     }
 
     bool movingSelection = view.selection().isMoving();

@@ -834,8 +834,6 @@ void VulkanWindow::Renderer::startNextFrame()
     renderer.startNextFrame();
     if (renderer._containsAnimation && Settings::RENDER_ANIMATIONS)
     {
-        QTimer::singleShot(50, [this]() {
-            window.requestUpdate();
-        });
+        QTimer::singleShot(50, [this]() { window.requestUpdate(); });
     }
 }
