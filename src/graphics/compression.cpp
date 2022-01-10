@@ -15,6 +15,8 @@ constexpr int LzmaHeaderSize = LZMA_PROPS_SIZE + UncompressedSizeLengthBytes;
 
 constexpr size_t BytesInTextureAtlas = 12 * 12 * 32 * 32 * 4;
 
+constexpr int TibiaBmpHeaderSizeBytes = 122;
+
 std::vector<uint8_t> LZMA::decompressFile(const std::filesystem::path &filepath)
 {
     // std::cout << filepath.filename().string() << std::endl;
@@ -24,7 +26,7 @@ std::vector<uint8_t> LZMA::decompressFile(const std::filesystem::path &filepath)
 
 std::vector<uint8_t> LZMA::decompressRelease(std::vector<uint8_t> &&srcVector)
 {
-    std::vector<uint8_t> result(BytesInTextureAtlas);
+    std::vector<uint8_t> result(BytesInTextureAtlas + TibiaBmpHeaderSizeBytes);
     auto srcBuffer = srcVector.data();
 
     // Skip Cipsoft specific headers
@@ -125,7 +127,7 @@ std::vector<uint8_t> LZMA::runDebugDecompression(const std::vector<uint8_t> &in,
 {
     lzma_stream stream = LZMA_STREAM_INIT;
 
-    std::vector<uint8_t> result(BytesInTextureAtlas);
+    std::vector<uint8_t> result(BytesInTextureAtlas + TibiaBmpHeaderSizeBytes);
     size_t cursor = 0;
     lzma_ret lzmaStatus;
 
