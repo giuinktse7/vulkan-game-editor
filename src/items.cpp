@@ -755,6 +755,8 @@ void Items::OtbReader::readNodes()
                     break;
                 case 919:
                     // Mountain ground 64x64, mountain on top-left quadrant
+                case 10164:
+                    // Brown mountain 64x64, mountain on top-left quadrant
                     itemType->appearance->quadrantRenderType = QuadrantRenderType::TopLeft;
                     break;
                 case 877:
