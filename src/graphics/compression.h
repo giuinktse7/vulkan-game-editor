@@ -23,18 +23,15 @@ struct LZMA
     Should perhaps be done in the future.
     NOTE: In Release mode, decompressRelease is ~1 second faster.
   */
-    static std::vector<uint8_t> decompressDebug(std::vector<uint8_t> &&buffer);
+    static std::vector<uint8_t> decompressLibLzma(std::vector<uint8_t> &&buffer);
 
     static std::vector<uint8_t> decompressRelease(std::vector<uint8_t> &&buffer);
-
-  private:
-    static std::vector<uint8_t> runDebugDecompression(const std::vector<uint8_t> &in, lzma_options_lzma &options);
 };
 
 inline std::vector<uint8_t> LZMA::decompress(std::vector<uint8_t> &&inBuffer)
 {
     // #ifdef _DEBUG_VME
-    return decompressDebug(std::move(inBuffer));
+    return decompressLibLzma(std::move(inBuffer));
     // #else
     // return decompressRelease(std::move(inBuffer));
     // #endif

@@ -14,8 +14,8 @@ constexpr int UncompressedSizeLengthBytes = 8;
 constexpr int LzmaHeaderSize = LZMA_PROPS_SIZE + UncompressedSizeLengthBytes;
 
 constexpr size_t BytesInTextureAtlas = 12 * 12 * 32 * 32 * 4;
-
 constexpr int TibiaBmpHeaderSizeBytes = 122;
+constexpr size_t DecompressedBmpSize = BytesInTextureAtlas + TibiaBmpHeaderSizeBytes;
 
 std::vector<uint8_t> LZMA::decompressFile(const std::filesystem::path &filepath)
 {
@@ -71,7 +71,7 @@ std::vector<uint8_t> LZMA::decompressRelease(std::vector<uint8_t> &&srcVector)
 //     return std::vector<uint8_t>();
 // }
 
-std::vector<uint8_t> LZMA::decompressDebug(std::vector<uint8_t> &&inBuffer)
+std::vector<uint8_t> LZMA::decompressLibLzma(std::vector<uint8_t> &&inBuffer)
 {
     /*
         The file can be padded with a number of NULL bytes (depending on LZMA file size)
@@ -120,14 +120,9 @@ std::vector<uint8_t> LZMA::decompressDebug(std::vector<uint8_t> &&inBuffer)
     */
     buffer = std::vector<uint8_t>(cursor + 8, buffer.end());
 
-    return LZMA::runDebugDecompression(buffer, options);
-}
-
-std::vector<uint8_t> LZMA::runDebugDecompression(const std::vector<uint8_t> &in, lzma_options_lzma &options)
-{
     lzma_stream stream = LZMA_STREAM_INIT;
 
-    std::vector<uint8_t> result(BytesInTextureAtlas + TibiaBmpHeaderSizeBytes);
+    std::vector<uint8_t> result(DecompressedBmpSize);
     size_t cursor = 0;
     lzma_ret lzmaStatus;
 
@@ -139,35 +134,16 @@ std::vector<uint8_t> LZMA::runDebugDecompression(const std::vector<uint8_t> &in,
 
     assert(lzmaStatus == LZMA_OK);
 
-    size_t remainingOut = BytesInTextureAtlas;
-
-    stream.next_in = in.data();
-    stream.avail_in = in.size();
+    stream.next_in = buffer.data();
+    stream.avail_in = buffer.size();
     stream.next_out = result.data();
-    stream.avail_out = remainingOut;
+    stream.avail_out = DecompressedBmpSize;
 
-    while (true)
-    {
-        lzmaStatus = lzma_code(&stream, stream.avail_in == 0 ? LZMA_FINISH : LZMA_RUN);
-        if (lzmaStatus == LZMA_STREAM_END)
-        {
-            cursor += remainingOut - stream.avail_out;
-            if (0 != stream.avail_in)
-                abort();
-            result.resize(cursor);
-            lzma_end(&stream);
-            return result;
-        }
-        if (lzmaStatus != LZMA_OK)
-            abort();
-        if (stream.avail_out == 0)
-        {
-            cursor += remainingOut - stream.avail_out;
-            result.resize(result.size() << 1);
-            stream.next_out = reinterpret_cast<uint8_t *>(&result[0] + cursor);
-            stream.avail_out = remainingOut = result.size() - cursor;
-        }
-    }
+    lzmaStatus = lzma_code(&stream, LZMA_RUN);
+    assert(lzmaStatus == LZMA_STREAM_END);
+    lzma_end(&stream);
+
+    return result;
 }
 
 #pragma warning(pop)
