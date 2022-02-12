@@ -12,4 +12,8 @@ namespace File
 
     void write(const std::filesystem::path &filepath, std::vector<uint8_t> &&buffer);
 
+    bool exists(const std::filesystem::path &path);
+    bool createDirectory(const std::filesystem::path &path);
+    bool createDirectories(const std::filesystem::path &path);
+
 } // namespace File

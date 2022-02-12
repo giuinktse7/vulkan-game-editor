@@ -47,3 +47,18 @@ void File::write(const std::filesystem::path &filepath, std::vector<uint8_t> &&b
     std::ofstream outfile(filepath, std::ios::out | std::ios::binary);
     outfile.write((const char *)buffer.data(), buffer.size());
 }
+
+bool File::exists(const std::filesystem::path &path)
+{
+    return std::filesystem::exists(path);
+}
+
+bool File::createDirectory(const std::filesystem::path &path)
+{
+    return std::filesystem::create_directory(path);
+}
+
+bool File::createDirectories(const std::filesystem::path &path)
+{
+    return std::filesystem::create_directories(path);
+}
