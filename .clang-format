@@ -2,7 +2,27 @@ BasedOnStyle: LLVM
 
 IndentWidth: 4
 ColumnLimit: 0
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterCaseLabel: true
+    AfterClass: true
+    AfterControlStatement: Always
+    AfterEnum: true
+    AfterFunction: true
+    AfterNamespace: true
+    AfterObjCDeclaration: true
+    AfterStruct: true
+    AfterUnion: true
+    AfterExternBlock: true
+    BeforeCatch: true
+    BeforeElse: true
+    BeforeLambdaBody: false
+    BeforeWhile: true
+    IndentBraces: false
+    SplitEmptyFunction: true
+    SplitEmptyRecord: true
+    SplitEmptyNamespace: true
+Standard: "c++20"
 AllowShortIfStatementsOnASingleLine: Never
 IndentCaseLabels: true
 AllowShortFunctionsOnASingleLine: Empty
@@ -15,10 +35,10 @@ BreakInheritanceList: AfterColon
 BreakConstructorInitializersBeforeComma: false
 BreakConstructorInitializers: BeforeColon
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
-AllowShortLambdasOnASingleLine: All
 AlwaysBreakTemplateDeclarations: Yes
 BinPackParameters: false
 ExperimentalAutoDetectBinPacking: false
 AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortLambdasOnASingleLine: All
 
 PenaltyReturnTypeOnItsOwnLine: 1000000
