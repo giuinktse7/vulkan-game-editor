@@ -1,6 +1,10 @@
 #include "main_application.h"
 
+#include "welcome_view.h"
 #include <QFile>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QQuickView>
 
 MainApplication::EventFilter::EventFilter(MainApplication *mainApplication)
     : QObject(mainApplication), mainApplication(mainApplication) {}
@@ -60,6 +64,12 @@ void MainApplication::onFocusWindowChanged(QWindow *window)
     }
 }
 
+void MainApplication::showMainWindow()
+{
+    welcomeView->close();
+    mainWindow.show();
+}
+
 void MainApplication::onFocusWidgetChanged(QWidget *widget)
 {
     prevWidget = currentWidget;
@@ -68,7 +78,9 @@ void MainApplication::onFocusWidgetChanged(QWidget *widget)
 
 int MainApplication::run()
 {
-    mainWindow.show();
+    welcomeView = new WelcomeView(this);
+    welcomeView->show();
+
     return exec();
 }
 

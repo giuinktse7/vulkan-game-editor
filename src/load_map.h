@@ -21,7 +21,10 @@ namespace OTBM
 class LoadMap
 {
   public:
-    static std::variant<Map, std::string> loadMap(std::filesystem::path &path);
+    /**
+      * @throws MapLoadError if the map could not be loaded.
+      */
+    static Map loadMap(const std::filesystem::path &path);
 
   private:
     static bool isValidOTBMVersion(uint32_t value);

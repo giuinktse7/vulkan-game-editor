@@ -1,6 +1,7 @@
 #include "load_map.h"
 
 #include "debug.h"
+#include "error.h"
 #include "file.h"
 #include "items.h"
 #include "otb.h"
@@ -33,12 +34,12 @@ namespace
     }
 } // namespace
 
-std::variant<Map, std::string> LoadMap::loadMap(std::filesystem::path &path)
+Map LoadMap::loadMap(const std::filesystem::path &path)
 {
     TimePoint start;
     if (!std::filesystem::exists(path) || std::filesystem::is_directory(path))
     {
-        return error(FILE_AND_LINE_STR + "Could not find map at path: " + path.string());
+        throw MapLoadError(FILE_AND_LINE_STR + "Could not find map at path: " + path.string());
     }
 
     LoadBuffer buffer(File::read(path));
@@ -46,28 +47,28 @@ std::variant<Map, std::string> LoadMap::loadMap(std::filesystem::path &path)
     std::string otbmIdentifier = buffer.nextString(4);
     if (!validOtbmIdentifier(otbmIdentifier))
     {
-        return error(FILE_AND_LINE_STR + "Bad format: The first four bytes of the .otbm file must be"
-                                         "'OTBM' or '0000', but they were '" +
-                     otbmIdentifier + "'");
+        throw MapLoadError(FILE_AND_LINE_STR + "Bad format: The first four bytes of the .otbm file must be"
+                                               "'OTBM' or '0000', but they were '" +
+                           otbmIdentifier + "'");
     }
 
     OTBM::Node_t rootNodeType = buffer.readNodeStart();
     if (rootNodeType != OTBM::Node_t::Root)
     {
-        return error(FILE_AND_LINE_STR + "Invalid OTBM file. rootNodeType must be " + std::to_string(to_underlying(OTBM::Node_t::Root)));
+        throw MapLoadError(FILE_AND_LINE_STR + "Invalid OTBM file. rootNodeType must be " + std::to_string(to_underlying(OTBM::Node_t::Root)));
     }
 
     uint32_t otbmVersion = buffer.nextU32();
     if (!isValidOTBMVersion(otbmVersion))
     {
         std::string supportedVersions = "(OTBM1, 0), (OTBM2, 1), (OTBM3, 2), (OTBM4, 3)";
-        return error(FILE_AND_LINE_STR + "Unsupported OTBM version: " + std::to_string(otbmVersion) + ". Supported versions (name, value): " + supportedVersions + ".");
+        throw MapLoadError(FILE_AND_LINE_STR + "Unsupported OTBM version: " + std::to_string(otbmVersion) + ". Supported versions (name, value): " + supportedVersions + ".");
     }
 
     auto deserializer = OTBM::Deserializer::create(static_cast<OTBMVersion>(otbmVersion), buffer);
     if (!deserializer)
     {
-        return error(FILE_AND_LINE_STR + "There is no supported deserializer for OTBM version " + std::to_string(otbmVersion) + ".");
+        throw MapLoadError(FILE_AND_LINE_STR + "There is no supported deserializer for OTBM version " + std::to_string(otbmVersion) + ".");
     }
 
     uint16_t width = buffer.nextU16();
@@ -82,24 +83,28 @@ std::variant<Map, std::string> LoadMap::loadMap(std::filesystem::path &path)
     mapOtb.majorVersion = buffer.nextU32();
     if (mapOtb.majorVersion > itemsOtb.majorVersion)
     {
-        return error(FILE_AND_LINE_STR + "Unsupported OTB major version: " + std::to_string(mapOtb.majorVersion));
+        throw MapLoadError(FILE_AND_LINE_STR + "Unsupported OTB major version: " + std::to_string(mapOtb.majorVersion));
     }
     else if (mapOtb.majorVersion < itemsOtb.majorVersion)
     {
-        return error(FILE_AND_LINE_STR + "Map was saved with major OTB version " + std::to_string(mapOtb.majorVersion) + " but the loaded items.otb uses major OTB version " + itemsOtb.majorVersion);
+        std::string msg = FILE_AND_LINE_STR + "Map was saved with major OTB version " + std::to_string(mapOtb.majorVersion) + " but the loaded items.otb uses major OTB version " + itemsOtb.majorVersion;
+        VME_LOG(msg);
+        // return error(msg);
     }
     uint32_t minorOtbVersion = buffer.nextU32();
 
     if (minorOtbVersion != itemsOtb.minorVersion)
     {
-        return error(FILE_AND_LINE_STR + "Minor OTB versions differ. The loaded items.otb has version: '" + itemsOtb.show() + "' but the map was saved using OTB version '" + mapOtb.show() + "'.");
+        std::string msg = FILE_AND_LINE_STR + "Minor OTB versions differ. The loaded items.otb has version: '" + itemsOtb.show() + "' but the map was saved using OTB version '" + mapOtb.show() + "'.";
+        VME_LOG(msg);
+        // return error(msg);
     }
 
     {
         OTBM::Node_t mapDataNodeType = buffer.readNodeStart();
         if (mapDataNodeType != OTBM::Node_t::MapData)
         {
-            return error(FILE_AND_LINE_STR + "Invalid OTBM file. Expected OTBM::Token::Start (0xFE) followed by OTBM::Node_t::MapData (0x2).");
+            throw MapLoadError(FILE_AND_LINE_STR + "Invalid OTBM file. Expected OTBM::Token::Start (0xFE) followed by OTBM::Node_t::MapData (0x2).");
         }
 
         // Read map attributes until the first map node begins
@@ -133,7 +138,7 @@ std::variant<Map, std::string> LoadMap::loadMap(std::filesystem::path &path)
                     auto errorString = deserializeTileArea(buffer, *deserializer.get(), map);
                     if (errorString)
                     {
-                        return error(FILE_AND_LINE_STR + errorString.value());
+                        throw MapLoadError(FILE_AND_LINE_STR + errorString.value());
                     }
                     break;
                 }
@@ -142,7 +147,7 @@ std::variant<Map, std::string> LoadMap::loadMap(std::filesystem::path &path)
                     auto errorString = deserializeTowns(buffer, *deserializer.get(), map);
                     if (errorString)
                     {
-                        return error(FILE_AND_LINE_STR + errorString.value());
+                        throw MapLoadError(FILE_AND_LINE_STR + errorString.value());
                     }
                     break;
                 }
@@ -152,7 +157,7 @@ std::variant<Map, std::string> LoadMap::loadMap(std::filesystem::path &path)
                     break;
                 }
                 default:
-                    return error(FILE_AND_LINE_STR + "Unknown nodeType (after map attributes): " + std::to_string(to_underlying(nodeType)));
+                    throw MapLoadError(FILE_AND_LINE_STR + "Unknown nodeType (after map attributes): " + std::to_string(to_underlying(nodeType)));
             }
         }
 

@@ -10,13 +10,13 @@ TODO
 
 ## Dependencies
 
--   [**Vulkan SDK**](https://vulkan.lunarg.com/) Low-level 3D graphics and computing API.
--   [**Qt6 (`Qt::Core`, `Qt::Widgets`, `Qt::Qml`, `Qt::Quick` and`Qt::Svg`)**](https://www.qt.io/download-open-source) Cross-plaftorm GUI framework.
+- [**Vulkan SDK**](https://vulkan.lunarg.com/) Low-level 3D graphics and computing API.
+- [**Qt6 (`Qt::Core`, `Qt::Widgets`, `Qt::Qml`, `Qt::Quick` and`Qt::Svg`)**](https://www.qt.io/download-open-source) Cross-plaftorm GUI framework.
 
     **NOTE**: The QT framework requires around 8 GB of disk space per target architecture (For example `msvc2019` or `msvc2019_64`).
 
--   [**vcpkg**](https://github.com/microsoft/vcpkg) C++ package manager.
--   The required libraries can be installed using vcpkg:
+- [**vcpkg**](https://github.com/microsoft/vcpkg) C++ package manager.
+- The required libraries can be installed using vcpkg:
 
     ```sh
     vcpkg install liblzma protobuf nlohmann-json stb pugixml glm catch2 nano-signal-slot lua
@@ -35,9 +35,10 @@ To build the project, first install the required [Dependencies](#dependencies).
 
 ### Building with Visual Studio 2019 (Recommended)
 
-1. Download and install [Visual Studio 2019 (Community)](https://visualstudio.microsoft.com/vs/).
-2. Go to `File->Open->Folder` and open the project root (The folder that contains `CMakeLists.txt`).
-3. Set startup project to `main.exe`.
+1. Download and install [Visual Studio 2022 Preview (Community)](https://visualstudio.microsoft.com/vs/).
+2. Follow steps 1.3 in [Building with CMake](#Building-with-CMake).
+3. Open `./build/VulkanGameEditor.sln` with Visual Studio.
+4. If necessary, update C++ version to `Preview - Features from the Latest C++ Working Draft (/std:c++latest)`. This can be done by right clicking a project in the solution explorer -> Properties -> Configuration Properties -> General. This must be done for each project in the solution.
 4. Run.
 
 Build configurations can be changed under `Project -> CMake Settings for VulkanGameEditor`.
@@ -72,7 +73,7 @@ Build configurations can be changed under `Project -> CMake Settings for VulkanG
 
     ```sh
     # Use the Visual Studio 16 2019 makefile generator, targeting the x64 platform with the ClangCL compiler.
-    cmake ../ -G "Visual Studio 17 2022" -A x64 [-T ClangCL]
+    cmake ../ -G "Visual Studio 16 2019" -A x64 [-T ClangCL]
     ```
 
     **Flags**:
@@ -97,11 +98,11 @@ To run the test suite `vme_tests`, run `./runtest` in the project root.
 
 There are four targets:
 
--   **main** (Executable): The `main` target is the executable of the application. This target links the `common` and `gui` libraries statically.
--   **common** (Library): The `common` target contains all code that **is not** related to GUI (i.e. everything except Qt6-reliant code).
--   **gui** (Library): The `gui` target contains all code that **is** related to GUI (i.e. all code that is Qt6-reliant).
+- **main** (Executable): The `main` target is the executable of the application. This target links the `common` and `gui` libraries statically.
+- **common** (Library): The `common` target contains all code that **is not** related to GUI (i.e. everything except Qt6-reliant code).
+- **gui** (Library): The `gui` target contains all code that **is** related to GUI (i.e. all code that is Qt6-reliant).
 
--   **vme_tests** (Executable): Contains tests for the `common` and `gui` libraries (See [Run tests using CMake](#run-tests-using-cmake)).
+- **vme_tests** (Executable): Contains tests for the `common` and `gui` libraries (See [Run tests using CMake](#run-tests-using-cmake)).
 
 The main purpose of having the `common` and `gui` library separate from the `main` target was to enable running unit tests against the code. It also ensures that there is no coupling introduced between core editor functionality and Qt6 (`common` does not have Qt6 as a dependency).
 

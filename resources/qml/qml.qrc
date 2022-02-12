@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/vme/qml">
+      <file>vme/WelcomeView.qml</file>
       <file>itemPropertyWindow.qml</file>
       <file>SearchPopupView.qml</file>
       <file>vme/Constants.qml</file>

@@ -31,8 +31,10 @@
 #include "../brushes/ground_brush.h"
 #include "../brushes/mountain_brush.h"
 #include "../brushes/wall_brush.h"
+#include "../error.h"
 #include "../graphics/appearance_types.h"
 #include "../item_location.h"
+#include "../load_map.h"
 #include "../qt/logging.h"
 #include "../save_map.h"
 #include "../settings.h"
@@ -122,6 +124,13 @@ uint32_t MainWindow::nextUntitledId()
 void MainWindow::addMapTab()
 {
     addMapTab(std::make_shared<Map>());
+}
+
+void MainWindow::addMapTab(const std::filesystem::path &path)
+{
+    Map map = LoadMap::loadMap(path);
+    std::shared_ptr<Map> sharedMap = std::make_shared<Map>(std::move(map));
+    addMapTab(sharedMap);
 }
 
 void MainWindow::addMapTab(std::shared_ptr<Map> map)
@@ -731,6 +740,8 @@ void MainWindow::initializePaletteWindow()
         addTestCreatureBrush("goblin", "Goblin", 61);
         addTestCreatureBrush("goblin_scavenger", "Goblin Scavenger", 297);
         addTestCreatureBrush("goblin_assassin", "Goblin Assassin", 296);
+        addTestCreatureBrush("squirrel", "Squirrel", 274);
+        addTestCreatureBrush("cobra", "Cobra", 81);
 
         otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType("mimic", "Mimic", Outfit::fromServerId(1740)))));
     }

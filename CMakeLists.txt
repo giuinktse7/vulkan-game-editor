@@ -98,6 +98,7 @@ set(CommonSources
     src/definitions.h
     src/item_animation.h
     src/file.h
+    src/error.h
     src/frame_group.h
     src/editor_action.h
     src/graphics/appearances.h
@@ -313,6 +314,7 @@ set(GuiSources
     src/gui/itempalette/item_palette_model.h
     src/gui/search_popup.h
     src/gui/minimap.h
+    src/gui/welcome_view.h
     src/main.h
     src/main.cpp
     src/gui/main_application.cpp
@@ -337,6 +339,7 @@ set(GuiSources
     src/gui/itempalette/item_palette_model.cpp
     src/gui/search_popup.cpp
     src/gui/minimap.cpp
+    src/gui/welcome_view.cpp
     src/qt/qt_vulkan_info.cpp)
 
 # NOTE: All files that use the QT framework must be in the `gui` library,

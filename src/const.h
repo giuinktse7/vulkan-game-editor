@@ -5,6 +5,10 @@
 #include "debug.h"
 #include "util.h"
 
+// Filesystem constants
+constexpr char APP_FOLDER_PATH[] = ".vme";
+constexpr char RECENT_FILES_FILE[] = "recent_files.json";
+
 // Map constants
 constexpr uint16_t MAP_TREE_CHILDREN_COUNT = 16;
 constexpr uint16_t MAP_LAYERS = 16;

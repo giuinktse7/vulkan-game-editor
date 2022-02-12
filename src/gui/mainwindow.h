@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -52,7 +53,18 @@ class MainWindow : public QWidget
     void initializeUI();
 
     void addMapTab();
+
+    /**
+     * @throws MapLoadError if the map could not be loaded.
+     */
     void addMapTab(std::shared_ptr<Map> map);
+
+    /**
+     * @brief 
+     * 
+     * @throws MapLoadError if the map could not be loaded.
+     */
+    void addMapTab(const std::filesystem::path &path);
 
     bool vulkanWindowEvent(QEvent *event);
 
