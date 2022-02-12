@@ -83,6 +83,7 @@ struct TextureAtlas
     std::pair<int, int> textureOffset(uint32_t spriteId);
 
     bool hasColorVariation(uint32_t variationId) const;
+    void dumpToFile(const std::filesystem::path &sourceFolder, const std::filesystem::path &destinationFolder);
 
     void overlay(TextureAtlas *templateAtlas, uint32_t variationId, uint32_t templateSpriteId, uint32_t targetSpriteId, Outfit::Look look);
 

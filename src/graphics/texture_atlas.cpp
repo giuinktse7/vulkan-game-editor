@@ -72,6 +72,13 @@ TextureAtlas::TextureAtlas(LZMACompressedBuffer &&buffer, uint32_t width, uint32
             drawOffset.y = 0;
             break;
     }
+
+    // if (spriteLayout == SpriteLayout::TWO_BY_TWO)
+    // {
+    //     std::filesystem::path sourcePath = "D:/Programs/Tibia/packages/Tibia/assets";
+    //     std::filesystem::path path = "C:/Users/giuin/Desktop/texture_atlases";
+    //     dumpToFile(sourcePath, path);
+    // }
 }
 
 TextureAtlas::InternalTextureInfo TextureAtlas::internalTextureInfoNormalized(uint32_t spriteId) const
@@ -393,4 +400,34 @@ const Texture &TextureInfo::getTexture() const
 const Texture &TextureInfo::getTexture(uint32_t textureVariationId) const
 {
     return atlas->getTexture(textureVariationId);
+}
+
+void TextureAtlas::dumpToFile(const std::filesystem::path &sourceFolder, const std::filesystem::path &destinationFolder)
+{
+    namespace fs = std::filesystem;
+    if (fs::exists(destinationFolder) && !fs::is_directory(destinationFolder))
+    {
+        VME_LOG_ERROR("Destination folder must be a directory. Bad destination: " << destinationFolder);
+        return;
+    }
+
+    if (!fs::exists(destinationFolder))
+    {
+        bool created = fs::create_directory(destinationFolder);
+        if (!created)
+        {
+            VME_LOG_ERROR("Could not create destination folder.");
+            return;
+        }
+    }
+
+    std::filesystem::path sourcePath = "D:/Programs/Tibia/packages/Tibia/assets";
+    auto file = File::read(sourcePath / sourceFile);
+    auto decompressed = LZMA::decompress(std::move(file));
+
+    std::ostringstream s;
+    s << this->sourceFile.stem().stem().string() << "__" << firstSpriteId << "_" << lastSpriteId << ".bmp";
+
+    auto filepath = (destinationFolder / s.str());
+    File::write(filepath, std::move(decompressed));
 }
