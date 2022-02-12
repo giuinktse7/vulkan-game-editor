@@ -65,7 +65,8 @@ int main(int argc, char *argv[])
 
     MainApplication app(argc, argv);
 
-    std::string version = "12.70.10889";
+    // std::string version = "12.70.10889";
+    std::string version = "12.81";
     std::string clientPath = std::format("data/clients/{}", version);
 
     auto configResult = Config::create(version);
@@ -92,22 +93,13 @@ int main(int argc, char *argv[])
     brushLoader.load(std::format("{}/palettes/creatures.json", clientPath));
     brushLoader.load(std::format("{}/palettes/tilesets.json", clientPath));
 
-    // TemporaryTest::loadAllTexturesIntoMemory();
+    app.mainWindow.addMapTab("C:/Users/giuin/Desktop/Untitled-1.otbm")
 
-    std::filesystem::path mapPath = "C:/Users/giuin/Desktop/Untitled-1.otbm";
+        // TemporaryTest::loadAllTexturesIntoMemory();
+        // return 0;
 
-    std::variant<Map, std::string> result = LoadMap::loadMap(mapPath);
-    if (!std::holds_alternative<Map>(result))
-    {
-        VME_LOG("Map load error: " << std::get<std::string>(result));
-        return EXIT_FAILURE;
-    }
+        app.initializeUI();
 
-    Map loadedMap = std::move(std::get<Map>(result));
-    std::shared_ptr<Map> sharedMap = std::make_shared<Map>(std::move(loadedMap));
-
-    app.initializeUI();
-    app.mainWindow.addMapTab(sharedMap);
     // app.mainWindow.addMapTab(TemporaryTest::makeTestMap1());
     // app.mainWindow.addMapTab(TemporaryTest::makeTestMap2());
 
@@ -227,16 +219,18 @@ std::pair<int, int> offsetFromSpriteId(TextureAtlas *atlas, uint32_t spriteId)
 void TemporaryTest::loadAllTexturesIntoMemory()
 {
     TimePoint start;
-    // for (uint16_t id = 100; id < Items::items.size(); ++id)
-    // {
-    //     ItemType *t = Items::items.getItemTypeByServerId(id);
 
-    //     if (!Items::items.validItemType(id))
-    //         continue;
+    for (uint16_t id = 100; id < Items::items.size(); ++id)
+    {
+        ItemType *t = Items::items.getItemTypeByServerId(id);
 
-    //     const TextureInfo &info = t->getTextureInfo();
-    //     info.atlas->getOrCreateTexture();
-    // }
+        if (!Items::items.validItemType(id))
+            continue;
+
+        const TextureInfo &info = t->getTextureInfo();
+        info.atlas->getOrCreateTexture();
+    }
+
     for (uint16_t looktype = 1; looktype < 1400; ++looktype)
     {
         auto creatureType = Creatures::creatureType(looktype);

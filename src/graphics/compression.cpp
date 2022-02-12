@@ -123,7 +123,6 @@ std::vector<uint8_t> LZMA::decompressLibLzma(std::vector<uint8_t> &&inBuffer)
     lzma_stream stream = LZMA_STREAM_INIT;
 
     std::vector<uint8_t> result(DecompressedBmpSize);
-    size_t cursor = 0;
     lzma_ret lzmaStatus;
 
     lzma_filter filters[2] = {

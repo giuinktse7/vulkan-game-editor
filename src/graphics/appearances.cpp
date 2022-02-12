@@ -333,7 +333,8 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
         {                             \
             this->flags |= flag;      \
         }                             \
-    } while (false)
+    }                                 \
+    while (false)
 
         ADD_FLAG_UTIL(bank, AppearanceFlag::Ground);
         ADD_FLAG_UTIL(clip, AppearanceFlag::Border);

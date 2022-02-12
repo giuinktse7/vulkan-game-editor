@@ -5,7 +5,7 @@ add_executable(
             vulkan_window_test.cpp observable_item_test.cpp)
 
 find_package(Catch2 CONFIG REQUIRED)
-target_link_libraries(vme_tests PUBLIC Catch2::Catch2)
+target_link_libraries(vme_tests PRIVATE Catch2::Catch2)
 
 target_link_libraries(vme_tests PRIVATE common gui)
 

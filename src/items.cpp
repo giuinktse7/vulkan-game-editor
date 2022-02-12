@@ -598,6 +598,7 @@ void Items::OtbReader::readNodes()
         uint16_t lightColor = 0;
         uint16_t wareId = 0;
         std::string name;
+        std::string description;
         uint16_t maxTextLen = 0;
 
         ItemType *itemType = nullptr;
@@ -720,6 +721,12 @@ void Items::OtbReader::readNodes()
                     break;
                 }
 
+                case itemproperty_t::ITEM_ATTR_DESCR:
+                {
+                    description = nextString(attributeSize);
+                    break;
+                }
+
                 default:
                 {
                     //skip unknown attributes
@@ -785,8 +792,8 @@ void Items::OtbReader::readNodes()
 
         [[maybe_unused]] uint8_t endToken = nextU8();
         DEBUG_ASSERT(endToken == EndNode, "Expected end token when parsing items.otb.");
-
-    } while (!nodeEnd());
+    }
+    while (!nodeEnd());
 }
 
 const std::vector<ItemType> &Items::getItemTypes() const
