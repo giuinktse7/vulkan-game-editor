@@ -53,6 +53,7 @@ find_package(Stb REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(pugixml CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(date CONFIG REQUIRED)
 # find_package(Lua REQUIRED) find_package(LuaJIT REQUIRED) find_package(sol2
 # CONFIG REQUIRED)
 find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_signal_slot.hpp")
@@ -314,7 +315,8 @@ set(GuiSources
     src/gui/itempalette/item_palette_model.h
     src/gui/search_popup.h
     src/gui/minimap.h
-    src/gui/welcome_view.h
+    src/gui/welcome/welcome_view.h
+    src/gui/welcome/welcome_view_model.h
     src/main.h
     src/main.cpp
     src/gui/main_application.cpp
@@ -339,7 +341,8 @@ set(GuiSources
     src/gui/itempalette/item_palette_model.cpp
     src/gui/search_popup.cpp
     src/gui/minimap.cpp
-    src/gui/welcome_view.cpp
+    src/gui/welcome/welcome_view.cpp
+    src/gui/welcome/welcome_view_model.cpp
     src/qt/qt_vulkan_info.cpp)
 
 # NOTE: All files that use the QT framework must be in the `gui` library,
@@ -366,6 +369,8 @@ qt_add_resources(QT_RESOURCES resources/shaders/shaders.qrc)
 set(app_icon_resource_windows
     "${CMAKE_CURRENT_SOURCE_DIR}/resources/vulkan-map-editor.rc")
 qt_add_executable(main ${QT_RESOURCES} ${app_icon_resource_windows})
+
+target_link_libraries(main PRIVATE date::date date::date-tz)
 
 target_link_libraries(main PRIVATE common)
 target_link_libraries(main PRIVATE gui)

@@ -1,6 +1,11 @@
 #include "time_util.h"
 
+#include <date/date.h>
+
 using namespace std::chrono;
+
+const std::string TimePoint::DEFAULT_SERIALIZE_FORMAT = "{:%Y-%m-%dT%H:%M:%S}";
+const std::string TimePoint::DEFAULT_PARSE_FORMAT = "%Y-%m-%dT%H:%M:%S";
 
 TimePoint applicationStartTime;
 
@@ -43,4 +48,24 @@ TimePoint TimePoint::sinceStart()
 void TimePoint::setApplicationStartTimePoint()
 {
     applicationStartTime = TimePoint::now();
+}
+
+std::string TimePoint::toString(std::chrono::system_clock::time_point timestamp, const std::string &format)
+{
+    return std::format(format, timestamp);
+}
+
+std::chrono::system_clock::time_point TimePoint::fromString(std::string raw, const std::string &format)
+{
+    using namespace std;
+    using namespace date;
+
+    auto now = system_clock::now();
+
+    istringstream in{raw};
+    date::sys_time<std::chrono::milliseconds> timePoint;
+
+    in >> parse(format, timePoint);
+
+    return std::chrono::time_point(timePoint);
 }

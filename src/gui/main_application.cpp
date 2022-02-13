@@ -1,6 +1,6 @@
 #include "main_application.h"
 
-#include "welcome_view.h"
+#include "./welcome/welcome_view.h"
 #include <QFile>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>

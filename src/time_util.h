@@ -4,9 +4,17 @@
 
 class TimePoint
 {
+  private:
+    static const std::string DEFAULT_SERIALIZE_FORMAT;
+    static const std::string DEFAULT_PARSE_FORMAT;
+
   public:
     using time_t = long long;
     TimePoint(std::chrono::steady_clock::time_point timePoint = std::chrono::steady_clock::now());
+
+    static std::string toString(std::chrono::system_clock::time_point timestamp, const std::string &format = DEFAULT_SERIALIZE_FORMAT);
+
+    static std::chrono::system_clock::time_point fromString(std::string raw, const std::string &format = DEFAULT_PARSE_FORMAT);
 
     static TimePoint now();
     static TimePoint sinceStart();

@@ -1,11 +1,10 @@
 #pragma once
 
-#include "main_application.h"
 #include <QAbstractListModel>
 #include <QObject>
-#include <QQuickView>
-#include <QVariant>
 
+#include <chrono>
+#include <ctime>
 #include <string>
 
 class RecentFilesModel : public QAbstractListModel
@@ -21,7 +20,7 @@ class RecentFilesModel : public QAbstractListModel
 
     virtual int rowCount(const QModelIndex &) const
     {
-        return backing.size();
+        return files.size();
     }
     virtual QVariant data(const QModelIndex &index, int role) const;
 
@@ -30,35 +29,23 @@ class RecentFilesModel : public QAbstractListModel
     Q_INVOKABLE void onItemClicked(const int index);
 
     void addFile(std::string path);
+    void writeToDisk();
+    void readFromDisk();
 
-    struct File
+    struct RecentFile
     {
-        File(std::string path);
+        RecentFile(std::string path);
+        RecentFile(std::string path, std::chrono::system_clock::time_point timestamp);
         std::string path;
+        std::chrono::system_clock::time_point timestamp;
     };
 
   private:
-    std::vector<File> backing;
+    std::vector<RecentFile> files;
 };
 
-class WelcomeView : public QObject
+class WelcomeViewModel
 {
-    Q_OBJECT
   public:
-    WelcomeView(QObject *parent = nullptr);
-    WelcomeView(MainApplication *app, QObject *parent = nullptr);
-
-    Q_INVOKABLE void openMainWindow();
-    Q_INVOKABLE void selectMapFile();
-
-    void show();
-    void close();
-
-  private:
-    void readRecentFiles();
-
-    MainApplication *app;
-    QQuickView *view;
-
-    RecentFilesModel recentFilesModel;
+    RecentFilesModel recentFiles;
 };

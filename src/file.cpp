@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <stdexcept>
 
 #include "debug.h"
@@ -46,6 +47,18 @@ void File::write(const std::filesystem::path &filepath, std::vector<uint8_t> &&b
 {
     std::ofstream outfile(filepath, std::ios::out | std::ios::binary);
     outfile.write((const char *)buffer.data(), buffer.size());
+}
+
+void File::writeJson(const std::filesystem::path &filepath, nlohmann::json &&json)
+{
+    auto directories = filepath.parent_path();
+    if (!std::filesystem::exists(directories))
+    {
+        File::createDirectories(directories);
+    }
+
+    std::ofstream file(filepath);
+    file << std::setw(4) << json;
 }
 
 bool File::exists(const std::filesystem::path &path)
