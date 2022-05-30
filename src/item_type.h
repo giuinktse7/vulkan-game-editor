@@ -103,6 +103,10 @@ enum itemproperty_t : uint8_t
 
     ITEM_ATTR_WAREID,
 
+    ITEM_ATTR_UPGRADE_CLASSIFICATION,
+
+    ITEM_ATTR_ARTICLE,
+
     ITEM_ATTR_LAST
 };
 
@@ -119,6 +123,7 @@ enum class ItemTypes_t
     Bed,
     Key,
     Rune,
+    ShowOffSocket,
     Last
 };
 
@@ -363,6 +368,8 @@ class ItemType
         Fluid,
         Door, //deprecated
         Deprecated,
+
+        ShowOffSocket,
 
         ITEM_GROUP_LAST
     };

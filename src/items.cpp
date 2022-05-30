@@ -597,9 +597,11 @@ void Items::OtbReader::readNodes()
         uint16_t lightLevel = 0;
         uint16_t lightColor = 0;
         uint16_t wareId = 0;
+        std::string article;
         std::string name;
         std::string description;
         uint16_t maxTextLen = 0;
+        uint8_t upgradeClassification = 0;
 
         ItemType *itemType = nullptr;
 
@@ -709,6 +711,19 @@ void Items::OtbReader::readNodes()
                     break;
                 }
 
+                case itemproperty_t::ITEM_ATTR_UPGRADE_CLASSIFICATION:
+                {
+                    DEBUG_ASSERT(attributeSize == sizeof(uint8_t), "Invalid attribute length.");
+                    upgradeClassification = nextU8();
+                    break;
+                }
+
+                case itemproperty_t::ITEM_ATTR_ARTICLE:
+                {
+                    article = nextString(attributeSize);
+                    break;
+                }
+
                 case itemproperty_t::ITEM_ATTR_MAX_TEXT_LENGTH:
                 {
                     maxTextLen = nextU16();
@@ -741,6 +756,7 @@ void Items::OtbReader::readNodes()
                 }
             }
         }
+
         if (itemType == nullptr)
         {
             ABORT_PROGRAM("Encountered item type without a server ID.");
@@ -824,7 +840,10 @@ ItemTypes_t Items::OtbReader::serverItemType(ItemType::Group itemGroup)
         case ItemType::Group::Charges:
         case ItemType::Group::Deprecated:
             return ItemTypes_t::None;
+        case ItemType::Group::ShowOffSocket:
+            return ItemTypes_t::ShowOffSocket;
         default:
+            VME_LOG_D("Here? " << int(itemGroup));
             VME_LOG("Unknown item type!");
             return ItemTypes_t::None;
     }
@@ -1044,6 +1063,12 @@ std::ostringstream stringify(const itemproperty_t &property)
             break;
         case ITEM_ATTR_WAREID:
             s << "ITEM_ATTR_WAREID";
+            break;
+        case ITEM_ATTR_UPGRADE_CLASSIFICATION:
+            s << "ITEM_ATTR_UPGRADE_CLASSIFICATION";
+            break;
+        case ITEM_ATTR_ARTICLE:
+            s << "ITEM_ATTR_ARTICLE";
             break;
         case ITEM_ATTR_LAST:
             s << "ITEM_ATTR_LAST";

@@ -259,6 +259,7 @@ class Appearances
 		It stores the start and end sprite id in the sprite sheet.
 	*/
     static std::vector<SpriteRange> textureAtlasSpriteRanges;
+    static std::vector<int> textureAtlasSpriteRangeIndex;
 };
 
 inline const vme_unordered_map<uint32_t, ObjectAppearance> &Appearances::objects()

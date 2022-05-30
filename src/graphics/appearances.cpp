@@ -1,13 +1,20 @@
 #include "appearances.h"
 
 #include <algorithm>
+#include <assert.h>
+#include <cfloat>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <ostream>
 #include <set>
+#include <sstream>
+#include <stdint.h>
 #include <string>
 #include <unordered_map>
+#include <vector>
+
 
 #include "../file.h"
 #include "../logger.h"
@@ -15,10 +22,115 @@
 #include "../util.h"
 #include "texture_atlas.h"
 
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// >>>>>>>Fast upper bound>>>>>>>
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// Fast upper bound from https://academy.realm.io/posts/how-we-beat-cpp-stl-binary-search/
+using namespace std;
+
+#ifndef _MSC_VER
+#define UNLIKELY(expr) __builtin_expect(!!(expr), 0)
+#define LIKELY(expr) __builtin_expect(!!(expr), 1)
+#else
+#define UNLIKELY(expr) (expr)
+#define LIKELY(expr) (expr)
+#endif
+
+#if defined(__GNUC__) || defined(__HP_aCC) || defined(__clang__)
+#define INLINE inline __attribute__((always_inline))
+#else
+#define INLINE __forceinline
+#endif
+
+// Force clang to use conditional move instead of branches. For other types of T than 64-bit integers, please
+// rewrite the assembly or use the ternary operator below instead.
+template <class T>
+INLINE size_t choose(T a, T b, size_t src1, size_t src2)
+{
+#if defined(__clang__) && defined(__x86_64)
+    size_t res = src1;
+    asm("cmpq %1, %2; cmovaeq %4, %0"
+        : "=q"(res)
+        : "q"(a),
+          "q"(b),
+          "q"(src1),
+          "q"(src2),
+          "0"(res)
+        : "cc");
+    return res;
+#else
+    return b >= a ? src2 : src1;
+#endif
+}
+
+template <class T>
+INLINE size_t fast_upper_bound4(const vector<T> &vec, T value)
+{
+    size_t size = vec.size();
+    size_t low = 0;
+
+    while (size >= 8)
+    {
+        size_t half = size / 2;
+        size_t other_half = size - half;
+        size_t probe = low + half;
+        size_t other_low = low + other_half;
+        T v = vec[probe];
+        size = half;
+        low = choose(v, value, low, other_low);
+
+        half = size / 2;
+        other_half = size - half;
+        probe = low + half;
+        other_low = low + other_half;
+        v = vec[probe];
+        size = half;
+        low = choose(v, value, low, other_low);
+
+        half = size / 2;
+        other_half = size - half;
+        probe = low + half;
+        other_low = low + other_half;
+        v = vec[probe];
+        size = half;
+        low = choose(v, value, low, other_low);
+    }
+
+    while (size > 0)
+    {
+        size_t half = size / 2;
+        size_t other_half = size - half;
+        size_t probe = low + half;
+        size_t other_low = low + other_half;
+        T v = vec[probe];
+        size = half;
+        low = choose(v, value, low, other_low);
+    };
+
+    return low;
+}
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// >>>>>>>Fast upper bound>>>>>>>
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 vme_unordered_map<uint32_t, ObjectAppearance> Appearances::_objects;
 vme_unordered_map<uint32_t, CreatureAppearance> Appearances::_creatures;
 
 std::vector<SpriteRange> Appearances::textureAtlasSpriteRanges;
+std::vector<int> Appearances::textureAtlasSpriteRangeIndex;
 vme_unordered_map<uint32_t, std::unique_ptr<TextureAtlas>> Appearances::textureAtlases;
 
 bool Appearances::isLoaded;
@@ -124,6 +236,14 @@ void Appearances::loadTextureAtlases(const std::filesystem::path catalogContents
         Appearances::textureAtlasSpriteRanges.end(),
         [](SpriteRange a, SpriteRange b) { return a.start < b.start; });
 
+    auto textureAtlasCount = Appearances::textureAtlasSpriteRanges.size();
+    textureAtlasSpriteRangeIndex.resize(Appearances::textureAtlasSpriteRanges.size());
+    for (int i = 0; i < textureAtlasCount; ++i)
+    {
+        // end + 1 because our binary search uses upper bound. Without the + 1 we get the wrong index.
+        textureAtlasSpriteRangeIndex[i] = textureAtlasSpriteRanges[i].end + 1;
+    }
+
     VME_LOG("Loaded compressed texture atlases in " << start.elapsedMillis() << " ms.");
 }
 
@@ -172,54 +292,15 @@ std::pair<bool, std::optional<std::string>> Appearances::dumpSpriteFiles(const s
 
 TextureAtlas *Appearances::getTextureAtlas(const uint32_t spriteId)
 {
-    // TODO Checks #1 and #2 should not be necessary. This algorithm can
-    // TODO  probably be improved, but it works for now.
+    auto result = fast_upper_bound4(textureAtlasSpriteRangeIndex, static_cast<int>(spriteId));
+    auto range = textureAtlasSpriteRanges[result];
 
-    // TODO #1
-    if (textureAtlasSpriteRanges.back().start <= spriteId)
+    if (range.start > spriteId || range.end < spriteId)
     {
-        auto end = textureAtlasSpriteRanges.back().end;
-        DEBUG_ASSERT(spriteId <= end, "spriteId is not present in any texture atlas.");
-
-        return textureAtlases.at(end).get();
+        ABORT_PROGRAM("There is no sprite with ID " + std::to_string(spriteId));
     }
 
-    size_t last = textureAtlasSpriteRanges.size() - 1;
-    size_t i = textureAtlasSpriteRanges.size() >> 1;
-
-    // Perform a binary search to find the Texture atlas containing the spriteId.
-
-    SpriteRange range = textureAtlasSpriteRanges[i];
-    size_t change = (textureAtlasSpriteRanges.size() >> 2) + (textureAtlasSpriteRanges.size() & 1);
-
-    while (change != 0)
-    {
-        if (range.start > spriteId)
-        {
-            // Handle negative i
-            if (change > i)
-            {
-                i = 0;
-            }
-            else
-            {
-                i -= change;
-            }
-        }
-        else if (range.end < spriteId)
-        {
-            i += change;
-        }
-        else
-        {
-            return textureAtlases.at(range.end).get();
-        }
-        // TODO #2 (The call to std::min())
-        range = textureAtlasSpriteRanges[std::min(i, last)];
-        change = (change >> 1) + (change & 1);
-    }
-
-    ABORT_PROGRAM("There is no sprite with ID " + std::to_string(spriteId));
+    return textureAtlases.at(range.end).get();
 }
 
 size_t Appearances::textureAtlasCount()
