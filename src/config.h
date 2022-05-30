@@ -14,6 +14,7 @@ class Config
         enum class Kind
         {
             NoConfigFile,
+            NoAssetsFolder,
             MissingConfigJsonKey
         };
 

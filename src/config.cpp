@@ -71,8 +71,8 @@ std::optional<Config::Error> Config::load()
     if (!std::filesystem::exists(_assetFolder) || !std::filesystem::is_directory(_assetFolder))
     {
         std::stringstream s;
-        s << "Could not locate config file for client version " << _version << ". You need to add a config.json file at: " + std::filesystem::absolute(_configFile).string() << std::endl;
-        result.emplace(Error::Kind::NoConfigFile, s.str());
+        s << "Could not locate Tibia asset folder for client version" << _version << ". Attempted path: " + std::filesystem::absolute(_assetFolder).string() << std::endl;
+        result.emplace(Error::Kind::NoAssetsFolder, s.str());
         return result;
     }
 
