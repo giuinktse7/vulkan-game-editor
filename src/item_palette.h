@@ -46,6 +46,7 @@ struct ItemPalettes
 {
     static ItemPalette &createPalette(const std::string &id, const std::string &name);
     static ItemPalette *getById(const std::string &id);
+    static ItemPalette *getOrCreateById(const std::string &id);
 
     static std::unordered_map<std::string, ItemPalette> &itemPalettes();
 

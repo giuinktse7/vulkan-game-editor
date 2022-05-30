@@ -544,7 +544,7 @@ void MainWindow::initializePaletteWindow()
 
     // Raw palette
     {
-        ItemPalette &rawPalette = *ItemPalettes::getById("raw");
+        ItemPalette &rawPalette = *ItemPalettes::getOrCreateById("raw");
 
         auto &bottomTileset = rawPalette.addTileset(Tileset("bottom_items", "Bottom items"));
         // auto &groundTileset = rawPalette.addTileset(Tileset("grounds", "Grounds"));

@@ -29,6 +29,19 @@ ItemPalette *ItemPalettes::getById(const std::string &id)
     return found != _itemPalettes.end() ? &(found->second) : nullptr;
 }
 
+ItemPalette *ItemPalettes::getOrCreateById(const std::string &id)
+{
+    auto found = _itemPalettes.find(id);
+    if (found != _itemPalettes.end())
+    {
+        return &(found->second);
+    }
+    else
+    {
+        return &createPalette(id, id);
+    }
+}
+
 bool ItemPalettes::contains(const std::string &id)
 {
     return _itemPalettes.find(id) != _itemPalettes.end();
