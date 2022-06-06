@@ -220,6 +220,14 @@ void MainWindow::mapViewSelectedTileThingClicked(MapView *mapView, const Tile *t
 {
     auto position = tile->position();
     bool showInPropertyWindow = !(QApplication::keyboardModifiers() & Qt::KeyboardModifier::AltModifier);
+
+    // The property window can not show multiple things
+    if (!mapView->singleThingSelected())
+    {
+        propertyWindow->resetFocus();
+        return;
+    }
+
     if (showInPropertyWindow)
     {
         rollbear::visit(
