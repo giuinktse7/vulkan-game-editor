@@ -33,7 +33,7 @@ TODO
 
 To build the project, first install the required [Dependencies](#dependencies).
 
-### Building with Visual Studio 2019 (Recommended)
+### Building with Visual Studio 2022 (Recommended)
 
 1. Download and install [Visual Studio 2022 Preview (Community)](https://visualstudio.microsoft.com/vs/).
 2. Follow steps 1.3 in [Building with CMake](#Building-with-CMake).
@@ -72,8 +72,8 @@ Build configurations can be changed under `Project -> CMake Settings for VulkanG
 4. In `./build`, run (for example)
 
     ```sh
-    # Use the Visual Studio 16 2019 makefile generator, targeting the x64 platform with the ClangCL compiler.
-    cmake ../ -G "Visual Studio 16 2019" -A x64 [-T ClangCL]
+    # Use the Visual Studio 17 2022 makefile generator, targeting the x64 platform with the ClangCL compiler.
+    cmake ../ -G "Visual Studio 17 2022" -A x64 [-T ClangCL]
     ```
 
     **Flags**:
