@@ -46,6 +46,16 @@ VME::ModifierKeys QtUtil::QtUiUtils::modifiers() const
     return enum_conversion::vmeModifierKeys(QApplication::keyboardModifiers());
 }
 
+double QtUtil::QtUiUtils::screenDevicePixelRatio()
+{
+    return window->screen()->devicePixelRatio();
+}
+
+double QtUtil::QtUiUtils::windowDevicePixelRatio()
+{
+    return window->devicePixelRatio();
+}
+
 void QtUtil::QtUiUtils::waitForDraw(std::function<void()> f)
 {
     window->waitingForDraw.emplace(f);

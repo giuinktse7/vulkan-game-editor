@@ -292,6 +292,12 @@ class MapView
 
     bool isValidPos(const Position &position) const;
 
+    /**
+     * @brief The device pixel ratio for the view. This can be affected by things like changing the display zoom
+     * on a Windows machine (125% zoom corresponds to device pixel ratio 1.25)
+     */
+    double devicePixelRatio() const;
+
     EditorAction &editorAction;
     MapHistory::History history;
 
