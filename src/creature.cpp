@@ -33,7 +33,7 @@ CreatureType *Creatures::addCreatureType(std::string id, std::string name, Outfi
 
     if (creatureType(id))
     {
-        VME_LOG_ERROR(std::format("A creature type with id '{}' already exists."));
+        VME_LOG_ERROR(std::format("A creature type with id '{}' already exists.", outfit.id()));
         return nullptr;
     }
 
