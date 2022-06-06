@@ -50,9 +50,9 @@ void TimePoint::setApplicationStartTimePoint()
     applicationStartTime = TimePoint::now();
 }
 
-std::string TimePoint::toString(std::chrono::system_clock::time_point timestamp, const std::string &format)
+std::string TimePoint::toString(std::chrono::system_clock::time_point timestamp)
 {
-    return std::format(format, timestamp);
+    return std::format("{:%Y-%m-%dT%H:%M:%S}", timestamp);
 }
 
 std::chrono::system_clock::time_point TimePoint::fromString(std::string raw, const std::string &format)

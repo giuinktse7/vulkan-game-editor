@@ -12,7 +12,7 @@ class TimePoint
     using time_t = long long;
     TimePoint(std::chrono::steady_clock::time_point timePoint = std::chrono::steady_clock::now());
 
-    static std::string toString(std::chrono::system_clock::time_point timestamp, const std::string &format = DEFAULT_SERIALIZE_FORMAT);
+    static std::string toString(std::chrono::system_clock::time_point timestamp);
 
     static std::chrono::system_clock::time_point fromString(std::string raw, const std::string &format = DEFAULT_PARSE_FORMAT);
 
