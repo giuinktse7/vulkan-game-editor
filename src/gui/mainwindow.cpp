@@ -194,10 +194,18 @@ void MainWindow::mapTabCloseEvent(int index, QVariant data)
 
 void MainWindow::mapTabChangedEvent(int index)
 {
-    if (index == -1)
-        return;
+    updateMenu(index);
+}
 
-    // Empty for now
+void MainWindow::updateMenu(int selectedMapTabIndex)
+{
+    bool hasMapTab = selectedMapTabIndex != -1;
+
+    getMenuAction("MENU_EDIT_UNDO")->setEnabled(hasMapTab);
+    getMenuAction("MENU_EDIT_REDO")->setEnabled(hasMapTab);
+    getMenuAction("MENU_EDIT_CUT")->setEnabled(hasMapTab);
+    getMenuAction("MENU_EDIT_COPY")->setEnabled(hasMapTab);
+    getMenuAction("MENU_EDIT_PASTE")->setEnabled(hasMapTab);
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -471,6 +479,10 @@ void MainWindow::initializeUI()
     });
 
     setLayout(layout);
+
+    // Allow things that rely on MapTab state to update
+    // For example, disabling undo/redo when there's no MapTab.
+    mapTabChangedEvent(-1);
 }
 
 void MainWindow::setSearchVisible(bool visible)
@@ -765,15 +777,26 @@ void MainWindow::initializePaletteWindow()
     });
 }
 
+MenuAction *MainWindow::getMenuAction(const QString &objectName) const
+{
+    auto child = this->menuBar->findChild<MenuAction *>(objectName);
+    return child;
+}
+
 QMenuBar *MainWindow::createMenuBar()
 {
-    QMenuBar *menuBar = new QMenuBar;
+    this->menuBar = new QMenuBar();
+    // this->menuBar = new QMenuBar;
 
-    const auto addMenuItem = [this](QMenu *menu, const char *text, const QKeySequence shortcut = 0, std::function<void()> f = nullptr) {
+    const auto addMenuItem = [this](QMenu *menu, const char *text, const QKeySequence shortcut = 0, std::function<void()> f = nullptr, QString objectName = "") {
         auto action = new MenuAction(tr(text), shortcut, menu);
         if (f)
         {
             connect(action, &QWidgetAction::triggered, f);
+        }
+        if (!objectName.isEmpty())
+        {
+            action->setObjectName(objectName);
         }
         menu->addAction(action);
         return action;
@@ -792,8 +815,10 @@ QMenuBar *MainWindow::createMenuBar()
     {
         auto editMenu = menuBar->addMenu(tr("Edit"));
 
-        addMenuItem(editMenu, "Undo", Qt::CTRL | Qt::Key_Z, [this] { this->currentMapView()->undo(); });
-        addMenuItem(editMenu, "Redo", Qt::CTRL | Qt::SHIFT | Qt::Key_Z, [this] { this->currentMapView()->redo(); });
+        addMenuItem(
+            editMenu, "Undo", Qt::CTRL | Qt::Key_Z, [this] { this->currentMapView()->undo(); }, "MENU_EDIT_UNDO");
+        addMenuItem(
+            editMenu, "Redo", Qt::CTRL | Qt::SHIFT | Qt::Key_Z, [this] { this->currentMapView()->redo(); }, "MENU_EDIT_REDO");
 
         addMenuItem(editMenu, "Jump To Brush...", Qt::Key_J, [this] {
             auto mainLayout = static_cast<MainLayout *>(layout());
@@ -803,26 +828,32 @@ QMenuBar *MainWindow::createMenuBar()
         addMenuItem(editMenu, "Temp Debug", Qt::Key_K, [this] { VME_LOG("."); });
         editMenu->addAction(new MenuSeparator(this));
 
-        addMenuItem(editMenu, "Cut", Qt::CTRL | Qt::Key_X, [this] {
-            MapView *mapView = this->currentMapView();
-            if (mapView)
-            {
-                this->mapCopyBuffer.copySelection(*mapView);
-                mapView->deleteSelectedItems();
-            }
-        });
-        addMenuItem(editMenu, "Copy", Qt::CTRL | Qt::Key_C, [this] {
-            this->mapCopyBuffer.copySelection(*this->currentMapView());
-        });
-        addMenuItem(editMenu, "Paste", Qt::CTRL | Qt::Key_V, [this] {
-            if (this->mapCopyBuffer.empty() || !this->currentMapView())
-            {
-                return;
-            }
+        addMenuItem(
+            editMenu, "Cut", Qt::CTRL | Qt::Key_X, [this] {
+                MapView *mapView = this->currentMapView();
+                if (mapView)
+                {
+                    this->mapCopyBuffer.copySelection(*mapView);
+                    mapView->deleteSelectedItems();
+                }
+            },
+            "MENU_EDIT_CUT");
+        addMenuItem(
+            editMenu, "Copy", Qt::CTRL | Qt::Key_C, [this] {
+                this->mapCopyBuffer.copySelection(*this->currentMapView());
+            },
+            "MENU_EDIT_COPY");
+        addMenuItem(
+            editMenu, "Paste", Qt::CTRL | Qt::Key_V, [this] {
+                if (this->mapCopyBuffer.empty() || !this->currentMapView())
+                {
+                    return;
+                }
 
-            this->editorAction.set(MouseAction::PasteMapBuffer(&this->mapCopyBuffer));
-            this->currentMapView()->requestDraw();
-        });
+                this->editorAction.set(MouseAction::PasteMapBuffer(&this->mapCopyBuffer));
+                this->currentMapView()->requestDraw();
+            },
+            "MENU_EDIT_PASTE");
 
         auto eyeDropper = new QShortcut(Qt::Key_I, this);
         connect(eyeDropper, &QShortcut::activated, [this]() {

@@ -31,6 +31,7 @@ class SearchPopupView;
 class ItemPaletteWindow;
 class TilesetListView;
 class SearchPopupWidget;
+class MenuAction;
 
 #include "../map_copy_buffer.h"
 #include "../signal.h"
@@ -60,8 +61,8 @@ class MainWindow : public QWidget
     void addMapTab(std::shared_ptr<Map> map);
 
     /**
-     * @brief 
-     * 
+     * @brief
+     *
      * @throws MapLoadError if the map could not be loaded.
      */
     void addMapTab(const std::filesystem::path &path);
@@ -108,9 +109,12 @@ class MainWindow : public QWidget
     void editorActionChangedEvent(const MouseAction_t &action);
 
     QMenuBar *createMenuBar();
+    MenuAction *getMenuAction(const QString &objectName) const;
     void initializePaletteWindow();
 
     void registerPropertyItemListeners();
+
+    void updateMenu(int selectedMapTabIndex);
 
     MapTabWidget *mapTabs = nullptr;
     ItemPropertyWindow *propertyWindow = nullptr;
@@ -120,6 +124,8 @@ class MainWindow : public QWidget
 
     // BorderLayout *rootLayout = nullptr;
     QVBoxLayout *rootLayout = nullptr;
+
+    QMenuBar *menuBar = nullptr;
 
     QLabel *positionStatus = nullptr;
     QLabel *zoomStatus = nullptr;
