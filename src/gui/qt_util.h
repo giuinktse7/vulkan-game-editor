@@ -67,6 +67,9 @@ namespace QtUtil
             : window(window) {}
         ScreenPosition mouseScreenPosInView() override;
 
+        double screenDevicePixelRatio() override;
+        double windowDevicePixelRatio() override;
+
         VME::ModifierKeys modifiers() const override;
 
         void waitForDraw(std::function<void()> f) override;

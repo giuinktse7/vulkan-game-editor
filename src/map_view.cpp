@@ -1766,6 +1766,11 @@ void MapView::requestDraw()
     drawRequest.fire();
 }
 
+double MapView::devicePixelRatio() const
+{
+    return uiUtils->windowDevicePixelRatio();
+}
+
 void MapView::requestMinimapDraw()
 {
     drawMinimapRequest.fire();

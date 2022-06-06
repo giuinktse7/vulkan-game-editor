@@ -151,7 +151,7 @@ using MouseAction_t = std::variant<MouseAction::None, MouseAction::MapBrush, Mou
 
 /**
  * Utility class for sending UI information to a MapView.
- * 
+ *
  * This is a necessary effect of separating normal code and UI code
  *
  * */
@@ -160,6 +160,8 @@ class UIUtils
   public:
     virtual ~UIUtils() = default;
 
+    virtual double screenDevicePixelRatio() = 0;
+    virtual double windowDevicePixelRatio() = 0;
     virtual ScreenPosition mouseScreenPosInView() = 0;
     virtual VME::ModifierKeys modifiers() const = 0;
     virtual void waitForDraw(std::function<void()> f) = 0;
@@ -193,8 +195,8 @@ class EditorAction
         return _previousAction.action;
     }
     /**
-   * @return true if the set was successful.
-   */
+     * @return true if the set was successful.
+     */
     bool setIfUnlocked(const MouseAction_t action)
     {
         if (_locked)

@@ -29,17 +29,22 @@ WorldPosition::WorldPosition()
 
 ScreenPosition WorldPosition::toScreenPos(const MapView &mapView) const
 {
+    double devicePixelRatio = mapView.devicePixelRatio();
+    float zoomFactor = mapView.getZoomFactor();
     // TODO Improve this function (if possible?) Right now, it does not appear to work correctly with zoom
-    ScreenPosition::value_type newX = std::lroundf((this->x - mapView.x()) * mapView.getZoomFactor());
-    ScreenPosition::value_type newY = std::lroundf((this->y - mapView.y()) * mapView.getZoomFactor());
+    ScreenPosition::value_type newX = std::lroundf((this->x - mapView.x()) * zoomFactor / devicePixelRatio);
+    ScreenPosition::value_type newY = std::lroundf((this->y - mapView.y()) * zoomFactor / devicePixelRatio);
 
     return ScreenPosition(newX, newY);
 }
 
 WorldPosition ScreenPosition::worldPos(const MapView &mapView) const
 {
-    WorldPosition::value_type newX = std::lroundf(mapView.x() + this->x / mapView.getZoomFactor());
-    WorldPosition::value_type newY = std::lroundf(mapView.y() + this->y / mapView.getZoomFactor());
+    double devicePixelRatio = mapView.devicePixelRatio();
+    float zoomFactor = mapView.getZoomFactor();
+
+    WorldPosition::value_type newX = std::lroundf(mapView.x() + this->x / zoomFactor * devicePixelRatio);
+    WorldPosition::value_type newY = std::lroundf(mapView.y() + this->y / zoomFactor * devicePixelRatio);
 
     return WorldPosition(newX, newY);
 }
