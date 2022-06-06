@@ -72,20 +72,20 @@ class MapView
     void itemDropEvent(const ItemDropEvent &event);
 
     /*
-		Escape the current action (for example when pressing the ESC key)
-	*/
+        Escape the current action (for example when pressing the ESC key)
+    */
     void escapeEvent();
     void requestDraw();
     void requestMinimapDraw();
 
     /**
-	 * Shorthand method for comitting actions within a group. Equivalent to:
-	 * 
-	 * history.startGroup(groupType);
-   * f();
-   * history.endGroup(groupType);
-	 *
-	 */
+     * Shorthand method for comitting actions within a group. Equivalent to:
+     *
+     * history.startGroup(groupType);
+     * f();
+     * history.endGroup(groupType);
+     *
+     */
     void commitTransaction(TransactionType groupType, std::function<void()> f);
 
     void beginTransaction(TransactionType transactionType);
@@ -130,8 +130,8 @@ class MapView
     void translateCamera(WorldPosition delta);
 
     /**
-	 * Runs f once after the next draw.
-	 */
+     * Runs f once after the next draw.
+     */
     void waitForDraw(std::function<void()> f);
 
     void zoom(int delta);
@@ -166,8 +166,8 @@ class MapView
     void addCreature(const Position &pos, Creature &&creature);
 
     /* Note: The indices must be in descending order (std::greater), because
-		otherwise the wrong items could be removed.
-	*/
+             otherwise the wrong items could be removed.
+    */
     void removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices);
     void removeItems(const Position &position, std::function<bool(const Item &)> predicate);
     void removeItems(const Tile &tile, std::function<bool(const Item &)> predicate);
@@ -217,14 +217,14 @@ class MapView
     void rotateBrush(bool forwards = true);
 
     /**
-	 * Returns the only selected item if there is **exactly one** selected item.
-	 * Returns nullptr otherwise.
-	 */
+     * Returns the only selected item if there is **exactly one** selected item.
+     * Returns nullptr otherwise.
+     */
     const Item *singleSelectedItem() const;
     /**
-	 * Returns the only selected item if there is **exactly one** selected item.
-	 * Returns nullptr otherwise.
-	 */
+     * Returns the only selected item if there is **exactly one** selected item.
+     * Returns nullptr otherwise.
+     */
     Item *singleSelectedItem();
 
     /**
@@ -249,9 +249,9 @@ class MapView
     inline Position mouseGamePos() const;
     inline WorldPosition mouseWorldPos() const;
     /*
-		Return the position on the map for the 'point'.
-		A point (0, 0) corresponds to the map position (0, 0, mapViewZ).
-	*/
+                Return the position on the map for the 'point'.
+                A point (0, 0) corresponds to the map position (0, 0, mapViewZ).
+        */
     template <typename T>
     Position toPosition(util::Point<T> point) const;
 
@@ -327,12 +327,12 @@ class MapView
     void setLastClickedTileQuadrant(const WorldPosition worldPos);
 
     /**
- 		*	Keeps track of all MapView instances. This is necessary for QT to
-		* validate MapView pointers in a QVariant.
-		*
-		* See:
-		* QtUtil::associatedMapView
-	*/
+     *	Keeps track of all MapView instances. This is necessary for QT to
+     * validate MapView pointers in a QVariant.
+     *
+     * See:
+     * QtUtil::associatedMapView
+     */
     static std::unordered_set<MapView *> instances;
 
     std::shared_ptr<Map> _map;
@@ -355,9 +355,6 @@ class MapView
      */
     std::optional<Position> lastBrushDragPosition;
 
-    /**
-     * 
-     */
     std::optional<TileQuadrant> lastClickedTileQuadrant;
 
     Overlay _overlay;

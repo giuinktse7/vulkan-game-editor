@@ -37,9 +37,9 @@ namespace
 namespace QtUtil
 {
     /**
-    * Makes it possible to mix connect syntax like:
-    * QmlBind::connect(countSpinbox, SIGNAL(valueChanged()), [=]{...});
-  */
+     * Makes it possible to mix connect syntax like:
+     * QmlBind::connect(countSpinbox, SIGNAL(valueChanged()), [=]{...});
+     */
     class QmlBind : public QObject
     {
         Q_OBJECT

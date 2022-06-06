@@ -18,9 +18,9 @@
 #include "settings.h"
 #include "util.h"
 
-/** Order of members matter for this struct due to alignment requirements in the 
+/** Order of members matter for this struct due to alignment requirements in the
  * vertex shader.
- * 
+ *
  * See: Vulkan Spec: 14.5.4. Offset and Stride Assignment
  */
 struct PushConstantData
@@ -1248,7 +1248,7 @@ void MapRenderer::updateUniformBuffer()
 }
 
 /**
- * 
+ *
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
