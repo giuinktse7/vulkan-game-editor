@@ -26,7 +26,7 @@ TODO
     For instance, for compiling against x64-windows, the command would be
 
     ```sh
-    liblzma:x64-windows protobuf:x64-windows nlohmann-json:x64-windows stb:x64-windows pugixml:x64-windows glm:x64-windows catch2:x64-windows nano-signal-slot:x64-windows lua:x64-windows date:x64-windows
+    vcpkg install liblzma:x64-windows protobuf:x64-windows nlohmann-json:x64-windows stb:x64-windows pugixml:x64-windows glm:x64-windows catch2:x64-windows nano-signal-slot:x64-windows lua:x64-windows date:x64-windows
     ```
 
 ## Building (Windows)
