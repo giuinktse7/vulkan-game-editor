@@ -40,7 +40,8 @@ enum class AppearanceItemCategory
     WandsRods = 21,
     PremiumScrolls = 22,
     TibiaCoins = 23,
-    CreatureProducts = 24
+    CreatureProducts = 24,
+    Quiver = 25
 };
 
 enum class AppearancePlayerProfession

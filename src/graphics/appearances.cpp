@@ -563,6 +563,7 @@ ObjectAppearance::ObjectAppearance(const proto::Appearance &protobufAppearance)
                 MAP_MARKET_FLAG(PREMIUM_SCROLLS, AppearanceItemCategory::PremiumScrolls);
                 MAP_MARKET_FLAG(TIBIA_COINS, AppearanceItemCategory::TibiaCoins);
                 MAP_MARKET_FLAG(CREATURE_PRODUCTS, AppearanceItemCategory::CreatureProducts);
+                MAP_MARKET_FLAG(QUIVER, AppearanceItemCategory::Quiver);
                 default:
                     ABORT_PROGRAM("Unknown appearance flag market category: " + std::to_string(flags.market().category()));
                     break;
