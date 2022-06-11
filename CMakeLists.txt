@@ -274,10 +274,11 @@ target_link_libraries(common PUBLIC Vulkan::Vulkan)
 target_include_directories(common PUBLIC ${Vulkan_INCLUDE_DIRS})
 
 target_link_libraries(common PRIVATE protobuf::libprotobuf)
-target_link_libraries(common PRIVATE ${LIBLZMA_LIBRARIES})
+# target_link_libraries(common PRIVATE ${LIBLZMA_LIBRARIES})
+target_link_libraries(common PRIVATE liblzma::liblzma)
 
 target_link_libraries(common PRIVATE pugixml)
-target_link_libraries(common PRIVATE glm)
+target_link_libraries(common PRIVATE glm::glm)
 
 target_include_directories(common PUBLIC ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 
@@ -350,7 +351,7 @@ set(GuiSources
 add_library(gui STATIC ${GuiSources})
 
 target_link_libraries(gui PRIVATE common)
-target_link_libraries(gui PRIVATE glm)
+target_link_libraries(gui PRIVATE glm::glm)
 
 target_compile_features(gui PUBLIC cxx_std_20)
 target_compile_features(gui PRIVATE cxx_std_20)
