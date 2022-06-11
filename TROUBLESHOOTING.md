@@ -1,5 +1,15 @@
 # Compilation issues
 
+## Protoc issues
+
+Likely related to mismatching versions between the protobuf library and the protoc version used to compile the protobuf files (under `./src/graphics/protobuf`).
+Ensure that the protobuf version installed by vcpkg matches the version of protoc used to compile the `.h` and `.cc` files.
+
+```bash
+vcpkg list | grep proto
+protoc --version
+```
+
 ## QT Issues
 
 ### QT tries to use `experimental/source_location` in `qproperty.h`

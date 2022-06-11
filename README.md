@@ -43,6 +43,20 @@ To build the project, first install the required [Dependencies](#dependencies).
 
 Build configurations can be changed under `Project -> CMake Settings for VulkanGameEditor`.
 
+## Generating c++ files from .proto files
+
+- Download [Protod](https://github.com/sysdream/Protod)
+- Get client.exe from tibia path `<tibia_path>\packages\Tibia\bin\client.exe`
+- Run `python27 ./protod.py client.exe` to generate .proto files and place them in `./in`.
+- Add `syntax = "proto2";` to top of each file .proto file.
+- Then:
+  - `protoc -I=./in --cpp_out=./out ./in/appearances.proto`
+  - `protoc -I=./in --cpp_out=./out ./in/map.proto`
+  - `protoc -I=./in --cpp_out=./out ./in/shared.proto`
+
+  Or:
+  - `protoc -I=./in --cpp_out=./out ./in/appearances.proto && protoc -I=./in --cpp_out=./out ./in/map.proto && protoc -I=./in --cpp_out=./out ./in/shared.proto`
+
 ### Building with CMake
 
 1. Download and install [CMake](https://cmake.org/download/).
