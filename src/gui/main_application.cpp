@@ -78,8 +78,10 @@ void MainApplication::onFocusWidgetChanged(QWidget *widget)
 
 int MainApplication::run()
 {
-    welcomeView = new WelcomeView(this);
-    welcomeView->show();
+    mainWindow.show();
+
+    // welcomeView = new WelcomeView(this);
+    // welcomeView->show();
 
     return exec();
 }

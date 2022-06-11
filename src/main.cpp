@@ -93,13 +93,12 @@ int main(int argc, char *argv[])
     brushLoader.load(std::format("{}/palettes/creatures.json", clientPath));
     brushLoader.load(std::format("{}/palettes/tilesets.json", clientPath));
 
-    // app.mainWindow.addMapTab("C:/Users/giuin/Desktop/Untitled-1.otbm");
-
-        // TemporaryTest::loadAllTexturesIntoMemory();
-        // return 0;
+    // TemporaryTest::loadAllTexturesIntoMemory();
+    // return 0;
 
     app.initializeUI();
 
+    // app.mainWindow.addMapTab("C:/Users/giuin/Desktop/Untitled-1.otbm");
     // app.mainWindow.addMapTab(TemporaryTest::makeTestMap1());
     // app.mainWindow.addMapTab(TemporaryTest::makeTestMap2());
 
