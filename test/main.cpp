@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[])
 {
-    auto configResult = Config::create("12.60.10411");
+    auto configResult = Config::create("12.81");
     if (configResult.isErr())
     {
         ABORT_PROGRAM(configResult.unwrapErr().show());
