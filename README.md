@@ -10,13 +10,13 @@ TODO
 
 ## Dependencies
 
-- [**Vulkan SDK**](https://vulkan.lunarg.com/) Low-level 3D graphics and computing API.
-- [**Qt6 (`Qt::Core`, `Qt::Widgets`, `Qt::Qml`, `Qt::Quick` and`Qt::Svg`)**](https://www.qt.io/download-open-source) Cross-plaftorm GUI framework.
+-   [**Vulkan SDK**](https://vulkan.lunarg.com/) Low-level 3D graphics and computing API.
+-   [**Qt6 (`Qt::Core`, `Qt::Widgets`, `Qt::Qml`, `Qt::Quick` and`Qt::Svg`)**](https://www.qt.io/download-open-source) Cross-plaftorm GUI framework.
 
     **NOTE**: The QT framework requires around 8 GB of disk space per target architecture (For example `msvc2019` or `msvc2019_64`).
 
-- [**vcpkg**](https://github.com/microsoft/vcpkg) C++ package manager.
-- The required libraries can be installed using vcpkg:
+-   [**vcpkg**](https://github.com/microsoft/vcpkg) C++ package manager.
+-   The required libraries can be installed using vcpkg:
 
     ```sh
     vcpkg install liblzma protobuf nlohmann-json stb pugixml glm catch2 nano-signal-slot lua date
@@ -39,23 +39,25 @@ To build the project, first install the required [Dependencies](#dependencies).
 2. Follow steps 1.3 in [Building with CMake](#Building-with-CMake).
 3. Open `./build/VulkanGameEditor.sln` with Visual Studio.
 4. If necessary, update C++ version to `Preview - Features from the Latest C++ Working Draft (/std:c++latest)`. This can be done by right clicking a project in the solution explorer -> Properties -> Configuration Properties -> General. This must be done for each project in the solution.
-4. Run.
+5. Run.
 
 Build configurations can be changed under `Project -> CMake Settings for VulkanGameEditor`.
 
 ## Generating c++ files from .proto files
 
-- Download [Protod](https://github.com/sysdream/Protod)
-- Get client.exe from tibia path `<tibia_path>\packages\Tibia\bin\client.exe`
-- Run `python27 ./protod.py client.exe` to generate .proto files and place them in `./in`.
-- Add `syntax = "proto2";` to top of each file .proto file.
-- Then:
-  - `protoc -I=./in --cpp_out=./out ./in/appearances.proto`
-  - `protoc -I=./in --cpp_out=./out ./in/map.proto`
-  - `protoc -I=./in --cpp_out=./out ./in/shared.proto`
+-   Download [Protod](https://github.com/sysdream/Protod)
+-   Get client.exe from tibia path `<tibia_path>\packages\Tibia\bin\client.exe`
+-   Run `python27 ./protod.py client.exe` to generate .proto files and place them in `./in`.
+-   Add `syntax = "proto2";` to top of each file .proto file.
+-   Then:
 
-  Or:
-  - `protoc -I=./in --cpp_out=./out ./in/appearances.proto && protoc -I=./in --cpp_out=./out ./in/map.proto && protoc -I=./in --cpp_out=./out ./in/shared.proto`
+    -   `protoc -I=./in --cpp_out=./out ./in/appearances.proto`
+    -   `protoc -I=./in --cpp_out=./out ./in/map.proto`
+    -   `protoc -I=./in --cpp_out=./out ./in/shared.proto`
+
+    Or:
+
+    -   `protoc -I=./in --cpp_out=./out ./in/appearances.proto && protoc -I=./in --cpp_out=./out ./in/map.proto && protoc -I=./in --cpp_out=./out ./in/shared.proto`
 
 ### Building with CMake
 
@@ -112,19 +114,19 @@ To run the test suite `vme_tests`, run `./runtest` in the project root.
 
 There are four targets:
 
-- **main** (Executable): The `main` target is the executable of the application. This target links the `common` and `gui` libraries statically.
-- **common** (Library): The `common` target contains all code that **is not** related to GUI (i.e. everything except Qt6-reliant code).
-- **gui** (Library): The `gui` target contains all code that **is** related to GUI (i.e. all code that is Qt6-reliant).
+-   **main** (Executable): The `main` target is the executable of the application. This target links the `common` and `gui` libraries statically.
+-   **common** (Library): The `common` target contains all code that **is not** related to GUI (i.e. everything except Qt6-reliant code).
+-   **gui** (Library): The `gui` target contains all code that **is** related to GUI (i.e. all code that is Qt6-reliant).
 
-- **vme_tests** (Executable): Contains tests for the `common` and `gui` libraries (See [Run tests using CMake](#run-tests-using-cmake)).
+-   **vme_tests** (Executable): Contains tests for the `common` and `gui` libraries (See [Run tests using CMake](#run-tests-using-cmake)).
 
 The main purpose of having the `common` and `gui` library separate from the `main` target was to enable running unit tests against the code. It also ensures that there is no coupling introduced between core editor functionality and Qt6 (`common` does not have Qt6 as a dependency).
 
+## Clang
+
+If you want to use `clang` or `clang-format`, you can get it here: `https://releases.llvm.org/download.html`.
+
 ## Terminology
-
-### Action
-
-An action is an event that can occur and can be undone/redone.
 
 ## Investigate build performance
 
