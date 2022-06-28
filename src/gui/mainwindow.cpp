@@ -5,9 +5,11 @@
 #pragma clang diagnostic ignored "-Wnonportable-include-path"
 #endif
 
+#include <QFileDialog>
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QMouseEvent>
 #include <QPlainTextEdit>
 #include <QQuickView>
@@ -32,6 +34,7 @@
 #include "../brushes/mountain_brush.h"
 #include "../brushes/wall_brush.h"
 #include "../error.h"
+#include "../file.h"
 #include "../graphics/appearance_types.h"
 #include "../item_location.h"
 #include "../load_map.h"
@@ -206,6 +209,7 @@ void MainWindow::updateMenu(int selectedMapTabIndex)
     getMenuAction("MENU_EDIT_CUT")->setEnabled(hasMapTab);
     getMenuAction("MENU_EDIT_COPY")->setEnabled(hasMapTab);
     getMenuAction("MENU_EDIT_PASTE")->setEnabled(hasMapTab);
+    getMenuAction("MENU_SAVE_MAP")->setEnabled(hasMapTab);
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -783,6 +787,40 @@ MenuAction *MainWindow::getMenuAction(const QString &objectName) const
     return child;
 }
 
+void MainWindow::openMapFileDialog()
+{
+    auto qFileName = QFileDialog::getOpenFileName(nullptr, tr("Open Map"), "C:/Users/giuin/Desktop", tr("OTBM Files (*.otbm)"));
+    std::string mapPath = qFileName.toStdString();
+
+    // No file selected
+    if (qFileName.isEmpty())
+    {
+        return;
+    }
+
+    if (File::exists(mapPath))
+    {
+        try
+        {
+            addMapTab(mapPath);
+        }
+        catch (const MapLoadError &error)
+        {
+            QMessageBox messageBox;
+            messageBox.setText(error.what());
+            messageBox.exec();
+            return;
+        }
+    }
+    else
+    {
+        QMessageBox messageBox;
+        messageBox.setText("Could not find the file " + qFileName);
+        messageBox.exec();
+        return;
+    }
+}
+
 QMenuBar *MainWindow::createMenuBar()
 {
     this->menuBar = new QMenuBar();
@@ -807,7 +845,16 @@ QMenuBar *MainWindow::createMenuBar()
         auto fileMenu = menuBar->addMenu(tr("File"));
 
         addMenuItem(fileMenu, "New Map", Qt::CTRL | Qt::Key_N, [this] { this->addMapTab(); });
-        addMenuItem(fileMenu, "Save", Qt::CTRL | Qt::Key_S, [this] { SaveMap::saveMap(*(currentMapView()->map())); });
+        addMenuItem(
+            fileMenu, "Save Map", Qt::CTRL | Qt::Key_S, [this] {
+                MapView* mapView = currentMapView();
+                if (mapView == nullptr) {
+                    return;
+                }
+                
+                SaveMap::saveMap(*(mapView->map())); },
+            "MENU_SAVE_MAP");
+        addMenuItem(fileMenu, "Open Map", Qt::CTRL | Qt::Key_S, [this] { this->openMapFileDialog(); });
         addMenuItem(fileMenu, "Close", Qt::CTRL | Qt::Key_W, [this] { mapTabs->removeCurrentTab(); });
     }
 

@@ -89,6 +89,8 @@ class MainWindow : public QWidget
 
     void copySelection();
 
+    void openMapFileDialog();
+
   protected:
     void mousePressEvent(QMouseEvent *event) override;
     bool event(QEvent *event) override;
