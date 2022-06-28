@@ -854,7 +854,7 @@ QMenuBar *MainWindow::createMenuBar()
                 
                 SaveMap::saveMap(*(mapView->map())); },
             "MENU_SAVE_MAP");
-        addMenuItem(fileMenu, "Open Map", Qt::CTRL | Qt::Key_S, [this] { this->openMapFileDialog(); });
+        addMenuItem(fileMenu, "Open Map", Qt::CTRL | Qt::Key_O, [this] { this->openMapFileDialog(); });
         addMenuItem(fileMenu, "Close", Qt::CTRL | Qt::Key_W, [this] { mapTabs->removeCurrentTab(); });
     }
 
