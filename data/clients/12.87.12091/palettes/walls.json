@@ -1,0 +1,52 @@
+{
+    "brushes": [
+        {
+            "id": "venore_wall",
+            "name": "Venorean wall",
+            "type": "wall",
+            "lookId": 19410,
+            "walls": {
+                "horizontal": {
+                    "items": 19410,
+                    "doors": [
+                        { "id": 19840 },
+                        { "id": 19841 },
+                        { "id": 19842, "open": true },
+                        { "id": 19843, "type": "locked" },
+                        { "id": 19845, "type": "quest" },
+                        { "id": 19847, "type": "magic" },
+                        { "id": 19844, "type": "quest", "open": true },
+                        { "id": 19846, "type": "quest", "open": true },
+                        { "id": 19848, "type": "magic", "open": true }
+                    ],
+                    "windows": [
+                        { "id": 19974, "type": "hatch_window" },
+                        { "id": 20182, "type": "hatch_window", "open": true },
+                        { "id": 19444, "type": "window" }
+                    ]
+                },
+                "vertical": {
+                    "items": 19405,
+                    "doors": [
+                        { "id": 19849 },
+                        { "id": 19850 },
+                        { "id": 19851, "open": true },
+                        { "id": 19852, "type": "locked" },
+                        { "id": 19854, "type": "quest" },
+                        { "id": 19856, "type": "magic" },
+                        { "id": 19853, "type": "locked", "open": true },
+                        { "id": 19855, "type": "quest", "open": true },
+                        { "id": 19857, "type": "magic", "open": true }
+                    ],
+                    "windows": [
+                        { "id": 19975, "type": "hatch_window" },
+                        { "id": 20185, "type": "hatch_window", "open": true },
+                        { "id": 19446, "type": "window" }
+                    ]
+                },
+                "corner": 19380,
+                "pole": 19378
+            }
+        }
+    ]
+}
