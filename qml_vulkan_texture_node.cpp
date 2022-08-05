@@ -85,7 +85,7 @@ std::shared_ptr<Map> testMap2()
 
 CustomTextureItem::CustomTextureItem()
 {
-    VME_LOG_D("CustomTextureItem::CustomTextureItem");
+    // VME_LOG_D("CustomTextureItem::CustomTextureItem");
     connect(this, &QQuickItem::windowChanged, this, [this]() {
         connect(window(), &QQuickWindow::sceneGraphInitialized, this, [this]() {
             if (!m_initialized)
@@ -100,7 +100,7 @@ CustomTextureItem::CustomTextureItem()
 
 void CustomTextureItem::initialize()
 {
-    VME_LOG_D("CustomTextureItem::initialize");
+    // VME_LOG_D("CustomTextureItem::initialize");
     auto qWindow = window();
     if (qWindow)
     {
@@ -129,7 +129,7 @@ void CustomTextureItem::initialize()
 
 QSGNode *CustomTextureItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
 {
-    VME_LOG_D("CustomTextureItem::updatePaintNode");
+    // VME_LOG_D("CustomTextureItem::updatePaintNode");
     CustomTextureNode *textureNode = static_cast<CustomTextureNode *>(node);
 
     if (!m_initialized)
@@ -188,7 +188,7 @@ void CustomTextureItem::releaseResources() // called on the gui thread if the it
 CustomTextureNode::CustomTextureNode(QQuickItem *item, QtVulkanInfo *vulkanInfo, MapRenderer *renderer, uint32_t width, uint32_t height)
     : m_item(item), vulkanInfo(vulkanInfo), mapRenderer(renderer)
 {
-    VME_LOG_D("CustomTextureNode::CustomTextureNode");
+    // VME_LOG_D("CustomTextureNode::CustomTextureNode");
     m_window = m_item->window();
     connect(m_window, &QQuickWindow::beforeRendering, this, &CustomTextureNode::render);
     connect(m_window, &QQuickWindow::screenChanged, this, [this]() {
@@ -210,7 +210,7 @@ QSGTexture *CustomTextureNode::texture() const
 
 void CustomTextureNode::sync()
 {
-    VME_LOG_D("CustomTextureNode::sync");
+    // VME_LOG_D("CustomTextureNode::sync");
     m_dpr = m_window->effectiveDevicePixelRatio();
     const QSize newSize = m_window->size() * m_dpr;
     bool needsNew = false;
@@ -237,7 +237,7 @@ void CustomTextureNode::sync()
                                                                              VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                                              m_window,
                                                                              m_size);
-        VME_LOG_D("[CustomTextureNode::sync] setTexture");
+        // VME_LOG_D("[CustomTextureNode::sync] setTexture");
 
         setTexture(wrapper);
         // Q_ASSERT(wrapper->nativeInterface<QNativeInterface::QSGVulkanTexture>()->nativeImage() == texture);
@@ -246,9 +246,6 @@ void CustomTextureNode::sync()
 
 void CustomTextureNode::render()
 {
-    VME_LOG_D("CustomTextureNode::render");
-    VME_LOG_D(m_window);
-
     QSGRendererInterface *rif = m_window->rendererInterface();
     VkCommandBuffer cb = *reinterpret_cast<VkCommandBuffer *>(
         rif->getResource(m_window, QSGRendererInterface::CommandListResource));
@@ -260,7 +257,5 @@ void CustomTextureNode::render()
     frame->currentFrameIndex = currentFrameSlot;
     frame->commandBuffer = cb;
 
-    VME_LOG_D("A");
     mapRenderer->render(screenTexture.vkFrameBuffer());
-    VME_LOG_D("B");
 }

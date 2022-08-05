@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <nlohmann/json.hpp>
@@ -10,13 +11,16 @@
 #include <regex>
 #include <utility>
 
+#include <QDirIterator>
+#include <QEventLoop>
 #include <QFile>
+#include <QFileSystemWatcher>
 #include <QFontDatabase>
 #include <QGuiApplication>
 #include <QLoggingCategory>
+#include <QQmlEngine>
 #include <QQuickStyle>
 #include <QQuickWindow>
-#include <QtQuick/QQuickView>
 
 #include "common/brushes/brush.h"
 #include "common/brushes/brush_loader.h"
@@ -33,11 +37,84 @@
 #include "common/random.h"
 #include "common/time_util.h"
 #include "common/util.h"
-
 #include "qt/logging.h"
 
-// #include <QtQml/qqmlextensionplugin.h>
-// Q_IMPORT_QML_PLUGIN(qml_uiplugin)
+class FileWatcher : QObject
+{
+  public:
+    FileWatcher()
+    {
+    }
+
+    void onFileChanged(std::function<void(const QString &)> f)
+    {
+        this->f = f;
+    }
+
+    void watchFile(const QString &file)
+    {
+        _watcher.addPath(file);
+
+        if (this->f)
+        {
+            connect(&_watcher, &QFileSystemWatcher::fileChanged, this, *f);
+        }
+    }
+
+  private:
+    std::optional<std::function<void(const QString &)>> f;
+    QFileSystemWatcher _watcher;
+};
+
+std::unique_ptr<FileWatcher> watcher;
+
+int MainApp::start(int argc, char **argv)
+{
+    QGuiApplication app(argc, argv);
+
+    // This example needs Vulkan. It will not run otherwise.
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+    QQuickStyle::setStyle("Fusion");
+
+    // QQuickView view;
+    // view.setResizeMode(QQuickView::SizeRootObjectToView);
+    // view.setSource(QUrl("qrc:///vulkangameeditor/main.qml"));
+    // view.show();
+
+    rootView = std::make_unique<QQuickView>();
+    rootView->setResizeMode(QQuickView::SizeRootObjectToView);
+    rootView->setSource(QUrl::fromLocalFile("../main.qml"));
+    rootView->show();
+
+    watcher = std::make_unique<FileWatcher>();
+
+    watcher->onFileChanged([this](const QString &file) {
+        qDebug() << file;
+
+        if (QFileInfo(file).baseName() == "main")
+        {
+            qDebug() << "Main changed.";
+            this->rootView->engine()->clearComponentCache();
+            this->rootView->setSource(QUrl::fromLocalFile("../main.qml"));
+        }
+    });
+
+    watcher->watchFile("../main.qml");
+
+    // QObject::connect(watcher->watcher(), QFileSystemWatcher::fileChanged)
+
+    // BrushLoader brushLoader;
+    // brushLoader.load(std::format("{}/palettes/palettes.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/borders.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/grounds.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/walls.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/doodads.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/mountains.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/creatures.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/tilesets.json", clientPath));
+
+    return app.exec();
+}
 
 int main(int argc, char **argv)
 {
@@ -60,28 +137,8 @@ int main(int argc, char **argv)
     Config config = configResult.unwrap();
     config.loadOrTerminate();
 
-    QGuiApplication app(argc, argv);
-
-    // This example needs Vulkan. It will not run otherwise.
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
-    QQuickStyle::setStyle("Fusion");
-
-    QQuickView view;
-    view.setResizeMode(QQuickView::SizeRootObjectToView);
-    view.setSource(QUrl("qrc:///vulkangameeditor/main.qml"));
-    view.show();
-
-    // BrushLoader brushLoader;
-    // brushLoader.load(std::format("{}/palettes/palettes.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/borders.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/grounds.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/walls.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/doodads.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/mountains.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/creatures.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/tilesets.json", clientPath));
-
-    return app.exec();
+    MainApp app;
+    return app.start(argc, argv);
 }
 
 int main2(int argc, char *argv[])
