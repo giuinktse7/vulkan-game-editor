@@ -2,6 +2,8 @@
 #include <optional>
 #include <vulkan/vulkan.h>
 
+#include "vulkan_helpers.h"
+
 struct QueueFamilyIndices
 {
     std::optional<uint32_t> graphicsFamily;
@@ -16,9 +18,10 @@ struct QueueFamilyIndices
 namespace DeviceManager
 {
 
-    VkPhysicalDevice pickPhysicalDevice();
+    // VkPhysicalDevice pickPhysicalDevice();
     bool isDeviceSuitable(VkPhysicalDevice device);
-    VkDevice createLogicalDevice();
+    // VkDevice createLogicalDevice();
 
-    QueueFamilyIndices getQueueFamilies(VkPhysicalDevice physicalDevice);
+    QueueFamilyIndices getQueueFamilies(VulkanInfo &info);
+    QueueFamilyIndices findQueueFamilies(VkSurfaceKHR surface, VkPhysicalDevice device);
 }; // namespace DeviceManager

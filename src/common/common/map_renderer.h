@@ -14,6 +14,7 @@
 #include "brushes/brush.h"
 #include "editor_action.h"
 #include "graphics/buffer.h"
+#include "graphics/swapchain.h"
 #include "graphics/texture.h"
 #include "graphics/texture_atlas.h"
 #include "graphics/vertex.h"
@@ -250,12 +251,13 @@ class MapRenderer
     static const int TILE_SIZE = 32;
     static const uint32_t MAX_VERTICES = 64 * 1024;
 
-    void initResources(VkFormat colorFormat);
-    void initSwapChainResources(util::Size vulkanSwapChainImageSize);
+    void initResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
+    void initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
     void releaseSwapChainResources();
     void releaseResources();
 
     void startNextFrame();
+    void render(VkFramebuffer frameBuffer = VK_NULL_HANDLE);
 
     VkDescriptorPool &getDescriptorPool()
     {
@@ -278,6 +280,11 @@ class MapRenderer
     }
 
     bool _containsAnimation = false;
+
+    VkRenderPass getRenderPass() const
+    {
+        return renderPass;
+    }
 
   private:
     using ItemPredicate = std::function<bool(const Position, const Item &item)>;
@@ -303,6 +310,7 @@ class MapRenderer
     };
 
     void createRenderPass();
+    void createFrameBuffers();
     void createGraphicsPipeline();
     VkShaderModule createShaderModule(const std::vector<uint8_t> &code);
     void createUniformBuffers();
@@ -378,19 +386,21 @@ class MapRenderer
 
     std::unordered_set<TextureWindow, TextureWindowHasher, TextureWindowEqual> testTextureSet;
 
+    std::unique_ptr<SwapChain> swapchain;
+
     bool debug = false;
     MapView *mapView;
     VulkanInfo &vulkanInfo;
     std::array<FrameData, 3> frames;
 
     // All sprites are drawn using this index buffer
+
     BoundBuffer indexBuffer;
     BoundBuffer vertexBuffer;
 
-    VkFormat colorFormat = VK_FORMAT_UNDEFINED;
-
     FrameData *_currentFrame = nullptr;
 
+    std::vector<VkFramebuffer> swapChainFramebuffers;
     VkRenderPass renderPass;
 
     VkDescriptorPool descriptorPool = 0;

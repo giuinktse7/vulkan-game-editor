@@ -67,6 +67,7 @@ class Map
     bool isTileEmpty(const Position pos) const;
 
     void addItem(const Position position, uint32_t serverId);
+    void addItem(const Position position, Item&&item);
 
     void insertTile(Tile &&tile);
     /*

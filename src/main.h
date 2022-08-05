@@ -1,9 +1,5 @@
 #pragma once
 
-#include "gui/mainwindow.h"
-#include "gui/vulkan_window.h"
-#include <QApplication>
-#include <QVulkanInstance>
 #include <filesystem>
 #include <optional>
 #include <stdarg.h>
@@ -14,8 +10,8 @@
 // TemporaryTest includes
 #include <memory>
 
-#include "map.h"
-#include "octree.h"
+#include "common/map.h"
+#include "common/octree.h"
 // End TemporaryTest includes
 
 namespace MainUtils

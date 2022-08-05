@@ -1,5 +1,42 @@
 cmake_minimum_required(VERSION 3.16.0)
 
+# This will allow us to print a feature summary.
+# https://cmake.org/cmake/help/v3.11/module/FeatureSummary.html
+include(FeatureSummary)
+
+# Required to enable testing for link-time optimization.
+# https://cmake.org/cmake/help/v3.11/module/CheckIPOSupported.html
+include(CheckIPOSupported)
+
+# Use link-time optimization if allowed.
+check_ipo_supported(RESULT ipo_supported)
+if(ipo_supported)
+    set_property(GLOBAL PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
+# We attempt to use ccache to speed up the build.
+find_program(CCACHE_FOUND "ccache")
+if(CCACHE_FOUND)
+    message(STATUS "Using ccache for building.")
+    set_property(GLOBAL PROPERTY LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif(CCACHE_FOUND)
+
+
+# If no build type was specified, set it to Release.
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
+            "Choose the type of build, options are: None Debug Release."
+            FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
+# If no installation prefix is given manually, install locally.
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE STRING
+            "The install location"
+            FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
 #[[
 Build instructions:
 1. Navigate to ./build.
@@ -20,8 +57,7 @@ endif()
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_PREFIX_PATH
-    "D:/Programs/cpp/libraries/Qt6.1/6.1.0/msvc2019_64/lib/cmake")
+set(CMAKE_PREFIX_PATH "C:/Qt/6.3.1/msvc2019_64/lib/cmake")
 # set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-format-style='file'")
 
 # set(ARCH "-target x86_64-w64-mingw32") set(CMAKE_ASM_FLAGS "${ARCH}")
@@ -29,7 +65,7 @@ set(CMAKE_PREFIX_PATH
 
 project(
   VulkanGameEditor
-  VERSION 0.0.1
+  VERSION 0.0.1 
   LANGUAGES C CXX)
 
 enable_testing()
@@ -39,28 +75,28 @@ add_subdirectory("test")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # QT Specific
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
+# set(CMAKE_AUTORCC ON)
+# set(CMAKE_AUTOUIC ON)
 # End QT
 
 # include(FindLua)
 
-find_package(Vulkan REQUIRED)
-find_package(protobuf CONFIG REQUIRED)
-find_package(liblzma CONFIG REQUIRED)
+# find_package(Vulkan REQUIRED)
+# find_package(protobuf CONFIG REQUIRED)
+# find_package(liblzma CONFIG REQUIRED)
 find_package(Stb REQUIRED)
-find_package(glm CONFIG REQUIRED)
-find_package(pugixml CONFIG REQUIRED)
-find_package(nlohmann_json CONFIG REQUIRED)
-find_package(date CONFIG REQUIRED)
+# find_package(glm CONFIG REQUIRED)
+# find_package(pugixml CONFIG REQUIRED)
+# find_package(nlohmann_json CONFIG REQUIRED)
 # find_package(Lua REQUIRED) find_package(LuaJIT REQUIRED) find_package(sol2
 # CONFIG REQUIRED)
-find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_signal_slot.hpp")
+# find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_signal_slot.hpp")
+
+# find_package(OpenSSL)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(USE_LUAJIT true)
+# set(USE_LUAJIT true)
 
 # Selects LuaJIT if user defines or auto-detected
 if(DEFINED USE_LUAJIT AND NOT USE_LUAJIT)
@@ -79,305 +115,59 @@ else()
   find_package(Lua REQUIRED)
 endif()
 
-find_package(
-  Qt6
-  COMPONENTS Core Widgets Qml Quick SvgWidgets QuickControls2
-  REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Qml Quick SvgWidgets QuickControls2)
+qt_standard_project_setup()
 
-set(CommonSources
-    src/config.h
-    src/settings.h
-    src/signal.h
-    src/history/history.h
-    src/history/history_action.h
-    src/history/history_change.h
-    src/history/thing_mutation.h
-    src/camera.h
-    src/const.h
-    src/otbm.h
-    src/debug.h
-    src/definitions.h
-    src/item_animation.h
-    src/file.h
-    src/error.h
-    src/frame_group.h
-    src/editor_action.h
-    src/graphics/appearances.h
-    src/graphics/appearance_types.h
-    src/graphics/buffer.h
-    src/graphics/compression.h
-    src/graphics/device_manager.h
-    src/graphics/engine.h
-    src/graphics/protobuf/appearances.pb.h
-    src/graphics/protobuf/map.pb.h
-    src/graphics/protobuf/shared.pb.h
-    src/graphics/resource-descriptor.h
-    src/graphics/swapchain.h
-    src/graphics/texture.h
-    src/graphics/texture_atlas.h
-    src/graphics/validation.h
-    src/graphics/vertex.h
-    src/graphics/vulkan_debug.h
-    src/graphics/vulkan_helpers.h
-    src/item.h
-    src/item_data.h
-    src/item_wrapper.h
-    src/observable_item.h
-    src/item_location.h
-    src/items.h
-    src/item_attribute.h
-    src/item_type.h
-    src/sprite_info.h
-    src/logger.h
-    vendor/lzma/7zTypes.h
-    vendor/lzma/Alloc.h
-    vendor/lzma/Compiler.h
-    vendor/lzma/LzFind.h
-    vendor/lzma/LzFindMt.h
-    vendor/lzma/LzHash.h
-    vendor/lzma/LzmaDec.h
-    vendor/lzma/LzmaEnc.h
-    vendor/lzma/LzmaLib.h
-    vendor/lzma/Precomp.h
-    vendor/lzma/Threads.h
-    vendor/rollbear-visit/visit.hpp
-    vendor/tsl/robin_growth_policy.h
-    vendor/tsl/robin_hash.h
-    vendor/tsl/robin_map.h
-    vendor/tsl/robin_set.h
-    vendor/result/result.h
-    vendor/fts_fuzzy_match/fts_fuzzy_match.h
-    # vendor/sol/sol.hpp vendor/sol/config.hpp vendor/sol/forward.hpp
-    src/map.h
-    src/save_map.h
-    src/load_map.h
-    src/map_renderer.h
-    src/map_copy_buffer.h
-    src/map_view.h
-    src/otb.h
-    src/position.h
-    src/quad_tree.h
-    src/random.h
-    src/selection.h
-    src/tile.h
-    src/tile_cover.h
-    src/outfit.h
-    src/tile_location.h
-    src/minimap_colors.h
-    src/time_util.h
-    src/creature.h
-    src/town.h
-    src/item_palette.h
-    src/tileset.h
-    src/type_trait.h
-    src/util.h
-    src/lazy_object.h
-    src/version.h
-    src/octree.h
-    src/brushes/brush.h
-    src/brushes/raw_brush.h
-    src/brushes/ground_brush.h
-    src/brushes/border_brush.h
-    src/brushes/border_brush_variation.h
-    src/brushes/wall_brush.h
-    src/brushes/doodad_brush.h
-    src/brushes/creature_brush.h
-    src/brushes/mountain_brush.h
-    src/brushes/brush_loader.h
-    src/lua/lua_state.h
-    src/lua/luascript_interface.h
-    src/lua/lua_brush.h
-    src/concepts.h
-    vendor/lzma/Alloc.c
-    vendor/lzma/LzFind.c
-    vendor/lzma/LzFindMt.c
-    vendor/lzma/LzmaDec.c
-    vendor/lzma/LzmaEnc.c
-    vendor/lzma/LzmaLib.c
-    vendor/lzma/Threads.c
-    src/config.cpp
-    src/settings.cpp
-    src/history/history.cpp
-    src/history/history_action.cpp
-    src/history/history_change.cpp
-    src/history/thing_mutation.cpp
-    src/camera.cpp
-    src/otbm.cpp
-    src/item_animation.cpp
-    src/file.cpp
-    src/editor_action.cpp
-    src/frame_group.cpp
-    src/graphics/appearances.cpp
-    src/graphics/buffer.cpp
-    src/graphics/compression.cpp
-    # src/graphics/device_manager.cpp src/graphics/engine.cpp
-    src/graphics/protobuf/appearances.pb.cc
-    src/graphics/protobuf/map.pb.cc
-    src/graphics/protobuf/shared.pb.cc
-    # src/graphics/resource-descriptor.cpp src/graphics/swapchain.cpp
-    src/graphics/texture.cpp
-    src/graphics/texture_atlas.cpp
-    src/graphics/vulkan_debug.cpp
-    src/item.cpp
-    src/item_data.cpp
-    src/item_wrapper.cpp
-    src/observable_item.cpp
-    src/item_location.cpp
-    src/items.cpp
-    src/item_attribute.cpp
-    src/item_type.cpp
-    src/sprite_info.cpp
-    src/logger.cpp
-    src/map.cpp
-    src/save_map.cpp
-    src/load_map.cpp
-    src/map_renderer.cpp
-    src/map_copy_buffer.cpp
-    src/map_view.cpp
-    src/otb.cpp
-    src/position.cpp
-    src/quad_tree.cpp
-    src/random.cpp
-    src/selection.cpp
-    src/tile.cpp
-    src/tile_location.cpp
-    src/tile_cover.cpp
-    src/time_util.cpp
-    src/creature.cpp
-    src/town.cpp
-    src/item_palette.cpp
-    src/tileset.cpp
-    src/util.cpp
-    src/octree.cpp
-    src/brushes/brush.cpp
-    src/brushes/raw_brush.cpp
-    src/brushes/ground_brush.cpp
-    src/brushes/border_brush.cpp
-    src/brushes/wall_brush.cpp
-    src/brushes/border_brush_variation.cpp
-    src/brushes/doodad_brush.cpp
-    src/brushes/creature_brush.cpp
-    src/brushes/mountain_brush.cpp
-    src/brushes/brush_loader.cpp
-    src/lua/lua_state.cpp
-    src/lua/luascript_interface.cpp
-    src/lua/lua_brush.cpp)
-
-add_library(common STATIC ${CommonSources})
-
-# target_include_directories(common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-target_compile_features(common PUBLIC cxx_std_20)
-target_compile_features(common PRIVATE cxx_std_20)
-
-target_link_libraries(common PUBLIC Vulkan::Vulkan)
-target_include_directories(common PUBLIC ${Vulkan_INCLUDE_DIRS})
-
-target_link_libraries(common PRIVATE protobuf::libprotobuf)
-# target_link_libraries(common PRIVATE ${LIBLZMA_LIBRARIES})
-target_link_libraries(common PRIVATE liblzma::liblzma)
-
-target_link_libraries(common PRIVATE pugixml)
-target_link_libraries(common PRIVATE glm::glm)
-
-target_include_directories(common PUBLIC ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
-
-# target_include_directories(common PRIVATE ${LUA_INCLUDE_DIR})
-# target_link_libraries(common PRIVATE ${LUA_LIBRARIES})
-
-# target_link_libraries(common PRIVATE sol2::sol2)
-
-# target_compile_definitions(common PRIVATE SOL_USING_CXX_LUA=1)
-
-# set_target_properties(common PROPERTIES LINK_FLAGS "/PROFILE")
-
-set(GuiSources
-    src/qt/enum_conversion.h
-    src/qt/logging.h
-    src/gui/gui.h
-    # src/gui/borderless_window.h
-    src/gui/main_application.h
-    src/gui/border_layout.h
-    src/gui/split_widget.h
-    src/gui/mainwindow.h
-    src/gui/map_view_widget.h
-    src/gui/menu.h
-    src/gui/qt_util.h
-    src/gui/gui_thing_image.h
-    src/gui/vulkan_window.h
-    src/gui/map_tab_widget.h
-    src/qt/qt_vulkan_info.h
-    src/gui/draggable_item.h
-    src/gui/properties/item_property_window.h
-    src/gui/properties/property_container_tree.h
-    src/gui/properties/container_model.h
-    src/gui/properties/container_list_model.h
-    src/gui/itempalette/item_palette_window.h
-    src/gui/itempalette/item_palette_model.h
-    src/gui/search_popup.h
-    src/gui/minimap.h
-    src/gui/welcome/welcome_view.h
-    src/gui/welcome/welcome_view_model.h
-    src/main.h
-    src/main.cpp
-    src/gui/main_application.cpp
-    src/qt/enum_conversion.cpp
-    src/qt/logging.cpp
-    # src/gui/borderless_window.cpp
-    src/gui/border_layout.cpp
-    src/gui/split_widget.cpp
-    src/gui/mainwindow.cpp
-    src/gui/map_view_widget.cpp
-    src/gui/menu.cpp
-    src/gui/qt_util.cpp
-    src/gui/gui_thing_image.cpp
-    src/gui/vulkan_window.cpp
-    src/gui/map_tab_widget.cpp
-    src/gui/draggable_item.cpp
-    src/gui/properties/item_property_window.cpp
-    src/gui/properties/property_container_tree.cpp
-    src/gui/properties/container_model.cpp
-    src/gui/properties/container_list_model.cpp
-    src/gui/itempalette/item_palette_window.cpp
-    src/gui/itempalette/item_palette_model.cpp
-    src/gui/search_popup.cpp
-    src/gui/minimap.cpp
-    src/gui/welcome/welcome_view.cpp
-    src/gui/welcome/welcome_view_model.cpp
-    src/qt/qt_vulkan_info.cpp)
-
-# NOTE: All files that use the QT framework must be in the `gui` library,
+# NOTE: All files that use the QT framework must be in the `ui` library,
 # because it is the only target that links QT.
-add_library(gui STATIC ${GuiSources})
 
-target_link_libraries(gui PRIVATE common)
-target_link_libraries(gui PRIVATE glm::glm)
+add_subdirectory(src/common)
+add_subdirectory(src/ui)
 
-target_compile_features(gui PUBLIC cxx_std_20)
-target_compile_features(gui PRIVATE cxx_std_20)
-
-# QT
-target_link_libraries(gui PUBLIC Qt6::Core Qt6::Widgets Qt6::Qml Qt6::Quick
-                                 Qt6::SvgWidgets Qt6::QuickControls2)
-
-# set_target_properties(gui PROPERTIES CMAKE_INCLUDE_CURRENT_DIR ON
-# CMAKE_AUTOMOC ON) End QT
-
-qt_add_resources(QT_RESOURCES resources/qml/qml.qrc)
-qt_add_resources(QT_RESOURCES resources/style/style.qrc)
-qt_add_resources(QT_RESOURCES resources/images/images.qrc)
-qt_add_resources(QT_RESOURCES resources/shaders/shaders.qrc)
+# qt_add_resources(QT_RESOURCES resources/qml/qml.qrc)
+# qt_add_resources(QT_RESOURCES resources/style/style.qrc)
+# qt_add_resources(QT_RESOURCES resources/images/images.qrc)
+# qt_add_resources(QT_RESOURCES resources/shaders/shaders.qrc)
 set(app_icon_resource_windows
     "${CMAKE_CURRENT_SOURCE_DIR}/resources/vulkan-map-editor.rc")
-qt_add_executable(main ${QT_RESOURCES} ${app_icon_resource_windows})
 
-target_link_libraries(main PRIVATE date::date date::date-tz)
+set(MainSources
+    src/main.h
+    src/main.cpp
+    vulkan_test_view.h
+    vulkan_test_view.cpp
+    vulkansquircle.h
+    vulkansquircle.cpp
+    qml_vulkan_texture_node.h
+    qml_vulkan_texture_node.cpp
+)
 
-target_link_libraries(main PRIVATE common)
-target_link_libraries(main PRIVATE gui)
+qt_add_executable(main ${MainSources} ${app_icon_resource_windows})
+
+qt_add_qml_module(main
+    URI VulkanGameEditor
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCE_PREFIX /vulkangameeditor
+    NO_RESOURCE_TARGET_PATH
+)
+
+
+
+# target_link_libraries(main PUBLIC Qt::Core Qt::Gui Qt::Widgets Qt::Qml Qt::Quick Qt::SvgWidgets Qt::QuickControls2)
+
+
+# if (DEFINED OpenSSL_LIBRARY)
+#   target_link_libraries(main PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+# endif()
+
+target_link_libraries(main PRIVATE common::common)
+target_link_libraries(main PUBLIC qml_ui::qml_ui)
 
 target_compile_features(main PUBLIC cxx_std_20)
 target_compile_features(main PRIVATE cxx_std_20)
+
 
 # Move required files post-build
 add_custom_command(

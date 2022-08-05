@@ -8,7 +8,7 @@
 #include "../definitions.h"
 #include "lzma.h"
 
-#include "../../vendor/lzma/LzmaLib.h"
+#include "../vendor/lzma/LzmaLib.h"
 
 struct LZMA
 {

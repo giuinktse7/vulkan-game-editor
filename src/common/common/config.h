@@ -4,7 +4,7 @@
 #include <optional>
 #include <string>
 
-#include "../vendor/result/result.h"
+#include "./vendor/result/result.h"
 
 class Config
 {

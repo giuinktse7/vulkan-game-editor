@@ -13,7 +13,7 @@
 #include "wall_brush.h"
 
 #define FTS_FUZZY_MATCH_IMPLEMENTATION
-#include "../../vendor/fts_fuzzy_match/fts_fuzzy_match.h"
+#include "../vendor/fts_fuzzy_match/fts_fuzzy_match.h"
 
 vme_unordered_map<uint32_t, std::unique_ptr<RawBrush>> Brush::rawBrushes;
 vme_unordered_map<std::string, std::unique_ptr<GroundBrush>> Brush::groundBrushes;

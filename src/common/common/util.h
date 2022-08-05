@@ -12,8 +12,8 @@
 #include "concepts.h"
 #include "debug.h"
 
-#include "../vendor/tsl/robin_map.h"
-#include "../vendor/tsl/robin_set.h"
+#include "./vendor/tsl/robin_map.h"
+#include "./vendor/tsl/robin_set.h"
 
 #define vme_unordered_map tsl::robin_map
 #define vme_unordered_set tsl::robin_set

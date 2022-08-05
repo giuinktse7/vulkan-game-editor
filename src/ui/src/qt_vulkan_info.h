@@ -1,27 +1,28 @@
 #pragma once
 
 #include <QVulkanDeviceFunctions>
+#include <QVulkanFunctions>
+#include <QVulkanInstance>
 #include <QVulkanWindow>
+#include <QtQuick/QQuickWindow>
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
 
-#include "../graphics/vulkan_helpers.h"
-
-#include "../util.h"
-
-#include "../map_view.h"
+#include "common/graphics/vulkan_helpers.h"
+#include "common/map_view.h"
+#include "common/util.h"
 
 // Matrix that adjusts for OpenGL -> Vulkan clip space differences
 static const QMatrix4x4 clipCorrectionMatrix = QMatrix4x4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f);
 
-class VulkanWindow;
-
 class QtVulkanInfo : public VulkanInfo
 {
   public:
-    QtVulkanInfo(VulkanWindow *window)
-        : window(window) {}
+    QtVulkanInfo(QQuickWindow *qml_window);
+    QtVulkanInfo();
+
+    void setQmlWindow(QQuickWindow *qml_window);
 
     void update() override;
     void frameReady() override;
@@ -54,7 +55,7 @@ class QtVulkanInfo : public VulkanInfo
     VkPhysicalDevice physicalDevice() const override;
     VkCommandPool graphicsCommandPool() const override;
     VkQueue graphicsQueue() const override;
-    uint32_t graphicsQueueFamilyIndex() const override;
+    uint32_t graphicsQueueFamilyIndex() override;
 
     inline void vkCmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) override
     {
@@ -69,6 +70,12 @@ class QtVulkanInfo : public VulkanInfo
     {
         return df->vkCreateImageView(device(), pCreateInfo, pAllocator, pView);
     }
+
+    inline VkResult vkCreateFramebuffer(const VkFramebufferCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkFramebuffer *pFramebuffer) override
+    {
+        return df->vkCreateFramebuffer(device(), pCreateInfo, pAllocator, pFramebuffer);
+    }
+
     inline VkResult vkAllocateCommandBuffers(const VkCommandBufferAllocateInfo *pAllocateInfo, VkCommandBuffer *pCommandBuffers) override
     {
         return df->vkAllocateCommandBuffers(device(), pAllocateInfo, pCommandBuffers);
@@ -114,6 +121,25 @@ class QtVulkanInfo : public VulkanInfo
     {
         df->vkDestroyImageView(device(), imageView, pAllocator);
     }
+
+    VkResult vkCreateSwapchainKHR(const VkSwapchainCreateInfoKHR *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkSwapchainKHR *pSwapchain) override
+    {
+        auto vkCreateSwapchainKHR = reinterpret_cast<PFN_vkCreateSwapchainKHR>(f->vkGetDeviceProcAddr(m_dev, "vkCreateSwapchainKHR"));
+        return vkCreateSwapchainKHR(m_dev, pCreateInfo, pAllocator, pSwapchain);
+    }
+
+    VkResult vkGetSwapchainImagesKHR(VkSwapchainKHR swapchain, uint32_t *pSwapchainImageCount, VkImage *pSwapchainImages) override
+    {
+        auto vkGetSwapchainImagesKHR = reinterpret_cast<PFN_vkGetSwapchainImagesKHR>(f->vkGetDeviceProcAddr(m_dev, "vkGetSwapchainImagesKHR"));
+        return vkGetSwapchainImagesKHR(m_dev, swapchain, pSwapchainImageCount, pSwapchainImages);
+    }
+
+    inline void vkDestroySwapchainKHR(VkSwapchainKHR swapchain, const VkAllocationCallbacks *pAllocator) override
+    {
+        auto vkDestroySwapchainKHR = reinterpret_cast<PFN_vkDestroySwapchainKHR>(f->vkGetDeviceProcAddr(m_dev, "vkDestroySwapchainKHR"));
+        vkDestroySwapchainKHR(m_dev, swapchain, pAllocator);
+    }
+
     inline VkResult vkCreateShaderModule(const VkShaderModuleCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkShaderModule *pShaderModule) override
     {
         return df->vkCreateShaderModule(device(), pCreateInfo, pAllocator, pShaderModule);
@@ -189,6 +215,11 @@ class QtVulkanInfo : public VulkanInfo
     inline void vkDestroyRenderPass(VkRenderPass renderPass, const VkAllocationCallbacks *pAllocator) override
     {
         df->vkDestroyRenderPass(device(), renderPass, pAllocator);
+    }
+
+    inline void vkDestroyFramebuffer(VkFramebuffer framebuffer, const VkAllocationCallbacks *pAllocator) override
+    {
+        df->vkDestroyFramebuffer(device(), framebuffer, pAllocator);
     }
 
     inline void vkCmdBindIndexBuffer(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkIndexType indexType) override
@@ -268,9 +299,30 @@ class QtVulkanInfo : public VulkanInfo
         f->vkGetPhysicalDeviceMemoryProperties(physicalDevice, pMemoryProperties);
     }
 
+    void vkGetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice physicalDevice, uint32_t *pQueueFamilyPropertyCount, VkQueueFamilyProperties *pQueueFamilyProperties) override
+    {
+        f->vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties);
+    }
+
+    void setMaxConcurrentFrameCount(int count)
+    {
+        _maxConcurrentFrameCount = count;
+    }
+
+    inline void vkDeviceWaitIdle() override
+    {
+        df->vkDeviceWaitIdle(device());
+    }
+
   private:
-    VulkanWindow *window = nullptr;
+    /* QML Stuff */
+    QQuickWindow *qml_window = nullptr;
+    VkPhysicalDevice m_physDev = VK_NULL_HANDLE;
+    VkDevice m_dev = VK_NULL_HANDLE;
+    VkCommandPool commandPool = VK_NULL_HANDLE;
 
     QVulkanDeviceFunctions *df = nullptr;
     QVulkanFunctions *f = nullptr;
+
+    int _maxConcurrentFrameCount;
 };

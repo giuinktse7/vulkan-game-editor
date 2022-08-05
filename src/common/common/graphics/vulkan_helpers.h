@@ -35,12 +35,16 @@ class VulkanInfo : public RenderTarget
     virtual VkPhysicalDevice physicalDevice() const = 0;
     virtual VkCommandPool graphicsCommandPool() const = 0;
     virtual VkQueue graphicsQueue() const = 0;
-    virtual uint32_t graphicsQueueFamilyIndex() const = 0;
+    virtual uint32_t graphicsQueueFamilyIndex() = 0;
 
     virtual ~VulkanInfo() = default;
 
+    virtual VkResult vkCreateSwapchainKHR(const VkSwapchainCreateInfoKHR *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkSwapchainKHR *pSwapchain) = 0;
+    virtual VkResult vkGetSwapchainImagesKHR(VkSwapchainKHR swapchain, uint32_t *pSwapchainImageCount, VkImage *pSwapchainImages) = 0;
+
     virtual VkResult vkCreateImage(const VkImageCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkImage *pImage) = 0;
     virtual VkResult vkCreateImageView(const VkImageViewCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkImageView *pView) = 0;
+    virtual VkResult vkCreateFramebuffer(const VkFramebufferCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkFramebuffer *pFramebuffer) = 0;
     virtual VkResult vkAllocateCommandBuffers(const VkCommandBufferAllocateInfo *pAllocateInfo, VkCommandBuffer *pCommandBuffers) = 0;
     virtual VkResult vkBeginCommandBuffer(VkCommandBuffer commandBuffer, const VkCommandBufferBeginInfo *pBeginInfo) = 0;
     virtual void vkUpdateDescriptorSets(uint32_t descriptorWriteCount, const VkWriteDescriptorSet *pDescriptorWrites, uint32_t descriptorCopyCount, const VkCopyDescriptorSet *pDescriptorCopies) = 0;
@@ -51,6 +55,7 @@ class VulkanInfo : public RenderTarget
     virtual VkResult vkAllocateMemory(const VkMemoryAllocateInfo *pAllocateInfo, const VkAllocationCallbacks *pAllocator, VkDeviceMemory *pMemory) = 0;
     virtual void vkFreeMemory(VkDeviceMemory memory, const VkAllocationCallbacks *pAllocator) = 0;
     virtual void vkCmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) = 0;
+    virtual void vkDeviceWaitIdle() = 0;
 
     virtual void vkCmdSetViewport(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewport *pViewports) = 0;
     virtual void vkCmdSetScissor(VkCommandBuffer commandBuffer, uint32_t firstScissor, uint32_t scissorCount, const VkRect2D *pScissors) = 0;
@@ -60,7 +65,7 @@ class VulkanInfo : public RenderTarget
     virtual void vkDestroyPipeline(VkPipeline pipeline, const VkAllocationCallbacks *pAllocator) = 0;
     virtual void vkDestroyPipelineLayout(VkPipelineLayout pipelineLayout, const VkAllocationCallbacks *pAllocator) = 0;
     virtual void vkDestroyRenderPass(VkRenderPass renderPass, const VkAllocationCallbacks *pAllocator) = 0;
-
+    virtual void vkDestroyFramebuffer(VkFramebuffer framebuffer, const VkAllocationCallbacks *pAllocator) = 0;
     virtual void vkCmdBindIndexBuffer(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkIndexType indexType) = 0;
     virtual void vkCmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer *pBuffers, const VkDeviceSize *pOffsets) = 0;
     virtual void vkCmdBindDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t firstSet, uint32_t descriptorSetCount, const VkDescriptorSet *pDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t *pDynamicOffsets) = 0;
@@ -73,6 +78,7 @@ class VulkanInfo : public RenderTarget
 
     virtual void vkDestroyImage(VkImage image, const VkAllocationCallbacks *pAllocator) = 0;
     virtual void vkDestroyImageView(VkImageView imageView, const VkAllocationCallbacks *pAllocator) = 0;
+    virtual void vkDestroySwapchainKHR(VkSwapchainKHR swapchain, const VkAllocationCallbacks *pAllocator) = 0;
     virtual VkResult vkCreateShaderModule(const VkShaderModuleCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkShaderModule *pShaderModule) = 0;
     virtual VkResult vkMapMemory(VkDeviceMemory memory, VkDeviceSize offset, VkDeviceSize size, VkMemoryMapFlags flags, void **ppData) = 0;
     virtual void vkUnmapMemory(VkDeviceMemory memory) = 0;
@@ -95,6 +101,8 @@ class VulkanInfo : public RenderTarget
     virtual void vkGetImageMemoryRequirements(VkImage image, VkMemoryRequirements *pMemoryRequirements) = 0;
     virtual void vkGetPhysicalDeviceMemoryProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties *pMemoryProperties) = 0;
     virtual void vkCmdPushConstants(VkCommandBuffer commandBuffer, VkPipelineLayout layout, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void *pValues) = 0;
+
+    virtual void vkGetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice physicalDevice, uint32_t *pQueueFamilyPropertyCount, VkQueueFamilyProperties *pQueueFamilyProperties) = 0;
 
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer buffer);

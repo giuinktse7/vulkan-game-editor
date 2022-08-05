@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <variant>
 
-#include "../vendor/rollbear-visit/visit.hpp"
 #include "brushes/brush.h"
 #include "brushes/ground_brush.h"
 #include "brushes/raw_brush.h"
@@ -17,6 +16,7 @@
 #include "position.h"
 #include "settings.h"
 #include "util.h"
+#include "vendor/rollbear-visit/visit.hpp"
 
 /** Order of members matter for this struct due to alignment requirements in the
  * vertex shader.
@@ -93,14 +93,16 @@ MapRenderer::MapRenderer(VulkanInfo &vulkanInfo, MapView *mapView)
     vulkanTextures.reserve(ArbitraryGeneralReserveAmount);
 }
 
-void MapRenderer::initResources(VkFormat colorFormat)
+void MapRenderer::initResources(VkSurfaceKHR surface, uint32_t width, uint32_t height)
 {
     // VME_LOG_D("[window: " << window.debugName << "] MapRenderer::initResources (device: " << window.device() << ")");
 
     vulkanInfo.update();
-    this->colorFormat = colorFormat;
+
+    // initSwapChainResources(surface, width, height);
 
     createRenderPass();
+    createFrameBuffers();
 
     _currentFrame = &frames.front();
 
@@ -115,9 +117,12 @@ void MapRenderer::initResources(VkFormat colorFormat)
     // VME_LOG_D("End MapRenderer::initResources");
 }
 
-void MapRenderer::initSwapChainResources(util::Size vulkanSwapChainImageSize)
+void MapRenderer::initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height)
 {
-    mapView->setViewportSize(vulkanSwapChainImageSize.width(), vulkanSwapChainImageSize.height());
+    swapchain = std::make_unique<SwapChain>(surface, &vulkanInfo);
+    swapchain->create(width, height);
+
+    mapView->setViewportSize(width, height);
 }
 
 void MapRenderer::releaseSwapChainResources()
@@ -170,8 +175,10 @@ void MapRenderer::releaseResources()
     debug = true;
 }
 
-void MapRenderer::startNextFrame()
+void MapRenderer::render(VkFramebuffer frameBuffer)
 {
+    _currentFrame->frameBuffer = frameBuffer;
+
     _containsAnimation = false;
     // VME_LOG_D("index: " << _currentFrame->currentFrameIndex);
     // VME_LOG("Start next frame");
@@ -268,7 +275,9 @@ void MapRenderer::drawMap()
     if (selectAction && selectAction->area)
         flags |= ItemDrawFlags::ActiveSelectionArea;
 
-    for (auto &tileLocation : view.mapRegion(1, 1))
+    auto region = view.mapRegion(1, 1);
+
+    for (auto &tileLocation : region)
     {
         if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
             continue;
@@ -1281,10 +1290,16 @@ void MapRenderer::beginRenderPass()
     vulkanInfo.vkCmdBeginRenderPass(_currentFrame->commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
+void MapRenderer::createFrameBuffers()
+{
+    // TODO
+}
+
 void MapRenderer::createRenderPass()
 {
     VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = this->colorFormat;
+    // colorAttachment.format = swapchain->imageFormat();
+    colorAttachment.format = VK_FORMAT_R8G8B8A8_UNORM;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;

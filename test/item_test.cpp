@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "../src/item.h"
+#include "common/item.h"
 
 TEST_CASE("item.h", "[core][item]")
 {

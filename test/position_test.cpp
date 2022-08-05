@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "../src/position.h"
+#include "common/position.h"
 
 TEST_CASE("position.h", "[core]")
 {

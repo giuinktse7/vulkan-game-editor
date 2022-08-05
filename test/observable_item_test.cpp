@@ -2,8 +2,8 @@
 
 #include <optional>
 
-#include "../src/item.h"
-#include "../src/items.h"
+#include "common/item.h"
+#include "common/items.h"
 
 struct ItemObserver
 {

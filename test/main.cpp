@@ -3,8 +3,8 @@
 
 #define VME_TEST
 
-#include "../src/config.h"
-#include "../src/debug.h"
+#include "common/config.h"
+#include "common/debug.h"
 
 int main(int argc, char *argv[])
 {

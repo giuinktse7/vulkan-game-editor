@@ -5,47 +5,86 @@
 #include <iostream>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <numeric>
 #include <optional>
+#include <regex>
 #include <utility>
 
 #include <QFile>
 #include <QFontDatabase>
-#include <QHBoxLayout>
-#include <QLabel>
+#include <QGuiApplication>
 #include <QLoggingCategory>
 #include <QQuickStyle>
 #include <QQuickWindow>
-#include <QStyleFactory>
+#include <QtQuick/QQuickView>
 
-#include "config.h"
-#include "file.h"
-#include "graphics/appearances.h"
-#include "gui/main_application.h"
-#include "gui/map_tab_widget.h"
-#include "gui/map_view_widget.h"
-#include "gui/vulkan_window.h"
-#include "item_wrapper.h"
-#include "items.h"
-#include "load_map.h"
-#include "logger.h"
-#include "observable_item.h"
+#include "common/brushes/brush.h"
+#include "common/brushes/brush_loader.h"
+#include "common/config.h"
+#include "common/file.h"
+#include "common/graphics/appearances.h"
+#include "common/item_palette.h"
+#include "common/item_wrapper.h"
+#include "common/items.h"
+#include "common/load_map.h"
+#include "common/logger.h"
+#include "common/lua/luascript_interface.h"
+#include "common/observable_item.h"
+#include "common/random.h"
+#include "common/time_util.h"
+#include "common/util.h"
+
 #include "qt/logging.h"
-#include "random.h"
-#include "time_util.h"
-#include "util.h"
 
-#include "brushes/brush.h"
-#include <fstream>
-#include <nlohmann/json.hpp>
-#include <numeric>
-#include <regex>
+// #include <QtQml/qqmlextensionplugin.h>
+// Q_IMPORT_QML_PLUGIN(qml_uiplugin)
 
-#include "lua/luascript_interface.h"
+int main(int argc, char **argv)
+{
+    ItemPalettes::createPalette("Default", "default");
 
-#include "brushes/brush_loader.h"
-#include "item_palette.h"
+    Random::global().setSeed(123);
+    TimePoint::setApplicationStartTimePoint();
 
-int main(int argc, char *argv[])
+    // std::string version = "12.81";
+    std::string version = "12.87.12091";
+    std::string clientPath = std::format("data/clients/{}", version);
+
+    auto configResult = Config::create(version);
+    if (configResult.isErr())
+    {
+        VME_LOG(configResult.unwrapErr().show());
+        return EXIT_FAILURE;
+    }
+
+    Config config = configResult.unwrap();
+    config.loadOrTerminate();
+
+    QGuiApplication app(argc, argv);
+
+    // This example needs Vulkan. It will not run otherwise.
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+    QQuickStyle::setStyle("Fusion");
+
+    QQuickView view;
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
+    view.setSource(QUrl("qrc:///vulkangameeditor/main.qml"));
+    view.show();
+
+    // BrushLoader brushLoader;
+    // brushLoader.load(std::format("{}/palettes/palettes.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/borders.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/grounds.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/walls.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/doodads.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/mountains.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/creatures.json", clientPath));
+    // brushLoader.load(std::format("{}/palettes/tilesets.json", clientPath));
+
+    return app.exec();
+}
+
+int main2(int argc, char *argv[])
 {
     ItemPalettes::createPalette("Default", "default");
 
@@ -63,10 +102,10 @@ int main(int argc, char *argv[])
 
     // QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
 
-    MainApplication app(argc, argv);
+    // MainApplication app(argc, argv);
 
-    // std::string version = "12.70.10889";
-    std::string version = "12.81";
+    // std::string version = "12.81";
+    std::string version = "12.87.12091";
     std::string clientPath = std::format("data/clients/{}", version);
 
     auto configResult = Config::create(version);
@@ -96,7 +135,7 @@ int main(int argc, char *argv[])
     // TemporaryTest::loadAllTexturesIntoMemory();
     // return 0;
 
-    app.initializeUI();
+    // app.initializeUI();
 
     // app.mainWindow.addMapTab("C:/Users/giuin/Desktop/Untitled-1.otbm");
     // app.mainWindow.addMapTab(TemporaryTest::makeTestMap1());
@@ -170,7 +209,8 @@ int main(int argc, char *argv[])
     // int cyclops = 22;
     // checkCreature(cyclops);
 
-    return app.run();
+    // return app.run();
+    return 0;
 }
 
 // void testApplyAtlasTemplate()

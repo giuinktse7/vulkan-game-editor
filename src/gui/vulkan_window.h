@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <QApplication>
 #include <QDataStream>
 #include <QDebug>
 #include <QMenu>

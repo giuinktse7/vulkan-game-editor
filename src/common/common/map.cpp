@@ -99,6 +99,12 @@ void Map::addItem(const Position position, uint32_t serverId)
     tile.addItem(Item(serverId));
 }
 
+void Map::addItem(const Position position, Item &&item)
+{
+    auto &tile = getOrCreateTile(position);
+    tile.addItem(std::move(item));
+}
+
 MapRegion Map::getRegion(Position from, Position to) const noexcept
 {
     return MapRegion(*this, from, to);

@@ -9,6 +9,11 @@
 #include "../../error.h"
 #include "../../file.h"
 
+WelcomeView::WelcomeView(QObject *parent)
+    : QObject(parent)
+{
+}
+
 WelcomeView::WelcomeView(MainApplication *app, QObject *parent)
     : app(app), QObject(parent)
 {

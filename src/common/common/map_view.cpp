@@ -1,6 +1,5 @@
 #include "map_view.h"
 
-#include "../vendor/rollbear-visit/visit.hpp"
 #include "brushes/border_brush.h"
 #include "brushes/brush.h"
 #include "brushes/creature_brush.h"
@@ -8,6 +7,8 @@
 #include "brushes/mountain_brush.h"
 #include "brushes/raw_brush.h"
 #include "brushes/wall_brush.h"
+#include "vendor/rollbear-visit/visit.hpp"
+
 
 #include "const.h"
 #include "items.h"
