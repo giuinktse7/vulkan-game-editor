@@ -305,7 +305,7 @@ class QtVulkanInfo : public VulkanInfo
         f->vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties);
     }
 
-    void setMaxConcurrentFrameCount(int count)
+    void setMaxConcurrentFrameCount(int count) override
     {
         _maxConcurrentFrameCount = count;
     }

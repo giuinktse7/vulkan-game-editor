@@ -1,7 +1,7 @@
 #include "vulkan_screen_texture.h"
 #include "../log.h"
 
-VulkanScreenTexture::VulkanScreenTexture(VulkanInfo *vulkanInfo)
+VulkanScreenTexture::VulkanScreenTexture(std::shared_ptr<VulkanInfo> &vulkanInfo)
     : vulkanInfo(vulkanInfo)
 {
 }

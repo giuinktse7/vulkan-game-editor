@@ -37,6 +37,8 @@ class VulkanInfo : public RenderTarget
     virtual VkQueue graphicsQueue() const = 0;
     virtual uint32_t graphicsQueueFamilyIndex() = 0;
 
+    virtual void setMaxConcurrentFrameCount(int count) = 0;
+
     virtual ~VulkanInfo() = default;
 
     virtual VkResult vkCreateSwapchainKHR(const VkSwapchainCreateInfoKHR *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkSwapchainKHR *pSwapchain) = 0;

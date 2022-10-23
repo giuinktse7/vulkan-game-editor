@@ -18,7 +18,7 @@ class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
     Q_OBJECT
 
   public:
-    MapTextureNode(QQuickItem *item, QtVulkanInfo *vulkanInfo, MapRenderer *renderer, uint32_t width, uint32_t height);
+    MapTextureNode(QQuickItem *item, std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapRenderer> renderer, uint32_t width, uint32_t height);
     ~MapTextureNode();
 
     QSGTexture *texture() const override;
@@ -37,8 +37,10 @@ class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
     QSize m_size;
     qreal m_dpr;
 
-    MapRenderer *mapRenderer = nullptr;
-    QtVulkanInfo *vulkanInfo = nullptr;
+    std::shared_ptr<VulkanInfo> vulkanInfo;
+    std::weak_ptr<MapView> mapView;
+    std::weak_ptr<MapRenderer> mapRenderer;
+
     VulkanScreenTexture screenTexture;
 
     std::unique_ptr<QSGTexture> textureWrapper;
@@ -76,14 +78,14 @@ class QmlMapItem : public QQuickItem
 
     void mapViewDrawRequested();
 
-    std::unique_ptr<QtVulkanInfo> vulkanInfo;
+    std::shared_ptr<VulkanInfo> vulkanInfo;
 
     bool m_initialized = false;
 
     MapTextureNode *mapTextureNode = nullptr;
     EditorAction action;
-    std::unique_ptr<MapView> mapView;
-    std::unique_ptr<MapRenderer> mapRenderer;
+    std::shared_ptr<MapView> mapView;
+    std::shared_ptr<MapRenderer> mapRenderer;
 };
 
 inline VME::MouseEvent vmeMouseEvent(QMouseEvent *event)

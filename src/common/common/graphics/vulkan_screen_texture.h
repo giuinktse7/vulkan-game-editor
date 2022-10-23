@@ -1,13 +1,15 @@
 #pragma once
 
+#include <memory>
 #include <vulkan/vulkan.h>
+
 
 #include "vulkan_helpers.h"
 
 class VulkanScreenTexture
 {
   public:
-    VulkanScreenTexture(VulkanInfo *vulkanInfo);
+    VulkanScreenTexture(std::shared_ptr<VulkanInfo> &vulkanInfo);
     ~VulkanScreenTexture();
 
     VkFramebuffer vkFrameBuffer() const
@@ -29,5 +31,5 @@ class VulkanScreenTexture
     VkFramebuffer m_textureFramebuffer = VK_NULL_HANDLE;
     VkImageView m_textureView = VK_NULL_HANDLE;
 
-    VulkanInfo *vulkanInfo;
+    std::shared_ptr<VulkanInfo> vulkanInfo;
 };

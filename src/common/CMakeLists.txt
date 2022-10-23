@@ -49,7 +49,7 @@ set(HEADER_FILES
     common/graphics/protobuf/map.pb.h
     common/graphics/protobuf/shared.pb.h
     common/graphics/resource-descriptor.h
-    common/graphics/swapchain.h
+    # common/graphics/swapchain.h
     common/graphics/texture.h
     common/graphics/texture_atlas.h
     common/graphics/validation.h
@@ -158,7 +158,7 @@ set(SOURCE_FILES
     common/graphics/protobuf/map.pb.cc
     common/graphics/protobuf/shared.pb.cc
     # graphics/resource-descriptor.cpp
-    common/graphics/swapchain.cpp
+    # common/graphics/swapchain.cpp
     common/graphics/texture.cpp
     common/graphics/texture_atlas.cpp
     common/graphics/vulkan_debug.cpp

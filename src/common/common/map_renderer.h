@@ -210,7 +210,7 @@ class VulkanTexture
 
     bool unused = true;
 
-    void initResources(const Texture &texture, VulkanInfo &vulkanInfo, const VulkanTexture::Descriptor descriptor);
+    void initResources(const Texture &texture, std::shared_ptr<VulkanInfo> &vulkanInfo, const VulkanTexture::Descriptor descriptor);
     void releaseResources();
 
     inline bool hasResources() const
@@ -227,7 +227,7 @@ class VulkanTexture
     uint32_t width;
     uint32_t height;
 
-    VulkanInfo *vulkanInfo;
+    std::shared_ptr<VulkanInfo> vulkanInfo;
     VkImage textureImage = VK_NULL_HANDLE;
     VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
     VkDescriptorSet _descriptorSet = VK_NULL_HANDLE;
@@ -245,7 +245,7 @@ class VulkanTexture
 class MapRenderer
 {
   public:
-    MapRenderer(VulkanInfo &vulkanInfo, MapView *mapView);
+    MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, MapView *mapView);
     ~MapRenderer();
     static const int MAX_NUM_TEXTURES = 256 * 256;
 
@@ -257,8 +257,8 @@ class MapRenderer
 
     void render(VkFramebuffer frameBuffer = VK_NULL_HANDLE);
 
-    void initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
-    void releaseSwapChainResources();
+    // void initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
+    // void releaseSwapChainResources();
 
     VkDescriptorPool &getDescriptorPool()
     {
@@ -285,6 +285,11 @@ class MapRenderer
     VkRenderPass getRenderPass() const
     {
         return renderPass;
+    }
+
+    std::shared_ptr<VulkanInfo> getVulkanInfo() const
+    {
+        return vulkanInfo;
     }
 
   private:
@@ -344,14 +349,14 @@ class MapRenderer
 
     DrawInfo::Object getItemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags);
     DrawInfo::Object itemTypeDrawInfo(const ItemType &itemType, const Position &position, uint32_t drawFlags);
-    DrawInfo::Creature creatureDrawInfo(const Creature &creature, const Position &position, uint32_t drawFlags) const;
+    DrawInfo::Creature creatureDrawInfo(const Creature &creature, const Position &position, uint32_t drawFlags);
 
     glm::vec4 getItemDrawColor(const Item &item, const Position &position, uint32_t drawFlags);
     glm::vec4 getCreatureDrawColor(const Creature &creature, const Position &position, uint32_t drawFlags) const;
     glm::vec4 getItemTypeDrawColor(uint32_t drawFlags);
 
-    VkDescriptorSet objectDescriptorSet(const Texture &texture) const;
-    VkDescriptorSet objectDescriptorSet(TextureAtlas *atlas) const;
+    VkDescriptorSet objectDescriptorSet(const Texture &texture);
+    VkDescriptorSet objectDescriptorSet(TextureAtlas *atlas);
 
     /**
 	 * @predicate An Item predicate. Items for which predicate(item) is false will not be rendered.
@@ -391,7 +396,7 @@ class MapRenderer
 
     bool debug = false;
     MapView *mapView;
-    VulkanInfo &vulkanInfo;
+    std::shared_ptr<VulkanInfo> vulkanInfo;
     std::array<FrameData, 3> frames;
 
     // All sprites are drawn using this index buffer
