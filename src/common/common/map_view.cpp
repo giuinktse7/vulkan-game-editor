@@ -9,7 +9,6 @@
 #include "brushes/wall_brush.h"
 #include "vendor/rollbear-visit/visit.hpp"
 
-
 #include "const.h"
 #include "items.h"
 #include "settings.h"
@@ -1646,7 +1645,8 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
 
 void MapView::waitForDraw(std::function<void()> f)
 {
-    uiUtils->waitForDraw(f);
+    f();
+    // uiUtils->waitForDraw(f);
 }
 
 void MapView::escapeEvent()
