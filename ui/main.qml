@@ -7,31 +7,6 @@ Item {
     width: 800;
     height: 600;
 
-    MouseArea {
-        anchors.fill: parent
-
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        
-        onClicked: {
-            if (mouse.button === Qt.RightButton){
-                console.log("hello")
-                contextMenu.popup()
-            }
-        }
-
-        onPressAndHold: {
-            if (mouse.source === Qt.MouseEventNotSynthesized)
-                contextMenu.popup()
-        }
-
-        Menu {
-            id: contextMenu
-            MenuItem { text: "Cut" }
-            MenuItem { text: "Copy" }
-            MenuItem { text: "Paste" }
-        }
-    }
-
     // MapViewItem {
     //     anchors.fill: parent
     //     focus: true
@@ -43,6 +18,48 @@ Item {
         id: renderer
         anchors.fill: parent
         anchors.margins: 0
+        focus: true
+        onActiveFocusChanged: console.log("uu")
+
+        MouseArea {
+            anchors.fill: parent;
+            acceptedButtons: Qt.LeftButton | Qt.RightButton;
+            propagateComposedEvents: true;
+
+            onClicked: (mouse) => {
+                mouse.accepted = false;
+
+                if (mouse.button === Qt.RightButton) {
+                    contextMenu.popup();
+                } else if (mouse.button === Qt.LeftButton) {
+                    renderer.forceActiveFocus();
+                }
+            }
+
+            onPressed: (mouse) => {
+                mouse.accepted = false;
+
+                 if (mouse.button === Qt.RightButton) {
+                    contextMenu.popup();
+                } else if (mouse.button === Qt.LeftButton) {
+                    renderer.forceActiveFocus();
+                }
+            }
+
+            onPressAndHold: (mouse) => {
+                mouse.accepted = false;
+
+                if (mouse.source === Qt.MouseEventNotSynthesized)
+                    contextMenu.popup()
+            }
+
+            Menu {
+                id: contextMenu
+                MenuItem { text: "Cut" }
+                MenuItem { text: "Copy" }
+                MenuItem { text: "Paste" }
+            }
+        }
     }
 
     // Rectangle {
@@ -85,40 +102,71 @@ Item {
  
        Rectangle {
             color: "green"
-            Layout.preferredHeight: 120
+            Layout.preferredHeight: 80
             Layout.fillWidth: true
             Layout.columnSpan: 3
-            Layout.rowSpan: 1
             Layout.row: 0
             Layout.column: 0
+
+            TextInput { text: "Hello"; }
        }
        
        Rectangle {
             color: "blue"
             Layout.preferredWidth: 200
             Layout.fillHeight: true
-            Layout.columnSpan: 1
             Layout.row: 1
             Layout.column: 0
        }
  
-       Rectangle {
-            color: "transparent"
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            Layout.columnSpan: 1
-            Layout.row: 1
-            Layout.column: 1
-       }
+    //    Rectangle {
+    //         color: "transparent"
+    //         Layout.fillHeight: true
+    //         Layout.fillWidth: true
+    //         Layout.row: 1
+    //         Layout.column: 1
+
+    //         MouseArea {
+    //             anchors.fill: parent
+
+    //             acceptedButtons: Qt.LeftButton | Qt.RightButton
+                
+    //             onClicked: {
+    //                 if (mouse.button === Qt.RightButton){
+    //                     console.log("hello")
+    //                     contextMenu.popup()
+    //                 }
+    //             }
+
+    //             onPressAndHold: {
+    //                 if (mouse.source === Qt.MouseEventNotSynthesized)
+    //                     contextMenu.popup()
+    //             }
+
+    //             Menu {
+    //                 id: contextMenu
+    //                 MenuItem { text: "Cut" }
+    //                 MenuItem { text: "Copy" }
+    //                 MenuItem { text: "Paste" }
+    //             }
+    //         }
+    //    }
        
         Rectangle {
-            color: "blue"
-            Layout.preferredWidth: 200
-            Layout.fillHeight: true
-            Layout.columnSpan: 1
-            Layout.rowSpan: 3
+            color: "purple"
+            Layout.fillWidth: true
+            Layout.preferredHeight: 30;
+            Layout.columnSpan: 3
             Layout.row: 2
             Layout.column: 0
+       }
+
+        Rectangle {
+            color: "green"
+            Layout.fillHeight: true
+            Layout.preferredWidth: 30;
+            Layout.row: 1
+            Layout.column: 2
        }
 
 

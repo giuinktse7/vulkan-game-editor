@@ -4,18 +4,15 @@
 VulkanScreenTexture::VulkanScreenTexture(VulkanInfo *vulkanInfo)
     : vulkanInfo(vulkanInfo)
 {
-    VME_LOG_D("VulkanScreenTexture()");
 }
 
 VulkanScreenTexture::~VulkanScreenTexture()
 {
-    VME_LOG_D("~VulkanScreenTexture()");
     releaseResources();
 }
 
 void VulkanScreenTexture::releaseResources()
 {
-    VME_LOG_D("VulkanScreenTexture::releaseResources");
     if (m_texture)
     {
         vulkanInfo->vkDestroyFramebuffer(m_textureFramebuffer, nullptr);
@@ -34,7 +31,6 @@ void VulkanScreenTexture::releaseResources()
 
 void VulkanScreenTexture::recreate(VkRenderPass renderPass, uint32_t width, uint32_t height)
 {
-    VME_LOG_D("VulkanScreenTexture::recreate");
     releaseResources();
 
     VkImageCreateInfo imageInfo;

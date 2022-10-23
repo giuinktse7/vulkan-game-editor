@@ -16,10 +16,14 @@ find_package(glm CONFIG REQUIRED)
 
 set(HEADER_FILES
     src/qt_vulkan_info.h
+    src/enum_conversion.h
+    src/logging.h
 )
 
 set(SOURCE_FILES
     src/qt_vulkan_info.cpp
+    src/enum_conversion.cpp
+    src/logging.cpp
 )
 
 qt_add_library(qml_ui STATIC ${HEADER_FILES} ${SOURCE_FILES})

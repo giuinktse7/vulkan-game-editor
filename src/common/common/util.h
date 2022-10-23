@@ -293,7 +293,8 @@ namespace util
     template <typename T>
     constexpr int lsb(T value)
     {
-        unsigned int v = static_cast<std::underlying_type_t<T>>(value);
+        // unsigned int v = static_cast<std::underlying_type_t<T>>(value);
+        unsigned int v = static_cast<unsigned int>(value);
         return MultiplyDeBruijnBitPosition[((uint32_t)((v & -v) *
                                                        0x077CB531U)) >>
                                            27];

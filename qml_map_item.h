@@ -10,6 +10,7 @@
 #include "common/graphics/vulkan_screen_texture.h"
 #include "common/map_renderer.h"
 #include "common/map_view.h"
+#include "src/enum_conversion.h"
 #include "src/qt_vulkan_info.h"
 
 class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
@@ -59,6 +60,9 @@ class QmlMapItem : public QQuickItem
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
 
   private slots:
@@ -68,12 +72,25 @@ class QmlMapItem : public QQuickItem
     void releaseResources() override;
     void initialize();
 
+    bool containsMouse() const;
+
+    void mapViewDrawRequested();
+
     std::unique_ptr<QtVulkanInfo> vulkanInfo;
 
     bool m_initialized = false;
 
-    MapTextureNode *node = nullptr;
+    MapTextureNode *mapTextureNode = nullptr;
     EditorAction action;
     std::unique_ptr<MapView> mapView;
     std::unique_ptr<MapRenderer> mapRenderer;
 };
+
+inline VME::MouseEvent vmeMouseEvent(QMouseEvent *event)
+{
+    VME::MouseButtons buttons = enum_conversion::vmeButtons(event->buttons());
+    VME::ModifierKeys modifiers = enum_conversion::vmeModifierKeys(event->modifiers());
+
+    ScreenPosition pos(event->pos().x(), event->pos().y());
+    return VME::MouseEvent(pos, buttons, modifiers);
+}

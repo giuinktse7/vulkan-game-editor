@@ -89,6 +89,7 @@ std::shared_ptr<Map> testMap2()
 
 QmlMapItem::QmlMapItem()
 {
+    setAcceptedMouseButtons(Qt::MouseButton::AllButtons);
     // VME_LOG_D("QmlMapItem::QmlMapItem");
     connect(this, &QQuickItem::windowChanged, this, [this]() {
         connect(window(), &QQuickWindow::sceneGraphInitialized, this, [this]() {
@@ -117,6 +118,8 @@ void QmlMapItem::initialize()
         mapView = std::make_unique<MapView>(std::make_unique<MockUIUtils2>(), action, testMap2());
         mapRenderer = std::make_unique<MapRenderer>(*vulkanInfo, mapView.get());
 
+        mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
+
         mapView->setX(0);
         mapView->setY(0);
         mapView->setViewportSize(1920, 1080);
@@ -136,6 +139,11 @@ void QmlMapItem::initialize()
     }
 }
 
+void QmlMapItem::mapViewDrawRequested()
+{
+    update();
+}
+
 QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
 {
     // VME_LOG_D("QmlMapItem::updatePaintNode");
@@ -153,18 +161,18 @@ QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
 
     if (!textureNode)
     {
-        node = new MapTextureNode(this, vulkanInfo.get(), mapRenderer.get(), width(), height());
+        mapTextureNode = new MapTextureNode(this, vulkanInfo.get(), mapRenderer.get(), width(), height());
     }
 
-    node->sync();
+    mapTextureNode->sync();
 
-    node->setTextureCoordinatesTransform(QSGSimpleTextureNode::NoTransform);
-    node->setFiltering(QSGTexture::Linear);
-    node->setRect(0, 0, width(), height());
+    mapTextureNode->setTextureCoordinatesTransform(QSGSimpleTextureNode::NoTransform);
+    mapTextureNode->setFiltering(QSGTexture::Linear);
+    mapTextureNode->setRect(0, 0, width(), height());
 
     window()->update(); // ensure getting to beforeRendering() at some point
 
-    return node;
+    return mapTextureNode;
 }
 
 void QmlMapItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -177,9 +185,47 @@ void QmlMapItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeom
     }
 }
 
+void QmlMapItem::mousePressEvent(QMouseEvent *event)
+{
+    bool mouseInside = containsMouse();
+    mapView->setUnderMouse(mouseInside);
+
+    if (event->button() == Qt::MouseButton::LeftButton)
+    {
+        auto e = vmeMouseEvent(event);
+        mapView->mousePressEvent(e);
+    }
+}
+
+void QmlMapItem::mouseMoveEvent(QMouseEvent *event)
+{
+    bool mouseInside = containsMouse();
+    mapView->setUnderMouse(mouseInside);
+
+    auto e = vmeMouseEvent(event);
+    mapView->mouseMoveEvent(e);
+}
+
+void QmlMapItem::mouseReleaseEvent(QMouseEvent *event)
+{
+    bool mouseInside = containsMouse();
+    mapView->setUnderMouse(mouseInside);
+
+    auto e = vmeMouseEvent(event);
+    mapView->mouseReleaseEvent(e);
+}
+
 void QmlMapItem::keyPressEvent(QKeyEvent *event)
 {
     VME_LOG_D(event->key());
+}
+
+bool QmlMapItem::containsMouse() const
+{
+    QSizeF selfSize = size();
+    auto mousePos = mapFromGlobal(QCursor::pos());
+
+    return (0 <= mousePos.x() && mousePos.x() <= selfSize.width()) && (0 <= mousePos.y() && mousePos.y() <= selfSize.height());
 }
 
 void QmlMapItem::invalidateSceneGraph() // called on the render thread when the scenegraph is invalidated
@@ -191,9 +237,12 @@ void QmlMapItem::invalidateSceneGraph() // called on the render thread when the 
 void QmlMapItem::releaseResources() // called on the gui thread if the item is removed from scene
 {
     // VME_LOG_D("QmlMapItem::releaseResources");
-    node->freeTexture();
+    if (mapTextureNode)
+    {
+        mapTextureNode->freeTexture();
+    }
 
-    node = nullptr;
+    mapTextureNode = nullptr;
 
     mapView = std::make_unique<MapView>(std::make_unique<MockUIUtils2>(), action, testMap2());
     mapRenderer.reset();
@@ -237,6 +286,7 @@ void MapTextureNode::sync()
     // VME_LOG_D("MapTextureNode::sync");
     m_dpr = m_window->effectiveDevicePixelRatio();
     const QSize newSize = m_window->size() * m_dpr;
+
     bool needsNewTexture = false;
 
     if (!texture())
