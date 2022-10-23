@@ -245,7 +245,7 @@ class VulkanTexture
 class MapRenderer
 {
   public:
-    MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, MapView *mapView);
+    MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapView> &mapView);
     ~MapRenderer();
     static const int MAX_NUM_TEXTURES = 256 * 256;
 
@@ -392,10 +392,10 @@ class MapRenderer
 
     std::unordered_set<TextureWindow, TextureWindowHasher, TextureWindowEqual> testTextureSet;
 
-    std::unique_ptr<SwapChain> swapchain;
+    // std::unique_ptr<SwapChain> swapchain;
 
     bool debug = false;
-    MapView *mapView;
+    std::shared_ptr<MapView> mapView;
     std::shared_ptr<VulkanInfo> vulkanInfo;
     std::array<FrameData, 3> frames;
 

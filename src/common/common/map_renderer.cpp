@@ -81,7 +81,7 @@ glm::vec4 colors::opacity(float value)
     return glm::vec4(1.0f, 1.0f, 1.0f, value);
 }
 
-MapRenderer::MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, MapView *mapView)
+MapRenderer::MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapView> &mapView)
     : mapView(mapView),
       vulkanInfo(vulkanInfo),
       vulkanTexturesForAppearances(Appearances::textureAtlasCount()),
@@ -1230,7 +1230,7 @@ VkDescriptorSet MapRenderer::objectDescriptorSet(const Texture &texture)
 
 void MapRenderer::updateUniformBuffer()
 {
-    glm::mat4 projection = vulkanInfo->projectionMatrix(mapView);
+    glm::mat4 projection = vulkanInfo->projectionMatrix(mapView.get());
     // const auto p = projection;
     // std::ostringstream s;
     // VME_LOG_D("Next:");

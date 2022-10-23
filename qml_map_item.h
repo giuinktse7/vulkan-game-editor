@@ -18,7 +18,7 @@ class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
     Q_OBJECT
 
   public:
-    MapTextureNode(QQuickItem *item, std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapRenderer> renderer, uint32_t width, uint32_t height);
+    MapTextureNode(QQuickItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapRenderer> renderer, uint32_t width, uint32_t height);
     ~MapTextureNode();
 
     QSGTexture *texture() const override;

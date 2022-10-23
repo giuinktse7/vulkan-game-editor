@@ -1,53 +1,13 @@
 #include "qml_map_item.h"
 
 #include "common/map_renderer.h"
+#include "src/qml_ui_utils.h"
 
 //>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>MockUIUtils2>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>
-
-class MockUIUtils2 : public UIUtils
-{
-  public:
-    MockUIUtils2() {}
-    ScreenPosition mouseScreenPosInView() override;
-
-    double screenDevicePixelRatio() override;
-    double windowDevicePixelRatio() override;
-
-    VME::ModifierKeys modifiers() const override;
-
-    void waitForDraw(std::function<void()> f) override;
-
-  private:
-};
-
-ScreenPosition MockUIUtils2::mouseScreenPosInView()
-{
-    return ScreenPosition(0, 0);
-}
-
-double MockUIUtils2::screenDevicePixelRatio()
-{
-    return 1.0;
-}
-
-double MockUIUtils2::windowDevicePixelRatio()
-{
-    return 1.0;
-}
-
-VME::ModifierKeys MockUIUtils2::modifiers() const
-{
-    return VME::ModifierKeys::None;
-}
-
-void MockUIUtils2::waitForDraw(std::function<void()> f)
-{
-    // No-op
-}
 
 std::shared_ptr<Map> testMap2()
 {
@@ -115,8 +75,8 @@ void QmlMapItem::initialize()
     if (qWindow)
     {
         vulkanInfo = std::make_shared<QtVulkanInfo>(window());
-        mapView = std::make_shared<MapView>(std::make_unique<MockUIUtils2>(), action, testMap2());
-        mapRenderer = std::make_shared<MapRenderer>(vulkanInfo, mapView.get());
+        mapView = std::make_shared<MapView>(std::make_unique<QmlUIUtils>(), action, testMap2());
+        mapRenderer = std::make_shared<MapRenderer>(vulkanInfo, mapView);
 
         mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
 
@@ -161,7 +121,7 @@ QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
 
     if (!textureNode)
     {
-        mapTextureNode = new MapTextureNode(this, vulkanInfo, mapRenderer, width(), height());
+        mapTextureNode = new MapTextureNode(this, mapView, vulkanInfo, mapRenderer, width(), height());
     }
 
     mapTextureNode->sync();
@@ -247,7 +207,7 @@ void QmlMapItem::releaseResources() // called on the gui thread if the item is r
 
     mapTextureNode = nullptr;
 
-    mapView = std::make_unique<MapView>(std::make_unique<MockUIUtils2>(), action, testMap2());
+    mapView = std::make_shared<MapView>(std::make_unique<QmlUIUtils>(), action, testMap2());
     mapRenderer.reset();
 }
 
@@ -257,8 +217,8 @@ void QmlMapItem::releaseResources() // called on the gui thread if the item is r
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-MapTextureNode::MapTextureNode(QQuickItem *item, std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapRenderer> renderer, uint32_t width, uint32_t height)
-    : m_item(item), vulkanInfo(vulkanInfo), mapRenderer(renderer), screenTexture(vulkanInfo)
+MapTextureNode::MapTextureNode(QQuickItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapRenderer> renderer, uint32_t width, uint32_t height)
+    : m_item(item), mapView(mapView), vulkanInfo(vulkanInfo), mapRenderer(renderer), screenTexture(vulkanInfo)
 {
     // VME_LOG_D("MapTextureNode::MapTextureNode");
     m_window = m_item->window();

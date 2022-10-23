@@ -18,12 +18,14 @@ set(HEADER_FILES
     src/qt_vulkan_info.h
     src/enum_conversion.h
     src/logging.h
+    src/qml_ui_utils.h
 )
 
 set(SOURCE_FILES
     src/qt_vulkan_info.cpp
     src/enum_conversion.cpp
     src/logging.cpp
+    src/qml_ui_utils.cpp
 )
 
 qt_add_library(qml_ui STATIC ${HEADER_FILES} ${SOURCE_FILES})
