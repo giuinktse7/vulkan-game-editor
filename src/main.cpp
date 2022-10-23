@@ -16,7 +16,6 @@
 #include <QFile>
 #include <QFileSystemWatcher>
 #include <QFontDatabase>
-#include <QGuiApplication>
 #include <QLoggingCategory>
 #include <QQmlEngine>
 #include <QQuickStyle>
@@ -68,10 +67,13 @@ class FileWatcher : QObject
 
 std::unique_ptr<FileWatcher> watcher;
 
-int MainApp::start(int argc, char **argv)
+MainApp::MainApp(int argc, char **argv)
+    : app(argc, argv)
 {
-    QGuiApplication app(argc, argv);
+}
 
+int MainApp::start()
+{
     // This example needs Vulkan. It will not run otherwise.
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
     QQuickStyle::setStyle("Fusion");
@@ -83,7 +85,7 @@ int MainApp::start(int argc, char **argv)
 
     rootView = std::make_unique<QQuickView>();
     rootView->setResizeMode(QQuickView::SizeRootObjectToView);
-    rootView->setSource(QUrl::fromLocalFile("../main.qml"));
+    rootView->setSource(QUrl::fromLocalFile("../ui/main.qml"));
     rootView->show();
 
     watcher = std::make_unique<FileWatcher>();
@@ -95,11 +97,11 @@ int MainApp::start(int argc, char **argv)
         {
             qDebug() << "Main changed.";
             this->rootView->engine()->clearComponentCache();
-            this->rootView->setSource(QUrl::fromLocalFile("../main.qml"));
+            this->rootView->setSource(QUrl::fromLocalFile(file));
         }
     });
 
-    watcher->watchFile("../main.qml");
+    watcher->watchFile("../ui/main.qml");
 
     // QObject::connect(watcher->watcher(), QFileSystemWatcher::fileChanged)
 
@@ -137,8 +139,9 @@ int main(int argc, char **argv)
     Config config = configResult.unwrap();
     config.loadOrTerminate();
 
-    MainApp app;
-    return app.start(argc, argv);
+    MainApp app(argc, argv);
+
+    return app.start();
 }
 
 int main2(int argc, char *argv[])

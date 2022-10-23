@@ -1,6 +1,12 @@
-#include "qml_vulkan_texture_node.h"
+#include "qml_map_item.h"
 
 #include "common/map_renderer.h"
+
+//>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>MockUIUtils2>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>
 
 class MockUIUtils2 : public UIUtils
 {
@@ -17,8 +23,6 @@ class MockUIUtils2 : public UIUtils
 
   private:
 };
-
-// UI Utils
 
 ScreenPosition MockUIUtils2::mouseScreenPosInView()
 {
@@ -83,9 +87,9 @@ std::shared_ptr<Map> testMap2()
     return map;
 }
 
-CustomTextureItem::CustomTextureItem()
+QmlMapItem::QmlMapItem()
 {
-    // VME_LOG_D("CustomTextureItem::CustomTextureItem");
+    // VME_LOG_D("QmlMapItem::QmlMapItem");
     connect(this, &QQuickItem::windowChanged, this, [this]() {
         connect(window(), &QQuickWindow::sceneGraphInitialized, this, [this]() {
             if (!m_initialized)
@@ -98,9 +102,14 @@ CustomTextureItem::CustomTextureItem()
     setFlag(ItemHasContents, true);
 }
 
-void CustomTextureItem::initialize()
+QmlMapItem::~QmlMapItem()
 {
-    // VME_LOG_D("CustomTextureItem::initialize");
+    // VME_LOG_D("~QmlMapItem");
+}
+
+void QmlMapItem::initialize()
+{
+    // VME_LOG_D("QmlMapItem::initialize");
     auto qWindow = window();
     if (qWindow)
     {
@@ -127,39 +136,38 @@ void CustomTextureItem::initialize()
     }
 }
 
-QSGNode *CustomTextureItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
+QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
 {
-    // VME_LOG_D("CustomTextureItem::updatePaintNode");
-    CustomTextureNode *textureNode = static_cast<CustomTextureNode *>(node);
+    // VME_LOG_D("QmlMapItem::updatePaintNode");
+    MapTextureNode *textureNode = static_cast<MapTextureNode *>(qsgNode);
 
     if (!m_initialized)
     {
         initialize();
     }
 
-    if (!textureNode && (width() <= 0 || height() <= 0))
+    if ((!textureNode && (width() <= 0 || height() <= 0)) || !m_initialized)
     {
         return nullptr;
     }
 
     if (!textureNode)
     {
-        m_node = new CustomTextureNode(this, vulkanInfo.get(), mapRenderer.get(), width(), height());
-        textureNode = m_node;
+        node = new MapTextureNode(this, vulkanInfo.get(), mapRenderer.get(), width(), height());
     }
 
-    m_node->sync();
+    node->sync();
 
-    textureNode->setTextureCoordinatesTransform(QSGSimpleTextureNode::NoTransform);
-    textureNode->setFiltering(QSGTexture::Linear);
-    textureNode->setRect(0, 0, width(), height());
+    node->setTextureCoordinatesTransform(QSGSimpleTextureNode::NoTransform);
+    node->setFiltering(QSGTexture::Linear);
+    node->setRect(0, 0, width(), height());
 
     window()->update(); // ensure getting to beforeRendering() at some point
 
-    return textureNode;
+    return node;
 }
 
-void CustomTextureItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QmlMapItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     QQuickItem::geometryChange(newGeometry, oldGeometry);
 
@@ -169,93 +177,110 @@ void CustomTextureItem::geometryChange(const QRectF &newGeometry, const QRectF &
     }
 }
 
-void CustomTextureItem::invalidateSceneGraph() // called on the render thread when the scenegraph is invalidated
+void QmlMapItem::keyPressEvent(QKeyEvent *event)
 {
-    m_node = nullptr;
+    VME_LOG_D(event->key());
 }
 
-void CustomTextureItem::releaseResources() // called on the gui thread if the item is removed from scene
+void QmlMapItem::invalidateSceneGraph() // called on the render thread when the scenegraph is invalidated
 {
-    m_node = nullptr;
+    // VME_LOG_D("QmlMapItem::invalidateSceneGraph");
+    releaseResources();
+}
+
+void QmlMapItem::releaseResources() // called on the gui thread if the item is removed from scene
+{
+    // VME_LOG_D("QmlMapItem::releaseResources");
+    node->freeTexture();
+
+    node = nullptr;
+
+    mapView = std::make_unique<MapView>(std::make_unique<MockUIUtils2>(), action, testMap2());
+    mapRenderer.reset();
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>CustomTextureNode>>>>>>>>
+//>>>>>>>MapTextureNode>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-CustomTextureNode::CustomTextureNode(QQuickItem *item, QtVulkanInfo *vulkanInfo, MapRenderer *renderer, uint32_t width, uint32_t height)
-    : m_item(item), vulkanInfo(vulkanInfo), mapRenderer(renderer)
+MapTextureNode::MapTextureNode(QQuickItem *item, QtVulkanInfo *vulkanInfo, MapRenderer *renderer, uint32_t width, uint32_t height)
+    : m_item(item), vulkanInfo(vulkanInfo), mapRenderer(renderer), screenTexture(vulkanInfo)
 {
-    // VME_LOG_D("CustomTextureNode::CustomTextureNode");
+    // VME_LOG_D("MapTextureNode::MapTextureNode");
     m_window = m_item->window();
-    connect(m_window, &QQuickWindow::beforeRendering, this, &CustomTextureNode::render);
+    connect(m_window, &QQuickWindow::beforeRendering, this, &MapTextureNode::render);
     connect(m_window, &QQuickWindow::screenChanged, this, [this]() {
         if (m_window->effectiveDevicePixelRatio() != m_dpr)
             m_item->update();
     });
-
-    initialize();
 }
 
-void CustomTextureNode::initialize()
+MapTextureNode::~MapTextureNode()
 {
+    // VME_LOG_D("~MapTextureNode()");
 }
 
-QSGTexture *CustomTextureNode::texture() const
+QSGTexture *MapTextureNode::texture() const
 {
     return QSGSimpleTextureNode::texture();
 }
 
-void CustomTextureNode::sync()
+void MapTextureNode::freeTexture()
 {
-    // VME_LOG_D("CustomTextureNode::sync");
+    screenTexture.releaseResources();
+}
+
+void MapTextureNode::sync()
+{
+    // VME_LOG_D("MapTextureNode::sync");
     m_dpr = m_window->effectiveDevicePixelRatio();
     const QSize newSize = m_window->size() * m_dpr;
-    bool needsNew = false;
+    bool needsNewTexture = false;
 
     if (!texture())
     {
-        needsNew = true;
+        needsNewTexture = true;
     }
 
     if (newSize != m_size)
     {
-        needsNew = true;
+        needsNewTexture = true;
         m_size = newSize;
     }
 
-    if (needsNew)
+    if (needsNewTexture)
     {
-        // Maybe unnecessary
-        vulkanInfo->update();
-        screenTexture.recreate(vulkanInfo, mapRenderer->getRenderPass(), m_size.width(), m_size.height());
+
+        screenTexture.recreate(mapRenderer->getRenderPass(), m_size.width(), m_size.height());
 
         VkImage texture = screenTexture.texture();
-        QSGTexture *wrapper = QNativeInterface::QSGVulkanTexture::fromNative(texture,
-                                                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                                             m_window,
-                                                                             m_size);
-        // VME_LOG_D("[CustomTextureNode::sync] setTexture");
+        textureWrapper = std::unique_ptr<QSGTexture>(QNativeInterface::QSGVulkanTexture::fromNative(texture,
+                                                                                                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                                                                    m_window,
+                                                                                                    m_size));
+        // VME_LOG_D("[MapTextureNode::sync] setTexture");
 
-        setTexture(wrapper);
+        setTexture(textureWrapper.get());
         // Q_ASSERT(wrapper->nativeInterface<QNativeInterface::QSGVulkanTexture>()->nativeImage() == texture);
     }
 }
 
-void CustomTextureNode::render()
+void MapTextureNode::render()
 {
-    QSGRendererInterface *rif = m_window->rendererInterface();
-    VkCommandBuffer cb = *reinterpret_cast<VkCommandBuffer *>(
-        rif->getResource(m_window, QSGRendererInterface::CommandListResource));
-    Q_ASSERT(cb);
+    QSGRendererInterface *renderInterface = m_window->rendererInterface();
+    VkCommandBuffer commandBuffer = *reinterpret_cast<VkCommandBuffer *>(
+        renderInterface->getResource(m_window, QSGRendererInterface::CommandListResource));
+    Q_ASSERT(commandBuffer);
 
     auto currentFrameSlot = m_window->graphicsStateInfo().currentFrameSlot;
+
     mapRenderer->setCurrentFrame(currentFrameSlot);
+
     auto frame = mapRenderer->currentFrame();
     frame->currentFrameIndex = currentFrameSlot;
-    frame->commandBuffer = cb;
+    frame->commandBuffer = commandBuffer;
 
     mapRenderer->render(screenTexture.vkFrameBuffer());
 }

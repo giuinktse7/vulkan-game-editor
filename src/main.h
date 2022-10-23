@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtQuick/QQuickView>
+#include <QGuiApplication>
 
 #include <filesystem>
 #include <optional>
@@ -35,10 +36,15 @@ namespace TemporaryTest
 class MainApp
 {
   public:
-    int start(int argc, char **argv);
+    MainApp(int argc, char **argv);
+
+    int start();
 
   private:
+    QGuiApplication app;
+    
     std::unique_ptr<QQuickView> rootView;
+
 };
 
 void overlay();

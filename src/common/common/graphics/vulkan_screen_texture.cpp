@@ -1,27 +1,41 @@
 #include "vulkan_screen_texture.h"
+#include "../log.h"
 
-VulkanScreenTexture::VulkanScreenTexture()
+VulkanScreenTexture::VulkanScreenTexture(VulkanInfo *vulkanInfo)
+    : vulkanInfo(vulkanInfo)
 {
+    VME_LOG_D("VulkanScreenTexture()");
 }
 
-void VulkanScreenTexture::cleanup(VulkanInfo *vulkanInfo)
+VulkanScreenTexture::~VulkanScreenTexture()
 {
+    VME_LOG_D("~VulkanScreenTexture()");
+    releaseResources();
+}
+
+void VulkanScreenTexture::releaseResources()
+{
+    VME_LOG_D("VulkanScreenTexture::releaseResources");
     if (m_texture)
     {
         vulkanInfo->vkDestroyFramebuffer(m_textureFramebuffer, nullptr);
         m_textureFramebuffer = VK_NULL_HANDLE;
+
         vulkanInfo->vkFreeMemory(m_textureMemory, nullptr);
         m_textureMemory = VK_NULL_HANDLE;
+
         vulkanInfo->vkDestroyImageView(m_textureView, nullptr);
         m_textureView = VK_NULL_HANDLE;
+
         vulkanInfo->vkDestroyImage(m_texture, nullptr);
         m_texture = VK_NULL_HANDLE;
     }
 }
 
-void VulkanScreenTexture::recreate(VulkanInfo *vulkanInfo, VkRenderPass renderPass, uint32_t width, uint32_t height)
+void VulkanScreenTexture::recreate(VkRenderPass renderPass, uint32_t width, uint32_t height)
 {
-    cleanup(vulkanInfo);
+    VME_LOG_D("VulkanScreenTexture::recreate");
+    releaseResources();
 
     VkImageCreateInfo imageInfo;
     memset(&imageInfo, 0, sizeof(imageInfo));

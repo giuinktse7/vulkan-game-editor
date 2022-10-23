@@ -21,6 +21,7 @@ class QtVulkanInfo : public VulkanInfo
   public:
     QtVulkanInfo(QQuickWindow *qml_window);
     QtVulkanInfo();
+    ~QtVulkanInfo();
 
     void setQmlWindow(QQuickWindow *qml_window);
 

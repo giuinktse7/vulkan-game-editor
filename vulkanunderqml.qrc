@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/scenegraph/vulkangameeditor">
-        <file>main.qml</file>
+        <file>ui/main.qml</file>
         <file>squircle.vert.spv</file>
         <file>squircle.frag.spv</file>
     </qresource>

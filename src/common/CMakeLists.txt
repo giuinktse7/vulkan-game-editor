@@ -16,9 +16,12 @@ find_package(nlohmann_json CONFIG REQUIRED)
 # find_package(date CONFIG REQUIRED)
 # target_link_libraries(common PRIVATE date::date date::date-tz)
 find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_signal_slot.hpp")
+find_package(spdlog CONFIG REQUIRED)
+
 
 
 set(HEADER_FILES
+    common/log.h
     common/config.h
     common/settings.h
     common/signal.h
@@ -229,6 +232,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE LibLZMA::LibLZMA)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pugixml)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
+target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 

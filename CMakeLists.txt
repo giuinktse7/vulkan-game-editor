@@ -134,12 +134,10 @@ set(app_icon_resource_windows
 set(MainSources
     src/main.h
     src/main.cpp
-    vulkan_test_view.h
-    vulkan_test_view.cpp
     vulkansquircle.h
     vulkansquircle.cpp
-    qml_vulkan_texture_node.h
-    qml_vulkan_texture_node.cpp
+    qml_map_item.h
+    qml_map_item.cpp
 )
 
 qt_add_executable(main ${MainSources} ${app_icon_resource_windows})
@@ -148,7 +146,7 @@ qt_add_qml_module(main
     URI VulkanGameEditor
     VERSION 1.0
     QML_FILES
-        main.qml
+        ui/main.qml
     RESOURCE_PREFIX /vulkangameeditor
     NO_RESOURCE_TARGET_PATH
 )

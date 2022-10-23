@@ -12,15 +12,18 @@
 #include "common/map_view.h"
 #include "src/qt_vulkan_info.h"
 
-class CustomTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
+class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
 {
     Q_OBJECT
 
   public:
-    CustomTextureNode(QQuickItem *item, QtVulkanInfo *vulkanInfo, MapRenderer *renderer, uint32_t width, uint32_t height);
-    // ~CustomTextureNode() override;
+    MapTextureNode(QQuickItem *item, QtVulkanInfo *vulkanInfo, MapRenderer *renderer, uint32_t width, uint32_t height);
+    ~MapTextureNode();
 
     QSGTexture *texture() const override;
+    void freeTexture();
+
+    void releaseResources();
 
     void sync();
 
@@ -28,35 +31,26 @@ class CustomTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
     void render();
 
   private:
-    void initialize();
-
-    enum Stage
-    {
-        VertexStage,
-        FragmentStage
-    };
-    void prepareShader(Stage stage);
-    bool buildTexture(const QSize &size);
-    void freeTexture();
-    bool createRenderPass();
-
-    QQuickItem *m_item;
-    QQuickWindow *m_window;
+    QQuickItem *m_item = nullptr;
+    QQuickWindow *m_window = nullptr;
     QSize m_size;
     qreal m_dpr;
 
-    MapRenderer *mapRenderer;
-    QtVulkanInfo *vulkanInfo;
+    MapRenderer *mapRenderer = nullptr;
+    QtVulkanInfo *vulkanInfo = nullptr;
     VulkanScreenTexture screenTexture;
+
+    std::unique_ptr<QSGTexture> textureWrapper;
 };
 
-class CustomTextureItem : public QQuickItem
+class QmlMapItem : public QQuickItem
 {
     Q_OBJECT
     QML_ELEMENT
 
   public:
-    CustomTextureItem();
+    QmlMapItem();
+    ~QmlMapItem();
 
   signals:
     void tChanged();
@@ -65,6 +59,8 @@ class CustomTextureItem : public QQuickItem
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
+    void keyPressEvent(QKeyEvent *event) override;
+
   private slots:
     void invalidateSceneGraph();
 
@@ -72,10 +68,11 @@ class CustomTextureItem : public QQuickItem
     void releaseResources() override;
     void initialize();
 
+    std::unique_ptr<QtVulkanInfo> vulkanInfo;
+
     bool m_initialized = false;
 
-    CustomTextureNode *m_node = nullptr;
-    std::unique_ptr<QtVulkanInfo> vulkanInfo;
+    MapTextureNode *node = nullptr;
     EditorAction action;
     std::unique_ptr<MapView> mapView;
     std::unique_ptr<MapRenderer> mapRenderer;

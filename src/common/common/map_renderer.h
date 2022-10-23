@@ -246,18 +246,19 @@ class MapRenderer
 {
   public:
     MapRenderer(VulkanInfo &vulkanInfo, MapView *mapView);
+    ~MapRenderer();
     static const int MAX_NUM_TEXTURES = 256 * 256;
 
     static const int TILE_SIZE = 32;
     static const uint32_t MAX_VERTICES = 64 * 1024;
 
     void initResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
-    void initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
-    void releaseSwapChainResources();
     void releaseResources();
 
-    void startNextFrame();
     void render(VkFramebuffer frameBuffer = VK_NULL_HANDLE);
+
+    void initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
+    void releaseSwapChainResources();
 
     VkDescriptorPool &getDescriptorPool()
     {

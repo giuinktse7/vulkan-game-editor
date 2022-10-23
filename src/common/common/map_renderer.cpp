@@ -93,6 +93,11 @@ MapRenderer::MapRenderer(VulkanInfo &vulkanInfo, MapView *mapView)
     vulkanTextures.reserve(ArbitraryGeneralReserveAmount);
 }
 
+MapRenderer::~MapRenderer()
+{
+    releaseResources();
+}
+
 void MapRenderer::initResources(VkSurfaceKHR surface, uint32_t width, uint32_t height)
 {
     // VME_LOG_D("[window: " << window.debugName << "] MapRenderer::initResources (device: " << window.device() << ")");
@@ -132,9 +137,6 @@ void MapRenderer::releaseSwapChainResources()
 
 void MapRenderer::releaseResources()
 {
-    // auto device = window.device();
-    // VME_LOG_D("[window: " << window.debugName << "] MapRenderer::releaseResources (device: " << device << ")");
-
     vulkanInfo.vkDestroyDescriptorSetLayout(uboDescriptorSetLayout, nullptr);
     uboDescriptorSetLayout = VK_NULL_HANDLE;
 
@@ -171,8 +173,6 @@ void MapRenderer::releaseResources()
         frame.frameBuffer = VK_NULL_HANDLE;
         frame.uboDescriptorSet = VK_NULL_HANDLE;
     }
-
-    debug = true;
 }
 
 void MapRenderer::render(VkFramebuffer frameBuffer)
@@ -206,7 +206,9 @@ void MapRenderer::render(VkFramebuffer frameBuffer)
 
 void MapRenderer::setupFrame()
 {
-    vulkanInfo.vkCmdBindPipeline(_currentFrame->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+    auto cb = _currentFrame->commandBuffer;
+
+    vulkanInfo.vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
     const util::Size size = vulkanInfo.vulkanSwapChainImageSize();
 
@@ -216,28 +218,21 @@ void MapRenderer::setupFrame()
     viewport.height = size.height();
     viewport.minDepth = 0;
     viewport.maxDepth = 1;
-    vulkanInfo.vkCmdSetViewport(_currentFrame->commandBuffer, 0, 1, &viewport);
+    vulkanInfo.vkCmdSetViewport(cb, 0, 1, &viewport);
 
     VkRect2D scissor;
     scissor.offset.x = scissor.offset.y = 0;
     scissor.extent.width = viewport.width;
     scissor.extent.height = viewport.height;
-    vulkanInfo.vkCmdSetScissor(_currentFrame->commandBuffer, 0, 1, &scissor);
+    vulkanInfo.vkCmdSetScissor(cb, 0, 1, &scissor);
 
     VkDeviceSize offsets[] = {0};
 
-    vulkanInfo.vkCmdBindDescriptorSets(
-        _currentFrame->commandBuffer,
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipelineLayout,
-        0,
-        1,
-        &_currentFrame->uboDescriptorSet,
-        0,
-        nullptr);
+    vulkanInfo.vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
+                                       &_currentFrame->uboDescriptorSet, 0, nullptr);
 
-    vulkanInfo.vkCmdBindVertexBuffers(_currentFrame->commandBuffer, 0, 1, &vertexBuffer.buffer, offsets);
-    vulkanInfo.vkCmdBindIndexBuffer(_currentFrame->commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+    vulkanInfo.vkCmdBindVertexBuffers(cb, 0, 1, &vertexBuffer.buffer, offsets);
+    vulkanInfo.vkCmdBindIndexBuffer(cb, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 }
 
 void MapRenderer::drawMap()

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import VulkanGameEditor
 
 Item {
@@ -8,7 +9,27 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: { console.log("hello") }
+
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        
+        onClicked: {
+            if (mouse.button === Qt.RightButton){
+                console.log("hello")
+                contextMenu.popup()
+            }
+        }
+
+        onPressAndHold: {
+            if (mouse.source === Qt.MouseEventNotSynthesized)
+                contextMenu.popup()
+        }
+
+        Menu {
+            id: contextMenu
+            MenuItem { text: "Cut" }
+            MenuItem { text: "Copy" }
+            MenuItem { text: "Paste" }
+        }
     }
 
     // MapViewItem {
@@ -18,7 +39,7 @@ Item {
     //     Keys.onPressed: (event) => { console.log("pressed " + event.key); }
     // }
 
-    CustomTextureItem {
+    QmlMapItem {
         id: renderer
         anchors.fill: parent
         anchors.margins: 0

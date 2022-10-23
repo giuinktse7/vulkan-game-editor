@@ -6,6 +6,11 @@ QtVulkanInfo::QtVulkanInfo()
 {
 }
 
+QtVulkanInfo::~QtVulkanInfo()
+{
+    VME_LOG_D("~QtVulkanInfo");
+}
+
 QtVulkanInfo::QtVulkanInfo(QQuickWindow *qml_window)
     : qml_window(qml_window)
 {
