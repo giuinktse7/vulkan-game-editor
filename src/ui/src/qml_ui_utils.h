@@ -2,10 +2,12 @@
 
 #include "common/editor_action.h"
 
+class QQuickWindow;
+
 class QmlUIUtils : public UIUtils
 {
   public:
-    QmlUIUtils() {}
+    QmlUIUtils(QQuickWindow *window);
     ScreenPosition mouseScreenPosInView() override;
 
     double screenDevicePixelRatio() override;
@@ -14,4 +16,7 @@ class QmlUIUtils : public UIUtils
     VME::ModifierKeys modifiers() const override;
 
     void waitForDraw(std::function<void()> f) override;
+
+  private:
+    QQuickWindow *window;
 };

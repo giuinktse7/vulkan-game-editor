@@ -52,6 +52,16 @@ void Camera::translate(WorldPosition delta)
     setWorldPosition(WorldPosition(_viewport.x, _viewport.y) + delta);
 }
 
+void Camera::translateX(WorldPosition::value_type x)
+{
+    setWorldPosition(WorldPosition(_viewport.x + x, _viewport.y));
+}
+
+void Camera::translateY(WorldPosition::value_type y)
+{
+    setWorldPosition(WorldPosition(_viewport.x, _viewport.y + y));
+}
+
 void Camera::zoomIn(ScreenPosition zoomOrigin)
 {
     setZoomStep(this->_zoomStep + 1, zoomOrigin);

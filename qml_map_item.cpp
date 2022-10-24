@@ -1,5 +1,6 @@
 #include "qml_map_item.h"
 
+#include "common/const.h"
 #include "common/map_renderer.h"
 #include "src/qml_ui_utils.h"
 
@@ -50,7 +51,14 @@ std::shared_ptr<Map> testMap2()
 QmlMapItem::QmlMapItem()
 {
     setAcceptedMouseButtons(Qt::MouseButton::AllButtons);
-    // VME_LOG_D("QmlMapItem::QmlMapItem");
+
+    setShortcut(Qt::Key_Escape, ShortcutAction::Escape);
+    setShortcut(Qt::Key_Delete, ShortcutAction::Delete);
+    setShortcut(Qt::ControlModifier, Qt::Key_0, ShortcutAction::ResetZoom);
+    setShortcut(Qt::KeypadModifier, Qt::Key_Plus, ShortcutAction::FloorUp);
+    setShortcut(Qt::KeypadModifier, Qt::Key_Minus, ShortcutAction::FloorDown);
+    setShortcut(Qt::Key_Q, ShortcutAction::LowerFloorShade);
+
     connect(this, &QQuickItem::windowChanged, this, [this]() {
         connect(window(), &QQuickWindow::sceneGraphInitialized, this, [this]() {
             if (!m_initialized)
@@ -75,7 +83,7 @@ void QmlMapItem::initialize()
     if (qWindow)
     {
         vulkanInfo = std::make_shared<QtVulkanInfo>(window());
-        mapView = std::make_shared<MapView>(std::make_unique<QmlUIUtils>(), action, testMap2());
+        mapView = std::make_shared<MapView>(std::make_unique<QmlUIUtils>(qWindow), action, testMap2());
         mapRenderer = std::make_shared<MapRenderer>(vulkanInfo, mapView);
 
         mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
@@ -177,7 +185,151 @@ void QmlMapItem::mouseReleaseEvent(QMouseEvent *event)
 
 void QmlMapItem::keyPressEvent(QKeyEvent *event)
 {
-    VME_LOG_D(event->key());
+    switch (event->key())
+    {
+        case Qt::Key_Left:
+            mapView->translateX(-MapTileSize);
+            break;
+        case Qt::Key_Right:
+            mapView->translateX(MapTileSize);
+            break;
+        case Qt::Key_Up:
+            mapView->translateY(-MapTileSize);
+            break;
+        case Qt::Key_Down:
+            mapView->translateY(MapTileSize);
+            break;
+        default:
+            break;
+    }
+}
+
+void QmlMapItem::wheelEvent(QWheelEvent *event)
+{
+    /*
+    The minimum rotation amount for a scroll to be registered, in eighths of a degree.
+    For example, 120 MinRotationAmount = (120 / 8) = 15 degrees of rotation.
+    */
+    const int MinRotationAmount = 120;
+
+    // The relative amount that the wheel was rotated, in eighths of a degree.
+    const int deltaY = event->angleDelta().y();
+
+    scrollAngleBuffer += deltaY;
+
+    if (std::abs(scrollAngleBuffer) >= MinRotationAmount)
+    {
+        this->mapView->zoom(scrollAngleBuffer / 8);
+        scrollAngleBuffer = 0;
+    }
+}
+
+bool QmlMapItem::event(QEvent *event)
+{
+    switch (event->type())
+    {
+            // case QEvent::Enter:
+            // {
+            //     bool panning = mapView->editorAction.is<MouseAction::Pan>();
+            //     if (panning)
+            //     {
+            //         setCursor(Qt::OpenHandCursor);
+            //     }
+            //     mapView->setUnderMouse(true);
+            //     break;
+            // }
+
+            // case QEvent::DragEnter:
+            //     dragEnterEvent(static_cast<QDragEnterEvent *>(event));
+            //     mapView->setUnderMouse(true);
+            //     mapView->dragEnterEvent();
+            //     break;
+
+            // case QEvent::DragMove:
+            //     dragMoveEvent(static_cast<QDragMoveEvent *>(event));
+            //     break;
+
+        case QEvent::Leave:
+        {
+
+            mapView->setUnderMouse(false);
+            break;
+        }
+
+            // case QEvent::DragLeave:
+            //     dragLeaveEvent(static_cast<QDragLeaveEvent *>(event));
+            //     mapView->setUnderMouse(false);
+            //     mapView->dragLeaveEvent();
+            //     break;
+
+            // case QEvent::Drop:
+            //     dropEvent(static_cast<QDropEvent *>(event));
+            //     break;
+
+        case QEvent::ShortcutOverride:
+        {
+            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+            auto action = getShortcutAction(keyEvent);
+            if (action)
+            {
+                shortcutPressedEvent(action.value());
+                return true;
+            }
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    return QQuickItem::event(event);
+}
+
+void QmlMapItem::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
+{
+    switch (action)
+    {
+        case ShortcutAction::Escape:
+            mapView->escapeEvent();
+            break;
+        case ShortcutAction::Delete:
+            mapView->deleteSelectedItems();
+            break;
+        case ShortcutAction::ResetZoom:
+            mapView->resetZoom();
+            break;
+        case ShortcutAction::FloorUp:
+            mapView->floorUp();
+            break;
+        case ShortcutAction::FloorDown:
+            mapView->floorDown();
+
+            break;
+        case ShortcutAction::LowerFloorShade:
+            mapView->toggleViewOption(MapView::ViewOption::ShadeLowerFloors);
+            break;
+    }
+}
+
+void QmlMapItem::setShortcut(Qt::KeyboardModifiers modifiers, Qt::Key key, ShortcutAction shortcut)
+{
+    int combination = QKeyCombination(modifiers, key).toCombined();
+    shortcuts.emplace(combination, shortcut);
+    shortcutActionToKeyCombination.emplace(shortcut, combination);
+}
+
+void QmlMapItem::setShortcut(Qt::Key key, ShortcutAction shortcut)
+{
+    int combination = QKeyCombination(key).toCombined();
+    shortcuts.emplace(combination, shortcut);
+    shortcutActionToKeyCombination.emplace(shortcut, combination);
+}
+
+std::optional<ShortcutAction> QmlMapItem::getShortcutAction(QKeyEvent *event) const
+{
+    auto shortcut = shortcuts.find(event->key() | event->modifiers());
+
+    return shortcut != shortcuts.end() ? std::optional<ShortcutAction>(shortcut->second) : std::nullopt;
 }
 
 bool QmlMapItem::containsMouse() const
@@ -207,7 +359,8 @@ void QmlMapItem::releaseResources() // called on the gui thread if the item is r
 
     mapTextureNode = nullptr;
 
-    mapView = std::make_shared<MapView>(std::make_unique<QmlUIUtils>(), action, testMap2());
+    // mapView = std::make_shared<MapView>(std::make_unique<QmlUIUtils>(), action, testMap2());
+    mapView.reset();
     mapRenderer.reset();
 }
 

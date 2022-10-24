@@ -13,6 +13,19 @@
 #include "src/enum_conversion.h"
 #include "src/qt_vulkan_info.h"
 
+enum class ShortcutAction
+{
+    Undo,
+    Redo,
+    Escape,
+    Delete,
+    ResetZoom,
+    FloorUp,
+    FloorDown,
+    LowerFloorShade,
+    Rotate
+};
+
 class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
 {
     Q_OBJECT
@@ -66,6 +79,8 @@ class QmlMapItem : public QQuickItem
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
+    bool event(QEvent *event) override;
 
   private slots:
     void invalidateSceneGraph();
@@ -78,6 +93,12 @@ class QmlMapItem : public QQuickItem
 
     void mapViewDrawRequested();
 
+    std::optional<ShortcutAction> getShortcutAction(QKeyEvent *event) const;
+    void setShortcut(Qt::KeyboardModifiers modifiers, Qt::Key key, ShortcutAction shortcut);
+    void setShortcut(Qt::Key key, ShortcutAction shortcut);
+
+    void shortcutPressedEvent(ShortcutAction action, QKeyEvent *event = nullptr);
+
     std::shared_ptr<VulkanInfo> vulkanInfo;
 
     bool m_initialized = false;
@@ -86,6 +107,15 @@ class QmlMapItem : public QQuickItem
     EditorAction action;
     std::shared_ptr<MapView> mapView;
     std::shared_ptr<MapRenderer> mapRenderer;
+
+    // Holds the current scroll amount. (see wheelEvent)
+    int scrollAngleBuffer = 0;
+
+    /**
+     * The key is an int from QKeyCombination::toCombined. (combination of Qt::Key and Qt Modifiers (Ctrl, Shift, Alt))
+    */
+    vme_unordered_map<int, ShortcutAction> shortcuts;
+    vme_unordered_map<ShortcutAction, int> shortcutActionToKeyCombination;
 };
 
 inline VME::MouseEvent vmeMouseEvent(QMouseEvent *event)

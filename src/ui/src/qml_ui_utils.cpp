@@ -2,11 +2,15 @@
 #include "enum_conversion.h"
 
 #include <QGuiApplication>
+#include <QtQuick/QQuickWindow>
+
+QmlUIUtils::QmlUIUtils(QQuickWindow *window)
+    : window(window) {}
 
 ScreenPosition QmlUIUtils::mouseScreenPosInView()
 {
-    ABORT_PROGRAM("Not implemented");
-    return ScreenPosition(0, 0);
+    auto pos = window->mapFromGlobal(QCursor::pos());
+    return ScreenPosition(pos.x(), pos.y());
 }
 
 double QmlUIUtils::screenDevicePixelRatio()

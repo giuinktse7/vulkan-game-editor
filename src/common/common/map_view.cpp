@@ -1703,6 +1703,16 @@ void MapView::setY(WorldPosition::value_type y)
     _camera.setY(y);
 }
 
+void MapView::translateX(WorldPosition::value_type x)
+{
+    _camera.translateX(x);
+}
+
+void MapView::translateY(WorldPosition::value_type y)
+{
+    _camera.translateY(y);
+}
+
 void MapView::floorUp()
 {
     setFloor(floor() - 1);

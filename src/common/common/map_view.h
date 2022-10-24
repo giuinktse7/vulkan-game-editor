@@ -121,6 +121,9 @@ class MapView
     void setX(WorldPosition::value_type x);
     void setY(WorldPosition::value_type y);
 
+    void translateX(WorldPosition::value_type x);
+    void translateY(WorldPosition::value_type y);
+
     void floorUp();
     void floorDown();
     void setFloor(int floor);

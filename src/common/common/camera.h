@@ -37,6 +37,8 @@ class Camera
     inline void setSize(WorldPosition::value_type width, WorldPosition::value_type height) noexcept;
 
     void translate(WorldPosition delta);
+    void translateX(WorldPosition::value_type x);
+    void translateY(WorldPosition::value_type y);
 
     void zoomIn(ScreenPosition zoomOrigin);
     void zoomOut(ScreenPosition zoomOrigin);
