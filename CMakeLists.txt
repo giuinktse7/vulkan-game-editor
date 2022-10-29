@@ -132,12 +132,12 @@ set(app_icon_resource_windows
     "${CMAKE_CURRENT_SOURCE_DIR}/resources/vulkan-map-editor.rc")
 
 set(MainSources
-    src/main.h
-    src/main.cpp
-    vulkansquircle.h
-    vulkansquircle.cpp
+    src/main/main.h
+    src/main/main.cpp
     qml_map_item.h
     qml_map_item.cpp
+    thing_list_model.h
+    thing_list_model.cpp
 )
 
 qt_add_executable(main ${MainSources} ${app_icon_resource_windows})
@@ -147,6 +147,7 @@ qt_add_qml_module(main
     VERSION 1.0
     QML_FILES
         ui/main.qml
+        ui/components/ThingList.qml
     RESOURCE_PREFIX /vulkangameeditor
     NO_RESOURCE_TARGET_PATH
 )

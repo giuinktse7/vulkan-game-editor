@@ -21,6 +21,7 @@
 #include <QQuickStyle>
 #include <QQuickWindow>
 
+#include "../qt/logging.h"
 #include "common/brushes/brush.h"
 #include "common/brushes/brush_loader.h"
 #include "common/config.h"
@@ -36,7 +37,7 @@
 #include "common/random.h"
 #include "common/time_util.h"
 #include "common/util.h"
-#include "qt/logging.h"
+
 
 class FileWatcher : QObject
 {
@@ -102,6 +103,7 @@ int MainApp::start()
     });
 
     watcher->watchFile("../ui/main.qml");
+    watcher->watchFile("../ui/components/ThingList.qml");
 
     // QObject::connect(watcher->watcher(), QFileSystemWatcher::fileChanged)
 
