@@ -17,6 +17,7 @@
 #include "core/random.h"
 #include "core/time_util.h"
 #include "debug_util.h"
+#include "gui_thing_image.h"
 
 #include <QtQml/qqmlextensionplugin.h>
 Q_IMPORT_QML_PLUGIN(AppComponentsPlugin)
@@ -62,8 +63,14 @@ int MainApp::start()
     QQuickStyle::setStyle("Fusion");
 
     rootView = std::make_unique<QQuickView>();
+    QQmlEngine *engine = rootView->engine();
+
+    // The QQmlEngine takes ownership of the image provider
+    engine->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
+    engine->addImageProvider(QLatin1String("creatureLooktypes"), new CreatureImageProvider);
+
     rootView->setResizeMode(QQuickView::SizeRootObjectToView);
-    this->rootView->engine()->addImportPath(QStringLiteral(":/"));
+    engine->addImportPath(QStringLiteral(":/"));
 
     const QUrl url(u"qrc:/app/qml/main.qml"_qs);
     rootView->setSource(url);
@@ -77,7 +84,7 @@ int MainApp::start()
         if (QFileInfo(file).baseName() == "main")
         {
             qDebug() << "Main changed.";
-            this->rootView->engine()->clearComponentCache();
+            rootView->engine()->clearComponentCache();
             this->rootView->setSource(QUrl::fromLocalFile(file));
         }
     });

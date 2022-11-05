@@ -12,7 +12,7 @@ TableView {
     rowSpacing: 1
     clip: true
 
-    model: ThingListModel {}
+    model: TileSetModel {}
 
     delegate: Rectangle {
         implicitWidth: 100

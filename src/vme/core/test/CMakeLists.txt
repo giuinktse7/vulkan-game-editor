@@ -1,6 +1,6 @@
 find_package(Catch2 3 REQUIRED)
 
-set(SOURCE_FILES
+set(SRC_FILES
     item_test.cpp
     map_view_test.cpp
     observable_item_test.cpp
@@ -8,5 +8,5 @@ set(SOURCE_FILES
 )
 
 
-add_executable(core-tests ${SOURCE_FILES})
+add_executable(core-tests ${SRC_FILES})
 target_link_libraries(core-tests PRIVATE core Catch2::Catch2WithMain)

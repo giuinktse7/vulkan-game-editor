@@ -122,7 +122,7 @@ set(HEADER_FILES
     core/concepts.h
 )
 
-set(SOURCE_FILES
+set(SRC_FILES
     core/vendor/lzma/Alloc.c
     core/vendor/lzma/LzFind.c
     core/vendor/lzma/LzFindMt.c
@@ -205,7 +205,7 @@ set(SOURCE_FILES
 
 add_library(core STATIC
     ${HEADER_FILES}
-    ${SOURCE_FILES}
+    ${SRC_FILES}
 )
 
 target_include_directories(core INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

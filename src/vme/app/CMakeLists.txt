@@ -12,7 +12,7 @@ set(HEADER_FILES
     qt_logging.h
 )
 
-set(SOURCE_FILES
+set(SRC_FILES
     main.cpp
     debug_util.cpp
     qml_map_item.cpp
@@ -23,9 +23,9 @@ set(SOURCE_FILES
 )
 
 
-add_executable(app ${HEADER_FILES} ${SOURCE_FILES})
+add_executable(app ${HEADER_FILES} ${SRC_FILES})
 
-target_link_libraries(app PRIVATE core app_componentsplugin Qt::Gui Qt::Quick Qt::QuickControls2)
+target_link_libraries(app PRIVATE core app_components app_componentsplugin Qt::Gui Qt::Quick Qt::QuickControls2)
 
 qt_add_qml_module(app
     URI app

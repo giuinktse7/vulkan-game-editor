@@ -109,7 +109,7 @@ Item {
             Layout.row: 0
             Layout.column: 0
 
-            TextInput { text: "Hello"; }
+            Image { source: "image://itemTypes/2152:51" }
        }
        
        Rectangle {

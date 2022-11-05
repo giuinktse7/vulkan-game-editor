@@ -1,16 +1,16 @@
 #include "thing_list_model.h"
 
-int ThingListModel::rowCount(const QModelIndex &) const
+int TileSetModel::rowCount(const QModelIndex &) const
 {
     return 200;
 }
 
-int ThingListModel::columnCount(const QModelIndex &) const
+int TileSetModel::columnCount(const QModelIndex &) const
 {
     return 200;
 }
 
-QVariant ThingListModel::data(const QModelIndex &index, int role) const
+QVariant TileSetModel::data(const QModelIndex &index, int role) const
 {
     switch (role)
     {
@@ -23,7 +23,7 @@ QVariant ThingListModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-QHash<int, QByteArray> ThingListModel::roleNames() const
+QHash<int, QByteArray> TileSetModel::roleNames() const
 {
     return {{Qt::DisplayRole, "display"}};
 }

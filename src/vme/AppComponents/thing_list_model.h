@@ -3,7 +3,9 @@
 #include <QAbstractTableModel>
 #include <qqml.h>
 
-class ThingListModel : public QAbstractTableModel
+class Tileset;
+
+class TileSetModel : public QAbstractTableModel
 {
     Q_OBJECT
     QML_ELEMENT
@@ -17,4 +19,6 @@ class ThingListModel : public QAbstractTableModel
     QVariant data(const QModelIndex &index, int role) const override;
 
     QHash<int, QByteArray> roleNames() const override;
+
+    Tileset *_tileset = nullptr;
 };
