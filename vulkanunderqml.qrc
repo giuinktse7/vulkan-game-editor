@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>ui/main.qml</file>
-        <file>ui/components/ThingList.qml</file>
-    </qresource>
-</RCC>

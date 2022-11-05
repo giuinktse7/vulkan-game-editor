@@ -106,21 +106,10 @@ Build configurations can be changed under `Project -> CMake Settings for VulkanG
 
 6. Copy over the folders `shaders` and `data` into `./build`.
 
-#### Run tests using CMake
-
-To run the test suite `vme_tests`, run `./runtest` in the project root.
-
 #### CMake Targets
 
 There are four targets:
-
--   **main** (Executable): The `main` target is the executable of the application. This target links the `common` and `gui` libraries statically.
--   **common** (Library): The `common` target contains all code that **is not** related to GUI (i.e. everything except Qt6-reliant code).
--   **gui** (Library): The `gui` target contains all code that **is** related to GUI (i.e. all code that is Qt6-reliant).
-
--   **vme_tests** (Executable): Contains tests for the `common` and `gui` libraries (See [Run tests using CMake](#run-tests-using-cmake)).
-
-The main purpose of having the `common` and `gui` library separate from the `main` target was to enable running unit tests against the code. It also ensures that there is no coupling introduced between core editor functionality and Qt6 (`common` does not have Qt6 as a dependency).
+TODO
 
 ## Clang
 
