@@ -4,6 +4,8 @@
 #include <QtQuick/QQuickView>
 #include <memory>
 
+#include "tileset_model.h"
+
 class MainApp
 {
   public:
@@ -15,4 +17,7 @@ class MainApp
     QGuiApplication app;
 
     std::unique_ptr<QQuickView> rootView;
+
+    // TODO Structure tileset model usage, this should not be stored in main!
+    std::unique_ptr<TileSetModel> tilesetModel;
 };

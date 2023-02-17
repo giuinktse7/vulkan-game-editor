@@ -5,8 +5,12 @@ import QtQuick.Controls
 import AppComponents as VMEComponent
 
 Item {
+    id: root;
     width: 800;
     height: 600;
+
+    property var tilesetModel;
+
 
     // MapViewItem {
     //     anchors.fill: parent
@@ -120,7 +124,10 @@ Item {
             Layout.column: 0
 
             VMEComponent.ThingList {
-
+                model: {
+                    console.log("Here: ", root.tilesetModel);
+                    root.tilesetModel;
+                }
             }
        }
  

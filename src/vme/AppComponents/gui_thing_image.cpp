@@ -340,7 +340,7 @@ QPixmap ItemTypeImageProvider::requestPixmap(const QString &id, QSize *size, con
         }
     }
 
-    if (!success)
+    if (!(success && Items::items.validItemType(serverId)))
     {
         return GUIImageCache::blackSquarePixmap();
     }

@@ -9,10 +9,13 @@ find_package(Qt6 REQUIRED COMPONENTS Core Qml Quick)
 
 set(HEADER_FILES
     gui_thing_image.h
+    ui_resources.h
+
 )
 
 set(SRC_FILES
     gui_thing_image.cpp
+    ui_resources.cpp
 )
 
 qt_add_library(app_components STATIC
@@ -28,12 +31,12 @@ target_link_libraries(app_components PRIVATE core app_componentsplugin Qt::Gui Q
 
 set(QML_HEADER_FILES
     my_type.h
-    thing_list_model.h
+    tileset_model.h
 )
 
 set(QML_SRC_FILES
     my_type.cpp
-    thing_list_model.cpp
+    tileset_model.cpp
 )
 
 

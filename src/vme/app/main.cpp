@@ -9,6 +9,7 @@
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#include <QVariant>
 
 #include <iostream>
 
@@ -56,9 +57,33 @@ MainApp::MainApp(int argc, char **argv)
 {
 }
 
+std::shared_ptr<Tileset> defaultTileset()
+{
+    auto tileset = std::make_shared<Tileset>("all", "All");
+
+    int from = 100;
+    int to = 45000;
+
+#ifdef _DEBUG_VME
+    from = 100;
+    to = 5000;
+#endif
+
+    for (int i = from; i < to; ++i)
+    {
+        tileset->addRawBrush(i);
+    }
+
+    return tileset;
+}
+
 int MainApp::start()
 {
-    // This example needs Vulkan. It will not run otherwise.
+    // TODO Abstract the tileset concept and use data files to build palettes & tilesets
+    auto tileset = defaultTileset();
+    tilesetModel = std::make_unique<TileSetModel>(tileset);
+
+    // Use Vulkan
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
     QQuickStyle::setStyle("Fusion");
 
@@ -68,6 +93,11 @@ int MainApp::start()
     // The QQmlEngine takes ownership of the image provider
     engine->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
     engine->addImageProvider(QLatin1String("creatureLooktypes"), new CreatureImageProvider);
+
+    QVariantMap properties;
+    properties.insert("tilesetModel", QVariant::fromValue(tilesetModel.get()));
+
+    rootView->setInitialProperties(properties);
 
     rootView->setResizeMode(QQuickView::SizeRootObjectToView);
     engine->addImportPath(QStringLiteral(":/"));
@@ -109,7 +139,7 @@ int MainApp::start()
 int main(int argc, char **argv)
 {
     // qInstallMessageHandler(pipeQtMessagesToStd);
-    showQmlResources();
+    // showQmlResources();
 
     ItemPalettes::createPalette("Default", "default");
 
