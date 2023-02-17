@@ -94,6 +94,16 @@ QVariant TileSetModel::data(const QModelIndex &modelIndex, int role) const
     return QVariant();
 }
 
+void TileSetModel::indexClicked(int index)
+{
+    // TODO Set the brush to the brush at the clicked index
+    /*
+    1. Emit event
+    2. Listen to event
+    3. Change brush
+    */
+}
+
 QHash<int, QByteArray> TileSetModel::roleNames() const
 {
     return {

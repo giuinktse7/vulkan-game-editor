@@ -17,6 +17,8 @@ class TileSetModel : public QAbstractTableModel
   public:
     TileSetModel(std::shared_ptr<Tileset> tileset);
 
+    Q_INVOKABLE void indexClicked(int index);
+
     enum Roles
     {
         ImageUriRole = Qt::UserRole + 1

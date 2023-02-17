@@ -112,24 +112,68 @@ Item {
             Layout.columnSpan: 3
             Layout.row: 0
             Layout.column: 0
-
-            Image { source: "image://itemTypes/2152:51" }
        }
        
-       Rectangle {
+        Rectangle {
             color: "blue"
-            Layout.preferredWidth: 200
-            Layout.fillHeight: true
-            Layout.row: 1
-            Layout.column: 0
+            property var rectWidth: 150;
+            Layout.preferredWidth: rectWidth;
+            Layout.fillHeight: true;
+            Layout.row: 1;
+            Layout.column: 0;
 
             VMEComponent.ThingList {
                 model: {
-                    console.log("Here: ", root.tilesetModel);
                     root.tilesetModel;
                 }
             }
-       }
+
+            MouseArea {
+                property var pressWidth;
+                property var pressX;
+                
+                id: roiRectArea;
+                width: 5;
+                anchors.top: parent.top;
+                anchors.bottom: parent.bottom;
+                anchors.right: parent.right;
+                hoverEnabled: true;
+                cursorShape: containsMouse ? Qt.SizeHorCursor : Qt.ArrowCursor;
+                acceptedButtons: Qt.LeftButton
+
+                function getMouseGlobalX(mouse) {
+                    const point = mapToGlobal(mouse.x, mouse.y);
+                    return point.x;
+                }
+                
+                onPressed: mouse => {
+                    pressX = getMouseGlobalX(mouse);
+                    console.log(`Pressed ${pressX}`);
+                    pressWidth = parent.rectWidth;
+                }
+                
+                onReleased: mouse => {
+                    const x = getMouseGlobalX(mouse);
+                    console.log(`Released ${x}`);
+                    parent.rectWidth = pressWidth + x - pressX;
+                    pressX = 0;
+                }
+                
+                onMouseXChanged: mouse => {
+                    const x = getMouseGlobalX(mouse);
+                    console.log(`Moved ${x}`);
+                    if (pressed) {
+                        parent.rectWidth = pressWidth + x - pressX;
+                        // console.log("Actual: ", parent.width, ", Expected: ", pressWidth + mouse.x - pressX)
+                    }
+                }
+
+                Rectangle {
+                    anchors.fill: parent;
+                    color: "red";
+                }
+            }
+        }
  
     //    Rectangle {
     //         color: "transparent"

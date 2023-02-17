@@ -15,6 +15,7 @@
 
 #include "core/config.h"
 #include "core/item_palette.h"
+#include "core/items.h"
 #include "core/random.h"
 #include "core/time_util.h"
 #include "debug_util.h"
@@ -71,7 +72,10 @@ std::shared_ptr<Tileset> defaultTileset()
 
     for (int i = from; i < to; ++i)
     {
-        tileset->addRawBrush(i);
+        if (Items::items.validItemType(i))
+        {
+            tileset->addRawBrush(i);
+        }
     }
 
     return tileset;
