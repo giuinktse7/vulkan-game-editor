@@ -6,6 +6,8 @@
 #include <QtQuick/QSGSimpleTextureNode>
 #include <QtQuick/QSGTextureProvider>
 
+#include <memory>
+
 #include "core/graphics/vulkan_helpers.h"
 #include "core/graphics/vulkan_screen_texture.h"
 #include "core/map_renderer.h"
@@ -103,7 +105,7 @@ class QmlMapItem : public QQuickItem
 
     bool m_initialized = false;
 
-    MapTextureNode *mapTextureNode = nullptr;
+    std::unique_ptr<MapTextureNode> mapTextureNode;
     EditorAction action;
     std::shared_ptr<MapView> mapView;
     std::shared_ptr<MapRenderer> mapRenderer;

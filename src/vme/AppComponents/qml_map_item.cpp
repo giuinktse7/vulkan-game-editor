@@ -75,7 +75,7 @@ QmlMapItem::QmlMapItem()
 
 QmlMapItem::~QmlMapItem()
 {
-    // VME_LOG_D("~QmlMapItem");
+    VME_LOG_D("~QmlMapItem");
 }
 
 void QmlMapItem::initialize()
@@ -116,7 +116,7 @@ void QmlMapItem::mapViewDrawRequested()
 
 QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
 {
-    // VME_LOG_D("QmlMapItem::updatePaintNode");
+    VME_LOG_D("QmlMapItem::updatePaintNode");
     MapTextureNode *textureNode = static_cast<MapTextureNode *>(qsgNode);
 
     if (!m_initialized)
@@ -131,7 +131,9 @@ QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
 
     if (!textureNode)
     {
-        mapTextureNode = new MapTextureNode(this, mapView, vulkanInfo, mapRenderer, width(), height());
+        VME_LOG_D("Creating a new one, hm");
+        mapTextureNode = std::make_unique<MapTextureNode>(this, mapView, vulkanInfo, mapRenderer, width(), height());
+        // mapTextureNode = new MapTextureNode(this, mapView, vulkanInfo, mapRenderer, width(), height());
     }
 
     mapTextureNode->sync();
@@ -142,7 +144,7 @@ QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
 
     window()->update(); // ensure getting to beforeRendering() at some point
 
-    return mapTextureNode;
+    return mapTextureNode.get();
 }
 
 void QmlMapItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -367,13 +369,13 @@ bool QmlMapItem::containsMouse() const
 
 void QmlMapItem::invalidateSceneGraph() // called on the render thread when the scenegraph is invalidated
 {
-    // VME_LOG_D("QmlMapItem::invalidateSceneGraph");
+    VME_LOG_D("QmlMapItem::invalidateSceneGraph");
     releaseResources();
 }
 
 void QmlMapItem::releaseResources() // called on the gui thread if the item is removed from scene
 {
-    // VME_LOG_D("QmlMapItem::releaseResources");
+    VME_LOG_D("QmlMapItem::releaseResources");
     if (mapTextureNode)
     {
         mapTextureNode->freeTexture();
@@ -395,7 +397,7 @@ void QmlMapItem::releaseResources() // called on the gui thread if the item is r
 MapTextureNode::MapTextureNode(QQuickItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapRenderer> renderer, uint32_t width, uint32_t height)
     : m_item(item), mapView(mapView), vulkanInfo(vulkanInfo), mapRenderer(renderer), screenTexture(vulkanInfo)
 {
-    // VME_LOG_D("MapTextureNode::MapTextureNode");
+    VME_LOG_D("MapTextureNode::MapTextureNode");
     m_window = m_item->window();
     connect(m_window, &QQuickWindow::beforeRendering, this, &MapTextureNode::render);
     connect(m_window, &QQuickWindow::screenChanged, this, [this]() {
@@ -406,7 +408,7 @@ MapTextureNode::MapTextureNode(QQuickItem *item, std::shared_ptr<MapView> mapVie
 
 MapTextureNode::~MapTextureNode()
 {
-    // VME_LOG_D("~MapTextureNode()");
+    VME_LOG_D("~MapTextureNode()");
 }
 
 QSGTexture *MapTextureNode::texture() const
@@ -421,7 +423,7 @@ void MapTextureNode::freeTexture()
 
 void MapTextureNode::sync()
 {
-    // VME_LOG_D("MapTextureNode::sync");
+    VME_LOG_D("MapTextureNode::sync");
     m_dpr = m_window->effectiveDevicePixelRatio();
     const QSize newSize = m_window->size() * m_dpr;
 
@@ -455,10 +457,13 @@ void MapTextureNode::sync()
             // Q_ASSERT(wrapper->nativeInterface<QNativeInterface::QSGVulkanTexture>()->nativeImage() == texture);
         }
     }
+
+    VME_LOG_D("MapTextureNode::sync end");
 }
 
 void MapTextureNode::render()
 {
+    // VME_LOG_D("MapTextureNode::render start");
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
     VkCommandBuffer commandBuffer = *reinterpret_cast<VkCommandBuffer *>(
         renderInterface->getResource(m_window, QSGRendererInterface::CommandListResource));
@@ -481,4 +486,6 @@ void MapTextureNode::render()
 
         renderer->render(screenTexture.vkFrameBuffer());
     }
+
+    // VME_LOG_D("MapTextureNode::render end");
 }

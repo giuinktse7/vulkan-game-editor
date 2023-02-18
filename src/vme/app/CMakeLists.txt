@@ -5,21 +5,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(HEADER_FILES
     main.h
     debug_util.h
-    qml_map_item.h
-    enum_conversion.h
-    qt_vulkan_info.h
-    qml_ui_utils.h
     qt_logging.h
+    editor.h
 )
 
 set(SRC_FILES
     main.cpp
     debug_util.cpp
-    qml_map_item.cpp
-    enum_conversion.cpp
-    qt_vulkan_info.cpp
-    qml_ui_utils.cpp
     qt_logging.cpp
+    editor.cpp
 )
 
 

@@ -32,13 +32,21 @@ target_link_libraries(app_components PRIVATE core app_componentsplugin Qt::Gui Q
 set(QML_HEADER_FILES
     my_type.h
     tileset_model.h
+    qml_map_item.h
+    enum_conversion.h
+    qml_ui_utils.h
+    qt_vulkan_info.h
 )
+
 
 set(QML_SRC_FILES
     my_type.cpp
     tileset_model.cpp
+    qml_map_item.cpp
+    enum_conversion.cpp
+    qml_ui_utils.cpp
+    qt_vulkan_info.cpp
 )
-
 
 
 qt_add_qml_module(app_components
@@ -47,6 +55,7 @@ qt_add_qml_module(app_components
     SOURCES
         ${QML_HEADER_FILES} ${QML_SRC_FILES}
     QML_FILES
-        RedSquare.qml
         ThingList.qml
+        ItemPalette.qml
+        MapView.qml
 ) 
