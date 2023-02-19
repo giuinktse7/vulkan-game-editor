@@ -2,11 +2,43 @@
 #include "editor.h"
 
 #include "core/logger.h"
+#include "core/tileset.h"
+#include "item_palette_store.h"
+
+#include <memory>
+
+std::shared_ptr<Tileset> defaultTileset()
+{
+    auto tileset = std::make_shared<Tileset>("all", "All");
+
+    int from = 100;
+    int to = 45000;
+
+#ifdef _DEBUG_VME
+    from = 100;
+    to = 5000;
+#endif
+
+    for (int i = from; i < to; ++i)
+    {
+        if (Items::items.validItemType(i))
+        {
+            tileset->addRawBrush(i);
+        }
+    }
+
+    return tileset;
+}
 
 Editor::Editor()
 {
     addMapTab("Untitled-1");
     addMapTab("Untitled-2");
+
+    // TODO Abstract the tileset concept and use data files to build palettes & tilesets
+    _itemPaletteStore.setTileset(defaultTileset());
+
+    _itemPaletteStore.onSelectBrush<&Editor::selectBrush>(this);
 }
 
 void Editor::mapTabSelected(int prevIndex, int index)
@@ -41,8 +73,13 @@ MapView *Editor::currentMapView()
     return item ? item->mapView.get() : nullptr;
 }
 
-void Editor::applyBrush(Brush *brush)
+void Editor::selectBrush(Brush *brush)
 {
+    VME_LOG_D("Editor::selectBrush");
+    auto mapView = currentMapView();
+
+    EditorAction::editorAction.setBrush(brush);
+    mapView->requestDraw();
 }
 
 void Editor::test()

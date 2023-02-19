@@ -168,8 +168,7 @@ void QmlMapItem::mouseMoveEvent(QMouseEvent *event)
     bool mouseInside = containsMouse();
     mapView->setUnderMouse(mouseInside);
 
-    auto e = vmeMouseEvent(event);
-    mapView->mouseMoveEvent(e);
+    mapView->mouseMoveEvent(vmeMouseEvent(event));
 }
 
 void QmlMapItem::mouseReleaseEvent(QMouseEvent *event)
@@ -270,6 +269,8 @@ bool QmlMapItem::event(QEvent *event)
 {
     switch (event->type())
     {
+        case QEvent::MouseMove:
+            break;
             // case QEvent::Enter:
             // {
             //     bool panning = mapView->editorAction.is<MouseAction::Pan>();
@@ -325,6 +326,21 @@ bool QmlMapItem::event(QEvent *event)
     }
 
     return QQuickItem::event(event);
+}
+
+void QmlMapItem::onMousePositionChanged(int x, int y, int button, int buttons, int modifiers)
+{
+    auto event = QMouseEvent(
+        QEvent::Type::MouseMove,
+        QPointF(x, y),
+        static_cast<Qt::MouseButton>(button), static_cast<Qt::MouseButtons>(buttons),
+        static_cast<Qt::KeyboardModifiers>(modifiers));
+
+    bool mouseInside = containsMouse();
+    mapView->setUnderMouse(mouseInside);
+
+    auto vmeEvent = vmeMouseEvent(&event);
+    mapView->mouseMoveEvent(vmeEvent);
 }
 
 void QmlMapItem::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)

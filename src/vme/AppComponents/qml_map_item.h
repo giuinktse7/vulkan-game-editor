@@ -147,6 +147,8 @@ class QmlMapItem : public QQuickItem
     QmlMapItem(std::string name = "");
     ~QmlMapItem();
 
+    Q_INVOKABLE void onMousePositionChanged(int x, int y, int button, int buttons, int modifiers);
+
     std::shared_ptr<MapView> mapView;
 
     int entryId()

@@ -12,6 +12,11 @@
 #include "core/tileset.h"
 #include "gui_thing_image.h"
 
+TileSetModel::TileSetModel()
+    : _tileset(std::make_shared<Tileset>("all", "All"))
+{
+}
+
 TileSetModel::TileSetModel(std::shared_ptr<Tileset> tileset)
     : _tileset(tileset) {}
 
@@ -22,8 +27,10 @@ int TileSetModel::rowCount(const QModelIndex &) const
 
 int TileSetModel::columnCount(const QModelIndex &) const
 {
-    return _columnCount;
+    return 1;
 }
+
+void setTileset(std::shared_ptr<Tileset> &&tileset);
 
 QVariant TileSetModel::data(const QModelIndex &modelIndex, int role) const
 {
@@ -94,14 +101,24 @@ QVariant TileSetModel::data(const QModelIndex &modelIndex, int role) const
     return QVariant();
 }
 
+void TileSetModel::setTileset(std::shared_ptr<Tileset> &&tileset)
+{
+    beginResetModel();
+    _tileset = std::move(tileset);
+    endResetModel();
+}
+
+void TileSetModel::clear()
+{
+    beginResetModel();
+    _tileset.reset();
+    endResetModel();
+}
+
 void TileSetModel::indexClicked(int index)
 {
-    // TODO Set the brush to the brush at the clicked index
-    /*
-    1. Emit event
-    2. Listen to event
-    3. Change brush
-    */
+    auto brush = _tileset->get(index);
+    selectBrush.fire(brush);
 }
 
 QHash<int, QByteArray> TileSetModel::roleNames() const

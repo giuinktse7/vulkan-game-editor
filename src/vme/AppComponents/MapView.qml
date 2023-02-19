@@ -16,6 +16,11 @@ QmlMapItem {
         anchors.fill: parent;
         acceptedButtons: Qt.LeftButton | Qt.RightButton;
         propagateComposedEvents: true;
+        hoverEnabled: true;
+
+        onPositionChanged: (mouse) => {
+            root.onMousePositionChanged(mouse.x, mouse.y, mouse.button, mouse.buttons, mouse.modifiers);
+        }
 
         onClicked: (mouse) => {
             mouse.accepted = false;

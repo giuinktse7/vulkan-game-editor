@@ -5,6 +5,7 @@
 #include <string>
 
 #include "core/brushes/brush.h"
+#include "item_palette_store.h"
 #include "qml_map_item.h"
 
 class QmlMapItem;
@@ -25,10 +26,15 @@ class Editor : public QObject
     void addMapTab(std::string tabName);
     void removeMapTab(int index);
 
+    ItemPaletteStore &itemPaletteStore()
+    {
+        return _itemPaletteStore;
+    }
+
     MapView *currentMapView();
 
     // Actions
-    void applyBrush(Brush *brush);
+    void selectBrush(Brush *brush);
 
     int currentMapIndex() const
     {
@@ -47,4 +53,6 @@ class Editor : public QObject
 
   private:
     int _currentMapIndex;
+
+    ItemPaletteStore _itemPaletteStore;
 };

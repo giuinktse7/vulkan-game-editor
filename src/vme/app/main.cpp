@@ -58,35 +58,8 @@ MainApp::MainApp(int argc, char **argv)
 {
 }
 
-std::shared_ptr<Tileset> defaultTileset()
-{
-    auto tileset = std::make_shared<Tileset>("all", "All");
-
-    int from = 100;
-    int to = 45000;
-
-#ifdef _DEBUG_VME
-    from = 100;
-    to = 5000;
-#endif
-
-    for (int i = from; i < to; ++i)
-    {
-        if (Items::items.validItemType(i))
-        {
-            tileset->addRawBrush(i);
-        }
-    }
-
-    return tileset;
-}
-
 int MainApp::start()
 {
-    // TODO Abstract the tileset concept and use data files to build palettes & tilesets
-    auto tileset = defaultTileset();
-    tilesetModel = std::make_unique<TileSetModel>(tileset);
-
     // Use Vulkan
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
     QQuickStyle::setStyle("Fusion");
@@ -101,7 +74,7 @@ int MainApp::start()
     qmlRegisterSingletonInstance("VME.editor", 1, 0, "Editor", editor.get());
 
     QVariantMap properties;
-    properties.insert("tilesetModel", QVariant::fromValue(tilesetModel.get()));
+    properties.insert("tilesetModel", QVariant::fromValue(editor->itemPaletteStore().tilesetModel()));
     properties.insert("editor", QVariant::fromValue(editor.get()));
 
     rootView->setInitialProperties(properties);
@@ -113,20 +86,20 @@ int MainApp::start()
     rootView->setSource(url);
     rootView->show();
 
-    watcher = std::make_unique<FileWatcher>();
+    // watcher = std::make_unique<FileWatcher>();
 
-    watcher->onFileChanged([this](const QString &file) {
-        qDebug() << file;
+    // watcher->onFileChanged([this](const QString &file) {
+    //     qDebug() << file;
 
-        if (QFileInfo(file).baseName() == "main")
-        {
-            qDebug() << "Main changed.";
-            rootView->engine()->clearComponentCache();
-            this->rootView->setSource(QUrl::fromLocalFile(file));
-        }
-    });
+    //     if (QFileInfo(file).baseName() == "main")
+    //     {
+    //         qDebug() << "Main changed.";
+    //         rootView->engine()->clearComponentCache();
+    //         this->rootView->setSource(QUrl::fromLocalFile(file));
+    //     }
+    // });
 
-    watcher->watchFile("qml/main.qml");
+    // watcher->watchFile("qml/main.qml");
 
     // QObject::connect(watcher->watcher(), QFileSystemWatcher::fileChanged)
 

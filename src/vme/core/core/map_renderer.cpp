@@ -320,7 +320,7 @@ void MapRenderer::drawCurrentAction()
 
             [this](const MouseAction::MapBrush &action) {
                 Position pos = mapView->mouseGamePos();
-                int variation = mapView->getBrushVariation();
+                int variation = action.variationIndex;
 
                 if (action.area)
                 {

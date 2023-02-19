@@ -4,7 +4,10 @@
 #include <memory>
 #include <qqml.h>
 
+#include "core/signal.h"
+
 class Tileset;
+class Brush;
 
 class TileSetModel : public QAbstractTableModel
 {
@@ -12,10 +15,13 @@ class TileSetModel : public QAbstractTableModel
     QML_ELEMENT
     QML_ADDED_IN_MINOR_VERSION(1)
 
-    Q_PROPERTY(int columnCount READ columnCount NOTIFY columnCountChanged)
-
   public:
+    TileSetModel();
     TileSetModel(std::shared_ptr<Tileset> tileset);
+
+    // Signals
+    template <auto MemberFunction, typename T>
+    void onSelectBrush(T *instance);
 
     Q_INVOKABLE void indexClicked(int index);
 
@@ -23,6 +29,9 @@ class TileSetModel : public QAbstractTableModel
     {
         ImageUriRole = Qt::UserRole + 1
     };
+
+    void setTileset(std::shared_ptr<Tileset> &&tileset);
+    void clear();
 
     int rowCount(const QModelIndex & = QModelIndex()) const override;
 
@@ -34,15 +43,13 @@ class TileSetModel : public QAbstractTableModel
 
     std::shared_ptr<Tileset> _tileset = nullptr;
 
-    void setColumnCount(int columnCount)
-    {
-        _columnCount = columnCount;
-        emit columnCountChanged(columnCount);
-    }
-
-  signals:
-    void columnCountChanged(int);
-
   private:
-    int _columnCount = 4;
+    // Signals
+    Nano::Signal<void(Brush *)> selectBrush;
 };
+
+template <auto MemberFunction, typename T>
+void TileSetModel::onSelectBrush(T *instance)
+{
+    selectBrush.connect<MemberFunction>(instance);
+}
