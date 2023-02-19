@@ -54,7 +54,7 @@ class FileWatcher : QObject
 std::unique_ptr<FileWatcher> watcher;
 
 MainApp::MainApp(int argc, char **argv)
-    : app(argc, argv)
+    : app(argc, argv), editor(std::make_unique<Editor>())
 {
 }
 
@@ -100,6 +100,7 @@ int MainApp::start()
 
     QVariantMap properties;
     properties.insert("tilesetModel", QVariant::fromValue(tilesetModel.get()));
+    properties.insert("editor", QVariant::fromValue(editor.get()));
 
     rootView->setInitialProperties(properties);
 
