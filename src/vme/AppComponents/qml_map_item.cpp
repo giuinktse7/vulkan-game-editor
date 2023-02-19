@@ -6,11 +6,12 @@
 #include "core/map_renderer.h"
 #include "qml_ui_utils.h"
 
-//>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>MockUIUtils2>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <vector>
+
+QmlMapItemStore QmlMapItemStore::qmlMapItemStore;
 
 std::shared_ptr<Map> testMap2()
 {
@@ -29,28 +30,11 @@ std::shared_ptr<Map> testMap2()
         }
     }
 
-    // {
-    //     Item gold(2148);
-    //     Item platinum(2152);
-    //     gold.setCount(25);
-    //     map->addItem(Position(7, 7, 7), 4526);
-    //     map->addItem(Position(7, 7, 7), std::move(gold));
-    //     map->addItem(Position(7, 7, 7), std::move(platinum));
-    // }
-    // {
-    //     Item gold(2148);
-    //     gold.setCount(25);
-    //     map->addItem(Position(8, 8, 7), 4526);
-    //     map->addItem(Position(8, 8, 7), std::move(gold));
-    // }
-    // {
-    //     map->addItem(Position(9, 9, 7), 4526);
-    // }
-
     return map;
 }
 
-QmlMapItem::QmlMapItem()
+QmlMapItem::QmlMapItem(std::string name)
+    : _name(name)
 {
     setAcceptedMouseButtons(Qt::MouseButton::AllButtons);
 
@@ -61,13 +45,31 @@ QmlMapItem::QmlMapItem()
     setShortcut(Qt::KeypadModifier, Qt::Key_Minus, ShortcutAction::FloorDown);
     setShortcut(Qt::Key_Q, ShortcutAction::LowerFloorShade);
 
-    connect(this, &QQuickItem::windowChanged, this, [this]() {
-        connect(window(), &QQuickWindow::sceneGraphInitialized, this, [this]() {
-            if (!m_initialized)
+    connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow *win) {
+        if (win)
+        {
+            QmlMapItemStore::qmlMapItemStore.mapTabs()->getById(_id)->item = this;
+
+            if (!mapView)
             {
-                initialize();
+                mapView = std::make_unique<MapView>(std::make_unique<QmlUIUtils>(window()), EditorAction::editorAction, testMap2());
+
+                mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
+
+                mapView->setX(0);
+                mapView->setY(0);
+
+                auto devicePixelRatio = win->effectiveDevicePixelRatio();
+                const QSize itemSize = this->size().toSize() * devicePixelRatio;
+
+                mapView->setViewportSize(itemSize.width(), itemSize.height());
             }
-        });
+
+            mapView->setUiUtils(std::make_unique<QmlUIUtils>(window()));
+
+            connect(win, &QQuickWindow::beforeSynchronizing, this, &QmlMapItem::sync, Qt::DirectConnection);
+            connect(win, &QQuickWindow::sceneGraphInvalidated, this, &QmlMapItem::cleanup, Qt::DirectConnection);
+        }
     });
 
     setFlag(ItemHasContents, true);
@@ -78,35 +80,33 @@ QmlMapItem::~QmlMapItem()
     VME_LOG_D("~QmlMapItem");
 }
 
-void QmlMapItem::initialize()
+void QmlMapItem::sync()
 {
-    // VME_LOG_D("QmlMapItem::initialize");
-    auto qWindow = window();
-    if (qWindow)
+    if (!textureNode)
     {
         vulkanInfo = std::make_shared<QtVulkanInfo>(window());
-        mapView = std::make_shared<MapView>(std::make_unique<QmlUIUtils>(qWindow), action, testMap2());
-        mapRenderer = std::make_shared<MapRenderer>(vulkanInfo, mapView);
+        vulkanInfo->setMaxConcurrentFrameCount(window()->graphicsStateInfo().framesInFlight);
 
-        mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
-
-        mapView->setX(0);
-        mapView->setY(0);
-        mapView->setViewportSize(1920, 1080);
-
-        const QQuickWindow::GraphicsStateInfo &stateInfo(qWindow->graphicsStateInfo());
-
-        vulkanInfo->setMaxConcurrentFrameCount(stateInfo.framesInFlight);
-
-        VkSurfaceKHR surface = qWindow->vulkanInstance()->surfaceForWindow(qWindow);
-
-        QSize size = qWindow->size() * qWindow->devicePixelRatio();
-        uint32_t width = static_cast<uint32_t>(size.width());
-        uint32_t height = static_cast<uint32_t>(size.height());
-
-        mapRenderer->initResources(surface, width, height);
-        m_initialized = true;
+        connect(window(), &QQuickWindow::beforeRendering, textureNode, &MapTextureNode::frameStart, Qt::DirectConnection);
     }
+
+    // Update window for vulkan info
+    static_cast<QtVulkanInfo *>(vulkanInfo.get())->setQmlWindow(window());
+}
+
+void QmlMapItem::cleanup()
+{
+}
+
+QString QmlMapItem::qStrName()
+{
+    return QString::fromStdString(_name);
+}
+MapTabListModel::TabData *MapTabListModel::getById(int id)
+{
+    auto found = std::find_if(_data.begin(), _data.end(), [id](const TabData &tabData) { return tabData.id == id; });
+
+    return found != _data.end() ? &*found : nullptr;
 }
 
 void QmlMapItem::mapViewDrawRequested()
@@ -116,35 +116,26 @@ void QmlMapItem::mapViewDrawRequested()
 
 QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
 {
-    VME_LOG_D("QmlMapItem::updatePaintNode");
-    MapTextureNode *textureNode = static_cast<MapTextureNode *>(qsgNode);
+    MapTextureNode *node = static_cast<MapTextureNode *>(qsgNode);
 
-    if (!m_initialized)
-    {
-        initialize();
-    }
-
-    if ((!textureNode && (width() <= 0 || height() <= 0)) || !m_initialized)
-    {
+    if (!node && (width() <= 0 || height() <= 0))
         return nullptr;
-    }
 
-    if (!textureNode)
+    if (!node)
     {
-        VME_LOG_D("Creating a new one, hm");
-        mapTextureNode = std::make_unique<MapTextureNode>(this, mapView, vulkanInfo, mapRenderer, width(), height());
-        // mapTextureNode = new MapTextureNode(this, mapView, vulkanInfo, mapRenderer, width(), height());
+        textureNode = new MapTextureNode(this, mapView, vulkanInfo, width(), height());
+        node = textureNode;
     }
 
-    mapTextureNode->sync();
+    textureNode->sync();
 
-    mapTextureNode->setTextureCoordinatesTransform(QSGSimpleTextureNode::NoTransform);
-    mapTextureNode->setFiltering(QSGTexture::Linear);
-    mapTextureNode->setRect(0, 0, width(), height());
+    node->setTextureCoordinatesTransform(QSGSimpleTextureNode::NoTransform);
+    node->setFiltering(QSGTexture::Linear);
+    node->setRect(0, 0, width(), height());
 
     window()->update(); // ensure getting to beforeRendering() at some point
 
-    return mapTextureNode.get();
+    return node;
 }
 
 void QmlMapItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -162,10 +153,13 @@ void QmlMapItem::mousePressEvent(QMouseEvent *event)
     bool mouseInside = containsMouse();
     mapView->setUnderMouse(mouseInside);
 
-    if (event->button() == Qt::MouseButton::LeftButton)
+    if (mouseInside)
     {
-        auto e = vmeMouseEvent(event);
-        mapView->mousePressEvent(e);
+        if (event->button() == Qt::MouseButton::LeftButton)
+        {
+            auto e = vmeMouseEvent(event);
+            mapView->mousePressEvent(e);
+        }
     }
 }
 
@@ -212,9 +206,11 @@ void QmlMapItem::keyPressEvent(QKeyEvent *event)
                     return;
                 }
 
+                QGuiApplication::setOverrideCursor(Qt::OpenHandCursor);
+
                 if (mapView->underMouse())
                 {
-                    // currentVulkanWindow()->setCursor(Qt::OpenHandCursor);
+                    VME_LOG_D("Under mouse");
                 }
 
                 MouseAction::Pan panAction;
@@ -226,6 +222,27 @@ void QmlMapItem::keyPressEvent(QKeyEvent *event)
         }
         default:
             break;
+    }
+}
+
+void QmlMapItem::keyReleaseEvent(QKeyEvent *event)
+{
+    switch (event->key())
+    {
+        case Qt::Key_Space:
+        {
+            if (!event->isAutoRepeat())
+            {
+                VME_LOG_D("Space released!");
+                auto pan = mapView->editorAction.as<MouseAction::Pan>();
+                if (pan)
+                {
+                    mapView->editorAction.setPrevious();
+                    QGuiApplication::restoreOverrideCursor();
+                }
+            }
+            break;
+        }
     }
 }
 
@@ -369,46 +386,56 @@ bool QmlMapItem::containsMouse() const
 
 void QmlMapItem::invalidateSceneGraph() // called on the render thread when the scenegraph is invalidated
 {
-    VME_LOG_D("QmlMapItem::invalidateSceneGraph");
-    releaseResources();
+    textureNode = nullptr;
 }
 
 void QmlMapItem::releaseResources() // called on the gui thread if the item is removed from scene
 {
-    VME_LOG_D("QmlMapItem::releaseResources");
-    if (mapTextureNode)
+    textureNode = nullptr;
+}
+
+void QmlMapItem::setEntryId(int id)
+{
+    if (_id != id)
     {
-        mapTextureNode->freeTexture();
+        _id = id;
+        emit entryIdChanged();
     }
-
-    mapTextureNode = nullptr;
-
-    // mapView = std::make_shared<MapView>(std::make_unique<QmlUIUtils>(), action, testMap2());
-    mapView.reset();
-    mapRenderer.reset();
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>MapTextureNode>>>>>>>>
+//>>>>>>>MapTextureNode>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-MapTextureNode::MapTextureNode(QQuickItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapRenderer> renderer, uint32_t width, uint32_t height)
-    : m_item(item), mapView(mapView), vulkanInfo(vulkanInfo), mapRenderer(renderer), screenTexture(vulkanInfo)
+MapTextureNode::MapTextureNode(QQuickItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, uint32_t width, uint32_t height)
+    : m_item(item), mapView(mapView), vulkanInfo(vulkanInfo), mapRenderer(std::make_unique<MapRenderer>(vulkanInfo, mapView)), screenTexture(vulkanInfo)
 {
-    VME_LOG_D("MapTextureNode::MapTextureNode");
     m_window = m_item->window();
+
+    mapRenderer->initResources();
+
     connect(m_window, &QQuickWindow::beforeRendering, this, &MapTextureNode::render);
     connect(m_window, &QQuickWindow::screenChanged, this, [this]() {
-        if (m_window->effectiveDevicePixelRatio() != m_dpr)
+        if (m_window->effectiveDevicePixelRatio() != devicePixelRatio)
             m_item->update();
     });
 }
 
 MapTextureNode::~MapTextureNode()
 {
-    VME_LOG_D("~MapTextureNode()");
+    // VME_LOG_D("~MapTextureNode()");
+    delete texture();
+}
+
+void MapTextureNode::frameStart()
+{
+    // VME_LOG_D("MapTextureNode::frameStart");
+    QSGRendererInterface *rif = m_window->rendererInterface();
+
+    // We are not prepared for anything other than running with the RHI and its Vulkan backend.
+    Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::Vulkan);
 }
 
 QSGTexture *MapTextureNode::texture() const
@@ -423,9 +450,8 @@ void MapTextureNode::freeTexture()
 
 void MapTextureNode::sync()
 {
-    VME_LOG_D("MapTextureNode::sync");
-    m_dpr = m_window->effectiveDevicePixelRatio();
-    const QSize newSize = m_window->size() * m_dpr;
+    devicePixelRatio = m_window->effectiveDevicePixelRatio();
+    const QSize newSize = m_item->size().toSize() * devicePixelRatio;
 
     bool needsNewTexture = false;
 
@@ -434,58 +460,149 @@ void MapTextureNode::sync()
         needsNewTexture = true;
     }
 
-    if (newSize != m_size)
+    if (newSize != textureSize)
     {
         needsNewTexture = true;
-        m_size = newSize;
+        textureSize = newSize;
     }
 
     if (needsNewTexture)
     {
-        if (auto renderer = mapRenderer.lock())
+        delete texture();
+        screenTexture.recreate(mapRenderer->getRenderPass(), textureSize.width(), textureSize.height());
+
+        VkImage texture = screenTexture.texture();
+        QSGTexture *wrapper = QNativeInterface::QSGVulkanTexture::fromNative(texture,
+                                                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                                             m_window,
+                                                                             textureSize);
+        setTexture(wrapper);
+
+        if (auto wMapView = mapView.lock())
         {
-            screenTexture.recreate(renderer->getRenderPass(), m_size.width(), m_size.height());
-
-            VkImage texture = screenTexture.texture();
-            textureWrapper = std::unique_ptr<QSGTexture>(QNativeInterface::QSGVulkanTexture::fromNative(texture,
-                                                                                                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                                                                        m_window,
-                                                                                                        m_size));
-            // VME_LOG_D("[MapTextureNode::sync] setTexture");
-
-            setTexture(textureWrapper.get());
-            // Q_ASSERT(wrapper->nativeInterface<QNativeInterface::QSGVulkanTexture>()->nativeImage() == texture);
+            wMapView->setViewportSize(newSize.width(), newSize.height());
         }
     }
-
-    VME_LOG_D("MapTextureNode::sync end");
 }
 
 void MapTextureNode::render()
 {
-    // VME_LOG_D("MapTextureNode::render start");
+    VkFramebuffer frameBuffer = screenTexture.vkFrameBuffer();
+
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
-    VkCommandBuffer commandBuffer = *reinterpret_cast<VkCommandBuffer *>(
-        renderInterface->getResource(m_window, QSGRendererInterface::CommandListResource));
+    auto resource = renderInterface->getResource(m_window, QSGRendererInterface::CommandListResource);
+    VkCommandBuffer commandBuffer = *reinterpret_cast<VkCommandBuffer *>(resource);
     Q_ASSERT(commandBuffer);
 
     auto currentFrameSlot = m_window->graphicsStateInfo().currentFrameSlot;
 
-    if (auto renderer = mapRenderer.lock())
+    mapRenderer->setCurrentFrame(currentFrameSlot);
+
+    auto frame = mapRenderer->currentFrame();
+    frame->currentFrameIndex = currentFrameSlot;
+    frame->commandBuffer = commandBuffer;
+
+    if (auto wMapView = mapView.lock())
     {
-        renderer->setCurrentFrame(currentFrameSlot);
-
-        auto frame = renderer->currentFrame();
-        frame->currentFrameIndex = currentFrameSlot;
-        frame->commandBuffer = commandBuffer;
-
-        if (auto wMapView = mapView.lock())
-        {
-            frame->mouseAction = wMapView->editorAction.action();
-        }
-
-        renderer->render(screenTexture.vkFrameBuffer());
+        frame->mouseAction = wMapView->editorAction.action();
     }
 
-    // VME_LOG_D("MapTextureNode::render end");
+    mapRenderer->render(frameBuffer);
+
+    // [QT doc]
+    // Memory barrier before the texture can be used as a source.
+    // Since we are not using a sub-pass, we have to do this explicitly.
+
+    VkImageMemoryBarrier imageTransitionBarrier = {};
+    imageTransitionBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imageTransitionBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    imageTransitionBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    imageTransitionBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    imageTransitionBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageTransitionBarrier.image = screenTexture.texture();
+    imageTransitionBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageTransitionBarrier.subresourceRange.levelCount = imageTransitionBarrier.subresourceRange.layerCount = 1;
+
+    vulkanInfo->vkCmdPipelineBarrier(commandBuffer,
+                                     VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                                     VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                     0, 0, nullptr, 0, nullptr,
+                                     1, &imageTransitionBarrier);
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>MapTabListModel>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+MapTabListModel::MapTabListModel(QObject *parent)
+    : QAbstractListModel(parent) {}
+
+void MapTabListModel::addTab(std::string tabName)
+{
+    auto modelSize = static_cast<int>(_data.size());
+
+    uint32_t id = _nextId++;
+
+    beginInsertRows(QModelIndex(), modelSize, modelSize);
+    _data.push_back(TabData{tabName, id, nullptr});
+    endInsertRows();
+
+    emit sizeChanged(size());
+}
+
+void MapTabListModel::removeTab(int index)
+{
+    beginRemoveRows(QModelIndex(), index, index);
+    _data.erase(_data.begin() + index);
+    endRemoveRows();
+    emit sizeChanged(size());
+}
+
+QVariant MapTabListModel::data(const QModelIndex &modelIndex, int role) const
+{
+    auto index = modelIndex.row();
+    if (index < 0 || index >= rowCount())
+        return QVariant();
+
+    if (role == to_underlying(Role::QmlMapItem))
+    {
+        return QVariant::fromValue(QString::fromStdString(_data.at(index).name));
+    }
+    else if (role == to_underlying(Role::EntryId))
+    {
+        return QVariant::fromValue(static_cast<int>(_data.at(index).id));
+    }
+
+    return QVariant();
+}
+
+QHash<int, QByteArray> MapTabListModel::roleNames() const
+{
+    QHash<int, QByteArray> roles;
+    roles[to_underlying(Role::QmlMapItem)] = "item";
+    roles[to_underlying(Role::EntryId)] = "theId";
+
+    return roles;
+}
+
+int MapTabListModel::size()
+{
+    return rowCount();
+}
+
+bool MapTabListModel::empty()
+{
+    return size() == 0;
+}
+
+int MapTabListModel::rowCount(const QModelIndex &parent) const
+{
+    return static_cast<int>(_data.size());
+}
+
+void MapTabListModel::setInstance(int index, QmlMapItem *instance)
+{
+    _data.at(index).item = instance;
 }

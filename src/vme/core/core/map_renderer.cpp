@@ -98,13 +98,9 @@ MapRenderer::~MapRenderer()
     releaseResources();
 }
 
-void MapRenderer::initResources(VkSurfaceKHR surface, uint32_t width, uint32_t height)
+void MapRenderer::initResources()
 {
-    // VME_LOG_D("[window: " << window.debugName << "] MapRenderer::initResources (device: " << window.device() << ")");
-
     vulkanInfo->update();
-
-    // initSwapChainResources(surface, width, height);
 
     createRenderPass();
     createFrameBuffers();
@@ -119,21 +115,21 @@ void MapRenderer::initResources(VkSurfaceKHR surface, uint32_t width, uint32_t h
     createVertexBuffer();
     createIndexBuffer();
 
-    // VME_LOG_D("End MapRenderer::initResources");
+    VME_LOG_D("End MapRenderer::initResources");
 }
 
-// void MapRenderer::initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height)
-// {
-//     swapchain = std::make_unique<SwapChain>(surface, &vulkanInfo);
-//     swapchain->create(width, height);
+void MapRenderer::initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height)
+{
+    // swapchain = std::make_unique<SwapChain>(surface, &vulkanInfo);
+    // swapchain->create(width, height);
 
-//     mapView->setViewportSize(width, height);
-// }
+    // mapView->setViewportSize(width, height);
+}
 
-// void MapRenderer::releaseSwapChainResources()
-// {
-// mapView->setViewportSize(0, 0);
-// }
+void MapRenderer::releaseSwapChainResources()
+{
+    // mapView->setViewportSize(0, 0);
+}
 
 void MapRenderer::releaseResources()
 {

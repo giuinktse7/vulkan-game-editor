@@ -36,6 +36,7 @@ set(QML_HEADER_FILES
     enum_conversion.h
     qml_ui_utils.h
     qt_vulkan_info.h
+    item_palette_store.h
 )
 
 
@@ -46,6 +47,7 @@ set(QML_SRC_FILES
     enum_conversion.cpp
     qml_ui_utils.cpp
     qt_vulkan_info.cpp
+    item_palette_store.cpp
 )
 
 

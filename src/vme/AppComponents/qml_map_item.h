@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QAbstractListModel>
+#include <QString>
 #include <QtGui/QScreen>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickWindow>
@@ -7,6 +9,7 @@
 #include <QtQuick/QSGTextureProvider>
 
 #include <memory>
+#include <string>
 
 #include "core/graphics/vulkan_helpers.h"
 #include "core/graphics/vulkan_screen_texture.h"
@@ -14,6 +17,62 @@
 #include "core/map_view.h"
 #include "enum_conversion.h"
 #include "qt_vulkan_info.h"
+
+class QmlMapItem;
+
+class MapTabListModel : public QAbstractListModel
+{
+    Q_OBJECT
+    Q_PROPERTY(int size READ size NOTIFY sizeChanged)
+
+  private:
+    struct TabData
+    {
+        std::string name;
+        uint32_t id;
+        QmlMapItem *item;
+    };
+
+  public:
+    enum class Role
+    {
+        QmlMapItem = Qt::UserRole + 1,
+        EntryId = Qt::UserRole + 2
+    };
+
+    void setInstance(int index, QmlMapItem *instance);
+
+    MapTabListModel(QObject *parent = 0);
+
+    TabData &get(int index)
+    {
+        return _data.at(index);
+    }
+
+    TabData *getById(int id);
+
+    void clear();
+    bool empty();
+
+    void addTab(std::string tabName);
+    void removeTab(int index);
+
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int size();
+
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+
+  signals:
+    void sizeChanged(int size);
+
+  protected:
+    QHash<int, QByteArray> roleNames() const;
+
+  private:
+    std::vector<TabData> _data;
+
+    uint32_t _nextId = 0;
+};
 
 enum class ShortcutAction
 {
@@ -33,13 +92,15 @@ class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
     Q_OBJECT
 
   public:
-    MapTextureNode(QQuickItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapRenderer> renderer, uint32_t width, uint32_t height);
+    MapTextureNode(QQuickItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, uint32_t width, uint32_t height);
     ~MapTextureNode();
 
     QSGTexture *texture() const override;
     void freeTexture();
 
     void releaseResources();
+
+    void frameStart();
 
     void sync();
 
@@ -49,29 +110,55 @@ class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
   private:
     QQuickItem *m_item = nullptr;
     QQuickWindow *m_window = nullptr;
-    QSize m_size;
-    qreal m_dpr;
+    QSize textureSize;
+    qreal devicePixelRatio;
 
     std::shared_ptr<VulkanInfo> vulkanInfo;
     std::weak_ptr<MapView> mapView;
-    std::weak_ptr<MapRenderer> mapRenderer;
-
-    VulkanScreenTexture screenTexture;
+    std::unique_ptr<MapRenderer> mapRenderer;
 
     std::unique_ptr<QSGTexture> textureWrapper;
+
+    VulkanScreenTexture screenTexture;
+};
+
+class QmlMapItemStore
+{
+  public:
+    static QmlMapItemStore qmlMapItemStore;
+
+    MapTabListModel *mapTabs()
+    {
+        return &_mapTabs;
+    };
+
+  private:
+    MapTabListModel _mapTabs;
 };
 
 class QmlMapItem : public QQuickItem
 {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(QString name READ qStrName)
+    Q_PROPERTY(int entryId READ entryId WRITE setEntryId NOTIFY entryIdChanged)
 
   public:
-    QmlMapItem();
+    QmlMapItem(std::string name = "");
     ~QmlMapItem();
 
+    std::shared_ptr<MapView> mapView;
+
+    int entryId()
+    {
+        return _id;
+    }
+
+    void setEntryId(int id);
+
   signals:
-    void tChanged();
+    void entryIdChanged();
+    void handleWindowChanged(QQuickWindow *win);
 
   protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
@@ -81,8 +168,13 @@ class QmlMapItem : public QQuickItem
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
     bool event(QEvent *event) override;
+
+  public slots:
+    void sync();
+    void cleanup();
 
   private slots:
     void invalidateSceneGraph();
@@ -101,14 +193,13 @@ class QmlMapItem : public QQuickItem
 
     void shortcutPressedEvent(ShortcutAction action, QKeyEvent *event = nullptr);
 
+    QString qStrName();
+
+    std::string _name;
+
     std::shared_ptr<VulkanInfo> vulkanInfo;
 
-    bool m_initialized = false;
-
-    std::unique_ptr<MapTextureNode> mapTextureNode;
-    EditorAction action;
-    std::shared_ptr<MapView> mapView;
-    std::shared_ptr<MapRenderer> mapRenderer;
+    MapTextureNode *textureNode = nullptr;
 
     // Holds the current scroll amount. (see wheelEvent)
     int scrollAngleBuffer = 0;
@@ -118,6 +209,8 @@ class QmlMapItem : public QQuickItem
      */
     vme_unordered_map<int, ShortcutAction> shortcuts;
     vme_unordered_map<ShortcutAction, int> shortcutActionToKeyCombination;
+
+    int _id = -1;
 };
 
 inline VME::MouseEvent vmeMouseEvent(QMouseEvent *event)

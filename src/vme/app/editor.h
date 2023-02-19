@@ -18,6 +18,7 @@ class Editor : public QObject
   public:
     Editor();
 
+    Q_INVOKABLE void test();
     Q_INVOKABLE void mapTabSelected(int prevIndex, int index);
     Q_INVOKABLE void mapTabCreated(QmlMapItem *item, int index);
 

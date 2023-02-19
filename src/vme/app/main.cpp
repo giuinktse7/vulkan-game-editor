@@ -98,6 +98,8 @@ int MainApp::start()
     engine->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
     engine->addImageProvider(QLatin1String("creatureLooktypes"), new CreatureImageProvider);
 
+    qmlRegisterSingletonInstance("VME.editor", 1, 0, "Editor", editor.get());
+
     QVariantMap properties;
     properties.insert("tilesetModel", QVariant::fromValue(tilesetModel.get()));
     properties.insert("editor", QVariant::fromValue(editor.get()));

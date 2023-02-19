@@ -3,13 +3,12 @@
 #include <memory>
 #include <vulkan/vulkan.h>
 
-
 #include "vulkan_helpers.h"
 
 class VulkanScreenTexture
 {
   public:
-    VulkanScreenTexture(std::shared_ptr<VulkanInfo> &vulkanInfo);
+    VulkanScreenTexture(std::shared_ptr<VulkanInfo> vulkanInfo);
     ~VulkanScreenTexture();
 
     VkFramebuffer vkFrameBuffer() const

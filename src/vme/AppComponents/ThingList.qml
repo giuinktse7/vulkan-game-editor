@@ -1,5 +1,6 @@
 import QtQuick 2.12
 import AppComponents
+import VME.editor 1.0
 
 // TableView {
 //     id: tableView
@@ -46,6 +47,7 @@ GridView {
             property bool dragging : false
 
             onPressed: (mouse) => {
+                Editor.test();
                 tableView.model.indexClicked(index);
             }
         }

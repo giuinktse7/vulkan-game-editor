@@ -12,9 +12,6 @@ Editor::Editor()
 void Editor::mapTabSelected(int prevIndex, int index)
 {
     VME_LOG_D("mapTabSelected from C++: " << prevIndex << ", " << index);
-
-    QmlMapItemStore::qmlMapItemStore.mapTabs()->get(prevIndex).item->_active = false;
-    QmlMapItemStore::qmlMapItemStore.mapTabs()->get(index).item->_active = true;
 }
 
 void Editor::addMapTab(std::string tabName)
@@ -29,7 +26,6 @@ void Editor::removeMapTab(int index)
 
 void Editor::mapTabCreated(QmlMapItem *item, int index)
 {
-    VME_LOG_D("Editor::mapTabCreated: " << item);
     mapTabs()->setInstance(index, item);
 }
 
@@ -47,6 +43,11 @@ MapView *Editor::currentMapView()
 
 void Editor::applyBrush(Brush *brush)
 {
+}
+
+void Editor::test()
+{
+    VME_LOG_D("Editor::test");
 }
 
 void Editor::setcurrentMapIndex(int index)

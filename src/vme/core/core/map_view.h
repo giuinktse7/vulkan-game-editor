@@ -58,6 +58,11 @@ class MapView
     void perfTest();
     void testBordering();
 
+    void setUiUtils(std::unique_ptr<UIUtils> &&uiUtils)
+    {
+        this->uiUtils = std::move(uiUtils);
+    }
+
     inline const Map *map() const noexcept;
 
     inline uint16_t mapWidth() const noexcept;

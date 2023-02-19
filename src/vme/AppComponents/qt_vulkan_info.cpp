@@ -118,6 +118,11 @@ uint32_t QtVulkanInfo::graphicsQueueFamilyIndex()
 
 void QtVulkanInfo::setQmlWindow(QQuickWindow *qml_window)
 {
+    if (this->qml_window == qml_window)
+    {
+        return;
+    }
+
     this->qml_window = qml_window;
 
     update();

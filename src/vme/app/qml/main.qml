@@ -9,6 +9,7 @@ Item {
     width: 800;
     height: 600;
 
+    property var editor;
     property var tilesetModel;
 
 
@@ -19,53 +20,40 @@ Item {
     //     Keys.onPressed: (event) => { console.log("pressed " + event.key); }
     // }
 
-    QmlMapItem {
-        id: renderer
+    StackLayout {
+        id: mapAreaStackLayout
         anchors.fill: parent
         anchors.margins: 0
-        focus: true
-        onActiveFocusChanged: console.log("uu")
+        currentIndex: tabRoot.currentIndex
+        property var prevIndex: 0
+        
+        onCurrentIndexChanged: (x) => {
+            root.editor.mapTabSelected(prevIndex, currentIndex);
+            prevIndex = currentIndex;
+        }
 
-        MouseArea {
-            anchors.fill: parent;
-            acceptedButtons: Qt.LeftButton | Qt.RightButton;
-            propagateComposedEvents: true;
+        Repeater {
+            model: root.editor.mapTabs
+            delegate: VMEComponent.MapView {
+                // Very important! Without these, resizing can fail
+                anchors.fill: parent
+                anchors.margins: 0
+                
+                required property string item
+                required property int theId
+                required property int index
 
-            onClicked: (mouse) => {
-                mouse.accepted = false;
+                id: mapView
 
-                if (mouse.button === Qt.RightButton) {
-                    contextMenu.popup();
-                } else if (mouse.button === Qt.LeftButton) {
-                    renderer.forceActiveFocus();
+                Component.onCompleted: () => {
+                    // console.log(`Index: ${index}`)
+                    mapView.entryId = theId;
+                    // console.log(mapView, mapView.entryId, item, theId)
                 }
-            }
-
-            onPressed: (mouse) => {
-                mouse.accepted = false;
-
-                 if (mouse.button === Qt.RightButton) {
-                    contextMenu.popup();
-                } else if (mouse.button === Qt.LeftButton) {
-                    renderer.forceActiveFocus();
-                }
-            }
-
-            onPressAndHold: (mouse) => {
-                mouse.accepted = false;
-
-                if (mouse.source === Qt.MouseEventNotSynthesized)
-                    contextMenu.popup()
-            }
-
-            Menu {
-                id: contextMenu
-                MenuItem { text: "Cut" }
-                MenuItem { text: "Copy" }
-                MenuItem { text: "Paste" }
             }
         }
     }
+
 
     // Rectangle {
     //     color: "transparent"
@@ -99,115 +87,86 @@ Item {
     // }
 
    GridLayout {
-       id: grid
-       anchors.fill: parent
-  
-       rows: 3
-       columns: 3
+        id: grid;
+        anchors.fill: parent;
+        rowSpacing: 0;
+        columnSpacing: 0
+
+        rows: 3;
+        columns: 3;
+
+        VMEComponent.ItemPalette {
+            color: "blue";
+            model: root.tilesetModel;
+
+            Layout.preferredWidth: rectWidth;
+            Layout.fillHeight: true;
+            Layout.row: 1;
+            Layout.column: 0;
+        }
  
-       Rectangle {
+        Rectangle {
             color: "green"
             Layout.preferredHeight: 80
             Layout.fillWidth: true
             Layout.columnSpan: 3
             Layout.row: 0
             Layout.column: 0
-       }
-       
+        }
+
         Rectangle {
-            color: "blue"
-            property var rectWidth: 150;
-            Layout.preferredWidth: rectWidth;
-            Layout.fillHeight: true;
-            Layout.row: 1;
-            Layout.column: 0;
+            id: mapViewTabSection
+            color: "#F5F5F5"
+            Layout.preferredHeight: mapViewBar.height;
 
-            VMEComponent.ThingList {
-                model: {
-                    root.tilesetModel;
-                }
-            }
+            Layout.row: 1
+            Layout.column: 1
+            Layout.alignment: Qt.AlignTop
+            Layout.fillWidth: true
 
-            MouseArea {
-                property var pressWidth;
-                property var pressX;
-                
-                id: roiRectArea;
-                width: 5;
-                anchors.top: parent.top;
-                anchors.bottom: parent.bottom;
-                anchors.right: parent.right;
-                hoverEnabled: true;
-                cursorShape: containsMouse ? Qt.SizeHorCursor : Qt.ArrowCursor;
-                acceptedButtons: Qt.LeftButton
+            RowLayout {
+                id: mapViewBar
 
-                function getMouseGlobalX(mouse) {
-                    const point = mapToGlobal(mouse.x, mouse.y);
-                    return point.x;
-                }
-                
-                onPressed: mouse => {
-                    pressX = getMouseGlobalX(mouse);
-                    console.log(`Pressed ${pressX}`);
-                    pressWidth = parent.rectWidth;
-                }
-                
-                onReleased: mouse => {
-                    const x = getMouseGlobalX(mouse);
-                    console.log(`Released ${x}`);
-                    parent.rectWidth = pressWidth + x - pressX;
-                    pressX = 0;
-                }
-                
-                onMouseXChanged: mouse => {
-                    const x = getMouseGlobalX(mouse);
-                    console.log(`Moved ${x}`);
-                    if (pressed) {
-                        parent.rectWidth = pressWidth + x - pressX;
-                        // console.log("Actual: ", parent.width, ", Expected: ", pressWidth + mouse.x - pressX)
+                TabBar {
+                    id: tabRoot
+
+                    onCurrentIndexChanged: () => {
+                       root.editor.currentMapIndex = currentIndex;
+                    }
+
+                    Repeater {
+                        model: root.editor.mapTabs
+                        delegate: TabButton {
+                            horizontalPadding: 8;
+                            verticalPadding: 4;
+                            text: item
+                        }
                     }
                 }
 
-                Rectangle {
-                    anchors.fill: parent;
-                    color: "red";
-                }
+                // TabBar {
+                //     TabButton {
+                //         horizontalPadding: 8;
+                //         verticalPadding: 4;
+                //         text: "Untitled 1";
+                //     }
+
+                //     TabButton {
+                //         horizontalPadding: 8;
+                //         verticalPadding: 4;
+                //         text: "Untitled 2"
+                //     }
+
+                //     TabButton {
+                //         horizontalPadding: 8;
+                //         verticalPadding: 4;
+                //         text: "Untitled 3"
+                //     }
+                // }
             }
+
         }
- 
-    //    Rectangle {
-    //         color: "transparent"
-    //         Layout.fillHeight: true
-    //         Layout.fillWidth: true
-    //         Layout.row: 1
-    //         Layout.column: 1
 
-    //         MouseArea {
-    //             anchors.fill: parent
-
-    //             acceptedButtons: Qt.LeftButton | Qt.RightButton
-                
-    //             onClicked: {
-    //                 if (mouse.button === Qt.RightButton){
-    //                     console.log("hello")
-    //                     contextMenu.popup()
-    //                 }
-    //             }
-
-    //             onPressAndHold: {
-    //                 if (mouse.source === Qt.MouseEventNotSynthesized)
-    //                     contextMenu.popup()
-    //             }
-
-    //             Menu {
-    //                 id: contextMenu
-    //                 MenuItem { text: "Cut" }
-    //                 MenuItem { text: "Copy" }
-    //                 MenuItem { text: "Paste" }
-    //             }
-    //         }
-    //    }
-       
         Rectangle {
             color: "purple"
             Layout.fillWidth: true
@@ -224,45 +183,5 @@ Item {
             Layout.row: 1
             Layout.column: 2
        }
-
-
-    //    Rectangle {
-    //         color: "blue"
-    //         Layout.fillWidth: true
-    //         Layout.columnSpan: 3
-    //         Layout.rowSpan: 1
-    //         Layout.row: 2
-    //         Layout.column: 0
-    //    }
- 
-    //    Rectangle {
-    //         color: "green"
-    //         Layout.fillHeight: true
-    //         Layout.fillWidth: true
-    //         Layout.columnSpan: 1
-    //         Layout.rowSpan: 2
-    //         Layout.row: 2
-    //         Layout.column: 3
-    //    }
- 
-    //    Rectangle {
-    //         color: "white"
-    //         Layout.fillHeight: true
-    //         Layout.fillWidth: true
-    //         Layout.columnSpan: 1
-    //         Layout.rowSpan: 1
-    //         Layout.row: 2
-    //         Layout.column: 2
-    //    }
- 
-    //    Rectangle {
-    //         color: "yellow"
-    //         Layout.fillHeight: true
-    //         Layout.fillWidth: true
-    //         Layout.columnSpan: 2
-    //         Layout.rowSpan: 1
-    //         Layout.row: 3
-    //         Layout.column: 1
-    //    }
    }
 }

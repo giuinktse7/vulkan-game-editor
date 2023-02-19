@@ -81,7 +81,7 @@ namespace DrawInfo
      * Describes an overlay object.
      * NOTE: Do not use this to draw a map item. For that, use DrawInfo::Object;
      * it takes a Position instead of a WorldPosition.
-    */
+     */
     struct OverlayObject : Base
     {
         WorldPosition position;
@@ -187,8 +187,8 @@ struct FrameData
 };
 
 /*
-	A VulkanTexture contains Vulkan resources that are used to draw a Texture
-	to the screen.
+        A VulkanTexture contains Vulkan resources that are used to draw a Texture
+        to the screen.
 */
 class VulkanTexture
 {
@@ -252,13 +252,13 @@ class MapRenderer
     static const int TILE_SIZE = 32;
     static const uint32_t MAX_VERTICES = 64 * 1024;
 
-    void initResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
+    void initResources();
     void releaseResources();
 
     void render(VkFramebuffer frameBuffer = VK_NULL_HANDLE);
 
-    // void initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
-    // void releaseSwapChainResources();
+    void initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
+    void releaseSwapChainResources();
 
     VkDescriptorPool &getDescriptorPool()
     {
@@ -359,8 +359,8 @@ class MapRenderer
     VkDescriptorSet objectDescriptorSet(TextureAtlas *atlas);
 
     /**
-	 * @predicate An Item predicate. Items for which predicate(item) is false will not be rendered.
-	 */
+     * @predicate An Item predicate. Items for which predicate(item) is false will not be rendered.
+     */
     void drawTile(const TileLocation &tileLocation,
                   uint32_t drawFlags,
                   const Position offset,
@@ -421,10 +421,10 @@ class MapRenderer
     mutable std::vector<uint32_t> activeTextureAtlasIds;
     mutable std::vector<VulkanTexture> vulkanTexturesForAppearances;
     /*
-		Resources for general textures such as solid color textures (non-sprites)
+                Resources for general textures such as solid color textures (non-sprites)
 
-		NOTE: Textures from TextureAtlas class should be stored in 'vulkanTexturesForAppearances'.
-	*/
+                NOTE: Textures from TextureAtlas class should be stored in 'vulkanTexturesForAppearances'.
+        */
     std::unordered_map<const Texture *, VulkanTexture> vulkanTextures;
 
     util::Size vulkanSwapChainImageSize;

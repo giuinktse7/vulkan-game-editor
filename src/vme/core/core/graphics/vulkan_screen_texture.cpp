@@ -1,10 +1,8 @@
 #include "vulkan_screen_texture.h"
 #include "../log.h"
 
-VulkanScreenTexture::VulkanScreenTexture(std::shared_ptr<VulkanInfo> &vulkanInfo)
-    : vulkanInfo(vulkanInfo)
-{
-}
+VulkanScreenTexture::VulkanScreenTexture(std::shared_ptr<VulkanInfo> vulkanInfo)
+    : vulkanInfo(vulkanInfo) {}
 
 VulkanScreenTexture::~VulkanScreenTexture()
 {
@@ -13,7 +11,7 @@ VulkanScreenTexture::~VulkanScreenTexture()
 
 void VulkanScreenTexture::releaseResources()
 {
-    if (m_texture)
+    if (m_texture && vulkanInfo)
     {
         vulkanInfo->vkDestroyFramebuffer(m_textureFramebuffer, nullptr);
         m_textureFramebuffer = VK_NULL_HANDLE;
