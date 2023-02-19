@@ -190,8 +190,11 @@ void MapRenderer::render(VkFramebuffer frameBuffer)
     isDefaultZoom = floorZoom == zoom && floorZoom == 1;
 
     drawMap();
-    drawCurrentAction();
-    drawMapOverlay();
+    if (mapView->underMouse())
+    {
+        drawCurrentAction();
+        drawMapOverlay();
+    }
 
     vulkanInfo->vkCmdEndRenderPass(_currentFrame->commandBuffer);
 
@@ -305,9 +308,9 @@ void MapRenderer::drawCurrentAction()
     std::visit(
         util::overloaded{
             [this](const MouseAction::Select select) {
-                if (select.area)
+                if (select.area && mapView->isDragging())
                 {
-                    DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
+                    // DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
 
                     // const auto [from, to] = mapView->getDragPoints().value();
                     // drawSolidRectangle(SolidColor::Blue, from, to, 0.1f);
@@ -322,9 +325,9 @@ void MapRenderer::drawCurrentAction()
                 Position pos = mapView->mouseGamePos();
                 int variation = action.variationIndex;
 
-                if (action.area)
+                if (action.area && mapView->isDragging())
                 {
-                    DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
+                    // DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
 
                     if (mapView->draggingWithSubtract())
                     {
@@ -391,7 +394,6 @@ void MapRenderer::drawCurrentAction()
                 {
                     if (mapView->underMouse())
                     {
-                        int variation = mapView->getBrushVariation();
                         drawBrushPreview(action.brush, pos, variation);
                     }
                 }

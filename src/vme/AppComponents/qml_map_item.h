@@ -19,6 +19,7 @@
 #include "qt_vulkan_info.h"
 
 class QmlMapItem;
+class Position;
 
 class MapTabListModel : public QAbstractListModel
 {
@@ -84,6 +85,7 @@ enum class ShortcutAction
     FloorUp,
     FloorDown,
     LowerFloorShade,
+    BrushEyeDrop,
     Rotate
 };
 
@@ -92,7 +94,7 @@ class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
     Q_OBJECT
 
   public:
-    MapTextureNode(QQuickItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, uint32_t width, uint32_t height);
+    MapTextureNode(QmlMapItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, uint32_t width, uint32_t height);
     ~MapTextureNode();
 
     QSGTexture *texture() const override;
@@ -108,7 +110,7 @@ class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
     void render();
 
   private:
-    QQuickItem *m_item = nullptr;
+    QmlMapItem *m_item = nullptr;
     QQuickWindow *m_window = nullptr;
     QSize textureSize;
     qreal devicePixelRatio;
@@ -148,6 +150,19 @@ class QmlMapItem : public QQuickItem
     ~QmlMapItem();
 
     Q_INVOKABLE void onMousePositionChanged(int x, int y, int button, int buttons, int modifiers);
+    Q_INVOKABLE void setFocus(bool focus);
+
+    void setActive(bool active);
+
+    bool isActive()
+    {
+        return _active;
+    }
+
+    bool hasFocus()
+    {
+        return _focused;
+    }
 
     std::shared_ptr<MapView> mapView;
 
@@ -197,6 +212,8 @@ class QmlMapItem : public QQuickItem
 
     QString qStrName();
 
+    void eyedrop(const Position position) const;
+
     std::string _name;
 
     std::shared_ptr<VulkanInfo> vulkanInfo;
@@ -213,6 +230,9 @@ class QmlMapItem : public QQuickItem
     vme_unordered_map<ShortcutAction, int> shortcutActionToKeyCombination;
 
     int _id = -1;
+
+    bool _focused = false;
+    bool _active = false;
 };
 
 inline VME::MouseEvent vmeMouseEvent(QMouseEvent *event)

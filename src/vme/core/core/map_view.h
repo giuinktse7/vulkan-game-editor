@@ -352,8 +352,6 @@ class MapView
 
     ViewOption _viewOptions = ViewOption::None;
 
-    bool canRender = false;
-
     Position _previousMouseGamePos;
     TileQuadrant _previousMouseMoveTileQuadrant = TileQuadrant::TopLeft;
     std::optional<TileQuadrant> mouseDownTileQuadrant;

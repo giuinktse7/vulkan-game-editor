@@ -33,7 +33,6 @@ std::shared_ptr<Tileset> defaultTileset()
 Editor::Editor()
 {
     addMapTab("Untitled-1");
-    addMapTab("Untitled-2");
 
     // TODO Abstract the tileset concept and use data files to build palettes & tilesets
     _itemPaletteStore.setTileset(defaultTileset());
@@ -44,6 +43,9 @@ Editor::Editor()
 void Editor::mapTabSelected(int prevIndex, int index)
 {
     VME_LOG_D("mapTabSelected from C++: " << prevIndex << ", " << index);
+
+    mapTabs()->get(prevIndex).item->setActive(false);
+    mapTabs()->get(index).item->setActive(true);
 }
 
 void Editor::addMapTab(std::string tabName)
@@ -54,11 +56,6 @@ void Editor::addMapTab(std::string tabName)
 void Editor::removeMapTab(int index)
 {
     mapTabs()->removeTab(index);
-}
-
-void Editor::mapTabCreated(QmlMapItem *item, int index)
-{
-    mapTabs()->setInstance(index, item);
 }
 
 MapView *Editor::currentMapView()
@@ -82,11 +79,6 @@ void Editor::selectBrush(Brush *brush)
     mapView->requestDraw();
 }
 
-void Editor::test()
-{
-    VME_LOG_D("Editor::test");
-}
-
 void Editor::setcurrentMapIndex(int index)
 {
     if (_currentMapIndex != index)
@@ -95,15 +87,5 @@ void Editor::setcurrentMapIndex(int index)
         emit currentMapIndexChanged(index);
 
         auto mapView = currentMapView();
-        VME_LOG_D("Current map view: " << currentMapView());
-        // TODO Remove, just for testing
-        if (mapView)
-        {
-            mapView->commitTransaction(TransactionType::AddMapItem, [mapView]() {
-                mapView->addItem(Position(15, 15, 7), 4526);
-            });
-
-            mapView->requestDraw();
-        }
     }
 }

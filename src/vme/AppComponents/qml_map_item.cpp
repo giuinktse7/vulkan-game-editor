@@ -2,8 +2,11 @@
 
 #include <QGuiApplication>
 
+#include "core/brushes/brush.h"
+#include "core/brushes/creature_brush.h"
 #include "core/const.h"
 #include "core/map_renderer.h"
+#include "core/vendor/rollbear-visit/visit.hpp"
 #include "qml_ui_utils.h"
 
 #include <algorithm>
@@ -17,16 +20,12 @@ std::shared_ptr<Map> testMap2()
 {
     std::shared_ptr<Map> map = std::make_shared<Map>();
 
-    for (int x = 5; x < 20; ++x)
+    for (int x = 5; x < 8; ++x)
     {
-        for (int y = 5; y < 20; ++y)
+        for (int y = 5; y < 8; ++y)
         {
-            Item gold(2148);
-            Item something(2152);
-            gold.setCount(25);
-            // map->addItem(Position(x, y, 7), 4526);
-            map->addItem(Position(x, y, 7), std::move(gold));
-            map->addItem(Position(x, y, 7), std::move(something));
+            Item grass(4526 + x - 5);
+            map->addItem(Position(x, y, 7), std::move(grass));
         }
     }
 
@@ -44,11 +43,19 @@ QmlMapItem::QmlMapItem(std::string name)
     setShortcut(Qt::KeypadModifier, Qt::Key_Plus, ShortcutAction::FloorUp);
     setShortcut(Qt::KeypadModifier, Qt::Key_Minus, ShortcutAction::FloorDown);
     setShortcut(Qt::Key_Q, ShortcutAction::LowerFloorShade);
+    setShortcut(Qt::ControlModifier, Qt::Key_Z, ShortcutAction::Undo);
+    setShortcut(Qt::ControlModifier | Qt::ShiftModifier, Qt::Key_Z, ShortcutAction::Redo);
+    setShortcut(Qt::Key_I, ShortcutAction::BrushEyeDrop);
 
     connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow *win) {
         if (win)
         {
             QmlMapItemStore::qmlMapItemStore.mapTabs()->getById(_id)->item = this;
+
+            if (_id == 0)
+            {
+                _active = true;
+            }
 
             if (!mapView)
             {
@@ -169,6 +176,21 @@ void QmlMapItem::mouseMoveEvent(QMouseEvent *event)
     mapView->setUnderMouse(mouseInside);
 
     mapView->mouseMoveEvent(vmeMouseEvent(event));
+}
+
+void QmlMapItem::onMousePositionChanged(int x, int y, int button, int buttons, int modifiers)
+{
+    auto event = QMouseEvent(
+        QEvent::Type::MouseMove,
+        QPointF(x, y),
+        static_cast<Qt::MouseButton>(button), static_cast<Qt::MouseButtons>(buttons),
+        static_cast<Qt::KeyboardModifiers>(modifiers));
+
+    bool mouseInside = containsMouse();
+    mapView->setUnderMouse(mouseInside);
+
+    auto vmeEvent = vmeMouseEvent(&event);
+    mapView->mouseMoveEvent(vmeEvent);
 }
 
 void QmlMapItem::mouseReleaseEvent(QMouseEvent *event)
@@ -328,19 +350,26 @@ bool QmlMapItem::event(QEvent *event)
     return QQuickItem::event(event);
 }
 
-void QmlMapItem::onMousePositionChanged(int x, int y, int button, int buttons, int modifiers)
+void QmlMapItem::eyedrop(const Position position) const
 {
-    auto event = QMouseEvent(
-        QEvent::Type::MouseMove,
-        QPointF(x, y),
-        static_cast<Qt::MouseButton>(button), static_cast<Qt::MouseButtons>(buttons),
-        static_cast<Qt::KeyboardModifiers>(modifiers));
+    TileThing topThing = mapView->map()->getTopThing(position);
 
-    bool mouseInside = containsMouse();
-    mapView->setUnderMouse(mouseInside);
+    rollbear::visit(
+        util::overloaded{
+            [this](Item *item) {
+                // TODO scroll to the brush in the TilesetListView
+                mapView->editorAction.setRawBrush(item->serverId());
+                mapView->requestDraw();
+            },
+            [this](Creature *creature) {
+                // TODO scroll to the brush in the TilesetListView
+                mapView->editorAction.setBrush(Brush::getCreatureBrush(creature->creatureType.id()));
+                mapView->requestDraw();
+            },
 
-    auto vmeEvent = vmeMouseEvent(&event);
-    mapView->mouseMoveEvent(vmeEvent);
+            [](const auto &arg) {
+            }},
+        topThing);
 }
 
 void QmlMapItem::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
@@ -361,12 +390,37 @@ void QmlMapItem::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
             break;
         case ShortcutAction::FloorDown:
             mapView->floorDown();
-
             break;
         case ShortcutAction::LowerFloorShade:
             mapView->toggleViewOption(MapView::ViewOption::ShadeLowerFloors);
             break;
+        case ShortcutAction::Undo:
+            mapView->undo();
+            break;
+        case ShortcutAction::Redo:
+            mapView->redo();
+            break;
+        case ShortcutAction::BrushEyeDrop:
+        {
+            auto pos = mapFromGlobal(QCursor::pos());
+            auto screenPos = ScreenPosition(pos.x(), pos.y());
+
+            Position mapPos = screenPos.toPos(*mapView.get());
+
+            eyedrop(mapPos);
+            break;
+        }
     }
+}
+
+void QmlMapItem::setFocus(bool focus)
+{
+    _focused = focus;
+}
+
+void QmlMapItem::setActive(bool active)
+{
+    _active = active;
 }
 
 void QmlMapItem::setShortcut(Qt::KeyboardModifiers modifiers, Qt::Key key, ShortcutAction shortcut)
@@ -425,7 +479,7 @@ void QmlMapItem::setEntryId(int id)
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-MapTextureNode::MapTextureNode(QQuickItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, uint32_t width, uint32_t height)
+MapTextureNode::MapTextureNode(QmlMapItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, uint32_t width, uint32_t height)
     : m_item(item), mapView(mapView), vulkanInfo(vulkanInfo), mapRenderer(std::make_unique<MapRenderer>(vulkanInfo, mapView)), screenTexture(vulkanInfo)
 {
     m_window = m_item->window();
@@ -503,6 +557,11 @@ void MapTextureNode::sync()
 
 void MapTextureNode::render()
 {
+    if (!m_item->isActive())
+    {
+        return;
+    }
+
     VkFramebuffer frameBuffer = screenTexture.vkFrameBuffer();
 
     QSGRendererInterface *renderInterface = m_window->rendererInterface();

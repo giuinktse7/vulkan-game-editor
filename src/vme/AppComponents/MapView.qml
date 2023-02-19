@@ -8,7 +8,9 @@ QmlMapItem {
     // anchors.fill: parent
     // anchors.margins: 0
     focus: true
-    onActiveFocusChanged: console.log("uu")
+    onActiveFocusChanged: () => {
+        root.setFocus(activeFocus);
+    }
     
     property var editor;
 

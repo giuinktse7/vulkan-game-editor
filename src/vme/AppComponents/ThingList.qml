@@ -47,7 +47,6 @@ GridView {
             property bool dragging : false
 
             onPressed: (mouse) => {
-                Editor.test();
                 tableView.model.indexClicked(index);
             }
         }
