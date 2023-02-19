@@ -173,6 +173,8 @@ class UIUtils
 class EditorAction
 {
   public:
+    static EditorAction editorAction;
+
     inline MouseAction_t &action() noexcept
     {
         return _action;

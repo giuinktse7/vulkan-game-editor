@@ -6,6 +6,8 @@
 #include "items.h"
 #include "selection.h"
 
+EditorAction EditorAction::editorAction;
+
 MouseAction::MapBrush::MapBrush(Brush *brush)
     : brush(brush) {}
 
