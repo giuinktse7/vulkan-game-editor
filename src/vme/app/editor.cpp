@@ -89,3 +89,33 @@ void Editor::setcurrentMapIndex(int index)
         auto mapView = currentMapView();
     }
 }
+
+void Editor::copy()
+{
+    MapView *mapView = currentMapView();
+    if (mapView)
+    {
+        mapCopyBuffer.copySelection(*mapView);
+    }
+}
+
+void Editor::paste()
+{
+    if (mapCopyBuffer.empty() || !currentMapView())
+    {
+        return;
+    }
+
+    EditorAction::editorAction.set(MouseAction::PasteMapBuffer(&this->mapCopyBuffer));
+    currentMapView()->requestDraw();
+}
+
+void Editor::cut()
+{
+    MapView *mapView = currentMapView();
+    if (mapView)
+    {
+        mapCopyBuffer.copySelection(*mapView);
+        mapView->deleteSelectedItems();
+    }
+}

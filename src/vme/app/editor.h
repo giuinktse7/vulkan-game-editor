@@ -5,6 +5,7 @@
 #include <string>
 
 #include "core/brushes/brush.h"
+#include "core/map_copy_buffer.h"
 #include "item_palette_store.h"
 #include "qml_map_item.h"
 
@@ -20,6 +21,10 @@ class Editor : public QObject
     Editor();
 
     Q_INVOKABLE void mapTabSelected(int prevIndex, int index);
+
+    Q_INVOKABLE void copy();
+    Q_INVOKABLE void paste();
+    Q_INVOKABLE void cut();
 
     void addMapTab(std::string tabName);
     void removeMapTab(int index);
@@ -53,4 +58,6 @@ class Editor : public QObject
     int _currentMapIndex = 0;
 
     ItemPaletteStore _itemPaletteStore;
+
+    MapCopyBuffer mapCopyBuffer;
 };

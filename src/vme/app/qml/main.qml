@@ -165,14 +165,17 @@ Item {
                 Action {
                     text: qsTr("Cut");
                     shortcut: "Ctrl+X";
+                    onTriggered: root.editor.cut();
                 }
                 Action {
                     text: qsTr("Copy");
                     shortcut: "Ctrl+C";
+                    onTriggered: root.editor.copy();
                 }
                 Action {
                     text: qsTr("Paste");
                     shortcut: "Ctrl+V";
+                    onTriggered: root.editor.paste();
                 }
 
             }
