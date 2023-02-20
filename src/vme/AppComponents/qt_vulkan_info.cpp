@@ -81,9 +81,8 @@ int QtVulkanInfo::maxConcurrentFrameCount() const
     return _maxConcurrentFrameCount;
 }
 
-util::Size QtVulkanInfo::vulkanSwapChainImageSize() const
+util::Size QtVulkanInfo::windowSize() const
 {
-
     QSize size = qml_window->size();
     return util::Size(size.width(), size.height());
 }

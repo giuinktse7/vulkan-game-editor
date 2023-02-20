@@ -1,16 +1,16 @@
 #include "qml_ui_utils.h"
 
+#include <QCursor>
 #include <QGuiApplication>
-#include <QtQuick/QQuickWindow>
 
 #include "enum_conversion.h"
 
-QmlUIUtils::QmlUIUtils(QQuickWindow *window)
-    : window(window) {}
+QmlUIUtils::QmlUIUtils(QQuickItem *item)
+    : _item(item) {}
 
 ScreenPosition QmlUIUtils::mouseScreenPosInView()
 {
-    auto pos = window->mapFromGlobal(QCursor::pos());
+    auto pos = _item->mapFromGlobal(QCursor::pos());
     return ScreenPosition(pos.x(), pos.y());
 }
 

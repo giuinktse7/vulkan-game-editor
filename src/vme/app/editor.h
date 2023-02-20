@@ -50,7 +50,7 @@ class Editor : public QObject
     void currentMapIndexChanged(int index);
 
   private:
-    int _currentMapIndex;
+    int _currentMapIndex = 0;
 
     ItemPaletteStore _itemPaletteStore;
 };

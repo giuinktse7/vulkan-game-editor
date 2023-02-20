@@ -1,13 +1,15 @@
 #pragma once
 
+#include <QtQuick/QQuickItem>
+
 #include "core/editor_action.h"
 
-class QQuickWindow;
+class QQuickItem;
 
 class QmlUIUtils : public UIUtils
 {
   public:
-    QmlUIUtils(QQuickWindow *window);
+    QmlUIUtils(QQuickItem *qItem);
     ScreenPosition mouseScreenPosInView() override;
 
     double screenDevicePixelRatio() override;
@@ -18,5 +20,5 @@ class QmlUIUtils : public UIUtils
     void waitForDraw(std::function<void()> f) override;
 
   private:
-    QQuickWindow *window;
+    QQuickItem *_item;
 };

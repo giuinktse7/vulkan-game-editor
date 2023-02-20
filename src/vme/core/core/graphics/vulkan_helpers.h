@@ -21,10 +21,10 @@ class RenderTarget
     virtual void frameReady() = 0;
     virtual void requestUpdate() = 0;
 
-    virtual util::Size vulkanSwapChainImageSize() const = 0;
+    virtual util::Size windowSize() const = 0;
     virtual int maxConcurrentFrameCount() const = 0;
 
-    virtual glm::mat4 projectionMatrix(MapView *mapView) const = 0;
+    virtual glm::mat4 projectionMatrix(MapView *mapView, util::Size size) const = 0;
 };
 
 class VulkanInfo : public RenderTarget

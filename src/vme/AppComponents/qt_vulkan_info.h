@@ -29,16 +29,15 @@ class QtVulkanInfo : public VulkanInfo
     void frameReady() override;
     void requestUpdate() override;
 
-    glm::mat4 projectionMatrix(MapView *mapView) const override
+    glm::mat4 projectionMatrix(MapView *mapView, util::Size size) const override
     {
         QMatrix4x4 projection = clipCorrectionMatrix; // adjust for Vulkan-OpenGL clip space differences
-        const util::Size sz = vulkanSwapChainImageSize();
         QRectF rect;
         const Camera::Viewport &viewport = mapView->getViewport();
         rect.setX(static_cast<qreal>(viewport.x));
         rect.setY(static_cast<qreal>(viewport.y));
-        rect.setWidth(sz.width() / viewport.zoom);
-        rect.setHeight(sz.height() / viewport.zoom);
+        rect.setWidth(size.width() / viewport.zoom);
+        rect.setHeight(size.height() / viewport.zoom);
         projection.ortho(rect);
 
         glm::mat4 data;
@@ -48,7 +47,7 @@ class QtVulkanInfo : public VulkanInfo
         return data;
     }
 
-    util::Size vulkanSwapChainImageSize() const override;
+    util::Size windowSize() const override;
 
     int maxConcurrentFrameCount() const override;
 

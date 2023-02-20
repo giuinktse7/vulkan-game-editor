@@ -255,7 +255,7 @@ class MapRenderer
     void initResources();
     void releaseResources();
 
-    void render(VkFramebuffer frameBuffer = VK_NULL_HANDLE);
+    void render(VkFramebuffer frameBuffer, util::Size swapChainSize);
 
     void initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
     void releaseSwapChainResources();

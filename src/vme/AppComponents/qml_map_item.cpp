@@ -59,7 +59,7 @@ QmlMapItem::QmlMapItem(std::string name)
 
             if (!mapView)
             {
-                mapView = std::make_unique<MapView>(std::make_unique<QmlUIUtils>(window()), EditorAction::editorAction, testMap2());
+                mapView = std::make_unique<MapView>(std::make_unique<QmlUIUtils>(this), EditorAction::editorAction, testMap2());
 
                 mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
 
@@ -72,7 +72,7 @@ QmlMapItem::QmlMapItem(std::string name)
                 mapView->setViewportSize(itemSize.width(), itemSize.height());
             }
 
-            mapView->setUiUtils(std::make_unique<QmlUIUtils>(window()));
+            mapView->setUiUtils(std::make_unique<QmlUIUtils>(this));
 
             connect(win, &QQuickWindow::beforeSynchronizing, this, &QmlMapItem::sync, Qt::DirectConnection);
             connect(win, &QQuickWindow::sceneGraphInvalidated, this, &QmlMapItem::cleanup, Qt::DirectConnection);
@@ -93,6 +93,9 @@ void QmlMapItem::sync()
     {
         vulkanInfo = std::make_shared<QtVulkanInfo>(window());
         vulkanInfo->setMaxConcurrentFrameCount(window()->graphicsStateInfo().framesInFlight);
+
+        textureNode = new MapTextureNode(this, mapView, vulkanInfo, width(), height());
+        textureNode->sync();
 
         connect(window(), &QQuickWindow::beforeRendering, textureNode, &MapTextureNode::frameStart, Qt::DirectConnection);
     }
@@ -182,7 +185,7 @@ void QmlMapItem::onMousePositionChanged(int x, int y, int button, int buttons, i
 {
     auto event = QMouseEvent(
         QEvent::Type::MouseMove,
-        QPointF(x, y),
+        mapToGlobal(QPointF(x, y)),
         static_cast<Qt::MouseButton>(button), static_cast<Qt::MouseButtons>(buttons),
         static_cast<Qt::KeyboardModifiers>(modifiers));
 
@@ -582,7 +585,7 @@ void MapTextureNode::render()
         frame->mouseAction = wMapView->editorAction.action();
     }
 
-    mapRenderer->render(frameBuffer);
+    mapRenderer->render(frameBuffer, util::Size(textureSize.width(), textureSize.height()));
 
     // [QT doc]
     // Memory barrier before the texture can be used as a source.

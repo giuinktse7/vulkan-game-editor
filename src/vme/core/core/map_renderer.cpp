@@ -171,8 +171,9 @@ void MapRenderer::releaseResources()
     }
 }
 
-void MapRenderer::render(VkFramebuffer frameBuffer)
+void MapRenderer::render(VkFramebuffer frameBuffer, util::Size swapChainSize)
 {
+    vulkanSwapChainImageSize = swapChainSize;
     _currentFrame->frameBuffer = frameBuffer;
 
     _containsAnimation = false;
@@ -209,7 +210,7 @@ void MapRenderer::setupFrame()
 
     vulkanInfo->vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-    const util::Size size = vulkanInfo->vulkanSwapChainImageSize();
+    const util::Size size = vulkanSwapChainImageSize;
 
     VkViewport viewport;
     viewport.x = viewport.y = 0;
@@ -1228,7 +1229,7 @@ VkDescriptorSet MapRenderer::objectDescriptorSet(const Texture &texture)
 
 void MapRenderer::updateUniformBuffer()
 {
-    glm::mat4 projection = vulkanInfo->projectionMatrix(mapView.get());
+    glm::mat4 projection = vulkanInfo->projectionMatrix(mapView.get(), vulkanSwapChainImageSize);
     // const auto p = projection;
     // std::ostringstream s;
     // VME_LOG_D("Next:");
@@ -1262,7 +1263,7 @@ void MapRenderer::updateUniformBuffer()
  **/
 void MapRenderer::beginRenderPass()
 {
-    util::Size size = vulkanInfo->vulkanSwapChainImageSize();
+    util::Size size = vulkanSwapChainImageSize;
     VkRenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = renderPass;
