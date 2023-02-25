@@ -40,7 +40,7 @@ QVariant TileSetModel::data(const QModelIndex &modelIndex, int role) const
             return QString("%1, %2").arg(modelIndex.column()).arg(modelIndex.row());
         case Roles::ImageUriRole:
         {
-            uint32_t index = modelIndex.row() * columnCount() + modelIndex.column();
+            uint32_t index = modelIndex.row();
             Brush *thingBrush = _tileset->get(index);
 
             switch (thingBrush->type())
@@ -49,40 +49,40 @@ QVariant TileSetModel::data(const QModelIndex &modelIndex, int role) const
                 {
                     auto brush = static_cast<RawBrush *>(thingBrush);
                     uint32_t serverId = brush->serverId();
-                    return UIResource::getItemPixmapString(serverId, 0);
+                    return UIResource::getItemPixmapString(serverId);
                 }
                 case BrushType::Ground:
                 {
                     auto brush = static_cast<GroundBrush *>(thingBrush);
                     uint32_t serverId = brush->iconServerId();
-                    return UIResource::getItemPixmapString(serverId, 0);
+                    return UIResource::getItemPixmapString(serverId);
                 }
                 case BrushType::Border:
                 {
                     auto brush = static_cast<BorderBrush *>(thingBrush);
                     uint32_t serverId = brush->iconServerId();
-                    return UIResource::getItemPixmapString(serverId, 0);
+                    return UIResource::getItemPixmapString(serverId);
                     break;
                 }
                 case BrushType::Wall:
                 {
                     auto brush = static_cast<WallBrush *>(thingBrush);
                     uint32_t serverId = brush->iconServerId();
-                    return UIResource::getItemPixmapString(serverId, 0);
+                    return UIResource::getItemPixmapString(serverId);
                     break;
                 }
                 case BrushType::Mountain:
                 {
                     auto brush = static_cast<MountainBrush *>(thingBrush);
                     uint32_t serverId = brush->iconServerId();
-                    return UIResource::getItemPixmapString(serverId, 0);
+                    return UIResource::getItemPixmapString(serverId);
                     break;
                 }
                 case BrushType::Doodad:
                 {
                     auto brush = static_cast<DoodadBrush *>(thingBrush);
                     uint32_t serverId = brush->iconServerId();
-                    return UIResource::getItemPixmapString(serverId, 0);
+                    return UIResource::getItemPixmapString(serverId);
                     break;
                 }
                 case BrushType::Creature:
