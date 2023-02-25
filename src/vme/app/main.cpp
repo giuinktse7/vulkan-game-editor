@@ -13,6 +13,7 @@
 
 #include <iostream>
 
+#include "core/brushes/brush_loader.h"
 #include "core/config.h"
 #include "core/item_palette.h"
 #include "core/items.h"
@@ -62,7 +63,7 @@ int MainApp::start()
 {
     // Use Vulkan
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
-    QQuickStyle::setStyle("Fusion");
+    // QQuickStyle::setStyle("Fusion");
 
     rootView = std::make_unique<QQuickView>();
     QQmlEngine *engine = rootView->engine();
@@ -103,16 +104,6 @@ int MainApp::start()
 
     // QObject::connect(watcher->watcher(), QFileSystemWatcher::fileChanged)
 
-    // BrushLoader brushLoader;
-    // brushLoader.load(std::format("{}/palettes/palettes.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/borders.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/grounds.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/walls.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/doodads.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/mountains.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/creatures.json", clientPath));
-    // brushLoader.load(std::format("{}/palettes/tilesets.json", clientPath));
-
     return app.exec();
 }
 
@@ -125,10 +116,7 @@ int main(int argc, char **argv)
 
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
-
-    // std::string version = "12.81";
     std::string version = "12.87.12091";
-    std::string clientPath = std::format("data/clients/{}", version);
 
     auto configResult = Config::create(version);
     if (configResult.isErr())
@@ -139,6 +127,18 @@ int main(int argc, char **argv)
 
     Config config = configResult.unwrap();
     config.loadOrTerminate();
+
+    std::string clientPath = std::format("data/clients/{}", version);
+
+    BrushLoader brushLoader;
+    brushLoader.load(std::format("{}/palettes/palettes.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/borders.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/grounds.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/walls.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/doodads.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/mountains.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/creatures.json", clientPath));
+    brushLoader.load(std::format("{}/palettes/tilesets.json", clientPath));
 
     MainApp app(argc, argv);
 
