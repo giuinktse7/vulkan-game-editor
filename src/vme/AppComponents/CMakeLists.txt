@@ -10,12 +10,21 @@ find_package(Qt6 REQUIRED COMPONENTS Core Qml Quick)
 set(HEADER_FILES
     gui_thing_image.h
     ui_resources.h
-
+    tileset_model.h
+    enum_conversion.h
+    qml_ui_utils.h
+    qt_vulkan_info.h
+    item_palette_store.h
 )
 
 set(SRC_FILES
     gui_thing_image.cpp
     ui_resources.cpp
+    tileset_model.cpp
+    enum_conversion.cpp
+    qml_ui_utils.cpp
+    qt_vulkan_info.cpp
+    item_palette_store.cpp
 )
 
 qt_add_library(app_components STATIC
@@ -30,24 +39,12 @@ target_link_libraries(app_components PRIVATE core app_componentsplugin Qt::Gui Q
 
 
 set(QML_HEADER_FILES
-    my_type.h
-    tileset_model.h
     qml_map_item.h
-    enum_conversion.h
-    qml_ui_utils.h
-    qt_vulkan_info.h
-    item_palette_store.h
 )
 
 
 set(QML_SRC_FILES
-    my_type.cpp
-    tileset_model.cpp
     qml_map_item.cpp
-    enum_conversion.cpp
-    qml_ui_utils.cpp
-    qt_vulkan_info.cpp
-    item_palette_store.cpp
 )
 
 
@@ -57,7 +54,10 @@ qt_add_qml_module(app_components
     SOURCES
         ${QML_HEADER_FILES} ${QML_SRC_FILES}
     QML_FILES
+        ResizableItem.qml
         ThingList.qml
         ItemPalette.qml
         MapView.qml
+        # ThingTile.qml
+        # ThingGrid.qml
 ) 
