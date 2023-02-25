@@ -574,15 +574,6 @@ MapTextureNode::~MapTextureNode()
     delete texture();
 }
 
-void MapTextureNode::frameStart()
-{
-    // VME_LOG_D("MapTextureNode::frameStart");
-    QSGRendererInterface *rif = m_window->rendererInterface();
-
-    // We are not prepared for anything other than running with the RHI and its Vulkan backend.
-    Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::Vulkan);
-}
-
 QSGTexture *MapTextureNode::texture() const
 {
     return QSGSimpleTextureNode::texture();
