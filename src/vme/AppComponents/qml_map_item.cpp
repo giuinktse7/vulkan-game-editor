@@ -684,3 +684,5 @@ void MapTabListModel::setInstance(int index, QmlMapItem *instance)
 {
     _data.at(index).item = instance;
 }
+
+#include "moc_qml_map_item.cpp"

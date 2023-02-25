@@ -128,3 +128,5 @@ QHash<int, QByteArray> TileSetModel::roleNames() const
         {Roles::ImageUriRole, "imageUri"},
     };
 }
+
+#include "moc_tileset_model.cpp"

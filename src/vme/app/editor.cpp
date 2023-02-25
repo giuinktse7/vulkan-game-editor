@@ -119,3 +119,5 @@ void Editor::cut()
         mapView->deleteSelectedItems();
     }
 }
+
+#include "moc_editor.cpp"
