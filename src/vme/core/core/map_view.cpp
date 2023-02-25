@@ -1814,7 +1814,7 @@ std::optional<Position> MapView::getLastBrushDragPosition() const noexcept
     return lastBrushDragPosition;
 }
 
-const Camera &MapView::camera() const noexcept
+Camera &MapView::camera() noexcept
 {
     return _camera;
 }

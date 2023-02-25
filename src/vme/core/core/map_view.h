@@ -133,7 +133,7 @@ class MapView
     void floorDown();
     void setFloor(int floor);
 
-    const Camera &camera() const noexcept;
+    Camera &camera() noexcept;
 
     void translateCamera(WorldPosition delta);
 

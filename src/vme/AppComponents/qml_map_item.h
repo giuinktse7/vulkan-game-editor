@@ -102,8 +102,6 @@ class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
 
     void releaseResources();
 
-    void frameStart();
-
     void sync();
 
   private slots:
@@ -144,6 +142,10 @@ class QmlMapItem : public QQuickItem
     QML_ELEMENT
     Q_PROPERTY(QString name READ qStrName)
     Q_PROPERTY(int entryId READ entryId WRITE setEntryId NOTIFY entryIdChanged)
+    Q_PROPERTY(float horizontalScrollSize READ horizontalScrollSize NOTIFY horizontalScrollSizeChanged)
+    Q_PROPERTY(float horizontalScrollPosition READ horizontalScrollPosition NOTIFY horizontalScrollPositionChanged)
+    Q_PROPERTY(float verticalScrollSize READ verticalScrollSize NOTIFY verticalScrollSizeChanged)
+    Q_PROPERTY(float verticalScrollPosition READ verticalScrollPosition NOTIFY verticalScrollPositionChanged)
 
   public:
     QmlMapItem(std::string name = "");
@@ -151,6 +153,15 @@ class QmlMapItem : public QQuickItem
 
     Q_INVOKABLE void onMousePositionChanged(int x, int y, int button, int buttons, int modifiers);
     Q_INVOKABLE void setFocus(bool focus);
+
+    Q_INVOKABLE void setHorizontalScrollPosition(float value);
+    Q_INVOKABLE void setVerticalScrollPosition(float value);
+
+    float horizontalScrollSize();
+    float verticalScrollSize();
+
+    float horizontalScrollPosition();
+    float verticalScrollPosition();
 
     void setActive(bool active);
 
@@ -176,6 +187,10 @@ class QmlMapItem : public QQuickItem
   signals:
     void entryIdChanged();
     void handleWindowChanged(QQuickWindow *win);
+    void horizontalScrollSizeChanged();
+    void horizontalScrollPositionChanged();
+    void verticalScrollSizeChanged();
+    void verticalScrollPositionChanged();
 
   protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
@@ -213,6 +228,8 @@ class QmlMapItem : public QQuickItem
     QString qStrName();
 
     void eyedrop(const Position position) const;
+
+    void onMapViewportChanged(const Camera::Viewport &);
 
     std::string _name;
 

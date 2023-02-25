@@ -32,6 +32,63 @@ std::shared_ptr<Map> testMap2()
     return map;
 }
 
+float QmlMapItem::horizontalScrollSize()
+{
+    if (!mapView)
+    {
+        return 0;
+    }
+
+    return static_cast<float>(mapView->getViewport().gameWidth()) / mapView->mapWidth();
+}
+
+float QmlMapItem::horizontalScrollPosition()
+{
+    if (!mapView)
+    {
+        return 0;
+    }
+
+    return std::min(1 - horizontalScrollSize(), static_cast<float>(mapView->cameraPosition().x) / mapView->mapWidth());
+}
+
+float QmlMapItem::verticalScrollSize()
+{
+    if (!mapView)
+    {
+        return 0;
+    }
+
+    return static_cast<float>(mapView->getViewport().gameHeight()) / mapView->mapHeight();
+}
+
+float QmlMapItem::verticalScrollPosition()
+{
+    if (!mapView)
+    {
+        return 0;
+    }
+
+    return std::min(1 - verticalScrollSize(), static_cast<float>(mapView->cameraPosition().y) / mapView->mapHeight());
+}
+
+void QmlMapItem::setHorizontalScrollPosition(float value)
+{
+    auto x = mapView->mapWidth() * value;
+    mapView->setX(x * MapTileSize);
+}
+
+void QmlMapItem::setVerticalScrollPosition(float value)
+{
+    auto y = mapView->mapHeight() * value;
+    mapView->setY(y * MapTileSize);
+}
+
+// int QmlMapItem::mapScrollHeight()
+// {
+//     return mapView->mapHeight() * mapView->getZoomFactor();
+// }
+
 QmlMapItem::QmlMapItem(std::string name)
     : _name(name)
 {
@@ -61,6 +118,7 @@ QmlMapItem::QmlMapItem(std::string name)
             {
                 mapView = std::make_unique<MapView>(std::make_unique<QmlUIUtils>(this), EditorAction::editorAction, testMap2());
 
+                mapView->onViewportChanged<&QmlMapItem::onMapViewportChanged>(this);
                 mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
 
                 mapView->setX(0);
@@ -87,18 +145,28 @@ QmlMapItem::~QmlMapItem()
     VME_LOG_D("~QmlMapItem");
 }
 
+void QmlMapItem::onMapViewportChanged(const Camera::Viewport &)
+{
+    emit horizontalScrollSizeChanged();
+    emit horizontalScrollPositionChanged();
+    emit verticalScrollSizeChanged();
+    emit verticalScrollPositionChanged();
+}
+
 void QmlMapItem::sync()
 {
-    if (!textureNode)
+    if (!vulkanInfo)
     {
         vulkanInfo = std::make_shared<QtVulkanInfo>(window());
         vulkanInfo->setMaxConcurrentFrameCount(window()->graphicsStateInfo().framesInFlight);
-
-        textureNode = new MapTextureNode(this, mapView, vulkanInfo, width(), height());
-        textureNode->sync();
-
-        connect(window(), &QQuickWindow::beforeRendering, textureNode, &MapTextureNode::frameStart, Qt::DirectConnection);
     }
+
+    if (!textureNode)
+    {
+        textureNode = new MapTextureNode(this, mapView, vulkanInfo, width(), height());
+    }
+
+    textureNode->sync();
 
     // Update window for vulkan info
     static_cast<QtVulkanInfo *>(vulkanInfo.get())->setQmlWindow(window());
@@ -133,7 +201,11 @@ QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
 
     if (!node)
     {
-        textureNode = new MapTextureNode(this, mapView, vulkanInfo, width(), height());
+        if (!textureNode)
+        {
+            textureNode = new MapTextureNode(this, mapView, vulkanInfo, width(), height());
+        }
+
         node = textureNode;
     }
 

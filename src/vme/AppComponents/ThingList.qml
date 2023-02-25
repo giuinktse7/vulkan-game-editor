@@ -1,6 +1,6 @@
 import QtQuick 2.12
+import QtQuick.Controls
 import AppComponents
-import VME.editor 1.0
 
 // TableView {
 //     id: tableView
@@ -19,32 +19,40 @@ import VME.editor 1.0
 GridView {
     id: tableView;
     anchors.fill: parent;
-    anchors.rightMargin: 14;
     cellWidth: 32;
     cellHeight: 32;
-    focus: true
+    focus: true;
+    flickDeceleration: 10000;
 
-    boundsMovement: Flickable.StopAtBounds
-    boundsBehavior: Flickable.StopAtBounds
+    boundsMovement: Flickable.StopAtBounds;
+    boundsBehavior: Flickable.StopAtBounds;
 
-    // columnSpacing: 1
-    // rowSpacing: 1
-    // clip: true
+    ScrollBar.vertical: ScrollBar {
+        minimumSize: 0.05;
+        snapMode: ScrollBar.SnapAlways;
+        stepSize: 0.01;
+        // background: Item { opacity: 0; }
+        // contentItem: Rectangle { implicitWidth: 10; implicitHeight: 10; color: "blue" }
 
-    delegate: Rectangle {
+        // contentItem: Rectangle {
+        //     implicitWidth: 12
+        //     color: "#757575"
+        // }
+
+        // background: Item {}
+     }
+
+    delegate: Image {
         id: item
-        implicitWidth: 32;
-        implicitHeight: 32;
+        // implicitWidth: 32;
+        // implicitHeight: 32;
 
-        Image { source: imageUri; }
+        source: imageUri;
 
         MouseArea {
             acceptedButtons : Qt.LeftButton | Qt.RightButton
             anchors.fill : parent
             propagateComposedEvents : true
-            property point pressOrigin
-            property int dragStartThreshold : 7
-            property bool dragging : false
 
             onPressed: (mouse) => {
                 tableView.model.indexClicked(index);

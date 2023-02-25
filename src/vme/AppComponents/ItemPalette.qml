@@ -1,19 +1,26 @@
 import QtQuick 2.12
+import QtQuick.Controls
 import AppComponents
 
 
 Rectangle {
     id: root
     readonly property int minWidth: 70;
-    property var rectWidth: 150;
-    
+    readonly property var extraWidth: 0;
+    property var rectWidth: extraWidth + 32 * 4;
+    clip: false;
+
     required property var model;
-    
-    ThingList {
-        model: {
-            root.model;
+
+    // ColumnLayout {
+        ThingList {
+            model: {
+                root.model;
+            }
         }
-    }
+    // }
+    
+
 
     MouseArea {
         readonly property int minWidth: parent.minWidth;
@@ -21,11 +28,11 @@ Rectangle {
         property var pressWidth;
         property var pressX;
         
-        id: roiRectArea;
         width: 5;
         anchors.top: parent.top;
         anchors.bottom: parent.bottom;
         anchors.right: parent.right;
+        anchors.rightMargin: -2;
         hoverEnabled: true;
         cursorShape: containsMouse ? Qt.SizeHorCursor : Qt.ArrowCursor;
         acceptedButtons: Qt.LeftButton
@@ -42,20 +49,20 @@ Rectangle {
         
         onReleased: mouse => {
             const x = getMouseGlobalX(mouse);
-            parent.rectWidth = Math.max(minWidth, pressWidth + x - pressX);
+            parent.rectWidth = extraWidth + Math.round(Math.max(minWidth, pressWidth + x - pressX) / 32) * 32;
             pressX = 0;
         }
         
         onMouseXChanged: mouse => {
             const x = getMouseGlobalX(mouse);
             if (pressed) {
-                parent.rectWidth = Math.max(minWidth, pressWidth + x - pressX);
+                parent.rectWidth = extraWidth + Math.round(Math.max(minWidth, pressWidth + x - pressX) / 32) * 32;
             }
         }
 
-        Rectangle {
-            anchors.fill: parent;
-            color: "red";
-        }
+        // Rectangle {
+        //     anchors.fill: parent;
+        //     color: "red";
+        // }
     }
 }
