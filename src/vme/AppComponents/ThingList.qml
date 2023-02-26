@@ -18,7 +18,7 @@ import AppComponents
 
 GridView {
     id: tableView;
-    anchors.fill: parent;
+    // anchors.fill: parent;
     cellWidth: 32;
     cellHeight: 32;
     focus: true;

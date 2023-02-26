@@ -22,47 +22,47 @@ Rectangle {
     
 
 
-    MouseArea {
-        readonly property int minWidth: parent.minWidth;
+    // MouseArea {
+    //     readonly property int minWidth: parent.minWidth;
 
-        property var pressWidth;
-        property var pressX;
+    //     property var pressWidth;
+    //     property var pressX;
         
-        width: 5;
-        anchors.top: parent.top;
-        anchors.bottom: parent.bottom;
-        anchors.right: parent.right;
-        anchors.rightMargin: -2;
-        hoverEnabled: true;
-        cursorShape: containsMouse ? Qt.SizeHorCursor : Qt.ArrowCursor;
-        acceptedButtons: Qt.LeftButton
+    //     width: 5;
+    //     anchors.top: parent.top;
+    //     anchors.bottom: parent.bottom;
+    //     anchors.right: parent.right;
+    //     anchors.rightMargin: -2;
+    //     hoverEnabled: true;
+    //     cursorShape: containsMouse ? Qt.SizeHorCursor : Qt.ArrowCursor;
+    //     acceptedButtons: Qt.LeftButton
 
-        function getMouseGlobalX(mouse) {
-            const point = mapToGlobal(mouse.x, mouse.y);
-            return point.x;
-        }
+    //     function getMouseGlobalX(mouse) {
+    //         const point = mapToGlobal(mouse.x, mouse.y);
+    //         return point.x;
+    //     }
         
-        onPressed: mouse => {
-            pressX = getMouseGlobalX(mouse);
-            pressWidth = parent.rectWidth;
-        }
+    //     onPressed: mouse => {
+    //         pressX = getMouseGlobalX(mouse);
+    //         pressWidth = parent.rectWidth;
+    //     }
         
-        onReleased: mouse => {
-            const x = getMouseGlobalX(mouse);
-            parent.rectWidth = extraWidth + Math.round(Math.max(minWidth, pressWidth + x - pressX) / 32) * 32;
-            pressX = 0;
-        }
+    //     onReleased: mouse => {
+    //         const x = getMouseGlobalX(mouse);
+    //         parent.rectWidth = extraWidth + Math.round(Math.max(minWidth, pressWidth + x - pressX) / 32) * 32;
+    //         pressX = 0;
+    //     }
         
-        onMouseXChanged: mouse => {
-            const x = getMouseGlobalX(mouse);
-            if (pressed) {
-                parent.rectWidth = extraWidth + Math.round(Math.max(minWidth, pressWidth + x - pressX) / 32) * 32;
-            }
-        }
+    //     onMouseXChanged: mouse => {
+    //         const x = getMouseGlobalX(mouse);
+    //         if (pressed) {
+    //             parent.rectWidth = extraWidth + Math.round(Math.max(minWidth, pressWidth + x - pressX) / 32) * 32;
+    //         }
+    //     }
 
-        // Rectangle {
-        //     anchors.fill: parent;
-        //     color: "red";
-        // }
-    }
+    //     // Rectangle {
+    //     //     anchors.fill: parent;
+    //     //     color: "red";
+    //     // }
+    // }
 }
