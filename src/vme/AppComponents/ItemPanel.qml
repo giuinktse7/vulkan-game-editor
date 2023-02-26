@@ -70,34 +70,41 @@ VMEComponent.ResizableItem {
         id: contentLayout;
         anchors.fill: parent;
 
+        spacing: 0;
+
         // Header
         Rectangle {
             Layout.fillWidth: true;
+            z: 2;
             height: 28;
             color: "#ECEFF1";
 
 
-            RowLayout {
-                anchors.fill: parent;
+            Image {
+                anchors.right: parent.right;
+                anchors.rightMargin: 8;
+                anchors.verticalCenter: parent.verticalCenter;
+                width: 10;
+                height: 10;
+                sourceSize: Qt.size(width, height);
+                source: "cross.svg";
 
-                Item {
-                    Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter;
+                MouseArea {
+                    anchors.fill: parent;
 
-                    width: 14;
-                    height: 14;
+                    acceptedButtons: Qt.LeftButton
 
-                    Image {
-                        anchors.fill: parent;
-                        width: 14;
-                        height: 14;
-                        source: "cross.svg";
+                    onClicked: (mouse) => {
+                        if (mouse.button === Qt.LeftButton) {
+                            root.destroy();
+                        }
                     }
                 }
-                
-                Text {
-                    Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter;
-                    text: "Item panel";
-                }
+            }
+            
+            Text {
+                anchors.centerIn: parent;
+                text: "Item panel";
             }
         }
     }

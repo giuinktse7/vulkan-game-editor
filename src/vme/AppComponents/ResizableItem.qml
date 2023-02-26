@@ -5,6 +5,8 @@ import AppComponents
 
 Rectangle {
     id: root
+
+    border.color: "#90A4AE";
     
     property int minWidth: 70;
     property int minHeight: 70;
@@ -15,7 +17,7 @@ Rectangle {
     implicitWidth: rectWidth;
     implicitHeight: rectHeight;
 
-    clip: false;
+    // clip: false;
 
     // Right
     MouseArea {
@@ -30,6 +32,11 @@ Rectangle {
         hoverEnabled: true;
         cursorShape: containsMouse ? Qt.SizeHorCursor : Qt.ArrowCursor;
         acceptedButtons: Qt.LeftButton
+        
+        // Rectangle {
+        //     anchors.fill: parent;
+        //     color: "blue";
+        // }
 
         function getMouseGlobalX(mouse) {
             const point = mapToGlobal(mouse.x, mouse.y);
@@ -69,6 +76,11 @@ Rectangle {
         hoverEnabled: true;
         cursorShape: containsMouse ? Qt.SizeVerCursor : Qt.ArrowCursor;
         acceptedButtons: Qt.LeftButton
+
+        // Rectangle {
+        //     anchors.fill: parent;
+        //     color: "blue";
+        // }
 
         function getMouseGlobalY(mouse) {
             const point = mapToGlobal(mouse.x, mouse.y);

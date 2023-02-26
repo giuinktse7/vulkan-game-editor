@@ -185,6 +185,29 @@ Item {
             }
         
             Menu {
+                title: qsTr("View")
+                Action {
+                    text: qsTr("New item palette");
+                    onTriggered: () => {
+                        const component = Qt.createComponent(Qt.url("../../AppComponents/ItemPalette.qml"));
+                        if (component.status == Component.Ready) {
+                            component.createObject(contentRoot, { model: root.tilesetModel });
+                        }
+                        else {
+                            console.log("Error loading component:", component.errorString());
+                            component.statusChanged.connect(() => {
+                                if (component.status == Component.Ready) {
+                                    component.createObject(contentRoot, { model: root.tilesetModel });
+                                } else {
+                                    console.log("Error loading component:", component.errorString());
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+
+            Menu {
                 title: qsTr("&Help")
                 Action { text: qsTr("&About") }
             }
@@ -200,7 +223,7 @@ Item {
                 anchors.fill: parent;
 
                 rowSpacing: 0;
-                columnSpacing: 0
+                columnSpacing: 0;
 
                 rows: 3;
                 columns: 3;
@@ -315,128 +338,6 @@ Item {
                 }
             } // Main grid
 
-
-            Repeater {
-                model: 6
-
-                VMEComponent.ItemPanel {
-                    x: Math.random() * (1200 / 2 - 100);
-                    y: Math.random() * (800 - 100);
-
-                    color: "black";
-
-                    VMEComponent.ThingList {
-                        Layout.fillWidth: true;
-                        Layout.fillHeight: true;
-                        
-                        model: {
-                            root.tilesetModel;
-                        }
-                    }
-                }
-
-                // VMEComponent.ItemPanel {
-                //     x: Math.random() * (1200 / 2 - 100);
-                //     y: Math.random() * (800 - 100);
-
-                //     color: Qt.rgba(Math.random(), Math.random(), Math.random(), 1);
-
-                //     border {
-                //         width: 2;
-                //         color: "white"
-                //     }
-
-                //     Text {
-                //         anchors.centerIn: parent
-                //         text: index
-                //         color: "white"
-                //     }
-                // }
-
-                // VMEComponent.ResizableItem {
-                //     id: rect;
-                    
-                //     z: mouseArea.drag.active || mouseArea.pressed ? 2 : 1;
-                //     color: Qt.rgba(Math.random(), Math.random(), Math.random(), 1);
-                //     x: Math.random() * (1200 / 2 - 100);
-                //     y: Math.random() * (800 - 100);
-
-                //     property var trueParent;
-
-                //     // property point beginDrag
-                //     property bool caught: false
-
-                //     border {
-                //         width: 2;
-                //         color: "white"
-                //     }
-
-                //     radius: 5
-                //     Drag.active: mouseArea.drag.active
-                //     Drag.supportedActions: Qt.MoveAction
-                //     Drag.proposedAction: Qt.MoveAction
-
-                //     property var onDetach: null;
-
-
-                //     Text {
-                //         anchors.centerIn: parent
-                //         text: index
-                //         color: "white"
-                //     }
-
-                //     // DropArea {
-
-                //     // }
-
-
-                //     MouseArea {
-                //         id: mouseArea
-                //         property bool dragActive: drag.active
-
-                //         anchors.fill: parent
-
-                //         drag.target: parent
-
-                //         onDragActiveChanged: () => {
-                //             if(drag.active) {
-                //                 console.log("Drag.onDragStarted");
-                //                 // if (rect.parent.beforeRemoveItem) {
-                //                 //     rect.parent.beforeRemoveItem(rect);
-                //                 // }
-
-                //                 if (rect.onDetach) {
-                //                     rect.onDetach();
-                //                     rect.onDetach = null;
-                //                 }
-
-                //                 rect.trueParent = rect.parent;
-                //                 rect.parent = contentRoot;
-                //             }
-                //         }
-                //         onPressed: {
-                //             // rect.beginDrag = Qt.point(rect.x, rect.y);
-                //         }
-                //         onReleased: {
-                //             const result = parent.Drag.drop();
-                //             // if (result == Qt.MoveAction) {
-                //             // } else {
-                //             //     backAnimX.from = rect.x;
-                //             //     backAnimX.to = beginDrag.x;
-                //             //     backAnimY.from = rect.y;
-                //             //     backAnimY.to = beginDrag.y;
-                //             //     backAnim.start()
-                //             // }
-                //         }
-                //     }
-
-                //     // ParallelAnimation {
-                //     //     id: backAnim
-                //     //     SpringAnimation { id: backAnimX; target: rect; property: "x"; duration: 500; spring: 2; damping: 0.2 }
-                //     //     SpringAnimation { id: backAnimY; target: rect; property: "y"; duration: 500; spring: 2; damping: 0.2 }
-                //     // }
-                // }
-            }
 
         } // contentRoot
     }
