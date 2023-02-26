@@ -1,5 +1,6 @@
 #include "item_palette.h"
 
+#include <ranges>
 #include <utility>
 
 #include "logger.h"
@@ -9,9 +10,9 @@
 //>>>>>>ItemPalettes>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>
-std::unordered_map<std::string, ItemPalette> ItemPalettes::_itemPalettes;
+std::unordered_map<std::string, std::shared_ptr<ItemPalette>> ItemPalettes::_itemPalettes;
 
-ItemPalette &ItemPalettes::createPalette(const std::string &id, const std::string &name)
+std::shared_ptr<ItemPalette> ItemPalettes::createPalette(const std::string &id, const std::string &name)
 {
     if (contains(id))
     {
@@ -19,14 +20,23 @@ ItemPalette &ItemPalettes::createPalette(const std::string &id, const std::strin
         return _itemPalettes.at(id);
     }
 
-    auto result = _itemPalettes.try_emplace(id, ItemPalette(id, name));
+    // Must use 'new' keyword because constructor is private
+    auto result = _itemPalettes.try_emplace(id, std::shared_ptr<ItemPalette>(new ItemPalette(id, name)));
     return result.first->second;
+}
+
+std::vector<std::shared_ptr<ItemPalette>> ItemPalettes::getItemPaletteList()
+{
+    auto valuesView = std::views::values(_itemPalettes);
+
+    std::vector<std::shared_ptr<ItemPalette>> values{valuesView.begin(), valuesView.end()};
+    return values;
 }
 
 ItemPalette *ItemPalettes::getById(const std::string &id)
 {
     auto found = _itemPalettes.find(id);
-    return found != _itemPalettes.end() ? &(found->second) : nullptr;
+    return found != _itemPalettes.end() ? found->second.get() : nullptr;
 }
 
 ItemPalette *ItemPalettes::getOrCreateById(const std::string &id)
@@ -34,22 +44,17 @@ ItemPalette *ItemPalettes::getOrCreateById(const std::string &id)
     auto found = _itemPalettes.find(id);
     if (found != _itemPalettes.end())
     {
-        return &(found->second);
+        return found->second.get();
     }
     else
     {
-        return &createPalette(id, id);
+        return createPalette(id, id).get();
     }
 }
 
 bool ItemPalettes::contains(const std::string &id)
 {
     return _itemPalettes.find(id) != _itemPalettes.end();
-}
-
-std::unordered_map<std::string, ItemPalette> &ItemPalettes::itemPalettes()
-{
-    return _itemPalettes;
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>

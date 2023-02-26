@@ -30,8 +30,6 @@ int TileSetModel::columnCount(const QModelIndex &) const
     return 1;
 }
 
-void setTileset(std::shared_ptr<Tileset> &&tileset);
-
 QVariant TileSetModel::data(const QModelIndex &modelIndex, int role) const
 {
     switch (role)

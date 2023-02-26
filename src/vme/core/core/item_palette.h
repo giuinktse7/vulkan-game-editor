@@ -44,14 +44,14 @@ class ItemPalette
 
 struct ItemPalettes
 {
-    static ItemPalette &createPalette(const std::string &id, const std::string &name);
+    static std::shared_ptr<ItemPalette> createPalette(const std::string &id, const std::string &name);
     static ItemPalette *getById(const std::string &id);
     static ItemPalette *getOrCreateById(const std::string &id);
 
-    static std::unordered_map<std::string, ItemPalette> &itemPalettes();
+    static std::vector<std::shared_ptr<ItemPalette>> getItemPaletteList();
 
   private:
-    static std::unordered_map<std::string, ItemPalette> _itemPalettes;
+    static std::unordered_map<std::string, std::shared_ptr<ItemPalette>> _itemPalettes;
 
     static bool contains(const std::string &id);
 };
