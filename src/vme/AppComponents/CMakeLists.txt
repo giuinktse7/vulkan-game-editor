@@ -11,6 +11,7 @@ set(HEADER_FILES
     gui_thing_image.h
     ui_resources.h
     tileset_model.h
+    item_palette_model.h
     enum_conversion.h
     qml_ui_utils.h
     qt_vulkan_info.h
@@ -21,6 +22,7 @@ set(SRC_FILES
     gui_thing_image.cpp
     ui_resources.cpp
     tileset_model.cpp
+    item_palette_model.cpp
     enum_conversion.cpp
     qml_ui_utils.cpp
     qt_vulkan_info.cpp
@@ -64,4 +66,6 @@ qt_add_qml_module(app_components
         # ThingGrid.qml
     RESOURCES
         cross.svg
-) 
+)
+
+
