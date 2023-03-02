@@ -55,7 +55,7 @@ class FileWatcher : QObject
 std::unique_ptr<FileWatcher> watcher;
 
 MainApp::MainApp(int argc, char **argv)
-    : app(argc, argv), editor(std::make_unique<Editor>())
+    : app(argc, argv), dataModel(std::make_unique<AppDataModel>())
 {
 }
 
@@ -72,7 +72,7 @@ int MainApp::start()
     engine->addImageProvider(QLatin1String("itemTypes"), new ItemTypeImageProvider);
     engine->addImageProvider(QLatin1String("creatureLooktypes"), new CreatureImageProvider);
 
-    qmlRegisterSingletonInstance("VME.editor", 1, 0, "Editor", editor.get());
+    qmlRegisterSingletonInstance("VME.dataModel", 1, 0, "AppDataModel", dataModel.get());
 
     QVariantMap properties;
     properties.insert("tilesetModel", QVariant::fromValue(editor->itemPaletteStore().tilesetModel()));

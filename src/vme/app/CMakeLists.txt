@@ -6,14 +6,14 @@ set(HEADER_FILES
     main.h
     debug_util.h
     qt_logging.h
-    editor.h
+    app_data_model.h
 )
 
 set(SRC_FILES
     main.cpp
     debug_util.cpp
     qt_logging.cpp
-    editor.cpp
+    app_data_model.cpp
 )
 
 

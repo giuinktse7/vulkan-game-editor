@@ -6,7 +6,7 @@
 
 #include "tileset_model.h"
 
-#include "editor.h"
+#include "app_data_model.h"
 
 class MainApp
 {
@@ -23,5 +23,5 @@ class MainApp
     // TODO Structure tileset model usage, this should not be stored in main!
     std::unique_ptr<TileSetModel> tilesetModel;
 
-    std::unique_ptr<Editor> editor;
+    std::unique_ptr<AppDataModel> dataModel;
 };

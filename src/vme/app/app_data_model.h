@@ -2,25 +2,33 @@
 
 #include <QAbstractListModel>
 #include <QObject>
+#include <QString>
 #include <string>
 
 #include "core/brushes/brush.h"
 #include "core/map_copy_buffer.h"
-#include "item_palette_store.h"
 #include "qml_map_item.h"
 
+#include "combobox_model.h"
+
+class TileSetModel;
 class QmlMapItem;
 
-class Editor : public QObject
+class AppDataModel : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(MapTabListModel *mapTabs READ mapTabs)
     Q_PROPERTY(int currentMapIndex READ currentMapIndex WRITE setcurrentMapIndex NOTIFY currentMapIndexChanged)
 
   public:
-    Editor();
+    AppDataModel();
 
     Q_INVOKABLE void mapTabSelected(int prevIndex, int index);
+
+    Q_INVOKABLE void setItemPaletteList(ComboBoxModel *model);
+    Q_INVOKABLE void setItemPalette(ComboBoxModel *model, QString paletteId);
+    Q_INVOKABLE void setTileset(TileSetModel *model, QString paletteId, QString tilesetId);
+    Q_INVOKABLE void selectBrush(TileSetModel *model, int index);
 
     Q_INVOKABLE void copy();
     Q_INVOKABLE void paste();
@@ -28,11 +36,6 @@ class Editor : public QObject
 
     void addMapTab(std::string tabName);
     void removeMapTab(int index);
-
-    ItemPaletteStore &itemPaletteStore()
-    {
-        return _itemPaletteStore;
-    }
 
     MapView *currentMapView();
 
@@ -56,8 +59,6 @@ class Editor : public QObject
 
   private:
     int _currentMapIndex = 0;
-
-    ItemPaletteStore _itemPaletteStore;
 
     MapCopyBuffer mapCopyBuffer;
 };
