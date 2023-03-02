@@ -12,16 +12,15 @@
 #include "core/tileset.h"
 #include "gui_thing_image.h"
 
-TileSetModel::TileSetModel()
-    : _tileset(std::make_shared<Tileset>("all", "All"))
-{
-}
-
-TileSetModel::TileSetModel(std::shared_ptr<Tileset> tileset)
-    : _tileset(tileset) {}
+TileSetModel::TileSetModel() {}
 
 int TileSetModel::rowCount(const QModelIndex &) const
 {
+    if (!_tileset)
+    {
+        return 0;
+    }
+
     return static_cast<int>(std::ceil(_tileset->size() / columnCount()));
 }
 
@@ -32,6 +31,11 @@ int TileSetModel::columnCount(const QModelIndex &) const
 
 QVariant TileSetModel::data(const QModelIndex &modelIndex, int role) const
 {
+    if (!_tileset)
+    {
+        return QVariant();
+    }
+
     switch (role)
     {
         case Qt::DisplayRole:
@@ -99,22 +103,37 @@ QVariant TileSetModel::data(const QModelIndex &modelIndex, int role) const
     return QVariant();
 }
 
-void TileSetModel::setTileset(std::shared_ptr<Tileset> &&tileset)
+void TileSetModel::setTileset(Tileset *tileset)
 {
     beginResetModel();
-    _tileset = std::move(tileset);
+    _tileset = tileset;
     endResetModel();
+}
+
+Brush *TileSetModel::getBrush(int index)
+{
+    if (!_tileset)
+    {
+        return nullptr;
+    }
+
+    return _tileset->get(index);
 }
 
 void TileSetModel::clear()
 {
     beginResetModel();
-    _tileset.reset();
+    _tileset = nullptr;
     endResetModel();
 }
 
 void TileSetModel::indexClicked(int index)
 {
+    if (!_tileset)
+    {
+        return;
+    }
+
     auto brush = _tileset->get(index);
     selectBrush.fire(brush);
 }

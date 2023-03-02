@@ -17,21 +17,22 @@ class TileSetModel : public QAbstractTableModel
 
   public:
     TileSetModel();
-    TileSetModel(std::shared_ptr<Tileset> tileset);
 
     // Signals
     template <auto MemberFunction, typename T>
     void onSelectBrush(T *instance);
 
+    Brush *getBrush(int index);
+
     Q_INVOKABLE void indexClicked(int index);
+    Q_INVOKABLE void clear();
 
     enum Roles
     {
         ImageUriRole = Qt::UserRole + 1
     };
 
-    void setTileset(std::shared_ptr<Tileset> &&tileset);
-    void clear();
+    void setTileset(Tileset *tileset);
 
     int rowCount(const QModelIndex & = QModelIndex()) const override;
 
@@ -41,7 +42,7 @@ class TileSetModel : public QAbstractTableModel
 
     QHash<int, QByteArray> roleNames() const override;
 
-    std::shared_ptr<Tileset> _tileset = nullptr;
+    Tileset *_tileset = nullptr;
 
   private:
     // Signals

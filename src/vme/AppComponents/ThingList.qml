@@ -1,6 +1,7 @@
 import QtQuick 2.12
 import QtQuick.Controls
 import AppComponents
+import VME.dataModel 1.0
 
 // TableView {
 //     id: tableView
@@ -18,50 +19,49 @@ import AppComponents
 Item {
     property alias model: tableView.model
 
-
     Component {
         id: brushDelegate
 
         Image {
             id: item
 
-            width: 32;
-            height: 32;
+            width: 32
+            height: 32
 
-            source: imageUri;
+            source: imageUri
 
             MouseArea {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 anchors.fill: parent
                 propagateComposedEvents: true
 
-                onPressed: (mouse) => {
-                    tableView.model.indexClicked(index);
+                onPressed: () => {
+                    AppDataModel.selectBrush(tableView.model, index);
                 }
             }
         }
     }
 
     GridView {
-        id: tableView;
+        id: tableView
 
-        delegate: brushDelegate;
-        clip: true;
+        delegate: brushDelegate
+        clip: true
 
-        anchors.fill: parent;
-        cellWidth: 32;
-        cellHeight: 32;
-        focus: true;
-        flickDeceleration: 10000;
-        snapMode: GridView.SnapToRow;
+        anchors.fill: parent
+        cellWidth: 32
+        cellHeight: 32
+        focus: true
+        flickDeceleration: 10000
+        snapMode: GridView.SnapToRow
 
-        boundsMovement: Flickable.StopAtBounds;
-        boundsBehavior: Flickable.StopAtBounds;
+        boundsMovement: Flickable.StopAtBounds
+        boundsBehavior: Flickable.StopAtBounds
 
         ScrollBar.vertical: ScrollBar {
-            minimumSize: 0.05;
-            snapMode: ScrollBar.SnapAlways;
-            stepSize: 0.01;
+            minimumSize: 0.05
+            snapMode: ScrollBar.SnapAlways
+            stepSize: 0.01
             // background: Item { opacity: 0; }
             // contentItem: Rectangle { implicitWidth: 10; implicitHeight: 10; color: "blue" }
 
@@ -72,6 +72,5 @@ Item {
 
             // background: Item {}
         }
-
     }
 }
