@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "tileset.h"
+#include "util.h"
 
 struct ItemPalettes;
 
@@ -48,7 +49,8 @@ struct ItemPalettes
     static ItemPalette *getById(const std::string &id);
     static ItemPalette *getOrCreateById(const std::string &id);
 
-    static std::vector<std::shared_ptr<ItemPalette>> getItemPaletteList();
+    static std::vector<std::shared_ptr<ItemPalette>> getItemPalettes();
+    static std::vector<NamedId> getItemPaletteList();
 
   private:
     static std::unordered_map<std::string, std::shared_ptr<ItemPalette>> _itemPalettes;

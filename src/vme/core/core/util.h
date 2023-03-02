@@ -18,6 +18,14 @@
 #define vme_unordered_map tsl::robin_map
 #define vme_unordered_set tsl::robin_set
 
+struct NamedId
+{
+    std::string id;
+    std::string name;
+
+    friend auto operator<=>(const NamedId &, const NamedId &) = default;
+};
+
 constexpr bool hasBitSet(uint32_t flag, uint32_t flags)
 {
     return (flags & flag) != 0;

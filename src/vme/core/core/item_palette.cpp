@@ -25,12 +25,22 @@ std::shared_ptr<ItemPalette> ItemPalettes::createPalette(const std::string &id, 
     return result.first->second;
 }
 
-std::vector<std::shared_ptr<ItemPalette>> ItemPalettes::getItemPaletteList()
+std::vector<std::shared_ptr<ItemPalette>> ItemPalettes::getItemPalettes()
 {
     auto valuesView = std::views::values(_itemPalettes);
 
     std::vector<std::shared_ptr<ItemPalette>> values{valuesView.begin(), valuesView.end()};
     return values;
+}
+
+std::vector<NamedId> ItemPalettes::getItemPaletteList()
+{
+    auto result = std::views::values(_itemPalettes) |
+                  std::ranges::views::transform([](const std::shared_ptr<ItemPalette> &x) {
+                      return NamedId{.id = x->id(), .name = x->name()};
+                  });
+
+    return std::vector<NamedId>{result.begin(), result.end()};
 }
 
 ItemPalette *ItemPalettes::getById(const std::string &id)
