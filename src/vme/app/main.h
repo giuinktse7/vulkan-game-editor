@@ -16,6 +16,8 @@ class MainApp
     int start();
 
   private:
+    void createDefaultPalettes();
+
     QGuiApplication app;
 
     std::unique_ptr<QQuickView> rootView;

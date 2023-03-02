@@ -3,6 +3,8 @@
 #include <ranges>
 #include <utility>
 
+using namespace std::ranges::views;
+
 #include "logger.h"
 
 //>>>>>>>>>>>>>>>>>>>>>>>
@@ -36,7 +38,8 @@ std::vector<std::shared_ptr<ItemPalette>> ItemPalettes::getItemPalettes()
 std::vector<NamedId> ItemPalettes::getItemPaletteList()
 {
     auto result = std::views::values(_itemPalettes) |
-                  std::ranges::views::transform([](const std::shared_ptr<ItemPalette> &x) {
+                  filter([](const std::shared_ptr<ItemPalette> &x) { return !x->empty(); }) |
+                  transform([](const std::shared_ptr<ItemPalette> &x) {
                       return NamedId{.id = x->id(), .name = x->name()};
                   });
 
