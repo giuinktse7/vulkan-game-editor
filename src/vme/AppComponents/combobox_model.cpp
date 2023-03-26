@@ -52,4 +52,4 @@ QHash<int, QByteArray> ComboBoxModel::roleNames() const
     return roles;
 }
 
-// #include "combobox_model.cpp"
+#include "moc_combobox_model.cpp"

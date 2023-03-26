@@ -99,14 +99,14 @@ class Tile
     const Item *getItem(std::function<bool(const Item &)> predicate) const;
 
     /**
-	 * @return The amount of removed items
-	 * */
+     * @return The amount of removed items
+     * */
     template <typename UnaryPredicate>
     inline uint16_t removeItemsIf(UnaryPredicate &&predicate);
 
-    /*
-		Deselect entire tile
-	*/
+    /**
+     * @brief Deselects entire tile
+     */
     void deselectAll();
     void deselectTopItem();
     void selectTopItem();
@@ -141,6 +141,11 @@ class Tile
 
     GroundBrush *groundBrush() const;
 
+    /**
+     * @brief Returns the top brush for each brush type
+     */
+    std::vector<Brush *> getTopBrushes();
+
     int getTopElevation() const;
 
     const std::vector<std::shared_ptr<Item>> &items() const noexcept
@@ -154,8 +159,8 @@ class Tile
     }
 
     /*
-		Counts all entities (items, creature, spawn, waypoint, etc.).
-	*/
+                Counts all entities (items, creature, spawn, waypoint, etc.).
+        */
     size_t getEntityCount();
 
     inline uint16_t mapFlags() const noexcept;

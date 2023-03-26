@@ -12,6 +12,7 @@ set(HEADER_FILES
     ui_resources.h
     tileset_model.h
     combobox_model.h
+    context_menu_model.h
     enum_conversion.h
     qml_ui_utils.h
     qt_vulkan_info.h
@@ -22,6 +23,7 @@ set(SRC_FILES
     ui_resources.cpp
     tileset_model.cpp
     combobox_model.cpp
+    context_menu_model.cpp
     enum_conversion.cpp
     qml_ui_utils.cpp
     qt_vulkan_info.cpp

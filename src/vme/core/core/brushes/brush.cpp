@@ -64,7 +64,7 @@ Tileset *Brush::tileset() const noexcept
     return _tileset;
 }
 
-Brush *Brush::getOrCreateRawBrush(uint32_t serverId)
+RawBrush *Brush::getOrCreateRawBrush(uint32_t serverId)
 {
     auto found = rawBrushes.find(serverId);
     if (found == rawBrushes.end())
@@ -438,6 +438,18 @@ void Brush::applyWithoutBorderize(MapView &mapView, const Position &position)
 int Brush::variationCount() const
 {
     return 1;
+}
+
+RawBrush *Brush::getRawBrush(const Tile &tile)
+{
+    auto topItem = tile.getTopItem();
+    if (!topItem)
+    {
+        return nullptr;
+    }
+
+    uint32_t id = topItem->serverId();
+    return Brush::getOrCreateRawBrush(id);
 }
 
 GroundBrush *Brush::getGroundBrush(const Tile &tile)

@@ -4,8 +4,11 @@
 #include <ranges>
 
 #include "brushes/border_brush.h"
+#include "brushes/creature_brush.h"
+#include "brushes/doodad_brush.h"
 #include "brushes/ground_brush.h"
 #include "brushes/mountain_brush.h"
+#include "brushes/raw_brush.h"
 #include "brushes/wall_brush.h"
 #include "items.h"
 #include "tile_location.h"
@@ -701,6 +704,63 @@ size_t Tile::getEntityCount()
         ++result;
 
     return result;
+}
+
+std::vector<Brush *> Tile::getTopBrushes()
+{
+    std::vector<Brush *> brushes;
+    // Raw brush
+    auto topItem = getTopItem();
+    if (topItem)
+    {
+        uint32_t id = topItem->serverId();
+        Brush *brush = static_cast<Brush *>(Brush::getOrCreateRawBrush(id));
+        brushes.emplace_back(brush);
+    }
+
+    // Wall brush
+    WallBrush *wallBrush = Brush::getWallBrush(*this);
+    if (wallBrush)
+    {
+        brushes.emplace_back(static_cast<Brush *>(wallBrush));
+    }
+
+    // Border brush
+    BorderBrush *borderBrush = Brush::getBorderBrush(*this);
+    if (borderBrush)
+    {
+        brushes.emplace_back(static_cast<Brush *>(borderBrush));
+    }
+
+    // Doodad brush
+    DoodadBrush *doodadBrush = Brush::getDoodadBrush(*this);
+    if (doodadBrush)
+    {
+        brushes.emplace_back(static_cast<Brush *>(doodadBrush));
+    }
+
+    // Ground brush
+    GroundBrush *groundBrush = Brush::getGroundBrush(*this);
+    if (groundBrush)
+    {
+        brushes.emplace_back(static_cast<Brush *>(groundBrush));
+    }
+
+    // Mountain brush
+    MountainBrush *mountainBrush = Brush::getMountainBrush(*this);
+    if (mountainBrush)
+    {
+        brushes.emplace_back(static_cast<Brush *>(mountainBrush));
+    }
+
+    // Creature brush
+    CreatureBrush *creatureBrush = Brush::getCreatureBrush(*this);
+    if (creatureBrush)
+    {
+        brushes.emplace_back(static_cast<Brush *>(creatureBrush));
+    }
+
+    return brushes;
 }
 
 int Tile::getTopElevation() const

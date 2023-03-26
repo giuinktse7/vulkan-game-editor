@@ -1,6 +1,7 @@
 #include "tileset.h"
 
 #include "brushes/brush.h"
+#include "brushes/raw_brush.h"
 #include "debug.h"
 #include "item_palette.h"
 #include "items.h"
@@ -54,7 +55,7 @@ void Tileset::addRawBrush(uint32_t serverId)
         return;
     }
 
-    Brush *brush = Brush::getOrCreateRawBrush(serverId);
+    Brush *brush = static_cast<Brush*>(Brush::getOrCreateRawBrush(serverId));
     if (hasBrush(brush))
     {
         auto paletteName = _palette ? _palette->name() : "(No palette)";

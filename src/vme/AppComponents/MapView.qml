@@ -2,68 +2,87 @@ import QtQuick 2.12
 import QtQuick.Controls
 import QtQuick.Layouts
 import AppComponents
+import VME.dataModel 1.0
 
 ColumnLayout {
-    id: root;
-    required property int theId;
+    id: root
+    required property int theId
 
     RowLayout {
         QmlMapItem {
             id: mapItem
 
-
-            Layout.fillWidth: true;
-            Layout.fillHeight: true;
+            Layout.fillWidth: true
+            Layout.fillHeight: true
 
             focus: true
             onActiveFocusChanged: () => {
                 mapItem.setFocus(activeFocus);
             }
-            
-            property var editor;
+
+            property var editor
 
             MouseArea {
-                anchors.fill: parent;
-                acceptedButtons: Qt.LeftButton | Qt.RightButton;
-                propagateComposedEvents: true;
-                hoverEnabled: true;
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                propagateComposedEvents: true
+                hoverEnabled: true
 
-                onPositionChanged: (mouse) => {
+                onPositionChanged: mouse => {
                     mapItem.onMousePositionChanged(mouse.x, mouse.y, mouse.button, mouse.buttons, mouse.modifiers);
                 }
 
-                onClicked: (mouse) => {
+                onClicked: mouse => {
                     mouse.accepted = false;
-
                     if (mouse.button === Qt.RightButton) {
+                        AppDataModel.populateRightClickContextMenu(menuRepeater.model);
                         contextMenu.popup();
                     } else if (mouse.button === Qt.LeftButton) {
                         mapItem.forceActiveFocus();
                     }
                 }
 
-                onPressed: (mouse) => {
+                onPressed: mouse => {
                     mouse.accepted = false;
-
                     if (mouse.button === Qt.RightButton) {
+                        AppDataModel.populateRightClickContextMenu(menuRepeater.model);
                         contextMenu.popup();
                     } else if (mouse.button === Qt.LeftButton) {
                         mapItem.forceActiveFocus();
                     }
                 }
 
-                onPressAndHold: (mouse) => {
+                onPressAndHold: mouse => {
                     mouse.accepted = false;
-
                     if (mouse.source === Qt.MouseEventNotSynthesized)
-                        contextMenu.popup()
+                        AppDataModel.populateRightClickContextMenu(menuRepeater.model);
+                    contextMenu.popup();
                 }
 
                 Menu {
                     id: contextMenu
-                    MenuItem { text: "Cut" }
-                    MenuItem { text: "Copy" }
-                    MenuItem { text: "Paste" }
+
+                    // MenuItem {
+                    //     text: "Cut"
+                    // }
+                    // MenuItem {
+                    //     text: "Copy"
+                    // }
+                    // MenuItem {
+                    //     text: "Paste"
+                    // }
+                    Repeater {
+                        id: menuRepeater
+                        model: ContextMenuModel {
+                        }
+
+                        MenuItem {
+                            action: Action {
+                                onTriggered: () => AppDataModel.onContextMenuAction(option)
+                            }
+                            text: itemText
+                        }
+                    }
                 }
             }
 
@@ -73,13 +92,13 @@ ColumnLayout {
         }
 
         ScrollBar {
-            size: mapItem.verticalScrollSize;
-            position: mapItem.verticalScrollPosition;
-            policy: ScrollBar.AlwaysOn;
-            orientation: Qt.Vertical;
-            active: hovered || pressed;
+            size: mapItem.verticalScrollSize
+            position: mapItem.verticalScrollPosition
+            policy: ScrollBar.AlwaysOn
+            orientation: Qt.Vertical
+            active: hovered || pressed
 
-            Layout.fillHeight: true;
+            Layout.fillHeight: true
 
             onPositionChanged: {
                 if (active) {
@@ -90,14 +109,14 @@ ColumnLayout {
     }
 
     ScrollBar {
-        size: mapItem.horizontalScrollSize;
-        position: mapItem.horizontalScrollPosition;
-        policy: ScrollBar.AlwaysOn;
-        orientation: Qt.Horizontal;
-        active: hovered || pressed;
+        size: mapItem.horizontalScrollSize
+        position: mapItem.horizontalScrollPosition
+        policy: ScrollBar.AlwaysOn
+        orientation: Qt.Horizontal
+        active: hovered || pressed
 
-        Layout.fillWidth: true;
-        
+        Layout.fillWidth: true
+
         onPositionChanged: {
             if (active) {
                 mapItem.setHorizontalScrollPosition(position);

@@ -175,7 +175,7 @@ class Brush
     virtual bool erasesItem(uint32_t serverId) const = 0;
     virtual BrushType type() const = 0;
 
-    static Brush *getOrCreateRawBrush(uint32_t serverId);
+    static RawBrush *getOrCreateRawBrush(uint32_t serverId);
 
     static GroundBrush *addGroundBrush(std::unique_ptr<GroundBrush> &&brush);
     static GroundBrush *addGroundBrush(GroundBrush &&brush);
@@ -205,6 +205,7 @@ class Brush
 
     static bool brushSorter(const Brush *leftBrush, const Brush *rightBrush);
 
+    static RawBrush *getRawBrush(const Tile &tile);
     static GroundBrush *getGroundBrush(const Tile &tile);
     static BorderBrush *getBorderBrush(const Tile &tile);
     static DoodadBrush *getDoodadBrush(const Tile &tile);
