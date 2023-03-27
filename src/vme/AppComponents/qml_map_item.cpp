@@ -257,7 +257,8 @@ void QmlMapItem::onMousePositionChanged(int x, int y, int button, int buttons, i
 {
     auto event = QMouseEvent(
         QEvent::Type::MouseMove,
-        mapToGlobal(QPointF(x, y)),
+        // mapToGlobal(QPointF(x, y)),
+        QPointF(x, y),
         static_cast<Qt::MouseButton>(button), static_cast<Qt::MouseButtons>(buttons),
         static_cast<Qt::KeyboardModifiers>(modifiers));
 
