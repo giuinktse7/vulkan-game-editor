@@ -38,6 +38,8 @@ class AppDataModel : public QObject
     Q_INVOKABLE void copy();
     Q_INVOKABLE void paste();
     Q_INVOKABLE void cut();
+    Q_INVOKABLE void setCursorShape(int shape);
+    Q_INVOKABLE void resetCursorShape();
 
     void addMapTab(std::string tabName);
     void removeMapTab(int index);

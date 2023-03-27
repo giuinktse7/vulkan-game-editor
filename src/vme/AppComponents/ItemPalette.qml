@@ -8,7 +8,8 @@ VMEComponent.ItemPanel {
     x: Math.random() * (1200 / 2 - 100)
     y: Math.random() * (800 - 100)
 
-    implicitWidth: 8 * 32
+    // + 4 for the border and + 17 for the scrollbar
+    implicitWidth: 8 * 32 + 4 + 17
     implicitHeight: 12 * 32
 
     color: "black"
@@ -16,6 +17,8 @@ VMEComponent.ItemPanel {
     ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
+
+        spacing: 0
 
         // https://doc.qt.io/qt-6/qtquickcontrols2-customize.html#customizing-combobox
         ComboBox {

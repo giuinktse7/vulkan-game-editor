@@ -1,4 +1,4 @@
-import QtQuick 2.12
+import QtQuick
 import QtQuick.Controls
 import AppComponents
 import VME.dataModel 1.0
@@ -42,35 +42,43 @@ Item {
         }
     }
 
-    GridView {
-        id: tableView
-
-        delegate: brushDelegate
-        clip: true
-
+    // The GridView is wrapped in a MouseArea to prevent the wheel event from propagating to the map view.
+    MouseArea {
         anchors.fill: parent
-        cellWidth: 32
-        cellHeight: 32
-        focus: true
-        flickDeceleration: 10000
-        snapMode: GridView.SnapToRow
+        onWheel: wheelEvent => {
+            wheelEvent.accepted = true;
+        }
 
-        boundsMovement: Flickable.StopAtBounds
-        boundsBehavior: Flickable.StopAtBounds
+        GridView {
+            id: tableView
 
-        ScrollBar.vertical: ScrollBar {
-            minimumSize: 0.05
-            snapMode: ScrollBar.SnapAlways
-            stepSize: 0.01
-            // background: Item { opacity: 0; }
-            // contentItem: Rectangle { implicitWidth: 10; implicitHeight: 10; color: "blue" }
+            delegate: brushDelegate
+            clip: true
 
-            // contentItem: Rectangle {
-            //     implicitWidth: 12
-            //     color: "#757575"
-            // }
+            anchors.fill: parent
+            cellWidth: 32
+            cellHeight: 32
+            focus: true
+            flickDeceleration: 10000
+            snapMode: GridView.SnapToRow
 
-            // background: Item {}
+            boundsMovement: Flickable.StopAtBounds
+            boundsBehavior: Flickable.StopAtBounds
+
+            ScrollBar.vertical: ScrollBar {
+                minimumSize: 0.05
+                snapMode: ScrollBar.SnapAlways
+                stepSize: 0.01
+                // background: Item { opacity: 0; }
+                // contentItem: Rectangle { implicitWidth: 10; implicitHeight: 10; color: "blue" }
+
+                // contentItem: Rectangle {
+                //     implicitWidth: 12
+                //     color: "#757575"
+                // }
+
+                // background: Item {}
+            }
         }
     }
 }

@@ -30,11 +30,11 @@ VMEComponent.ResizableItem {
         property bool dragActive: drag.active
 
         anchors.fill: parent
-        drag.target: parent
+        drag.target: root
 
         onDragActiveChanged: () => {
             if (drag.active) {
-                console.log("Drag.onDragStarted");
+                // console.log("Drag.onDragStarted");
                 // if (root.parent.beforeRemoveItem) {
                 //     root.parent.beforeRemoveItem(root);
                 // }
@@ -51,7 +51,7 @@ VMEComponent.ResizableItem {
         {
         }
         onReleased: {
-            const result = parent.Drag.drop();
+            const result = root.Drag.drop();
             // if (result == Qt.MoveAction) {
             // } else {
             //     backAnimX.from = root.x;
@@ -79,7 +79,7 @@ VMEComponent.ResizableItem {
             Rectangle {
                 id: crossContainer
                 anchors.right: parent.right
-                anchors.rightMargin: 8
+                anchors.rightMargin: 5
                 anchors.verticalCenter: parent.verticalCenter
                 color: "transparent"
 

@@ -1,6 +1,8 @@
 
 #include "app_data_model.h"
 
+#include <QGuiApplication>
+
 #include "context_menu_model.h"
 #include "core/item_palette.h"
 #include "core/logger.h"
@@ -299,6 +301,16 @@ void AppDataModel::cut()
         mapCopyBuffer.copySelection(*mapView);
         mapView->deleteSelectedItems();
     }
+}
+
+void AppDataModel::setCursorShape(int shape)
+{
+    QGuiApplication::setOverrideCursor(static_cast<Qt::CursorShape>(shape));
+}
+
+void AppDataModel::resetCursorShape()
+{
+    QGuiApplication::restoreOverrideCursor();
 }
 
 #include "moc_app_data_model.cpp"
