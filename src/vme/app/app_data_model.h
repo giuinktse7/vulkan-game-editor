@@ -3,6 +3,9 @@
 #include <QAbstractListModel>
 #include <QObject>
 #include <QString>
+#include <QUrl>
+#include <QVariant>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -23,10 +26,15 @@ class AppDataModel : public QObject
     Q_PROPERTY(MapTabListModel *mapTabs READ mapTabs)
     Q_PROPERTY(int currentMapIndex READ currentMapIndex WRITE setcurrentMapIndex NOTIFY currentMapIndexChanged)
 
+  signals:
+    void openFolderDialog(QVariant dialog_id);
+
   public:
     AppDataModel();
 
     Q_INVOKABLE void mapTabSelected(int prevIndex, int index);
+    Q_INVOKABLE void loadMap(QUrl url);
+    Q_INVOKABLE void saveCurrentMap(QUrl url);
 
     Q_INVOKABLE void setItemPaletteList(ComboBoxModel *model);
     Q_INVOKABLE void setItemPalette(ComboBoxModel *model, QString paletteId);
@@ -40,6 +48,10 @@ class AppDataModel : public QObject
     Q_INVOKABLE void cut();
     Q_INVOKABLE void setCursorShape(int shape);
     Q_INVOKABLE void resetCursorShape();
+    Q_INVOKABLE void saveMap();
+    Q_INVOKABLE void closeMap(int id);
+
+    Q_INVOKABLE void mapTabCreated(QmlMapItem *item, int id);
 
     void addMapTab(std::string tabName);
     void removeMapTab(int index);
@@ -66,6 +78,11 @@ class AppDataModel : public QObject
 
   private:
     int _currentMapIndex = 0;
+
+    /**
+     * A map that has been loaded but not yet added to a QmlMapItem.
+     */
+    std::unique_ptr<Map> _stagedMap;
 
     MapCopyBuffer mapCopyBuffer;
 

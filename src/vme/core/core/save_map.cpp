@@ -12,26 +12,25 @@
 
 #pragma warning(push)
 #pragma warning(disable : 26812)
-namespace
-{
-    const std::filesystem::path OutputFolder("C:/Users/giuin/Desktop");
-}
 
 using namespace OTBM;
 
 constexpr uint32_t DEFAULT_BUFFER_SIZE = util::power(2, 20);
 
-void SaveMap::saveMap(const Map &map)
+bool SaveMap::saveMap(const Map &map)
 {
     std::ofstream stream;
     SaveBuffer buffer = SaveBuffer(stream);
 
-    auto path = OutputFolder / std::filesystem::path(map.name());
-    VME_LOG_D("Saving map to: " << path);
+    auto maybePath = map.filePath();
+    if (!maybePath.has_value())
+    {
+        return false;
+    }
 
-    stream.open(
-        path,
-        std::ofstream::out | std::ios::binary | std::ofstream::trunc);
+    auto path = map.filePath().value();
+
+    stream.open(path, std::ofstream::out | std::ios::binary | std::ofstream::trunc);
 
     buffer.writeRawString("OTBM");
 
@@ -43,8 +42,9 @@ void SaveMap::saveMap(const Map &map)
         buffer.writeU16(map.width());
         buffer.writeU16(map.height());
 
-        buffer.writeU32(Items::items.otbVersionInfo().majorVersion);
-        buffer.writeU32(Items::items.otbVersionInfo().minorVersion);
+        auto versionInfo = Items::items.otbVersionInfo();
+        buffer.writeU32(versionInfo.majorVersion);
+        buffer.writeU32(versionInfo.minorVersion);
 
         buffer.startNode(Node_t::MapData);
         {
@@ -184,6 +184,8 @@ void SaveMap::saveMap(const Map &map)
     buffer.finish();
 
     stream.close();
+
+    return true;
 }
 
 void SaveMap::Serializer::serializeItem(const Item &item)

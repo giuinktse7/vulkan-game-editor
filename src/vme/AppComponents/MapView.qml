@@ -62,15 +62,6 @@ ColumnLayout {
                 Menu {
                     id: contextMenu
 
-                    // MenuItem {
-                    //     text: "Cut"
-                    // }
-                    // MenuItem {
-                    //     text: "Copy"
-                    // }
-                    // MenuItem {
-                    //     text: "Paste"
-                    // }
                     Repeater {
                         id: menuRepeater
                         model: ContextMenuModel {
@@ -87,7 +78,7 @@ ColumnLayout {
             }
 
             Component.onCompleted: () => {
-                mapItem.entryId = root.theId;
+                AppDataModel.mapTabCreated(mapItem, root.theId);
             }
         }
 

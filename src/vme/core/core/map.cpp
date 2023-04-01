@@ -705,3 +705,13 @@ const Town *Map::getTown(uint32_t id) const
     auto found = _towns.find(id);
     return found != _towns.end() ? &found.value() : nullptr;
 }
+
+void Map::setFilepath(std::filesystem::path path)
+{
+    _filepath = path;
+}
+
+std::optional<std::filesystem::path> Map::filePath() const
+{
+    return _filepath;
+}

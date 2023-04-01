@@ -3,12 +3,65 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import AppComponents as VMEComponent
+import QtQuick.Dialogs
+import QtCore
 import VME.dataModel 1.0
 
 Item {
     id: root
     width: 1200
     height: 800
+
+    function createItemPalette(parent) {
+        const component = Qt.createComponent(Qt.url("../../AppComponents/ItemPalette.qml"));
+        if (component.status == Component.Ready) {
+            return component.createObject(parent);
+        } else {
+            console.log("Error loading component:", component.errorString());
+            component.statusChanged.connect(() => {
+                    if (component.status == Component.Ready) {
+                        return component.createObject(parent);
+                    } else {
+                        console.log("Error loading component:", component.errorString());
+                    }
+                });
+        }
+    }
+
+    FileDialog {
+        id: saveMapFileDialog
+        title: "Save Map"
+        currentFolder: StandardPaths.standardLocations(StandardPaths.DocumentsLocation)[0]
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["OTBM files (*.otbm)"]
+        onAccepted: () => {
+            AppDataModel.saveCurrentMap(selectedFile);
+        }
+    }
+
+    FileDialog {
+        id: loadMapFileDialog
+        title: "Load Map"
+        currentFolder: StandardPaths.standardLocations(StandardPaths.DocumentsLocation)[0]
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["OTBM files (*.otbm)"]
+        onAccepted: () => {
+            AppDataModel.loadMap(selectedFile);
+        }
+    }
+
+    Connections {
+        target: AppDataModel
+
+        /**
+        * Listens to the openFolderDialog signal from the AppDataModel C++ class
+        */
+        function onOpenFolderDialog(dialog_id) {
+            if (dialog_id === "save_map_location") {
+                saveMapFileDialog.open();
+            }
+        }
+    }
 
     DropArea {
         id: baseDropThing
@@ -81,10 +134,14 @@ Item {
                 Action {
                     text: qsTr("&Open...")
                     shortcut: "Ctrl+O"
+                    onTriggered: {
+                        loadMapFileDialog.open();
+                    }
                 }
                 Action {
                     text: qsTr("&Save")
                     shortcut: "Ctrl+S"
+                    onTriggered: AppDataModel.saveMap()
                 }
                 Action {
                     text: qsTr("Save &As...")
@@ -230,19 +287,7 @@ Item {
                 Action {
                     text: qsTr("New item palette")
                     onTriggered: () => {
-                        const component = Qt.createComponent(Qt.url("../../AppComponents/ItemPalette.qml"));
-                        if (component.status == Component.Ready) {
-                            component.createObject(contentRoot);
-                        } else {
-                            console.log("Error loading component:", component.errorString());
-                            component.statusChanged.connect(() => {
-                                    if (component.status == Component.Ready) {
-                                        component.createObject(contentRoot);
-                                    } else {
-                                        console.log("Error loading component:", component.errorString());
-                                    }
-                                });
-                        }
+                        createItemPalette(contentRoot);
                     }
                 }
             }
@@ -281,17 +326,37 @@ Item {
                         id: tabRoot
 
                         onCurrentIndexChanged: () => {
-                            AppDataModel.currentMapIndex = currentIndex;
+                            // Necessary because the tab bar will sometimes try to set the index to a value that is
+                            // out of bounds. Unclear why.
+                            if (currentIndex >= AppDataModel.mapTabs.size) {
+                                currentIndex = AppDataModel.mapTabs.size - 1;
+                                return;
+                            }
                         }
 
                         Repeater {
                             model: AppDataModel.mapTabs
-                            delegate: TabButton {
+                            delegate: VMEComponent.MapTabButton {
                                 horizontalPadding: 8
                                 verticalPadding: 4
                                 text: item
+                                active: tabRoot.currentIndex == index
+
+                                onClose: () => AppDataModel.closeMap(theId)
                             }
                         }
+                    }
+
+                    Binding {
+                        target: AppDataModel
+                        property: "currentMapIndex"
+                        value: tabRoot.currentIndex
+                    }
+
+                    Binding {
+                        target: tabRoot
+                        property: "currentIndex"
+                        value: AppDataModel.currentMapIndex
                     }
 
                     StackLayout {
@@ -301,14 +366,6 @@ Item {
                         Layout.fillHeight: true
 
                         currentIndex: tabRoot.currentIndex
-                        property var prevIndex: 0
-
-                        onCurrentIndexChanged: x => {
-                            if (prevIndex != currentIndex) {
-                                AppDataModel.mapTabSelected(prevIndex, currentIndex);
-                            }
-                            prevIndex = currentIndex;
-                        }
 
                         Repeater {
                             model: AppDataModel.mapTabs
@@ -323,10 +380,16 @@ Item {
                 }
 
                 VMEComponent.VerticalPanelArea {
+                    id: leftPanelArea
                     Layout.fillHeight: true
                     Layout.row: 1
                     Layout.column: 0
                     Layout.minimumWidth: 200
+
+                    Component.onCompleted: () => {
+                        const itemPalette = root.createItemPalette(leftPanelArea);
+                        leftPanelArea.addItemToLayout(itemPalette);
+                    }
                 }
 
                 Rectangle {

@@ -57,6 +57,7 @@ class MapTabListModel : public QAbstractListModel
 
     void addTab(std::string tabName);
     void removeTab(int index);
+    void removeTabById(int id);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int size();
@@ -174,6 +175,8 @@ class QmlMapItem : public QQuickItem
     {
         return _focused;
     }
+
+    void setMap(std::shared_ptr<Map> &&map);
 
     std::shared_ptr<MapView> mapView;
 

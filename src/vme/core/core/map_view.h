@@ -146,6 +146,8 @@ class MapView
 
     void moveItem(const Tile &fromTile, const Position toPosition, Item *item);
 
+    void setMapFilepath(std::filesystem::path path);
+
     void setSpawnInterval(Creature *creature, int spawnInterval);
 
     void setSubtype(Item *item, uint8_t count);
@@ -239,6 +241,8 @@ class MapView
      * Returns the only selected thing (or std::monostate if there is zero or more than one selected thing).
      */
     TileThing singleSelectedThing();
+
+    void setMap(std::shared_ptr<Map> &&map);
 
     bool isDragging() const;
     bool hasSelection() const;

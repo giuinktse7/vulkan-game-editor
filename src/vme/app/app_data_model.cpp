@@ -1,4 +1,3 @@
-
 #include "app_data_model.h"
 
 #include <QGuiApplication>
@@ -17,6 +16,8 @@
 #include "core/brushes/mountain_brush.h"
 #include "core/brushes/raw_brush.h"
 #include "core/brushes/wall_brush.h"
+#include "core/load_map.h"
+#include "core/save_map.h"
 
 #include <memory>
 #include <ranges>
@@ -24,14 +25,35 @@
 AppDataModel::AppDataModel()
 {
     addMapTab("Untitled-1");
+    addMapTab("Untitled-2");
 }
 
 void AppDataModel::mapTabSelected(int prevIndex, int index)
 {
-    VME_LOG_D("mapTabSelected from C++: " << prevIndex << ", " << index);
+    auto tabModel = mapTabs();
 
-    mapTabs()->get(prevIndex).item->setActive(false);
-    mapTabs()->get(index).item->setActive(true);
+    if (tabModel->empty())
+    {
+        return;
+    }
+
+    if (prevIndex < tabModel->size() && prevIndex != -1)
+    {
+        QmlMapItem *item = mapTabs()->get(prevIndex).item;
+        if (item)
+        {
+            item->setActive(false);
+        }
+    }
+
+    if (index < tabModel->size() && index != -1)
+    {
+        QmlMapItem *item = mapTabs()->get(index).item;
+        if (item)
+        {
+            item->setActive(true);
+        }
+    }
 }
 
 void AppDataModel::addMapTab(std::string tabName)
@@ -72,7 +94,6 @@ void AppDataModel::setItemPalette(ComboBoxModel *model, QString paletteId)
 
         auto data = std::vector<NamedId>{result.begin(), result.end()};
         model->setData(data);
-        VME_LOG_D("Set data to palette: " << paletteId.toStdString());
     }
     else
     {
@@ -95,8 +116,6 @@ void AppDataModel::setTileset(TileSetModel *model, QString paletteId, QString ti
 
 void AppDataModel::populateRightClickContextMenu(ContextMenuModel *model)
 {
-    VME_LOG_D("populateRightClickContextMenu from C++: ");
-
     auto mapView = currentMapView();
 
     auto mouseGamePos = mapView->mouseGamePos();
@@ -255,7 +274,6 @@ void AppDataModel::selectBrush(TileSetModel *model, int index)
 
 void AppDataModel::selectBrush(Brush *brush)
 {
-    VME_LOG_D("AppDataModel::selectBrush");
     auto mapView = currentMapView();
 
     EditorAction::editorAction.setBrush(brush);
@@ -266,10 +284,12 @@ void AppDataModel::setcurrentMapIndex(int index)
 {
     if (_currentMapIndex != index)
     {
+        int prevIndex = _currentMapIndex;
+        // VME_LOG("AppDataModel::setcurrentMapIndex: " << index);
         _currentMapIndex = index;
         emit currentMapIndexChanged(index);
 
-        auto mapView = currentMapView();
+        mapTabSelected(prevIndex, index);
     }
 }
 
@@ -311,6 +331,82 @@ void AppDataModel::setCursorShape(int shape)
 void AppDataModel::resetCursorShape()
 {
     QGuiApplication::restoreOverrideCursor();
+}
+
+void AppDataModel::saveMap()
+{
+    MapView *mapView = currentMapView();
+    if (mapView)
+    {
+        const Map *map = mapView->map();
+        if (map)
+        {
+            if (mapView->map()->filePath().has_value())
+            {
+                SaveMap::saveMap(*map);
+            }
+            else
+            {
+                emit openFolderDialog(QVariant::fromValue(QString("save_map_location")));
+            }
+        }
+    }
+}
+
+void AppDataModel::saveCurrentMap(QUrl url)
+{
+    MapView *mapView = currentMapView();
+    if (mapView)
+    {
+        const Map *map = mapView->map();
+        if (map)
+        {
+            auto filepath = url.toLocalFile();
+            mapView->setMapFilepath(std::filesystem::path(filepath.toStdString()));
+            bool ok = SaveMap::saveMap(*map);
+            if (!ok)
+            {
+                VME_LOG_ERROR("Failed to save current map to " << filepath.toStdString());
+            }
+        }
+    }
+}
+
+void AppDataModel::loadMap(QUrl url)
+{
+    auto filepath = url.toLocalFile();
+    _stagedMap = std::make_unique<Map>(LoadMap::loadMap(std::filesystem::path(filepath.toStdString())));
+    addMapTab(url.fileName().toStdString());
+}
+
+void AppDataModel::mapTabCreated(QmlMapItem *item, int id)
+{
+    auto mapTab = QmlMapItemStore::qmlMapItemStore.mapTabs()->getById(id);
+    if (mapTab)
+    {
+        item->setEntryId(id);
+        mapTab->item = item;
+
+        if (_stagedMap)
+        {
+            mapTab->item->setMap(std::move(_stagedMap));
+            _stagedMap.reset();
+
+            int index = QmlMapItemStore::qmlMapItemStore.mapTabs()->size() - 1;
+            setcurrentMapIndex(index);
+        }
+    }
+}
+
+void AppDataModel::closeMap(int id)
+{
+    auto mapTab = QmlMapItemStore::qmlMapItemStore.mapTabs()->getById(id);
+    if (mapTab)
+    {
+        // TODO Check if the map has been changed and prompt to save
+
+        QmlMapItemStore::qmlMapItemStore.mapTabs()->removeTabById(id);
+    }
 }
 
 #include "moc_app_data_model.cpp"

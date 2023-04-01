@@ -107,7 +107,11 @@ QmlMapItem::QmlMapItem(std::string name)
     connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow *win) {
         if (win)
         {
-            QmlMapItemStore::qmlMapItemStore.mapTabs()->getById(_id)->item = this;
+            // auto tabData = QmlMapItemStore::qmlMapItemStore.mapTabs()->getById(_id);
+            // if (tabData)
+            // {
+            //     tabData->item = this;
+            // }
 
             if (_id == 0)
             {
@@ -116,19 +120,16 @@ QmlMapItem::QmlMapItem(std::string name)
 
             if (!mapView)
             {
-                mapView = std::make_unique<MapView>(std::make_unique<QmlUIUtils>(this), EditorAction::editorAction, testMap2());
+                mapView = std::make_unique<MapView>(std::make_unique<QmlUIUtils>(this), EditorAction::editorAction, std::make_shared<Map>());
 
                 mapView->onViewportChanged<&QmlMapItem::onMapViewportChanged>(this);
                 mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
-
-                mapView->setX(0);
-                mapView->setY(0);
-
-                auto devicePixelRatio = win->effectiveDevicePixelRatio();
-                const QSize itemSize = this->size().toSize() * devicePixelRatio;
-
-                mapView->setViewportSize(itemSize.width(), itemSize.height());
             }
+
+            auto devicePixelRatio = win->effectiveDevicePixelRatio();
+            const QSize itemSize = this->size().toSize() * devicePixelRatio;
+
+            mapView->setViewportSize(itemSize.width(), itemSize.height());
 
             mapView->setUiUtils(std::make_unique<QmlUIUtils>(this));
 
@@ -143,6 +144,21 @@ QmlMapItem::QmlMapItem(std::string name)
 QmlMapItem::~QmlMapItem()
 {
     VME_LOG_D("~QmlMapItem");
+}
+
+void QmlMapItem::setMap(std::shared_ptr<Map> &&map)
+{
+    if (!mapView)
+    {
+        mapView = std::make_unique<MapView>(std::make_unique<QmlUIUtils>(this), EditorAction::editorAction, std::move(map));
+
+        mapView->onViewportChanged<&QmlMapItem::onMapViewportChanged>(this);
+        mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
+    }
+    else
+    {
+        mapView->setMap(std::move(map));
+    }
 }
 
 void QmlMapItem::onMapViewportChanged(const Camera::Viewport &)
@@ -179,12 +195,6 @@ void QmlMapItem::cleanup()
 QString QmlMapItem::qStrName()
 {
     return QString::fromStdString(_name);
-}
-MapTabListModel::TabData *MapTabListModel::getById(int id)
-{
-    auto found = std::find_if(_data.begin(), _data.end(), [id](const TabData &tabData) { return tabData.id == id; });
-
-    return found != _data.end() ? &*found : nullptr;
 }
 
 void QmlMapItem::mapViewDrawRequested()
@@ -691,7 +701,9 @@ void MapTabListModel::addTab(std::string tabName)
     _data.push_back(TabData{tabName, id, nullptr});
     endInsertRows();
 
-    emit sizeChanged(size());
+    VME_LOG_D("MapTabListModel::addTab: tab " << tabName << " added with id " << id << ". Size: " << size());
+
+    // emit sizeChanged(size());
 }
 
 void MapTabListModel::removeTab(int index)
@@ -699,7 +711,21 @@ void MapTabListModel::removeTab(int index)
     beginRemoveRows(QModelIndex(), index, index);
     _data.erase(_data.begin() + index);
     endRemoveRows();
-    emit sizeChanged(size());
+    // emit sizeChanged(size());
+}
+
+void MapTabListModel::removeTabById(int id)
+{
+    auto found = std::find_if(_data.cbegin(), _data.cend(), [id](const TabData &tabData) { return tabData.id == id; });
+    if (found != _data.cend())
+    {
+        auto index = std::distance(_data.cbegin(), found);
+        removeTab(index);
+    }
+    else
+    {
+        VME_LOG_ERROR("MapTabListModel::removeTab: tab with id " << id << " not found");
+    }
 }
 
 QVariant MapTabListModel::data(const QModelIndex &modelIndex, int role) const
@@ -718,6 +744,13 @@ QVariant MapTabListModel::data(const QModelIndex &modelIndex, int role) const
     }
 
     return QVariant();
+}
+
+MapTabListModel::TabData *MapTabListModel::getById(int id)
+{
+    auto found = std::find_if(_data.begin(), _data.end(), [id](const TabData &tabData) { return tabData.id == id; });
+
+    return found != _data.end() ? &*found : nullptr;
 }
 
 QHash<int, QByteArray> MapTabListModel::roleNames() const
@@ -749,4 +782,4 @@ void MapTabListModel::setInstance(int index, QmlMapItem *instance)
     _data.at(index).item = instance;
 }
 
-#include "moc_qml_map_item.cpp"
+// #include "moc_qml_map_item.cpp"

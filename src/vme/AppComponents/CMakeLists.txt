@@ -60,6 +60,7 @@ qt_add_qml_module(app_components
         ThingList.qml
         ItemPalette.qml
         MapView.qml
+        MapTabButton.qml
         VerticalPanelArea.qml
         ItemPanel.qml
         # ThingTile.qml

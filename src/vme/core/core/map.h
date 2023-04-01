@@ -60,19 +60,19 @@ class Map
     TileThing getTopThing(const Position pos);
 
     /*
-		Remove and release ownership of the tile
-	*/
+                Remove and release ownership of the tile
+        */
     std::unique_ptr<Tile> dropTile(const Position pos);
 
     bool isTileEmpty(const Position pos) const;
 
     void addItem(const Position position, uint32_t serverId);
-    void addItem(const Position position, Item&&item);
+    void addItem(const Position position, Item &&item);
 
     void insertTile(Tile &&tile);
     /*
-		Moves the tile to pos. If pos already contained a tile, that tile is destroyed.
-	*/
+                Moves the tile to pos. If pos already contained a tile, that tile is destroyed.
+        */
     void moveTile(Position from, Position to);
 
     const MapVersion &getMapVersion() const;
@@ -96,13 +96,16 @@ class Map
     const Town *getTown(uint32_t id) const;
     Town *getTown(uint32_t id);
 
+    void setFilepath(std::filesystem::path path);
+    std::optional<std::filesystem::path> filePath() const;
+
     inline const std::string &name() const noexcept;
 
     void setName(std::string name);
 
     /*
-		Clear the map.
-	*/
+                Clear the map.
+        */
     void clear();
 
     quadtree::Node *getLeafUnsafe(int x, int y) const;
@@ -115,6 +118,7 @@ class Map
     MapVersion mapVersion;
     std::string _description;
 
+    std::optional<std::filesystem::path> _filepath;
     std::filesystem::path _spawnFilepath;
     std::filesystem::path _houseFilepath;
 
@@ -123,9 +127,9 @@ class Map
     util::Volume<uint16_t, uint16_t, uint8_t> _size;
 
     /*
-		Replace the tile at the given tile's location. Returns the old tile if one
-		was present.
-	*/
+                Replace the tile at the given tile's location. Returns the old tile if one
+                was present.
+        */
     std::unique_ptr<Tile> replaceTile(Tile &&tile);
     std::unique_ptr<Tile> setOrReplaceTile(Tile &&tile);
 
@@ -134,8 +138,8 @@ class Map
     void moveSelectedItems(const Position source, const Position destination);
 
     /*
-		Remove and release ownership of the item
-	*/
+                Remove and release ownership of the item
+        */
     std::shared_ptr<Item> dropItem(Tile *tile, Item *item);
 
     void createItemAt(Position pos, uint16_t id);

@@ -1684,6 +1684,16 @@ void MapView::toggleViewOption(ViewOption option)
     requestDraw();
 }
 
+void MapView::setMapFilepath(std::filesystem::path path)
+{
+    _map->setFilepath(path);
+}
+
+void MapView::setMap(std::shared_ptr<Map> &&map)
+{
+    _map = std::move(map);
+}
+
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

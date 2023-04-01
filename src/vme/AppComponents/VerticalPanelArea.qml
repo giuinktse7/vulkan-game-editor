@@ -3,11 +3,18 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Rectangle {
+    id: root
     // Layout.fillHeight: true;
     // Layout.row: 1;
     // Layout.column: 0;
     // Layout.minimumWidth: 200;
     Layout.preferredWidth: gridLayout.childrenRect.width;
+
+    function addItemToLayout(item)
+    {
+        item.parent = gridLayout;
+        item.Layout.row = gridLayout.children.length - 1;
+    }
 
     DropArea {
         id: dropArea;

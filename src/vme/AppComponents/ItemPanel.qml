@@ -46,10 +46,12 @@ VMEComponent.ResizableItem {
                 root.parent = contentRoot;
             }
         }
-        onPressed:
-        // root.beginDrag = Qt.point(root.x, root.y);
-        {
+
+        onPressed: mouse => {
+            root.Drag.hotSpot.x = mouse.x - mouseArea.x;
+            root.Drag.hotSpot.y = mouse.y - mouseArea.y;
         }
+
         onReleased: {
             const result = root.Drag.drop();
             // if (result == Qt.MoveAction) {

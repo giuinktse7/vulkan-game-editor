@@ -48,7 +48,10 @@ class SaveBuffer
 
 namespace SaveMap
 {
-    void saveMap(const Map &map);
+    /**
+     * returns true if the map was saved successfully
+     */
+    bool saveMap(const Map &map);
 
     class Serializer
     {
