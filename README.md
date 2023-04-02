@@ -1,6 +1,6 @@
 # Vulkan Game Editor
 
-A game editor written in C++20 using Vulkan and the QT framework
+A game editor written in C++20 using Vulkan and the QT framework. Uses QML for the UI.
 
 ---
 
@@ -11,7 +11,7 @@ TODO
 ## Dependencies
 
 -   [**Vulkan SDK**](https://vulkan.lunarg.com/) Low-level 3D graphics and computing API.
--   [**Qt6 (`Qt::Core`, `Qt::Widgets`, `Qt::Qml`, `Qt::Quick` and`Qt::Svg`)**](https://www.qt.io/download-open-source) Cross-plaftorm GUI framework.
+-   [**Qt6 (`Qt::Core`, `Qt::Qml`, `Qt::Quick` and`Qt::Svg`)**](https://www.qt.io/download-open-source) Cross-plaftorm GUI framework.
 
     **NOTE**: The QT framework requires around 8 GB of disk space per target architecture (For example `msvc2019` or `msvc2019_64`).
 
