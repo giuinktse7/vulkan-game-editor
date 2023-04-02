@@ -5,6 +5,7 @@
 #include "../items.h"
 #include "../map_view.h"
 #include "../position.h"
+#include "../settings.h"
 #include "../tile.h"
 
 RawBrush::RawBrush(ItemType *itemType)
@@ -36,7 +37,7 @@ void RawBrush::apply(MapView &mapView, const Position &position)
     }
     else
     {
-        mapView.addItem(tile, Item(_itemType->id));
+        mapView.addItem(tile, Item(_itemType->id), Settings::BRUSH_INSERTION_OFFSET);
     }
 }
 

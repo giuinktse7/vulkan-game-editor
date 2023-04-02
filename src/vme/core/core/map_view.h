@@ -83,6 +83,8 @@ class MapView
     void requestDraw();
     void requestMinimapDraw();
 
+    Tile *hoveredTile() const noexcept;
+
     /**
      * Shorthand method for comitting actions within a group. Equivalent to:
      *
@@ -166,7 +168,7 @@ class MapView
     void addBorder(const Position &position, uint32_t id, uint32_t zOrder);
     void addItem(const Position &position, uint32_t id);
     void addItem(const Position &pos, Item &&item, bool onBlocking = true);
-    void addItem(Tile &tile, Item &&item);
+    void addItem(Tile &tile, Item &&item, int insertionOffset = 0);
     void setGround(Tile &tile, Item &&ground, bool clearBorders = false);
     void replaceItemByServerId(Tile &tile, uint32_t oldServerId, uint32_t newServerId);
 

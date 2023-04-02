@@ -265,6 +265,27 @@ Item {
                 MenuSeparator {
                 }
 
+                Menu {
+                    title: qsTr("Border Options")
+                    Action {
+                        text: qsTr("Autoborder")
+                        checkable: true
+                        checked: AppDataModel.autoBorder
+                        shortcut: "A"
+                        onTriggered: AppDataModel.toggleAutoBorder()
+                    }
+                    Action {
+                        text: qsTr("Detailed Border Mode")
+                        checkable: true
+                        checked: AppDataModel.detailedBorderModeEnabled
+                        shortcut: "Alt+B"
+                        onTriggered: AppDataModel.toggleDetailedBorderModeEnabled()
+                    }
+                }
+
+                MenuSeparator {
+                }
+
                 Action {
                     text: qsTr("Cut")
                     shortcut: "Ctrl+X"
@@ -279,6 +300,25 @@ Item {
                     text: qsTr("Paste")
                     shortcut: "Ctrl+V"
                     onTriggered: AppDataModel.paste()
+                }
+
+                MenuSeparator {
+                }
+
+                Action {
+                    text: qsTr("Increase Brush Offset")
+                    shortcut: "Z"
+                    onTriggered: AppDataModel.changeBrushInsertionOffset(1)
+                }
+                Action {
+                    text: qsTr("Decrease Brush Offset")
+                    shortcut: "X"
+                    onTriggered: AppDataModel.changeBrushInsertionOffset(-1)
+                }
+                Action {
+                    text: qsTr("Reset Brush Offset")
+                    shortcut: "C"
+                    onTriggered: AppDataModel.resetBrushInsertionOffset()
                 }
             }
 
@@ -304,6 +344,54 @@ Item {
                 MenuSeparator {
                 }
 
+                Action {
+                    text: qsTr("Show Creatures")
+                    checkable: true
+                    checked: true
+                    shortcut: "F"
+                    onTriggered: () => console.log("[Show Creatures] Not implemented.")
+                }
+                Action {
+                    text: qsTr("Show Spawns")
+                    checkable: true
+                    checked: true
+                    shortcut: "S"
+                    onTriggered: () => console.log("[Show Spawns] Not implemented.")
+                }
+                Action {
+                    text: qsTr("Show Special")
+                    checkable: true
+                    checked: true
+                    shortcut: "E"
+                    onTriggered: () => console.log("[Show Special] Not implemented.")
+                }
+                Action {
+                    text: qsTr("Show Houses")
+                    checkable: true
+                    checked: true
+                    shortcut: "Ctrl+H"
+                    onTriggered: () => console.log("[Show Houses] Not implemented.")
+                }
+                Action {
+                    text: qsTr("Show Pathing")
+                    checkable: true
+                    checked: true
+                    shortcut: "O"
+                    onTriggered: () => console.log("[Show Pathing] Not implemented.")
+                }
+                Action {
+                    text: qsTr("Show Towns")
+                    checkable: true
+                    checked: true
+                    onTriggered: () => console.log("[Show Towns] Not implemented.")
+                }
+                Action {
+                    text: qsTr("Show Waypoints")
+                    checkable: true
+                    checked: true
+                    shortcut: "Shift+W"
+                    onTriggered: () => console.log("[Show Waypoints] Not implemented.")
+                }
             }
 
             Menu {

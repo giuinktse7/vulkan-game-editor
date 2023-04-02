@@ -8,3 +8,4 @@ int Settings::DEFAULT_CREATURE_SPAWN_INTERVAL = 60;
 bool Settings::HIGHLIGHT_BRUSH_IN_PALETTE_ON_SELECT = false;
 bool Settings::RENDER_ANIMATIONS = false;
 bool Settings::PLACE_MOUNTAIN_FEATURES = false;
+int Settings::BRUSH_INSERTION_OFFSET = 0;

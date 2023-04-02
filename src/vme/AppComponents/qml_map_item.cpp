@@ -1,11 +1,13 @@
 #include "qml_map_item.h"
 
 #include <QGuiApplication>
+#include <QTimer>
 
 #include "core/brushes/brush.h"
 #include "core/brushes/creature_brush.h"
 #include "core/const.h"
 #include "core/map_renderer.h"
+#include "core/settings.h"
 #include "core/vendor/rollbear-visit/visit.hpp"
 #include "qml_ui_utils.h"
 
@@ -438,7 +440,14 @@ bool QmlMapItem::event(QEvent *event)
 
 void QmlMapItem::eyedrop(const Position position) const
 {
-    TileThing topThing = mapView->map()->getTopThing(position);
+
+    Tile *tile = mapView->map()->getTile(position);
+    if (!tile)
+    {
+        return;
+    }
+
+    TileThing topThing = tile->getThing(Settings::BRUSH_INSERTION_OFFSET);
 
     rollbear::visit(
         util::overloaded{

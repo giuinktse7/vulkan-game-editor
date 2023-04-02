@@ -65,15 +65,17 @@ class Tile
     uint8_t minimapColor() const;
 
     TileThing getTopThing() const;
+    TileThing getThing(int offsetFromTop) const;
     Item *getTopItem() const;
     inline Item *ground() const noexcept;
 
     std::optional<size_t> indexOf(Item *item) const;
     Item *itemAt(size_t index);
+    Item *itemAt(size_t index) const;
 
     Item *addBorder(Item &&item, uint32_t zOrder);
     Item *addItem(uint32_t serverId);
-    Item *addItem(Item &&item);
+    Item *addItem(Item &&item, int insertionOffset = 0);
     Item *addItem(std::shared_ptr<Item> item);
 
     void insertItem(std::shared_ptr<Item> item, size_t index);

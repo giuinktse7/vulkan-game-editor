@@ -18,6 +18,7 @@
 #include "core/brushes/wall_brush.h"
 #include "core/load_map.h"
 #include "core/save_map.h"
+#include "core/settings.h"
 
 #include <memory>
 #include <ranges>
@@ -179,6 +180,8 @@ void AppDataModel::populateRightClickContextMenu(ContextMenuModel *model)
     }
 
     model->setData(actions);
+
+    mapView->editorAction.reset();
 }
 
 void AppDataModel::onContextMenuAction(int id)
@@ -408,6 +411,12 @@ void AppDataModel::closeMap(int id)
         QmlMapItemStore::qmlMapItemStore.mapTabs()->removeTabById(id);
     }
 }
+void AppDataModel::toggleAutoBorder()
+{
+    Settings::AUTO_BORDER = !Settings::AUTO_BORDER;
+    emit autoBorderChanged(Settings::AUTO_BORDER);
+}
+
 void AppDataModel::toggleShowAnimation()
 {
     Settings::RENDER_ANIMATIONS = !Settings::RENDER_ANIMATIONS;
@@ -421,10 +430,73 @@ void AppDataModel::toggleShowAnimation()
     emit showAnimationChanged(Settings::RENDER_ANIMATIONS);
 }
 
+void AppDataModel::toggleDetailedBorderModeEnabled()
+{
+    auto mapView = currentMapView();
+    if (mapView)
+    {
+        auto action = mapView->editorAction.as<MouseAction::MapBrush>();
+        if (action)
+        {
+            if (action->brush->type() == BrushType::Border)
+            {
+                auto brushType = Settings::BORDER_BRUSH_VARIATION == BorderBrushVariationType::General
+                                     ? BorderBrushVariationType::Detailed
+                                     : BorderBrushVariationType::General;
+
+                BorderBrush::setBrushVariation(brushType);
+                emit detailedBorderModeEnabledChanged(brushType == BorderBrushVariationType::Detailed);
+                mapView->requestDraw();
+            }
+            else if (action->brush->type() == BrushType::Mountain)
+            {
+                Settings::PLACE_MOUNTAIN_FEATURES = !Settings::PLACE_MOUNTAIN_FEATURES;
+            }
+        }
+    }
+}
+
+bool AppDataModel::autoBorder() const
+{
+    return Settings::AUTO_BORDER;
+}
+
 bool AppDataModel::showAnimation() const
 {
     return Settings::RENDER_ANIMATIONS;
 }
 
+bool AppDataModel::detailedBorderModeEnabled() const
+{
+    return Settings::BORDER_BRUSH_VARIATION == BorderBrushVariationType::Detailed;
+}
+
+void AppDataModel::changeBrushInsertionOffset(int delta)
+{
+    int offset = Settings::BRUSH_INSERTION_OFFSET;
+    auto mapView = currentMapView();
+
+    /**
+     * If the hovered tile is not null, we can use the item count to determine the maximum offset.
+     * This should improve the UX of this functionality.
+     */
+    if (mapView)
+    {
+        auto tile = mapView->hoveredTile();
+        if (tile)
+        {
+            auto count = static_cast<int>(tile->itemCount());
+            offset = std::min(offset, count);
+        }
+    }
+
+    Settings::BRUSH_INSERTION_OFFSET = std::max(offset + delta, 0);
+    VME_LOG_D("Settings::BRUSH_INSERTION_OFFSET: " << Settings::BRUSH_INSERTION_OFFSET);
+}
+
+void AppDataModel::resetBrushInsertionOffset()
+{
+    Settings::BRUSH_INSERTION_OFFSET = 0;
+}
 
 #include "moc_app_data_model.cpp"

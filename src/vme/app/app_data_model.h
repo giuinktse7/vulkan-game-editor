@@ -25,7 +25,9 @@ class AppDataModel : public QObject
     Q_OBJECT
     Q_PROPERTY(MapTabListModel *mapTabs READ mapTabs)
     Q_PROPERTY(int currentMapIndex READ currentMapIndex WRITE setcurrentMapIndex NOTIFY currentMapIndexChanged)
+    Q_PROPERTY(bool autoBorder READ autoBorder NOTIFY autoBorderChanged)
     Q_PROPERTY(bool showAnimation READ showAnimation NOTIFY showAnimationChanged)
+    Q_PROPERTY(bool detailedBorderModeEnabled READ detailedBorderModeEnabled NOTIFY detailedBorderModeEnabledChanged)
 
   signals:
     void openFolderDialog(QVariant dialog_id);
@@ -54,7 +56,13 @@ class AppDataModel : public QObject
 
     Q_INVOKABLE void mapTabCreated(QmlMapItem *item, int id);
 
+    Q_INVOKABLE void changeBrushInsertionOffset(int delta);
+    Q_INVOKABLE void resetBrushInsertionOffset();
+
+    Q_INVOKABLE void toggleAutoBorder();
     Q_INVOKABLE void toggleShowAnimation();
+    Q_INVOKABLE void toggleDetailedBorderModeEnabled();
+
     void addMapTab(std::string tabName);
     void removeMapTab(int index);
 
@@ -68,7 +76,10 @@ class AppDataModel : public QObject
         return _currentMapIndex;
     }
 
+    bool autoBorder() const;
     bool showAnimation() const;
+    bool detailedBorderModeEnabled() const;
+
     MapTabListModel *mapTabs()
     {
         return QmlMapItemStore::qmlMapItemStore.mapTabs();
@@ -78,7 +89,9 @@ class AppDataModel : public QObject
 
   signals:
     void currentMapIndexChanged(int index);
+    void autoBorderChanged(bool value);
     void showAnimationChanged(bool value);
+    void detailedBorderModeEnabledChanged(bool value);
 
   private:
     int _currentMapIndex = 0;

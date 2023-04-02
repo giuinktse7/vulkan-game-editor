@@ -202,10 +202,10 @@ void MapView::endTransaction(TransactionType transactionType)
     history.endTransaction(transactionType);
 }
 
-void MapView::addItem(Tile &tile, Item &&item)
+void MapView::addItem(Tile &tile, Item &&item, int insertionOffset)
 {
     Tile newTile = tile.deepCopy();
-    newTile.addItem(std::move(item));
+    newTile.addItem(std::move(item), insertionOffset);
 
     Action action(ActionType::SetTile);
     action.addChange(SetTile(std::move(newTile)));
@@ -1817,6 +1817,11 @@ void MapView::setUnderMouse(bool underMouse)
     {
         requestDraw();
     }
+}
+
+Tile *MapView::hoveredTile() const noexcept
+{
+    return getTile(_previousMouseGamePos);
 }
 
 std::optional<Position> MapView::getLastBrushDragPosition() const noexcept

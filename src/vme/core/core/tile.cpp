@@ -286,6 +286,11 @@ Item *Tile::itemAt(size_t index)
     return index >= _items.size() ? nullptr : _items.at(index).get();
 }
 
+Item *Tile::itemAt(size_t index) const
+{
+    return index >= _items.size() ? nullptr : _items.at(index).get();
+}
+
 void Tile::insertItem(std::shared_ptr<Item> item, size_t index)
 {
     _items.emplace(_items.begin() + index, item);
@@ -375,8 +380,10 @@ Item *Tile::addBorder(Item &&item, uint32_t zOrder)
     return newItem.get();
 }
 
-Item *Tile::addItem(Item &&item)
+Item *Tile::addItem(Item &&item, int insertionOffset)
 {
+    DEBUG_ASSERT(insertionOffset >= 0, "insertionOffset must be >= 0.");
+
     if (item.isGround())
     {
         return replaceGround(std::move(item));
@@ -385,9 +392,17 @@ Item *Tile::addItem(Item &&item)
     if (item.selected)
         ++_selectionCount;
 
-    if (_items.size() == 0 || item.isTop() || item.itemType->stackOrder >= _items.back()->itemType->stackOrder)
+    if (_items.empty() || item.isTop() || item.itemType->stackOrder >= _items.back()->itemType->stackOrder)
     {
-        auto &newItem = _items.emplace_back(std::make_unique<Item>(std::move(item)));
+        if (insertionOffset == 0)
+        {
+            auto &newItem = _items.emplace_back(std::make_unique<Item>(std::move(item)));
+            return newItem.get();
+        }
+
+        auto cursor = _items.end() - std::min(insertionOffset, static_cast<int>(_items.size()));
+
+        auto &newItem = *_items.emplace(cursor, std::make_unique<Item>(std::move(item)));
         return newItem.get();
     }
     else
@@ -405,6 +420,15 @@ Item *Tile::addItem(Item &&item)
         }
         else
         {
+            auto s = static_cast<int>(std::distance(_items.begin(), cursor));
+            cursor -= std::min(insertionOffset, s);
+
+            cursor -= insertionOffset;
+            if (cursor < _items.begin())
+            {
+                cursor = _items.begin();
+            }
+
             auto &newItem = *_items.emplace(cursor, std::make_unique<Item>(std::move(item)));
             return newItem.get();
         }
@@ -894,6 +918,42 @@ TileThing Tile::firstSelectedThing()
         Item *item = firstSelectedItem();
         return item;
     }
+}
+
+TileThing Tile::getThing(int offsetFromTop) const
+{
+    // Creature?
+    if (_creature && _creature->selected)
+    {
+        if (offsetFromTop == 0)
+        {
+            return _creature.get();
+        }
+        else
+        {
+            --offsetFromTop;
+        }
+    }
+
+    int index = _items.size() - 1 - offsetFromTop;
+
+    if (index >= 0)
+    {
+        return itemAt(index);
+    }
+
+    if (_ground)
+    {
+        return _ground.get();
+    }
+
+    // If there's no ground, return the bottom item if we have one
+    if (!_items.empty())
+    {
+        return _items.front().get();
+    }
+
+    return std::monostate{};
 }
 
 void Tile::setFlags(uint32_t flags)
