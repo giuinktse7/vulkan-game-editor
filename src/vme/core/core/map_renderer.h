@@ -280,8 +280,6 @@ class MapRenderer
         return _currentFrame;
     }
 
-    bool _containsAnimation = false;
-
     VkRenderPass getRenderPass() const
     {
         return renderPass;
@@ -290,6 +288,11 @@ class MapRenderer
     std::shared_ptr<VulkanInfo> getVulkanInfo() const
     {
         return vulkanInfo;
+    }
+
+    bool containsAnimation() const
+    {
+        return _containsAnimation;
     }
 
   private:
@@ -393,6 +396,8 @@ class MapRenderer
     std::unordered_set<TextureWindow, TextureWindowHasher, TextureWindowEqual> testTextureSet;
 
     // std::unique_ptr<SwapChain> swapchain;
+
+    bool _containsAnimation = false;
 
     bool debug = false;
     std::shared_ptr<MapView> mapView;

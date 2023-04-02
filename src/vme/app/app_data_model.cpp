@@ -408,5 +408,23 @@ void AppDataModel::closeMap(int id)
         QmlMapItemStore::qmlMapItemStore.mapTabs()->removeTabById(id);
     }
 }
+void AppDataModel::toggleShowAnimation()
+{
+    Settings::RENDER_ANIMATIONS = !Settings::RENDER_ANIMATIONS;
+
+    auto mapView = currentMapView();
+    if (mapView && Settings::RENDER_ANIMATIONS)
+    {
+        mapView->requestDraw();
+    }
+
+    emit showAnimationChanged(Settings::RENDER_ANIMATIONS);
+}
+
+bool AppDataModel::showAnimation() const
+{
+    return Settings::RENDER_ANIMATIONS;
+}
+
 
 #include "moc_app_data_model.cpp"

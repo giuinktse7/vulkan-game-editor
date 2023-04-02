@@ -291,6 +291,20 @@ Item {
                     }
                 }
             }
+            Menu {
+                title: qsTr("Show")
+                Action {
+                    text: qsTr("Show Animation")
+                    checkable: true
+                    checked: AppDataModel.showAnimation
+                    shortcut: "L"
+                    onTriggered: AppDataModel.toggleShowAnimation()
+                }
+
+                MenuSeparator {
+                }
+
+            }
 
             Menu {
                 title: qsTr("&Help")

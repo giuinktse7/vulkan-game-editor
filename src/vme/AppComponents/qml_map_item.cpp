@@ -559,6 +559,20 @@ void QmlMapItem::setEntryId(int id)
     }
 }
 
+void QmlMapItem::scheduleDraw(int millis)
+{
+    if (millis == 0)
+    {
+        update();
+    }
+    else
+    {
+        QTimer::singleShot(millis, this, [this]() {
+            update();
+        });
+    }
+}
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>MapTextureNode>>>>>>>>>>>
@@ -660,6 +674,12 @@ void MapTextureNode::render()
     }
 
     mapRenderer->render(frameBuffer, util::Size(textureSize.width(), textureSize.height()));
+
+    if (Settings::RENDER_ANIMATIONS && mapRenderer->containsAnimation())
+    {
+        constexpr int MILLIS_PER_FRAME = 1000 / 60;
+        m_item->scheduleDraw(MILLIS_PER_FRAME);
+    }
 
     // [QT doc]
     // Memory barrier before the texture can be used as a source.

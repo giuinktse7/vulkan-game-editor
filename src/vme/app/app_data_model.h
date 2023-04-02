@@ -25,6 +25,7 @@ class AppDataModel : public QObject
     Q_OBJECT
     Q_PROPERTY(MapTabListModel *mapTabs READ mapTabs)
     Q_PROPERTY(int currentMapIndex READ currentMapIndex WRITE setcurrentMapIndex NOTIFY currentMapIndexChanged)
+    Q_PROPERTY(bool showAnimation READ showAnimation NOTIFY showAnimationChanged)
 
   signals:
     void openFolderDialog(QVariant dialog_id);
@@ -53,6 +54,7 @@ class AppDataModel : public QObject
 
     Q_INVOKABLE void mapTabCreated(QmlMapItem *item, int id);
 
+    Q_INVOKABLE void toggleShowAnimation();
     void addMapTab(std::string tabName);
     void removeMapTab(int index);
 
@@ -66,6 +68,7 @@ class AppDataModel : public QObject
         return _currentMapIndex;
     }
 
+    bool showAnimation() const;
     MapTabListModel *mapTabs()
     {
         return QmlMapItemStore::qmlMapItemStore.mapTabs();
@@ -75,6 +78,7 @@ class AppDataModel : public QObject
 
   signals:
     void currentMapIndexChanged(int index);
+    void showAnimationChanged(bool value);
 
   private:
     int _currentMapIndex = 0;

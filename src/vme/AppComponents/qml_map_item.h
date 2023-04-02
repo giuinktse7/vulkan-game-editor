@@ -152,6 +152,8 @@ class QmlMapItem : public QQuickItem
     QmlMapItem(std::string name = "");
     ~QmlMapItem();
 
+    void scheduleDraw(int millis);
+
     Q_INVOKABLE void onMousePositionChanged(int x, int y, int button, int buttons, int modifiers);
     Q_INVOKABLE void setFocus(bool focus);
 
