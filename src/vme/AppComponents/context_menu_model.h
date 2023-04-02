@@ -53,8 +53,6 @@ class ContextMenuModel : public QAbstractListModel
     ContextMenuModel();
     ContextMenuModel(std::vector<ContextMenuItem> items);
 
-    void clear();
-
     Q_INVOKABLE void setData(std::vector<ContextMenuItem> items);
     // Q_INVOKABLE QString getValue(int index);
 

@@ -16,6 +16,7 @@ set(HEADER_FILES
     enum_conversion.h
     qml_ui_utils.h
     qt_vulkan_info.h
+    town_list_model.h
 )
 
 set(SRC_FILES
@@ -27,6 +28,7 @@ set(SRC_FILES
     enum_conversion.cpp
     qml_ui_utils.cpp
     qt_vulkan_info.cpp
+    town_list_model.cpp
 )
 
 qt_add_library(app_components STATIC
@@ -59,6 +61,7 @@ qt_add_qml_module(app_components
         ResizableItem.qml
         ThingList.qml
         ItemPalette.qml
+        TownWindow.qml
         MapView.qml
         MapTabButton.qml
         VerticalPanelArea.qml

@@ -57,6 +57,4 @@ QHash<int, QByteArray> ContextMenuModel::roleNames() const
     return roles;
 }
 
-void clear();
-
 // #include "context_menu_model.cpp"

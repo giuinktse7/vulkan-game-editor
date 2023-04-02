@@ -24,6 +24,7 @@
 #include <ranges>
 
 AppDataModel::AppDataModel()
+    : _townListModel(std::make_unique<TownListModel>())
 {
     addMapTab("Untitled-1");
     addMapTab("Untitled-2");
@@ -53,6 +54,17 @@ void AppDataModel::mapTabSelected(int prevIndex, int index)
         if (item)
         {
             item->setActive(true);
+
+            // Update town list model
+            auto mapView = currentMapView();
+            if (mapView)
+            {
+                _townListModel->setMap(mapView->mapAsShared());
+            }
+            else
+            {
+                _townListModel->clear();
+            }
         }
     }
 }
@@ -288,7 +300,7 @@ void AppDataModel::setcurrentMapIndex(int index)
     if (_currentMapIndex != index)
     {
         int prevIndex = _currentMapIndex;
-        // VME_LOG("AppDataModel::setcurrentMapIndex: " << index);
+        VME_LOG("AppDataModel::setcurrentMapIndex: " << index);
         _currentMapIndex = index;
         emit currentMapIndexChanged(index);
 
@@ -384,6 +396,7 @@ void AppDataModel::loadMap(QUrl url)
 
 void AppDataModel::mapTabCreated(QmlMapItem *item, int id)
 {
+    VME_LOG_D("AppDataModel::mapTabCreated: " << id);
     auto mapTab = QmlMapItemStore::qmlMapItemStore.mapTabs()->getById(id);
     if (mapTab)
     {
@@ -411,6 +424,12 @@ void AppDataModel::closeMap(int id)
         QmlMapItemStore::qmlMapItemStore.mapTabs()->removeTabById(id);
     }
 }
+
+TownListModel *AppDataModel::townListModel()
+{
+    return _townListModel.get();
+}
+
 void AppDataModel::toggleAutoBorder()
 {
     Settings::AUTO_BORDER = !Settings::AUTO_BORDER;
@@ -497,6 +516,17 @@ void AppDataModel::changeBrushInsertionOffset(int delta)
 void AppDataModel::resetBrushInsertionOffset()
 {
     Settings::BRUSH_INSERTION_OFFSET = 0;
+}
+
+void AppDataModel::createTown()
+{
+    auto mapView = currentMapView();
+    const Town &town = mapView->mapAsShared()->addTown();
+    _townListModel->addTown(town);
+    // if (mapView)
+    // {
+    //     mapView->mapAsShared()->addTown()
+    // }
 }
 
 #include "moc_app_data_model.cpp"

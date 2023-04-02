@@ -13,17 +13,20 @@
 #include "core/map_copy_buffer.h"
 #include "core/position.h"
 #include "qml_map_item.h"
+#include "town_list_model.h"
 
 #include "combobox_model.h"
 
 class TileSetModel;
 class ContextMenuModel;
+class TownListModel;
 class QmlMapItem;
 
 class AppDataModel : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(MapTabListModel *mapTabs READ mapTabs)
+    Q_PROPERTY(TownListModel *townListModel READ townListModel)
     Q_PROPERTY(int currentMapIndex READ currentMapIndex WRITE setcurrentMapIndex NOTIFY currentMapIndexChanged)
     Q_PROPERTY(bool autoBorder READ autoBorder NOTIFY autoBorderChanged)
     Q_PROPERTY(bool showAnimation READ showAnimation NOTIFY showAnimationChanged)
@@ -62,6 +65,7 @@ class AppDataModel : public QObject
     Q_INVOKABLE void toggleAutoBorder();
     Q_INVOKABLE void toggleShowAnimation();
     Q_INVOKABLE void toggleDetailedBorderModeEnabled();
+    Q_INVOKABLE void createTown();
 
     void addMapTab(std::string tabName);
     void removeMapTab(int index);
@@ -85,6 +89,8 @@ class AppDataModel : public QObject
         return QmlMapItemStore::qmlMapItemStore.mapTabs();
     };
 
+    TownListModel *townListModel();
+
     void setcurrentMapIndex(int index);
 
   signals:
@@ -94,7 +100,7 @@ class AppDataModel : public QObject
     void detailedBorderModeEnabledChanged(bool value);
 
   private:
-    int _currentMapIndex = 0;
+    int _currentMapIndex = -1;
 
     /**
      * A map that has been loaded but not yet added to a QmlMapItem.
@@ -104,4 +110,7 @@ class AppDataModel : public QObject
     MapCopyBuffer mapCopyBuffer;
 
     std::optional<Position> _contextMenuPosition;
+
+  private:
+    std::unique_ptr<TownListModel> _townListModel;
 };

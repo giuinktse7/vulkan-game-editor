@@ -676,6 +676,24 @@ void Map::addTown(Town &&town)
     _towns.emplace(town.id(), std::move(town));
 }
 
+const Town &Map::addTown()
+{
+    auto ids = to_vector(_towns | std::views::values | std::views::transform([](const Town &town) { return town.id(); }));
+
+    std::ranges::sort(ids);
+
+    uint32_t nextId = 0;
+    auto it = ids.begin();
+    for (auto it = ids.begin(); it != ids.end() && *it == nextId; ++it)
+    {
+        ++nextId;
+    }
+
+    _towns.emplace(nextId, Town(nextId));
+
+    return _towns.at(nextId);
+}
+
 const Town *Map::getTown(const std::string &name) const
 {
     auto found = std::find_if(_towns.begin(), _towns.end(), [&name](const std::pair<uint32_t, Town> &pair) {

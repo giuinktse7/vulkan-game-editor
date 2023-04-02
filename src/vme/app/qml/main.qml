@@ -28,6 +28,11 @@ Item {
         }
     }
 
+    VMEComponent.TownWindow {
+        id: townWindow
+        visible: true
+    }
+
     FileDialog {
         id: saveMapFileDialog
         title: "Save Map"
@@ -319,6 +324,16 @@ Item {
                     text: qsTr("Reset Brush Offset")
                     shortcut: "C"
                     onTriggered: AppDataModel.resetBrushInsertionOffset()
+                }
+            }
+
+            Menu {
+                title: qsTr("Map")
+
+                Action {
+                    text: qsTr("Edit Towns")
+                    shortcut: "Ctrl+T"
+                    onTriggered: () => {}
                 }
             }
 

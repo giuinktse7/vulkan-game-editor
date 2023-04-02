@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <stack>
 #include <string>
 #include <unordered_map>
@@ -91,6 +92,7 @@ class Map
 
     inline const vme_unordered_map<uint32_t, Town> &towns() const noexcept;
     void addTown(Town &&town);
+    const Town &addTown();
     const Town *getTown(const std::string &name) const;
     Town *getTown(const std::string &name);
     const Town *getTown(uint32_t id) const;
@@ -432,3 +434,23 @@ class MapArea
         return iterator::end();
     }
 };
+
+template <std::ranges::range R>
+auto to_vector(R &&r)
+{
+    std::vector<std::ranges::range_value_t<R>> v;
+
+    // if we can get a size, reserve that much
+    if constexpr (requires { std::ranges::size(r); })
+    {
+        v.reserve(std::ranges::size(r));
+    }
+
+    // push all the elements
+    for (auto &&e : r)
+    {
+        v.push_back(static_cast<decltype(e) &&>(e));
+    }
+
+    return v;
+}

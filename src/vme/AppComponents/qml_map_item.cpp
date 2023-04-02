@@ -106,6 +106,11 @@ QmlMapItem::QmlMapItem(std::string name)
     setShortcut(Qt::ControlModifier | Qt::ShiftModifier, Qt::Key_Z, ShortcutAction::Redo);
     setShortcut(Qt::Key_I, ShortcutAction::BrushEyeDrop);
 
+    mapView = std::make_unique<MapView>(std::make_unique<QmlUIUtils>(this), EditorAction::editorAction, std::make_shared<Map>());
+
+    mapView->onViewportChanged<&QmlMapItem::onMapViewportChanged>(this);
+    mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
+
     connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow *win) {
         if (win)
         {
@@ -118,14 +123,6 @@ QmlMapItem::QmlMapItem(std::string name)
             if (_id == 0)
             {
                 _active = true;
-            }
-
-            if (!mapView)
-            {
-                mapView = std::make_unique<MapView>(std::make_unique<QmlUIUtils>(this), EditorAction::editorAction, std::make_shared<Map>());
-
-                mapView->onViewportChanged<&QmlMapItem::onMapViewportChanged>(this);
-                mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
             }
 
             auto devicePixelRatio = win->effectiveDevicePixelRatio();

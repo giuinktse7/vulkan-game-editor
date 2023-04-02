@@ -306,6 +306,8 @@ class MapView
 
     bool isValidPos(const Position &position) const;
 
+    std::shared_ptr<Map> mapAsShared();
+
     /**
      * @brief The device pixel ratio for the view. This can be affected by things like changing the display zoom
      * on a Windows machine (125% zoom corresponds to device pixel ratio 1.25)
@@ -381,6 +383,11 @@ class MapView
     Nano::Signal<void()> drawMinimapRequest;
     Nano::Signal<void()> undoRedoPerformed;
 };
+
+inline std::shared_ptr<Map> MapView::mapAsShared()
+{
+    return _map;
+}
 
 inline const Map *MapView::map() const noexcept
 {
