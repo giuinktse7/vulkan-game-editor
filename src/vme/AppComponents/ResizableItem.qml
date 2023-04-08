@@ -7,7 +7,6 @@ Rectangle {
     id: root
 
     default property alias _contentChildren: contentArea.data
-    color: "red"
     border.color: "#FF5722"
     border.width: 2
 

@@ -35,17 +35,47 @@ class QmlPosition : public QObject
     Position _position;
 };
 
+class TownData : public QObject
+{
+  public:
+    Q_OBJECT
+    Q_PROPERTY(int id MEMBER _id)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+
+  public:
+    TownData(uint32_t id, QString name);
+    TownData(const TownData &);
+
+    ~TownData();
+
+    QString name()
+    {
+        return _name;
+    }
+
+    void setName(const QString &name)
+    {
+        VME_LOG_D("TownData::setName: " << name.toStdString());
+        if (name != _name)
+        {
+            _name = name;
+            emit nameChanged(name);
+        }
+    }
+
+  signals:
+    void nameChanged(const QString &newName);
+
+    // void templePos()
+  public:
+    uint32_t _id;
+    QString _name;
+};
+
 class TownListModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int size READ size NOTIFY sizeChanged)
-
-  private:
-    struct TownData
-    {
-        uint32_t id;
-        std::unique_ptr<QmlPosition> templePos;
-    };
 
   public:
     enum class Role
@@ -55,13 +85,12 @@ class TownListModel : public QAbstractListModel
         TemplePos = Qt::UserRole + 3,
     };
 
+    Q_INVOKABLE void textChanged(QString text, int index);
+
     TownListModel(std::shared_ptr<Map> map, QObject *parent = nullptr);
     TownListModel(QObject *parent = nullptr);
 
-    TownData &get(int index)
-    {
-        return _data.at(index);
-    }
+    Q_INVOKABLE TownData *get(int index);
 
     void addTown(const Town &town);
 
@@ -83,7 +112,7 @@ class TownListModel : public QAbstractListModel
 
   private:
     std::weak_ptr<Map> _map;
-    std::vector<TownData> _data;
+    std::vector<std::unique_ptr<TownData>> _data;
 };
 
 // class QmlPosition : public QObject

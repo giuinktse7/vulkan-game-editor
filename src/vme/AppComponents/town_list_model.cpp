@@ -1,5 +1,6 @@
 #include "town_list_model.h"
 
+#include <QQmlEngine>
 #include <QVariant>
 #include <ranges>
 
@@ -48,6 +49,15 @@ void QmlPosition::setZ(int z)
     }
 }
 
+TownData::TownData(uint32_t id, QString name)
+    // : _id(id), _name(name), _templePos(std::make_unique<QmlPosition>(Position(14, 14, 7))) {}
+    : _id(id), _name(name)
+{
+}
+
+TownData::TownData(const TownData &other)
+    : _id(other._id), _name(other._name) {}
+
 TownListModel::TownListModel(QObject *parent)
 {
 }
@@ -57,14 +67,37 @@ TownListModel::TownListModel(std::shared_ptr<Map> map, QObject *parent)
 {
     for (const auto &value : map->towns() | std::views::values)
     {
-        _data.push_back(TownData{.id = value.id(), .templePos = std::make_unique<QmlPosition>(value.templePosition())});
+        _data.push_back(std::make_unique<TownData>(value.id(), "Untitled"));
     }
+}
+
+TownData *TownListModel::get(int index)
+{
+    if (index < 0 || index >= _data.size())
+    {
+        return nullptr;
+    }
+
+    auto ptr = _data.at(index).get();
+
+    // Ensure that the object is owned by C++ and not by QML
+    if (QQmlEngine::objectOwnership(ptr) != QQmlEngine::ObjectOwnership::CppOwnership)
+    {
+        QQmlEngine::setObjectOwnership(ptr, QQmlEngine::CppOwnership);
+    }
+
+    return ptr;
+}
+
+TownData::~TownData()
+{
+    VME_LOG_D("TownData::~TownData: " << _name.toStdString());
 }
 
 void TownListModel::addTown(const Town &town)
 {
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    _data.push_back(TownData{.id = town.id(), .templePos = std::make_unique<QmlPosition>(town.templePosition())});
+    _data.push_back(std::make_unique<TownData>(town.id(), "Untitled"));
     endInsertRows();
 }
 
@@ -74,33 +107,40 @@ QVariant TownListModel::data(const QModelIndex &modelIndex, int role) const
     if (index < 0 || index >= rowCount())
         return QVariant();
 
-    const TownData &item = _data.at(index);
-    if (auto m = _map.lock())
-    {
-        Town *town = m->getTown(item.id);
+    const TownData &item = *_data.at(index);
 
-        if (role == to_underlying(Role::Name))
-        {
-            if (town)
-            {
-                return QVariant::fromValue(QString::fromStdString(town->name()));
-            }
-            else
-            {
-                return QVariant::fromValue(QString(""));
-            }
-        }
-        else if (role == to_underlying(Role::ItemId))
-        {
-            return QVariant::fromValue(item.id);
-        }
-        else if (role == to_underlying(Role::TemplePos))
-        {
-            return QVariant::fromValue(item.templePos.get());
-        }
+    if (role == to_underlying(Role::Name))
+    {
+        return item._name;
+    }
+    else if (role == to_underlying(Role::ItemId))
+    {
+        return QVariant::fromValue(item._id);
+    }
+    else if (role == to_underlying(Role::TemplePos))
+    {
+        // return QVariant::fromValue(item._templePos.get());
+        return QVariant();
     }
 
     return QVariant();
+}
+
+void TownListModel::textChanged(QString text, int index)
+{
+    VME_LOG_D("TownListModel::textChanged");
+    if (auto m = _map.lock())
+    {
+        Town *town = m->getTown(_data.at(index)->_id);
+        if (town)
+        {
+            town->setName(text.toStdString());
+
+            auto modelIndex = createIndex(index, 0);
+            VME_LOG_D("Pewpew " << index);
+            emit dataChanged(modelIndex, modelIndex, {to_underlying(Role::Name)});
+        }
+    }
 }
 
 QHash<int, QByteArray> TownListModel::roleNames() const
@@ -116,13 +156,14 @@ QHash<int, QByteArray> TownListModel::roleNames() const
 
 void TownListModel::setMap(std::shared_ptr<Map> map)
 {
+    VME_LOG_D("TownListModel::setMap");
     _map = map;
 
     beginResetModel();
     _data.clear();
     for (const auto &value : map->towns() | std::views::values)
     {
-        _data.push_back(TownData{.id = value.id(), .templePos = std::make_unique<QmlPosition>(value.templePosition())});
+        _data.push_back(std::make_unique<TownData>(value.id(), QString::fromStdString(value.name())));
     }
     endResetModel();
 }

@@ -147,6 +147,8 @@ bool SaveMap::saveMap(const Map &map)
                 buffer.endNode();
             }
 
+            VME_LOG_D("Saving map with " << savedTiles << " tiles to " << path);
+
             // Close the last node
             if (!emptyMap)
             {

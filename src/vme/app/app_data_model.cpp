@@ -520,13 +520,10 @@ void AppDataModel::resetBrushInsertionOffset()
 
 void AppDataModel::createTown()
 {
+    VME_LOG_D("AppDataModel::createTown");
     auto mapView = currentMapView();
     const Town &town = mapView->mapAsShared()->addTown();
     _townListModel->addTown(town);
-    // if (mapView)
-    // {
-    //     mapView->mapAsShared()->addTown()
-    // }
 }
 
 #include "moc_app_data_model.cpp"

@@ -24,47 +24,6 @@ VMEComponent.ResizableItem {
     // DropArea {
 
     // }
-    MouseArea {
-        id: mouseArea
-
-        property bool dragActive: drag.active
-
-        anchors.fill: parent
-        drag.target: root
-
-        onDragActiveChanged: () => {
-            if (drag.active) {
-                // console.log("Drag.onDragStarted");
-                // if (root.parent.beforeRemoveItem) {
-                //     root.parent.beforeRemoveItem(root);
-                // }
-                if (root.onDetach) {
-                    root.onDetach();
-                    root.onDetach = null;
-                }
-                root.prevParent = root.parent;
-                root.parent = contentRoot;
-            }
-        }
-
-        onPressed: mouse => {
-            root.Drag.hotSpot.x = mouse.x - mouseArea.x;
-            root.Drag.hotSpot.y = mouse.y - mouseArea.y;
-        }
-
-        onReleased: {
-            const result = root.Drag.drop();
-            // if (result == Qt.MoveAction) {
-            // } else {
-            //     backAnimX.from = root.x;
-            //     backAnimX.to = beginDrag.x;
-            //     backAnimY.from = root.y;
-            //     backAnimY.to = beginDrag.y;
-            //     backAnim.start()
-            // }
-        }
-    }
-
     ColumnLayout {
         id: contentLayout
         anchors.fill: parent
@@ -77,6 +36,47 @@ VMEComponent.ResizableItem {
             z: 2
             height: 24
             color: "#f3f3f3"
+
+            MouseArea {
+                id: mouseArea
+
+                property bool dragActive: drag.active
+
+                anchors.fill: parent
+                drag.target: root
+
+                onDragActiveChanged: () => {
+                    if (drag.active) {
+                        // console.log("Drag.onDragStarted");
+                        // if (root.parent.beforeRemoveItem) {
+                        //     root.parent.beforeRemoveItem(root);
+                        // }
+                        if (root.onDetach) {
+                            root.onDetach();
+                            root.onDetach = null;
+                        }
+                        root.prevParent = root.parent;
+                        root.parent = contentRoot;
+                    }
+                }
+
+                onPressed: mouse => {
+                    root.Drag.hotSpot.x = mouse.x - mouseArea.x;
+                    root.Drag.hotSpot.y = mouse.y - mouseArea.y;
+                }
+
+                onReleased: {
+                    const result = root.Drag.drop();
+                    // if (result == Qt.MoveAction) {
+                    // } else {
+                    //     backAnimX.from = root.x;
+                    //     backAnimX.to = beginDrag.x;
+                    //     backAnimY.from = root.y;
+                    //     backAnimY.to = beginDrag.y;
+                    //     backAnim.start()
+                    // }
+                }
+            }
 
             Rectangle {
                 id: crossContainer
