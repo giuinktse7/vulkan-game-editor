@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(CMAKE_PREFIX_PATH "C:/Qt/6.3.1/msvc2019_64/lib/cmake")
+# set(CMAKE_PREFIX_PATH "C:/Qt/6.3.1/msvc2019_64/lib/cmake")
 
 set(CMAKE_AUTOMOC ON)
 
@@ -62,6 +62,8 @@ qt_add_qml_module(app_components
         ThingList.qml
         ItemPalette.qml
         TownWindow.qml
+        InputField.qml
+        BorderedLayout.qml
         MapView.qml
         MapTabButton.qml
         VerticalPanelArea.qml

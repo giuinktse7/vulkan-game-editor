@@ -6,7 +6,6 @@ import VME.dataModel 1.0
 
 VMEComponent.ItemPanel {
     property var townModel: AppDataModel.townListModel
-
     x: 400
     y: 200
 
@@ -26,7 +25,6 @@ VMEComponent.ItemPanel {
             MouseArea {
                 anchors.fill: parent
                 onClicked: () => {
-                    console.log(`clicked on ${name} at index ${index} with itemId ${itemId}`);
                     list.currentIndex = index;
                 }
             }
@@ -43,121 +41,121 @@ VMEComponent.ItemPanel {
         Layout.fillHeight: true
 
         ColumnLayout {
-            anchors.fill: parent
-            spacing: 0
-
-            ListView {
-                id: list
-                Layout.fillWidth: true
-                Layout.minimumHeight: 100
-                highlight: Rectangle {
-                    color: "lightsteelblue"
-                    radius: 5
-                }
-                focus: true
-
-                readonly property var currentTown: list.currentIndex != -1 ? list.model.get(list.currentIndex) : undefined
-
-                model: townModel
-                delegate: testDelegate
-
-                currentIndex: 0
-
-                onCountChanged: {
-                    console.log(`onCountChanged - count: ${count}`);
-                    if (count == 1) {
-                        currentIndex = 0;
-                    } else if (count == 0) {
-                        currentIndex = -1;
-                    }
-                }
-
-                onCurrentTownChanged: {
-                    if (currentTown) {
-                        console.log(`currentTownChanged: ${currentTown.name}`);
-                        textInput.text = currentTown.name;
-                    }
-                }
-            }
+            spacing: 6
 
             Rectangle {
+                Layout.alignment: Qt.AlignTop
                 Layout.fillWidth: true
-                Layout.minimumHeight: 30
-                height: textInput.height
-                color: red
+                Layout.minimumHeight: 100
+                Layout.maximumHeight: 100
+
+                Layout.preferredWidth: childrenRect.width
+                Layout.preferredHeight: list.height
 
                 border {
-                    color: "black"
+                    color: "#B3E5FC"
                     width: 1
                 }
 
-                radius: 2
+                ListView {
+                    id: list
+                    anchors.fill: parent
 
-                TextInput {
-                    id: textInput
-                    anchors.centerIn: parent
-                    font.pointSize: 12
+                    // readonly property var currentTown: list.model.get(list.currentIndex)
+                    Layout.maximumHeight: 100
 
-                    // text: list.currentIndex != -1 ? list.currentItem.name : ""
-                    padding: 10
-                    selectionColor: "#6666FF"
-                    cursorVisible: true
+                    highlight: Rectangle {
+                        color: "lightsteelblue"
+                        radius: 5
+                    }
+
+                    flickDeceleration: 10000
+                    boundsMovement: Flickable.StopAtBounds
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    ScrollBar.vertical: ScrollBar {
+                        policy: ScrollBar.AlwaysOn
+                        active: hovered || pressed
+                        Layout.fillHeight: true
+                    }
+
+                    clip: true
                     focus: true
 
-                    onTextChanged: {
-                        console.log("[JS] textInput::onTextChanged");
-                        if (list.currentIndex != -1) {
-                            console.log(`[JS] textInput::onTextChanged - list.currentIndex != -1, currenttown: ${list.currentTown}, name: ${list.currentTown.name}`);
-                            // list.model.get(list.currentIndex).name = textInput.text;
-                            if (list.currentTown) {
-                                console.log(`Setting name to ${textInput.text}`);
-                                list.currentTown.name = textInput.text;
-                            }
-                            list.model.textChanged(textInput.text, list.currentIndex);
+                    model: townModel
+                    delegate: testDelegate
+
+                    currentIndex: 0
+
+                    onCountChanged: {
+                        if (count == 1) {
+                            currentIndex = 0;
+                        } else if (count == 0) {
+                            currentIndex = -1;
+                        }
+                    }
+
+                    onCurrentIndexChanged: {
+                        if (currentIndex != -1) {
+                            townNameInput.text = list.model?.get(list.currentIndex)?.name ?? "";
                         }
                     }
                 }
             }
 
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.minimumHeight: 30
+            VMEComponent.BorderedLayout {
+                Layout.alignment: Qt.AlignTop
 
-                Rectangle {
-                    Layout.minimumWidth: 80
-                    Layout.minimumHeight: 30
-                    TextInput {
-                        anchors.verticalCenter: parent.verticalCenter
-                        font.pointSize: 12
-                        text: "1000"
+                ColumnLayout {
+                    spacing: 6
 
-                        validator: IntValidator {
+                    Text {
+                        text: "ID: 5"
+                    }
+
+                    VMEComponent.InputField {
+                        id: townNameInput
+                        label: "Name"
+                        text: list.model?.get(list.currentIndex)?.name ?? ""
+                        Layout.preferredWidth: childrenRect.width
+                        Layout.preferredHeight: childrenRect.height
+
+                        onTextChanged: {
+                            if (list.currentIndex != -1) {
+                                const currentTown = list.model.get(list.currentIndex);
+                                if (currentTown.name != townNameInput.text) {
+                                    currentTown.name = townNameInput.text;
+                                    list.model.nameChanged(townNameInput.text, list.currentIndex);
+                                }
+                            }
                         }
                     }
-                }
 
-                Rectangle {
-                    Layout.minimumWidth: 80
-                    Layout.minimumHeight: 30
-                    TextInput {
-                        anchors.verticalCenter: parent.verticalCenter
-                        font.pointSize: 12
-                        text: "1000"
-
-                        validator: IntValidator {
+                    RowLayout {
+                        VMEComponent.InputField {
+                            id: templePosXInput
+                            label: "X"
+                            text: "1000"
+                            minimumInputWidth: 50
+                            Layout.preferredWidth: childrenRect.width
+                            Layout.preferredHeight: childrenRect.height
                         }
-                    }
-                }
 
-                Rectangle {
-                    Layout.minimumWidth: 80
-                    Layout.minimumHeight: 30
-                    TextInput {
-                        anchors.verticalCenter: parent.verticalCenter
-                        font.pointSize: 12
-                        text: "7"
-
-                        validator: IntValidator {
+                        VMEComponent.InputField {
+                            id: templePosYInput
+                            label: "Y"
+                            text: "1000"
+                            minimumInputWidth: 50
+                            Layout.preferredWidth: childrenRect.width
+                            Layout.preferredHeight: childrenRect.height
+                        }
+                        VMEComponent.InputField {
+                            id: templePosZInput
+                            label: "Z"
+                            text: "7"
+                            minimumInputWidth: 50
+                            Layout.preferredWidth: childrenRect.width
+                            Layout.preferredHeight: childrenRect.height
                         }
                     }
                 }
@@ -174,6 +172,7 @@ VMEComponent.ItemPanel {
             //     }
             // }
             Button {
+                Layout.alignment: Qt.AlignTop
                 text: "New"
                 onClicked: AppDataModel.createTown()
             }

@@ -1,6 +1,7 @@
 #include "app_data_model.h"
 
 #include <QGuiApplication>
+#include <QQmlEngine>
 
 #include "context_menu_model.h"
 #include "core/item_palette.h"
@@ -26,6 +27,9 @@
 AppDataModel::AppDataModel()
     : _townListModel(std::make_unique<TownListModel>())
 {
+    // Do not pass ownership to QML. If QML assumes ownership, it will attempt to delete the object when it is no longer used.
+    QQmlEngine::setObjectOwnership(_townListModel.get(), QQmlEngine::CppOwnership);
+
     addMapTab("Untitled-1");
     addMapTab("Untitled-2");
 }
@@ -520,7 +524,6 @@ void AppDataModel::resetBrushInsertionOffset()
 
 void AppDataModel::createTown()
 {
-    VME_LOG_D("AppDataModel::createTown");
     auto mapView = currentMapView();
     const Town &town = mapView->mapAsShared()->addTown();
     _townListModel->addTown(town);

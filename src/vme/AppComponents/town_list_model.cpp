@@ -7,6 +7,17 @@
 QmlPosition::QmlPosition(Position position)
     : _position(position) {}
 
+QmlPosition::QmlPosition(const QmlPosition &other)
+{
+    _position = other._position;
+}
+
+QmlPosition &QmlPosition::operator=(const QmlPosition &other)
+{
+    _position = other._position;
+    return *this;
+}
+
 int QmlPosition::x() const
 {
     return _position.x;
@@ -49,14 +60,36 @@ void QmlPosition::setZ(int z)
     }
 }
 
-TownData::TownData(uint32_t id, QString name)
+void TownData::setName(const QString &name)
+{
+    VME_LOG_D("TownData::setName: " << name.toStdString());
+    if (name != _name)
+    {
+        _name = name;
+        emit nameChanged(name);
+    }
+}
+
+void TownData::setTemplePos(const QmlPosition &position)
+{
+    if (_templePos != position)
+    {
+        _templePos = position;
+        emit templePosChanged(position);
+    }
+}
+
+TownData::TownData(uint32_t id, QString name, QObject *parent)
     // : _id(id), _name(name), _templePos(std::make_unique<QmlPosition>(Position(14, 14, 7))) {}
-    : _id(id), _name(name)
+    : QObject(parent), _id(id), _name(name), _templePos(Position(1000, 1000, 7))
 {
 }
 
 TownData::TownData(const TownData &other)
-    : _id(other._id), _name(other._name) {}
+    : QObject(other.parent()), _id(other._id), _name(other._name), _templePos(other._templePos.position())
+{
+    VME_LOG_D("TownData::TownData(const TownData &other), name: " << _name.toStdString());
+}
 
 TownListModel::TownListModel(QObject *parent)
 {
@@ -67,7 +100,7 @@ TownListModel::TownListModel(std::shared_ptr<Map> map, QObject *parent)
 {
     for (const auto &value : map->towns() | std::views::values)
     {
-        _data.push_back(std::make_unique<TownData>(value.id(), "Untitled"));
+        _data.push_back(std::make_unique<TownData>(value.id(), "Untitled", this));
     }
 }
 
@@ -97,7 +130,7 @@ TownData::~TownData()
 void TownListModel::addTown(const Town &town)
 {
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    _data.push_back(std::make_unique<TownData>(town.id(), "Untitled"));
+    _data.push_back(std::make_unique<TownData>(town.id(), "Untitled", this));
     endInsertRows();
 }
 
@@ -107,40 +140,101 @@ QVariant TownListModel::data(const QModelIndex &modelIndex, int role) const
     if (index < 0 || index >= rowCount())
         return QVariant();
 
-    const TownData &item = *_data.at(index);
+    const TownData *item = _data.at(index).get();
+
+    if (!item)
+    {
+        VME_LOG_D("TownListModel::data: item is null for index " << index);
+        return QVariant();
+    }
 
     if (role == to_underlying(Role::Name))
     {
-        return item._name;
+        return item->_name;
     }
     else if (role == to_underlying(Role::ItemId))
     {
-        return QVariant::fromValue(item._id);
+        return QVariant::fromValue(item->_id);
     }
     else if (role == to_underlying(Role::TemplePos))
     {
-        // return QVariant::fromValue(item._templePos.get());
-        return QVariant();
+        return &item->_templePos;
     }
 
     return QVariant();
 }
 
-void TownListModel::textChanged(QString text, int index)
+bool TownListModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    VME_LOG_D("TownListModel::textChanged");
+    if (!index.isValid())
+    {
+        return false;
+    }
+
+    if (role == to_underlying(Role::Name))
+    {
+        TownData *item = _data.at(index.row()).get();
+        item->setName(value.toString());
+        emit dataChanged(index, index, {to_underlying(Role::Name)});
+        return true;
+    }
+    else if (role == to_underlying(Role::ItemId))
+    {
+        // TODO
+        return false;
+    }
+    else if (role == to_underlying(Role::TemplePos))
+    {
+        // TODO
+        return false;
+    }
+}
+
+void TownListModel::nameChanged(QString text, int index)
+{
+    VME_LOG_D("TownListModel::nameChanged");
     if (auto m = _map.lock())
     {
-        Town *town = m->getTown(_data.at(index)->_id);
+        TownData *modelTown = _data.at(index).get();
+        if (!modelTown)
+        {
+            ABORT_PROGRAM("TownListModel::nameChanged: modelTown is null for index " << index);
+        }
+
+        Town *town = m->getTown(modelTown->_id);
         if (town)
         {
             town->setName(text.toStdString());
 
             auto modelIndex = createIndex(index, 0);
-            VME_LOG_D("Pewpew " << index);
             emit dataChanged(modelIndex, modelIndex, {to_underlying(Role::Name)});
         }
     }
+}
+
+void TownListModel::xChanged(int value, int index)
+{
+    if (auto m = _map.lock())
+    {
+        Town *town = m->getTown(_data.at(index)->_id);
+        if (town)
+        {
+            Position pos = town->templePosition();
+            pos.x = value;
+            town->setTemplePosition(pos);
+
+            auto modelIndex = createIndex(index, 0);
+            emit dataChanged(modelIndex, modelIndex, {to_underlying(Role::TemplePos)});
+        }
+    }
+}
+
+void TownListModel::yChanged(int value, int index)
+{
+}
+
+void TownListModel::zChanged(int value, int index)
+{
 }
 
 QHash<int, QByteArray> TownListModel::roleNames() const
@@ -163,7 +257,7 @@ void TownListModel::setMap(std::shared_ptr<Map> map)
     _data.clear();
     for (const auto &value : map->towns() | std::views::values)
     {
-        _data.push_back(std::make_unique<TownData>(value.id(), QString::fromStdString(value.name())));
+        _data.push_back(std::make_unique<TownData>(value.id(), QString::fromStdString(value.name()), this));
     }
     endResetModel();
 }
