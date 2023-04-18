@@ -10,7 +10,7 @@ VMEComponent.ItemPanel {
     y: 200
 
     implicitWidth: 300
-    implicitHeight: 200
+    implicitHeight: 350
 
     color: "white"
 
@@ -98,9 +98,26 @@ VMEComponent.ItemPanel {
                     onCurrentIndexChanged: {
                         if (currentIndex != -1) {
                             townNameInput.text = list.model?.get(list.currentIndex)?.name ?? "";
+                            const currentTown = list.model?.get(list.currentIndex);
+                            townNameInput.text = currentTown?.name ?? "";
+                            templePosXInput.text = currentTown?.x ?? "";
+                            templePosYInput.text = currentTown?.y ?? "";
+                            templePosZInput.text = currentTown?.z ?? "";
                         }
                     }
                 }
+
+                // Binding {
+                //     target: townNameInput
+                //     property: "text"
+                //     value:
+                // }
+
+                // Binding {
+                //     target: tabRoot
+                //     property: "currentIndex"
+                //     value: AppDataModel.currentMapIndex
+                // }
             }
 
             VMEComponent.BorderedLayout {
@@ -121,11 +138,12 @@ VMEComponent.ItemPanel {
                         Layout.preferredHeight: childrenRect.height
 
                         onTextChanged: {
-                            if (list.currentIndex != -1) {
-                                const currentTown = list.model.get(list.currentIndex);
-                                if (currentTown.name != townNameInput.text) {
-                                    currentTown.name = townNameInput.text;
-                                    list.model.nameChanged(townNameInput.text, list.currentIndex);
+                            const index = list.currentIndex;
+                            if (index != -1) {
+                                const currentTown = list.model.get(index);
+                                if (currentTown.name != text) {
+                                    currentTown.name = text;
+                                    list.model.nameChanged(text, index);
                                 }
                             }
                         }
@@ -135,10 +153,22 @@ VMEComponent.ItemPanel {
                         VMEComponent.InputField {
                             id: templePosXInput
                             label: "X"
-                            text: "1000"
+                            text: list.model?.get(list.currentIndex)?.x ?? ""
                             minimumInputWidth: 50
                             Layout.preferredWidth: childrenRect.width
                             Layout.preferredHeight: childrenRect.height
+
+                            onTextChanged: {
+                                const index = list.currentIndex;
+                                if (index != -1) {
+                                    const currentTown = list.model.get(index);
+                                    if (currentTown.x.toString() != text) {
+                                        const newValue = parseInt(text);
+                                        currentTown.x = newValue;
+                                        list.model.xChanged(newValue, index);
+                                    }
+                                }
+                            }
                         }
 
                         VMEComponent.InputField {
@@ -148,7 +178,20 @@ VMEComponent.ItemPanel {
                             minimumInputWidth: 50
                             Layout.preferredWidth: childrenRect.width
                             Layout.preferredHeight: childrenRect.height
+
+                            onTextChanged: {
+                                const index = list.currentIndex;
+                                if (index != -1) {
+                                    const currentTown = list.model.get(index);
+                                    if (currentTown.y.toString() != text) {
+                                        const newValue = parseInt(text);
+                                        currentTown.y = newValue;
+                                        list.model.yChanged(newValue, index);
+                                    }
+                                }
+                            }
                         }
+
                         VMEComponent.InputField {
                             id: templePosZInput
                             label: "Z"
@@ -156,6 +199,18 @@ VMEComponent.ItemPanel {
                             minimumInputWidth: 50
                             Layout.preferredWidth: childrenRect.width
                             Layout.preferredHeight: childrenRect.height
+
+                            onTextChanged: {
+                                const index = list.currentIndex;
+                                if (index != -1) {
+                                    const currentTown = list.model.get(index);
+                                    if (currentTown.z.toString() != text) {
+                                        const newValue = parseInt(text);
+                                        currentTown.z = newValue;
+                                        list.model.zChanged(newValue, index);
+                                    }
+                                }
+                            }
                         }
                     }
                 }

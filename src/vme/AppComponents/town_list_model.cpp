@@ -4,65 +4,8 @@
 #include <QVariant>
 #include <ranges>
 
-QmlPosition::QmlPosition(Position position)
-    : _position(position) {}
-
-QmlPosition::QmlPosition(const QmlPosition &other)
-{
-    _position = other._position;
-}
-
-QmlPosition &QmlPosition::operator=(const QmlPosition &other)
-{
-    _position = other._position;
-    return *this;
-}
-
-int QmlPosition::x() const
-{
-    return _position.x;
-}
-
-int QmlPosition::y() const
-{
-    return _position.y;
-}
-
-int QmlPosition::z() const
-{
-    return _position.z;
-}
-
-void QmlPosition::setX(int x)
-{
-    if (x != _position.x)
-    {
-        _position.x = x;
-        emit xChanged(x);
-    }
-}
-
-void QmlPosition::setY(int y)
-{
-    if (y != _position.y)
-    {
-        _position.y = y;
-        emit yChanged(y);
-    }
-}
-
-void QmlPosition::setZ(int z)
-{
-    if (z != _position.z)
-    {
-        _position.z = z;
-        emit zChanged(z);
-    }
-}
-
 void TownData::setName(const QString &name)
 {
-    VME_LOG_D("TownData::setName: " << name.toStdString());
     if (name != _name)
     {
         _name = name;
@@ -70,25 +13,42 @@ void TownData::setName(const QString &name)
     }
 }
 
-void TownData::setTemplePos(const QmlPosition &position)
+void TownData::setX(const int x)
 {
-    if (_templePos != position)
+    if (_x != x)
     {
-        _templePos = position;
-        emit templePosChanged(position);
+        _x = x;
+        emit xChanged(x);
+    }
+}
+
+void TownData::setY(const int y)
+{
+    if (_y != y)
+    {
+        _y = y;
+        emit yChanged(y);
+    }
+}
+
+void TownData::setZ(const int z)
+{
+    if (_z != z)
+    {
+        _z = z;
+        emit zChanged(z);
     }
 }
 
 TownData::TownData(uint32_t id, QString name, QObject *parent)
     // : _id(id), _name(name), _templePos(std::make_unique<QmlPosition>(Position(14, 14, 7))) {}
-    : QObject(parent), _id(id), _name(name), _templePos(Position(1000, 1000, 7))
+    : QObject(parent), _id(id), _name(name), _x(1000), _y(1000), _z(7)
 {
 }
 
 TownData::TownData(const TownData &other)
-    : QObject(other.parent()), _id(other._id), _name(other._name), _templePos(other._templePos.position())
+    : QObject(other.parent()), _id(other._id), _name(other._name), _x(other._x), _y(other._y), _z(other._z)
 {
-    VME_LOG_D("TownData::TownData(const TownData &other), name: " << _name.toStdString());
 }
 
 TownListModel::TownListModel(QObject *parent)
@@ -156,9 +116,17 @@ QVariant TownListModel::data(const QModelIndex &modelIndex, int role) const
     {
         return QVariant::fromValue(item->_id);
     }
-    else if (role == to_underlying(Role::TemplePos))
+    else if (role == to_underlying(Role::TempleX))
     {
-        return &item->_templePos;
+        return item->x();
+    }
+    else if (role == to_underlying(Role::TempleY))
+    {
+        return item->y();
+    }
+    else if (role == to_underlying(Role::TempleZ))
+    {
+        return item->z();
     }
 
     return QVariant();
@@ -183,10 +151,30 @@ bool TownListModel::setData(const QModelIndex &index, const QVariant &value, int
         // TODO
         return false;
     }
-    else if (role == to_underlying(Role::TemplePos))
+    else if (role == to_underlying(Role::TempleX))
     {
-        // TODO
-        return false;
+        TownData *item = _data.at(index.row()).get();
+        item->setX(value.toInt());
+        emit dataChanged(index, index, {to_underlying(Role::TempleX)});
+        return true;
+    }
+    else if (role == to_underlying(Role::TempleY))
+    {
+        TownData *item = _data.at(index.row()).get();
+        item->setY(value.toInt());
+        emit dataChanged(index, index, {to_underlying(Role::TempleY)});
+        return true;
+    }
+    else if (role == to_underlying(Role::TempleZ))
+    {
+        TownData *item = _data.at(index.row()).get();
+        item->setZ(value.toInt());
+        emit dataChanged(index, index, {to_underlying(Role::TempleZ)});
+        return true;
+    }
+    else
+    {
+        ABORT_PROGRAM("Unknown role: " << role);
     }
 }
 
@@ -216,6 +204,12 @@ void TownListModel::xChanged(int value, int index)
 {
     if (auto m = _map.lock())
     {
+        TownData *modelTown = _data.at(index).get();
+        if (!modelTown)
+        {
+            ABORT_PROGRAM("TownListModel::xChanged: modelTown is null for index " << index);
+        }
+
         Town *town = m->getTown(_data.at(index)->_id);
         if (town)
         {
@@ -224,17 +218,55 @@ void TownListModel::xChanged(int value, int index)
             town->setTemplePosition(pos);
 
             auto modelIndex = createIndex(index, 0);
-            emit dataChanged(modelIndex, modelIndex, {to_underlying(Role::TemplePos)});
+            emit dataChanged(modelIndex, modelIndex, {to_underlying(Role::TempleX)});
         }
     }
 }
 
 void TownListModel::yChanged(int value, int index)
 {
+    if (auto m = _map.lock())
+    {
+        TownData *modelTown = _data.at(index).get();
+        if (!modelTown)
+        {
+            ABORT_PROGRAM("TownListModel::xChanged: modelTown is null for index " << index);
+        }
+
+        Town *town = m->getTown(_data.at(index)->_id);
+        if (town)
+        {
+            Position pos = town->templePosition();
+            pos.y = value;
+            town->setTemplePosition(pos);
+
+            auto modelIndex = createIndex(index, 0);
+            emit dataChanged(modelIndex, modelIndex, {to_underlying(Role::TempleY)});
+        }
+    }
 }
 
 void TownListModel::zChanged(int value, int index)
 {
+    if (auto m = _map.lock())
+    {
+        TownData *modelTown = _data.at(index).get();
+        if (!modelTown)
+        {
+            ABORT_PROGRAM("TownListModel::xChanged: modelTown is null for index " << index);
+        }
+
+        Town *town = m->getTown(_data.at(index)->_id);
+        if (town)
+        {
+            Position pos = town->templePosition();
+            pos.z = value;
+            town->setTemplePosition(pos);
+
+            auto modelIndex = createIndex(index, 0);
+            emit dataChanged(modelIndex, modelIndex, {to_underlying(Role::TempleZ)});
+        }
+    }
 }
 
 QHash<int, QByteArray> TownListModel::roleNames() const
@@ -243,7 +275,9 @@ QHash<int, QByteArray> TownListModel::roleNames() const
 
     roles[to_underlying(Role::Name)] = "name";
     roles[to_underlying(Role::ItemId)] = "itemId";
-    roles[to_underlying(Role::TemplePos)] = "templePos";
+    roles[to_underlying(Role::TempleX)] = "templeX";
+    roles[to_underlying(Role::TempleY)] = "templeY";
+    roles[to_underlying(Role::TempleZ)] = "templeZ";
 
     return roles;
 }
