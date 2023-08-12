@@ -15,6 +15,9 @@ class TileSetModel : public QAbstractTableModel
     QML_ELEMENT
     QML_ADDED_IN_MINOR_VERSION(1)
 
+  signals:
+    void brushIndexSelected(int index);
+
   public:
     TileSetModel();
 
@@ -23,6 +26,12 @@ class TileSetModel : public QAbstractTableModel
     void onSelectBrush(T *instance);
 
     Brush *getBrush(int index);
+    /**
+     * @brief Returns the index of the brush in the tileset.
+     * @return The index of the brush in the tileset.
+     * @note If the brush is not found, -1 is returned.
+     */
+    int indexOfBrush(Brush *brush);
 
     Q_INVOKABLE void indexClicked(int index);
     Q_INVOKABLE void clear();

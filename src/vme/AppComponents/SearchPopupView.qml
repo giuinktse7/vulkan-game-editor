@@ -1,12 +1,36 @@
-import QtQuick.Controls 2.15
-import QtQuick 2.15
+import QtQuick.Controls
+import QtQuick
 import QtQuick.Layouts
-import AppComponents
+import AppComponents as VMEComponent
 import VME.dataModel 1.0
 
-Rectangle {
+VMEComponent.ItemPanel {
     id: root
-    anchors.fill: parent
+
+    z: 3
+
+    closeClicked: () => {
+        close();
+    }
+
+    function open() {
+        root.visible = true;
+        root.enabled = true;
+        focusSearchTextInput();
+    }
+
+    function close() {
+        root.visible = false;
+        root.enabled = false;
+        root.resetSearchText();
+    }
+
+    // anchors.fill: parent
+    implicitWidth: 300
+    implicitHeight: 350
+
+    x: 600
+    y: 250
 
     property int minHeight: 300
     property int maxHeight: 600
@@ -23,54 +47,56 @@ Rectangle {
         search_textfield.forceActiveFocus();
     }
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton
-        property int oldMouseY
-        property int startHeight
-        property bool resizing: false
-        cursorShape: containsMouse || pressed ? Qt.SizeVerCursor : Qt.ArrowCursor
-        preventStealing: true
-        propagateComposedEvents: true
+    // MouseArea {
+    //     id: mouseArea
+    //     Layout.fillWidth: true
+    //     Layout.fillHeight: true
 
-        // Rectangle {
-        //   anchors.fill: parent
-        //   color: "red"
-        // }
-        hoverEnabled: true
+    //     acceptedButtons: Qt.LeftButton
+    //     property int oldMouseY
+    //     property int startHeight
+    //     property bool resizing: false
+    //     cursorShape: containsMouse || pressed ? Qt.SizeVerCursor : Qt.ArrowCursor
+    //     preventStealing: true
+    //     propagateComposedEvents: true
 
-        onPressed: mouse => {
-            if ((mouseY > height - 5)) {
-                oldMouseY = mouseY;
-                startHeight = root.height;
-                resizing = true;
-                // applicationContext.setCursor(Qt.SizeVerCursor)
-            } else {
-                mouse.accepted = false;
-            }
-        }
+    //     // Rectangle {
+    //     //   anchors.fill: parent
+    //     //   color: "red"
+    //     // }
+    //     hoverEnabled: true
 
-        onReleased: {
-            if (resizing) {
-                // applicationContext.resetCursor()
-                resizing = false;
-            }
-        }
+    //     onPressed: mouse => {
+    //         if ((mouseY > height - 5)) {
+    //             oldMouseY = mouseY;
+    //             startHeight = root.height;
+    //             resizing = true;
+    //             // applicationContext.setCursor(Qt.SizeVerCursor)
+    //         } else {
+    //             mouse.accepted = false;
+    //         }
+    //     }
 
-        onPositionChanged: {
-            if (!pressed && resizing) {
-                // applicationContext.resetCursor()
-                resizing = false;
-            }
-            cursorShape = ((mouseY > height - 5) || resizing) ? Qt.SizeVerCursor : Qt.ArrowCursor;
-            if (resizing) {
-                const deltaY = (mouseY - oldMouseY);
-                const newHeight = Math.max(root.minHeight, Math.min(startHeight + deltaY, root.maxHeight));
-                Context.C_SearchPopupView.setHeight(newHeight);
-            }
-        }
-    }
+    //     onReleased: {
+    //         if (resizing) {
+    //             // applicationContext.resetCursor()
+    //             resizing = false;
+    //         }
+    //     }
+
+    //     onPositionChanged: {
+    //         if (!pressed && resizing) {
+    //             // applicationContext.resetCursor()
+    //             resizing = false;
+    //         }
+    //         cursorShape = ((mouseY > height - 5) || resizing) ? Qt.SizeVerCursor : Qt.ArrowCursor;
+    //         if (resizing) {
+    //             const deltaY = (mouseY - oldMouseY);
+    //             const newHeight = Math.max(root.minHeight, Math.min(startHeight + deltaY, root.maxHeight));
+    //             Context.C_SearchPopupView.setHeight(newHeight);
+    //         }
+    //     }
+    // }
 
     // ShaderEffectSource {
     //     id: theSource
@@ -82,12 +108,11 @@ Rectangle {
     //     fragmentShader: "qrc:/test.frag.qsb"
     // }
     Rectangle {
-        anchors.fill: parent
-        anchors.margins: 1
+        Layout.fillWidth: true
+        Layout.fillHeight: true
 
         color: "#fcfcfc"
 
-        // color: "#ccc";
         ColumnLayout {
             anchors.fill: parent
             TextField {
@@ -100,8 +125,6 @@ Rectangle {
 
                 selectByMouse: true
                 color: "#222222"
-                background: Item {
-                }
                 placeholderText: qsTr("Search for brushes...")
                 font.pixelSize: 12
 
@@ -113,8 +136,7 @@ Rectangle {
                 }
 
                 onTextChanged: {
-                    // !nocommit
-                    Context.C_SearchPopupView.searchEvent(text);
+                    AppDataModel.qmlSearchEvent(text);
                 }
 
                 Keys.onDownPressed: {
@@ -125,7 +147,8 @@ Rectangle {
 
                 onAccepted: {
                     if (root.searchResults.count != 0) {
-                        Context.C_SearchPopupView.brushSelected(0);
+                        AppDataModel.onSearchBrushSelected(0);
+                        root.close();
                     }
                 }
             }
@@ -155,7 +178,7 @@ Rectangle {
                     filter_selection_indicator.width = width + spacing;
                 }
 
-                AppComponents.SearchPopupFilterChoice {
+                VMEComponent.SearchPopupFilterChoice {
                     readonly property int filterId: 0
                     id: "filter_choice_all"
                     text: qsTr("All")
@@ -189,7 +212,7 @@ Rectangle {
                     }
                 }
 
-                AppComponents.SearchPopupFilterChoice {
+                VMEComponent.SearchPopupFilterChoice {
 
                     readonly property int filterId: 1
                     id: "filter_choice_raw"
@@ -224,7 +247,7 @@ Rectangle {
                     }
                 }
 
-                AppComponents.SearchPopupFilterChoice {
+                VMEComponent.SearchPopupFilterChoice {
                     readonly property int filterId: 2
                     id: "filter_choice_ground"
                     text: qsTr("Ground")
@@ -258,7 +281,7 @@ Rectangle {
                     }
                 }
 
-                AppComponents.SearchPopupFilterChoice {
+                VMEComponent.SearchPopupFilterChoice {
                     readonly property int filterId: 3
                     id: "filter_choice_doodad"
                     text: qsTr("Doodad")
@@ -292,7 +315,7 @@ Rectangle {
                     }
                 }
 
-                AppComponents.SearchPopupFilterChoice {
+                VMEComponent.SearchPopupFilterChoice {
                     readonly property int filterId: 4
                     id: "filter_choice_creature"
                     text: qsTr("Creature")
@@ -440,7 +463,8 @@ Rectangle {
                         }
 
                         onPressed: {
-                            Context.C_SearchPopupView.brushSelected(index);
+                            AppDataModel.onSearchBrushSelected(index);
+                            root.close();
                         }
 
                         Column {

@@ -103,6 +103,16 @@ QVariant TileSetModel::data(const QModelIndex &modelIndex, int role) const
     return QVariant();
 }
 
+int TileSetModel::indexOfBrush(Brush *brush)
+{
+    if (!_tileset)
+    {
+        return -1;
+    }
+
+    return _tileset->indexOf(brush);
+}
+
 void TileSetModel::setTileset(Tileset *tileset)
 {
     beginResetModel();

@@ -30,12 +30,13 @@ RowLayout {
             leftPadding: 6
             rightPadding: 6
             width: minimumInputWidth
+            selectByMouse: true
 
             text: root.text
 
             MouseArea {
                 anchors.fill: parent
-
+                hoverEnabled: true
                 acceptedButtons: Qt.NoButton
                 propagateComposedEvents: true
 

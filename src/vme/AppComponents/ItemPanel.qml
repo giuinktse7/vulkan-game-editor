@@ -13,6 +13,8 @@ VMEComponent.ResizableItem {
     property var prevParent
     property var onDetach: null
 
+    property var closeClicked: null
+
     // property point beginDrag
     property bool caught: false
 
@@ -99,7 +101,11 @@ VMEComponent.ResizableItem {
 
                     onClicked: mouse => {
                         if (mouse.button === Qt.LeftButton) {
-                            root.destroy();
+                            if (root.closeClicked !== null) {
+                                root.closeClicked();
+                            } else {
+                                root.destroy();
+                            }
                         }
                     }
                 }

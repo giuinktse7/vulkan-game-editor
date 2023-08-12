@@ -13,6 +13,7 @@
 #include "core/map_copy_buffer.h"
 #include "core/position.h"
 #include "qml_map_item.h"
+#include "search_result_model.h"
 #include "town_list_model.h"
 
 #include "combobox_model.h"
@@ -20,13 +21,32 @@
 class TileSetModel;
 class ContextMenuModel;
 class TownListModel;
+class FilteredSearchModel;
 class QmlMapItem;
+class ComboBoxModel;
+
+class ItemPaletteViewData
+{
+  public:
+    ItemPaletteViewData(ComboBoxModel *paletteDropdownModel,
+                        ComboBoxModel *tilesetDropdownModel,
+                        QObject *brushList,
+                        TileSetModel *tilesetModel);
+
+    void positionViewAtIndex(int index) const;
+
+    ComboBoxModel *paletteDropdownModel;
+    ComboBoxModel *tilesetDropdownModel;
+    TileSetModel *tilesetModel;
+    QObject *brushList;
+};
 
 class AppDataModel : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(MapTabListModel *mapTabs READ mapTabs)
     Q_PROPERTY(TownListModel *townListModel READ townListModel)
+    Q_PROPERTY(FilteredSearchModel *filteredSearchModel READ filteredSearchModel)
     Q_PROPERTY(int currentMapIndex READ currentMapIndex WRITE setcurrentMapIndex NOTIFY currentMapIndexChanged)
     Q_PROPERTY(bool autoBorder READ autoBorder NOTIFY autoBorderChanged)
     Q_PROPERTY(bool showAnimation READ showAnimation NOTIFY showAnimationChanged)
@@ -42,7 +62,8 @@ class AppDataModel : public QObject
     Q_INVOKABLE void loadMap(QUrl url);
     Q_INVOKABLE void saveCurrentMap(QUrl url);
 
-    Q_INVOKABLE void setItemPaletteList(ComboBoxModel *model);
+    Q_INVOKABLE void initializeItemPalettePanel(ComboBoxModel *paletteDropdownModel, ComboBoxModel *tilesetDropdownModel, QObject *brushList, TileSetModel *tilesetModel);
+    Q_INVOKABLE void destroyItemPalettePanel(ComboBoxModel *paletteModel);
     Q_INVOKABLE void setItemPalette(ComboBoxModel *model, QString paletteId);
     Q_INVOKABLE void setTileset(TileSetModel *model, QString paletteId, QString tilesetId);
     Q_INVOKABLE void selectBrush(TileSetModel *model, int index);
@@ -67,13 +88,16 @@ class AppDataModel : public QObject
     Q_INVOKABLE void toggleDetailedBorderModeEnabled();
     Q_INVOKABLE void createTown();
 
+    Q_INVOKABLE void qmlSearchEvent(QString searchTerm);
+    Q_INVOKABLE void onSearchBrushSelected(int index);
+
     void addMapTab(std::string tabName);
     void removeMapTab(int index);
 
     MapView *currentMapView();
 
     // Actions
-    void selectBrush(Brush *brush);
+    void selectBrush(Brush *brush, bool showInItemPalette = false);
 
     int currentMapIndex() const
     {
@@ -90,8 +114,11 @@ class AppDataModel : public QObject
     };
 
     TownListModel *townListModel();
+    FilteredSearchModel *filteredSearchModel();
 
     void setcurrentMapIndex(int index);
+
+    void search(std::string searchTerm);
 
   signals:
     void currentMapIndexChanged(int index);
@@ -111,6 +138,11 @@ class AppDataModel : public QObject
 
     std::optional<Position> _contextMenuPosition;
 
+    SearchResultModel searchResultModel;
+
+    std::vector<ItemPaletteViewData> itemPalettes;
+
   private:
     std::unique_ptr<TownListModel> _townListModel;
+    std::unique_ptr<FilteredSearchModel> _filteredSearchModel;
 };

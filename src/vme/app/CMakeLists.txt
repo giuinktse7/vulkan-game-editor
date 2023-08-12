@@ -16,6 +16,11 @@ set(SRC_FILES
     app_data_model.cpp
 )
 
+# https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html
+if(QT_KNOWN_POLICY_QTP0001)
+    qt_policy(SET QTP0001 NEW)
+endif()
+
 
 add_executable(app ${HEADER_FILES} ${SRC_FILES})
 

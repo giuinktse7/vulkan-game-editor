@@ -3,6 +3,7 @@
 #include <QGuiApplication>
 #include <QQmlEngine>
 
+#include "combobox_model.h"
 #include "context_menu_model.h"
 #include "core/item_palette.h"
 #include "core/logger.h"
@@ -24,9 +25,28 @@
 #include <memory>
 #include <ranges>
 
-AppDataModel::AppDataModel()
-    : _townListModel(std::make_unique<TownListModel>())
+ItemPaletteViewData::ItemPaletteViewData(ComboBoxModel *paletteDropdownModel,
+                                         ComboBoxModel *tilesetDropdownModel,
+                                         QObject *brushList,
+                                         TileSetModel *tilesetModel)
+    : paletteDropdownModel(paletteDropdownModel),
+      tilesetDropdownModel(tilesetDropdownModel),
+      brushList(brushList),
+      tilesetModel(tilesetModel)
 {
+}
+
+void ItemPaletteViewData::positionViewAtIndex(int index) const
+{
+    VME_LOG_D("ItemPaletteViewData::positionViewAtIndex: " << index);
+    emit tilesetModel->brushIndexSelected(index);
+    // QMetaObject::invokeMethod(brushList, "positionViewAtIndex", Qt::QueuedConnection, Q_ARG(int, index));
+}
+
+AppDataModel::AppDataModel()
+    : _townListModel(std::make_unique<TownListModel>()), _filteredSearchModel(std::make_unique<FilteredSearchModel>())
+{
+    _filteredSearchModel->setSourceModel(&this->searchResultModel);
     // Do not pass ownership to QML. If QML assumes ownership, it will attempt to delete the object when it is no longer used.
     QQmlEngine::setObjectOwnership(_townListModel.get(), QQmlEngine::CppOwnership);
 
@@ -95,9 +115,26 @@ MapView *AppDataModel::currentMapView()
     return item ? item->mapView.get() : nullptr;
 }
 
-void AppDataModel::setItemPaletteList(ComboBoxModel *model)
+void AppDataModel::initializeItemPalettePanel(ComboBoxModel *paletteDropdownModel, ComboBoxModel *tilesetDropdownModel, QObject *brushList, TileSetModel *tilesetModel)
 {
-    model->setData(ItemPalettes::getItemPaletteList());
+    paletteDropdownModel->setData(ItemPalettes::getItemPaletteList());
+
+    itemPalettes.emplace_back(paletteDropdownModel,
+                              tilesetDropdownModel,
+                              brushList,
+                              tilesetModel);
+}
+
+void AppDataModel::destroyItemPalettePanel(ComboBoxModel *paletteModel)
+{
+    auto removed = std::remove_if(
+        itemPalettes.begin(),
+        itemPalettes.end(),
+        [paletteModel](const ItemPaletteViewData &itemPalette) {
+            return itemPalette.paletteDropdownModel == paletteModel;
+        });
+
+    itemPalettes.erase(removed, itemPalettes.end());
 }
 
 void AppDataModel::setItemPalette(ComboBoxModel *model, QString paletteId)
@@ -291,11 +328,55 @@ void AppDataModel::selectBrush(TileSetModel *model, int index)
     }
 }
 
-void AppDataModel::selectBrush(Brush *brush)
+void AppDataModel::selectBrush(Brush *brush, bool showInItemPalette)
 {
+    VME_LOG_D("AppDataModel::selectBrush: " << brush->name());
     auto mapView = currentMapView();
 
     EditorAction::editorAction.setBrush(brush);
+
+    if (showInItemPalette)
+    {
+        bool positioned = false;
+        for (const auto paletteData : itemPalettes)
+        {
+            // TODO Can be made faster because the brush knows which tileset it belongs to
+            int index = paletteData.tilesetModel->indexOfBrush(brush);
+            if (index != -1)
+            {
+                VME_LOG_D("Found in open palette at index " << index);
+                positioned = true;
+                paletteData.positionViewAtIndex(index);
+                break;
+            }
+        }
+
+        if (!positioned && !itemPalettes.empty())
+        {
+            // Show the brush in the first palette
+            auto paletteData = itemPalettes[0];
+
+            // Use tileset from brush if available
+            auto tileset = brush->tileset();
+            if (tileset)
+            {
+                VME_LOG_D("Tileset: " << tileset->name());
+                auto palette = tileset->palette();
+                if (palette)
+                {
+                    VME_LOG_D("Palette: " << palette->name());
+                    paletteData.paletteDropdownModel->setSelectedId(palette->id());
+                    paletteData.tilesetDropdownModel->setSelectedId(tileset->id());
+
+                    int index = tileset->indexOf(brush);
+                    VME_LOG_D("Index: " << index);
+
+                    paletteData.positionViewAtIndex(index);
+                }
+            }
+        }
+    }
+
     mapView->requestDraw();
 }
 
@@ -434,6 +515,11 @@ TownListModel *AppDataModel::townListModel()
     return _townListModel.get();
 }
 
+FilteredSearchModel *AppDataModel::filteredSearchModel()
+{
+    return _filteredSearchModel.get();
+}
+
 void AppDataModel::toggleAutoBorder()
 {
     Settings::AUTO_BORDER = !Settings::AUTO_BORDER;
@@ -527,6 +613,33 @@ void AppDataModel::createTown()
     auto mapView = currentMapView();
     const Town &town = mapView->mapAsShared()->addTown();
     _townListModel->addTown(town);
+}
+
+void AppDataModel::qmlSearchEvent(QString searchTerm)
+{
+    search(searchTerm.toStdString());
+}
+
+void AppDataModel::search(std::string searchTerm)
+{
+    VME_LOG_D("Search for term: " << searchTerm);
+    if (searchTerm.size() > 2)
+    {
+        auto results = Brush::search(searchTerm);
+        searchResultModel.setSearchResults(std::move(results));
+    }
+    else
+    {
+        searchResultModel.clear();
+    }
+}
+
+void AppDataModel::onSearchBrushSelected(int index)
+{
+    auto modelIndex = _filteredSearchModel->index(index, 0);
+    auto indexInUnFilteredList = _filteredSearchModel->data(modelIndex, to_underlying(SearchResultModel::Role::VectorIndex)).toInt();
+
+    this->selectBrush(searchResultModel.brushAtIndex(indexInUnFilteredList), true);
 }
 
 #include "moc_app_data_model.cpp"

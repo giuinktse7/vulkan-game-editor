@@ -28,9 +28,16 @@ Item {
         }
     }
 
+    VMEComponent.SearchPopupView {
+        id: searchPopupView
+        visible: true
+
+        searchResults: AppDataModel.filteredSearchModel
+    }
+
     VMEComponent.TownWindow {
         id: townWindow
-        visible: true
+        visible: false
     }
 
     FileDialog {
@@ -262,6 +269,10 @@ Item {
 
                 Action {
                     text: qsTr("Jump to brush...")
+                    shortcut: "J"
+                    onTriggered: () => {
+                        searchPopupView.open();
+                    }
                 }
                 Action {
                     text: qsTr("Jump to item...")

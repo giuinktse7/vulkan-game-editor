@@ -16,6 +16,9 @@ class ComboBoxModel : public QAbstractListModel
     QML_ELEMENT
     QML_ADDED_IN_MINOR_VERSION(1)
 
+  signals:
+    void selectedIndexChanged(int index);
+
   public:
     enum Role
     {
@@ -23,11 +26,14 @@ class ComboBoxModel : public QAbstractListModel
         Value = Qt::UserRole + 2
     };
 
+    Q_INVOKABLE void setData(std::vector<NamedId> items);
+
     ComboBoxModel();
     ComboBoxModel(std::vector<NamedId> items);
 
-    Q_INVOKABLE void setData(std::vector<NamedId> items);
-    // Q_INVOKABLE QString getValue(int index);
+    void setSelectedIndex(int index);
+
+    bool setSelectedId(std::string id);
 
     int rowCount(const QModelIndex & = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role) const override;

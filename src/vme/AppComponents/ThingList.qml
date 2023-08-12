@@ -19,6 +19,10 @@ import VME.dataModel 1.0
 Item {
     property alias model: tableView.model
 
+    function positionViewAtIndex(index) {
+        tableView.positionViewAtIndex(index, GridView.Beginning);
+    }
+
     Component {
         id: brushDelegate
 

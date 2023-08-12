@@ -52,4 +52,26 @@ QHash<int, QByteArray> ComboBoxModel::roleNames() const
     return roles;
 }
 
+void ComboBoxModel::setSelectedIndex(int index)
+{
+    emit selectedIndexChanged(index);
+}
+
+bool ComboBoxModel::setSelectedId(std::string id)
+{
+    auto found = std::find_if(items.begin(),
+                              items.end(),
+                              [id](const NamedId &namedId) { return id == namedId.id; });
+
+    if (found == items.end())
+    {
+        return false;
+    }
+
+    int index = static_cast<int>(found - items.begin());
+
+    setSelectedIndex(index);
+    return true;
+}
+
 #include "moc_combobox_model.cpp"

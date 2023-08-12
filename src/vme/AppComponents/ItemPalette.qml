@@ -29,16 +29,25 @@ VMEComponent.ItemPanel {
             Layout.fillWidth: true
 
             model: VMEComponent.ComboBoxModel {
-                id: paletteListModel
+                id: paletteDropdownModel
                 onModelReset: () => {}
 
+                onSelectedIndexChanged: index => {
+                    console.log(`[QML] Palette onSelectedIndexChanged: ${index}`);
+                    paletteDropdown.currentIndex = index;
+                }
+
                 Component.onCompleted: () => {
-                    AppDataModel.setItemPaletteList(paletteListModel);
+                    AppDataModel.initializeItemPalettePanel(paletteDropdownModel, tilesetDropdownModel, brushList, tilesetModel);
                     paletteDropdown.currentIndex = 0;
                     // console.log(`Completed. ${paletteDropdown.currentIndex}: ${paletteDropdown.currentText}, ${paletteDropdown.currentValue}`);
                     // if (paletteDropdown.currentValue != '') {
                     // AppDataModel.setItemPalette(tilesetModel, paletteDropdown.currentValue);
                     // }
+                }
+
+                Component.onDestruction: () => {
+                    AppDataModel.destroyItemPalettePanel(paletteDropdownModel);
                 }
             }
 
@@ -46,7 +55,7 @@ VMEComponent.ItemPanel {
                 // console.log(`paletteDropdown: ${currentValue}`);
                 if (currentValue != '') {
                     tilesetDropdown.currentIndex = -1;
-                    AppDataModel.setItemPalette(tilesetModel, currentValue);
+                    AppDataModel.setItemPalette(tilesetDropdownModel, currentValue);
                     tilesetDropdown.currentIndex = 0;
                 }
             }
@@ -67,12 +76,17 @@ VMEComponent.ItemPanel {
             Layout.fillWidth: true
 
             model: VMEComponent.ComboBoxModel {
-                id: tilesetModel
+                id: tilesetDropdownModel
+
+                onSelectedIndexChanged: index => {
+                    console.log(`[QML] Tileset onSelectedIndexChanged: ${index}`);
+                    tilesetDropdown.currentIndex = index;
+                }
 
                 onModelReset: () => {
-                    if (tilesetModel.rowCount() == 0) {
+                    if (tilesetDropdownModel.rowCount() == 0) {
                         tilesetDropdown.currentIndex = -1;
-                        brushModel.clear();
+                        tilesetModel.clear();
                         return;
                     }
                 }
@@ -81,18 +95,23 @@ VMEComponent.ItemPanel {
             onCurrentValueChanged: () => {
                 if (currentValue === undefined && currentIndex != -1) {
                     currentIndex = -1;
-                    brushModel.clear();
+                    tilesetModel.clear();
                     return;
                 }
                 // console.log(`tilesetDropdown: ${currentValue}`);
-                AppDataModel.setTileset(brushModel, paletteDropdown.currentValue, currentValue);
+                AppDataModel.setTileset(tilesetModel, paletteDropdown.currentValue, currentValue);
             }
         }
 
         VMEComponent.ThingList {
-            id: itemList
+            id: brushList
             model: VMEComponent.TileSetModel {
-                id: brushModel
+                id: tilesetModel
+
+                onBrushIndexSelected: index => {
+                    console.log(`[QML] onBrushIndexSelected: ${index}`);
+                    brushList.positionViewAtIndex(index);
+                }
             }
 
             Layout.fillWidth: true

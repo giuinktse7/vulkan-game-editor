@@ -7,6 +7,11 @@ set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Qml Quick)
 
+# https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html
+if(QT_KNOWN_POLICY_QTP0001)
+    qt_policy(SET QTP0001 NEW)
+endif()
+
 set(HEADER_FILES
     gui_thing_image.h
     ui_resources.h
@@ -17,6 +22,7 @@ set(HEADER_FILES
     qml_ui_utils.h
     qt_vulkan_info.h
     town_list_model.h
+    search_result_model.h
 )
 
 set(SRC_FILES
@@ -29,6 +35,7 @@ set(SRC_FILES
     qml_ui_utils.cpp
     qt_vulkan_info.cpp
     town_list_model.cpp
+    search_result_model.cpp
 )
 
 qt_add_library(app_components STATIC
@@ -68,6 +75,8 @@ qt_add_qml_module(app_components
         MapTabButton.qml
         VerticalPanelArea.qml
         ItemPanel.qml
+        SearchPopupView.qml
+        SearchPopupFilterChoice.qml
         # ThingTile.qml
         # ThingGrid.qml
     RESOURCES
