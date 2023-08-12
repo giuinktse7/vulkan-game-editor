@@ -89,9 +89,9 @@ int MainApp::start()
     rootView->setInitialProperties(properties);
 
     rootView->setResizeMode(QQuickView::SizeRootObjectToView);
-    engine->addImportPath(QStringLiteral(":/"));
+    // engine->addImportPath(QStringLiteral(":/"));
 
-    const QUrl url(u"qrc:/app/qml/main.qml"_qs);
+    const QUrl url(u"qrc:/qt/qml/app/qml/main.qml"_qs);
     rootView->setSource(url);
     rootView->show();
 
