@@ -107,6 +107,8 @@ enum itemproperty_t : uint8_t
 
     ITEM_ATTR_ARTICLE,
 
+    ITEM_CATEGORY,
+
     ITEM_ATTR_LAST
 };
 
@@ -496,6 +498,8 @@ class ItemType
     uint16_t writeOnceItemId = 0;
     uint16_t maxItems = 0;
     uint16_t wareId = 0;
+
+    uint8_t itemCategory = 0;
 
     FloorChange floorChange = FloorChange::None;
 

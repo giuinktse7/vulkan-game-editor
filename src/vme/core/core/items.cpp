@@ -301,8 +301,8 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
         // else if (key == "runespellName")
         // {
         /*if((attribute = itemAttributesNode.attribute("value"))) {
-				it.runeSpellName = attribute.as_string();
-			}*/
+                                it.runeSpellName = attribute.as_string();
+                        }*/
         // }
         else if (key == "weight")
         {
@@ -372,8 +372,8 @@ bool Items::loadItemFromXml(pugi::xml_node itemNode, uint32_t id)
         // else if (key == "writeonceitemid")
         // {
         /*if((attribute = itemAttributesNode.attribute("value"))) {
-				it.writeOnceItemId = pugi::cast<int32_t>(attribute.value());
-			}*/
+                                it.writeOnceItemId = pugi::cast<int32_t>(attribute.value());
+                        }*/
         // }
         // Currenly no use for allowdistread (2021-01-13)
         // else if (key == "allowdistread")
@@ -602,6 +602,7 @@ void Items::OtbReader::readNodes()
         std::string description;
         uint16_t maxTextLen = 0;
         uint8_t upgradeClassification = 0;
+        uint8_t itemCategory = 0;
 
         ItemType *itemType = nullptr;
 
@@ -700,7 +701,7 @@ void Items::OtbReader::readNodes()
 
                 case itemproperty_t::ITEM_ATTR_MINIMAPCOLOR:
                 {
-                    //Ignore it (get it from appearances as 'automapColor' instead)
+                    // Ignore it (get it from appearances as 'automapColor' instead)
                     skipBytes(attributeSize);
                     break;
                 }
@@ -742,16 +743,25 @@ void Items::OtbReader::readNodes()
                     break;
                 }
 
+                case itemproperty_t::ITEM_CATEGORY:
+                {
+                    itemCategory = nextU8();
+                    break;
+                }
+
                 default:
                 {
-                    //skip unknown attributes
-                    VME_LOG_D("Skipped unknown: " << static_cast<itemproperty_t>(attributeType));
-                    std::vector<uint8_t> s(cursor - 8, cursor);
+                    // skip unknown attributes
+                    VME_LOG_D("Skipped unknown: " << static_cast<itemproperty_t>(attributeType) << "(" << attributeSize << " bytes)");
+                    std::vector<uint8_t> s(cursor, cursor + attributeSize);
+                    VME_LOG_D("Skipped bytes:");
                     for (auto &k : s)
                     {
                         VME_LOG_D((int)k);
                     }
-                    skipBytes(attributeSize);
+                    // Note, we must consume the bytes! We must call nextString() or equivalent, such as skipBytes().
+                    auto k = nextString(attributeSize);
+                    VME_LOG_D("Skipped bytes as string: " << k);
                     break;
                 }
             }
@@ -804,6 +814,9 @@ void Items::OtbReader::readNodes()
             {
                 itemType->setName(std::move(name));
             }
+
+            itemType->itemCategory = itemCategory;
+            itemType->article = article;
         }
 
         [[maybe_unused]] uint8_t endToken = nextU8();
@@ -827,11 +840,11 @@ ItemTypes_t Items::OtbReader::serverItemType(ItemType::Group itemGroup)
             return ItemTypes_t::Door;
             break;
         case ItemType::Group::MagicField:
-            //not used
+            // not used
             return ItemTypes_t::MagicField;
             break;
         case ItemType::Group::Teleport:
-            //not used
+            // not used
             return ItemTypes_t::Teleport;
         case ItemType::Group::None:
         case ItemType::Group::Ground:
