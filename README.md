@@ -31,7 +31,18 @@ TODO
 
 ## Building (Windows)
 
-To build the project, first install the required [Dependencies](#dependencies).
+1. To build the project, first install the required [Dependencies](#dependencies).
+
+2. Set the environment variable `CMAKE_PREFIX_PATH` to the cmake path of your QT installation:
+
+```
+<your_installation_path>\Qt6.5\6.5.0\msvc2019_64\lib\cmake
+```
+3. Add the QT .dlls to the `PATH` environment variable:
+```
+<your_installation_path>\Qt6.5\6.5.0\msvc2019_64\bin
+```
+
 
 ### Building with Visual Studio 2022 (Recommended)
 

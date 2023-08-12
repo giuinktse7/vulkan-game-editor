@@ -15,6 +15,8 @@ Current goals:
 
 ## Crashes
 
+-   [Not verified, unknown crash reason]: Select two creatures (and maybe something else) and click delete
+
 ## Rendering
 
 ## Map Rendering
