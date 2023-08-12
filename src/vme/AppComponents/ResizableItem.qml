@@ -7,11 +7,7 @@ Rectangle {
     id: root
 
     default property alias _contentChildren: contentArea.data
-    border.color: "#FF5722"
-    border.width: 2
 
-    // border.color: "#90A4AE"
-    // border.color: "#616161"
     property int minWidth: 70
     property int minHeight: 70
     property var rectWidth: implicitWidth

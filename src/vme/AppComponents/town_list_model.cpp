@@ -230,7 +230,7 @@ void TownListModel::yChanged(int value, int index)
         TownData *modelTown = _data.at(index).get();
         if (!modelTown)
         {
-            ABORT_PROGRAM("TownListModel::xChanged: modelTown is null for index " << index);
+            ABORT_PROGRAM("TownListModel::yChanged: modelTown is null for index " << index);
         }
 
         Town *town = m->getTown(_data.at(index)->_id);
@@ -253,7 +253,7 @@ void TownListModel::zChanged(int value, int index)
         TownData *modelTown = _data.at(index).get();
         if (!modelTown)
         {
-            ABORT_PROGRAM("TownListModel::xChanged: modelTown is null for index " << index);
+            ABORT_PROGRAM("TownListModel::zChanged: modelTown is null for index " << index);
         }
 
         Town *town = m->getTown(_data.at(index)->_id);

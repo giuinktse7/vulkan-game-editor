@@ -25,13 +25,14 @@ VMEComponent.ItemPanel {
             MouseArea {
                 anchors.fill: parent
                 onClicked: () => {
+                    console.log(`clicked on ${name} at index ${index} with itemId ${itemId}`);
                     list.currentIndex = index;
                 }
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "name: " + name
+                text: `${name} (${templeX}, ${templeY}, ${templeZ})`
             }
         }
     }
@@ -41,6 +42,7 @@ VMEComponent.ItemPanel {
         Layout.fillHeight: true
 
         ColumnLayout {
+            anchors.fill: parent
             spacing: 6
 
             Rectangle {
@@ -49,7 +51,7 @@ VMEComponent.ItemPanel {
                 Layout.minimumHeight: 100
                 Layout.maximumHeight: 100
 
-                Layout.preferredWidth: childrenRect.width
+                // Layout.preferredWidth: childrenRect.width
                 Layout.preferredHeight: list.height
 
                 border {
@@ -62,7 +64,8 @@ VMEComponent.ItemPanel {
                     anchors.fill: parent
 
                     // readonly property var currentTown: list.model.get(list.currentIndex)
-                    Layout.maximumHeight: 100
+                    Layout.preferredHeight: 150
+                    Layout.maximumHeight: 200
 
                     highlight: Rectangle {
                         color: "lightsteelblue"
@@ -88,6 +91,7 @@ VMEComponent.ItemPanel {
                     currentIndex: 0
 
                     onCountChanged: {
+                        console.log(`onCountChanged - count: ${count}`);
                         if (count == 1) {
                             currentIndex = 0;
                         } else if (count == 0) {
@@ -97,7 +101,7 @@ VMEComponent.ItemPanel {
 
                     onCurrentIndexChanged: {
                         if (currentIndex != -1) {
-                            townNameInput.text = list.model?.get(list.currentIndex)?.name ?? "";
+                            console.log(`currentIndexChanged: ${currentIndex}, town name: ${list.model.get(list.currentIndex)?.name}`);
                             const currentTown = list.model?.get(list.currentIndex);
                             townNameInput.text = currentTown?.name ?? "";
                             templePosXInput.text = currentTown?.x ?? "";
@@ -122,6 +126,7 @@ VMEComponent.ItemPanel {
 
             VMEComponent.BorderedLayout {
                 Layout.alignment: Qt.AlignTop
+                Layout.fillWidth: true
 
                 ColumnLayout {
                     spacing: 6
@@ -132,6 +137,7 @@ VMEComponent.ItemPanel {
 
                     VMEComponent.InputField {
                         id: townNameInput
+                        Layout.alignment: Qt.AlignTop
                         label: "Name"
                         text: list.model?.get(list.currentIndex)?.name ?? ""
                         Layout.preferredWidth: childrenRect.width
@@ -150,6 +156,7 @@ VMEComponent.ItemPanel {
                     }
 
                     RowLayout {
+                        Layout.alignment: Qt.AlignTop
                         VMEComponent.InputField {
                             id: templePosXInput
                             label: "X"

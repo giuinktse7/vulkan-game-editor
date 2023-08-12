@@ -91,15 +91,15 @@ enum itemproperty_t : uint8_t
     ITEM_ATTR_MAX_TEXT_LENGTH_ONCE,
     ITEM_ATTR_LIGHT,
 
-    //1-byte aligned
-    ITEM_ATTR_DECAY2,     //deprecated
-    ITEM_ATTR_WEAPON2,    //deprecated
-    ITEM_ATTR_AMU2,       //deprecated
-    ITEM_ATTR_ARMOR2,     //deprecated
-    ITEM_ATTR_WRITEABLE2, //deprecated
+    // 1-byte aligned
+    ITEM_ATTR_DECAY2,     // deprecated
+    ITEM_ATTR_WEAPON2,    // deprecated
+    ITEM_ATTR_AMU2,       // deprecated
+    ITEM_ATTR_ARMOR2,     // deprecated
+    ITEM_ATTR_WRITEABLE2, // deprecated
     ITEM_ATTR_LIGHT2,
     ITEM_ATTR_TOPORDER,
-    ITEM_ATTR_WRITEABLE3, //deprecated
+    ITEM_ATTR_WRITEABLE3, // deprecated
 
     ITEM_ATTR_WAREID,
 
@@ -192,7 +192,7 @@ enum class FluidType : uint8_t
 
     Mud = static_cast<uint8_t>(FluidColor::Brown) + 16,
     FruitJuice = static_cast<uint8_t>(FluidColor::Yellow) + 16,
-    Ink = static_cast<uint8_t>(FluidColor::White) + 16, //12.20+ - we don't care about this id so let's choose whatever
+    Ink = static_cast<uint8_t>(FluidColor::White) + 16, // 12.20+ - we don't care about this id so let's choose whatever
 
     Lava = static_cast<uint8_t>(FluidColor::Red) + 24,
     Rum = static_cast<uint8_t>(FluidColor::Brown) + 24,
@@ -358,17 +358,17 @@ class ItemType
 
         Ground,
         Container,
-        Weapon,     //deprecated
-        Ammunition, //deprecated
-        Armor,      //deprecated
+        Weapon,     // deprecated
+        Ammunition, // deprecated
+        Armor,      // deprecated
         Charges,
-        Teleport,   //deprecated
-        MagicField, //deprecated
-        Writable,   //deprecated
-        Key,        //deprecated
+        Teleport,   // deprecated
+        MagicField, // deprecated
+        Writable,   // deprecated
+        Key,        // deprecated
         Splash,
         Fluid,
-        Door, //deprecated
+        Door, // deprecated
         Deprecated,
 
         ShowOffSocket,
@@ -377,7 +377,7 @@ class ItemType
     };
 
     ItemType() {}
-    //non-copyable
+    // non-copyable
     ItemType(const ItemType &other) = delete;
     ItemType &operator=(const ItemType &other) = delete;
 
