@@ -135,6 +135,14 @@ void Tile::clearBorders()
     }
 }
 
+void Tile::clearAll()
+{
+    _items.clear();
+    _ground.reset();
+    _creature.reset();
+    _selectionCount = 0;
+}
+
 GroundBrush *Tile::groundBrush() const
 {
     if (_ground)
@@ -826,35 +834,54 @@ Tile Tile::deepCopy(Position newPosition) const
     return tile;
 }
 
+void Tile::moveAllExceptPosition(Tile &source, Tile &target)
+{
+    target._items = std::move(source._items);
+    target._ground = std::move(source._ground);
+    target._creature = std::move(source._creature);
+    target._selectionCount = source._selectionCount;
+    target._flags = source._flags;
+}
+
 Tile Tile::deepCopy(bool onlySelected) const
 {
     Tile tile(_position);
-    deepCopyInto(tile, false);
+    deepCopyInto(tile, onlySelected);
     return tile;
+}
+
+void Tile::merge(const Tile &tile)
+{
+    applyToBase(*this, tile, false);
+}
+
+void Tile::applyToBase(Tile &base, const Tile &other, bool onlySelected)
+{
+    for (const auto &item : other._items)
+    {
+        if (!onlySelected || item->selected)
+        {
+            base.addItem(item->deepCopy());
+        }
+    }
+
+    if (other._ground && (!onlySelected || other._ground->selected))
+    {
+        base._ground = std::make_unique<Item>(other._ground->deepCopy());
+        base._flags = other._flags;
+    }
+
+    if (other._creature && (!onlySelected || other._creature->selected))
+    {
+        base._creature = std::make_unique<Creature>(other._creature->deepCopy());
+    }
+
+    base._selectionCount = other._selectionCount;
 }
 
 void Tile::deepCopyInto(Tile &tile, bool onlySelected) const
 {
-    for (const auto &item : _items)
-    {
-        if (!onlySelected || item->selected)
-        {
-            tile.addItem(item->deepCopy());
-        }
-    }
-
-    if (_ground && (!onlySelected || _ground->selected))
-    {
-        tile._ground = std::make_unique<Item>(_ground->deepCopy());
-        tile._flags = this->_flags;
-    }
-
-    if (_creature && (!onlySelected || _creature->selected))
-    {
-        tile._creature = std::make_unique<Creature>(_creature->deepCopy());
-    }
-
-    tile._selectionCount = this->_selectionCount;
+    applyToBase(tile, *this, onlySelected);
 }
 
 bool Tile::isEmpty() const

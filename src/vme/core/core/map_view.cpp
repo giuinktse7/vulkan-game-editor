@@ -417,6 +417,11 @@ void MapView::insertTile(std::unique_ptr<Tile> &&tile)
     history.commit(ActionType::SetTile, SetTile(std::move(tile)));
 }
 
+void MapView::insertTileWithMerge(Tile &&tile)
+{
+    history.commit(ActionType::MergeTile, MergeTile(std::move(tile)));
+}
+
 void MapView::removeTile(const Position position)
 {
     Action action(ActionType::RemoveTile);
@@ -1342,7 +1347,16 @@ void MapView::mousePressEvent(VME::MouseEvent event)
                     {
                         auto newPosition = this->mouseGamePos() + (location->position() - paste.buffer->topLeft);
                         auto tile = location->tile()->deepCopy(newPosition);
-                        this->insertTile(std::move(tile));
+
+                        // Override target tile if source tile has ground
+                        if (tile.hasGround())
+                        {
+                            this->insertTile(std::move(tile));
+                        }
+                        else
+                        {
+                            this->insertTileWithMerge(std::move(tile));
+                        }
                         positions.emplace_back(newPosition);
                     }
 

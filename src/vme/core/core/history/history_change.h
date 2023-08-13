@@ -21,6 +21,7 @@ namespace MapHistory
         Selection,
         ModifyTile,
         SetTile,
+        MergeTile,
         RemoveTile,
         CutTile,
         PasteTile,
@@ -72,6 +73,20 @@ namespace MapHistory
         void undo(MapView &mapView) override;
 
       protected:
+        std::variant<std::unique_ptr<Tile>, Position> data;
+    };
+
+    class MergeTile : public ChangeItem
+    {
+      public:
+        MergeTile(Tile &&tile);
+        MergeTile(std::unique_ptr<Tile> &&tile);
+
+        void commit(MapView &mapView) override;
+        void undo(MapView &mapView) override;
+
+      protected:
+        bool firstCommit;
         std::variant<std::unique_ptr<Tile>, Position> data;
     };
 
@@ -236,7 +251,7 @@ namespace MapHistory
         Tile toTile;
     };
 
-    /* 
+    /*
     NOTE: The 'from' and 'to' positions are stored in the undoData tiles to
     save space
   */
@@ -335,12 +350,12 @@ namespace MapHistory
             Position position;
 
             /**
-       * To save space, the ground tile is represented by the value 0. Hence
-       * item indices are offset by 1. The item at index 0 in a tile is
-       * represented by the value 1 here, etc.
-       * 0: Ground
-       * 1..n: Items
-       */
+             * To save space, the ground tile is represented by the value 0. Hence
+             * item indices are offset by 1. The item at index 0 in a tile is
+             * represented by the value 1 here, etc.
+             * 0: Ground
+             * 1..n: Items
+             */
             std::vector<uint16_t> indices;
 
             bool creature = false;
@@ -426,6 +441,7 @@ namespace MapHistory
         using DataTypes = std::variant<
             std::monostate,
             SetTile,
+            MergeTile,
             RemoveTile,
             Select,
             Deselect,

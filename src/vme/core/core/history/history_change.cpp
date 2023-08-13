@@ -137,6 +137,56 @@ namespace MapHistory
         }
     }
 
+    MergeTile::MergeTile(Tile &&tile)
+        : data(std::make_unique<Tile>(std::move(tile))), firstCommit(true)
+    {
+    }
+
+    MergeTile::MergeTile(std::unique_ptr<Tile> &&tile)
+        : data(std::move(tile)), firstCommit(true) {}
+
+    void MergeTile::commit(MapView &mapView)
+    {
+        VME_LOG_D("Committing merge tile.");
+        auto &tile = std::get<std::unique_ptr<Tile>>(data);
+        const Position position = tile->position();
+
+        if (firstCommit)
+        {
+            firstCommit = false;
+
+            auto currentTile = mapView.getTile(position);
+            if (currentTile)
+            {
+                Tile t = currentTile->deepCopy();
+                t.merge(*tile);
+
+                tile = std::make_unique<Tile>(std::move(t));
+            }
+        }
+
+        swapMapTile(mapView, std::move(tile));
+        if (!tile)
+        {
+            data = position;
+        }
+    }
+
+    void MergeTile::undo(MapView &mapView)
+    {
+        VME_LOG_D("Undoing merge tile.");
+        if (std::holds_alternative<Position>(data))
+        {
+            data = removeMapTile(mapView, std::get<Position>(data));
+        }
+        else
+        {
+            auto &tile = std::get<std::unique_ptr<Tile>>(data);
+
+            swapMapTile(mapView, std::move(tile));
+        }
+    }
+
     MoveFromMapToContainer::MoveFromMapToContainer(Tile &tile, Item *item, ContainerLocation &to)
         : fromPosition(tile.position()), to(to), data(PreFirstCommitData{item}) {}
 
@@ -394,33 +444,36 @@ namespace MapHistory
 
         if (partialMoveData)
         {
-            std::stack<std::shared_ptr<Item>> droppedItems;
-
-            // Reverse iteration because we must start from the highest index. Otherwise, dropping items will cause the
-            // higher indices to become invalid.
-            auto it = partialMoveData->indices.rbegin();
-            while (it != partialMoveData->indices.rend())
-            {
-                auto index = *it;
-                droppedItems.push(from.dropItem(index));
-                ++it;
-            }
-
-            // Add the dropped items to the target tile, now in correct order
-            while (!droppedItems.empty())
-            {
-                auto &item = droppedItems.top();
-                to.addItem(std::move(item));
-                droppedItems.pop();
-            }
-
             if (partialMoveData->moveFlags & MoveFlags::MoveGround)
             {
-                to.setGround(from.dropGround());
+                Tile::moveAllExceptPosition(from, to);
             }
-            if (partialMoveData->moveFlags & MoveFlags::MoveCreature)
+            else
             {
-                to.setCreature(from.dropCreature());
+                std::stack<std::shared_ptr<Item>> droppedItems;
+
+                // Reverse iteration because we must start from the highest index. Otherwise, dropping items will cause the
+                // higher indices to become invalid.
+                auto it = partialMoveData->indices.rbegin();
+                while (it != partialMoveData->indices.rend())
+                {
+                    auto index = *it;
+                    droppedItems.push(from.dropItem(index));
+                    ++it;
+                }
+
+                // Add the dropped items to the target tile, now in correct order
+                while (!droppedItems.empty())
+                {
+                    auto &item = droppedItems.top();
+                    to.addItem(std::move(item));
+                    droppedItems.pop();
+                }
+
+                if (partialMoveData->moveFlags & MoveFlags::MoveCreature)
+                {
+                    to.setCreature(from.dropCreature());
+                }
             }
         }
 
@@ -537,7 +590,10 @@ namespace MapHistory
                     }
 
                     if (partial.ground && from.hasGround())
+                    {
+                        to.clearAll();
                         to.setGround(from.dropGround());
+                    }
                 }},
             moveData);
 

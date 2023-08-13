@@ -106,6 +106,10 @@ class MapView
     Tile &getOrCreateTile(const Position pos);
     void insertTile(Tile &&tile);
     void insertTile(std::unique_ptr<Tile> &&tile);
+    /**
+     * Inserts the tile into the map. If there is already a tile at the same position, the tiles are merged.
+     */
+    void insertTileWithMerge(Tile &&tile);
     void removeTile(const Position pos);
     void modifyTile(const Position pos, std::function<void(Tile &)> f);
 

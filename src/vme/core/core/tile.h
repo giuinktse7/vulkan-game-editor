@@ -36,6 +36,8 @@ class Tile
     Tile(TileLocation &location);
     // ~Tile();
 
+    static void moveAllExceptPosition(Tile &source, Tile &target);
+
     Tile(const Tile &) = delete;
     Tile &operator=(const Tile &) = delete;
     Tile(Tile &&other) noexcept;
@@ -45,6 +47,8 @@ class Tile
     Tile deepCopy(Position newPosition) const;
 
     Tile copyForHistory() const;
+
+    void merge(const Tile &tile);
 
     inline bool itemSelected(uint16_t itemIndex) const
     {
@@ -95,6 +99,7 @@ class Tile
     void moveItems(Tile &other);
     void moveItemsWithBroadcast(Tile &other);
     void moveSelected(Tile &other);
+    void clearAll();
     void clearBorders();
     void clearBottomItems();
 
@@ -201,12 +206,14 @@ class Tile
   private:
     friend class MapView;
 
+    void deepCopyInto(Tile &tile, bool onlySelected) const;
+
+    static void applyToBase(Tile &base, const Tile &other, bool onlySelected = false);
+
     const std::vector<std::shared_ptr<Item>>::const_iterator findItem(std::function<bool(const Item &)> predicate) const;
 
     Item *replaceGround(Item &&ground);
     Item *replaceItem(size_t index, Item &&item);
-
-    void deepCopyInto(Tile &tile, bool onlySelected) const;
 
     std::vector<std::shared_ptr<Item>> _items;
     std::shared_ptr<Item> _ground;
