@@ -35,6 +35,11 @@ Item {
         searchResults: AppDataModel.filteredSearchModel
     }
 
+    VMEComponent.MinimapView {
+        id: minimapView
+        visible: false
+    }
+
     VMEComponent.TownWindow {
         id: townWindow
         visible: false
@@ -421,6 +426,21 @@ Item {
             }
 
             Menu {
+                title: qsTr("Window")
+                Action {
+                    text: qsTr("Minimap")
+                    shortcut: "M"
+                    onTriggered: () => {
+                        if (minimapView.visible) {
+                            minimapView.close();
+                        } else {
+                            minimapView.open();
+                        }
+                    }
+                }
+            }
+
+            Menu {
                 title: qsTr("&Help")
                 Action {
                     text: qsTr("&About")
@@ -521,7 +541,7 @@ Item {
                 }
 
                 Rectangle {
-                    color: "purple"
+                    color: "#90A4AE"
                     Layout.fillWidth: true
                     Layout.preferredHeight: 30
                     Layout.columnSpan: 3
@@ -530,7 +550,7 @@ Item {
                 }
 
                 Rectangle {
-                    color: "green"
+                    color: "#90A4AE"
                     Layout.fillHeight: true
                     Layout.preferredWidth: 30
                     Layout.row: 1

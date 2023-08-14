@@ -26,8 +26,8 @@ VMEComponent.ItemPanel {
     }
 
     // anchors.fill: parent
-    implicitWidth: 300
-    implicitHeight: 350
+    implicitWidth: 600
+    implicitHeight: 400
 
     x: 600
     y: 250
