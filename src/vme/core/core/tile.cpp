@@ -59,10 +59,10 @@ void Tile::setLocation(TileLocation &location)
 
 void Tile::setCreature(Creature &&creature)
 {
-    setCreature(std::make_unique<Creature>(std::move(creature)));
+    setCreature(std::make_shared<Creature>(std::move(creature)));
 }
 
-void Tile::setCreature(std::unique_ptr<Creature> &&creature)
+void Tile::setCreature(std::shared_ptr<Creature> &&creature)
 {
     if (_creature)
     {
@@ -81,13 +81,18 @@ void Tile::setCreature(std::unique_ptr<Creature> &&creature)
     _creature = std::move(creature);
 }
 
-std::unique_ptr<Creature> Tile::dropCreature()
+std::shared_ptr<Creature> Tile::dropCreature()
 {
+    if (!_creature)
+    {
+        return {};
+    }
+
     if (_creature->selected)
     {
         --_selectionCount;
     }
-    std::unique_ptr<Creature> droppedCreature(std::move(_creature));
+    std::shared_ptr<Creature> droppedCreature(std::move(_creature));
     _creature.reset();
 
     return droppedCreature;
@@ -1043,7 +1048,7 @@ void Tile::movedInMap()
     }
 }
 
-void Tile::swapCreature(std::unique_ptr<Creature> &creature)
+void Tile::swapCreature(std::shared_ptr<Creature> &creature)
 {
     _creature.swap(creature);
 }

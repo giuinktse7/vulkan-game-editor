@@ -1030,11 +1030,11 @@ namespace MapHistory
         spawnInterval = prevInterval;
     }
 
-    SetCreature::SetCreature(Position position, std::unique_ptr<Creature> &&creature)
+    SetCreature::SetCreature(Position position, std::shared_ptr<Creature> &&creature)
         : position(position), creature(std::move(creature)) {}
 
     SetCreature::SetCreature(Position position, Creature &&creature)
-        : position(position), creature(std::make_unique<Creature>(std::move(creature))) {}
+        : position(position), creature(std::make_shared<Creature>(std::move(creature))) {}
 
     SetCreature SetCreature::noCreature(Position position)
     {

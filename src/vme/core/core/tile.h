@@ -184,9 +184,9 @@ class Tile
 
     void setLocation(TileLocation &location);
     void setCreature(Creature &&creature);
-    void setCreature(std::unique_ptr<Creature> &&creature);
-    void swapCreature(std::unique_ptr<Creature> &creature);
-    std::unique_ptr<Creature> dropCreature();
+    void setCreature(std::shared_ptr<Creature> &&creature);
+    void swapCreature(std::shared_ptr<Creature> &creature);
+    std::shared_ptr<Creature> dropCreature();
     inline Creature *creature() const noexcept;
 
     inline Position position() const noexcept
@@ -221,9 +221,12 @@ class Tile
     Item *replaceGround(Item &&ground);
     Item *replaceItem(size_t index, Item &&item);
 
+    /**
+     * These are shared pointers because they are shared with the history system.
+     */
     std::vector<std::shared_ptr<Item>> _items;
     std::shared_ptr<Item> _ground;
-    std::unique_ptr<Creature> _creature;
+    std::shared_ptr<Creature> _creature;
 
     Position _position;
 

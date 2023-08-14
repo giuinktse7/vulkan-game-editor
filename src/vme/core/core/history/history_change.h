@@ -307,7 +307,7 @@ namespace MapHistory
     class SetCreature : public ChangeItem
     {
       public:
-        SetCreature(Position position, std::unique_ptr<Creature> &&creature);
+        SetCreature(Position position, std::shared_ptr<Creature> &&creature);
         SetCreature(Position position, Creature &&creature);
 
         static SetCreature noCreature(Position position);
@@ -317,23 +317,7 @@ namespace MapHistory
 
       private:
         Position position;
-        std::unique_ptr<Creature> creature;
-    };
-
-    class MultiMove : public ChangeItem
-    {
-      public:
-        MultiMove(Position deltaPos, size_t moveOperations);
-        void commit(MapView &mapView) override;
-        void undo(MapView &mapView) override;
-
-        void add(Move &&move);
-
-      private:
-        Position deltaPos;
-
-        std::vector<Move> moves;
-        bool sorted = false;
+        std::shared_ptr<Creature> creature;
     };
 
     class SelectMultiple : public ChangeItem
