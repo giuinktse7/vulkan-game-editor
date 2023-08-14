@@ -95,6 +95,7 @@ class AppDataModel : public QObject
     void removeMapTab(int index);
 
     MapView *currentMapView();
+    std::weak_ptr<MapView> currentMapViewPtr();
 
     // Actions
     void selectBrush(Brush *brush, bool showInItemPalette = false);
@@ -121,6 +122,7 @@ class AppDataModel : public QObject
     void search(std::string searchTerm);
 
   signals:
+    void currentMapViewChanged(MapView *prev, MapView *current);
     void currentMapIndexChanged(int index);
     void autoBorderChanged(bool value);
     void showAnimationChanged(bool value);

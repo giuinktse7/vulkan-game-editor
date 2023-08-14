@@ -384,7 +384,6 @@ class MapView
     Nano::Signal<void(Tile *tile, Item *item)> mapItemDragStart;
     Nano::Signal<void(MapView *mapView, const Tile *tile, TileThing tileThing)> selectedTileThingClicked;
     Nano::Signal<void()> drawRequest;
-    Nano::Signal<void()> drawMinimapRequest;
     Nano::Signal<void()> undoRedoPerformed;
 };
 

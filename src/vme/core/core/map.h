@@ -189,6 +189,13 @@ class MapRegion
     MapRegion(const Map &map, Position from, Position to) noexcept
         : map(map), from(from), to(to) {}
 
+    bool contains(const Position position) const
+    {
+        return position.x >= from.x && position.x <= to.x &&
+               position.y >= from.y && position.y <= to.y &&
+               position.z >= from.z && position.z <= to.z;
+    }
+
     class Iterator
     {
       public:

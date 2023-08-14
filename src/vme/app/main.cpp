@@ -62,7 +62,9 @@ class FileWatcher : QObject
 std::unique_ptr<FileWatcher> watcher;
 
 MainApp::MainApp(int argc, char **argv)
-    : app(argc, argv), dataModel(std::make_unique<AppDataModel>())
+    : app(argc, argv),
+      dataModel(std::make_unique<AppDataModel>()),
+      minimap(std::make_shared<Minimap>())
 {
 }
 
@@ -82,6 +84,25 @@ int MainApp::start()
     engine->addImageProvider(QLatin1String("creatureLooktypes"), new CreatureImageProvider);
 
     qmlRegisterSingletonInstance("VME.dataModel", 1, 0, "AppDataModel", dataModel.get());
+    qmlRegisterSingletonInstance("VME.minimap", 1, 0, "Minimap", minimap.get());
+
+    auto model = dataModel.get();
+    auto minimap = this->minimap;
+
+    // Hook up minimap to events of current map view
+    QObject::connect(model, &AppDataModel::currentMapViewChanged, [minimap, model](MapView *prevMapView, MapView *mapView) {
+        if (prevMapView)
+        {
+            prevMapView->drawMinimapRequest.disconnect<&Minimap::update>(minimap.get());
+        }
+
+        if (mapView)
+        {
+            mapView->drawMinimapRequest.connect<&Minimap::update>(minimap.get());
+        }
+
+        minimap->setMapView(model->currentMapViewPtr());
+    });
 
     QVariantMap properties;
     // properties.insert("tilesetModel", QVariant::fromValue(dataModel->itemPaletteStore().tilesetModel()));

@@ -105,7 +105,7 @@ void AppDataModel::removeMapTab(int index)
 
 MapView *AppDataModel::currentMapView()
 {
-    if (mapTabs()->empty())
+    if (mapTabs()->empty() || _currentMapIndex == -1)
     {
         return nullptr;
     }
@@ -113,6 +113,18 @@ MapView *AppDataModel::currentMapView()
     auto item = mapTabs()->get(_currentMapIndex).item;
 
     return item ? item->mapView.get() : nullptr;
+}
+
+std::weak_ptr<MapView> AppDataModel::currentMapViewPtr()
+{
+    if (mapTabs()->empty())
+    {
+        return {};
+    }
+
+    auto item = mapTabs()->get(_currentMapIndex).item;
+
+    return item ? item->mapView : std::weak_ptr<MapView>();
 }
 
 void AppDataModel::initializeItemPalettePanel(ComboBoxModel *paletteDropdownModel, ComboBoxModel *tilesetDropdownModel, QObject *brushList, TileSetModel *tilesetModel)
@@ -384,10 +396,15 @@ void AppDataModel::setcurrentMapIndex(int index)
 {
     if (_currentMapIndex != index)
     {
+        MapView *prev = currentMapView();
         int prevIndex = _currentMapIndex;
-        VME_LOG("AppDataModel::setcurrentMapIndex: " << index);
         _currentMapIndex = index;
+        MapView *curr = currentMapView();
         emit currentMapIndexChanged(index);
+        if (prev || curr)
+        {
+            emit currentMapViewChanged(prev, curr);
+        }
 
         mapTabSelected(prevIndex, index);
     }

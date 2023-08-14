@@ -4,9 +4,9 @@
 #include <QtQuick/QQuickView>
 #include <memory>
 
-#include "tileset_model.h"
-
 #include "app_data_model.h"
+#include "minimap.h"
+#include "tileset_model.h"
 
 class MainApp
 {
@@ -26,4 +26,5 @@ class MainApp
     std::unique_ptr<TileSetModel> tilesetModel;
 
     std::unique_ptr<AppDataModel> dataModel;
+    std::shared_ptr<Minimap> minimap;
 };
