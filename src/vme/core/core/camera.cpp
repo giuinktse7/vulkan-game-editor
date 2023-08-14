@@ -29,13 +29,13 @@ void Camera::updateZoom(ScreenPosition zoomOrigin)
     ScreenPosition scaled = zoomOrigin * scale;
 
     WorldPosition newPosition(_viewport.x + scaled.x, _viewport.y + scaled.y);
-    this->setWorldPosition(newPosition);
-
     _viewport.zoom = newZoomFactor;
+
+    this->setWorldPosition(newPosition, false);
     fireViewportChange();
 }
 
-void Camera::setWorldPosition(WorldPosition position) noexcept
+void Camera::setWorldPosition(WorldPosition position, bool notifyViewportChange) noexcept
 {
     int oldX = _viewport.x;
     int oldY = _viewport.y;
@@ -43,8 +43,10 @@ void Camera::setWorldPosition(WorldPosition position) noexcept
     _viewport.x = std::max(position.x, 0);
     _viewport.y = std::max(position.y, 0);
 
-    if (_viewport.x != oldX || _viewport.y != oldY)
+    if (notifyViewportChange && (_viewport.x != oldX || _viewport.y != oldY))
+    {
         fireViewportChange();
+    }
 }
 
 void Camera::translate(WorldPosition delta)

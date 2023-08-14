@@ -30,7 +30,7 @@ class Camera
 
     Camera();
 
-    void setWorldPosition(WorldPosition position) noexcept;
+    void setWorldPosition(WorldPosition position, bool notifyViewportChange = true) noexcept;
     inline void setX(WorldPosition::value_type x) noexcept;
     inline void setY(WorldPosition::value_type y) noexcept;
     inline void setZ(int z) noexcept;

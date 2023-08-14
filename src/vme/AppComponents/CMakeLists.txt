@@ -23,6 +23,7 @@ set(HEADER_FILES
     qt_vulkan_info.h
     town_list_model.h
     search_result_model.h
+    minimap.h
 )
 
 set(SRC_FILES
@@ -36,6 +37,7 @@ set(SRC_FILES
     qt_vulkan_info.cpp
     town_list_model.cpp
     search_result_model.cpp
+    minimap.cpp
 )
 
 qt_add_library(app_components STATIC
@@ -51,11 +53,13 @@ target_link_libraries(app_components PRIVATE core app_componentsplugin Qt::Gui Q
 
 set(QML_HEADER_FILES
     qml_map_item.h
+    refreshable_image.h
 )
 
 
 set(QML_SRC_FILES
     qml_map_item.cpp
+    refreshable_image.cpp
 )
 
 
@@ -77,6 +81,7 @@ qt_add_qml_module(app_components
         ItemPanel.qml
         SearchPopupView.qml
         SearchPopupFilterChoice.qml
+        MinimapView.qml
         # ThingTile.qml
         # ThingGrid.qml
     RESOURCES
