@@ -2,6 +2,7 @@
 
 #include <QAbstractListModel>
 #include <QString>
+#include <QTimer>
 #include <QtGui/QScreen>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickWindow>
@@ -15,6 +16,7 @@
 #include "core/graphics/vulkan_screen_texture.h"
 #include "core/map_renderer.h"
 #include "core/map_view.h"
+#include "core/time_util.h"
 #include "enum_conversion.h"
 #include "qt_vulkan_info.h"
 
@@ -217,6 +219,7 @@ class QmlMapItem : public QQuickItem
     void invalidateSceneGraph();
 
   private:
+    void delayedUpdate();
     void releaseResources() override;
     void initialize();
 
@@ -255,6 +258,10 @@ class QmlMapItem : public QQuickItem
 
     bool _focused = false;
     bool _active = false;
+
+    uint32_t minTimePerFrameMs = 16;
+    TimePoint lastDrawTime;
+    QTimer drawTimer;
 };
 
 inline VME::MouseEvent vmeMouseEvent(QMouseEvent *event)

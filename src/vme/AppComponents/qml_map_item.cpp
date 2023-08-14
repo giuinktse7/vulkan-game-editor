@@ -8,6 +8,7 @@
 #include "core/const.h"
 #include "core/map_renderer.h"
 #include "core/settings.h"
+#include "core/time_util.h"
 #include "core/vendor/rollbear-visit/visit.hpp"
 #include "qml_ui_utils.h"
 
@@ -94,6 +95,11 @@ void QmlMapItem::setVerticalScrollPosition(float value)
 QmlMapItem::QmlMapItem(std::string name)
     : _name(name)
 {
+    drawTimer.setSingleShot(true);
+    connect(&drawTimer, &QTimer::timeout, [this]() {
+        delayedUpdate();
+    });
+
     setAcceptedMouseButtons(Qt::MouseButton::AllButtons);
 
     setShortcut(Qt::Key_Escape, ShortcutAction::Escape);
@@ -198,7 +204,7 @@ QString QmlMapItem::qStrName()
 
 void QmlMapItem::mapViewDrawRequested()
 {
-    update();
+    delayedUpdate();
 }
 
 QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
@@ -569,14 +575,30 @@ void QmlMapItem::scheduleDraw(int millis)
 {
     if (millis == 0)
     {
-        update();
+        delayedUpdate();
     }
     else
     {
         QTimer::singleShot(millis, this, [this]() {
-            update();
+            delayedUpdate();
         });
     }
+}
+
+void QmlMapItem::delayedUpdate()
+{
+    auto elapsedMillis = lastDrawTime.elapsedMillis();
+    if (elapsedMillis < minTimePerFrameMs)
+    {
+        if (!drawTimer.isActive())
+        {
+            drawTimer.start(minTimePerFrameMs - elapsedMillis);
+        }
+        return;
+    }
+
+    lastDrawTime = TimePoint::now();
+    update();
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
