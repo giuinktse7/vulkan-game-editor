@@ -13,6 +13,19 @@
 #include "items.h"
 #include "tile_location.h"
 
+void swap(Tile &first, Tile &second)
+{
+    using std::swap;
+
+    DEBUG_ASSERT(first._position == second._position, "Can not swap tiles with different positions.");
+
+    swap(first._items, second._items);
+    swap(first._ground, second._ground);
+    swap(first._creature, second._creature);
+    swap(first._selectionCount, second._selectionCount);
+    swap(first._flags, second._flags);
+}
+
 Tile::Tile(TileLocation &tileLocation)
     : _position(tileLocation.position()), _flags(0), _selectionCount(0) {}
 

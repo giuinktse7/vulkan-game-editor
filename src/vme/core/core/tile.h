@@ -46,6 +46,12 @@ class Tile
     Tile deepCopy(bool onlySelected = false) const;
     Tile deepCopy(Position newPosition) const;
 
+    friend void swap(Tile &first, Tile &second);
+
+    /**
+     * @brief Creates a copy of the tile for history purposes.
+     * @details This does NOT create a deep copy!
+     */
     Tile copyForHistory() const;
 
     void merge(const Tile &tile);
