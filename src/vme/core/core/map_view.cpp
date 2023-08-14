@@ -297,7 +297,7 @@ void MapView::removeItems(const Position position, const std::set<size_t, std::g
     history.commit(std::move(action));
 }
 
-void MapView::removeSelectedItems(const Tile &tile)
+void MapView::removeSelectedThings(const Tile &tile)
 {
     Action action(ActionType::ModifyTile);
 

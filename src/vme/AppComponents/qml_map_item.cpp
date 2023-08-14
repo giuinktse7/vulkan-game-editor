@@ -472,7 +472,7 @@ void QmlMapItem::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
             mapView->escapeEvent();
             break;
         case ShortcutAction::Delete:
-            mapView->deleteSelectedItems();
+            mapView->deleteSelectedThings();
             break;
         case ShortcutAction::ResetZoom:
             mapView->resetZoom();

@@ -276,10 +276,10 @@ void AppDataModel::onContextMenuAction(int id)
             break;
         case ContextMenuOption::Cut:
             mapCopyBuffer.copySelection(*mapView);
-            mapView->deleteSelectedItems();
+            mapView->deleteSelectedThings();
             break;
         case ContextMenuOption::Delete:
-            mapView->deleteSelectedItems();
+            mapView->deleteSelectedThings();
             break;
         case ContextMenuOption::CopyPosition:
             // TODO
@@ -419,7 +419,7 @@ void AppDataModel::cut()
     if (mapView)
     {
         mapCopyBuffer.copySelection(*mapView);
-        mapView->deleteSelectedItems();
+        mapView->deleteSelectedThings();
     }
 }
 

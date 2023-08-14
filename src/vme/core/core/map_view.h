@@ -187,7 +187,7 @@ class MapView
     void removeItems(const Position position, const std::set<size_t, std::greater<size_t>> &indices);
     void removeItems(const Position &position, std::function<bool(const Item &)> predicate);
     void removeItems(const Tile &tile, std::function<bool(const Item &)> predicate);
-    void removeSelectedItems(const Tile &tile);
+    void removeSelectedThings(const Tile &tile);
     void removeItemsWithBorderize(const Tile &tile, std::function<bool(const Item &)> p);
     void removeItem(Tile &tile, Item *item);
     void removeItem(Tile &tile, std::function<bool(const Item &)> p);
@@ -215,7 +215,7 @@ class MapView
     /* Synonym for z() */
     inline int floor() const noexcept;
 
-    void deleteSelectedItems();
+    void deleteSelectedThings();
 
     void setDragStart(WorldPosition position);
     void setDragEnd(WorldPosition position);
