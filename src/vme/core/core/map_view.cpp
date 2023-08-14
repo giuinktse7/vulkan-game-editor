@@ -510,7 +510,7 @@ void MapView::moveFromContainerToContainer(ContainerLocation &from, ContainerLoc
 
 void MapView::moveSelection(const Position &offset)
 {
-    history.beginTransaction(TransactionType::MoveItems);
+    history.beginTransaction(TransactionType::MoveSelection);
     {
         Action action(ActionType::Selection);
 
@@ -525,7 +525,7 @@ void MapView::moveSelection(const Position &offset)
 
         history.commit(std::move(action));
     }
-    history.endTransaction(TransactionType::MoveItems);
+    history.endTransaction(TransactionType::MoveSelection);
 }
 
 void MapView::deleteSelectedItems()
@@ -1635,7 +1635,7 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
                     waitForDraw([this, &drag] {
                         if (drag.isMoving())
                         {
-                            commitTransaction(TransactionType::MoveItems, [this, &drag] {
+                            commitTransaction(TransactionType::MoveSelection, [this, &drag] {
                                 Position toPosition = drag.tile->position() + drag.moveDelta.value();
                                 moveItem(*drag.tile, toPosition, drag.item);
                             });

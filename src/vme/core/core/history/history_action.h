@@ -20,7 +20,7 @@ enum class TransactionType
     Selection,
     AddMapItem,
     RemoveMapItem,
-    MoveItems,
+    MoveSelection,
     ModifyItem,
     ModifyCreature
 };
@@ -121,7 +121,7 @@ inline std::ostringstream stringify(const TransactionType &type)
         case TransactionType::RemoveMapItem:
             s << "TransactionType::RemoveMapItem";
             break;
-        case TransactionType::MoveItems:
+        case TransactionType::MoveSelection:
             s << "TransactionType::MoveItems";
             break;
         case TransactionType::BrushAction:
