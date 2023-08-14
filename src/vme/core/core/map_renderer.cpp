@@ -238,6 +238,7 @@ void MapRenderer::setupFrame()
 void MapRenderer::drawMap()
 {
     MapView &view = *mapView;
+    Position mouseGamePos = mapView->mouseGamePos();
 
     ItemPredicate filter = nullptr;
     if (mapView->draggingWithSubtract() && !Settings::AUTO_BORDER)
@@ -296,7 +297,7 @@ void MapRenderer::drawMap()
             if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
                 continue;
 
-            auto offset = mapView->mouseGamePos() - mapBuffer->topLeft;
+            auto offset = mouseGamePos - mapBuffer->topLeft;
 
             drawTile(tileLocation.tile(), ItemDrawFlags::DrawSelected | ItemDrawFlags::Ghost, offset, filter);
         }
