@@ -590,6 +590,14 @@ bool MapRenderer::shouldDrawItem(const Position pos, const Item &item, uint32_t 
     return (selected || unselected) && passFilter;
 }
 
+bool MapRenderer::shouldDrawCreature(const Position pos, const Creature &creature, uint32_t flags) const noexcept
+{
+    bool selected = creature.selected && (flags & ItemDrawFlags::DrawSelected);
+    bool unselected = !creature.selected && (flags & ItemDrawFlags::DrawNonSelected);
+
+    return (selected || unselected);
+}
+
 void MapRenderer::drawTile(const TileLocation &tileLocation, uint32_t flags, const ItemPredicate &filter)
 {
     drawTile(tileLocation, flags, PositionConstants::Zero, filter);
@@ -664,10 +672,12 @@ void MapRenderer::drawTile(Tile *tile, uint32_t flags, const Position offset, co
 
     if (tile->hasCreature())
     {
-        auto &creature = *tile->creature();
-        auto color = getCreatureDrawColor(creature, position, flags);
-        drawCreatureType(creature.creatureType, position, creature.direction(), color, worldPosOffset);
-        // drawCreature(creatureDrawInfo(creature, position, flags));
+        if (shouldDrawCreature(position, *tile->creature(), flags))
+        {
+            auto &creature = *tile->creature();
+            auto color = getCreatureDrawColor(creature, position, flags);
+            drawCreatureType(creature.creatureType, position, creature.direction(), color, worldPosOffset);
+        }
     }
 }
 

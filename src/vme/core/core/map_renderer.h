@@ -385,6 +385,7 @@ class MapRenderer
     void drawCreatureType(const CreatureType &creatureType, const Position position, Direction direction, glm::vec4 color, const DrawOffset &drawOffset = DrawOffset{0, 0});
 
     bool shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter = {}) const noexcept;
+    bool shouldDrawCreature(const Position pos, const Creature&creature, uint32_t flags) const noexcept;
 
     void drawBrushPreview(Brush *brush, const Position &position, int variation);
     void drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos, int variation);
