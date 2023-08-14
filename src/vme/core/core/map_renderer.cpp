@@ -294,12 +294,12 @@ void MapRenderer::drawMap()
         auto mapBuffer = pasteAction->buffer;
         for (auto &tileLocation : mapBuffer->getBufferMap().getRegion(mapBuffer->topLeft, mapBuffer->bottomRight))
         {
-            if (!tileLocation.hasTile() || (movingSelection && tileLocation.tile()->allSelected()))
+            if (!(tileLocation.hasTile() && region.contains(tileLocation.position())))
                 continue;
 
             auto offset = mouseGamePos - mapBuffer->topLeft;
 
-            drawTile(tileLocation.tile(), ItemDrawFlags::DrawSelected | ItemDrawFlags::Ghost, offset, filter);
+            drawTile(tileLocation.tile(), ItemDrawFlags::Ghost | ItemDrawFlags::ForceDraw, offset);
         }
     }
 }
@@ -584,6 +584,11 @@ void MapRenderer::drawMapOverlay()
 
 bool MapRenderer::shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter) const noexcept
 {
+    if (flags & ItemDrawFlags::ForceDraw)
+    {
+        return true;
+    }
+
     bool selected = item.selected && (flags & ItemDrawFlags::DrawSelected);
     bool unselected = !item.selected && (flags & ItemDrawFlags::DrawNonSelected);
     bool passFilter = !filter || filter(pos, item);
@@ -593,6 +598,11 @@ bool MapRenderer::shouldDrawItem(const Position pos, const Item &item, uint32_t 
 
 bool MapRenderer::shouldDrawCreature(const Position pos, const Creature &creature, uint32_t flags) const noexcept
 {
+    if (flags & ItemDrawFlags::ForceDraw)
+    {
+        return true;
+    }
+
     bool selected = creature.selected && (flags & ItemDrawFlags::DrawSelected);
     bool unselected = !creature.selected && (flags & ItemDrawFlags::DrawNonSelected);
 

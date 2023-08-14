@@ -132,6 +132,7 @@ namespace ItemDrawFlags
     constexpr uint32_t Ghost = 1 << 2;
     constexpr uint32_t ActiveSelectionArea = 1 << 3;
     constexpr uint32_t Shade = 1 << 4;
+    constexpr uint32_t ForceDraw = 1 << 5;
 } // namespace ItemDrawFlags
 
 struct TextureOffset
@@ -371,7 +372,7 @@ class MapRenderer
     void drawTile(const TileLocation &tileLocation,
                   uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
                   const ItemPredicate &filter = nullptr);
-    void drawTile(Tile *tile, uint32_t flags, const Position offset, const ItemPredicate &filter);
+    void drawTile(Tile *tile, uint32_t flags, const Position offset, const ItemPredicate &filter = nullptr);
 
     WorldPosition getWorldPosForDraw(const ItemTypeDrawInfo &info, TextureAtlas *atlas) const;
 
@@ -385,7 +386,7 @@ class MapRenderer
     void drawCreatureType(const CreatureType &creatureType, const Position position, Direction direction, glm::vec4 color, const DrawOffset &drawOffset = DrawOffset{0, 0});
 
     bool shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter = {}) const noexcept;
-    bool shouldDrawCreature(const Position pos, const Creature&creature, uint32_t flags) const noexcept;
+    bool shouldDrawCreature(const Position pos, const Creature &creature, uint32_t flags) const noexcept;
 
     void drawBrushPreview(Brush *brush, const Position &position, int variation);
     void drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos, int variation);
