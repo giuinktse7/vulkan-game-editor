@@ -516,7 +516,7 @@ inline std::string toString(T value)
         inline bool isSet(const EnumType a, const EnumType b)                                                                                                     \
         {                                                                                                                                                         \
             typedef std::underlying_type<EnumType>::type ut;                                                                                                      \
-            return (a & static_cast<EnumType>(~static_cast<ut>(b))) == b;                                                                                         \
+            return (a & static_cast<EnumType>(static_cast<ut>(b))) == b;                                                                                          \
         }                                                                                                                                                         \
         inline void toggle(EnumType &a, EnumType b)                                                                                                               \
         {                                                                                                                                                         \
