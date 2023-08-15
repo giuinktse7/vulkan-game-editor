@@ -14,6 +14,7 @@ class Minimap : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QImage image MEMBER _image READ image NOTIFY minimapChanged)
+    Q_PROPERTY(bool open MEMBER _open READ open WRITE setOpen NOTIFY openChanged)
 
   public:
     void setMapView(std::weak_ptr<MapView> mapView);
@@ -23,6 +24,12 @@ class Minimap : public QObject
 
     void resize(int width, int height);
 
+    bool open()
+    {
+        return _open;
+    }
+    void setOpen(bool open);
+
     explicit Minimap(QObject *parent = nullptr);
 
     QImage image() const;
@@ -30,6 +37,7 @@ class Minimap : public QObject
 
   signals:
     void minimapChanged();
+    void openChanged();
 
   private:
     QImage createMinimap();
@@ -40,6 +48,7 @@ class Minimap : public QObject
 
     QImage _image;
     QSize _size;
+    bool _open;
 
     // Used to avoid refreshing the minimap too often
     TimePoint lastRefresh;

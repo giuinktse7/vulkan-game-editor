@@ -17,11 +17,13 @@ VMEComponent.ItemPanel {
     function open() {
         root.visible = true;
         root.enabled = true;
+        Minimap.open = true;
     }
 
     function close() {
         root.visible = false;
         root.enabled = false;
+        Minimap.open = false;
     }
 
     // anchors.fill: parent

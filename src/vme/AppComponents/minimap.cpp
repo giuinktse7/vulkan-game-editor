@@ -4,7 +4,7 @@
 #include "core/minimap_colors.h"
 
 Minimap::Minimap(QObject *parent)
-    : QObject(parent), _size(200, 200), lastRefresh(TimePoint::now())
+    : QObject(parent), _size(200, 200), lastRefresh(TimePoint::now()), _open(false)
 {
     delayedRefresh.setSingleShot(true);
     connect(&delayedRefresh, &QTimer::timeout, [this]() {
@@ -16,6 +16,11 @@ Minimap::Minimap(QObject *parent)
 
 void Minimap::update()
 {
+    if (!_open)
+    {
+        return;
+    }
+
     auto elapsedMillis = lastRefresh.elapsedMillis();
     if (elapsedMillis < refreshCooldownMs)
     {
@@ -121,4 +126,14 @@ void Minimap::setMapView(std::weak_ptr<MapView> mapView)
 {
     _mapView = mapView;
     update();
+}
+
+void Minimap::setOpen(bool open)
+{
+    if (open != this->_open)
+    {
+        this->_open = open;
+        update();
+        emit openChanged();
+    }
 }
