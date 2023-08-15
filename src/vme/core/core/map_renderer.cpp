@@ -171,12 +171,51 @@ void MapRenderer::releaseResources()
     }
 }
 
+bool MapRenderer::mouseHover()
+{
+    return EnumFlag::isSet(_currentFrame->flags, FrameDataFlag::MouseHover);
+}
+
+bool MapRenderer::draggingWithSubtract()
+{
+    return EnumFlag::isSet(_currentFrame->flags, FrameDataFlag::DraggingWithSubtract);
+}
+
+bool MapRenderer::hasMovingSelection()
+{
+    return EnumFlag::isSet(_currentFrame->flags, FrameDataFlag::MovingSelection);
+}
+
+bool MapRenderer::isDragging()
+{
+    return EnumFlag::isSet(_currentFrame->flags, FrameDataFlag::Dragging);
+}
+
+std::optional<std::pair<WorldPosition, WorldPosition>> MapRenderer::getDragPoints()
+{
+    return _currentFrame->dragPoints;
+}
+
 void MapRenderer::render(VkFramebuffer frameBuffer, util::Size swapChainSize)
 {
     vulkanSwapChainImageSize = swapChainSize;
-    _currentFrame->frameBuffer = frameBuffer;
 
     _containsAnimation = false;
+
+    _currentFrame->frameBuffer = frameBuffer;
+
+    _currentFrame->mouseAction = mapView->editorAction.action();
+    _currentFrame->mouseGamePos = mapView->mouseGamePos();
+    _currentFrame->dragPoints = mapView->getDragPoints();
+
+    auto select = mouseActionAs<MouseAction::Select>();
+
+    _currentFrame->flags = FrameDataFlag::None;
+    EnumFlag::set(_currentFrame->flags, FrameDataFlag::MouseHover, mapView->underMouse());
+    EnumFlag::set(_currentFrame->flags, FrameDataFlag::DraggingWithSubtract, mapView->draggingWithSubtract());
+    EnumFlag::set(_currentFrame->flags, FrameDataFlag::MovingSelection, select && select->isMoving());
+    EnumFlag::set(_currentFrame->flags, FrameDataFlag::Dragging, mapView->isDragging());
+
     // VME_LOG_D("index: " << _currentFrame->currentFrameIndex);
     // VME_LOG("Start next frame");
     updateUniformBuffer();
@@ -191,7 +230,7 @@ void MapRenderer::render(VkFramebuffer frameBuffer, util::Size swapChainSize)
     isDefaultZoom = floorZoom == zoom && floorZoom == 1;
 
     drawMap();
-    if (mapView->underMouse())
+    if (mouseHover())
     {
         drawCurrentAction();
         drawMapOverlay();
@@ -235,43 +274,51 @@ void MapRenderer::setupFrame()
     vulkanInfo->vkCmdBindIndexBuffer(cb, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 }
 
+MouseAction_t MapRenderer::mouseAction() const
+{
+    return _currentFrame->mouseAction;
+}
+
 void MapRenderer::drawMap()
 {
-    MapView &view = *mapView;
-    Position mouseGamePos = mapView->mouseGamePos();
+    Position mouseGamePos = _currentFrame->mouseGamePos;
+
+    int viewZ = mapView->z();
 
     ItemPredicate filter = nullptr;
-    if (mapView->draggingWithSubtract() && !Settings::AUTO_BORDER)
+    if (draggingWithSubtract() && !Settings::AUTO_BORDER)
     {
-        auto [from, to] = mapView->getDragPoints().value();
-        Region2D dragRegion(from.toPos(view.floor()), to.toPos(view.floor()));
-        Brush *brush = std::get<MouseAction::MapBrush>(mapView->editorAction.action()).brush;
+        auto [from, to] = _currentFrame->dragPoints.value();
+        Region2D dragRegion(from.toPos(viewZ), to.toPos(viewZ));
+        Brush *brush = mouseActionAs<MouseAction::MapBrush>()->brush;
 
         filter = [brush, dragRegion](const Position pos, const Item &item) {
             return !(brush->erasesItem(item.serverId()) && dragRegion.contains(pos));
         };
     }
-    else if (mapView->editorAction.is<MouseAction::DragDropItem>())
+    else if (isMouseAction<MouseAction::DragDropItem>())
     {
-        MouseAction::DragDropItem *drag = mapView->editorAction.as<MouseAction::DragDropItem>();
+        MouseAction::DragDropItem *drag = mouseActionAs<MouseAction::DragDropItem>();
         filter = [drag](const Position pos, const Item &item) { return &item != drag->item; };
     }
 
-    bool movingSelection = view.selection().isMoving();
-    bool shadeLowerFloors = view.hasOption(MapView::ViewOption::ShadeLowerFloors);
-
-    int viewZ = view.z();
+    bool movingSelection = hasMovingSelection();
+    bool shadeLowerFloors = mapView->hasOption(MapView::ViewOption::ShadeLowerFloors);
 
     uint32_t flags = ItemDrawFlags::DrawNonSelected;
 
     if (!movingSelection)
+    {
         flags |= ItemDrawFlags::DrawSelected;
+    }
 
-    auto selectAction = mapView->editorAction.as<MouseAction::Select>();
+    auto selectAction = mouseActionAs<MouseAction::Select>();
     if (selectAction && selectAction->area)
+    {
         flags |= ItemDrawFlags::ActiveSelectionArea;
+    }
 
-    auto region = view.mapRegion(1, 1);
+    auto region = mapView->mapRegion(1, 1);
 
     for (auto &tileLocation : region)
     {
@@ -288,7 +335,7 @@ void MapRenderer::drawMap()
     }
 
     // Draw paste preview
-    auto pasteAction = mapView->editorAction.as<MouseAction::PasteMapBuffer>();
+    auto pasteAction = mouseActionAs<MouseAction::PasteMapBuffer>();
     if (pasteAction)
     {
         auto mapBuffer = pasteAction->buffer;
@@ -310,30 +357,30 @@ void MapRenderer::drawCurrentAction()
     std::visit(
         util::overloaded{
             [this](const MouseAction::Select select) {
-                if (select.area && mapView->isDragging())
+                if (select.area && isDragging())
                 {
                     // DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
 
                     // const auto [from, to] = mapView->getDragPoints().value();
                     // drawSolidRectangle(SolidColor::Blue, from, to, 0.1f);
                 }
-                else if (mapView->selection().isMoving())
+                else if (hasMovingSelection())
                 {
                     drawMovingSelection();
                 }
             },
 
             [this](const MouseAction::MapBrush &action) {
-                Position pos = mapView->mouseGamePos();
+                Position pos = this->_currentFrame->mouseGamePos;
                 int variation = action.variationIndex;
 
-                if (action.area && mapView->isDragging())
+                if (action.area && isDragging())
                 {
+                    const auto [from, to] = getDragPoints().value();
                     // DEBUG_ASSERT(mapView->isDragging(), "action.area == true is invalid if no drag is active.");
 
-                    if (mapView->draggingWithSubtract())
+                    if (draggingWithSubtract())
                     {
-                        const auto [from, to] = mapView->getDragPoints().value();
                         Texture &texture = Texture::getOrCreateSolidTexture(SolidColor::Red);
 
                         drawRectangle(texture, from, to, 0.2f);
@@ -341,13 +388,13 @@ void MapRenderer::drawCurrentAction()
                     }
                     else
                     {
+                        int floor = mapView->floor();
+
                         switch (action.brush->type())
                         {
                             case BrushType::Raw:
                             case BrushType::Ground:
                             {
-                                auto [from, to] = mapView->getDragPoints().value();
-                                int floor = mapView->floor();
                                 auto area = MapArea(*mapView->map(), from.toPos(floor), to.toPos(floor));
 
                                 for (auto &pos : area)
@@ -359,8 +406,6 @@ void MapRenderer::drawCurrentAction()
                             case BrushType::Wall:
                             {
                                 auto wallBrush = static_cast<WallBrush *>(action.brush);
-                                auto [from, to] = mapView->getDragPoints().value();
-                                int floor = mapView->floor();
 
                                 auto fromPos = from.toPos(floor);
                                 auto toPos = to.toPos(floor);
@@ -375,8 +420,6 @@ void MapRenderer::drawCurrentAction()
                             }
                             case BrushType::Mountain:
                             {
-                                auto [from, to] = mapView->getDragPoints().value();
-                                int floor = mapView->floor();
                                 auto area = MapArea(*mapView->map(), from.toPos(floor), to.toPos(floor));
 
                                 for (auto &pos : area)
@@ -394,7 +437,7 @@ void MapRenderer::drawCurrentAction()
                 }
                 else
                 {
-                    if (mapView->underMouse())
+                    if (mouseHover())
                     {
                         drawBrushPreview(action.brush, pos, variation);
                     }
@@ -402,7 +445,7 @@ void MapRenderer::drawCurrentAction()
             },
 
             [this](const MouseAction::DragDropItem drag) {
-                if (mapView->underMouse())
+                if (mouseHover())
                 {
                     ItemDrawInfo info{};
                     info.item = drag.item;
@@ -537,12 +580,12 @@ void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
 void MapRenderer::drawMovingSelection()
 {
     // External drag operation (e.g. for dropping an item in a container)
-    if (!mapView->underMouse() && mapView->singleThingSelected())
+    if (!mouseHover() && mapView->singleThingSelected())
     {
         return;
     }
 
-    Position moveDelta = mapView->editorAction.as<MouseAction::Select>()->moveDelta.value();
+    Position moveDelta = mouseActionAs<MouseAction::Select>()->moveDelta.value();
 
     auto mapRect = mapView->getGameBoundingRect();
     mapRect = mapRect.translate(-moveDelta.x, -moveDelta.y, {0, 0});

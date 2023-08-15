@@ -173,6 +173,16 @@ enum BlendMode
     NUM_BLENDMODES
 };
 
+enum class FrameDataFlag : uint16_t
+{
+    None = 0,
+    MouseHover = 1,
+    Dragging = 1 << 1,
+    DraggingWithSubtract = 1 << 2,
+    MovingSelection = 1 << 3,
+};
+VME_ENUM_OPERATORS(FrameDataFlag);
+
 struct FrameData
 {
     VkFramebuffer frameBuffer = nullptr;
@@ -183,8 +193,11 @@ struct FrameData
     int currentFrameIndex = 0;
 
     glm::mat4 projectionMatrix{};
+
     MouseAction_t mouseAction = MouseAction::None{};
-    bool mouseHover = false;
+    Position mouseGamePos = PositionConstants::Zero;
+    FrameDataFlag flags = FrameDataFlag::None;
+    std::optional<std::pair<WorldPosition, WorldPosition>> dragPoints = std::nullopt;
 };
 
 /*
@@ -394,6 +407,26 @@ class MapRenderer
 
     void issueDraw(const DrawInfo::Base &info, const WorldPosition &worldPos);
     void issueRectangleDraw(DrawInfo::Rectangle &info);
+
+    MouseAction_t mouseAction() const;
+
+    template <typename T>
+    bool isMouseAction()
+    {
+        return std::holds_alternative<T>(_currentFrame->mouseAction);
+    }
+
+    template <typename T>
+    T *mouseActionAs()
+    {
+        return std::get_if<T>(&_currentFrame->mouseAction);
+    }
+
+    bool hasMovingSelection();
+    bool mouseHover();
+    bool isDragging();
+    bool draggingWithSubtract();
+    std::optional<std::pair<WorldPosition, WorldPosition>> getDragPoints();
 
     std::unordered_set<TextureWindow, TextureWindowHasher, TextureWindowEqual> testTextureSet;
 
