@@ -30,7 +30,7 @@ Item {
 
     VMEComponent.SearchPopupView {
         id: searchPopupView
-        visible: true
+        visible: false
 
         searchResults: AppDataModel.filteredSearchModel
     }
