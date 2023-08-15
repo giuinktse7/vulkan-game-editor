@@ -302,18 +302,7 @@ void MapView::removeSelectedThings(const Tile &tile)
     Action action(ActionType::ModifyTile);
 
     Tile newTile = tile.deepCopy();
-
-    for (size_t i = 0; i < tile.items().size(); ++i)
-    {
-        if (tile.items().at(i)->selected)
-            newTile.removeItem(i);
-    }
-
-    Item *ground = newTile.ground();
-    if (ground && ground->selected)
-    {
-        newTile._ground.reset();
-    }
+    newTile.removeSelectedThings();
 
     action.addChange(SetTile(std::move(newTile)));
 
@@ -514,21 +503,15 @@ void MapView::moveSelection(const Position &offset)
     {
         Action action(ActionType::Selection);
 
-        for (const auto fromPos : _selection)
-        {
-            const Tile &fromTile = *getTile(fromPos);
-            Position toPos = fromPos + offset;
-            DEBUG_ASSERT(fromTile.hasSelection(), "The tile at each position of a selection should have a selection.");
-
-            action.addChange(std::make_unique<Move_v2>(Move_v2::selected(fromTile, toPos)));
-        }
+        auto moveSelection = std::make_unique<MoveSelection>(_selection.allPositions(), offset);
+        action.addChange(std::move(moveSelection));
 
         history.commit(std::move(action));
     }
     history.endTransaction(TransactionType::MoveSelection);
 }
 
-void MapView::deleteSelectedItems()
+void MapView::deleteSelectedThings()
 {
     if (_selection.empty())
     {
@@ -550,7 +533,7 @@ void MapView::deleteSelectedItems()
             }
             else
             {
-                removeSelectedItems(tile);
+                removeSelectedThings(tile);
             }
 
             modifiedPositions.emplace(pos);
@@ -572,7 +555,7 @@ void MapView::deleteSelectedItems()
             }
             else
             {
-                removeSelectedItems(tile);
+                removeSelectedThings(tile);
             }
         }
     }
