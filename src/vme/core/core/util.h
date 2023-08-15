@@ -5,6 +5,7 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <thread>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -325,6 +326,13 @@ namespace util
         m &= mod >> std::numeric_limits<int>::digits;
         return mod + m;
     }
+
+    inline size_t threadId()
+    {
+        size_t thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
+        return thread_id;
+    }
+
 } // namespace util
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
