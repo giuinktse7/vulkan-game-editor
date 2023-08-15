@@ -323,6 +323,10 @@ class MapView
 
     std::optional<Region2D<WorldPosition>> dragRegion;
 
+    Nano::Signal<void()> drawMinimapRequest;
+
+    void mapRenderFinished();
+
   private:
     friend class MapHistory::ChangeItem;
 
@@ -380,6 +384,11 @@ class MapView
 
     bool _prevUnderMouse = false;
     bool _underMouse = false;
+
+    /**
+     * Used to enqueue mutations to the MapView so that they don't happen during a draw.
+     */
+    std::queue<std::function<void()>> waitingForRenderFinish;
 
     Nano::Signal<void(const Camera::Viewport &)> viewportChange;
     Nano::Signal<void(Tile *tile, Item *item)> mapItemDragStart;

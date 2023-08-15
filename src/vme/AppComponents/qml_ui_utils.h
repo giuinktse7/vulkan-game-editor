@@ -1,8 +1,13 @@
 #pragma once
 
-#include <QtQuick/QQuickItem>
+#include <QEvent>
 
 #include "core/editor_action.h"
+
+enum CustomQEvent
+{
+    RenderMapFinished = QEvent::User + 1,
+};
 
 class QQuickItem;
 

@@ -19,6 +19,9 @@
 
 QmlMapItemStore QmlMapItemStore::qmlMapItemStore;
 
+MapRenderFinishedEvent::MapRenderFinishedEvent()
+    : QEvent(static_cast<QEvent::Type>(CustomQEvent::RenderMapFinished)) {}
+
 std::shared_ptr<Map> testMap2()
 {
     std::shared_ptr<Map> map = std::make_shared<Map>();
@@ -93,13 +96,8 @@ void QmlMapItem::setVerticalScrollPosition(float value)
 // }
 
 QmlMapItem::QmlMapItem(std::string name)
-    : _name(name)
+    : _name(name), lastDrawTime(TimePoint::now())
 {
-    drawTimer.setSingleShot(true);
-    connect(&drawTimer, &QTimer::timeout, [this]() {
-        delayedUpdate();
-    });
-
     setAcceptedMouseButtons(Qt::MouseButton::AllButtons);
 
     setShortcut(Qt::Key_Escape, ShortcutAction::Escape);
@@ -116,6 +114,9 @@ QmlMapItem::QmlMapItem(std::string name)
 
     mapView->onViewportChanged<&QmlMapItem::onMapViewportChanged>(this);
     mapView->onDrawRequested<&QmlMapItem::mapViewDrawRequested>(this);
+
+    drawTimer.setSingleShot(true);
+    connect(&drawTimer, &QTimer::timeout, this, &QmlMapItem::delayedUpdate, Qt::DirectConnection);
 
     connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow *win) {
         if (win)
@@ -138,12 +139,27 @@ QmlMapItem::QmlMapItem(std::string name)
 
             mapView->setUiUtils(std::make_unique<QmlUIUtils>(this));
 
+            connect(win, &QQuickWindow::beforeFrameBegin, this, &QmlMapItem::beforeRenderMap, Qt::DirectConnection);
+            connect(win, &QQuickWindow::afterFrameEnd, this, &QmlMapItem::afterRenderMap, Qt::DirectConnection);
+
             connect(win, &QQuickWindow::beforeSynchronizing, this, &QmlMapItem::sync, Qt::DirectConnection);
             connect(win, &QQuickWindow::sceneGraphInvalidated, this, &QmlMapItem::cleanup, Qt::DirectConnection);
         }
     });
 
     setFlag(ItemHasContents, true);
+}
+
+void QmlMapItem::beforeRenderMap()
+{
+    rendering = true;
+}
+
+void QmlMapItem::afterRenderMap()
+{
+    rendering = false;
+
+    QGuiApplication::postEvent(this, new MapRenderFinishedEvent(), Qt::HighEventPriority);
 }
 
 QmlMapItem::~QmlMapItem()
@@ -245,6 +261,38 @@ void QmlMapItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeom
     }
 }
 
+void QmlMapItem::defer(QEvent::Type eventType, VME::MouseEvent event)
+{
+    if (deferredEvents.contains(eventType))
+    {
+        auto &deferredEvent = deferredEvents.at(eventType);
+        switch (eventType)
+        {
+            case QEvent::MouseButtonPress:
+            {
+                if (event.buttons() & VME::MouseButtons::LeftButton)
+                {
+                    deferredEvent.event = event;
+                    return;
+                }
+                break;
+            }
+            case QEvent::MouseButtonRelease:
+                break;
+            case QEvent::MouseMove:
+                deferredEvent.event = event;
+                break;
+            default:
+                break;
+        }
+        deferredEvent.event = event;
+    }
+    else
+    {
+        deferredEvents.try_emplace(eventType, DeferredEvent{event, TimePoint::now()});
+    }
+}
+
 void QmlMapItem::mousePressEvent(QMouseEvent *event)
 {
     bool mouseInside = containsMouse();
@@ -255,7 +303,14 @@ void QmlMapItem::mousePressEvent(QMouseEvent *event)
         if (event->button() == Qt::MouseButton::LeftButton)
         {
             auto e = vmeMouseEvent(event);
-            mapView->mousePressEvent(e);
+            if (rendering)
+            {
+                defer(QEvent::MouseButtonPress, e);
+            }
+            else
+            {
+                mapView->mousePressEvent(e);
+            }
         }
     }
 }
@@ -264,8 +319,16 @@ void QmlMapItem::mouseMoveEvent(QMouseEvent *event)
 {
     bool mouseInside = containsMouse();
     mapView->setUnderMouse(mouseInside);
+    auto vmeEvent = vmeMouseEvent(event);
 
-    mapView->mouseMoveEvent(vmeMouseEvent(event));
+    if (rendering)
+    {
+        defer(QEvent::MouseMove, vmeEvent);
+    }
+    else
+    {
+        mapView->mouseMoveEvent(vmeEvent);
+    }
 }
 
 void QmlMapItem::onMousePositionChanged(int x, int y, int button, int buttons, int modifiers)
@@ -281,7 +344,14 @@ void QmlMapItem::onMousePositionChanged(int x, int y, int button, int buttons, i
     mapView->setUnderMouse(mouseInside);
 
     auto vmeEvent = vmeMouseEvent(&event);
-    mapView->mouseMoveEvent(vmeEvent);
+    if (rendering)
+    {
+        defer(QEvent::MouseMove, vmeEvent);
+    }
+    else
+    {
+        mapView->mouseMoveEvent(vmeEvent);
+    }
 }
 
 void QmlMapItem::mouseReleaseEvent(QMouseEvent *event)
@@ -290,7 +360,14 @@ void QmlMapItem::mouseReleaseEvent(QMouseEvent *event)
     mapView->setUnderMouse(mouseInside);
 
     auto e = vmeMouseEvent(event);
-    mapView->mouseReleaseEvent(e);
+    if (rendering && event->button() == Qt::MouseButton::LeftButton)
+    {
+        defer(QEvent::MouseButtonRelease, e);
+    }
+    else
+    {
+        mapView->mouseReleaseEvent(e);
+    }
 }
 
 void QmlMapItem::keyPressEvent(QKeyEvent *event)
@@ -404,6 +481,29 @@ bool QmlMapItem::event(QEvent *event)
             // case QEvent::DragMove:
             //     dragMoveEvent(static_cast<QDragMoveEvent *>(event));
             //     break;
+
+        case CustomQEvent::RenderMapFinished:
+        {
+            // Run deferred events
+            if (deferredEvents.contains(QEvent::MouseButtonRelease))
+            {
+                mapView->mouseReleaseEvent(deferredEvents.at(QEvent::MouseButtonRelease).event);
+            }
+            if (deferredEvents.contains(QEvent::MouseButtonPress))
+            {
+                mapView->mousePressEvent(deferredEvents.at(QEvent::MouseButtonPress).event);
+            }
+            if (deferredEvents.contains(QEvent::MouseMove))
+            {
+                mapView->mouseMoveEvent(deferredEvents.at(QEvent::MouseMove).event);
+            }
+
+            deferredEvents.clear();
+
+            mapView->mapRenderFinished();
+
+            break;
+        }
 
         case QEvent::Leave:
         {
@@ -695,11 +795,6 @@ void MapTextureNode::render()
     auto frame = mapRenderer->currentFrame();
     frame->currentFrameIndex = currentFrameSlot;
     frame->commandBuffer = commandBuffer;
-
-    if (auto wMapView = mapView.lock())
-    {
-        frame->mouseAction = wMapView->editorAction.action();
-    }
 
     mapRenderer->render(frameBuffer, util::Size(textureSize.width(), textureSize.height()));
 

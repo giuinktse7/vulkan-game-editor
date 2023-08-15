@@ -2,6 +2,7 @@
 
 #include <QCursor>
 #include <QGuiApplication>
+#include <QQuickItem>
 
 #include "enum_conversion.h"
 

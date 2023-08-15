@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QEvent>
 #include <QString>
 #include <QTimer>
 #include <QtGui/QScreen>
@@ -22,6 +23,18 @@
 
 class QmlMapItem;
 class Position;
+
+class MapRenderFinishedEvent : public QEvent
+{
+  public:
+    MapRenderFinishedEvent();
+};
+
+struct DeferredEvent
+{
+    VME::MouseEvent event;
+    TimePoint timestamp;
+};
 
 class MapTabListModel : public QAbstractListModel
 {
@@ -156,6 +169,9 @@ class QmlMapItem : public QQuickItem
 
     void scheduleDraw(int millis);
 
+    void beforeRenderMap();
+    void afterRenderMap();
+
     Q_INVOKABLE void onMousePositionChanged(int x, int y, int button, int buttons, int modifiers);
     Q_INVOKABLE void setFocus(bool focus);
 
@@ -225,6 +241,8 @@ class QmlMapItem : public QQuickItem
 
     bool containsMouse() const;
 
+    void defer(QEvent::Type eventType, VME::MouseEvent event);
+
     void mapViewDrawRequested();
 
     std::optional<ShortcutAction> getShortcutAction(QKeyEvent *event) const;
@@ -259,9 +277,13 @@ class QmlMapItem : public QQuickItem
     bool _focused = false;
     bool _active = false;
 
-    uint32_t minTimePerFrameMs = 16;
+    uint32_t minTimePerFrameMs = 1000 / 120; // 120 FPS
     TimePoint lastDrawTime;
     QTimer drawTimer;
+
+    vme_unordered_map<QEvent::Type, DeferredEvent> deferredEvents;
+
+    bool rendering = false;
 };
 
 inline VME::MouseEvent vmeMouseEvent(QMouseEvent *event)

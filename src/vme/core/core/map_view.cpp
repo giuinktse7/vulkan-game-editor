@@ -1425,7 +1425,9 @@ void MapView::mousePressEvent(VME::MouseEvent event)
 
         _previousMouseGamePos = pos;
     }
+
     requestDraw();
+    requestMinimapDraw();
 }
 
 void MapView::mouseMoveEvent(VME::MouseEvent event)
@@ -1550,6 +1552,7 @@ void MapView::mouseReleaseEvent(VME::MouseEvent event)
             GroundBrush::resetReplacementFilter();
         }
     }
+
     requestDraw();
 }
 
@@ -1587,15 +1590,10 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
             [this](MouseAction::Select &select) {
                 if (select.isMoving())
                 {
-                    waitForDraw([this, &select] {
-                        Position deltaPos = select.moveDelta.value();
-                        moveSelection(deltaPos);
-                        requestDraw();
-                        requestMinimapDraw();
-
-                        select.reset();
-                        editorAction.unlock();
-                    });
+                    Position deltaPos = select.moveDelta.value();
+                    select.reset();
+                    editorAction.unlock();
+                    moveSelection(deltaPos);
                 }
                 else
                 {
@@ -1607,19 +1605,17 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
             [this](MouseAction::DragDropItem &drag) {
                 if (this->underMouse() && drag.isMoving())
                 {
-                    waitForDraw([this, &drag] {
-                        if (drag.isMoving())
-                        {
-                            commitTransaction(TransactionType::MoveSelection, [this, &drag] {
-                                Position toPosition = drag.tile->position() + drag.moveDelta.value();
-                                moveItem(*drag.tile, toPosition, drag.item);
-                            });
-                        }
+                    if (drag.isMoving())
+                    {
+                        commitTransaction(TransactionType::MoveSelection, [this, &drag] {
+                            Position toPosition = drag.tile->position() + drag.moveDelta.value();
+                            moveItem(*drag.tile, toPosition, drag.item);
+                        });
+                    }
 
-                        // drag.reset();
-                        editorAction.unlock();
-                        editorAction.setPrevious();
-                    });
+                    // drag.reset();
+                    editorAction.unlock();
+                    editorAction.setPrevious();
                 }
                 else
                 {
@@ -1634,8 +1630,30 @@ void MapView::endCurrentAction(VME::ModifierKeys modifiers)
 
 void MapView::waitForDraw(std::function<void()> f)
 {
-    f();
-    // uiUtils->waitForDraw(f);
+    auto empty = waitingForRenderFinish.empty();
+    waitingForRenderFinish.emplace(f);
+
+    if (empty)
+    {
+        requestDraw();
+    }
+}
+
+void MapView::mapRenderFinished()
+{
+    if (waitingForRenderFinish.empty())
+    {
+        return;
+    }
+
+    while (!waitingForRenderFinish.empty())
+    {
+        waitingForRenderFinish.front()();
+        waitingForRenderFinish.pop();
+    }
+
+    requestDraw();
+    requestMinimapDraw();
 }
 
 void MapView::escapeEvent()
