@@ -48,13 +48,13 @@ Current goals:
 
 ### GUI
 
--   [ ] Drag & Drop of item palettes
+-   [x] Drag & Drop of item palettes
 -   [ ] Snap to left/bottom/right
 -   [ ] Snap to other itempalettes - Only if the itempalette is not already snapped to a side
 -   [ ] Palette ComboBox
     -   [x] Render the palette names
-    -   [ ] Implement changing palette
-    -   [ ] Implement changing tileset
+    -   [x] Implement changing palette
+    -   [x] Implement changing tileset
 
 ## General
 
