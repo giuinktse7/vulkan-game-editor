@@ -184,7 +184,7 @@ VMEComponent.ItemPanel {
                     text: qsTr("All")
                     fontSize: filterOptionsRow.fontSize
                     selected: filterOptionsRow.selectedId == filterId
-                    amount: root.searchResults.totalCount
+                    amount: root.searchResults?.totalCount ?? 0
 
                     activeFocusOnTab: true
                     onActiveFocusChanged: {
@@ -219,7 +219,7 @@ VMEComponent.ItemPanel {
                     text: qsTr("Raw")
                     fontSize: filterOptionsRow.fontSize
                     selected: filterOptionsRow.selectedId == filterId
-                    amount: root.searchResults.rawCount
+                    amount: root.searchResults?.rawCount ?? 0
 
                     activeFocusOnTab: true
                     onActiveFocusChanged: {
@@ -253,7 +253,7 @@ VMEComponent.ItemPanel {
                     text: qsTr("Ground")
                     fontSize: filterOptionsRow.fontSize
                     selected: filterOptionsRow.selectedId == filterId
-                    amount: root.searchResults.groundCount
+                    amount: root.searchResults?.groundCount ?? 0
 
                     activeFocusOnTab: true
                     onActiveFocusChanged: {
@@ -287,7 +287,7 @@ VMEComponent.ItemPanel {
                     text: qsTr("Doodad")
                     fontSize: filterOptionsRow.fontSize
                     selected: filterOptionsRow.selectedId == filterId
-                    amount: root.searchResults.doodadCount
+                    amount: root.searchResults?.doodadCount ?? 0
 
                     activeFocusOnTab: true
                     onActiveFocusChanged: {
@@ -321,7 +321,7 @@ VMEComponent.ItemPanel {
                     text: qsTr("Creature")
                     fontSize: filterOptionsRow.fontSize
                     selected: filterOptionsRow.selectedId == filterId
-                    amount: root.searchResults.creatureCount
+                    amount: root.searchResults?.creatureCount ?? 0
 
                     activeFocusOnTab: true
                     onActiveFocusChanged: {

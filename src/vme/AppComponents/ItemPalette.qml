@@ -40,14 +40,12 @@ VMEComponent.ItemPanel {
                 Component.onCompleted: () => {
                     AppDataModel.initializeItemPalettePanel(paletteDropdownModel, tilesetDropdownModel, brushList, tilesetModel);
                     paletteDropdown.currentIndex = 0;
-                    // console.log(`Completed. ${paletteDropdown.currentIndex}: ${paletteDropdown.currentText}, ${paletteDropdown.currentValue}`);
-                    // if (paletteDropdown.currentValue != '') {
-                    // AppDataModel.setItemPalette(tilesetModel, paletteDropdown.currentValue);
-                    // }
                 }
 
                 Component.onDestruction: () => {
-                    AppDataModel.destroyItemPalettePanel(paletteDropdownModel);
+                    if (AppDataModel?.destroyItemPalettePanel) {
+                        AppDataModel.destroyItemPalettePanel(paletteDropdownModel);
+                    }
                 }
             }
 
@@ -60,12 +58,6 @@ VMEComponent.ItemPanel {
                 }
             }
 
-            // Connections {
-            //     target: parent.model
-            //     function onDataChanged() {
-            //         console.log("hoho");
-            //     }
-            // }
         }
 
         ComboBox {
