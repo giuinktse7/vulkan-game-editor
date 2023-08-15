@@ -363,4 +363,18 @@ namespace std
             return hash;
         }
     };
+
+    template <>
+    struct formatter<Position>
+    {
+        constexpr auto parse(format_parse_context &ctx)
+        {
+            return ctx.begin();
+        }
+
+        auto format(const Position &pos, format_context &ctx)
+        {
+            return format_to(ctx.out(), "({}, {}, {})", pos.x, pos.y, pos.z);
+        }
+    };
 } // namespace std
