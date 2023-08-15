@@ -48,6 +48,7 @@ namespace MapHistory
         Map *getMap(MapView &mapView) const noexcept;
         std::unique_ptr<Tile> setMapTile(MapView &mapView, Tile &&tile);
         void swapMapTile(MapView &mapView, std::unique_ptr<Tile> &&tile);
+        void swapMapTile(MapView &mapView, Tile &tile);
         std::unique_ptr<Tile> removeMapTile(MapView &mapView, const Position position);
         void updateSelection(MapView &mapView, const Position &position);
 
@@ -218,6 +219,39 @@ namespace MapHistory
         std::variant<Tile, Position> data;
     };
 
+    class MoveSelection : public ChangeItem
+    {
+      public:
+        MoveSelection(std::vector<Position> positions, Position deltaPos);
+        void commit(MapView &mapView) override;
+        void undo(MapView &mapView) override;
+
+      private:
+        struct MoveData
+        {
+            Tile fromTile;
+            Tile toTile;
+        };
+
+        std::unique_ptr<std::vector<Position>> &dataAsPositions()
+        {
+            return std::get<std::unique_ptr<std::vector<Position>>>(moveData);
+        }
+
+        std::unique_ptr<std::vector<MoveData>> &dataAsTiles()
+        {
+            return std::get<std::unique_ptr<std::vector<MoveData>>>(moveData);
+        }
+
+        std::function<bool(const Position &, const Position &)> getPositionComparator();
+
+        Position deltaPos;
+
+        std::variant<std::unique_ptr<std::vector<MoveData>>, std::unique_ptr<std::vector<Position>>> moveData;
+
+        bool firstCommit = true;
+    };
+
     class Move_v2 : public ChangeItem
     {
       public:
@@ -239,6 +273,16 @@ namespace MapHistory
         void commit(MapView &mapView) override;
         void undo(MapView &mapView) override;
 
+        Position fromPos() const
+        {
+            return fromTile.position();
+        }
+
+        Position toPos() const
+        {
+            return toTile.position();
+        }
+
       private:
         struct PartialMoveData
         {
@@ -249,6 +293,8 @@ namespace MapHistory
 
         Tile fromTile;
         Tile toTile;
+
+        bool firstCommit = true;
     };
 
     /*

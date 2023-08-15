@@ -38,7 +38,11 @@ Tile::Tile(Tile &&other) noexcept
       _creature(std::move(other._creature)),
       _position(other._position),
       _flags(other._flags),
-      _selectionCount(other._selectionCount) {}
+      _selectionCount(other._selectionCount)
+{
+    other._selectionCount = 0;
+    other._flags = 0;
+}
 
 Tile &Tile::operator=(Tile &&other) noexcept
 {
@@ -49,6 +53,8 @@ Tile &Tile::operator=(Tile &&other) noexcept
     _selectionCount = other._selectionCount;
     _flags = other._flags;
 
+    other._selectionCount = 0;
+    other._flags = 0;
     return *this;
 }
 
@@ -79,6 +85,23 @@ void Tile::setCreature(std::shared_ptr<Creature> &&creature)
         ++_selectionCount;
     }
     _creature = std::move(creature);
+}
+
+Creature *Tile::replaceCreature(Creature &&creature)
+{
+    bool currentSelected = _creature && _creature->selected;
+
+    if (currentSelected && !creature.selected)
+    {
+        --_selectionCount;
+    }
+    else if (!currentSelected && creature.selected)
+    {
+        ++_selectionCount;
+    }
+
+    _creature = std::make_shared<Creature>(std::move(creature));
+    return &(*_creature);
 }
 
 std::shared_ptr<Creature> Tile::dropCreature()
@@ -159,6 +182,13 @@ void Tile::clearAll()
     _ground.reset();
     _creature.reset();
     _selectionCount = 0;
+}
+
+void Tile::clearItems()
+{
+    auto k = std::ranges::count_if(_items, [](const std::shared_ptr<Item> &item) { return item->selected; });
+    _items.clear();
+    _selectionCount -= k;
 }
 
 GroundBrush *Tile::groundBrush() const
@@ -255,56 +285,62 @@ void Tile::deselectAll()
 
 void Tile::moveItems(Tile &other)
 {
+    int numSelected = 0;
     for (auto &item : _items)
     {
+        if (item->selected)
+        {
+            ++numSelected;
+        }
+
         other.addItem(std::move(item));
     }
     _items.clear();
 
-    _selectionCount = (_ground && _ground->selected) ? 1 : 0;
+    _selectionCount -= numSelected;
 }
 
 void Tile::moveItemsWithBroadcast(Tile &other)
 {
+    int numSelected = 0;
     for (auto &item : _items)
     {
+        if (item->selected)
+        {
+            ++numSelected;
+        }
+
         Item *newItem = other.addItem(std::move(item));
         Items::items.itemAddressChanged(newItem);
     }
     _items.clear();
 
-    _selectionCount = (_ground && _ground->selected) ? 1 : 0;
+    _selectionCount -= numSelected;
 }
 
 void Tile::moveSelected(Tile &other)
 {
     if (_ground && _ground->selected)
     {
-        other._items.clear();
-        other._ground = dropGround();
+        other.clearItems();
+        other.removeCreature();
+        other.setGround(dropGround());
     }
 
     if (_creature && _creature->selected)
     {
-        other._creature = dropCreature();
+        other.setCreature(dropCreature());
     }
 
-    auto it = _items.begin();
-    while (it != _items.end())
-    {
-        auto &item = *it;
+    std::erase_if(_items, [&](const auto &item) {
         if (item->selected)
         {
             other.addItem(std::move(item));
-            it = _items.erase(it);
-
             --_selectionCount;
+            return true;
         }
-        else
-        {
-            ++it;
-        }
-    }
+        return false;
+    });
 }
 
 Item *Tile::itemAt(size_t index)
@@ -340,18 +376,19 @@ Item *Tile::addItem(std::shared_ptr<Item> item)
         // return replaceGround(std::move(item));
         return _ground.get();
     }
-    else if (_items.size() == 0 || item->isTop() || item->itemType->stackOrder >= _items.back()->itemType->stackOrder)
-    {
-        if (item->selected)
-            ++_selectionCount;
 
+    if (item->selected)
+    {
+        ++_selectionCount;
+    }
+
+    if (_items.size() == 0 || item->isTop() || item->itemType->stackOrder >= _items.back()->itemType->stackOrder)
+    {
         auto &newItem = _items.emplace_back(item);
         return newItem.get();
     }
     else
     {
-        if (item->selected)
-            ++_selectionCount;
 
         auto cursor = _items.begin();
         while (cursor != _items.end() && (*cursor)->itemType->stackOrder <= item->itemType->stackOrder)
@@ -466,9 +503,13 @@ Item *Tile::replaceGround(Item &&ground)
     bool currentSelected = _ground && _ground->selected;
 
     if (currentSelected && !ground.selected)
+    {
         --_selectionCount;
+    }
     else if (!currentSelected && ground.selected)
+    {
         ++_selectionCount;
+    }
 
     _ground = std::make_shared<Item>(std::move(ground));
     return &(*_ground);
@@ -494,6 +535,11 @@ void Tile::replaceItemByServerId(uint32_t serverId, uint32_t newServerId)
     auto found = std::find_if(_items.begin(), _items.end(), [serverId](const std::shared_ptr<Item> &item) { return item->serverId() == serverId; });
     if (found != _items.end())
     {
+        if ((*found)->selected)
+        {
+            --_selectionCount;
+        }
+
         auto newItem = std::make_shared<Item>(newServerId);
         found->swap(newItem);
     }
@@ -514,6 +560,11 @@ void Tile::setGround(std::shared_ptr<Item> ground)
 
 void Tile::removeGround()
 {
+    if (!_ground)
+    {
+        return;
+    }
+
     if (_ground->selected)
     {
         --_selectionCount;
@@ -521,8 +572,29 @@ void Tile::removeGround()
     _ground.reset();
 }
 
+void Tile::removeSelectedThings()
+{
+    if (_ground && _ground->selected)
+    {
+        removeGround();
+    }
+
+    if (_creature && _creature->selected)
+    {
+        removeCreature();
+    }
+
+    auto erased = std::erase_if(_items, [](const std::shared_ptr<Item> &item) { return item->selected; });
+    _selectionCount -= erased;
+}
+
 void Tile::removeCreature()
 {
+    if (!_creature)
+    {
+        return;
+    }
+
     if (_creature->selected)
     {
         --_selectionCount;
@@ -630,6 +702,10 @@ std::shared_ptr<Item> Tile::dropGround()
 {
     if (_ground)
     {
+        if (_ground->selected)
+        {
+            --_selectionCount;
+        }
         std::shared_ptr<Item> ground = std::move(_ground);
         _ground.reset();
 
@@ -744,14 +820,21 @@ bool Tile::topItemSelected() const
         return false;
 
     const Item *topItem = getTopItem();
-    return allSelected() || topItem->selected;
+    return topItem->selected;
 }
 
 size_t Tile::getEntityCount()
 {
     size_t result = _items.size();
     if (_ground)
+    {
         ++result;
+    }
+
+    if (_creature)
+    {
+        ++result;
+    }
 
     return result;
 }
@@ -825,21 +908,20 @@ int Tile::getTopElevation() const
 Tile Tile::copyForHistory() const
 {
     Tile tile(_position);
-    for (const auto &item : _items)
-    {
-        tile.addItem(item);
-    }
-    tile._flags = this->_flags;
+
+    tile._items = _items;
+
     if (_ground)
     {
-        tile._ground = std::make_unique<Item>(_ground->deepCopy());
+        tile._ground = _ground;
     }
 
     if (_creature)
     {
-        tile._creature = std::make_unique<Creature>(_creature->deepCopy());
+        tile._creature = _creature;
     }
 
+    tile._flags = this->_flags;
     tile._selectionCount = this->_selectionCount;
 
     return tile;
@@ -885,16 +967,14 @@ void Tile::applyToBase(Tile &base, const Tile &other, bool onlySelected)
 
     if (other._ground && (!onlySelected || other._ground->selected))
     {
-        base._ground = std::make_unique<Item>(other._ground->deepCopy());
+        base.replaceGround(other._ground->deepCopy());
         base._flags = other._flags;
     }
 
     if (other._creature && (!onlySelected || other._creature->selected))
     {
-        base._creature = std::make_unique<Creature>(other._creature->deepCopy());
+        base.replaceCreature(other._creature->deepCopy());
     }
-
-    base._selectionCount = other._selectionCount;
 }
 
 void Tile::deepCopyInto(Tile &tile, bool onlySelected) const
@@ -968,16 +1048,9 @@ TileThing Tile::firstSelectedThing()
 TileThing Tile::getThing(int offsetFromTop) const
 {
     // Creature?
-    if (_creature && _creature->selected)
+    if (offsetFromTop == 0 && _creature)
     {
-        if (offsetFromTop == 0)
-        {
-            return _creature.get();
-        }
-        else
-        {
-            --offsetFromTop;
-        }
+        return _creature.get();
     }
 
     int index = _items.size() - 1 - offsetFromTop;

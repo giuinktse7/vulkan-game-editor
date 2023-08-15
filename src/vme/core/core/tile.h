@@ -61,6 +61,8 @@ class Tile
         return _items.at(itemIndex)->selected;
     }
 
+    void removeSelectedThings();
+
     void movedInMap();
 
     bool topItemSelected() const;
@@ -105,6 +107,7 @@ class Tile
     void moveItems(Tile &other);
     void moveItemsWithBroadcast(Tile &other);
     void moveSelected(Tile &other);
+    void clearItems();
     void clearAll();
     void clearBorders();
     void clearBottomItems();
@@ -171,9 +174,9 @@ class Tile
         return _items.size();
     }
 
-    /*
-                Counts all entities (items, creature, spawn, waypoint, etc.).
-        */
+    /**
+     * @brief Returns the amount of entities on the tile (items, creature, spawn, waypoint, etc.).
+     */
     size_t getEntityCount();
 
     inline uint16_t mapFlags() const noexcept;
@@ -220,6 +223,7 @@ class Tile
 
     Item *replaceGround(Item &&ground);
     Item *replaceItem(size_t index, Item &&item);
+    Creature *replaceCreature(Creature &&creature);
 
     /**
      * These are shared pointers because they are shared with the history system.

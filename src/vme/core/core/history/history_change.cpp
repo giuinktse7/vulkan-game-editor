@@ -1,6 +1,9 @@
 #include "history_change.h"
 
 #include "../map_view.h"
+#include "../util.h"
+
+#include <algorithm>
 
 namespace MapHistory
 {
@@ -32,6 +35,17 @@ namespace MapHistory
         }
         // Not necessary when items are stored as pointers
         // location.tile()->movedInMap();
+
+        mapView.selection().setSelected(position, selected);
+    }
+
+    void ChangeItem::swapMapTile(MapView &mapView, Tile &tile)
+    {
+        const Position position = tile.position();
+        bool selected = tile.hasSelection();
+
+        auto &mapTile = mapView.getOrCreateTile(position);
+        std::ranges::swap(mapTile, tile);
 
         mapView.selection().setSelected(position, selected);
     }
@@ -438,7 +452,6 @@ namespace MapHistory
         Tile &from = mapView.getOrCreateTile(fromPos);
         Tile &to = mapView.getOrCreateTile(toPos);
 
-        // VME_LOG_D("Moving from " << fromPos << " to " << toPos);
         fromTile = from.copyForHistory();
         toTile = to.copyForHistory();
 
@@ -480,6 +493,7 @@ namespace MapHistory
         // toPos being the first call improves performance (slightly). If toPos is no longer selected,
         // it is possible that selection size becomes 0. If so, caching the only selected
         // position becomes a much faster operation.
+        // ^ VERIFY Is this correct?
         updateSelection(mapView, toPos);
         updateSelection(mapView, fromPos);
     }
@@ -488,11 +502,123 @@ namespace MapHistory
     {
         Map *map = getMap(mapView);
 
+        Position fromPos = fromTile.position();
+        Position toPos = toTile.position();
+
         map->insertTile(std::move(toTile));
         map->insertTile(std::move(fromTile));
 
+        DEBUG_ASSERT(fromPos == fromTile.position(), "fromPos position mismatch.");
+        DEBUG_ASSERT(toPos == toTile.position(), "toPos position mismatch.");
+
         updateSelection(mapView, fromTile.position());
         updateSelection(mapView, toTile.position());
+    }
+
+    std::function<bool(const Position &, const Position &)> MoveSelection::getPositionComparator()
+    {
+        int dx = util::sgn(deltaPos.x);
+        int dy = util::sgn(deltaPos.y);
+
+        if (dx == 1 && dy == 1)
+        {
+            return [](const Position &a, const Position &b) { return a.x + a.y >= b.x + b.y; };
+        }
+        else if (dx == 1 && dy == -1)
+        {
+            return [](const Position &a, const Position &b) { return a.x + b.y >= b.x + a.y; };
+        }
+        else if (dx == -1 && dy == 1)
+        {
+            return [](const Position &a, const Position &b) { return b.x + a.y >= a.x + b.y; };
+        }
+        else if (dx == -1 && dy == -1)
+        {
+            return [](const Position &a, const Position &b) { return a.x + a.y <= b.x + b.y; };
+        }
+        else if (dx == 1 && dy == 0)
+        {
+            return [](const Position &a, const Position &b) { return a.x >= b.x; };
+        }
+        else if (dx == -1 && dy == 0)
+        {
+            return [](const Position &a, const Position &b) { return a.x <= b.x; };
+        }
+        else if (dx == 0 && dy == 1)
+        {
+            return [](const Position &a, const Position &b) { return a.y >= b.y; };
+        }
+        else if (dx == 0 && dy == -1)
+        {
+            return [](const Position &a, const Position &b) { return a.y <= b.y; };
+        }
+        else
+        {
+            ABORT_PROGRAM("[MoveSelection::MoveSelection] dx or dy is 0. This should never happen.");
+        }
+    }
+
+    MoveSelection::MoveSelection(std::vector<Position> positions, Position deltaPos)
+        : deltaPos(deltaPos),
+          moveData(std::make_unique<std::vector<MoveData>>()),
+          firstCommit(true)
+    {
+
+        moveData = std::make_unique<std::vector<Position>>(std::move(positions));
+    }
+
+    void MoveSelection::commit(MapView &mapView)
+    {
+        if (firstCommit)
+        {
+            auto comparator = getPositionComparator();
+            std::vector<Position> positions = *dataAsPositions();
+
+            // Necessary sort to avoid moves overlapping src/target positions of other moves
+            std::ranges::sort(positions, comparator);
+
+            moveData = std::make_unique<std::vector<MoveData>>();
+            auto &tiles = dataAsTiles();
+            tiles->reserve(positions.size());
+
+            for (const auto &pos : positions)
+            {
+                Tile &from = *mapView.getTile(pos);
+                Tile &to = mapView.getOrCreateTile(pos + deltaPos);
+
+                Tile currentFrom = from.copyForHistory();
+                Tile currentTo = to.copyForHistory();
+
+                from.moveSelected(to);
+
+                mapView.selection().setSelected(pos, false);
+                mapView.selection().setSelected(pos + deltaPos, true);
+
+                tiles->emplace_back(MoveData{std::move(currentFrom), std::move(currentTo)});
+            }
+        }
+        else
+        {
+            for (auto &tileData : *dataAsTiles())
+            {
+                swapMapTile(mapView, tileData.fromTile);
+                swapMapTile(mapView, tileData.toTile);
+            }
+        }
+
+        firstCommit = false;
+    }
+
+    void MoveSelection::undo(MapView &mapView)
+    {
+        for (auto &tileData : *dataAsTiles() | std::views::reverse)
+        {
+            Position fromPos = tileData.fromTile.position();
+            Position toPos = tileData.toTile.position();
+
+            swapMapTile(mapView, tileData.fromTile);
+            swapMapTile(mapView, tileData.toTile);
+        }
     }
 
     Move::Move(Position from, Position to)
