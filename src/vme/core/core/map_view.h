@@ -334,6 +334,7 @@ class MapView
     void removeItemsInRegion(const Position &from, const Position &to, std::function<bool(const Item &)> predicate);
     void fillRegion(const Position &from, const Position &to, uint32_t serverId);
     void fillRegion(const Position &from, const Position &to, std::function<uint32_t()> itemSupplier);
+    void applyBrushAction(const MouseAction::MapBrush &brushAction, Position position, bool isNewQuadrant, bool isNewTile, bool erase);
     void fillRegionByGroundBrush(const Position &from, const Position &to, GroundBrush *brush);
     void fillRegionByMountainBrush(const Position &from, const Position &to, MountainBrush *brush);
     void endCurrentAction(VME::ModifierKeys modifiers);

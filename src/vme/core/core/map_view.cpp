@@ -1209,34 +1209,86 @@ void MapView::selectTopThing(const Position &position, bool isNewSelection)
     history.endTransaction(TransactionType::Selection);
 }
 
-        history.beginTransaction(TransactionType::Selection);
+void MapView::applyBrushAction(const MouseAction::MapBrush &brushAction, Position applyPos, bool isNewQuadrant, bool isNewTile, bool erase)
+{
+    if (brushAction.area)
+        return;
+
+    Brush *brush = brushAction.brush;
+
+    if (erase)
+    {
+        const Tile *tile = getTile(applyPos);
+        if (tile)
         {
-            if (isNewSelection)
+            brush->erase(*this, applyPos);
+        }
+
+        return;
+    }
+
+    DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::BrushAction), "Incorrect transaction type.");
+
+    switch (brush->type())
+    {
+        case BrushType::Border:
+        {
+            if (!isNewTile)
             {
-                clearSelection();
+                if (isNewQuadrant)
+                {
+                    auto borderBrush = static_cast<BorderBrush *>(brush);
+                    borderBrush->quadrantChanged(*this, applyPos, _previousMouseMoveTileQuadrant, *mouseDownTileQuadrant);
+                }
+
+                return;
             }
 
-            if (topItem)
+            auto positions = Position::bresenHamsWithCorners(this->_previousMouseGamePos, applyPos);
+            for (const auto position : positions)
             {
-                if (Settings::AUTO_BORDER)
+                if (_map->contains(position))
                 {
-                    if (topItem->itemType->hasFlag(ItemTypeFlag::InMountainBrush | ItemTypeFlag::InBorderBrush))
-                    {
-                        selectTile(*tile);
-                    }
-                    else
-                    {
-                        selectTopItem(position);
-                    }
+                    brush->apply(*this, position);
+                    lastBrushDragPosition = position;
                 }
-                else
+            }
+            break;
+        }
+        case BrushType::Wall:
+        {
+            if (!isNewTile)
+            {
+                return;
+            }
+            for (const auto position : Position::bresenHamsWithCorners(this->_previousMouseGamePos, applyPos))
+            {
+                if (_map->contains(position))
                 {
-                    selectTopItem(position);
+                    brush->apply(*this, position);
+                }
+            }
+            break;
+        }
+        default:
+        {
+            if (!isNewTile)
+            {
+                return;
+            }
+
+            for (const auto position : Position::bresenHams(this->_previousMouseGamePos, applyPos))
+            {
+                if (_map->contains(position))
+                {
+                    brushAction.brush->apply(*this, position);
                 }
             }
         }
-        history.endTransaction(TransactionType::Selection);
+        break;
     }
+
+    requestMinimapDraw();
 }
 
 //>>>>>>>>>>>>>>>>>>
@@ -1381,15 +1433,16 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
     WorldPosition worldPos = event.pos().worldPos(*this);
     Position pos = worldPos.toPos(floor());
     TileQuadrant quadrant = worldPos.tileQuadrant();
-    // VME_LOG_D("MapView::mouseMoveEvent quadrant: " << quadrant);
 
-    bool newTile = _previousMouseGamePos != pos;
-    bool newQuadrant = _previousMouseMoveTileQuadrant != quadrant;
+    bool isNewTile = _previousMouseGamePos != pos;
+    bool isNewQuadrant = _previousMouseMoveTileQuadrant != quadrant;
 
     if (!isDragging())
     {
-        if (newTile || newQuadrant)
+        if (isNewTile || isNewQuadrant)
+        {
             requestDraw();
+        }
 
         _previousMouseGamePos = pos;
         _previousMouseMoveTileQuadrant = quadrant;
@@ -1403,8 +1456,8 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
 
         rollbear::visit(
             util::overloaded{
-                [this, &pos, newTile](MouseAction::Select &select) {
-                    if (!newTile || !hasSelection())
+                [this, &pos, isNewTile](MouseAction::Select &select) {
+                    if (!isNewTile || !hasSelection())
                     {
                         return;
                     }
@@ -1433,8 +1486,8 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                     }
                 },
 
-                [this, &pos, newTile](MouseAction::DragDropItem &drag) {
-                    if (newTile || prevUnderMouse())
+                [this, &pos, isNewTile](MouseAction::DragDropItem &drag) {
+                    if (isNewTile || prevUnderMouse())
                     {
                         if (drag.moveOrigin.has_value())
                         {
@@ -1443,85 +1496,8 @@ void MapView::mouseMoveEvent(VME::MouseEvent event)
                     }
                 },
 
-                [this, pos, newQuadrant, &event, newTile](const MouseAction::MapBrush &action) {
-                    if (action.area)
-                        return;
-
-                    if (event.modifiers() & VME::ModifierKeys::Ctrl)
-                    {
-                        const Tile *tile = getTile(pos);
-                        if (tile)
-                        {
-                            action.brush->erase(*this, pos);
-                        }
-                    }
-                    else
-                    {
-                        DEBUG_ASSERT(history.hasCurrentTransactionType(TransactionType::BrushAction), "Incorrect transaction type.");
-                        switch (action.brush->type())
-                        {
-                            case BrushType::Border:
-                            {
-                                if (!newTile)
-                                {
-                                    if (newQuadrant)
-                                    {
-                                        auto brush = static_cast<BorderBrush *>(action.brush);
-                                        brush->quadrantChanged(*this, pos, _previousMouseMoveTileQuadrant, *mouseDownTileQuadrant);
-                                    }
-
-                                    return;
-                                }
-
-                                auto positions = Position::bresenHamsWithCorners(this->_previousMouseGamePos, pos);
-                                for (const auto position : positions)
-                                {
-                                    // Require non-negative positions
-                                    if (position.x >= 0 && position.y >= 0)
-                                    {
-                                        action.brush->apply(*this, position);
-                                        lastBrushDragPosition = position;
-                                    }
-                                }
-                                break;
-                            }
-                            case BrushType::Wall:
-                            {
-                                if (!newTile)
-                                {
-                                    return;
-                                }
-                                for (const auto position : Position::bresenHamsWithCorners(this->_previousMouseGamePos, pos))
-                                {
-                                    // Require non-negative positions
-                                    if (position.x >= 0 && position.y >= 0)
-                                    {
-                                        action.brush->apply(*this, position);
-                                    }
-                                }
-                                break;
-                            }
-                            default:
-                            {
-                                if (!newTile)
-                                {
-                                    return;
-                                }
-
-                                for (const auto position : Position::bresenHams(this->_previousMouseGamePos, pos))
-                                {
-                                    // Require non-negative positions
-                                    if (position.x >= 0 && position.y >= 0)
-                                    {
-                                        action.brush->apply(*this, position);
-                                    }
-                                }
-                            }
-                            break;
-                        }
-
-                        requestMinimapDraw();
-                    }
+                [this, pos, isNewQuadrant, &event, isNewTile](const MouseAction::MapBrush &action) {
+                    this->applyBrushAction(action, pos, isNewQuadrant, isNewTile, action.erase);
                 },
 
                 [this, event](MouseAction::Pan &action) {
