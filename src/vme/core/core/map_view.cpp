@@ -1178,20 +1178,36 @@ void MapView::selectTopThing(const Position &position, bool isNewSelection)
         return;
     }
 
-    if (tile->hasCreature())
+    history.beginTransaction(TransactionType::Selection);
     {
-        commitTransaction(TransactionType::Selection, [this, position, isNewSelection] {
-            if (isNewSelection)
-            {
-                clearSelection();
-            }
+        if (isNewSelection)
+        {
+            clearSelection();
+        }
 
+        if (tile->hasCreature())
+        {
             history.commit(ActionType::Selection, SetSelectionTileSpecial::creature(position, true));
-        });
+        }
+        else
+        {
+            Item *topItem = tile->getTopItem();
+            if (topItem)
+            {
+                if (Settings::AUTO_BORDER && topItem->itemType->hasFlag(ItemTypeFlag::InMountainBrush | ItemTypeFlag::InBorderBrush))
+                {
+                    // TODO Why do we do this when the condition above is true instead of always doing selectTopItem?
+                    selectTile(*tile);
+                }
+                else
+                {
+                    selectTopItem(position);
+                }
+            }
+        }
     }
-    else
-    {
-        Item *topItem = tile->getTopItem();
+    history.endTransaction(TransactionType::Selection);
+}
 
         history.beginTransaction(TransactionType::Selection);
         {
