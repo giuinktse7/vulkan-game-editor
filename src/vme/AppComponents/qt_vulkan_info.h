@@ -23,6 +23,8 @@ class QtVulkanInfo : public VulkanInfo
     QtVulkanInfo();
     ~QtVulkanInfo();
 
+    static bool checkValidationLayers(QVulkanFunctions *f);
+
     void setQmlWindow(QQuickWindow *qml_window);
 
     void update() override;
@@ -304,6 +306,11 @@ class QtVulkanInfo : public VulkanInfo
         f->vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties);
     }
 
+    VkResult vkEnumerateInstanceLayerProperties(uint32_t *pPropertyCount, VkLayerProperties *pProperties)
+    {
+        return f->vkEnumerateInstanceLayerProperties(pPropertyCount, pProperties);
+    }
+
     void setMaxConcurrentFrameCount(int count) override
     {
         _maxConcurrentFrameCount = count;
@@ -323,6 +330,8 @@ class QtVulkanInfo : public VulkanInfo
 
     QVulkanDeviceFunctions *df = nullptr;
     QVulkanFunctions *f = nullptr;
+
+    QVulkanInstance vulkanInstance;
 
     int _maxConcurrentFrameCount;
 };

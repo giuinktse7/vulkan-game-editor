@@ -1,6 +1,8 @@
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Enable Vulkan debugging layer
+set(QSG_RHI_DEBUG_LAYER 1)
 
 set(HEADER_FILES
     main.h

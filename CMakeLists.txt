@@ -31,6 +31,9 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Enable Vulkan debugging layer
+set(QSG_RHI_DEBUG_LAYER 1)
+
 project(vme VERSION 1.0.0 LANGUAGES C CXX)
 
 

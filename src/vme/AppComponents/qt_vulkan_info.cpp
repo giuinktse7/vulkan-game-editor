@@ -14,6 +14,27 @@ QtVulkanInfo::~QtVulkanInfo()
 QtVulkanInfo::QtVulkanInfo(QQuickWindow *qml_window)
     : qml_window(qml_window)
 {
+    bool hasValidationLayer = QtVulkanInfo::checkValidationLayers(vulkanInstance.functions());
+    if (hasValidationLayer)
+    {
+        vulkanInstance.setLayers({"VK_LAYER_KHRONOS_validation"});
+    }
+
+    if (!vulkanInstance.layers().contains("VK_LAYER_KHRONOS_validation"))
+    {
+        VME_LOG_D("VK_LAYER_KHRONOS_validation not found");
+    }
+
+    if (!vulkanInstance.create())
+    {
+        qWarning("Vulkan not available");
+        ABORT_PROGRAM("No Vulkan available!");
+    }
+    else
+    {
+        VME_LOG_D("Vulkan instance created");
+    }
+
     update();
 
     if (qml_window)
@@ -28,10 +49,42 @@ QtVulkanInfo::QtVulkanInfo(QQuickWindow *qml_window)
     }
 }
 
+bool QtVulkanInfo::checkValidationLayers(QVulkanFunctions *f)
+{
+    const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+
+    uint32_t layerCount;
+    f->vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    f->vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+    bool layerFound = false;
+    for (const char *layerName : validationLayers)
+    {
+
+        for (const auto &layerProperties : availableLayers)
+        {
+            if (strcmp(layerName, layerProperties.layerName) == 0)
+            {
+                return true;
+            }
+        }
+    }
+
+    return layerFound;
+}
+
 void QtVulkanInfo::update()
 {
     if (qml_window)
     {
+        if (qml_window->vulkanInstance() != &vulkanInstance)
+        {
+            VME_LOG_D("Using custom vulkan instance");
+            qml_window->setVulkanInstance(&vulkanInstance);
+        }
+
         QSGRendererInterface *rif = qml_window->rendererInterface();
         QVulkanInstance *inst = reinterpret_cast<QVulkanInstance *>(
             rif->getResource(qml_window, QSGRendererInterface::VulkanInstanceResource));
