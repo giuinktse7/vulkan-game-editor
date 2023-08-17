@@ -133,19 +133,21 @@ void MapRenderer::releaseSwapChainResources()
 
 void MapRenderer::releaseResources()
 {
-    vulkanInfo->vkDestroyDescriptorSetLayout(uboDescriptorSetLayout, nullptr);
+    auto &v = vulkanInfo;
+
+    v->vkDestroyDescriptorSetLayout(uboDescriptorSetLayout, nullptr);
     uboDescriptorSetLayout = VK_NULL_HANDLE;
 
-    vulkanInfo->vkDestroyDescriptorSetLayout(textureDescriptorSetLayout, nullptr);
+    v->vkDestroyDescriptorSetLayout(textureDescriptorSetLayout, nullptr);
     textureDescriptorSetLayout = VK_NULL_HANDLE;
 
-    vulkanInfo->vkDestroyDescriptorPool(descriptorPool, nullptr);
+    v->vkDestroyDescriptorPool(descriptorPool, nullptr);
     descriptorPool = VK_NULL_HANDLE;
 
-    vulkanInfo->vkDestroyPipeline(graphicsPipeline, nullptr);
+    v->vkDestroyPipeline(graphicsPipeline, nullptr);
     graphicsPipeline = VK_NULL_HANDLE;
 
-    vulkanInfo->vkDestroyPipelineLayout(pipelineLayout, nullptr);
+    v->vkDestroyPipelineLayout(pipelineLayout, nullptr);
     pipelineLayout = VK_NULL_HANDLE;
 
     vulkanInfo->vkDestroyRenderPass(renderPass, nullptr);
@@ -218,7 +220,8 @@ void MapRenderer::render(VkFramebuffer frameBuffer, util::Size swapChainSize)
 
     // VME_LOG_D("index: " << _currentFrame->currentFrameIndex);
     // VME_LOG("Start next frame");
-    updateUniformBuffer();
+    glm::mat4 projection = vulkanInfo->projectionMatrix(mapView.get(), vulkanSwapChainImageSize);
+    updateUniformBuffer(projection);
 
     beginRenderPass();
 
@@ -1291,21 +1294,8 @@ VkDescriptorSet MapRenderer::objectDescriptorSet(const Texture &texture)
     return vulkanTexture.descriptorSet();
 }
 
-void MapRenderer::updateUniformBuffer()
+void MapRenderer::updateUniformBuffer(glm::mat4 projection)
 {
-    glm::mat4 projection = vulkanInfo->projectionMatrix(mapView.get(), vulkanSwapChainImageSize);
-    // const auto p = projection;
-    // std::ostringstream s;
-    // VME_LOG_D("Next:");
-    // for (int i = 0; i < 4; ++i)
-    // {
-    //   s << "x: " << p[i].x << ", ";
-    //   s << "y: " << p[i].y << ", ";
-    //   s << "z: " << p[i].z << ", ";
-    //   s << "w: " << p[i].w << ", ";
-    //   s << std::endl;
-    // }
-    // VME_LOG_D(s.str());
     ItemUniformBufferObject uniformBufferObject{projection};
 
     void *data;

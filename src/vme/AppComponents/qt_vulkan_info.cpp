@@ -14,7 +14,7 @@ QtVulkanInfo::~QtVulkanInfo()
 QtVulkanInfo::QtVulkanInfo(QQuickWindow *qml_window)
     : qml_window(qml_window)
 {
-    bool hasValidationLayer = QtVulkanInfo::checkValidationLayers(vulkanInstance.functions());
+    bool hasValidationLayer = QtVulkanInfo::checkValidationLayers(qml_window->vulkanInstance()->functions());
     if (hasValidationLayer)
     {
         vulkanInstance.setLayers({"VK_LAYER_KHRONOS_validation"});
@@ -23,6 +23,15 @@ QtVulkanInfo::QtVulkanInfo(QQuickWindow *qml_window)
     if (!vulkanInstance.layers().contains("VK_LAYER_KHRONOS_validation"))
     {
         VME_LOG_D("VK_LAYER_KHRONOS_validation not found");
+    }
+
+    auto extensions = qml_window->vulkanInstance()->supportedExtensions();
+    VME_LOG_D("Extensions: " << extensions.size());
+    for (int i = 0; i < extensions.size(); ++i)
+    {
+        qDebug() << extensions[i].name;
+        // process items in numerical order by index
+        // do something with "list[i]";
     }
 
     if (!vulkanInstance.create())
@@ -62,7 +71,6 @@ bool QtVulkanInfo::checkValidationLayers(QVulkanFunctions *f)
     bool layerFound = false;
     for (const char *layerName : validationLayers)
     {
-
         for (const auto &layerProperties : availableLayers)
         {
             if (strcmp(layerName, layerProperties.layerName) == 0)
