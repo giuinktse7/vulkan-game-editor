@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
-    std::string version = "13.20";
+    std::string version = "15.01";
 
     auto configResult = Config::create(version);
     if (configResult.isErr())
