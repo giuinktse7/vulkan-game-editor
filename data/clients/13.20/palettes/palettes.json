@@ -1,0 +1,20 @@
+{
+    "palettes": [
+        {
+            "id": "raw",
+            "name": "Raw Palette"
+        },
+        {
+            "id": "terrain",
+            "name": "Terrain Palette"
+        },
+        {
+            "id": "doodad",
+            "name": "Doodad Palette"
+        },
+        {
+            "id": "creature",
+            "name": "Creature Palette"
+        }
+    ]
+}

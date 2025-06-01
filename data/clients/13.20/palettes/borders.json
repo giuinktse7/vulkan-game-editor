@@ -1,0 +1,141 @@
+{
+    "brushes": [
+        {
+            "id": "normal_grass_border",
+            "name": "Normal grass border",
+            "type": "border",
+            "lookId": 4550,
+            "items": {
+                "straight": { "n": 4542, "e": 4543, "s": 4544, "w": 4545 },
+                "corner": { "nw": 4546, "ne": 4547, "sw": 4548, "se": 4549 },
+                "diagonal": { "nw": 4550, "ne": 4551, "sw": 4552, "se": 4553 }
+            },
+            "centerGroundId": "normal_grass"
+        },
+        {
+            "id": "dried_grass_border",
+            "name": "Dried grass border",
+            "type": "border",
+            "lookId": 8355,
+            "items": {
+                "straight": { "n": 8349, "e": 8360, "s": 8359, "w": 8350 },
+                "corner": { "nw": 8351, "ne": 8352, "sw": 8353, "se": 8354 },
+                "diagonal": { "nw": 8355, "ne": 8356, "sw": 8357, "se": 8358 }
+            },
+            "centerGroundId": "dried_grass"
+        },
+        {
+            "id": "sea_border",
+            "name": "Sea border",
+            "type": "border",
+            "lookId": 4651,
+            "items": {
+                "straight": { "n": 4644, "e": 4645, "s": 4646, "w": 4647 },
+                "corner": { "nw": 4652, "ne": 4653, "sw": 4654, "se": 4655 },
+                "diagonal": { "nw": 4648, "ne": 4649, "sw": 4650, "se": 4651 }
+            },
+            "centerGroundId": "sea",
+            "stackBehavior": "clear"
+        },
+        {
+            "id": "gray_mountain_wall_thin_border",
+            "name": "Gray Mountain Wall Border (Thin)",
+            "type": "border",
+            "lookId": 4464,
+            "items": {
+                "straight": { "n": 4456, "e": 4457, "s": 4458, "w": 4459 },
+                "corner": { "nw": 4460, "ne": 4461, "sw": 4463, "se": 4462 },
+                "diagonal": { "nw": 4464, "ne": 4465, "sw": 4467, "se": 4466 }
+            }
+        },
+        {
+            "id": "earth_mountain_wall_border",
+            "name": "Earth Mountain Wall Border",
+            "type": "border",
+            "lookId": 8913,
+            "items": {
+                "straight": { "n": 8053, "e": 8056, "s": 8055, "w": 8054 },
+                "corner": { "nw": 8367, "ne": 8369, "sw": 8057, "se": 8366 },
+                "diagonal": { "nw": 8117, "ne": 8118, "sw": 8119, "se": 8120 }
+            }
+        },
+        {
+            "id": "sand_to_water",
+            "name": "Shallow Water",
+            "type": "border",
+            "lookId": 4640,
+            "items": {
+                "straight": { "n": 4632, "e": 4635, "s": 4634, "w": 4633 },
+                "corner": { "nw": 4643, "ne": 4642, "sw": 4641, "se": 4640 },
+                "diagonal": { "nw": 4639, "ne": 4638, "sw": 4637, "se": 4636 }
+            },
+            "extraItems": {
+                "straight": { "n": [4656, 4660], "e": [4659, 4663], "s": [4657, 4661], "w": [4658, 4662] }
+            },
+            "centerGroundId": "sand",
+            "stackBehavior": "fullGround",
+            "rules": [
+                {
+                    "whenBorder": {
+                        "borderId": "sea_border",
+                        "cases": [
+                            {
+                                "selfEdge": "n",
+                                "borderEdge": "cnw",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4656 }]
+                            },
+                            {
+                                "selfEdge": "n",
+                                "borderEdge": "cne",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4660 }]
+                            },
+                            {
+                                "selfEdge": "s",
+                                "borderEdge": "csw",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4657 }]
+                            },
+                            {
+                                "selfEdge": "s",
+                                "borderEdge": "cse",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4661 }]
+                            },
+                            {
+                                "selfEdge": "e",
+                                "borderEdge": "cse",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4663 }]
+                            },
+                            {
+                                "selfEdge": "e",
+                                "borderEdge": "cne",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4659 }]
+                            },
+                            {
+                                "selfEdge": "w",
+                                "borderEdge": "csw",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4662 }]
+                            },
+                            {
+                                "selfEdge": "w",
+                                "borderEdge": "cnw",
+                                "actions": [{ "type": "replace", "replaceSelf": false, "serverId": 4658 }]
+                            }
+                        ],
+                        "actions": [{ "type": "setFull", "setSelf": true }]
+                    }
+                }
+            ]
+        }
+        // {
+        //     "id": "sand_to_water",
+        //     "name": "Shallow Water",
+        //     "type": "border",
+        //     "lookId": 4640,
+        //     "items": {
+        //         "straight": { "n": 4634, "e": 4633, "s": 4632, "w": 4635 },
+        //         "corner": { "nw": 4636, "ne": 4637, "sw": 4638, "se": 4639 },
+        //         "diagonal": { "nw": 4640, "ne": 4641, "sw": 4642, "se": 4643 }
+        //     },
+        //     "centerGroundId": "sand"
+        // }
+    ]
+}

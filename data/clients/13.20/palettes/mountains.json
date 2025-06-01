@@ -1,0 +1,42 @@
+{
+    "brushes": [
+        {
+            "id": "gray_mountain",
+            "name": "Gray Mountain",
+            "type": "mountain",
+            "ground": "gray_mountain_ground",
+            "lookId": 919,
+            "items": {
+                "innerWalls": {
+                    "e": 4826,
+                    "s": 4827,
+                    "se": 877
+                },
+                "outerWalls": {
+                    "straight": { "n": 4471, "e": 4468, "s": 4469, "w": 4472 },
+                    "corner": { "nw": 4475, "ne": 4474, "se": 4470, "sw": 4473 },
+                    "diagonal": { "nw": 4476, "ne": 4478, "sw": 4477, "se": 4479 }
+                }
+            }
+        },
+        {
+            "id": "earth_mountain",
+            "name": "Earth Mountain",
+            "type": "mountain",
+            "ground": "earth_mountain_ground",
+            "lookId": 10164,
+            "items": {
+                "innerWalls": {
+                    "e": 7999,
+                    "s": 7987,
+                    "se": 8004
+                },
+                "outerWalls": {
+                    "straight": { "n": 7989, "e": 8168, "s": 8169, "w": 7988 },
+                    "corner": { "nw": 7995, "ne": 7996, "sw": 7994, "se": 8371 },
+                    "diagonal": { "nw": 8135, "ne": 8137, "se": 8138, "sw": 8136 }
+                }
+            }
+        }
+    ]
+}
