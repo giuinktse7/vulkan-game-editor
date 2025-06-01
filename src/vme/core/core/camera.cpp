@@ -2,7 +2,6 @@
 
 #include "const.h"
 #include "logger.h"
-#include "map.h"
 
 namespace
 {

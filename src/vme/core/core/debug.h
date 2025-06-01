@@ -2,10 +2,6 @@
 
 #include <cassert>
 #include <exception>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <string>
 
 #include "logger.h"
 
@@ -26,14 +22,15 @@ class GeneralDebugException : public std::exception
     const char *message;
 };
 
-#define ABORT_PROGRAM(message)                                                                            \
-    do                                                                                                    \
-    {                                                                                                     \
-        std::ostringstream s;                                                                             \
-        s << "[ERROR] " << __FILE__ << ", line " << (unsigned)(__LINE__) << ": " << message << std::endl; \
-        VME_LOG_D(s.str());                                                                               \
-        throw GeneralDebugException(s.str().c_str());                                                     \
-    } while (false)
+#define ABORT_PROGRAM(message)                                                                       \
+    do                                                                                               \
+    {                                                                                                \
+        std::ostringstream s;                                                                        \
+        s << "[ERROR] " << __FILE__ << ", line " << (unsigned)(__LINE__) << ": " << message << "\n"; \
+        VME_LOG_D(s.str());                                                                          \
+        throw GeneralDebugException(s.str().c_str());                                                \
+    }                                                                                                \
+    while (false)
 
 #define NOT_IMPLEMENTED_ABORT() ABORT_PROGRAM("Not implemented yet.");
 
@@ -52,7 +49,8 @@ class GeneralDebugException : public std::exception
 #define DEBUG_ASSERT(exp, msg) \
     do                         \
     {                          \
-    } while (0)
+    }                          \
+    while (0)
 #endif
 
 #define FILE_AND_LINE_STR (__FILE__ + std::string("(" + std::to_string(__LINE__) + "): "))

@@ -1,17 +1,13 @@
 #pragma once
 
 #include <array>
-#include <limits>
 #include <memory>
 #include <optional>
 #include <queue>
-#include <sstream>
-#include <type_traits>
 #include <vector>
 
 #include "debug.h"
 #include "position.h"
-#include "time_util.h"
 #include "util.h"
 
 // HeapNode macro
@@ -174,8 +170,8 @@ namespace vme
 
                 if (splitCounts.z == 0 && cacheInfo.endZIndex == -1)
                     cacheInfo.endZIndex = cacheInfo.count;
-
-            } while (splitCounts.x > 0 || splitCounts.y > 0 || splitCounts.z > 0);
+            }
+            while (splitCounts.x > 0 || splitCounts.y > 0 || splitCounts.z > 0);
 
             if (cacheInfo.endXIndex != cacheInfo.count)
                 --remainingDimensions;
@@ -204,8 +200,8 @@ namespace vme
 
             virtual bool empty() const noexcept;
 
-            Leaf *leaf(const Position pos) const;
-            Leaf *getOrCreateLeaf(const Position pos);
+            Leaf *getLeaf(Position pos) const;
+            Leaf *getOrCreateLeaf(Position pos);
 
             virtual std::string show() const;
 
@@ -261,8 +257,8 @@ namespace vme
 
             void clear() override;
 
-            bool size() const noexcept;
-            uint32_t count() const noexcept;
+            [[nodiscard]] uint32_t size() const noexcept;
+            [[nodiscard]] uint32_t count() const noexcept;
 
             /*
         Returns true if the leaf has the position 'pos'.
@@ -281,7 +277,7 @@ namespace vme
             Position min() const noexcept;
             Position max() const noexcept;
 
-            std::array<bool, ChunkSize.width *ChunkSize.height *ChunkSize.depth> values = {false};
+            std::array<bool, ChunkSize.width * ChunkSize.height * ChunkSize.depth> values = {false};
 
             Position position;
 
@@ -312,7 +308,7 @@ namespace vme
                 }
             };
             /*
-        Important: Indices hold indices into xs, ys, and zs. To get a position 
+        Important: Indices hold indices into xs, ys, and zs. To get a position
         based on low/high, use min() and max().
       */
             Indices low;
@@ -370,7 +366,7 @@ namespace vme
             bool isCachedNode() const noexcept override;
             int childCount() const noexcept override;
 
-            bool addBoundingBox(BoundingBox boundingBox);
+            bool addBoundingBox(BoundingBox bbox);
 
             uint16_t childOffset(const int pattern) const;
 
@@ -526,14 +522,14 @@ namespace vme
             long size() const noexcept;
             bool empty() const noexcept;
 
-            const std::optional<BoundingBox> boundingBox() const noexcept;
+            std::optional<BoundingBox> boundingBox() const noexcept;
 
             std::optional<Position> getCorner(bool positiveX, bool positiveY, bool positiveZ) const noexcept;
 
             /**
-       * Returns the only position if the tree, ONLY if the tree only has a single
-       * position.
-       */
+             * Returns the only position if the tree, ONLY if the tree only has a single
+             * position.
+             */
             std::optional<Position> onlyPosition() const;
 
           private:
@@ -573,8 +569,8 @@ namespace vme
 
             const CachedNode *getCachedNode(const Position position) const;
 
-            std::optional<std::pair<CachedNode *, HeapNode *>> fromCache(const Position position) const;
-            std::pair<CachedNode *, HeapNode *> getOrCreateFromCache(const Position position);
+            std::optional<std::pair<CachedNode *, HeapNode *>> fromCache(Position position) const;
+            std::pair<CachedNode *, HeapNode *> getOrCreateFromCache(Position position);
             Leaf *getLeaf(const Position position) const;
             std::pair<CachedNode *, Leaf *> getOrCreateLeaf(const Position position);
 
@@ -590,14 +586,13 @@ namespace vme
             return true;
         }
 
-        inline bool Leaf::size() const noexcept
+        inline uint32_t Leaf::size() const noexcept
         {
             return _count;
         }
 
         inline void Leaf::clear()
         {
-            VME_LOG_D("Clear");
             values.fill(false);
         }
 

@@ -197,7 +197,7 @@ namespace vme
             }
 
             uint16_t cacheHeapIndex = cacheIndex - cacheInfo.amountToInitialize;
-            auto &result = cachedHeapNodes.at(cacheHeapIndex);
+            const auto &result = cachedHeapNodes.at(cacheHeapIndex);
 
             return result ? std::optional<std::pair<CachedNode *, HeapNode *>>{{const_cast<CachedNode *>(cached), result.get()}}
                           : std::nullopt;
@@ -263,8 +263,8 @@ namespace vme
 
         bool Tree::contains(const Position pos) const
         {
-            auto l = getLeaf(pos);
-            return l && l->contains(pos);
+            auto *leaf = getLeaf(pos);
+            return (leaf != nullptr) && leaf->contains(pos);
         }
 
         bool Tree::add(const Position pos)
@@ -352,27 +352,27 @@ namespace vme
             if (!maybeCached)
                 return nullptr;
             const auto &[cached, node] = maybeCached.value();
-            auto leaf = node->leaf(position);
+            auto leaf = node->getLeaf(position);
             markAsRecent(cached, leaf);
             return leaf;
         }
 
         std::pair<CachedNode *, Leaf *> Tree::getOrCreateLeaf(const Position pos)
         {
-            if (mostRecentLeaf.second && mostRecentLeaf.second->encloses(pos))
+            if ((mostRecentLeaf.second != nullptr) && mostRecentLeaf.second->encloses(pos))
             {
                 return mostRecentLeaf;
             }
 
             const auto [cached, node] = getOrCreateFromCache(pos);
-            auto leaf = node->getOrCreateLeaf(pos);
+            auto *leaf = node->getOrCreateLeaf(pos);
 
             markAsRecent(cached, leaf);
 
             return {cached, leaf};
         }
 
-        const std::optional<BoundingBox> Tree::boundingBox() const noexcept
+        std::optional<BoundingBox> Tree::boundingBox() const noexcept
         {
             return root.boundingBox();
         }
@@ -395,11 +395,9 @@ namespace vme
             {
                 return &cachedNodes.at(childIndex);
             }
-            else
-            {
-                auto &child = cachedHeapNodes.at(childIndex - cacheInfo.amountToInitialize);
-                return child ? child.get() : nullptr;
-            }
+
+            const auto &child = cachedHeapNodes.at(childIndex - cacheInfo.amountToInitialize);
+            return child ? child.get() : nullptr;
         }
 
         //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -480,9 +478,9 @@ namespace vme
         //>>>>>>>>HeapNode>>>>>>>>>
         //>>>>>>>>>>>>>>>>>>>>>>>>>
 
-        Leaf *HeapNode::leaf(const Position pos) const
+        Leaf *HeapNode::getLeaf(const Position pos) const
         {
-            HeapNode *node = const_cast<HeapNode *>(this);
+            auto *node = const_cast<HeapNode *>(this);
             while (node && !node->isLeaf())
                 node = node->child(node->getIndex(pos));
 
@@ -491,8 +489,8 @@ namespace vme
 
         bool HeapNode::contains(const Position pos) const
         {
-            auto l = leaf(pos);
-            return l && l->contains(pos);
+            auto *leaf = getLeaf(pos);
+            return leaf && leaf->contains(pos);
         }
 
         //>>>>>>>>>>>>>>>>>>>>>
@@ -523,7 +521,7 @@ namespace vme
         inline uint16_t Leaf::getIndex(const Position &pos) const
         {
             return ((pos.z - position.z) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.width + (pos.x - position.x);
-            //return ((pos.x - position.x) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.depth + (pos.z - position.z);
+            // return ((pos.x - position.x) * ChunkSize.height + (pos.y - position.y)) * ChunkSize.depth + (pos.z - position.z);
         }
 
         bool Leaf::addToBoundingBox(const Position pos)
@@ -715,7 +713,7 @@ namespace vme
             auto index = getIndex(pos);
 
             if (values[index])
-                return {false, false};
+                return {.change = false, .bboxChange = false};
 
             ++_count;
             values[index] = true;
@@ -724,7 +722,7 @@ namespace vme
             if (bboxChanged && !parent->isCachedNode())
                 parent->updateBoundingBox();
 
-            return {true, bboxChanged};
+            return {.change = true, .bboxChange = bboxChanged};
         }
 
         Leaf::UpdateResult Leaf::remove(const Position pos)
@@ -760,7 +758,7 @@ namespace vme
             if (isLeaf())
                 return static_cast<Leaf *>(this);
 
-            auto node = getOrCreateChild(pos);
+            auto *node = getOrCreateChild(pos);
             while (!node->isLeaf())
             {
                 // VME_LOG_D("getOrCreateLeaf: " << node);
@@ -938,14 +936,14 @@ namespace vme
             switch (split)
             {
                 case 0b1:
-                    children[index] = std::make_unique<NodeY>(std::move(nextMidPoint), childDelta, this);
+                    children[index] = std::make_unique<NodeY>(nextMidPoint, childDelta, this);
                     break;
                 case 0b10:
-                    children[index] = std::make_unique<NodeX>(std::move(nextMidPoint), childDelta, this);
+                    children[index] = std::make_unique<NodeX>(nextMidPoint, childDelta, this);
                     break;
                 case 0b11:
                 {
-                    children[index] = std::make_unique<NodeXY>(std::move(nextMidPoint), childDelta, this);
+                    children[index] = std::make_unique<NodeXY>(nextMidPoint, childDelta, this);
                     break;
                 }
 
@@ -1317,14 +1315,12 @@ namespace vme
                         value = static_cast<const Leaf *>(current);
                         return;
                     }
-                    else
+
+                    for (int i = 0; i < current->childCount(); ++i)
                     {
-                        for (int i = 0; i < current->childCount(); ++i)
-                        {
-                            auto child = tree->getChild(i, current);
-                            if (child && !child->empty())
-                                nodes.emplace(child);
-                        }
+                        auto *child = tree->getChild(i, current);
+                        if (child && !child->empty())
+                            nodes.emplace(child);
                     }
                 }
             }
@@ -1400,7 +1396,8 @@ namespace vme
                         }
                     }
                 }
-            } while (!currentLeaf()->contains(value));
+            }
+            while (!currentLeaf()->contains(value));
         }
 
         Tree::iterator &Tree::iterator::operator++()
