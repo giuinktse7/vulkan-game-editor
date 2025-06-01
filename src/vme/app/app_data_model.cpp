@@ -620,7 +620,7 @@ void AppDataModel::resetBrushInsertionOffset()
 
 void AppDataModel::createTown()
 {
-    auto mapView = currentMapView();
+    auto *mapView = currentMapView();
     const Town &town = mapView->mapAsShared()->addTown();
     _townListModel->addTown(town);
 }

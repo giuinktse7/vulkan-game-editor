@@ -5,6 +5,7 @@
 #include <optional>
 #include <queue>
 #include <vector>
+#include <variant>
 
 #include "debug.h"
 #include "position.h"

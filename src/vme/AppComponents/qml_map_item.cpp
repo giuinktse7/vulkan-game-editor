@@ -15,6 +15,9 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <qnamespace.h>
+#include <qpoint.h>
+#include <utility>
 #include <vector>
 
 QmlMapItemStore QmlMapItemStore::qmlMapItemStore;
@@ -22,23 +25,7 @@ QmlMapItemStore QmlMapItemStore::qmlMapItemStore;
 MapRenderFinishedEvent::MapRenderFinishedEvent()
     : QEvent(static_cast<QEvent::Type>(CustomQEvent::RenderMapFinished)) {}
 
-std::shared_ptr<Map> testMap2()
-{
-    std::shared_ptr<Map> map = std::make_shared<Map>();
-
-    for (int x = 5; x < 8; ++x)
-    {
-        for (int y = 5; y < 8; ++y)
-        {
-            Item grass(4526 + x - 5);
-            map->addItem(Position(x, y, 7), std::move(grass));
-        }
-    }
-
-    return map;
-}
-
-float QmlMapItem::horizontalScrollSize()
+float QmlMapItem::horizontalScrollSize() const
 {
     if (!mapView)
     {
@@ -48,7 +35,7 @@ float QmlMapItem::horizontalScrollSize()
     return static_cast<float>(mapView->getViewport().gameWidth()) / mapView->mapWidth();
 }
 
-float QmlMapItem::horizontalScrollPosition()
+float QmlMapItem::horizontalScrollPosition() const
 {
     if (!mapView)
     {
@@ -58,7 +45,7 @@ float QmlMapItem::horizontalScrollPosition()
     return std::min(1 - horizontalScrollSize(), static_cast<float>(mapView->cameraPosition().x) / mapView->mapWidth());
 }
 
-float QmlMapItem::verticalScrollSize()
+float QmlMapItem::verticalScrollSize() const
 {
     if (!mapView)
     {
@@ -68,7 +55,7 @@ float QmlMapItem::verticalScrollSize()
     return static_cast<float>(mapView->getViewport().gameHeight()) / mapView->mapHeight();
 }
 
-float QmlMapItem::verticalScrollPosition()
+float QmlMapItem::verticalScrollPosition() const
 {
     if (!mapView)
     {
@@ -96,7 +83,7 @@ void QmlMapItem::setVerticalScrollPosition(float value)
 // }
 
 QmlMapItem::QmlMapItem(std::string name)
-    : _name(name), lastDrawTime(TimePoint::now())
+    : _name(std::move(name)), lastDrawTime(TimePoint::now())
 {
     setAcceptedMouseButtons(Qt::MouseButton::AllButtons);
 
@@ -182,7 +169,7 @@ void QmlMapItem::setMap(std::shared_ptr<Map> &&map)
     }
 }
 
-void QmlMapItem::onMapViewportChanged(const Camera::Viewport &)
+void QmlMapItem::onMapViewportChanged(const Camera::Viewport & /*unused*/)
 {
     emit horizontalScrollSizeChanged();
     emit horizontalScrollPositionChanged();
@@ -223,7 +210,7 @@ void QmlMapItem::mapViewDrawRequested()
     delayedUpdate();
 }
 
-QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData *)
+QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData * /*unused*/)
 {
     MapTextureNode *node = static_cast<MapTextureNode *>(qsgNode);
 
@@ -333,12 +320,11 @@ void QmlMapItem::mouseMoveEvent(QMouseEvent *event)
 
 void QmlMapItem::onMousePositionChanged(int x, int y, int button, int buttons, int modifiers)
 {
-    auto event = QMouseEvent(
-        QEvent::Type::MouseMove,
-        // mapToGlobal(QPointF(x, y)),
-        QPointF(x, y),
-        static_cast<Qt::MouseButton>(button), static_cast<Qt::MouseButtons>(buttons),
-        static_cast<Qt::KeyboardModifiers>(modifiers));
+    auto event = QMouseEvent(QEvent::Type::MouseMove,
+                             QPointF(x, y),
+                             mapToGlobal(QPointF(x, y)),
+                             static_cast<Qt::MouseButton>(button), static_cast<Qt::MouseButtons>(buttons),
+                             static_cast<Qt::KeyboardModifiers>(modifiers));
 
     bool mouseInside = containsMouse();
     mapView->setUnderMouse(mouseInside);
@@ -423,7 +409,7 @@ void QmlMapItem::keyReleaseEvent(QKeyEvent *event)
             if (!event->isAutoRepeat())
             {
                 VME_LOG_D("Space released!");
-                auto pan = mapView->editorAction.as<MouseAction::Pan>();
+                auto *pan = mapView->editorAction.as<MouseAction::Pan>();
                 if (pan)
                 {
                     mapView->editorAction.setPrevious();
@@ -437,20 +423,24 @@ void QmlMapItem::keyReleaseEvent(QKeyEvent *event)
 
 void QmlMapItem::wheelEvent(QWheelEvent *event)
 {
-    /*
-    The minimum rotation amount for a scroll to be registered, in eighths of a degree.
-    For example, 120 MinRotationAmount = (120 / 8) = 15 degrees of rotation.
-    */
-    const int MinRotationAmount = 120;
+    // Each wheel step is reported in 1/8 degrees. 1 degree = 8 units.
+    static constexpr int angleUnitsPerDegree = 8;
 
-    // The relative amount that the wheel was rotated, in eighths of a degree.
-    const int deltaY = event->angleDelta().y();
+    // Minimum total angle delta (in angle units) before triggering a zoom.
+    // 120 units = 15 degrees (i.e. 120 / 8).
+    static constexpr int minScrollUnitsForZoom = 120;
 
-    scrollAngleBuffer += deltaY;
+    // The vertical wheel delta in 1/8 degree units.
+    const int wheelDelta = event->angleDelta().y();
 
-    if (std::abs(scrollAngleBuffer) >= MinRotationAmount)
+    scrollAngleBuffer += wheelDelta;
+
+    if (std::abs(scrollAngleBuffer) >= minScrollUnitsForZoom)
     {
-        this->mapView->zoom(scrollAngleBuffer / 8);
+        // Convert from angle units to degrees and perform zoom.
+        int zoomDelta = scrollAngleBuffer / angleUnitsPerDegree;
+        this->mapView->zoom(zoomDelta);
+
         scrollAngleBuffer = 0;
     }
 }
@@ -482,7 +472,7 @@ bool QmlMapItem::event(QEvent *event)
             //     dragMoveEvent(static_cast<QDragMoveEvent *>(event));
             //     break;
 
-        case CustomQEvent::RenderMapFinished:
+        case CustomQEvent::RenderMapFinished: // NOLINT
         {
             // Run deferred events
             if (deferredEvents.contains(QEvent::MouseButtonRelease))
@@ -561,7 +551,7 @@ void QmlMapItem::eyedrop(const Position position) const
             },
             [this](Creature *creature) {
                 // TODO scroll to the brush in the TilesetListView
-                mapView->editorAction.setBrush(Brush::getCreatureBrush(creature->creatureType.id()));
+                mapView->editorAction.setBrush(Brushes::getCreatureBrush(creature->creatureType.id()));
                 mapView->requestDraw();
             },
 
@@ -603,7 +593,7 @@ void QmlMapItem::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
             auto pos = mapFromGlobal(QCursor::pos());
             auto screenPos = ScreenPosition(pos.x(), pos.y());
 
-            Position mapPos = screenPos.toPos(*mapView.get());
+            Position mapPos = screenPos.toPos(*mapView);
 
             eyedrop(mapPos);
             break;
@@ -784,7 +774,7 @@ void MapTextureNode::render()
     VkFramebuffer frameBuffer = screenTexture.vkFrameBuffer();
 
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
-    auto resource = renderInterface->getResource(m_window, QSGRendererInterface::CommandListResource);
+    auto *resource = renderInterface->getResource(m_window, QSGRendererInterface::CommandListResource);
     VkCommandBuffer commandBuffer = *reinterpret_cast<VkCommandBuffer *>(resource);
     Q_ASSERT(commandBuffer);
 
@@ -792,7 +782,7 @@ void MapTextureNode::render()
 
     mapRenderer->setCurrentFrame(currentFrameSlot);
 
-    auto frame = mapRenderer->currentFrame();
+    auto *frame = mapRenderer->currentFrame();
     frame->currentFrameIndex = currentFrameSlot;
     frame->commandBuffer = commandBuffer;
 
@@ -834,14 +824,14 @@ void MapTextureNode::render()
 MapTabListModel::MapTabListModel(QObject *parent)
     : QAbstractListModel(parent) {}
 
-void MapTabListModel::addTab(std::string tabName)
+void MapTabListModel::addTab(const std::string &tabName)
 {
     auto modelSize = static_cast<int>(_data.size());
 
     uint32_t id = _nextId++;
 
     beginInsertRows(QModelIndex(), modelSize, modelSize);
-    _data.push_back(TabData{tabName, id, nullptr});
+    _data.push_back(TabData{.name = tabName, .id = id, .item = nullptr});
     endInsertRows();
 
     VME_LOG_D("MapTabListModel::addTab: tab " << tabName << " added with id " << id << ". Size: " << size());
@@ -875,7 +865,7 @@ QVariant MapTabListModel::data(const QModelIndex &modelIndex, int role) const
 {
     auto index = modelIndex.row();
     if (index < 0 || index >= rowCount())
-        return QVariant();
+        return {};
 
     if (role == to_underlying(Role::QmlMapItem))
     {
@@ -886,7 +876,7 @@ QVariant MapTabListModel::data(const QModelIndex &modelIndex, int role) const
         return QVariant::fromValue(static_cast<int>(_data.at(index).id));
     }
 
-    return QVariant();
+    return {};
 }
 
 MapTabListModel::TabData *MapTabListModel::getById(int id)
@@ -905,12 +895,12 @@ QHash<int, QByteArray> MapTabListModel::roleNames() const
     return roles;
 }
 
-int MapTabListModel::size()
+int MapTabListModel::size() const
 {
     return rowCount();
 }
 
-bool MapTabListModel::empty()
+bool MapTabListModel::empty() const
 {
     return size() == 0;
 }

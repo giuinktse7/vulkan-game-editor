@@ -1,19 +1,8 @@
 
 #include "luascript_interface.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
-
-#include <initializer_list>
-#include <iostream>
-#include <string>
-
-#include "../brushes/brush.h"
-#include "../brushes/ground_brush.h"
-#include "../debug.h"
-#include "../time_util.h"
 
 #include "lua_brush.h"
 

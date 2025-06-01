@@ -2,8 +2,6 @@
 
 #include <algorithm>
 
-#include "graphics/validation.h"
-
 util::Size::Size(int width, int height)
     : w(width), h(height) {}
 
@@ -25,7 +23,7 @@ std::vector<const char *> getRequiredExtensions()
     return v;
 }
 
-std::string util::unicodePath(std::filesystem::path path)
+std::string util::unicodePath(const std::filesystem::path& path)
 {
     return std::filesystem::absolute(path).string();
 }

@@ -1,11 +1,10 @@
 #pragma once
 
-#include <ostream>
-#include <stdint.h>
-
 #include "const.h"
 #include "type_trait.h"
 #include "util.h"
+#include <cstdint>
+#include <ostream>
 
 class MapView;
 struct WorldPosition;
@@ -238,34 +237,34 @@ struct Region2D
           _x1(std::max(from.x, to.x)),
           _y1(std::max(from.y, to.y)) {}
 
-    inline Pos from() const noexcept
+    Pos from() const noexcept
     {
         return _from;
     }
 
-    inline Pos to() const noexcept
+    Pos to() const noexcept
     {
         return _to;
     }
 
-    inline void setFrom(Pos position)
+    void setFrom(Pos position)
     {
         _from = position;
         updateMinMax();
     }
 
-    inline void setTo(Pos position)
+    void setTo(Pos position)
     {
         _to = position;
         updateMinMax();
     }
 
-    inline bool contains(Pos pos) const
+    bool contains(Pos pos) const
     {
         return (_x0 <= pos.x && pos.x <= _x1) && (_y0 <= pos.y && pos.y <= _y1);
     }
 
-    inline bool collides(Pos topLeft, Pos bottomRight) const
+    bool collides(Pos topLeft, Pos bottomRight) const
     {
         return _x0 < bottomRight.x && _x1 > topLeft.x && _y0 < bottomRight.y && _y1 > topLeft.y;
     }

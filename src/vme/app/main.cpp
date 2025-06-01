@@ -1,3 +1,4 @@
+// NOLINTBEGIN(readability-magic-numbers)
 #include "main.h"
 
 #include <QDebug>
@@ -86,7 +87,7 @@ int MainApp::start()
     qmlRegisterSingletonInstance("VME.dataModel", 1, 0, "AppDataModel", dataModel.get());
     qmlRegisterSingletonInstance("VME.minimap", 1, 0, "Minimap", minimap.get());
 
-    auto model = dataModel.get();
+    auto *model = dataModel.get();
     auto minimap = this->minimap;
 
     // Hook up minimap to events of current map view
@@ -112,7 +113,7 @@ int MainApp::start()
     rootView->setResizeMode(QQuickView::SizeRootObjectToView);
     // engine->addImportPath(QStringLiteral(":/"));
 
-    const QUrl url(u"qrc:/qt/qml/app/qml/main.qml"_qs);
+    const QUrl url(u"qrc:/qt/qml/app/qml/main.qml"_s);
     rootView->setSource(url);
     rootView->show();
 
@@ -203,11 +204,41 @@ void MainApp::createDefaultPalettes()
         to = 5000;
 #endif
 
-        for (int i = from; i < to; ++i)
+        int startInvalid = -1;
+        int endInvalid = -1;
+
+        for (int serverId = from; serverId < to; ++serverId)
         {
-            ItemType *itemType = Items::items.getItemTypeByServerId(i);
+            ItemType *itemType = Items::items.getItemTypeByServerId(serverId);
             if (!itemType || !itemType->isValid())
                 continue;
+
+            bool isValidItemType = Items::items.validItemType(serverId);
+            if (!isValidItemType)
+            {
+                if (startInvalid == -1)
+                {
+                    startInvalid = serverId;
+                }
+                else
+                {
+                    endInvalid = serverId;
+                }
+
+                continue;
+            }
+
+            if (startInvalid != -1 && endInvalid != -1)
+            {
+                VME_LOG_ERROR(std::format("Invalid item types: [{}, {}].", startInvalid, endInvalid));
+                startInvalid = -1;
+                endInvalid = -1;
+            }
+            else if (startInvalid != -1)
+            {
+                VME_LOG_ERROR(std::format("Invalid item type: {}.", startInvalid));
+                startInvalid = -1;
+            }
 
             if (itemType->hasFlag(AppearanceFlag::Corpse) || itemType->hasFlag(AppearanceFlag::PlayerCorpse))
             {
@@ -215,11 +246,11 @@ void MainApp::createDefaultPalettes()
                 continue;
             }
 
-            allTileset.addRawBrush(i);
+            allTileset.addRawBrush(serverId);
 
             if (itemType->hasFlag(AppearanceFlag::Bottom))
             {
-                bottomTileset.addRawBrush(i);
+                bottomTileset.addRawBrush(serverId);
             }
             // else if (itemType->hasFlag(AppearanceFlag::Ground))
             // {
@@ -227,56 +258,68 @@ void MainApp::createDefaultPalettes()
             // }
             else if (itemType->hasFlag(AppearanceFlag::Border))
             {
-                borderTileset.addRawBrush(i);
+                borderTileset.addRawBrush(serverId);
             }
             else if (itemType->hasFlag(AppearanceFlag::Top))
             {
-                archwayTileset.addRawBrush(i);
+                archwayTileset.addRawBrush(serverId);
             }
             else if (itemType->isDoor())
             {
-                doorTileset.addRawBrush(i);
+                doorTileset.addRawBrush(serverId);
             }
             else if (itemType->hasFlag(AppearanceFlag::Unsight))
             {
-                unsightTileset.addRawBrush(i);
+                unsightTileset.addRawBrush(serverId);
             }
             else if (itemType->isContainer())
             {
-                containerTileset.addRawBrush(i);
+                containerTileset.addRawBrush(serverId);
             }
             else if (itemType->hasFlag(AppearanceFlag::Wrap) || itemType->hasFlag(AppearanceFlag::Unwrap) || itemType->isBed())
             {
-                interiorTileset.addRawBrush(i);
+                interiorTileset.addRawBrush(serverId);
             }
             else if (itemType->hasFlag(AppearanceFlag::Take))
             {
                 if (itemType->hasFlag(AppearanceFlag::Clothes))
                 {
-                    equipmentTileset.addRawBrush(i);
+                    equipmentTileset.addRawBrush(serverId);
                 }
                 else
                 {
-                    pickuableTileset.addRawBrush(i);
+                    pickuableTileset.addRawBrush(serverId);
                 }
             }
             else if (itemType->hasFlag(AppearanceFlag::Light))
             {
-                lightSourceTileset.addRawBrush(i);
+                lightSourceTileset.addRawBrush(serverId);
             }
             else if (itemType->hasFlag(AppearanceFlag::Hang))
             {
-                hangableTileset.addRawBrush(i);
+                hangableTileset.addRawBrush(serverId);
             }
             else
             {
                 if (!itemType->hasFlag(AppearanceFlag::Ground))
                 {
-                    otherTileset.addRawBrush(i);
+                    otherTileset.addRawBrush(serverId);
                 }
             }
 
             // GuiImageCache::cachePixmapForServerId(i);
+        }
+
+        if (startInvalid != -1 && endInvalid != -1)
+        {
+            VME_LOG_ERROR(std::format("Invalid item types: [{}, {}].", startInvalid, endInvalid));
+            startInvalid = -1;
+            endInvalid = -1;
+        }
+        else if (startInvalid != -1)
+        {
+            VME_LOG_ERROR(std::format("Invalid item type: {}.", startInvalid));
+            startInvalid = -1;
         }
     }
 
@@ -374,3 +417,5 @@ void MainApp::createDefaultPalettes()
         otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType("mimic", "Mimic", Outfit::fromServerId(1740)))));
     }
 }
+
+// NOLINTEND(readability-magic-numbers)
