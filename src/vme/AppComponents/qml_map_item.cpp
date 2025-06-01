@@ -4,6 +4,7 @@
 #include <QTimer>
 
 #include "core/brushes/brush.h"
+#include "core/brushes/brushes.h"
 #include "core/brushes/creature_brush.h"
 #include "core/const.h"
 #include "core/map_renderer.h"
@@ -92,6 +93,7 @@ QmlMapItem::QmlMapItem(std::string name)
     setShortcut(Qt::ControlModifier, Qt::Key_0, ShortcutAction::ResetZoom);
     setShortcut(Qt::KeypadModifier, Qt::Key_Plus, ShortcutAction::FloorUp);
     setShortcut(Qt::KeypadModifier, Qt::Key_Minus, ShortcutAction::FloorDown);
+    setShortcut(Qt::ControlModifier, Qt::Key_R, ShortcutAction::Rotate);
     setShortcut(Qt::Key_Q, ShortcutAction::LowerFloorShade);
     setShortcut(Qt::ControlModifier, Qt::Key_Z, ShortcutAction::Undo);
     setShortcut(Qt::ControlModifier | Qt::ShiftModifier, Qt::Key_Z, ShortcutAction::Redo);
@@ -598,6 +600,9 @@ void QmlMapItem::shortcutPressedEvent(ShortcutAction action, QKeyEvent *event)
             eyedrop(mapPos);
             break;
         }
+        case ShortcutAction::Rotate:
+            mapView->rotateBrush();
+            break;
     }
 }
 
