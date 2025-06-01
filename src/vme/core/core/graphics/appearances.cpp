@@ -57,20 +57,20 @@ using namespace std;
 template <class T>
 INLINE size_t choose(T a, T b, size_t src1, size_t src2)
 {
-#if defined(__clang__) && defined(__x86_64)
-    size_t res = src1;
-    asm("cmpq %1, %2; cmovaeq %4, %0"
-        : "=q"(res)
-        : "q"(a),
-          "q"(b),
-          "q"(src1),
-          "q"(src2),
-          "0"(res)
-        : "cc");
-    return res;
-#else
+// #if defined(__clang__) && defined(__x86_64)
+//     size_t res = src1;
+//     asm("cmpq %1, %2; cmovaeq %4, %0"
+//         : "=q"(res)
+//         : "q"(a),
+//           "q"(b),
+//           "q"(src1),
+//           "q"(src2),
+//           "0"(res)
+//         : "cc");
+//     return res;
+// #else
     return b >= a ? src2 : src1;
-#endif
+// #endif
 }
 
 template <class T>
