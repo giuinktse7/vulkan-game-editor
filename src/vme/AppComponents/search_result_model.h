@@ -10,6 +10,7 @@
 #include <optional>
 
 #include "core/brushes/brush.h"
+#include "core/brushes/brushes.h"
 
 class ItemTypeImageProvider;
 class SearchResultModel;
