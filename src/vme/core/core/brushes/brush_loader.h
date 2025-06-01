@@ -1,15 +1,14 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
 #include <array>
 #include <filesystem>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <optional>
 #include <stack>
 #include <string>
 
 #include "../const.h"
-#include "../tileset.h"
 #include "../util.h"
 
 class BorderBrush;

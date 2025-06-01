@@ -30,7 +30,8 @@ namespace JsonParseMethods
         }
         else
         {
-            throw json::type_error::create(302, "Invalid ground ID.", json);
+            // throw json::type_error::create(302, "Invalid ground ID.", json);
+            ABORT_PROGRAM(std::format("Invalid ground ID: expected string but got {}", json.type_name()));
         }
     }
 
@@ -48,12 +49,14 @@ namespace JsonParseMethods
                 case "fullGround"_sh:
                     return BorderStackBehavior::FullGround;
                 default:
-                    throw json::type_error::create(302, std::format("Invalid stack behavior: {}", stackBehavior), json);
+                    ABORT_PROGRAM(std::format("Invalid stack behavior: {}", stackBehavior));
+                    // throw json::type_error::create(302, std::format("Invalid stack behavior: {}", stackBehavior), json);
             }
         }
         else
         {
-            throw json::type_error::create(302, "Invalid stack behavior.", json);
+            ABORT_PROGRAM(std::format("Invalid stack behavior: expected string but got {}", json.type_name()));
+            // throw json::type_error::create(302, "Invalid stack behavior.", json);
         }
     }
 
@@ -89,12 +92,14 @@ namespace JsonParseMethods
                 case "dne"_sh:
                     return BorderType::NorthEastDiagonal;
                 default:
-                    throw json::type_error::create(302, "parseBorderType: Invalid BorderType. Expected std::string but got something else.", json);
+                    // throw json::type_error::create(302, "parseBorderType: Invalid BorderType. Expected std::string but got something else.", json);
+                    ABORT_PROGRAM(std::format("parseBorderType: Invalid BorderType '{}'. Expected one of ['n', 'e', 's', 'w', 'csw', 'cse', 'cnw', 'cne', 'dsw', 'dse', 'dnw', 'dne'].", rawBorderType));
             }
         }
         else
         {
-            throw json::type_error::create(302, "parseBorderType: Invalid BorderType. Expected std::string but got something else.", json);
+            // throw json::type_error::create(302, "parseBorderType: Invalid BorderType. Expected std::string but got something else.", json);
+            ABORT_PROGRAM(std::format("parseBorderType: Invalid BorderType. Expected std::string but got '{}'.", json.type_name()));
         }
     }
 } // namespace JsonParseMethods
@@ -141,7 +146,8 @@ int getInt(const json &j, std::string key)
     auto value = j[key];
     if (!value.is_number_integer())
     {
-        throw json::type_error::create(302, std::format("The value at key '{}' has to be an integer (it was a '{}').", key, std::string(value.type_name())), j);
+        // throw json::type_error::create(302, std::format("The value at key '{}' has to be an integer (it was a '{}').", key, std::string(value.type_name())), j);
+        ABORT_PROGRAM(std::format("The value at key '{}' has to be an integer (it was a '{}').", key, std::string(value.type_name())));
     }
 
     return value.get<int>();
@@ -224,7 +230,8 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
 
         if (!brush.contains("id"))
         {
-            throw json::other_error::create(403, std::format("A brush is missing an id (all brushes must have an id). Add an id to this brush: {}", brush.dump(4)), brush);
+            // throw json::other_error::create(403, std::format("A brush is missing an id (all brushes must have an id). Add an id to this brush: {}", brush.dump(4)), brush);
+            ABORT_PROGRAM(std::format("A brush is missing an id (all brushes must have an id). Add an id to this brush: {}", brush.dump(4)));
         }
 
         stackTrace.emplace(std::format("Brush '{}'", brush.at("id").get<std::string>()));
@@ -232,7 +239,8 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
         auto brushType = Brush::parseBrushType(getString(brush, "type"));
         if (!brushType)
         {
-            throw json::type_error::create(302, std::format("The type must be one of ['ground', 'doodad', 'wall', 'border']."), brush);
+            // throw json::type_error::create(302, std::format("The type must be one of ['ground', 'doodad', 'wall', 'border']."), brush);
+            ABORT_PROGRAM(std::format("The type must be one of ['ground', 'doodad', 'wall', 'border']. Got: '{}'", getString(brush, "type")));
         }
 
         switch (*brushType)
@@ -649,7 +657,8 @@ GroundBrush BrushLoader::parseGroundBrush(const json &brush)
                     align = BorderAlign::Outer;
                     break;
                 default:
-                    throw json::type_error::create(302, std::format("Invalid value for 'align': '{}'. Expected 'inner' or 'outer'.", rawAlign), border);
+                    // throw json::type_error::create(302, std::format("Invalid value for 'align': '{}'. Expected 'inner' or 'outer'.", rawAlign), border);
+                    ABORT_PROGRAM(std::format("Invalid value for 'align': '{}'. Expected 'inner' or 'outer'.", rawAlign));
             }
 
             std::string borderId = border.at("id").get<std::string>();
@@ -657,7 +666,8 @@ GroundBrush BrushLoader::parseGroundBrush(const json &brush)
             BorderBrush *brush = Brush::getBorderBrush(borderId);
             if (!brush)
             {
-                throw json::type_error::create(302, std::format("There is no border brush with id '{}'", borderId), border);
+                // throw json::type_error::create(302, std::format("There is no border brush with id '{}'", borderId), border);
+                ABORT_PROGRAM(std::format("There is no border brush with id '{}'", borderId));
             }
 
             // TODO make it possible for a ground to have more than one border. The borders should be chosen based on
@@ -828,7 +838,8 @@ std::unique_ptr<BorderRuleAction> BrushLoader::parseBorderRuleAction(const nlohm
             return std::make_unique<SetFullAction>(setSelf);
         }
         default:
-            throw json::other_error::create(403, std::format("Invalid border rule action type: '{}'. Allowed values: [\"replace\", \"setFull\"]", type), actionJson);
+            // throw json::other_error::create(403, std::format("Invalid border rule action type: '{}'. Allowed values: [\"replace\", \"setFull\"]", type), actionJson);
+            ABORT_PROGRAM(std::format("Invalid border rule action type: '{}'. Allowed values: [\"replace\", \"setFull\"]", type));
     }
 }
 
@@ -943,7 +954,8 @@ void BrushLoader::parseTilesets(const nlohmann::json &tilesetsJson)
 
         if (!tileset.contains("id"))
         {
-            throw json::other_error::create(403, std::format("A tileset is missing an id (all tilesets must have an id). Add an id to this tileset: {}", tileset.dump(4)), tileset);
+            // throw json::other_error::create(403, std::format("A tileset is missing an id (all tilesets must have an id). Add an id to this tileset: {}", tileset.dump(4)), tileset);
+            ABORT_PROGRAM(std::format("A tileset is missing an id (all tilesets must have an id). Add an id to this tileset: {}", tileset.dump(4)));
         }
 
         parseTileset(tileset);
@@ -1026,7 +1038,8 @@ void BrushLoader::parseCreatures(const nlohmann::json &creaturesJson)
 
         if (!creature.contains("id"))
         {
-            throw json::other_error::create(403, std::format("A creature is missing an id (all creatures must have an id). Add an id to this creature: {}", creature.dump(4)), creature);
+            // throw json::other_error::create(403, std::format("A creature is missing an id (all creatures must have an id). Add an id to this creature: {}", creature.dump(4)), creature);
+            ABORT_PROGRAM(std::format("A creature is missing an id (all creatures must have an id). Add an id to this creature: {}", creature.dump(4)));
         }
 
         parseCreature(creature);
@@ -1041,17 +1054,20 @@ void BrushLoader::parseCreature(const nlohmann::json &creatureJson)
 
     if (!creatureJson.contains("name") || !creatureJson.at("name").is_string())
     {
-        throw json::other_error::create(403, std::format("A creature is missing a name (all creatures must have a name). Add a name to this creature: {}", creatureJson.dump(4)), creatureJson);
+        // throw json::other_error::create(403, std::format("A creature is missing a name (all creatures must have a name). Add a name to this creature: {}", creatureJson.dump(4)), creatureJson);
+        ABORT_PROGRAM(std::format("A creature is missing a name (all creatures must have a name). Add a name to this creature: {}", creatureJson.dump(4)));
     }
 
     if (!creatureJson.contains("type") || !creatureJson.at("type").is_string())
     {
-        throw json::other_error::create(403, std::format("A creature is missing a type (either 'monster' or 'npc'). Add a type to this creature: {}", creatureJson.dump(4)), creatureJson);
+        // throw json::other_error::create(403, std::format("A creature is missing a type (either 'monster' or 'npc'). Add a type to this creature: {}", creatureJson.dump(4)), creatureJson);
+        ABORT_PROGRAM(std::format("A creature is missing a type (either 'monster' or 'npc'). Add a type to this creature: {}", creatureJson.dump(4)));
     }
 
     if (!creatureJson.contains("looktype") || !creatureJson.at("looktype").is_number_integer())
     {
-        throw json::other_error::create(403, std::format("A creature is missing a looktype. Add a looktype to this creature: {}", creatureJson.dump(4)), creatureJson);
+        // throw json::other_error::create(403, std::format("A creature is missing a looktype. Add a looktype to this creature: {}", creatureJson.dump(4)), creatureJson);
+        ABORT_PROGRAM(std::format("A creature is missing a looktype. Add a looktype to this creature: {}", creatureJson.dump(4)));
     }
 
     auto name = getString(creatureJson, "name");
@@ -1069,12 +1085,14 @@ void BrushLoader::parsePalettes(const nlohmann::json &paletteJson)
     {
         if (!palette.contains("id"))
         {
-            throw json::other_error::create(403, std::format("A palette is missing an id (all palettes must have an id). Add an id to this palette: {}", palette.dump(4)), palette);
+            // throw json::other_error::create(403, std::format("A palette is missing an id (all palettes must have an id). Add an id to this palette: {}", palette.dump(4)), palette);
+            ABORT_PROGRAM(std::format("A palette is missing an id (all palettes must have an id). Add an id to this palette: {}", palette.dump(4)));
         }
 
         if (!palette.contains("name"))
         {
-            throw json::other_error::create(403, std::format("A palette is missing a name (all palettes must have a name). Add a name to this palette: {}", palette.dump(4)), palette);
+            // throw json::other_error::create(403, std::format("A palette is missing a name (all palettes must have a name). Add a name to this palette: {}", palette.dump(4)), palette);
+            ABORT_PROGRAM(std::format("A palette is missing a name (all palettes must have a name). Add a name to this palette: {}", palette.dump(4)));
         }
 
         auto id = palette.at("id").get<std::string>();
