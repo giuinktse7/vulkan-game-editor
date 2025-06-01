@@ -70,12 +70,12 @@ class LuaState
     static void registerFunction(lua_State *L, std::string globalName, std::string functionName, lua_CFunction function);
     static void registerField(lua_State *L, std::string globalName, std::string fieldName, lua_CFunction function);
 
-    template <typename T>
-    static typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type
-    getNumber(int32_t arg);
+    // template <typename T>
+    // static typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type
+    // getNumber(int32_t arg);
 
-    template <typename T>
-    static T getNumber(int32_t arg, T defaultValue);
+    // template <typename T>
+    // static T getNumber(int32_t arg, T defaultValue);
 
     template <class T>
     static void pushUserData(lua_State *L, T *value);
@@ -185,20 +185,20 @@ T *LuaState::checkUserData(lua_State *L, int32_t arg, const char *typeName)
     return userdata ? *userdata : nullptr;
 }
 
-template <typename T>
-typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type
-LuaState::getNumber(int32_t arg)
-{
-    return static_cast<T>(lua_tonumber(L, arg));
-}
+// template <typename T>
+// typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type
+// LuaState::getNumber(int32_t arg)
+// {
+//     return static_cast<T>(lua_tonumber(L, arg));
+// }
 
-template <typename T>
-T LuaState::getNumber(int32_t arg, T defaultValue)
-{
-    const auto parameters = lua_gettop(L);
-    if (parameters == 0 || arg > parameters)
-    {
-        return defaultValue;
-    }
-    return getNumber<T>(L, arg);
-}
+// template <typename T>
+// T LuaState::getNumber(int32_t arg, T defaultValue)
+// {
+//     const auto parameters = lua_gettop(L);
+//     if (parameters == 0 || arg > parameters)
+//     {
+//         return defaultValue;
+//     }
+//     return getNumber<T>(L, arg);
+// }
