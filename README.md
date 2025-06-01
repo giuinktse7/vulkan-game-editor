@@ -38,11 +38,19 @@ TODO
 ```
 <your_installation_path>\Qt6.5\6.5.0\msvc2019_64\lib\cmake
 ```
+
 3. Add the QT .dlls to the `PATH` environment variable:
+
 ```
 <your_installation_path>\Qt6.5\6.5.0\msvc2019_64\bin
 ```
 
+4. Set Vulkan SDK enviroment variables:
+
+```
+VK_SDK_PATH=<install_path>\VulkanSDK\<vulkan_version>
+VULKAN_SDK=<install_path>\VulkanSDK\<vulkan_version>
+```
 
 ### Building with Visual Studio 2022 (Recommended)
 
@@ -100,7 +108,7 @@ Build configurations can be changed under `Project -> CMake Settings for VulkanG
 
     ```sh
     # Use the Visual Studio 17 2022 makefile generator, targeting the x64 platform with the ClangCL compiler.
-    cmake ../ -G "Visual Studio 17 2022" -A x64 [-T ClangCL]
+    cmake ../ -G "Visual Studio 17 2022" -A x64 [-T ClangCL] [DCMAKE_EXPORT_COMPILE_COMMANDS=1]
     ```
 
     **Flags**:

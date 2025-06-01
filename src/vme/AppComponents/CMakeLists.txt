@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.16)
 # set(CMAKE_PREFIX_PATH "C:/Qt/6.3.1/msvc2019_64/lib/cmake")
 
 set(CMAKE_AUTOMOC ON)
-
+# Enable Vulkan debugging layer
+set(QSG_RHI_DEBUG_LAYER 1)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Qml Quick)
 

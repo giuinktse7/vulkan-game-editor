@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 
 find_package(Vulkan REQUIRED)
-find_package(protobuf CONFIG REQUIRED)
+find_package(Protobuf CONFIG REQUIRED)
 find_package(LibLZMA REQUIRED)
 find_package(Stb REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -106,6 +106,8 @@ set(HEADER_FILES
     core/lazy_object.h
     core/version.h
     core/octree.h
+    core/brushes/brushes.h
+    core/brushes/brushes.cpp
     core/brushes/brush.h
     core/brushes/raw_brush.h
     core/brushes/ground_brush.h
@@ -220,6 +222,7 @@ target_link_libraries(core PRIVATE LibLZMA::LibLZMA)
 target_link_libraries(core PRIVATE pugixml)
 target_link_libraries(core PRIVATE glm::glm)
 target_link_libraries(core PUBLIC spdlog::spdlog)
+target_link_libraries(core PRIVATE nlohmann_json::nlohmann_json)
 
 target_include_directories(core PUBLIC ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 

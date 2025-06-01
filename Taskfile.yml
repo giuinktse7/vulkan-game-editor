@@ -1,0 +1,20 @@
+version: '3'
+
+tasks:
+  generate:
+    desc: Generate CMake build files. Must run in a VS terminal like 'x64 Native Tools Command Prompt for VS 2022'.
+    cmds:
+      - cmake -B build/ninja -S . -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+  build:
+    desc: Build the project using CMake. Must run in a VS terminal like 'x64 Native Tools Command Prompt for VS 2022'.
+    cmds:
+      - cmake --build build/ninja
+  run:
+    desc: Run the application
+    cmds:
+      - ./build/ninja/src/vme/app/app.exe
+
+  clean:
+    desc: Clean build directory
+    cmds:
+      - rm -rf build

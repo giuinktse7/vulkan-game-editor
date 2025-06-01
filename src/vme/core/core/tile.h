@@ -8,6 +8,7 @@
 #include "creature.h"
 #include "item.h"
 #include "tile_location.h"
+#include "tile_cover.h"
 
 class MapView;
 class TileLocation;
@@ -15,7 +16,6 @@ class BorderBrush;
 class MountainBrush;
 class WallBrush;
 class GroundBrush;
-enum TileCover;
 struct TileBorderBlock;
 
 struct BorderCover

@@ -10,6 +10,7 @@
 #include <optional>
 
 #include "core/brushes/brush.h"
+#include "core/brushes/brushes.h"
 
 class ItemTypeImageProvider;
 class SearchResultModel;
@@ -44,7 +45,7 @@ class FilteredSearchModel : public QSortFilterProxyModel
     void setSourceModel(QAbstractItemModel *model) override;
 
   protected:
-    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
+    [[nodiscard]] bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
   private:
     std::function<bool(Brush *)> acceptAll = [](Brush *) { return true; };
@@ -53,7 +54,7 @@ class FilteredSearchModel : public QSortFilterProxyModel
     SearchResultModel *_searchModel = nullptr;
     ItemTypeImageProvider *thingImageProvider = nullptr;
 
-    std::optional<BrushType> parseBrushType(QString raw);
+    std::optional<BrushType> parseBrushType(const QString &rawBrushType);
 };
 
 class SearchResultModel : public QAbstractListModel

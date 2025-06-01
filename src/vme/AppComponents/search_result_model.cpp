@@ -4,6 +4,7 @@
 #include <QQmlEngine>
 #include <QQmlProperty>
 #include <QQuickItem>
+#include <utility>
 
 #include "gui_thing_image.h"
 #include "ui_resources.h"
@@ -96,7 +97,7 @@ void FilteredSearchModel::setSourceModel(QAbstractItemModel *model)
 
 void FilteredSearchModel::setFilter(QString s)
 {
-    std::optional<BrushType> brushType = Brush::parseBrushType(s.toStdString());
+    std::optional<BrushType> brushType = Brushes::parseBrushType(s.toStdString());
     if (!brushType)
     {
         VME_LOG_ERROR("FilteredSearchModel::setFilter Unknown filter type: " << s.toStdString());
@@ -109,7 +110,7 @@ void FilteredSearchModel::setFilter(QString s)
 
 void FilteredSearchModel::setPredicate(std::function<bool(Brush *)> predicate)
 {
-    this->predicate = predicate;
+    this->predicate = std::move(predicate);
     invalidateFilter();
 }
 
@@ -170,7 +171,7 @@ int FilteredSearchModel::creatureCount() const
     return results ? results->creatureCount : 0;
 }
 
-std::optional<BrushType> FilteredSearchModel::parseBrushType(QString rawBrushType)
+std::optional<BrushType> FilteredSearchModel::parseBrushType(const QString &rawBrushType)
 {
-    return Brush::parseBrushType(rawBrushType.toStdString());
+    return Brushes::parseBrushType(rawBrushType.toStdString());
 }

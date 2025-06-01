@@ -18,7 +18,7 @@ void LuaGroundBrush::luaRegister(lua_State *L)
 
 int LuaGroundBrush::luaCreate(lua_State *L)
 {
-    auto brush = new LuaGroundBrush();
+    auto *brush = new LuaGroundBrush();
 
     LuaState::pushUserData(L, brush);
     LuaState::setMetaTable(L, -1, LuaName);
@@ -33,7 +33,7 @@ LuaGroundBrush *LuaGroundBrush::checkSelf(lua_State *L)
 
 int LuaGroundBrush::luaGetName(lua_State *L)
 {
-    auto self = checkSelf(L);
+    auto *self = checkSelf(L);
 
     lua_pushstring(L, self->_name.c_str());
 
@@ -42,8 +42,8 @@ int LuaGroundBrush::luaGetName(lua_State *L)
 
 int LuaGroundBrush::luaSetName(lua_State *L)
 {
-    auto self = checkSelf(L);
-    auto name = luaL_checkstring(L, 2);
+    auto *self = checkSelf(L);
+    const auto *name = luaL_checkstring(L, 2);
 
     self->setName(name);
 
@@ -52,7 +52,7 @@ int LuaGroundBrush::luaSetName(lua_State *L)
 
 int LuaGroundBrush::luaSetItemWeights(lua_State *L)
 {
-    auto self = checkSelf(L);
+    auto *self = checkSelf(L);
     luaL_argcheck(L, lua_istable(L, 2), 1, "Expected a table.");
 
     lua_pushnil(L);

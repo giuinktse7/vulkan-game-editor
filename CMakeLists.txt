@@ -10,8 +10,11 @@ if(ipo_supported)
     set_property(GLOBAL PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
-# set(CMAKE_PREFIX_PATH "C:/Qt/6.3.1/msvc2019_64/lib/cmake")
- 
+set(CMAKE_PREFIX_PATH "C:/Qt/6.9.0/msvc2022_64/lib/cmake")
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_definitions(${Qt6Core_DEFINITIONS})
 
 
 # If no build type was specified, set it to Release.
@@ -28,8 +31,9 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
       CACHE STRING "")
 endif()
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Enable Vulkan debugging layer
+set(QSG_RHI_DEBUG_LAYER 1)
 
 project(vme VERSION 1.0.0 LANGUAGES C CXX)
 

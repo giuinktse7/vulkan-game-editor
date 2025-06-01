@@ -1,8 +1,5 @@
 #include "border_brush_variation.h"
 
-#include "../map.h"
-#include "../map_view.h"
-#include "../position.h"
 #include "border_brush.h"
 #include "brush.h"
 
@@ -601,7 +598,7 @@ TileCover DetailedBorderBrush::quadrantChanged(BorderNeighborMap &neighbors, Til
         TileQuadrant quadrants = prevQuadrant | currQuadrant;
         if (quadrants == (TopLeft | TopRight))
         {
-            bool valid = !(currDir == Dir::South && !(neighbors.at(1, 0) & (FullSouth | SouthWestCorner)));
+            bool valid = currDir != Dir::South || (neighbors.at(1, 0) & (FullSouth | SouthWestCorner));
 
             if (currDir != Dir::South)
             {
@@ -721,7 +718,7 @@ void DetailedBorderBrush::expandNorth(BorderNeighborMap &neighbors, TileBorderIn
     }
     else if (prevTile.quadrant == BottomLeft)
     {
-        if (prevDir == Dir::East & !(nextSouthCover & FullWest))
+        if ((prevDir == Dir::East) & !(nextSouthCover & FullWest))
         {
             nextSouthCover |= SouthEast;
             tileInfo.quadrant = BottomRight;

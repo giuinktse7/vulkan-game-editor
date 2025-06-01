@@ -1,9 +1,10 @@
 #include "doodad_brush.h"
 
-#include <cctype>
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "../debug.h"
@@ -11,6 +12,7 @@
 #include "../map_view.h"
 #include "../random.h"
 #include "../tile.h"
+#include "brushes.h"
 
 using DoodadAlternative = DoodadBrush::DoodadAlternative;
 using DoodadSingle = DoodadBrush::DoodadSingle;
@@ -23,21 +25,21 @@ namespace
 } // namespace
 
 DoodadBrush::DoodadBrush(std::string id, const std::string &name, DoodadAlternative &&alternative, uint32_t iconServerId)
-    : Brush(name), _id(id), _iconServerId(iconServerId), thickness(DefaultThickness)
+    : Brush(name), _id(std::move(id)), _iconServerId(iconServerId), thickness(DefaultThickness)
 {
     alternatives.emplace_back(std::move(alternative));
     initialize();
 }
 
 DoodadBrush::DoodadBrush(std::string id, const std::string &name, std::vector<DoodadAlternative> &&alternatives, uint32_t iconServerId)
-    : Brush(name), alternatives(std::move(alternatives)), _id(id), _iconServerId(iconServerId), thickness(DefaultThickness)
+    : Brush(name), alternatives(std::move(alternatives)), _id(std::move(id)), _iconServerId(iconServerId), thickness(DefaultThickness)
 {
     initialize();
 }
 
 void DoodadBrush::erase(MapView &mapView, const Position &position)
 {
-    for (const auto &relativePos : Brush::brushShape().getRelativePositions())
+    for (const auto &relativePos : Brushes::brushShape().getRelativePositions())
     {
         auto finalPos = position + relativePos;
 
@@ -61,7 +63,7 @@ void DoodadBrush::erase(MapView &mapView, const Position &position)
         auto found = composites.find(serverId);
         if (found != composites.end())
         {
-            auto composite = found->second;
+            auto *composite = found->second;
             Position zeroPos = finalPos - composite->relativePosition(serverId);
             for (const auto &tile : composite->tiles)
             {
@@ -165,7 +167,7 @@ uint32_t DoodadBrush::iconServerId() const
 
 bool DoodadBrush::erasesItem(uint32_t serverId) const
 {
-    return _serverIds.find(serverId) != _serverIds.end();
+    return _serverIds.contains(serverId);
 }
 
 BrushType DoodadBrush::type() const
@@ -220,9 +222,9 @@ DoodadAlternative::DoodadAlternative(std::vector<std::unique_ptr<DoodadEntry>> &
 {
 
     // Sort by weights descending to optimize iteration in sample() for the most common cases.
-    std::sort(
-        this->choices.begin(),
-        this->choices.end(), [](const std::unique_ptr<DoodadEntry> &a, const std::unique_ptr<DoodadEntry> &b) {
+    std::ranges::sort(
+        this->choices,
+        [](const std::unique_ptr<DoodadEntry> &a, const std::unique_ptr<DoodadEntry> &b) {
             return a->weight > b->weight;
         });
 
@@ -268,13 +270,13 @@ std::vector<ItemPreviewInfo> DoodadAlternative::sample(const std::string &brushN
     {
         case EntryType::Single:
         {
-            auto single = static_cast<DoodadSingle *>(found);
+            auto *single = static_cast<DoodadSingle *>(found);
             result.emplace_back(single->serverId, PositionConstants::Zero);
             break;
         }
         case EntryType::Composite:
         {
-            auto composite = static_cast<DoodadComposite *>(found);
+            auto *composite = static_cast<DoodadComposite *>(found);
             for (const CompositeTile &tile : composite->tiles)
             {
                 const Position relativePos(
@@ -305,7 +307,7 @@ int DoodadBrush::variationCount() const
 void DoodadBrush::updatePreview(int variation)
 {
     _buffer.clear();
-    auto relativePositions = Brush::brushShape().getRelativePositions();
+    auto relativePositions = Brushes::brushShape().getRelativePositions();
     std::unordered_set<Position> takenPositions;
 
     int alternateIndex = util::modulo(variation, alternatives.size());
@@ -369,7 +371,7 @@ std::vector<ThingDrawInfo> DoodadBrush::getPreviewTextureInfo(int variation) con
     return previewInfo;
 }
 
-const std::string DoodadBrush::getDisplayId() const
+std::string DoodadBrush::getDisplayId() const
 {
     return _name;
 }

@@ -68,22 +68,22 @@ class MapTabListModel : public QAbstractListModel
     TabData *getById(int id);
 
     void clear();
-    bool empty();
+    [[nodiscard]] bool empty() const;
 
-    void addTab(std::string tabName);
+    void addTab(const std::string &tabName);
     void removeTab(int index);
     void removeTabById(int id);
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    int size();
+    [[nodiscard]] int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    [[nodiscard]] int size() const;
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    [[nodiscard]] QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
   signals:
     void sizeChanged(int size);
 
   protected:
-    QHash<int, QByteArray> roleNames() const;
+    [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
   private:
     std::vector<TabData> _data;
@@ -178,11 +178,11 @@ class QmlMapItem : public QQuickItem
     Q_INVOKABLE void setHorizontalScrollPosition(float value);
     Q_INVOKABLE void setVerticalScrollPosition(float value);
 
-    float horizontalScrollSize();
-    float verticalScrollSize();
+    [[nodiscard]] float horizontalScrollSize() const;
+    [[nodiscard]] float verticalScrollSize() const;
 
-    float horizontalScrollPosition();
-    float verticalScrollPosition();
+    [[nodiscard]] float horizontalScrollPosition() const;
+    [[nodiscard]] float verticalScrollPosition() const;
 
     void setActive(bool active);
 

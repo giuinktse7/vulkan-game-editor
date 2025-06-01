@@ -1,0 +1,138 @@
+{
+    "brushes": [
+        {
+            "id": "normal_grass",
+            "name": "Grass",
+            "type": "ground",
+            "lookId": 4526,
+            "zOrder": 1000,
+            "items": [
+                { "id": 4526, "chance": 300 },
+                { "id": 4527, "chance": 10 },
+                { "id": 4528, "chance": 25 },
+                { "id": 4529, "chance": 25 },
+                { "id": 4530, "chance": 25 },
+                { "id": 4531, "chance": 15 },
+                { "id": 4532, "chance": 25 },
+                { "id": 4533, "chance": 25 },
+                { "id": 4534, "chance": 15 },
+                { "id": 4535, "chance": 25 },
+                { "id": 4536, "chance": 25 },
+                { "id": 4537, "chance": 25 },
+                { "id": 4538, "chance": 20 },
+                { "id": 4539, "chance": 20 },
+                { "id": 4540, "chance": 20 },
+                { "id": 4541, "chance": 20 },
+                { "id": 294, "chance": 0 },
+                { "id": 468, "chance": 0 },
+                { "id": 469, "chance": 0 },
+                { "id": 470, "chance": 0 },
+                { "id": 24623, "chance": 0 }
+            ],
+            "borders": [
+                {
+                    "align": "outer",
+                    "id": "normal_grass_border"
+                }
+            ]
+        },
+        {
+            "id": "dried_grass",
+            "name": "Dried Grass",
+            "type": "ground",
+            "lookId": 8326,
+            "zOrder": 990,
+            "items": [{ "ids": [8326, 8327, 8328, 8329, 8330, 8331, 8332, 8333, 8334, 8347, 8348], "chance": 1 }],
+            "borders": [
+                {
+                    "align": "outer",
+                    "id": "dried_grass_border"
+                }
+            ]
+        },
+        {
+            "id": "rock_soil",
+            "name": "Rock Soil",
+            "type": "ground",
+            "lookId": 4405,
+            "zOrder": 900,
+            "items": [
+                {
+                    "ids": [
+                        4405, 4406, 4407, 4408, 4409, 4410, 4411, 4412, 4413, 4414, 4415, 4416, 4417, 4418, 4419, 4420,
+                        4421
+                    ],
+                    "chance": 1
+                }
+            ]
+        },
+        {
+            "id": "sea",
+            "name": "Sea",
+            "type": "ground",
+            "lookId": 4608,
+            "zOrder": 7600,
+            "items": [
+                { "id": 4608, "chance": 3 },
+                {
+                    "ids": [4609, 4610, 4611, 4612, 4613, 4614, 4615, 4616, 4617, 4618, 4619, 4664, 4665, 4666],
+                    "chance": 1
+                },
+                { "ids": [4620, 4621, 4622, 4623, 4624, 4625], "chance": 0 },
+                { "ids": [5757, 5756, 5755, 5759, 5760, 5758, 5761], "chance": 0 }
+            ],
+            "borders": [
+                // {
+                //     "align": "outer",
+                //     "to": "sand",
+                //     "id": "sand_to_water"
+                // },
+                {
+                    "align": "outer",
+                    "id": "sea_border"
+                }
+            ]
+        },
+        {
+            "id": "gray_mountain_ground",
+            "name": "Gray Mountain Ground",
+            "type": "ground",
+            "lookId": 919,
+            "zOrder": 10000,
+            "items": [{ "ids": [919], "chance": 1 }],
+            "borders": [
+                {
+                    "align": "outer",
+                    "id": "gray_mountain_wall_thin_border"
+                }
+            ]
+        },
+        {
+            "id": "earth_mountain_ground",
+            "name": "Earth Mountain Ground",
+            "type": "ground",
+            "lookId": 10164,
+            "zOrder": 10000,
+            "items": [{ "ids": [10164], "chance": 1 }],
+            "borders": []
+        },
+        {
+            "id": "sand",
+            "name": "Sand",
+            "type": "ground",
+            "lookId": 231,
+            "zOrder": 900,
+            "items": [
+                { "ids": [231], "chance": 1 },
+                { "ids": [4632, 4635, 4634, 4633, 4643, 4642, 4641, 4640, 4639, 4638, 4637, 4636], "chance": 0 }
+            ],
+            "borders": [
+                {
+                    "align": "inner",
+                    "id": "sand_to_water",
+                    "to": "sea"
+                }
+            ]
+        }
+    ]
+}

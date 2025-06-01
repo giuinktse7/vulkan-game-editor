@@ -1,0 +1,15 @@
+{
+    "creatures": [
+        {
+            //    <creature name="Adventurer" type="monster" looktype="129" lookhead="92" lookbody="15" looklegs="92" lookfeet="82"/>
+            "id": "wild_warrior",
+            "name": "Wild Warrior",
+            "type": "monster",
+            "looktype": 131,
+            "head": 57,
+            "body": 57,
+            "legs": 57,
+            "feet": 57
+        }
+    ]
+}

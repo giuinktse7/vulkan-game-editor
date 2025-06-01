@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QRect>
+#include <qnamespace.h>
 
 #include "core/creature.h"
 #include "core/graphics/texture_atlas.h"
@@ -109,7 +110,7 @@ QImage GUIThingImage::getCreatureTypeImage(const CreatureType &creatureType, Dir
         getLayer(&creatureType, posture, 2, direction);
     }
 
-    return image.mirrored();
+    return image.flipped(Qt::Vertical);
 }
 
 QImage GUIThingImage::getItemTypeImage(const ItemType &itemType, uint8_t subtype)
@@ -120,7 +121,7 @@ QImage GUIThingImage::getItemTypeImage(const ItemType &itemType, uint8_t subtype
     QRect rect(info.window.x0, info.window.y0, info.window.x1, info.window.y1);
     QImage *textureImage = GUIImageCache::getOrCreateQImageForTexture(info.getTexture());
 
-    QImage image = textureImage->copy(rect).mirrored();
+    QImage image = textureImage->copy(rect).flipped(Qt::Vertical);
 
     if (rect.width() > 32 || rect.height() > 32)
     {
@@ -166,7 +167,7 @@ QPixmap GUIThingImage::thingPixmap(const TextureWindow &textureWindow, const Tex
 
     QImage sprite = QImage(pixelData, 12 * 32, 12 * 32, 384 * 4, QImage::Format::Format_ARGB32)
                         .copy(textureRegion)
-                        .mirrored();
+                        .flipped(Qt::Vertical);
 
     auto width = spriteWidth;
     auto height = spriteHeight;

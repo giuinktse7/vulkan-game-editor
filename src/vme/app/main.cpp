@@ -1,3 +1,4 @@
+// NOLINTBEGIN(readability-magic-numbers)
 #include "main.h"
 
 #include <QDebug>
@@ -9,28 +10,28 @@
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#include <QString>
 #include <QVariant>
-
-#include <iostream>
 
 #include "core/brushes/border_brush.h"
 #include "core/brushes/brush.h"
 #include "core/brushes/brush_loader.h"
+#include "core/brushes/brushes.h"
 #include "core/brushes/creature_brush.h"
 #include "core/brushes/doodad_brush.h"
 #include "core/brushes/ground_brush.h"
 #include "core/brushes/mountain_brush.h"
-#include "core/brushes/wall_brush.h"
 #include "core/config.h"
 #include "core/item_palette.h"
 #include "core/items.h"
 #include "core/random.h"
 #include "core/time_util.h"
-#include "debug_util.h"
 #include "gui_thing_image.h"
 
 #include <QtQml/qqmlextensionplugin.h>
 Q_IMPORT_QML_PLUGIN(AppComponentsPlugin)
+
+using namespace Qt::Literals::StringLiterals;
 
 class FileWatcher : QObject
 {
@@ -86,7 +87,7 @@ int MainApp::start()
     qmlRegisterSingletonInstance("VME.dataModel", 1, 0, "AppDataModel", dataModel.get());
     qmlRegisterSingletonInstance("VME.minimap", 1, 0, "Minimap", minimap.get());
 
-    auto model = dataModel.get();
+    auto *model = dataModel.get();
     auto minimap = this->minimap;
 
     // Hook up minimap to events of current map view
@@ -112,7 +113,7 @@ int MainApp::start()
     rootView->setResizeMode(QQuickView::SizeRootObjectToView);
     // engine->addImportPath(QStringLiteral(":/"));
 
-    const QUrl url(u"qrc:/qt/qml/app/qml/main.qml"_qs);
+    const QUrl url(u"qrc:/qt/qml/app/qml/main.qml"_s);
     rootView->setSource(url);
     rootView->show();
 
@@ -143,7 +144,7 @@ int main(int argc, char **argv)
 
     Random::global().setSeed(123);
     TimePoint::setApplicationStartTimePoint();
-    std::string version = "13.20";
+    std::string version = "15.01";
 
     auto configResult = Config::create(version);
     if (configResult.isErr())
@@ -203,11 +204,41 @@ void MainApp::createDefaultPalettes()
         to = 5000;
 #endif
 
-        for (int i = from; i < to; ++i)
+        int startInvalid = -1;
+        int endInvalid = -1;
+
+        for (int serverId = from; serverId < to; ++serverId)
         {
-            ItemType *itemType = Items::items.getItemTypeByServerId(i);
+            ItemType *itemType = Items::items.getItemTypeByServerId(serverId);
             if (!itemType || !itemType->isValid())
                 continue;
+
+            bool isValidItemType = Items::items.validItemType(serverId);
+            if (!isValidItemType)
+            {
+                if (startInvalid == -1)
+                {
+                    startInvalid = serverId;
+                }
+                else
+                {
+                    endInvalid = serverId;
+                }
+
+                continue;
+            }
+
+            if (startInvalid != -1 && endInvalid != -1)
+            {
+                VME_LOG_ERROR(std::format("Invalid item types: [{}, {}].", startInvalid, endInvalid));
+                startInvalid = -1;
+                endInvalid = -1;
+            }
+            else if (startInvalid != -1)
+            {
+                VME_LOG_ERROR(std::format("Invalid item type: {}.", startInvalid));
+                startInvalid = -1;
+            }
 
             if (itemType->hasFlag(AppearanceFlag::Corpse) || itemType->hasFlag(AppearanceFlag::PlayerCorpse))
             {
@@ -215,11 +246,11 @@ void MainApp::createDefaultPalettes()
                 continue;
             }
 
-            allTileset.addRawBrush(i);
+            allTileset.addRawBrush(serverId);
 
             if (itemType->hasFlag(AppearanceFlag::Bottom))
             {
-                bottomTileset.addRawBrush(i);
+                bottomTileset.addRawBrush(serverId);
             }
             // else if (itemType->hasFlag(AppearanceFlag::Ground))
             // {
@@ -227,56 +258,68 @@ void MainApp::createDefaultPalettes()
             // }
             else if (itemType->hasFlag(AppearanceFlag::Border))
             {
-                borderTileset.addRawBrush(i);
+                borderTileset.addRawBrush(serverId);
             }
             else if (itemType->hasFlag(AppearanceFlag::Top))
             {
-                archwayTileset.addRawBrush(i);
+                archwayTileset.addRawBrush(serverId);
             }
             else if (itemType->isDoor())
             {
-                doorTileset.addRawBrush(i);
+                doorTileset.addRawBrush(serverId);
             }
             else if (itemType->hasFlag(AppearanceFlag::Unsight))
             {
-                unsightTileset.addRawBrush(i);
+                unsightTileset.addRawBrush(serverId);
             }
             else if (itemType->isContainer())
             {
-                containerTileset.addRawBrush(i);
+                containerTileset.addRawBrush(serverId);
             }
             else if (itemType->hasFlag(AppearanceFlag::Wrap) || itemType->hasFlag(AppearanceFlag::Unwrap) || itemType->isBed())
             {
-                interiorTileset.addRawBrush(i);
+                interiorTileset.addRawBrush(serverId);
             }
             else if (itemType->hasFlag(AppearanceFlag::Take))
             {
                 if (itemType->hasFlag(AppearanceFlag::Clothes))
                 {
-                    equipmentTileset.addRawBrush(i);
+                    equipmentTileset.addRawBrush(serverId);
                 }
                 else
                 {
-                    pickuableTileset.addRawBrush(i);
+                    pickuableTileset.addRawBrush(serverId);
                 }
             }
             else if (itemType->hasFlag(AppearanceFlag::Light))
             {
-                lightSourceTileset.addRawBrush(i);
+                lightSourceTileset.addRawBrush(serverId);
             }
             else if (itemType->hasFlag(AppearanceFlag::Hang))
             {
-                hangableTileset.addRawBrush(i);
+                hangableTileset.addRawBrush(serverId);
             }
             else
             {
                 if (!itemType->hasFlag(AppearanceFlag::Ground))
                 {
-                    otherTileset.addRawBrush(i);
+                    otherTileset.addRawBrush(serverId);
                 }
             }
 
             // GuiImageCache::cachePixmapForServerId(i);
+        }
+
+        if (startInvalid != -1 && endInvalid != -1)
+        {
+            VME_LOG_ERROR(std::format("Invalid item types: [{}, {}].", startInvalid, endInvalid));
+            startInvalid = -1;
+            endInvalid = -1;
+        }
+        else if (startInvalid != -1)
+        {
+            VME_LOG_ERROR(std::format("Invalid item type: {}.", startInvalid));
+            startInvalid = -1;
         }
     }
 
@@ -287,14 +330,14 @@ void MainApp::createDefaultPalettes()
         // Grounds
         {
             auto &groundTileset = terrainPalette.addTileset(Tileset("grounds", "Grounds"));
-            auto &brushes = Brush::getGroundBrushes();
-            for (auto &brush : brushes)
+            auto &brushes = Brushes::getGroundBrushes();
+            for (const auto &brush : brushes)
             {
                 groundTileset.addBrush(brush.second.get());
             }
 
-            auto &mountainBrushes = Brush::getMountainBrushes();
-            for (auto &brush : mountainBrushes)
+            auto &mountainBrushes = Brushes::getMountainBrushes();
+            for (const auto &brush : mountainBrushes)
             {
                 groundTileset.addBrush(brush.second.get());
             }
@@ -303,8 +346,8 @@ void MainApp::createDefaultPalettes()
         // Borders
         {
             auto &borderTileset = terrainPalette.addTileset(Tileset("borders", "Borders"));
-            auto &brushes = Brush::getBorderBrushes();
-            for (auto &brush : brushes)
+            auto &brushes = Brushes::getBorderBrushes();
+            for (const auto &brush : brushes)
             {
                 borderTileset.addBrush(brush.second.get());
             }
@@ -313,8 +356,8 @@ void MainApp::createDefaultPalettes()
         // Walls
         {
             auto &wallTileset = terrainPalette.addTileset(Tileset("walls", "Walls"));
-            auto &brushes = Brush::getWallBrushes();
-            for (auto &brush : brushes)
+            auto &brushes = Brushes::getWallBrushes();
+            for (const auto &brush : brushes)
             {
                 wallTileset.addBrush(brush.second.get());
             }
@@ -322,11 +365,11 @@ void MainApp::createDefaultPalettes()
 
         // Doodads
         {
-            auto &brushes = Brush::getDoodadBrushes();
+            auto &brushes = Brushes::getDoodadBrushes();
             if (brushes.size() > 0)
             {
                 auto &doodadTileset = terrainPalette.addTileset(Tileset("doodads", "Doodads"));
-                for (auto &brush : brushes)
+                for (const auto &brush : brushes)
                 {
                     doodadTileset.addBrush(brush.second.get());
                 }
@@ -341,23 +384,23 @@ void MainApp::createDefaultPalettes()
         auto &otherTileset = creaturePalette.addTileset(Tileset("other", "Other"));
 
         const auto addTestCreatureBrush = [&otherTileset](std::string id, std::string name, int looktype) {
-            otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(id, name, looktype))));
+            otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(id, name, looktype))));
         };
 
-        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+        otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
             "colorful_nomad",
             "Colorful Nomad",
             // Outfit(150, 116, 68, 68, 68, Outfit::Addon::First | Outfit::Addon::Second, 370)))));
             Outfit(150, 116, 68, 68, 68, Outfit::Addon::None, 370)))));
         // Outfit(150, 116, 68, 68, 68, Outfit::Addon::None)))));
 
-        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+        otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
             "colorful_nomad_2",
             "Colorful Nomad 2",
             // Outfit(150, 116, 68, 68, 68, Outfit::Addon::First | Outfit::Addon::Second, 370)))));
             Outfit(150, 116, 68, 68, 68, Outfit::Addon::None)))));
 
-        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+        otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
             "nomad",
             "Nomad",
             Outfit(146, 114, 20, 22, 2)))));
@@ -371,6 +414,8 @@ void MainApp::createDefaultPalettes()
         addTestCreatureBrush("squirrel", "Squirrel", 274);
         addTestCreatureBrush("cobra", "Cobra", 81);
 
-        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType("mimic", "Mimic", Outfit::fromServerId(1740)))));
+        otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType("mimic", "Mimic", Outfit::fromServerId(1740)))));
     }
 }
+
+// NOLINTEND(readability-magic-numbers)

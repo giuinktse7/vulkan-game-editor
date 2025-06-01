@@ -13,12 +13,23 @@
 struct Position;
 class MapView;
 class Map;
+class BorderBrush;
 class GroundBrush;
 class RawBrush;
 class GeneralBorderBrush;
 struct TileBorderBlock;
 
 enum class BorderBrushVariationType;
+
+/**
+ * Number of borders that a ground brush can have.
+ * Visual representation of border positions:
+ * Borders: 4 sides, 4 corners, 4 diagonals = 12 total
+ * - Sides: N, E, S, W (║══)
+ * - Corners: Outer corner borders
+ * - Diagonals: Inner diagonal borders
+ */
+constexpr int BORDER_COUNT_FOR_GROUND_TILE = 12;
 
 enum class BorderStackBehavior
 {
@@ -124,12 +135,60 @@ struct BorderRule
     std::string action;
 };
 
+struct BorderNeighborMap
+{
+    BorderNeighborMap(const Position &position, BorderBrush *brush, const Map &map);
+    [[nodiscard]] TileCover at(int x, int y) const;
+    TileCover &at(int x, int y);
+    TileCover &center();
+    void set(int x, int y, TileCover tileCover);
+
+    bool isExpanded(int x, int y) const;
+    bool hasExpandedCover() const noexcept;
+    void addExpandedCover(int x, int y);
+
+    std::vector<ExpandedTileBlock> expandedCovers;
+
+  private:
+    int index(int x, int y) const;
+    TileCover getTileCoverAt(BorderBrush *brush, const Map &map, Position position) const;
+
+    std::array<TileCover, TILES_IN_5_BY_5_GRID> data;
+};
+
+struct BorderData
+{
+    BorderData(std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds);
+    BorderData(std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds, GroundBrush *centerBrush);
+
+    bool is(uint32_t serverId, BorderType borderType) const;
+    std::optional<uint32_t> getServerId(BorderType borderType) const noexcept;
+    BorderType getBorderType(uint32_t serverId) const;
+    std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> getBorderIds() const;
+    GroundBrush *centerBrush() const;
+
+    void setCenterGroundId(const std::string &id);
+
+    void setExtraBorderIds(vme_unordered_map<uint32_t, BorderType> &&extraIds);
+    const vme_unordered_map<uint32_t, BorderType> *getExtraBorderIds() const;
+
+  private:
+    std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds = {};
+
+    /**
+     * Extras border ids that also count as tile cover for this border
+     */
+    std::unique_ptr<vme_unordered_map<uint32_t, BorderType>> extraIds;
+
+    std::optional<Brush::LazyGround> _centerBrush;
+};
+
 class BorderBrush final : public Brush
 {
   public:
-    BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds);
-    BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, GroundBrush *centerBrush);
-    BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, RawBrush *centerBrush);
+    BorderBrush(std::string id, const std::string &name, std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds);
+    BorderBrush(std::string id, const std::string &name, std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds, GroundBrush *centerBrush);
+    BorderBrush(std::string id, const std::string &name, std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds, RawBrush *centerBrush);
 
     void fixBorders(MapView &mapView, const Position &position, BorderNeighborMap &neighbors);
 
@@ -138,7 +197,7 @@ class BorderBrush final : public Brush
 
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
-    const std::string getDisplayId() const override;
+    std::string getDisplayId() const override;
     std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const override;
 
     void apply(MapView &mapView, const Position &position, BorderType borderType);
@@ -185,8 +244,8 @@ class BorderBrush final : public Brush
 
     void quadrantChanged(MapView &mapView, const Position &position, BorderNeighborMap &neighbors, TileQuadrant prevQuadrant, TileQuadrant currQuadrant);
 
-    bool presentAt(const Map &map, const Position position) const;
-    uint32_t borderItemAt(const Map &map, const Position position) const;
+    bool presentAt(const Map &map, Position position) const;
+    uint32_t borderItemAt(const Map &map, Position position) const;
 
     void initialize();
 

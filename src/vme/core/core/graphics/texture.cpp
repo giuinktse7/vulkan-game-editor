@@ -6,15 +6,10 @@
 #pragma warning(pop)
 
 #include <algorithm>
-#include <cmath>
-#include <ostream>
-#include <stdexcept>
 #include <string>
 #include <unordered_map>
 
-#include "../logger.h"
 #include "../util.h"
-#include "buffer.h"
 
 #pragma warning(push)
 #pragma warning(disable : 26812)

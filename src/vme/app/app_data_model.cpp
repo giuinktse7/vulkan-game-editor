@@ -10,14 +10,7 @@
 #include "core/tileset.h"
 #include "tileset_model.h"
 
-#include "core/brushes/border_brush.h"
-#include "core/brushes/brush.h"
-#include "core/brushes/creature_brush.h"
-#include "core/brushes/doodad_brush.h"
-#include "core/brushes/ground_brush.h"
-#include "core/brushes/mountain_brush.h"
-#include "core/brushes/raw_brush.h"
-#include "core/brushes/wall_brush.h"
+#include "core/brushes/brushes.h"
 #include "core/load_map.h"
 #include "core/save_map.h"
 #include "core/settings.h"
@@ -258,7 +251,7 @@ void AppDataModel::onContextMenuAction(int id)
             Tile *tile = mapView->getTile(_contextMenuPosition.value());                                                    \
             if (tile)                                                                                                       \
             {                                                                                                               \
-                auto brush = Brush::__method(*tile);                                                                        \
+                auto brush = Brushes::__method(*tile);                                                                      \
                 if (brush)                                                                                                  \
                 {                                                                                                           \
                     mapView->commitTransaction(TransactionType::Selection, [this, mapView] { mapView->clearSelection(); }); \
@@ -627,7 +620,7 @@ void AppDataModel::resetBrushInsertionOffset()
 
 void AppDataModel::createTown()
 {
-    auto mapView = currentMapView();
+    auto *mapView = currentMapView();
     const Town &town = mapView->mapAsShared()->addTown();
     _townListModel->addTown(town);
 }
@@ -642,7 +635,7 @@ void AppDataModel::search(std::string searchTerm)
     VME_LOG_D("Search for term: " << searchTerm);
     if (searchTerm.size() > 2)
     {
-        auto results = Brush::search(searchTerm);
+        auto results = Brushes::search(searchTerm);
         searchResultModel.setSearchResults(std::move(results));
     }
     else

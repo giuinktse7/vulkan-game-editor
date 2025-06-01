@@ -5,6 +5,8 @@
 
 #include "const.h"
 
+constexpr int TILES_IN_5_BY_5_GRID = 25;
+
 enum TileCover
 {
     TILE_COVER_NONE = 0,

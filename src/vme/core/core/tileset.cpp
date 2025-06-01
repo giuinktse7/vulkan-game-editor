@@ -1,16 +1,17 @@
 #include "tileset.h"
 
+#include <utility>
+
 #include "brushes/brush.h"
-#include "brushes/raw_brush.h"
-#include "debug.h"
+#include "brushes/brushes.h"
 #include "item_palette.h"
 #include "items.h"
 
 Tileset::Tileset(std::string id)
-    : _id(id) {}
+    : _id(std::move(id)) {}
 
 Tileset::Tileset(std::string id, std::string name)
-    : _id(id), _name(name) {}
+    : _id(std::move(id)), _name(std::move(name)) {}
 
 const std::string &Tileset::name() const noexcept
 {
@@ -24,7 +25,7 @@ const std::string &Tileset::id() const noexcept
 
 void Tileset::setName(std::string name)
 {
-    _name = name;
+    _name = std::move(name);
 }
 
 size_t Tileset::size() const noexcept
@@ -55,7 +56,7 @@ void Tileset::addRawBrush(uint32_t serverId)
         return;
     }
 
-    Brush *brush = static_cast<Brush*>(Brush::getOrCreateRawBrush(serverId));
+    Brush *brush = static_cast<Brush *>(Brushes::getOrCreateRawBrush(serverId));
     if (hasBrush(brush))
     {
         auto paletteName = _palette ? _palette->name() : "(No palette)";
@@ -99,5 +100,5 @@ int Tileset::indexOf(Brush *brush) const
 
 bool Tileset::hasBrush(Brush *brush) const
 {
-    return brushToIndexMap.find(brush) != brushToIndexMap.end();
+    return brushToIndexMap.contains(brush);
 }

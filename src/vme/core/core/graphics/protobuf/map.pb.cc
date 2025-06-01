@@ -16,114 +16,124 @@
 #include <google/protobuf/port_def.inc>
 
 PROTOBUF_PRAGMA_INIT_SEG
+
+namespace _pb = ::PROTOBUF_NAMESPACE_ID;
+namespace _pbi = _pb::internal;
+
 namespace tibia {
 namespace protobuf {
 namespace map {
-constexpr Map::Map(
-  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
-  : areas_()
-  , npcs_()
-  , resource_files_()
-  , top_left_tile_coordinate_(nullptr)
-  , bottom_right_tile_coordinate_(nullptr){}
+PROTOBUF_CONSTEXPR Map::Map(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.areas_)*/{}
+  , /*decltype(_impl_.npcs_)*/{}
+  , /*decltype(_impl_.resource_files_)*/{}
+  , /*decltype(_impl_.top_left_tile_coordinate_)*/nullptr
+  , /*decltype(_impl_.bottom_right_tile_coordinate_)*/nullptr} {}
 struct MapDefaultTypeInternal {
-  constexpr MapDefaultTypeInternal()
-    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  PROTOBUF_CONSTEXPR MapDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
   ~MapDefaultTypeInternal() {}
   union {
     Map _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT MapDefaultTypeInternal _Map_default_instance_;
-constexpr Area::Area(
-  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
-  : subarea_ids_()
-  , name_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
-  , alias_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
-  , label_coordinate_(nullptr)
-  , area_id_(0u)
-  , area_type_(0)
-
-  , reject_donations_(false){}
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MapDefaultTypeInternal _Map_default_instance_;
+PROTOBUF_CONSTEXPR Area::Area(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.subarea_ids_)*/{}
+  , /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.alias_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.label_coordinate_)*/nullptr
+  , /*decltype(_impl_.area_id_)*/0u
+  , /*decltype(_impl_.area_type_)*/0
+  , /*decltype(_impl_.reject_donations_)*/false} {}
 struct AreaDefaultTypeInternal {
-  constexpr AreaDefaultTypeInternal()
-    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  PROTOBUF_CONSTEXPR AreaDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
   ~AreaDefaultTypeInternal() {}
   union {
     Area _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT AreaDefaultTypeInternal _Area_default_instance_;
-constexpr Npc::Npc(
-  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
-  : name_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
-  , tile_coordinate_(nullptr)
-  , subarea_id_(0u){}
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 AreaDefaultTypeInternal _Area_default_instance_;
+PROTOBUF_CONSTEXPR Npc::Npc(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.tile_coordinate_)*/nullptr
+  , /*decltype(_impl_.subarea_id_)*/0u} {}
 struct NpcDefaultTypeInternal {
-  constexpr NpcDefaultTypeInternal()
-    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  PROTOBUF_CONSTEXPR NpcDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
   ~NpcDefaultTypeInternal() {}
   union {
     Npc _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT NpcDefaultTypeInternal _Npc_default_instance_;
-constexpr MapFile::MapFile(
-  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
-  : file_name_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
-  , top_left_coordinate_(nullptr)
-  , file_type_(0)
-
-  , fields_width_(0u)
-  , fields_height_(0u)
-  , area_id_(0u)
-  , scale_factor_(0){}
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 NpcDefaultTypeInternal _Npc_default_instance_;
+PROTOBUF_CONSTEXPR MapFile::MapFile(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.file_name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.top_left_coordinate_)*/nullptr
+  , /*decltype(_impl_.file_type_)*/0
+  , /*decltype(_impl_.fields_width_)*/0u
+  , /*decltype(_impl_.fields_height_)*/0u
+  , /*decltype(_impl_.area_id_)*/0u
+  , /*decltype(_impl_.scale_factor_)*/0} {}
 struct MapFileDefaultTypeInternal {
-  constexpr MapFileDefaultTypeInternal()
-    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  PROTOBUF_CONSTEXPR MapFileDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
   ~MapFileDefaultTypeInternal() {}
   union {
     MapFile _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT MapFileDefaultTypeInternal _MapFile_default_instance_;
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MapFileDefaultTypeInternal _MapFile_default_instance_;
 }  // namespace map
 }  // namespace protobuf
 }  // namespace tibia
-static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_map_2eproto[4];
-static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_map_2eproto[2];
-static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_map_2eproto = nullptr;
+static ::_pb::Metadata file_level_metadata_map_2eproto[4];
+static const ::_pb::EnumDescriptor* file_level_enum_descriptors_map_2eproto[2];
+static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_map_2eproto = nullptr;
 
 const uint32_t TableStruct_map_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, _impl_._has_bits_),
   PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, areas_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, npcs_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, resource_files_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, top_left_tile_coordinate_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, bottom_right_tile_coordinate_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, _impl_.areas_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, _impl_.npcs_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, _impl_.resource_files_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, _impl_.top_left_tile_coordinate_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Map, _impl_.bottom_right_tile_coordinate_),
   ~0u,
   ~0u,
   ~0u,
   0,
   1,
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, _impl_._has_bits_),
   PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, area_id_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, name_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, area_type_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, subarea_ids_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, label_coordinate_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, reject_donations_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, alias_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, _impl_.area_id_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, _impl_.name_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, _impl_.area_type_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, _impl_.subarea_ids_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, _impl_.label_coordinate_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, _impl_.reject_donations_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Area, _impl_.alias_),
   3,
   0,
   4,
@@ -131,31 +141,31 @@ const uint32_t TableStruct_map_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(prot
   2,
   5,
   1,
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Npc, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Npc, _impl_._has_bits_),
   PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Npc, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Npc, name_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Npc, tile_coordinate_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Npc, subarea_id_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Npc, _impl_.name_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Npc, _impl_.tile_coordinate_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::Npc, _impl_.subarea_id_),
   0,
   1,
   2,
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, _impl_._has_bits_),
   PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, file_type_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, top_left_coordinate_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, file_name_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, fields_width_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, fields_height_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, area_id_),
-  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, scale_factor_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, _impl_.file_type_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, _impl_.top_left_coordinate_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, _impl_.file_name_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, _impl_.fields_width_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, _impl_.fields_height_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, _impl_.area_id_),
+  PROTOBUF_FIELD_OFFSET(::tibia::protobuf::map::MapFile, _impl_.scale_factor_),
   2,
   1,
   0,
@@ -164,18 +174,18 @@ const uint32_t TableStruct_map_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(prot
   5,
   6,
 };
-static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 11, -1, sizeof(::tibia::protobuf::map::Map)},
   { 16, 29, -1, sizeof(::tibia::protobuf::map::Area)},
   { 36, 45, -1, sizeof(::tibia::protobuf::map::Npc)},
   { 48, 61, -1, sizeof(::tibia::protobuf::map::MapFile)},
 };
 
-static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tibia::protobuf::map::_Map_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tibia::protobuf::map::_Area_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tibia::protobuf::map::_Npc_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tibia::protobuf::map::_MapFile_default_instance_),
+static const ::_pb::Message* const file_default_instances[] = {
+  &::tibia::protobuf::map::_Map_default_instance_._instance,
+  &::tibia::protobuf::map::_Area_default_instance_._instance,
+  &::tibia::protobuf::map::_Npc_default_instance_._instance,
+  &::tibia::protobuf::map::_MapFile_default_instance_._instance,
 };
 
 const char descriptor_table_protodef_map_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
@@ -207,22 +217,24 @@ const char descriptor_table_protodef_map_2eproto[] PROTOBUF_SECTION_VARIABLE(pro
   "E_NONE\020\000\022\022\n\016AREA_TYPE_AREA\020\001\022\025\n\021AREA_TYP"
   "E_SUBAREA\020\002"
   ;
-static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_map_2eproto_deps[1] = {
+static const ::_pbi::DescriptorTable* const descriptor_table_map_2eproto_deps[1] = {
   &::descriptor_table_shared_2eproto,
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_map_2eproto_once;
-const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_map_2eproto = {
-  false, false, 1051, descriptor_table_protodef_map_2eproto, "map.proto", 
-  &descriptor_table_map_2eproto_once, descriptor_table_map_2eproto_deps, 1, 4,
-  schemas, file_default_instances, TableStruct_map_2eproto::offsets,
-  file_level_metadata_map_2eproto, file_level_enum_descriptors_map_2eproto, file_level_service_descriptors_map_2eproto,
+static ::_pbi::once_flag descriptor_table_map_2eproto_once;
+const ::_pbi::DescriptorTable descriptor_table_map_2eproto = {
+    false, false, 1051, descriptor_table_protodef_map_2eproto,
+    "map.proto",
+    &descriptor_table_map_2eproto_once, descriptor_table_map_2eproto_deps, 1, 4,
+    schemas, file_default_instances, TableStruct_map_2eproto::offsets,
+    file_level_metadata_map_2eproto, file_level_enum_descriptors_map_2eproto,
+    file_level_service_descriptors_map_2eproto,
 };
-PROTOBUF_ATTRIBUTE_WEAK const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable* descriptor_table_map_2eproto_getter() {
+PROTOBUF_ATTRIBUTE_WEAK const ::_pbi::DescriptorTable* descriptor_table_map_2eproto_getter() {
   return &descriptor_table_map_2eproto;
 }
 
 // Force running AddDescriptors() at dynamic initialization time.
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY static ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptorsRunner dynamic_init_dummy_map_2eproto(&descriptor_table_map_2eproto);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY2 static ::_pbi::AddDescriptorsRunner dynamic_init_dummy_map_2eproto(&descriptor_table_map_2eproto);
 namespace tibia {
 namespace protobuf {
 namespace map {
@@ -261,7 +273,7 @@ bool AREA_TYPE_IsValid(int value) {
 
 class Map::_Internal {
  public:
-  using HasBits = decltype(std::declval<Map>()._has_bits_);
+  using HasBits = decltype(std::declval<Map>()._impl_._has_bits_);
   static const ::tibia::protobuf::shared::Coordinate& top_left_tile_coordinate(const Map* msg);
   static void set_has_top_left_tile_coordinate(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
@@ -274,80 +286,83 @@ class Map::_Internal {
 
 const ::tibia::protobuf::shared::Coordinate&
 Map::_Internal::top_left_tile_coordinate(const Map* msg) {
-  return *msg->top_left_tile_coordinate_;
+  return *msg->_impl_.top_left_tile_coordinate_;
 }
 const ::tibia::protobuf::shared::Coordinate&
 Map::_Internal::bottom_right_tile_coordinate(const Map* msg) {
-  return *msg->bottom_right_tile_coordinate_;
+  return *msg->_impl_.bottom_right_tile_coordinate_;
 }
 void Map::clear_top_left_tile_coordinate() {
-  if (top_left_tile_coordinate_ != nullptr) top_left_tile_coordinate_->Clear();
-  _has_bits_[0] &= ~0x00000001u;
+  if (_impl_.top_left_tile_coordinate_ != nullptr) _impl_.top_left_tile_coordinate_->Clear();
+  _impl_._has_bits_[0] &= ~0x00000001u;
 }
 void Map::clear_bottom_right_tile_coordinate() {
-  if (bottom_right_tile_coordinate_ != nullptr) bottom_right_tile_coordinate_->Clear();
-  _has_bits_[0] &= ~0x00000002u;
+  if (_impl_.bottom_right_tile_coordinate_ != nullptr) _impl_.bottom_right_tile_coordinate_->Clear();
+  _impl_._has_bits_[0] &= ~0x00000002u;
 }
 Map::Map(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned),
-  areas_(arena),
-  npcs_(arena),
-  resource_files_(arena) {
-  SharedCtor();
-  if (!is_message_owned) {
-    RegisterArenaDtor(arena);
-  }
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
   // @@protoc_insertion_point(arena_constructor:tibia.protobuf.map.Map)
 }
 Map::Map(const Map& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _has_bits_(from._has_bits_),
-      areas_(from.areas_),
-      npcs_(from.npcs_),
-      resource_files_(from.resource_files_) {
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  Map* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.areas_){from._impl_.areas_}
+    , decltype(_impl_.npcs_){from._impl_.npcs_}
+    , decltype(_impl_.resource_files_){from._impl_.resource_files_}
+    , decltype(_impl_.top_left_tile_coordinate_){nullptr}
+    , decltype(_impl_.bottom_right_tile_coordinate_){nullptr}};
+
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_top_left_tile_coordinate()) {
-    top_left_tile_coordinate_ = new ::tibia::protobuf::shared::Coordinate(*from.top_left_tile_coordinate_);
-  } else {
-    top_left_tile_coordinate_ = nullptr;
+    _this->_impl_.top_left_tile_coordinate_ = new ::tibia::protobuf::shared::Coordinate(*from._impl_.top_left_tile_coordinate_);
   }
   if (from._internal_has_bottom_right_tile_coordinate()) {
-    bottom_right_tile_coordinate_ = new ::tibia::protobuf::shared::Coordinate(*from.bottom_right_tile_coordinate_);
-  } else {
-    bottom_right_tile_coordinate_ = nullptr;
+    _this->_impl_.bottom_right_tile_coordinate_ = new ::tibia::protobuf::shared::Coordinate(*from._impl_.bottom_right_tile_coordinate_);
   }
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.map.Map)
 }
 
-inline void Map::SharedCtor() {
-::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
-    reinterpret_cast<char*>(&top_left_tile_coordinate_) - reinterpret_cast<char*>(this)),
-    0, static_cast<size_t>(reinterpret_cast<char*>(&bottom_right_tile_coordinate_) -
-    reinterpret_cast<char*>(&top_left_tile_coordinate_)) + sizeof(bottom_right_tile_coordinate_));
+inline void Map::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.areas_){arena}
+    , decltype(_impl_.npcs_){arena}
+    , decltype(_impl_.resource_files_){arena}
+    , decltype(_impl_.top_left_tile_coordinate_){nullptr}
+    , decltype(_impl_.bottom_right_tile_coordinate_){nullptr}
+  };
 }
 
 Map::~Map() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.map.Map)
-  if (GetArenaForAllocation() != nullptr) return;
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
-  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 inline void Map::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  if (this != internal_default_instance()) delete top_left_tile_coordinate_;
-  if (this != internal_default_instance()) delete bottom_right_tile_coordinate_;
+  _impl_.areas_.~RepeatedPtrField();
+  _impl_.npcs_.~RepeatedPtrField();
+  _impl_.resource_files_.~RepeatedPtrField();
+  if (this != internal_default_instance()) delete _impl_.top_left_tile_coordinate_;
+  if (this != internal_default_instance()) delete _impl_.bottom_right_tile_coordinate_;
 }
 
-void Map::ArenaDtor(void* object) {
-  Map* _this = reinterpret_cast< Map* >(object);
-  (void)_this;
-}
-void Map::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
-}
 void Map::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
 
 void Map::Clear() {
@@ -356,30 +371,30 @@ void Map::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  areas_.Clear();
-  npcs_.Clear();
-  resource_files_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.areas_.Clear();
+  _impl_.npcs_.Clear();
+  _impl_.resource_files_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(top_left_tile_coordinate_ != nullptr);
-      top_left_tile_coordinate_->Clear();
+      GOOGLE_DCHECK(_impl_.top_left_tile_coordinate_ != nullptr);
+      _impl_.top_left_tile_coordinate_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(bottom_right_tile_coordinate_ != nullptr);
-      bottom_right_tile_coordinate_->Clear();
+      GOOGLE_DCHECK(_impl_.bottom_right_tile_coordinate_ != nullptr);
+      _impl_.bottom_right_tile_coordinate_->Clear();
     }
   }
-  _has_bits_.Clear();
+  _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* Map::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* Map::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
     uint32_t tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // repeated .tibia.protobuf.map.Area areas = 1;
       case 1:
@@ -452,7 +467,7 @@ const char* Map::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::intern
     CHK_(ptr != nullptr);
   }  // while
 message_done:
-  _has_bits_.Or(has_bits);
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
@@ -467,48 +482,46 @@ uint8_t* Map::_InternalSerialize(
   (void) cached_has_bits;
 
   // repeated .tibia.protobuf.map.Area areas = 1;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_areas_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_areas_size()); i < n; i++) {
+    const auto& repfield = this->_internal_areas(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(1, this->_internal_areas(i), target, stream);
+        InternalWriteMessage(1, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   // repeated .tibia.protobuf.map.Npc npcs = 2;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_npcs_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_npcs_size()); i < n; i++) {
+    const auto& repfield = this->_internal_npcs(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(2, this->_internal_npcs(i), target, stream);
+        InternalWriteMessage(2, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   // repeated .tibia.protobuf.map.MapFile resource_files = 3;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_resource_files_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_resource_files_size()); i < n; i++) {
+    const auto& repfield = this->_internal_resource_files(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(3, this->_internal_resource_files(i), target, stream);
+        InternalWriteMessage(3, repfield, repfield.GetCachedSize(), target, stream);
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .tibia.protobuf.shared.Coordinate top_left_tile_coordinate = 4;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        4, _Internal::top_left_tile_coordinate(this), target, stream);
+      InternalWriteMessage(4, _Internal::top_left_tile_coordinate(this),
+        _Internal::top_left_tile_coordinate(this).GetCachedSize(), target, stream);
   }
 
   // optional .tibia.protobuf.shared.Coordinate bottom_right_tile_coordinate = 5;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        5, _Internal::bottom_right_tile_coordinate(this), target, stream);
+      InternalWriteMessage(5, _Internal::bottom_right_tile_coordinate(this),
+        _Internal::bottom_right_tile_coordinate(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.map.Map)
@@ -525,77 +538,75 @@ size_t Map::ByteSizeLong() const {
 
   // repeated .tibia.protobuf.map.Area areas = 1;
   total_size += 1UL * this->_internal_areas_size();
-  for (const auto& msg : this->areas_) {
+  for (const auto& msg : this->_impl_.areas_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   // repeated .tibia.protobuf.map.Npc npcs = 2;
   total_size += 1UL * this->_internal_npcs_size();
-  for (const auto& msg : this->npcs_) {
+  for (const auto& msg : this->_impl_.npcs_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   // repeated .tibia.protobuf.map.MapFile resource_files = 3;
   total_size += 1UL * this->_internal_resource_files_size();
-  for (const auto& msg : this->resource_files_) {
+  for (const auto& msg : this->_impl_.resource_files_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional .tibia.protobuf.shared.Coordinate top_left_tile_coordinate = 4;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *top_left_tile_coordinate_);
+          *_impl_.top_left_tile_coordinate_);
     }
 
     // optional .tibia.protobuf.shared.Coordinate bottom_right_tile_coordinate = 5;
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *bottom_right_tile_coordinate_);
+          *_impl_.bottom_right_tile_coordinate_);
     }
 
   }
-  return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
 const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Map::_class_data_ = {
-    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSizeCheck,
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
     Map::MergeImpl
 };
 const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Map::GetClassData() const { return &_class_data_; }
 
-void Map::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
-                      const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-  static_cast<Map *>(to)->MergeFrom(
-      static_cast<const Map &>(from));
-}
 
-
-void Map::MergeFrom(const Map& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.map.Map)
-  GOOGLE_DCHECK_NE(&from, this);
+void Map::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<Map*>(&to_msg);
+  auto& from = static_cast<const Map&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.map.Map)
+  GOOGLE_DCHECK_NE(&from, _this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  areas_.MergeFrom(from.areas_);
-  npcs_.MergeFrom(from.npcs_);
-  resource_files_.MergeFrom(from.resource_files_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.areas_.MergeFrom(from._impl_.areas_);
+  _this->_impl_.npcs_.MergeFrom(from._impl_.npcs_);
+  _this->_impl_.resource_files_.MergeFrom(from._impl_.resource_files_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_mutable_top_left_tile_coordinate()->::tibia::protobuf::shared::Coordinate::MergeFrom(from._internal_top_left_tile_coordinate());
+      _this->_internal_mutable_top_left_tile_coordinate()->::tibia::protobuf::shared::Coordinate::MergeFrom(
+          from._internal_top_left_tile_coordinate());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_bottom_right_tile_coordinate()->::tibia::protobuf::shared::Coordinate::MergeFrom(from._internal_bottom_right_tile_coordinate());
+      _this->_internal_mutable_bottom_right_tile_coordinate()->::tibia::protobuf::shared::Coordinate::MergeFrom(
+          from._internal_bottom_right_tile_coordinate());
     }
   }
-  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void Map::CopyFrom(const Map& from) {
@@ -612,20 +623,20 @@ bool Map::IsInitialized() const {
 void Map::InternalSwap(Map* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  areas_.InternalSwap(&other->areas_);
-  npcs_.InternalSwap(&other->npcs_);
-  resource_files_.InternalSwap(&other->resource_files_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.areas_.InternalSwap(&other->_impl_.areas_);
+  _impl_.npcs_.InternalSwap(&other->_impl_.npcs_);
+  _impl_.resource_files_.InternalSwap(&other->_impl_.resource_files_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(Map, bottom_right_tile_coordinate_)
-      + sizeof(Map::bottom_right_tile_coordinate_)
-      - PROTOBUF_FIELD_OFFSET(Map, top_left_tile_coordinate_)>(
-          reinterpret_cast<char*>(&top_left_tile_coordinate_),
-          reinterpret_cast<char*>(&other->top_left_tile_coordinate_));
+      PROTOBUF_FIELD_OFFSET(Map, _impl_.bottom_right_tile_coordinate_)
+      + sizeof(Map::_impl_.bottom_right_tile_coordinate_)
+      - PROTOBUF_FIELD_OFFSET(Map, _impl_.top_left_tile_coordinate_)>(
+          reinterpret_cast<char*>(&_impl_.top_left_tile_coordinate_),
+          reinterpret_cast<char*>(&other->_impl_.top_left_tile_coordinate_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata Map::GetMetadata() const {
-  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+  return ::_pbi::AssignDescriptors(
       &descriptor_table_map_2eproto_getter, &descriptor_table_map_2eproto_once,
       file_level_metadata_map_2eproto[0]);
 }
@@ -634,7 +645,7 @@ void Map::InternalSwap(Map* other) {
 
 class Area::_Internal {
  public:
-  using HasBits = decltype(std::declval<Area>()._has_bits_);
+  using HasBits = decltype(std::declval<Area>()._impl_._has_bits_);
   static void set_has_area_id(HasBits* has_bits) {
     (*has_bits)[0] |= 8u;
   }
@@ -658,91 +669,102 @@ class Area::_Internal {
 
 const ::tibia::protobuf::shared::Coordinate&
 Area::_Internal::label_coordinate(const Area* msg) {
-  return *msg->label_coordinate_;
+  return *msg->_impl_.label_coordinate_;
 }
 void Area::clear_label_coordinate() {
-  if (label_coordinate_ != nullptr) label_coordinate_->Clear();
-  _has_bits_[0] &= ~0x00000004u;
+  if (_impl_.label_coordinate_ != nullptr) _impl_.label_coordinate_->Clear();
+  _impl_._has_bits_[0] &= ~0x00000004u;
 }
 Area::Area(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned),
-  subarea_ids_(arena) {
-  SharedCtor();
-  if (!is_message_owned) {
-    RegisterArenaDtor(arena);
-  }
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
   // @@protoc_insertion_point(arena_constructor:tibia.protobuf.map.Area)
 }
 Area::Area(const Area& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _has_bits_(from._has_bits_),
-      subarea_ids_(from.subarea_ids_) {
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  Area* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.subarea_ids_){from._impl_.subarea_ids_}
+    , decltype(_impl_.name_){}
+    , decltype(_impl_.alias_){}
+    , decltype(_impl_.label_coordinate_){nullptr}
+    , decltype(_impl_.area_id_){}
+    , decltype(_impl_.area_type_){}
+    , decltype(_impl_.reject_donations_){}};
+
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.name_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+    _impl_.name_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_name()) {
-    name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_name(), 
-      GetArenaForAllocation());
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
   }
-  alias_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.alias_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    alias_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+    _impl_.alias_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_alias()) {
-    alias_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_alias(), 
-      GetArenaForAllocation());
+    _this->_impl_.alias_.Set(from._internal_alias(), 
+      _this->GetArenaForAllocation());
   }
   if (from._internal_has_label_coordinate()) {
-    label_coordinate_ = new ::tibia::protobuf::shared::Coordinate(*from.label_coordinate_);
-  } else {
-    label_coordinate_ = nullptr;
+    _this->_impl_.label_coordinate_ = new ::tibia::protobuf::shared::Coordinate(*from._impl_.label_coordinate_);
   }
-  ::memcpy(&area_id_, &from.area_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&reject_donations_) -
-    reinterpret_cast<char*>(&area_id_)) + sizeof(reject_donations_));
+  ::memcpy(&_impl_.area_id_, &from._impl_.area_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.reject_donations_) -
+    reinterpret_cast<char*>(&_impl_.area_id_)) + sizeof(_impl_.reject_donations_));
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.map.Area)
 }
 
-inline void Area::SharedCtor() {
-name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-alias_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  alias_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
-    reinterpret_cast<char*>(&label_coordinate_) - reinterpret_cast<char*>(this)),
-    0, static_cast<size_t>(reinterpret_cast<char*>(&reject_donations_) -
-    reinterpret_cast<char*>(&label_coordinate_)) + sizeof(reject_donations_));
+inline void Area::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.subarea_ids_){arena}
+    , decltype(_impl_.name_){}
+    , decltype(_impl_.alias_){}
+    , decltype(_impl_.label_coordinate_){nullptr}
+    , decltype(_impl_.area_id_){0u}
+    , decltype(_impl_.area_type_){0}
+    , decltype(_impl_.reject_donations_){false}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.alias_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.alias_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 Area::~Area() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.map.Area)
-  if (GetArenaForAllocation() != nullptr) return;
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
-  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 inline void Area::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  alias_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (this != internal_default_instance()) delete label_coordinate_;
+  _impl_.subarea_ids_.~RepeatedField();
+  _impl_.name_.Destroy();
+  _impl_.alias_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.label_coordinate_;
 }
 
-void Area::ArenaDtor(void* object) {
-  Area* _this = reinterpret_cast< Area* >(object);
-  (void)_this;
-}
-void Area::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
-}
 void Area::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
 
 void Area::Clear() {
@@ -751,41 +773,41 @@ void Area::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  subarea_ids_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.subarea_ids_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      name_.ClearNonDefaultToEmpty();
+      _impl_.name_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      alias_.ClearNonDefaultToEmpty();
+      _impl_.alias_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000004u) {
-      GOOGLE_DCHECK(label_coordinate_ != nullptr);
-      label_coordinate_->Clear();
+      GOOGLE_DCHECK(_impl_.label_coordinate_ != nullptr);
+      _impl_.label_coordinate_->Clear();
     }
   }
   if (cached_has_bits & 0x00000038u) {
-    ::memset(&area_id_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&reject_donations_) -
-        reinterpret_cast<char*>(&area_id_)) + sizeof(reject_donations_));
+    ::memset(&_impl_.area_id_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.reject_donations_) -
+        reinterpret_cast<char*>(&_impl_.area_id_)) + sizeof(_impl_.reject_donations_));
   }
-  _has_bits_.Clear();
+  _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* Area::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* Area::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
     uint32_t tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional uint32 area_id = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           _Internal::set_has_area_id(&has_bits);
-          area_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          _impl_.area_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -794,11 +816,11 @@ const char* Area::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inter
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "tibia.protobuf.map.Area.name");
-          #endif  // !NDEBUG
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
+          #ifndef NDEBUG
+          ::_pbi::VerifyUTF8(str, "tibia.protobuf.map.Area.name");
+          #endif  // !NDEBUG
         } else
           goto handle_unusual;
         continue;
@@ -843,7 +865,7 @@ const char* Area::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inter
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
           _Internal::set_has_reject_donations(&has_bits);
-          reject_donations_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          _impl_.reject_donations_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -852,11 +874,11 @@ const char* Area::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inter
       case 7:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
           auto str = _internal_mutable_alias();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "tibia.protobuf.map.Area.alias");
-          #endif  // !NDEBUG
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
+          #ifndef NDEBUG
+          ::_pbi::VerifyUTF8(str, "tibia.protobuf.map.Area.alias");
+          #endif  // !NDEBUG
         } else
           goto handle_unusual;
         continue;
@@ -876,7 +898,7 @@ const char* Area::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inter
     CHK_(ptr != nullptr);
   }  // while
 message_done:
-  _has_bits_.Or(has_bits);
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
@@ -890,11 +912,11 @@ uint8_t* Area::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional uint32 area_id = 1;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(1, this->_internal_area_id(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(1, this->_internal_area_id(), target);
   }
 
   // optional string name = 2;
@@ -910,28 +932,27 @@ uint8_t* Area::_InternalSerialize(
   // optional .tibia.protobuf.map.AREA_TYPE area_type = 3;
   if (cached_has_bits & 0x00000010u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       3, this->_internal_area_type(), target);
   }
 
   // repeated uint32 subarea_ids = 4;
   for (int i = 0, n = this->_internal_subarea_ids_size(); i < n; i++) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(4, this->_internal_subarea_ids(i), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(4, this->_internal_subarea_ids(i), target);
   }
 
   // optional .tibia.protobuf.shared.Coordinate label_coordinate = 5;
   if (cached_has_bits & 0x00000004u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        5, _Internal::label_coordinate(this), target, stream);
+      InternalWriteMessage(5, _Internal::label_coordinate(this),
+        _Internal::label_coordinate(this).GetCachedSize(), target, stream);
   }
 
   // optional bool reject_donations = 6;
   if (cached_has_bits & 0x00000020u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(6, this->_internal_reject_donations(), target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(6, this->_internal_reject_donations(), target);
   }
 
   // optional string alias = 7;
@@ -945,7 +966,7 @@ uint8_t* Area::_InternalSerialize(
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.map.Area)
@@ -962,14 +983,14 @@ size_t Area::ByteSizeLong() const {
 
   // repeated uint32 subarea_ids = 4;
   {
-    size_t data_size = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      UInt32Size(this->subarea_ids_);
+    size_t data_size = ::_pbi::WireFormatLite::
+      UInt32Size(this->_impl_.subarea_ids_);
     total_size += 1 *
-                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_subarea_ids_size());
+                  ::_pbi::FromIntSize(this->_internal_subarea_ids_size());
     total_size += data_size;
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000003fu) {
     // optional string name = 2;
     if (cached_has_bits & 0x00000001u) {
@@ -989,18 +1010,18 @@ size_t Area::ByteSizeLong() const {
     if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *label_coordinate_);
+          *_impl_.label_coordinate_);
     }
 
     // optional uint32 area_id = 1;
     if (cached_has_bits & 0x00000008u) {
-      total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32SizePlusOne(this->_internal_area_id());
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_area_id());
     }
 
     // optional .tibia.protobuf.map.AREA_TYPE area_type = 3;
     if (cached_has_bits & 0x00000010u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_area_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_area_type());
     }
 
     // optional bool reject_donations = 6;
@@ -1009,52 +1030,49 @@ size_t Area::ByteSizeLong() const {
     }
 
   }
-  return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
 const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Area::_class_data_ = {
-    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSizeCheck,
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
     Area::MergeImpl
 };
 const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Area::GetClassData() const { return &_class_data_; }
 
-void Area::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
-                      const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-  static_cast<Area *>(to)->MergeFrom(
-      static_cast<const Area &>(from));
-}
 
-
-void Area::MergeFrom(const Area& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.map.Area)
-  GOOGLE_DCHECK_NE(&from, this);
+void Area::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<Area*>(&to_msg);
+  auto& from = static_cast<const Area&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.map.Area)
+  GOOGLE_DCHECK_NE(&from, _this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  subarea_ids_.MergeFrom(from.subarea_ids_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.subarea_ids_.MergeFrom(from._impl_.subarea_ids_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000003fu) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_set_name(from._internal_name());
+      _this->_internal_set_name(from._internal_name());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_set_alias(from._internal_alias());
+      _this->_internal_set_alias(from._internal_alias());
     }
     if (cached_has_bits & 0x00000004u) {
-      _internal_mutable_label_coordinate()->::tibia::protobuf::shared::Coordinate::MergeFrom(from._internal_label_coordinate());
+      _this->_internal_mutable_label_coordinate()->::tibia::protobuf::shared::Coordinate::MergeFrom(
+          from._internal_label_coordinate());
     }
     if (cached_has_bits & 0x00000008u) {
-      area_id_ = from.area_id_;
+      _this->_impl_.area_id_ = from._impl_.area_id_;
     }
     if (cached_has_bits & 0x00000010u) {
-      area_type_ = from.area_type_;
+      _this->_impl_.area_type_ = from._impl_.area_type_;
     }
     if (cached_has_bits & 0x00000020u) {
-      reject_donations_ = from.reject_donations_;
+      _this->_impl_.reject_donations_ = from._impl_.reject_donations_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
-  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void Area::CopyFrom(const Area& from) {
@@ -1073,28 +1091,26 @@ void Area::InternalSwap(Area* other) {
   auto* lhs_arena = GetArenaForAllocation();
   auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  subarea_ids_.InternalSwap(&other->subarea_ids_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.subarea_ids_.InternalSwap(&other->_impl_.subarea_ids_);
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      &name_, lhs_arena,
-      &other->name_, rhs_arena
+      &_impl_.name_, lhs_arena,
+      &other->_impl_.name_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      &alias_, lhs_arena,
-      &other->alias_, rhs_arena
+      &_impl_.alias_, lhs_arena,
+      &other->_impl_.alias_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(Area, reject_donations_)
-      + sizeof(Area::reject_donations_)
-      - PROTOBUF_FIELD_OFFSET(Area, label_coordinate_)>(
-          reinterpret_cast<char*>(&label_coordinate_),
-          reinterpret_cast<char*>(&other->label_coordinate_));
+      PROTOBUF_FIELD_OFFSET(Area, _impl_.reject_donations_)
+      + sizeof(Area::_impl_.reject_donations_)
+      - PROTOBUF_FIELD_OFFSET(Area, _impl_.label_coordinate_)>(
+          reinterpret_cast<char*>(&_impl_.label_coordinate_),
+          reinterpret_cast<char*>(&other->_impl_.label_coordinate_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata Area::GetMetadata() const {
-  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+  return ::_pbi::AssignDescriptors(
       &descriptor_table_map_2eproto_getter, &descriptor_table_map_2eproto_once,
       file_level_metadata_map_2eproto[1]);
 }
@@ -1103,7 +1119,7 @@ void Area::InternalSwap(Area* other) {
 
 class Npc::_Internal {
  public:
-  using HasBits = decltype(std::declval<Npc>()._has_bits_);
+  using HasBits = decltype(std::declval<Npc>()._impl_._has_bits_);
   static void set_has_name(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
@@ -1118,74 +1134,78 @@ class Npc::_Internal {
 
 const ::tibia::protobuf::shared::Coordinate&
 Npc::_Internal::tile_coordinate(const Npc* msg) {
-  return *msg->tile_coordinate_;
+  return *msg->_impl_.tile_coordinate_;
 }
 void Npc::clear_tile_coordinate() {
-  if (tile_coordinate_ != nullptr) tile_coordinate_->Clear();
-  _has_bits_[0] &= ~0x00000002u;
+  if (_impl_.tile_coordinate_ != nullptr) _impl_.tile_coordinate_->Clear();
+  _impl_._has_bits_[0] &= ~0x00000002u;
 }
 Npc::Npc(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
-  SharedCtor();
-  if (!is_message_owned) {
-    RegisterArenaDtor(arena);
-  }
+  SharedCtor(arena, is_message_owned);
   // @@protoc_insertion_point(arena_constructor:tibia.protobuf.map.Npc)
 }
 Npc::Npc(const Npc& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _has_bits_(from._has_bits_) {
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  Npc* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.name_){}
+    , decltype(_impl_.tile_coordinate_){nullptr}
+    , decltype(_impl_.subarea_id_){}};
+
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.name_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+    _impl_.name_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_name()) {
-    name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_name(), 
-      GetArenaForAllocation());
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
   }
   if (from._internal_has_tile_coordinate()) {
-    tile_coordinate_ = new ::tibia::protobuf::shared::Coordinate(*from.tile_coordinate_);
-  } else {
-    tile_coordinate_ = nullptr;
+    _this->_impl_.tile_coordinate_ = new ::tibia::protobuf::shared::Coordinate(*from._impl_.tile_coordinate_);
   }
-  subarea_id_ = from.subarea_id_;
+  _this->_impl_.subarea_id_ = from._impl_.subarea_id_;
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.map.Npc)
 }
 
-inline void Npc::SharedCtor() {
-name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
-    reinterpret_cast<char*>(&tile_coordinate_) - reinterpret_cast<char*>(this)),
-    0, static_cast<size_t>(reinterpret_cast<char*>(&subarea_id_) -
-    reinterpret_cast<char*>(&tile_coordinate_)) + sizeof(subarea_id_));
+inline void Npc::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.name_){}
+    , decltype(_impl_.tile_coordinate_){nullptr}
+    , decltype(_impl_.subarea_id_){0u}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 Npc::~Npc() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.map.Npc)
-  if (GetArenaForAllocation() != nullptr) return;
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
-  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 inline void Npc::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (this != internal_default_instance()) delete tile_coordinate_;
+  _impl_.name_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.tile_coordinate_;
 }
 
-void Npc::ArenaDtor(void* object) {
-  Npc* _this = reinterpret_cast< Npc* >(object);
-  (void)_this;
-}
-void Npc::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
-}
 void Npc::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
 
 void Npc::Clear() {
@@ -1194,37 +1214,37 @@ void Npc::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      name_.ClearNonDefaultToEmpty();
+      _impl_.name_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(tile_coordinate_ != nullptr);
-      tile_coordinate_->Clear();
+      GOOGLE_DCHECK(_impl_.tile_coordinate_ != nullptr);
+      _impl_.tile_coordinate_->Clear();
     }
   }
-  subarea_id_ = 0u;
-  _has_bits_.Clear();
+  _impl_.subarea_id_ = 0u;
+  _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* Npc::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* Npc::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
     uint32_t tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional string name = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "tibia.protobuf.map.Npc.name");
-          #endif  // !NDEBUG
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
+          #ifndef NDEBUG
+          ::_pbi::VerifyUTF8(str, "tibia.protobuf.map.Npc.name");
+          #endif  // !NDEBUG
         } else
           goto handle_unusual;
         continue;
@@ -1240,7 +1260,7 @@ const char* Npc::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::intern
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
           _Internal::set_has_subarea_id(&has_bits);
-          subarea_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          _impl_.subarea_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1261,7 +1281,7 @@ const char* Npc::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::intern
     CHK_(ptr != nullptr);
   }  // while
 message_done:
-  _has_bits_.Or(has_bits);
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
@@ -1275,7 +1295,7 @@ uint8_t* Npc::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional string name = 1;
   if (cached_has_bits & 0x00000001u) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
@@ -1288,20 +1308,19 @@ uint8_t* Npc::_InternalSerialize(
 
   // optional .tibia.protobuf.shared.Coordinate tile_coordinate = 2;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::tile_coordinate(this), target, stream);
+      InternalWriteMessage(2, _Internal::tile_coordinate(this),
+        _Internal::tile_coordinate(this).GetCachedSize(), target, stream);
   }
 
   // optional uint32 subarea_id = 3;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(3, this->_internal_subarea_id(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(3, this->_internal_subarea_id(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.map.Npc)
@@ -1316,7 +1335,7 @@ size_t Npc::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     // optional string name = 1;
     if (cached_has_bits & 0x00000001u) {
@@ -1329,51 +1348,48 @@ size_t Npc::ByteSizeLong() const {
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *tile_coordinate_);
+          *_impl_.tile_coordinate_);
     }
 
     // optional uint32 subarea_id = 3;
     if (cached_has_bits & 0x00000004u) {
-      total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32SizePlusOne(this->_internal_subarea_id());
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_subarea_id());
     }
 
   }
-  return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
 const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Npc::_class_data_ = {
-    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSizeCheck,
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
     Npc::MergeImpl
 };
 const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Npc::GetClassData() const { return &_class_data_; }
 
-void Npc::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
-                      const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-  static_cast<Npc *>(to)->MergeFrom(
-      static_cast<const Npc &>(from));
-}
 
-
-void Npc::MergeFrom(const Npc& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.map.Npc)
-  GOOGLE_DCHECK_NE(&from, this);
+void Npc::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<Npc*>(&to_msg);
+  auto& from = static_cast<const Npc&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.map.Npc)
+  GOOGLE_DCHECK_NE(&from, _this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_set_name(from._internal_name());
+      _this->_internal_set_name(from._internal_name());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_tile_coordinate()->::tibia::protobuf::shared::Coordinate::MergeFrom(from._internal_tile_coordinate());
+      _this->_internal_mutable_tile_coordinate()->::tibia::protobuf::shared::Coordinate::MergeFrom(
+          from._internal_tile_coordinate());
     }
     if (cached_has_bits & 0x00000004u) {
-      subarea_id_ = from.subarea_id_;
+      _this->_impl_.subarea_id_ = from._impl_.subarea_id_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
-  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void Npc::CopyFrom(const Npc& from) {
@@ -1392,22 +1408,21 @@ void Npc::InternalSwap(Npc* other) {
   auto* lhs_arena = GetArenaForAllocation();
   auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      &name_, lhs_arena,
-      &other->name_, rhs_arena
+      &_impl_.name_, lhs_arena,
+      &other->_impl_.name_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(Npc, subarea_id_)
-      + sizeof(Npc::subarea_id_)
-      - PROTOBUF_FIELD_OFFSET(Npc, tile_coordinate_)>(
-          reinterpret_cast<char*>(&tile_coordinate_),
-          reinterpret_cast<char*>(&other->tile_coordinate_));
+      PROTOBUF_FIELD_OFFSET(Npc, _impl_.subarea_id_)
+      + sizeof(Npc::_impl_.subarea_id_)
+      - PROTOBUF_FIELD_OFFSET(Npc, _impl_.tile_coordinate_)>(
+          reinterpret_cast<char*>(&_impl_.tile_coordinate_),
+          reinterpret_cast<char*>(&other->_impl_.tile_coordinate_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata Npc::GetMetadata() const {
-  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+  return ::_pbi::AssignDescriptors(
       &descriptor_table_map_2eproto_getter, &descriptor_table_map_2eproto_once,
       file_level_metadata_map_2eproto[2]);
 }
@@ -1416,7 +1431,7 @@ void Npc::InternalSwap(Npc* other) {
 
 class MapFile::_Internal {
  public:
-  using HasBits = decltype(std::declval<MapFile>()._has_bits_);
+  using HasBits = decltype(std::declval<MapFile>()._impl_._has_bits_);
   static void set_has_file_type(HasBits* has_bits) {
     (*has_bits)[0] |= 4u;
   }
@@ -1443,76 +1458,88 @@ class MapFile::_Internal {
 
 const ::tibia::protobuf::shared::Coordinate&
 MapFile::_Internal::top_left_coordinate(const MapFile* msg) {
-  return *msg->top_left_coordinate_;
+  return *msg->_impl_.top_left_coordinate_;
 }
 void MapFile::clear_top_left_coordinate() {
-  if (top_left_coordinate_ != nullptr) top_left_coordinate_->Clear();
-  _has_bits_[0] &= ~0x00000002u;
+  if (_impl_.top_left_coordinate_ != nullptr) _impl_.top_left_coordinate_->Clear();
+  _impl_._has_bits_[0] &= ~0x00000002u;
 }
 MapFile::MapFile(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
-  SharedCtor();
-  if (!is_message_owned) {
-    RegisterArenaDtor(arena);
-  }
+  SharedCtor(arena, is_message_owned);
   // @@protoc_insertion_point(arena_constructor:tibia.protobuf.map.MapFile)
 }
 MapFile::MapFile(const MapFile& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _has_bits_(from._has_bits_) {
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  MapFile* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.file_name_){}
+    , decltype(_impl_.top_left_coordinate_){nullptr}
+    , decltype(_impl_.file_type_){}
+    , decltype(_impl_.fields_width_){}
+    , decltype(_impl_.fields_height_){}
+    , decltype(_impl_.area_id_){}
+    , decltype(_impl_.scale_factor_){}};
+
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  file_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.file_name_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    file_name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+    _impl_.file_name_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_file_name()) {
-    file_name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_file_name(), 
-      GetArenaForAllocation());
+    _this->_impl_.file_name_.Set(from._internal_file_name(), 
+      _this->GetArenaForAllocation());
   }
   if (from._internal_has_top_left_coordinate()) {
-    top_left_coordinate_ = new ::tibia::protobuf::shared::Coordinate(*from.top_left_coordinate_);
-  } else {
-    top_left_coordinate_ = nullptr;
+    _this->_impl_.top_left_coordinate_ = new ::tibia::protobuf::shared::Coordinate(*from._impl_.top_left_coordinate_);
   }
-  ::memcpy(&file_type_, &from.file_type_,
-    static_cast<size_t>(reinterpret_cast<char*>(&scale_factor_) -
-    reinterpret_cast<char*>(&file_type_)) + sizeof(scale_factor_));
+  ::memcpy(&_impl_.file_type_, &from._impl_.file_type_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.scale_factor_) -
+    reinterpret_cast<char*>(&_impl_.file_type_)) + sizeof(_impl_.scale_factor_));
   // @@protoc_insertion_point(copy_constructor:tibia.protobuf.map.MapFile)
 }
 
-inline void MapFile::SharedCtor() {
-file_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  file_name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
-    reinterpret_cast<char*>(&top_left_coordinate_) - reinterpret_cast<char*>(this)),
-    0, static_cast<size_t>(reinterpret_cast<char*>(&scale_factor_) -
-    reinterpret_cast<char*>(&top_left_coordinate_)) + sizeof(scale_factor_));
+inline void MapFile::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.file_name_){}
+    , decltype(_impl_.top_left_coordinate_){nullptr}
+    , decltype(_impl_.file_type_){0}
+    , decltype(_impl_.fields_width_){0u}
+    , decltype(_impl_.fields_height_){0u}
+    , decltype(_impl_.area_id_){0u}
+    , decltype(_impl_.scale_factor_){0}
+  };
+  _impl_.file_name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.file_name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 MapFile::~MapFile() {
   // @@protoc_insertion_point(destructor:tibia.protobuf.map.MapFile)
-  if (GetArenaForAllocation() != nullptr) return;
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
-  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 inline void MapFile::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  file_name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (this != internal_default_instance()) delete top_left_coordinate_;
+  _impl_.file_name_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.top_left_coordinate_;
 }
 
-void MapFile::ArenaDtor(void* object) {
-  MapFile* _this = reinterpret_cast< MapFile* >(object);
-  (void)_this;
-}
-void MapFile::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
-}
 void MapFile::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
 
 void MapFile::Clear() {
@@ -1521,31 +1548,31 @@ void MapFile::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      file_name_.ClearNonDefaultToEmpty();
+      _impl_.file_name_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(top_left_coordinate_ != nullptr);
-      top_left_coordinate_->Clear();
+      GOOGLE_DCHECK(_impl_.top_left_coordinate_ != nullptr);
+      _impl_.top_left_coordinate_->Clear();
     }
   }
   if (cached_has_bits & 0x0000007cu) {
-    ::memset(&file_type_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&scale_factor_) -
-        reinterpret_cast<char*>(&file_type_)) + sizeof(scale_factor_));
+    ::memset(&_impl_.file_type_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.scale_factor_) -
+        reinterpret_cast<char*>(&_impl_.file_type_)) + sizeof(_impl_.scale_factor_));
   }
-  _has_bits_.Clear();
+  _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* MapFile::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* MapFile::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
     uint32_t tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .tibia.protobuf.map.MAP_FILE_TYPE file_type = 1;
       case 1:
@@ -1572,11 +1599,11 @@ const char* MapFile::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::in
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           auto str = _internal_mutable_file_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "tibia.protobuf.map.MapFile.file_name");
-          #endif  // !NDEBUG
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
+          #ifndef NDEBUG
+          ::_pbi::VerifyUTF8(str, "tibia.protobuf.map.MapFile.file_name");
+          #endif  // !NDEBUG
         } else
           goto handle_unusual;
         continue;
@@ -1584,7 +1611,7 @@ const char* MapFile::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::in
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
           _Internal::set_has_fields_width(&has_bits);
-          fields_width_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          _impl_.fields_width_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1593,7 +1620,7 @@ const char* MapFile::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::in
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
           _Internal::set_has_fields_height(&has_bits);
-          fields_height_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          _impl_.fields_height_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1602,7 +1629,7 @@ const char* MapFile::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::in
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
           _Internal::set_has_area_id(&has_bits);
-          area_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          _impl_.area_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1611,7 +1638,7 @@ const char* MapFile::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::in
       case 7:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 57)) {
           _Internal::set_has_scale_factor(&has_bits);
-          scale_factor_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          _impl_.scale_factor_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
           ptr += sizeof(double);
         } else
           goto handle_unusual;
@@ -1632,7 +1659,7 @@ const char* MapFile::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::in
     CHK_(ptr != nullptr);
   }  // while
 message_done:
-  _has_bits_.Or(has_bits);
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
@@ -1646,20 +1673,19 @@ uint8_t* MapFile::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .tibia.protobuf.map.MAP_FILE_TYPE file_type = 1;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       1, this->_internal_file_type(), target);
   }
 
   // optional .tibia.protobuf.shared.Coordinate top_left_coordinate = 2;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::top_left_coordinate(this), target, stream);
+      InternalWriteMessage(2, _Internal::top_left_coordinate(this),
+        _Internal::top_left_coordinate(this).GetCachedSize(), target, stream);
   }
 
   // optional string file_name = 3;
@@ -1675,29 +1701,29 @@ uint8_t* MapFile::_InternalSerialize(
   // optional uint32 fields_width = 4;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(4, this->_internal_fields_width(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(4, this->_internal_fields_width(), target);
   }
 
   // optional uint32 fields_height = 5;
   if (cached_has_bits & 0x00000010u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(5, this->_internal_fields_height(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(5, this->_internal_fields_height(), target);
   }
 
   // optional uint32 area_id = 6;
   if (cached_has_bits & 0x00000020u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(6, this->_internal_area_id(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(6, this->_internal_area_id(), target);
   }
 
   // optional double scale_factor = 7;
   if (cached_has_bits & 0x00000040u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteDoubleToArray(7, this->_internal_scale_factor(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(7, this->_internal_scale_factor(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:tibia.protobuf.map.MapFile)
@@ -1712,7 +1738,7 @@ size_t MapFile::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000007fu) {
     // optional string file_name = 3;
     if (cached_has_bits & 0x00000001u) {
@@ -1725,28 +1751,28 @@ size_t MapFile::ByteSizeLong() const {
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *top_left_coordinate_);
+          *_impl_.top_left_coordinate_);
     }
 
     // optional .tibia.protobuf.map.MAP_FILE_TYPE file_type = 1;
     if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_file_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_file_type());
     }
 
     // optional uint32 fields_width = 4;
     if (cached_has_bits & 0x00000008u) {
-      total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32SizePlusOne(this->_internal_fields_width());
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_fields_width());
     }
 
     // optional uint32 fields_height = 5;
     if (cached_has_bits & 0x00000010u) {
-      total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32SizePlusOne(this->_internal_fields_height());
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_fields_height());
     }
 
     // optional uint32 area_id = 6;
     if (cached_has_bits & 0x00000020u) {
-      total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32SizePlusOne(this->_internal_area_id());
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_area_id());
     }
 
     // optional double scale_factor = 7;
@@ -1755,54 +1781,51 @@ size_t MapFile::ByteSizeLong() const {
     }
 
   }
-  return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
 const ::PROTOBUF_NAMESPACE_ID::Message::ClassData MapFile::_class_data_ = {
-    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSizeCheck,
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
     MapFile::MergeImpl
 };
 const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*MapFile::GetClassData() const { return &_class_data_; }
 
-void MapFile::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
-                      const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-  static_cast<MapFile *>(to)->MergeFrom(
-      static_cast<const MapFile &>(from));
-}
 
-
-void MapFile::MergeFrom(const MapFile& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.map.MapFile)
-  GOOGLE_DCHECK_NE(&from, this);
+void MapFile::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<MapFile*>(&to_msg);
+  auto& from = static_cast<const MapFile&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:tibia.protobuf.map.MapFile)
+  GOOGLE_DCHECK_NE(&from, _this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000007fu) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_set_file_name(from._internal_file_name());
+      _this->_internal_set_file_name(from._internal_file_name());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_top_left_coordinate()->::tibia::protobuf::shared::Coordinate::MergeFrom(from._internal_top_left_coordinate());
+      _this->_internal_mutable_top_left_coordinate()->::tibia::protobuf::shared::Coordinate::MergeFrom(
+          from._internal_top_left_coordinate());
     }
     if (cached_has_bits & 0x00000004u) {
-      file_type_ = from.file_type_;
+      _this->_impl_.file_type_ = from._impl_.file_type_;
     }
     if (cached_has_bits & 0x00000008u) {
-      fields_width_ = from.fields_width_;
+      _this->_impl_.fields_width_ = from._impl_.fields_width_;
     }
     if (cached_has_bits & 0x00000010u) {
-      fields_height_ = from.fields_height_;
+      _this->_impl_.fields_height_ = from._impl_.fields_height_;
     }
     if (cached_has_bits & 0x00000020u) {
-      area_id_ = from.area_id_;
+      _this->_impl_.area_id_ = from._impl_.area_id_;
     }
     if (cached_has_bits & 0x00000040u) {
-      scale_factor_ = from.scale_factor_;
+      _this->_impl_.scale_factor_ = from._impl_.scale_factor_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
-  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void MapFile::CopyFrom(const MapFile& from) {
@@ -1821,22 +1844,21 @@ void MapFile::InternalSwap(MapFile* other) {
   auto* lhs_arena = GetArenaForAllocation();
   auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      &file_name_, lhs_arena,
-      &other->file_name_, rhs_arena
+      &_impl_.file_name_, lhs_arena,
+      &other->_impl_.file_name_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(MapFile, scale_factor_)
-      + sizeof(MapFile::scale_factor_)
-      - PROTOBUF_FIELD_OFFSET(MapFile, top_left_coordinate_)>(
-          reinterpret_cast<char*>(&top_left_coordinate_),
-          reinterpret_cast<char*>(&other->top_left_coordinate_));
+      PROTOBUF_FIELD_OFFSET(MapFile, _impl_.scale_factor_)
+      + sizeof(MapFile::_impl_.scale_factor_)
+      - PROTOBUF_FIELD_OFFSET(MapFile, _impl_.top_left_coordinate_)>(
+          reinterpret_cast<char*>(&_impl_.top_left_coordinate_),
+          reinterpret_cast<char*>(&other->_impl_.top_left_coordinate_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata MapFile::GetMetadata() const {
-  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+  return ::_pbi::AssignDescriptors(
       &descriptor_table_map_2eproto_getter, &descriptor_table_map_2eproto_once,
       file_level_metadata_map_2eproto[3]);
 }
@@ -1846,16 +1868,20 @@ void MapFile::InternalSwap(MapFile* other) {
 }  // namespace protobuf
 }  // namespace tibia
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::tibia::protobuf::map::Map* Arena::CreateMaybeMessage< ::tibia::protobuf::map::Map >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::tibia::protobuf::map::Map*
+Arena::CreateMaybeMessage< ::tibia::protobuf::map::Map >(Arena* arena) {
   return Arena::CreateMessageInternal< ::tibia::protobuf::map::Map >(arena);
 }
-template<> PROTOBUF_NOINLINE ::tibia::protobuf::map::Area* Arena::CreateMaybeMessage< ::tibia::protobuf::map::Area >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::tibia::protobuf::map::Area*
+Arena::CreateMaybeMessage< ::tibia::protobuf::map::Area >(Arena* arena) {
   return Arena::CreateMessageInternal< ::tibia::protobuf::map::Area >(arena);
 }
-template<> PROTOBUF_NOINLINE ::tibia::protobuf::map::Npc* Arena::CreateMaybeMessage< ::tibia::protobuf::map::Npc >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::tibia::protobuf::map::Npc*
+Arena::CreateMaybeMessage< ::tibia::protobuf::map::Npc >(Arena* arena) {
   return Arena::CreateMessageInternal< ::tibia::protobuf::map::Npc >(arena);
 }
-template<> PROTOBUF_NOINLINE ::tibia::protobuf::map::MapFile* Arena::CreateMaybeMessage< ::tibia::protobuf::map::MapFile >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::tibia::protobuf::map::MapFile*
+Arena::CreateMaybeMessage< ::tibia::protobuf::map::MapFile >(Arena* arena) {
   return Arena::CreateMessageInternal< ::tibia::protobuf::map::MapFile >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE

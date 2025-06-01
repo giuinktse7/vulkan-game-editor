@@ -28,7 +28,7 @@ class CreatureBrush final : public Brush
     const std::string &id() const noexcept;
 
     std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const override;
-    const std::string getDisplayId() const override;
+    std::string getDisplayId() const override;
     int variationCount() const override;
 
     const CreatureType *const creatureType;

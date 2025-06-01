@@ -1850,7 +1850,7 @@ void MapView::perfTest()
     Position to(2000, 2000, 7);
 
     // > 1min with autoborder
-    // fillRegionByGroundBrush(from, to, Brush::getGroundBrush("normal_grass"));
+    // fillRegionByGroundBrush(from, to, Brushes::getGroundBrush("normal_grass"));
 
     // < 2s without autoborder
     fillRegion(from, to, 4526);

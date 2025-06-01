@@ -14,15 +14,12 @@
 #include "brushes/brush.h"
 #include "editor_action.h"
 #include "graphics/buffer.h"
-#include "graphics/swapchain.h"
 #include "graphics/texture.h"
 #include "graphics/texture_atlas.h"
-#include "graphics/vertex.h"
 #include "graphics/vulkan_helpers.h"
 #include "item.h"
 #include "items.h"
 #include "map.h"
-#include "time_util.h"
 #include "util.h"
 
 class MapView;
@@ -345,7 +342,7 @@ class MapRenderer
 
     bool insideMap(const Position &position);
 
-    void updateUniformBuffer();
+    void updateUniformBuffer(glm::mat4 projection);
 
     void beginRenderPass();
     void setupFrame();

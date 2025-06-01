@@ -1,18 +1,17 @@
 #pragma once
 
-#include <chrono>
 #include <filesystem>
 #include <limits>
 #include <optional>
 #include <string>
 #include <thread>
 #include <type_traits>
-#include <variant>
 #include <vector>
 
 #include "concepts.h"
 #include "debug.h"
 
+// These are required for the tsl::robin_map and tsl::robin_set
 #include "./vendor/tsl/robin_map.h"
 #include "./vendor/tsl/robin_set.h"
 
@@ -76,7 +75,7 @@ namespace util
         // else the indices were equal, no rotate necessary
     }
 
-    std::string unicodePath(std::filesystem::path path);
+    std::string unicodePath(const std::filesystem::path &path);
 
     template <typename T>
     bool unique_ptr_value_equals(const std::unique_ptr<T> &lhs,
@@ -84,30 +83,6 @@ namespace util
     {
         return !lhs ? !rhs : rhs && *lhs == *rhs;
     }
-
-    template <typename T>
-    decltype(auto) pointerAddress(T *pointer)
-    {
-        if constexpr (sizeof(void *) == 8)
-        {
-            uint64_t result = (uint64_t)pointer;
-            return result;
-        }
-        else if (sizeof(void *) == 4)
-        {
-            uint32_t result = (uint32_t)pointer;
-            return result;
-        }
-        else
-        {
-            // static_assert(
-            // false,
-            // "Invalid pointer size. Pointer size must be 4 or 8 bytes.");
-            return 8;
-        }
-    }
-
-    using PointerAddress = decltype(pointerAddress((void *)nullptr));
 
     bool powerOf2(Arithmetic auto value)
     {
@@ -120,13 +95,13 @@ namespace util
       public:
         Volume(T1 width, T2 height, T3 depth);
 
-        inline constexpr T1 width() const noexcept;
-        inline constexpr T2 height() const noexcept;
-        inline constexpr T3 depth() const noexcept;
+        constexpr T1 width() const noexcept;
+        constexpr T2 height() const noexcept;
+        constexpr T3 depth() const noexcept;
 
-        inline constexpr void setWidth(T1 width) noexcept;
-        inline constexpr void setHeight(T2 height) noexcept;
-        inline constexpr void setDepth(T3 height) noexcept;
+        constexpr void setWidth(T1 width) noexcept;
+        constexpr void setHeight(T2 height) noexcept;
+        constexpr void setDepth(T3 depth) noexcept;
 
       private:
         int _width;
@@ -139,11 +114,11 @@ namespace util
       public:
         Size(int width, int height);
 
-        inline constexpr int width() const noexcept;
-        inline constexpr int height() const noexcept;
+        [[nodiscard]] constexpr int width() const noexcept;
+        [[nodiscard]] constexpr int height() const noexcept;
 
-        inline constexpr void setWidth(int width) noexcept;
-        inline constexpr void setHeight(int height) noexcept;
+        constexpr void setWidth(int width) noexcept;
+        constexpr void setHeight(int height) noexcept;
 
       private:
         int w;
@@ -351,7 +326,7 @@ constexpr inline auto string_hash(const char *s)
     return hash;
 }
 
-constexpr inline auto operator"" _sh(const char *s, size_t)
+constexpr inline auto operator""_sh(const char *s, size_t /*unused*/)
 {
     return string_hash(s);
 }
@@ -373,69 +348,69 @@ inline util::Volume<T1, T2, T3>::Volume(T1 width, T2 height, T3 depth)
 }
 
 template <typename T1, typename T2, typename T3>
-inline constexpr T1 util::Volume<T1, T2, T3>::width() const noexcept
+constexpr T1 util::Volume<T1, T2, T3>::width() const noexcept
 {
     return _width;
 }
 
 template <typename T1, typename T2, typename T3>
-inline constexpr T2 util::Volume<T1, T2, T3>::height() const noexcept
+constexpr T2 util::Volume<T1, T2, T3>::height() const noexcept
 {
     return _height;
 }
 
 template <typename T1, typename T2, typename T3>
-inline constexpr T3 util::Volume<T1, T2, T3>::depth() const noexcept
+constexpr T3 util::Volume<T1, T2, T3>::depth() const noexcept
 {
     return _depth;
 }
 
 template <typename T1, typename T2, typename T3>
-inline constexpr void util::Volume<T1, T2, T3>::setWidth(T1 width) noexcept
+constexpr void util::Volume<T1, T2, T3>::setWidth(T1 width) noexcept
 {
     _width = width;
 }
 
 template <typename T1, typename T2, typename T3>
-inline constexpr void util::Volume<T1, T2, T3>::setHeight(T2 height) noexcept
+constexpr void util::Volume<T1, T2, T3>::setHeight(T2 height) noexcept
 {
     _height = height;
 }
 
 template <typename T1, typename T2, typename T3>
-inline constexpr void util::Volume<T1, T2, T3>::setDepth(T3 depth) noexcept
+constexpr void util::Volume<T1, T2, T3>::setDepth(T3 depth) noexcept
 {
     _depth = depth;
 }
 
-inline constexpr int util::Size::width() const noexcept
+constexpr int util::Size::width() const noexcept
 {
     return w;
 }
 
-inline constexpr int util::Size::height() const noexcept
+constexpr int util::Size::height() const noexcept
 {
     return h;
 }
 
 template <Arithmetic T>
-inline constexpr T util::Point<T>::x() const noexcept
+constexpr T util::Point<T>::x() const noexcept
 {
     return _x;
 }
 
 template <Arithmetic T>
-inline constexpr T util::Point<T>::y() const noexcept
+constexpr T util::Point<T>::y() const noexcept
 {
     return _y;
 }
 
-inline constexpr void util::Size::setWidth(int width) noexcept
+constexpr void util::Size::setWidth(int width) noexcept
 {
     w = width;
 }
 
-inline constexpr void util::Size::setHeight(int height) noexcept
+constexpr void util::Size::setHeight(int height) noexcept
 {
     h = height;
 }
@@ -443,7 +418,7 @@ inline constexpr void util::Size::setHeight(int height) noexcept
 template <typename T>
 inline std::ostream &operator<<(std::ostream &os, const util::Point<T> &pos)
 {
-    os << "{ x=" << pos.x() << ', y=' << pos.y() << ' }';
+    os << "{ x=" << pos.x() << ", y=" << pos.y() << " }";
     return os;
 }
 
@@ -532,34 +507,34 @@ inline std::string toString(T value)
         }                                                                                                                                                         \
     }
 
-#define STRUCTURED_BINDING(Type, count)                                 \
-    namespace std                                                       \
-    {                                                                   \
-        template <>                                                     \
-        struct tuple_size<Type> : std::integral_constant<size_t, count> \
-        {                                                               \
-        };                                                              \
-                                                                        \
-        template <size_t I>                                             \
-        class std::tuple_element<I, Type>                               \
-        {                                                               \
-          public:                                                       \
-            using type = decltype(declval<Type>().get<I>());            \
-        };                                                              \
+#define STRUCTURED_BINDING(Type, count)                            \
+    namespace std                                                  \
+    {                                                              \
+        template <>                                                \
+        struct tuple_size<Type> : integral_constant<size_t, count> \
+        {                                                          \
+        };                                                         \
+                                                                   \
+        template <size_t I>                                        \
+        class tuple_element<I, Type>                               \
+        {                                                          \
+          public:                                                  \
+            using type = decltype(declval<Type>().get<I>());       \
+        };                                                         \
     }
 
-#define STRUCTURED_BINDING_T1(Type, count)                                 \
-    namespace std                                                          \
-    {                                                                      \
-        template <typename T>                                              \
-        struct tuple_size<Type<T>> : std::integral_constant<size_t, count> \
-        {                                                                  \
-        };                                                                 \
-                                                                           \
-        template <size_t I, typename T>                                    \
-        class std::tuple_element<I, Type<T>>                               \
-        {                                                                  \
-          public:                                                          \
-            using type = decltype(declval<Type<T>>().template get<I>());   \
-        };                                                                 \
+#define STRUCTURED_BINDING_T1(Type, count)                               \
+    namespace std                                                        \
+    {                                                                    \
+        template <typename T>                                            \
+        struct tuple_size<Type<T>> : integral_constant<size_t, count>    \
+        {                                                                \
+        };                                                               \
+                                                                         \
+        template <size_t I, typename T>                                  \
+        class tuple_element<I, Type<T>>                                  \
+        {                                                                \
+          public:                                                        \
+            using type = decltype(declval<Type<T>>().template get<I>()); \
+        };                                                               \
     }
