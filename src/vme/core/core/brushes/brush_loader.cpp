@@ -12,6 +12,7 @@
 #include "../time_util.h"
 #include "border_brush.h"
 #include "brush.h"
+#include "brushes.h"
 #include "doodad_brush.h"
 #include "ground_brush.h"
 #include "mountain_brush.h"
@@ -236,7 +237,7 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
 
         stackTrace.emplace(std::format("Brush '{}'", brush.at("id").get<std::string>()));
 
-        auto brushType = Brush::parseBrushType(getString(brush, "type"));
+        auto brushType = Brushes::parseBrushType(getString(brush, "type"));
         if (!brushType)
         {
             // throw json::type_error::create(302, std::format("The type must be one of ['ground', 'doodad', 'wall', 'border']."), brush);
@@ -248,19 +249,19 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
             case BrushType::Ground:
             {
                 auto groundBrush = parseGroundBrush(brush);
-                Brush::addGroundBrush(std::move(groundBrush));
+                Brushes::addGroundBrush(std::move(groundBrush));
                 break;
             }
             case BrushType::Border:
             {
                 auto borderBrush = parseBorderBrush(brush);
-                Brush::addBorderBrush(std::move(borderBrush));
+                Brushes::addBorderBrush(std::move(borderBrush));
                 break;
             }
             case BrushType::Wall:
             {
                 auto wallBrush = parseWallBrush(brush);
-                Brush::addWallBrush(std::move(wallBrush));
+                Brushes::addWallBrush(std::move(wallBrush));
                 break;
             }
             case BrushType::Doodad:
@@ -268,7 +269,7 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
                 auto doodadBrush = parseDoodadBrush(brush);
                 if (doodadBrush.has_value())
                 {
-                    Brush::addDoodadBrush(std::move(doodadBrush.value()));
+                    Brushes::addDoodadBrush(std::move(doodadBrush.value()));
                 }
                 break;
             }
@@ -277,7 +278,7 @@ void BrushLoader::parseBrushes(const nlohmann::json &brushesJson)
                 auto mountainBrush = parseMountainBrush(brush);
                 if (mountainBrush.has_value())
                 {
-                    Brush::addMountainBrush(std::move(mountainBrush.value()));
+                    Brushes::addMountainBrush(std::move(mountainBrush.value()));
                 }
                 break;
             }
@@ -369,7 +370,7 @@ WallBrush BrushLoader::parseWallBrush(const json &brush)
 
         stackTrace.emplace("items");
         {
-            json items = root.at("items");
+            const json &items = root.at("items");
 
             parseItems(items, &part);
         }
@@ -460,7 +461,7 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
 
     int lookId = getInt(brush, "lookId");
 
-    std::array<uint32_t, 12> outerWalls;
+    std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> outerWalls;
 
     stackTrace.emplace("items");
     {
@@ -493,7 +494,7 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
     const json &ground = brush.at("ground");
 
     auto onFirstGroundUse = [mountainBrushId](const Brush *brush) {
-        MountainBrush *mountainBrush = Brush::getMountainBrush(mountainBrushId);
+        MountainBrush *mountainBrush = Brushes::getMountainBrush(mountainBrushId);
         switch (brush->type())
         {
             case BrushType::Raw:
@@ -523,7 +524,7 @@ std::optional<MountainBrush> BrushLoader::parseMountainBrush(const json &brush)
 
     MountainBrush mountainBrush = MountainBrush(mountainBrushId, name, lazyGround, innerWall, BorderData(outerWalls), lookId);
 
-    return mountainBrush;
+    return std::make_optional(std::move(mountainBrush));
 }
 
 std::optional<DoodadBrush> BrushLoader::parseDoodadBrush(const json &brush)
@@ -663,7 +664,7 @@ GroundBrush BrushLoader::parseGroundBrush(const json &brush)
 
             std::string borderId = border.at("id").get<std::string>();
 
-            BorderBrush *brush = Brush::getBorderBrush(borderId);
+            BorderBrush *brush = Brushes::getBorderBrush(borderId);
             if (!brush)
             {
                 // throw json::type_error::create(302, std::format("There is no border brush with id '{}'", borderId), border);
@@ -782,13 +783,13 @@ vme_unordered_map<uint32_t, BorderType> BrushLoader::parseExtraBorderIds(const j
     return data;
 }
 
-std::array<uint32_t, 12> BrushLoader::parseBorderIds(const json &borderJson)
+std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> BrushLoader::parseBorderIds(const json &borderJson)
 {
     const json &straight = borderJson.at("straight");
     const json &corner = borderJson.at("corner");
     const json &diagonal = borderJson.at("diagonal");
 
-    std::array<uint32_t, 12> borderIds;
+    std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds;
 
     auto setBorderId = [&borderIds](BorderType borderType, uint32_t serverId) {
         // -1 because first value in BorderType is BorderType::None
@@ -909,7 +910,7 @@ BorderBrush BrushLoader::parseBorderBrush(const nlohmann::json &brush)
     const json &corner = items.at("corner");
     const json &diagonal = items.at("diagonal");
 
-    std::array<uint32_t, 12> borderIds = parseBorderIds(items);
+    std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds = parseBorderIds(items);
 
     auto borderBrush = BorderBrush(id, name, borderIds);
     borderBrush.setIconServerId(lookId);

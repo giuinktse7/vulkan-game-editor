@@ -266,7 +266,7 @@ void WallBrush::applyInRectangleArea(MapView &mapView, const Position &from, con
     }
 }
 
-const std::string WallBrush::getDisplayId() const
+std::string WallBrush::getDisplayId() const
 {
     return id;
 }

@@ -26,7 +26,7 @@ class RawBrush final : public Brush
 
     std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const override;
 
-    const std::string getDisplayId() const override;
+    std::string getDisplayId() const override;
 
   private:
     ItemType *_itemType;

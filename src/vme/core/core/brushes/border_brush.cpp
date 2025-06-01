@@ -122,13 +122,13 @@ bool isTop(TileQuadrant quadrant);
 bool isLeft(TileQuadrant quadrant);
 bool isRight(TileQuadrant quadrant);
 
-BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds, GroundBrush *centerBrush)
+BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds, GroundBrush *centerBrush)
     : Brush(name), id(id), borderData(borderIds, centerBrush)
 {
     initialize();
 }
 
-BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, 12> borderIds)
+BorderBrush::BorderBrush(std::string id, const std::string &name, std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds)
     : Brush(name), id(id), borderData(borderIds)
 {
     initialize();
@@ -677,7 +677,7 @@ BrushType BorderBrush::type() const
     return BrushType::Border;
 }
 
-const std::string BorderBrush::getDisplayId() const
+std::string BorderBrush::getDisplayId() const
 {
     return id;
 }
@@ -845,4 +845,152 @@ void ReplaceAction::apply(MapView &mapView, const Position &position, uint32_t o
 void SetFullAction::apply(MapView &mapView, const Position &position, GroundBrush *groundBrush)
 {
     groundBrush->applyWithoutBorderize(mapView, position);
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>BorderData>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>
+
+BorderData::BorderData(std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds)
+    : borderIds(borderIds) {}
+
+BorderData::BorderData(std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> borderIds, GroundBrush *centerBrush)
+    : borderIds(borderIds), _centerBrush(std::make_optional<Brush::LazyGround>(centerBrush)) {}
+
+void BorderData::setExtraBorderIds(vme_unordered_map<uint32_t, BorderType> &&extraIds)
+{
+    this->extraIds = std::make_unique<vme_unordered_map<uint32_t, BorderType>>(std::move(extraIds));
+}
+
+const vme_unordered_map<uint32_t, BorderType> *BorderData::getExtraBorderIds() const
+{
+    return extraIds ? extraIds.get() : nullptr;
+}
+
+void BorderData::setCenterGroundId(const std::string &id)
+{
+    _centerBrush.emplace(Brush::LazyGround(id));
+}
+
+GroundBrush *BorderData::centerBrush() const
+{
+    return _centerBrush ? _centerBrush->value() : nullptr;
+}
+
+BorderType BorderData::getBorderType(uint32_t serverId) const
+{
+    for (int i = 0; i < borderIds.size(); ++i)
+    {
+        if (borderIds[i] == serverId)
+        {
+            return static_cast<BorderType>(i + 1);
+        }
+    }
+
+    if (extraIds && extraIds->contains(serverId))
+    {
+        return extraIds->at(serverId);
+    }
+
+    if (_centerBrush && _centerBrush->value()->erasesItem(serverId))
+    {
+        return BorderType::Center;
+    }
+
+    return BorderType::None;
+}
+
+std::optional<uint32_t> BorderData::getServerId(BorderType borderType) const noexcept
+{
+    // -1 because index zero in BorderType is BorderType::None
+    uint32_t id = borderIds[to_underlying(borderType) - 1];
+    return id == 0 ? std::nullopt : std::make_optional(id);
+}
+
+std::array<uint32_t, BORDER_COUNT_FOR_GROUND_TILE> BorderData::getBorderIds() const
+{
+    return borderIds;
+}
+
+bool BorderData::is(uint32_t serverId, BorderType borderType) const
+{
+    if (borderType == BorderType::Center)
+    {
+        return _centerBrush && _centerBrush->value()->erasesItem(serverId);
+    }
+
+    auto borderItemId = getServerId(borderType);
+    return borderItemId && (*borderItemId == serverId);
+}
+
+BorderNeighborMap::BorderNeighborMap(const Position &position, BorderBrush *brush, const Map &map)
+{
+    for (int dy = -2; dy <= 2; ++dy)
+    {
+        for (int dx = -2; dx <= 2; ++dx)
+        {
+            TileCover tileCover = getTileCoverAt(brush, map, position + Position(dx, dy, 0));
+            TileQuadrant quadrant = brush->getNeighborQuadrant(dx, dy);
+            tileCover = TileCovers::unifyTileCover(tileCover, quadrant);
+
+            auto diagonals = tileCover & TileCovers::Diagonals;
+            DEBUG_ASSERT((diagonals == TileCovers::None) || TileCovers::exactlyOneSet(diagonals & TileCovers::Diagonals), "Preferred diagonal must be None or have exactly one diagonal set.");
+
+            set(dx, dy, tileCover);
+        }
+    }
+}
+
+TileCover BorderNeighborMap::getTileCoverAt(BorderBrush *brush, const Map &map, const Position position) const
+{
+    Tile *tile = map.getTile(position);
+    if (!tile)
+    {
+        return TILE_COVER_NONE;
+    }
+
+    return tile->getTileCover(brush);
+}
+
+bool BorderNeighborMap::isExpanded(int x, int y) const
+{
+    auto found = std::find_if(expandedCovers.begin(), expandedCovers.end(), [x, y](const ExpandedTileBlock &block) { return block.x == x && block.y == y; });
+    return found != expandedCovers.end();
+}
+
+bool BorderNeighborMap::hasExpandedCover() const noexcept
+{
+    return !expandedCovers.empty();
+}
+
+void BorderNeighborMap::addExpandedCover(int x, int y)
+{
+    expandedCovers.emplace_back(ExpandedTileBlock{x, y});
+}
+
+TileCover &BorderNeighborMap::at(int x, int y)
+{
+    return data[index(x, y)];
+}
+
+TileCover &BorderNeighborMap::center()
+{
+    return data[12];
+}
+
+TileCover BorderNeighborMap::at(int x, int y) const
+{
+    return data[index(x, y)];
+}
+
+void BorderNeighborMap::set(int x, int y, TileCover tileCover)
+{
+    data[index(x, y)] = tileCover;
+}
+
+int BorderNeighborMap::index(int x, int y) const
+{
+    return (y + 2) * 5 + (x + 2);
 }

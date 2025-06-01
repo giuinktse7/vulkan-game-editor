@@ -44,7 +44,6 @@ class WallBrush final : public Brush
         std::vector<Window> windows;
     };
 
-  public:
     WallBrush(std::string id, const std::string &name, StraightPart &&horizontal, StraightPart &&vertical, Part &&corner, Part &&pole);
 
     void apply(MapView &mapView, const Position &position) override;
@@ -55,7 +54,7 @@ class WallBrush final : public Brush
 
     void applyInRectangleArea(MapView &mapView, const Position &from, const Position &to);
 
-    const std::string getDisplayId() const override;
+    std::string getDisplayId() const override;
     bool erasesItem(uint32_t serverId) const override;
     bool includes(uint32_t serverId) const;
 

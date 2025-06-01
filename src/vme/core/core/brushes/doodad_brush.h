@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <optional>
 #include <unordered_set>
 #include <vector>
 
@@ -28,7 +27,7 @@ class DoodadBrush final : public Brush
 
     static ReplaceBehavior parseReplaceBehavior(std::string raw);
 
-    enum class EntryType
+    enum class EntryType : std::uint8_t
     {
         Single,
         Composite,
@@ -105,7 +104,7 @@ class DoodadBrush final : public Brush
     uint32_t iconServerId() const;
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
-    const std::string getDisplayId() const override;
+    std::string getDisplayId() const override;
 
     const std::string &id() const noexcept;
 

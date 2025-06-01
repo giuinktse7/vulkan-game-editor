@@ -1,12 +1,9 @@
 #pragma once
 
-#include <optional>
-
 #include "../tile_cover.h"
 
-class BorderNeighborMap;
+struct BorderNeighborMap;
 struct BorderExpandResult;
-class BorderNeighborMap;
 class MapView;
 struct Position;
 

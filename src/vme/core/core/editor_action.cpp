@@ -1,6 +1,7 @@
 #include "editor_action.h"
 
 #include "brushes/brush.h"
+#include "brushes/brushes.h"
 #include "brushes/raw_brush.h"
 #include "debug.h"
 #include "items.h"
@@ -12,7 +13,7 @@ MouseAction::MapBrush::MapBrush(Brush *brush)
     : brush(brush) {}
 
 MouseAction::MapBrush::MapBrush(uint32_t serverId)
-    : brush(Brush::getOrCreateRawBrush(serverId)) {}
+    : brush(Brushes::getOrCreateRawBrush(serverId)) {}
 
 void MouseAction::MapBrush::nextVariation()
 {

@@ -57,7 +57,7 @@ std::vector<ThingDrawInfo> CreatureBrush::getPreviewTextureInfo(int variation) c
     return std::vector<ThingDrawInfo>{DrawCreatureType(creatureType, PositionConstants::Zero, direction)};
 }
 
-const std::string CreatureBrush::getDisplayId() const
+std::string CreatureBrush::getDisplayId() const
 {
     return std::to_string(creatureType->looktype());
 }

@@ -52,7 +52,7 @@ struct GroundBorder
 
 /**
  * Ground Brush
- * 
+ *
  * Possible optimization:
  * nextServerId() performs linear search. It is the fastest approach for small lists (< 30 items at least).
  * However, if in the future it is common to use larger ground brushes (40-60+ items) then a possible optimization to try
@@ -92,7 +92,7 @@ class GroundBrush final : public Brush
 
     std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const override;
 
-    const std::string getDisplayId() const override;
+    std::string getDisplayId() const override;
 
     const std::unordered_set<uint32_t> &serverIds() const;
 
@@ -181,12 +181,12 @@ struct GroundNeighborMap
 
   private:
     int index(int x, int y) const;
-    std::optional<value_type> getTileCoverAt(const Map &map, const Position position, TileCover mask) const;
+    std::optional<value_type> getTileCoverAt(const Map &map, Position position, TileCover mask) const;
 
-    std::array<value_type, 25> data;
+    std::array<value_type, TILES_IN_5_BY_5_GRID> data;
 
     // Used to remove adjacent borders when placing a new ground using GroundBrush
-    static constexpr std::array<TileCover, 25> indexToBorderExclusionMask = {
+    static constexpr std::array<TileCover, TILES_IN_5_BY_5_GRID> indexToBorderExclusionMask = {
         // Row 1
         TILE_COVER_NONE,
         TILE_COVER_NONE,

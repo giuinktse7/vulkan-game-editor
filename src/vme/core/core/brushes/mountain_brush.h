@@ -4,10 +4,9 @@
 #include <unordered_set>
 #include <variant>
 
-#include "../lazy_object.h"
-#include "../random.h"
 #include "../tile.h"
 #include "../tile_cover.h"
+#include "border_brush.h"
 #include "brush.h"
 
 struct Position;
@@ -74,7 +73,7 @@ class MountainBrush final : public Brush
     bool erasesItem(uint32_t serverId) const override;
     BrushType type() const override;
     std::vector<ThingDrawInfo> getPreviewTextureInfo(int variation) const override;
-    const std::string getDisplayId() const override;
+    std::string getDisplayId() const override;
 
     uint32_t iconServerId() const;
 

@@ -106,6 +106,8 @@ set(HEADER_FILES
     core/lazy_object.h
     core/version.h
     core/octree.h
+    core/brushes/brushes.h
+    core/brushes/brushes.cpp
     core/brushes/brush.h
     core/brushes/raw_brush.h
     core/brushes/ground_brush.h

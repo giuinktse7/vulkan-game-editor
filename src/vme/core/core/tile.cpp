@@ -4,6 +4,7 @@
 #include <ranges>
 
 #include "brushes/border_brush.h"
+#include "brushes/brushes.h"
 #include "brushes/creature_brush.h"
 #include "brushes/doodad_brush.h"
 #include "brushes/ground_brush.h"
@@ -847,47 +848,47 @@ std::vector<Brush *> Tile::getTopBrushes()
     if (topItem)
     {
         uint32_t id = topItem->serverId();
-        Brush *brush = static_cast<Brush *>(Brush::getOrCreateRawBrush(id));
+        Brush *brush = static_cast<Brush *>(Brushes::getOrCreateRawBrush(id));
         brushes.emplace_back(brush);
     }
 
     // Wall brush
-    WallBrush *wallBrush = Brush::getWallBrush(*this);
+    WallBrush *wallBrush = Brushes::getWallBrush(*this);
     if (wallBrush)
     {
         brushes.emplace_back(static_cast<Brush *>(wallBrush));
     }
 
     // Border brush
-    BorderBrush *borderBrush = Brush::getBorderBrush(*this);
+    BorderBrush *borderBrush = Brushes::getBorderBrush(*this);
     if (borderBrush)
     {
         brushes.emplace_back(static_cast<Brush *>(borderBrush));
     }
 
     // Doodad brush
-    DoodadBrush *doodadBrush = Brush::getDoodadBrush(*this);
+    DoodadBrush *doodadBrush = Brushes::getDoodadBrush(*this);
     if (doodadBrush)
     {
         brushes.emplace_back(static_cast<Brush *>(doodadBrush));
     }
 
     // Ground brush
-    GroundBrush *groundBrush = Brush::getGroundBrush(*this);
+    GroundBrush *groundBrush = Brushes::getGroundBrush(*this);
     if (groundBrush)
     {
         brushes.emplace_back(static_cast<Brush *>(groundBrush));
     }
 
     // Mountain brush
-    MountainBrush *mountainBrush = Brush::getMountainBrush(*this);
+    MountainBrush *mountainBrush = Brushes::getMountainBrush(*this);
     if (mountainBrush)
     {
         brushes.emplace_back(static_cast<Brush *>(mountainBrush));
     }
 
     // Creature brush
-    CreatureBrush *creatureBrush = Brush::getCreatureBrush(*this);
+    CreatureBrush *creatureBrush = Brushes::getCreatureBrush(*this);
     if (creatureBrush)
     {
         brushes.emplace_back(static_cast<Brush *>(creatureBrush));

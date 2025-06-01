@@ -76,7 +76,7 @@ std::vector<ThingDrawInfo> RawBrush::getPreviewTextureInfo(int variation) const
     return std::vector<ThingDrawInfo>{DrawItemType(_itemType, PositionConstants::Zero)};
 }
 
-const std::string RawBrush::getDisplayId() const
+std::string RawBrush::getDisplayId() const
 {
     return std::to_string(_itemType->id);
 }

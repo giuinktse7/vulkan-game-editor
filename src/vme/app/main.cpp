@@ -9,28 +9,28 @@
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#include <QString>
 #include <QVariant>
-
-#include <iostream>
 
 #include "core/brushes/border_brush.h"
 #include "core/brushes/brush.h"
 #include "core/brushes/brush_loader.h"
+#include "core/brushes/brushes.h"
 #include "core/brushes/creature_brush.h"
 #include "core/brushes/doodad_brush.h"
 #include "core/brushes/ground_brush.h"
 #include "core/brushes/mountain_brush.h"
-#include "core/brushes/wall_brush.h"
 #include "core/config.h"
 #include "core/item_palette.h"
 #include "core/items.h"
 #include "core/random.h"
 #include "core/time_util.h"
-#include "debug_util.h"
 #include "gui_thing_image.h"
 
 #include <QtQml/qqmlextensionplugin.h>
 Q_IMPORT_QML_PLUGIN(AppComponentsPlugin)
+
+using namespace Qt::Literals::StringLiterals;
 
 class FileWatcher : QObject
 {
@@ -287,14 +287,14 @@ void MainApp::createDefaultPalettes()
         // Grounds
         {
             auto &groundTileset = terrainPalette.addTileset(Tileset("grounds", "Grounds"));
-            auto &brushes = Brush::getGroundBrushes();
-            for (auto &brush : brushes)
+            auto &brushes = Brushes::getGroundBrushes();
+            for (const auto &brush : brushes)
             {
                 groundTileset.addBrush(brush.second.get());
             }
 
-            auto &mountainBrushes = Brush::getMountainBrushes();
-            for (auto &brush : mountainBrushes)
+            auto &mountainBrushes = Brushes::getMountainBrushes();
+            for (const auto &brush : mountainBrushes)
             {
                 groundTileset.addBrush(brush.second.get());
             }
@@ -303,8 +303,8 @@ void MainApp::createDefaultPalettes()
         // Borders
         {
             auto &borderTileset = terrainPalette.addTileset(Tileset("borders", "Borders"));
-            auto &brushes = Brush::getBorderBrushes();
-            for (auto &brush : brushes)
+            auto &brushes = Brushes::getBorderBrushes();
+            for (const auto &brush : brushes)
             {
                 borderTileset.addBrush(brush.second.get());
             }
@@ -313,8 +313,8 @@ void MainApp::createDefaultPalettes()
         // Walls
         {
             auto &wallTileset = terrainPalette.addTileset(Tileset("walls", "Walls"));
-            auto &brushes = Brush::getWallBrushes();
-            for (auto &brush : brushes)
+            auto &brushes = Brushes::getWallBrushes();
+            for (const auto &brush : brushes)
             {
                 wallTileset.addBrush(brush.second.get());
             }
@@ -322,11 +322,11 @@ void MainApp::createDefaultPalettes()
 
         // Doodads
         {
-            auto &brushes = Brush::getDoodadBrushes();
+            auto &brushes = Brushes::getDoodadBrushes();
             if (brushes.size() > 0)
             {
                 auto &doodadTileset = terrainPalette.addTileset(Tileset("doodads", "Doodads"));
-                for (auto &brush : brushes)
+                for (const auto &brush : brushes)
                 {
                     doodadTileset.addBrush(brush.second.get());
                 }
@@ -341,23 +341,23 @@ void MainApp::createDefaultPalettes()
         auto &otherTileset = creaturePalette.addTileset(Tileset("other", "Other"));
 
         const auto addTestCreatureBrush = [&otherTileset](std::string id, std::string name, int looktype) {
-            otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(id, name, looktype))));
+            otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(id, name, looktype))));
         };
 
-        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+        otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
             "colorful_nomad",
             "Colorful Nomad",
             // Outfit(150, 116, 68, 68, 68, Outfit::Addon::First | Outfit::Addon::Second, 370)))));
             Outfit(150, 116, 68, 68, 68, Outfit::Addon::None, 370)))));
         // Outfit(150, 116, 68, 68, 68, Outfit::Addon::None)))));
 
-        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+        otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
             "colorful_nomad_2",
             "Colorful Nomad 2",
             // Outfit(150, 116, 68, 68, 68, Outfit::Addon::First | Outfit::Addon::Second, 370)))));
             Outfit(150, 116, 68, 68, 68, Outfit::Addon::None)))));
 
-        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
+        otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType(
             "nomad",
             "Nomad",
             Outfit(146, 114, 20, 22, 2)))));
@@ -371,6 +371,6 @@ void MainApp::createDefaultPalettes()
         addTestCreatureBrush("squirrel", "Squirrel", 274);
         addTestCreatureBrush("cobra", "Cobra", 81);
 
-        otherTileset.addBrush(Brush::addCreatureBrush(CreatureBrush(Creatures::addCreatureType("mimic", "Mimic", Outfit::fromServerId(1740)))));
+        otherTileset.addBrush(Brushes::addCreatureBrush(CreatureBrush(Creatures::addCreatureType("mimic", "Mimic", Outfit::fromServerId(1740)))));
     }
 }

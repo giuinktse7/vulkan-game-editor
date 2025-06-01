@@ -2,9 +2,8 @@
 #include "ground_brush.h"
 
 #include <algorithm>
-#include <numeric>
+#include <format>
 
-#include "../debug.h"
 #include "../items.h"
 #include "../map_view.h"
 #include "../position.h"
@@ -13,6 +12,7 @@
 #include "../tile.h"
 #include "../tile_cover.h"
 #include "border_brush.h"
+#include "brushes.h"
 #include "mountain_brush.h"
 
 std::variant<std::monostate, uint32_t, const GroundBrush *> GroundBrush::replacementFilter = std::monostate{};
@@ -444,7 +444,7 @@ std::vector<ThingDrawInfo> GroundBrush::getPreviewTextureInfo(int variation) con
     return std::vector<ThingDrawInfo>{DrawItemType(_iconServerId, PositionConstants::Zero)};
 }
 
-const std::string GroundBrush::getDisplayId() const
+std::string GroundBrush::getDisplayId() const
 {
     return id;
 }
@@ -710,7 +710,7 @@ void GroundBrush::postBorderize(MapView &mapView, const Position &position, Grou
                                         }
                                         else
                                         {
-                                            BorderBrush *otherBrush = Brush::getBorderBrush(rule.borderId);
+                                            BorderBrush *otherBrush = Brushes::getBorderBrush(rule.borderId);
 
                                             uint32_t oldServerId = *otherBrush->getServerId(ruleCase.borderEdge);
                                             action->apply(mapView, pos, oldServerId);
@@ -720,7 +720,7 @@ void GroundBrush::postBorderize(MapView &mapView, const Position &position, Grou
                                     case BorderRuleAction::Type::SetFull:
                                     {
                                         auto *action = static_cast<SetFullAction *>(ruleCase.action.get());
-                                        BorderBrush *borderBrush = action->setSelf ? cover.brush : Brush::getBorderBrush(rule.borderId);
+                                        BorderBrush *borderBrush = action->setSelf ? cover.brush : Brushes::getBorderBrush(rule.borderId);
                                         action->apply(mapView, pos, borderBrush->centerBrush());
                                     }
                                 }
@@ -739,8 +739,15 @@ void GroundBrush::postBorderize(MapView &mapView, const Position &position, Grou
                                     case BorderRuleAction::Type::SetFull:
                                     {
                                         auto *setAction = static_cast<SetFullAction *>(action.get());
-                                        BorderBrush *borderBrush = setAction->setSelf ? cover.brush : Brush::getBorderBrush(rule.borderId);
+                                        BorderBrush *borderBrush = setAction->setSelf ? cover.brush : Brushes::getBorderBrush(rule.borderId);
                                         setAction->apply(mapView, pos, borderBrush->centerBrush());
+                                        break;
+                                    }
+                                    case BorderRuleAction::Type::Replace:
+                                    {
+                                        VME_LOG_ERROR(
+                                            std::format("Border rule action 'replace' is not implemented for brush '{}'.", cover.brush->getDisplayId()));
+                                        break;
                                     }
                                 }
                             }
@@ -775,7 +782,8 @@ void GroundBrush::borderize(MapView &mapView, const Position &position)
         {                                                                 \
             remove |= (removeCover);                                      \
         }                                                                 \
-    } while (false)
+    }                                                                     \
+    while (false)
 
                 remove_invalid_border(-1, -1, NorthEast | SouthWest | East | South | SouthEastCorner, NorthWestCorner);
                 remove_invalid_border(0, -1, FullSouth, North);
@@ -1036,21 +1044,19 @@ BorderBrush *GroundBrush::findBorderTowards(const GroundBrush *groundBrush, Bord
     else
     {
         // Inner border from self
-        auto innerBrush = getBorderTowards(groundBrush, BorderAlign::Inner);
+        auto *innerBrush = getBorderTowards(groundBrush, BorderAlign::Inner);
         if (innerBrush)
         {
             return innerBrush;
         }
-        else
+
+        // Outer border from other
+        if (zOrder() < groundBrush->zOrder())
         {
-            // Outer border from other
-            if (zOrder() < groundBrush->zOrder())
+            auto *brush = groundBrush->getBorderTowards(this, BorderAlign::Outer);
+            if (brush)
             {
-                auto brush = groundBrush->getBorderTowards(this, BorderAlign::Outer);
-                if (brush)
-                {
-                    return brush;
-                }
+                return brush;
             }
         }
     }
@@ -1062,7 +1068,7 @@ void GroundNeighborMap::addCenterCorners()
 {
     auto fix = [this](int dx, int dy, TileCover corner) {
         auto &block = at(dx, dy);
-        auto brush = centerGround->findBorderTowards(block.ground, BorderAlign::Outer);
+        auto *brush = centerGround->findBorderTowards(block.ground, BorderAlign::Outer);
 
         if (brush)
         {

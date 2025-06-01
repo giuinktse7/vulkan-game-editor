@@ -1,5 +1,7 @@
 #include "mountain_brush.h"
 
+#include <utility>
+
 #include "../items.h"
 #include "../map.h"
 #include "../map_view.h"
@@ -10,7 +12,7 @@
 #include "raw_brush.h"
 
 MountainBrush::MountainBrush(std::string id, std::string name, Brush::LazyGround ground, MountainPart::InnerWall innerWall, BorderData&& mountainBorders, uint32_t iconServerId)
-    : Brush(name), _id(id), _ground(ground), innerWall(innerWall), mountainBorder(std::move(mountainBorders)), _iconServerId(iconServerId)
+    : Brush(std::move(name)), _id(std::move(id)), _ground(std::move(ground)), innerWall(innerWall), mountainBorder(std::move(mountainBorders)), _iconServerId(iconServerId)
 {
     initialize();
 }
@@ -184,7 +186,7 @@ std::vector<ThingDrawInfo> MountainBrush::getPreviewTextureInfo(int variation) c
     return ground()->getPreviewTextureInfo(variation);
 }
 
-const std::string MountainBrush::getDisplayId() const
+std::string MountainBrush::getDisplayId() const
 {
     return _id;
 }
