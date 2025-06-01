@@ -1,0 +1,35 @@
+CompileFlags:
+    Add:
+        - -std=c++20
+        - -isystem
+        - C:/vcpkg/installed/x64-windows/include
+    Remove:
+        - -frounding-math
+
+Diagnostics:
+    ClangTidy:
+        Add: [performance-*, readability-*, modernize-*]
+        Remove:
+            - readability-braces-around-statements
+            - modernize-use-trailing-return-type
+            - readability-implicit-bool-conversion
+            - readability-math-missing-parentheses
+        CheckOptions:
+            readability-identifier-length.MinimumVariableNameLength: 0
+            readability-identifier-length.IgnoredVariableNames: "^([XYZxyzit]|id|it|to)$"
+            readability-identifier-length.MinimumLoopCounterNameLength: 3
+            readability-identifier-length.IgnoredLoopCounterNames: "^([ijkxyz_]|idx|it)$"
+            readability-identifier-length.MinimumExceptionNameLength: 2
+            readability-identifier-length.IgnoredExceptionVariableNames: "^(e|ex)$"
+            readability-identifier-length.MinimumParameterNameLength: 3
+            readability-identifier-length.IgnoredParameterNames: "^([XYZxyzit]|id|it|to)$"
+
+    UnusedIncludes: Strict
+
+Index:
+    Background: Build
+
+InlayHints:
+    Enabled: Yes
+    ParameterNames: Yes
+    DeducedTypes: Yes
