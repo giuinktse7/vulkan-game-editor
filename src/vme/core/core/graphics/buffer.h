@@ -23,6 +23,7 @@ struct BoundBuffer
 
     VkBuffer buffer = nullptr;
     VkDeviceMemory deviceMemory = nullptr;
+    VkDescriptorBufferInfo descriptor;
 
     VkDeviceSize size = 0;
     VkBufferUsageFlags usageFlags = 0;
@@ -31,7 +32,7 @@ struct BoundBuffer
     void initResources(VulkanInfo *vulkanInfo);
     void releaseResources();
 
-    bool hasResources() const noexcept;
+    [[nodiscard]] bool hasResources() const noexcept;
 };
 
 namespace Buffer

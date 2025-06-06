@@ -107,27 +107,7 @@ void QtVulkanInfo::update()
     }
 }
 
-void QtVulkanInfo::frameReady()
-{
-    // if (window)
-    // {
-    //     window->frameReady();
 
-    //     while (!window->waitingForDraw.empty())
-    //     {
-    //         window->waitingForDraw.front()();
-    //         window->waitingForDraw.pop();
-    //     }
-    // }
-}
-
-void QtVulkanInfo::requestUpdate()
-{
-    // if (window)
-    // {
-    //     window->requestUpdate();
-    // }
-}
 
 int QtVulkanInfo::maxConcurrentFrameCount() const
 {

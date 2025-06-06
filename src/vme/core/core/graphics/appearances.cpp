@@ -1,18 +1,15 @@
 #include "appearances.h"
 
 #include <algorithm>
-#include <assert.h>
-#include <cfloat>
+#include <cassert>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <ostream>
-#include <set>
 #include <sstream>
-#include <stdint.h>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 
@@ -20,6 +17,7 @@
 #include "../logger.h"
 #include "../time_util.h"
 #include "../util.h"
+#include "compression.h"
 #include "texture_atlas.h"
 
 //////////////////////////////////

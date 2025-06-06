@@ -118,20 +118,7 @@ void MapRenderer::initResources()
     VME_LOG_D("End MapRenderer::initResources");
 }
 
-void MapRenderer::initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height)
-{
-    // swapchain = std::make_unique<SwapChain>(surface, &vulkanInfo);
-    // swapchain->create(width, height);
-
-    // mapView->setViewportSize(width, height);
-}
-
-void MapRenderer::releaseSwapChainResources()
-{
-    // mapView->setViewportSize(0, 0);
-}
-
-void MapRenderer::releaseResources()
+void MapRenderer::destroyResources()
 {
     auto &v = vulkanInfo;
 
@@ -210,7 +197,7 @@ void MapRenderer::render(VkFramebuffer frameBuffer, util::Size swapChainSize)
     _currentFrame->mouseGamePos = mapView->mouseGamePos();
     _currentFrame->dragPoints = mapView->getDragPoints();
 
-    auto select = mouseActionAs<MouseAction::Select>();
+    auto *select = mouseActionAs<MouseAction::Select>();
 
     _currentFrame->flags = FrameDataFlag::None;
     EnumFlag::set(_currentFrame->flags, FrameDataFlag::MouseHover, mapView->underMouse());
@@ -338,10 +325,10 @@ void MapRenderer::drawMap()
     }
 
     // Draw paste preview
-    auto pasteAction = mouseActionAs<MouseAction::PasteMapBuffer>();
+    auto *pasteAction = mouseActionAs<MouseAction::PasteMapBuffer>();
     if (pasteAction)
     {
-        auto mapBuffer = pasteAction->buffer;
+        auto *mapBuffer = pasteAction->buffer;
         for (auto &tileLocation : mapBuffer->getBufferMap().getRegion(mapBuffer->topLeft, mapBuffer->bottomRight))
         {
             if (!(tileLocation.hasTile() && region.contains(tileLocation.position())))
@@ -574,7 +561,7 @@ void MapRenderer::drawPreviewItem(uint32_t serverId, Position pos)
     {
         const Tile *tile = mapView->getTile(pos);
         int elevation = tile ? tile->getTopElevation() : 0;
-        info.worldPosOffset = {-elevation, -elevation};
+        info.worldPosOffset = {.x = -elevation, .y = -elevation};
     }
 
     drawItemType(info);
@@ -1608,7 +1595,7 @@ void MapRenderer::createDescriptorSets()
 
     std::array<VkDescriptorSet, maxFrames> descriptorSets;
 
-    if (vulkanInfo->vkAllocateDescriptorSets(&allocInfo, &descriptorSets[0]) != VK_SUCCESS)
+    if (vulkanInfo->vkAllocateDescriptorSets(&allocInfo, descriptorSets.data()) != VK_SUCCESS)
     {
         ABORT_PROGRAM("failed to allocate descriptor sets");
     }
@@ -1739,6 +1726,11 @@ VkCommandBuffer MapRenderer::beginSingleTimeCommands(VulkanInfo *info)
     return commandBuffer;
 }
 
+void MapRenderer::setRenderTargetSize(int width, int height)
+{
+    renderTargetSize = util::Size{width, height};
+}
+
 uint32_t MapRenderer::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
     VkPhysicalDeviceMemoryProperties memProperties;
@@ -1764,9 +1756,7 @@ uint32_t MapRenderer::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t t
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  **/
-VulkanTexture::VulkanTexture()
-{
-}
+VulkanTexture::VulkanTexture() = default;
 
 VulkanTexture::~VulkanTexture()
 {
@@ -1862,7 +1852,7 @@ void VulkanTexture::createImage(
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = vulkanInfo->findMemoryType(vulkanInfo->physicalDevice(), memRequirements.memoryTypeBits, properties);
+    allocInfo.memoryTypeIndex = vulkanInfo->findMemoryType(memRequirements.memoryTypeBits, properties);
 
     if (vulkanInfo->vkAllocateMemory(&allocInfo, nullptr, &textureImageMemory) != VK_SUCCESS)
     {
@@ -1983,7 +1973,7 @@ VkImageView VulkanTexture::createImageView(VkImage image, VkFormat format)
 RectangleDrawInfo::RectangleDrawInfo(SolidColor color, SolidColor borderColor, WorldPosition position, int width, int height, float opacity)
     : color(color), borderColor(borderColor), position(position), width(width), height(height), opacity(opacity) {}
 
-RectangleDrawInfo::RectangleDrawInfo() {}
+RectangleDrawInfo::RectangleDrawInfo() = default;
 
 RectangleDrawInfo RectangleDrawInfo::border(SolidColor color, WorldPosition position, int width, int height, float opacity)
 {

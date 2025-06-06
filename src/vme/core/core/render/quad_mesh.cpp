@@ -23,7 +23,7 @@ void QuadMesh::bind(VkCommandBuffer commandBuffer) const
 {
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &offset);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 }
 
 VkBuffer QuadMesh::getVertexBuffer() const
@@ -55,7 +55,7 @@ std::array<VkVertexInputAttributeDescription, 1> QuadMesh::Vertex::getAttributeD
     std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
-    attributeDescriptions[0].format = VK_FORMAT_R32G32_SINT; // since you're using ivec2
+    attributeDescriptions[0].format = VK_FORMAT_R32G32_SINT;
     attributeDescriptions[0].offset = offsetof(Vertex, pos);
     return attributeDescriptions;
 }

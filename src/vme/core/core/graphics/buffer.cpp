@@ -4,14 +4,14 @@
 
 #include "../debug.h"
 
-BoundBuffer::BoundBuffer()
-    : vulkanInfo(nullptr), buffer(VK_NULL_HANDLE), deviceMemory(VK_NULL_HANDLE)
-{
-}
+BoundBuffer::BoundBuffer() = default;
 
 BoundBuffer::BoundBuffer(VulkanInfo *vulkanInfo, VkDeviceSize size, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags propertyFlags)
     : vulkanInfo(vulkanInfo), size(size), usageFlags(usageFlags), propertyFlags(propertyFlags)
 {
+    descriptor.buffer = buffer;
+    descriptor.offset = 0;
+    descriptor.range = size;
 }
 
 BoundBuffer::BoundBuffer(BoundBuffer &&other) noexcept
@@ -79,7 +79,7 @@ void BoundBuffer::initResources(VulkanInfo *vulkanInfo)
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = vulkanInfo->findMemoryType(vulkanInfo->physicalDevice(), memRequirements.memoryTypeBits, propertyFlags);
+    allocInfo.memoryTypeIndex = vulkanInfo->findMemoryType(memRequirements.memoryTypeBits, propertyFlags);
 
     if (vulkanInfo->vkAllocateMemory(&allocInfo, nullptr, &deviceMemory) != VK_SUCCESS)
     {

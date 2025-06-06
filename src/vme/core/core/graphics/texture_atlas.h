@@ -8,14 +8,13 @@
 
 #include "../const.h"
 #include "../outfit.h"
-#include "compression.h"
 #include "texture.h"
 
 struct TextureAtlas;
 struct WorldPosition;
 
 /*
-	The width and height of a texture atlas in pixels
+    The width and height of a texture atlas in pixels
 */
 constexpr struct
 {
@@ -25,7 +24,7 @@ constexpr struct
 
 struct TextureInfo
 {
-    enum class CoordinateType
+    enum class CoordinateType : std::uint8_t
     {
         Normalized,
         Unnormalized
@@ -87,7 +86,7 @@ struct TextureAtlas
 
     void overlay(TextureAtlas *templateAtlas, uint32_t variationId, uint32_t templateSpriteId, uint32_t targetSpriteId, Outfit::Look look);
 
-    glm::vec4 getFragmentBounds(const TextureWindow window) const;
+    glm::vec4 getFragmentBounds(TextureWindow window) const;
     const TextureWindow getTextureWindow(uint32_t spriteId, uint32_t variationId, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
     const TextureWindow getTextureWindow(uint32_t spriteId, TextureInfo::CoordinateType coordinateType = TextureInfo::CoordinateType::Normalized) const;
     const TextureWindow getTextureWindowTopLeft(uint32_t spriteId) const;
@@ -96,7 +95,7 @@ struct TextureAtlas
 
     bool isCompressed() const;
 
-    inline uint32_t sizeInBytes() const
+    uint32_t sizeInBytes() const
     {
         return width * height * 4;
     }

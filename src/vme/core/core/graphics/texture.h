@@ -1,11 +1,10 @@
 #pragma once
 
-#include <filesystem>
+#include <filesystem> // Needed for std::ostream &operator<<
 #include <string>
 #include <vector>
 
 #include <glm/vec4.hpp>
-#include <memory>
 
 class TextureAtlas;
 struct Pixel;
@@ -57,9 +56,9 @@ class Texture
     static Texture &getOrCreateSolidTexture(SolidColor color);
 
     /*
-		An auto-incrementing id (used for vector indexing)
-	*/
-    uint32_t id() const noexcept
+       An auto-incrementing id (used for vector indexing)
+    */
+    [[nodiscard]] uint32_t id() const noexcept
     {
         return _id;
     }

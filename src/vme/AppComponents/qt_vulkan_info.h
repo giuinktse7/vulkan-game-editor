@@ -28,8 +28,6 @@ class QtVulkanInfo : public VulkanInfo
     void setQmlWindow(QQuickWindow *qml_window);
 
     void update() override;
-    void frameReady() override;
-    void requestUpdate() override;
 
     glm::mat4 projectionMatrix(MapView *mapView, util::Size size) const override
     {
@@ -248,6 +246,11 @@ class QtVulkanInfo : public VulkanInfo
     void vkCmdSetScissor(VkCommandBuffer commandBuffer, uint32_t firstScissor, uint32_t scissorCount, const VkRect2D *pScissors) override
     {
         df->vkCmdSetScissor(commandBuffer, firstScissor, scissorCount, pScissors);
+    }
+
+    void vkDestroySampler(VkSampler sampler, const VkAllocationCallbacks *pAllocator) override
+    {
+        df->vkDestroySampler(device(), sampler, pAllocator);
     }
 
     void vkDestroyDescriptorSetLayout(VkDescriptorSetLayout descriptorSetLayout, const VkAllocationCallbacks *pAllocator) override
