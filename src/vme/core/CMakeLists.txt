@@ -83,6 +83,7 @@ set(HEADER_FILES
     core/save_map.h
     core/load_map.h
     core/map_renderer.h
+    core/render/quad_mesh.h
     # map_renderer_qml.h
     core/map_copy_buffer.h
     core/map_view.h
@@ -172,6 +173,7 @@ set(SRC_FILES
     core/save_map.cpp
     core/load_map.cpp
     core/map_renderer.cpp
+    core/render/quad_mesh.cpp
     # map_renderer_qml.cpp
     core/map_copy_buffer.cpp
     core/map_view.cpp
