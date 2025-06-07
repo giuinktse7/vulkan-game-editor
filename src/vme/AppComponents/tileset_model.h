@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QAbstractTableModel>
-#include <memory>
 #include <qqml.h>
 
 #include "core/signal.h"

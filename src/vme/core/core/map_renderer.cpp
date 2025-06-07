@@ -85,7 +85,8 @@ MapRenderer::MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_pt
     : mapView(mapView),
       vulkanInfo(vulkanInfo),
       vulkanTexturesForAppearances(Appearances::textureAtlasCount()),
-      vulkanSwapChainImageSize(0, 0)
+      renderTargetSize(0, 0),
+      quadMesh(vulkanInfo->device(), vulkanInfo->physicalDevice(), vulkanInfo->graphicsCommandPool(), vulkanInfo->graphicsQueue())
 {
     activeTextureAtlasIds.reserve(Appearances::textureAtlasCount());
 
@@ -95,27 +96,31 @@ MapRenderer::MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_pt
 
 MapRenderer::~MapRenderer()
 {
-    releaseResources();
+    destroyResources();
 }
 
-void MapRenderer::initResources()
+void MapRenderer::createResources()
 {
-    vulkanInfo->update();
+    // vulkanInfo->update();
 
     createRenderPass();
-    createFrameBuffers();
 
     _currentFrame = &frames.front();
+
+    // Ensure that we have a descriptor pool for the current frame
+    if (_currentFrame->descriptorPool == VK_NULL_HANDLE)
+    {
+        ABORT_PROGRAM("MapRenderer::createResources: Current frame descriptor pool is not initialized.");
+    }
 
     createDescriptorSetLayouts();
     createGraphicsPipeline();
     createUniformBuffers();
-    createDescriptorPool();
     createDescriptorSets();
     createVertexBuffer();
     createIndexBuffer();
 
-    VME_LOG_D("End MapRenderer::initResources");
+    VME_LOG_D("End MapRenderer::createResources");
 }
 
 void MapRenderer::destroyResources()
@@ -127,9 +132,6 @@ void MapRenderer::destroyResources()
 
     v->vkDestroyDescriptorSetLayout(textureDescriptorSetLayout, nullptr);
     textureDescriptorSetLayout = VK_NULL_HANDLE;
-
-    v->vkDestroyDescriptorPool(descriptorPool, nullptr);
-    descriptorPool = VK_NULL_HANDLE;
 
     v->vkDestroyPipeline(graphicsPipeline, nullptr);
     graphicsPipeline = VK_NULL_HANDLE;
@@ -185,13 +187,14 @@ std::optional<std::pair<WorldPosition, WorldPosition>> MapRenderer::getDragPoint
     return _currentFrame->dragPoints;
 }
 
-void MapRenderer::render(VkFramebuffer frameBuffer, util::Size swapChainSize)
+void MapRenderer::render(VkCommandBuffer commandBuffer, int frameIndex)
 {
-    vulkanSwapChainImageSize = swapChainSize;
+    this->setCurrentFrame(frameIndex);
+    _currentFrame->index = frameIndex;
+    _currentFrame->commandBuffer = commandBuffer;
+    // VME_LOG_D("MapRenderer::render: frameIndex: " << frameIndex << ", commandBuffer: " << commandBuffer << ", size: " << renderTargetSize.width() << "x" << renderTargetSize.height());
 
     _containsAnimation = false;
-
-    _currentFrame->frameBuffer = frameBuffer;
 
     _currentFrame->mouseAction = mapView->editorAction.action();
     _currentFrame->mouseGamePos = mapView->mouseGamePos();
@@ -207,14 +210,10 @@ void MapRenderer::render(VkFramebuffer frameBuffer, util::Size swapChainSize)
 
     // VME_LOG_D("index: " << _currentFrame->currentFrameIndex);
     // VME_LOG("Start next frame");
-    glm::mat4 projection = vulkanInfo->projectionMatrix(mapView.get(), vulkanSwapChainImageSize);
+    glm::mat4 projection = vulkanInfo->projectionMatrix(mapView.get(), renderTargetSize);
     updateUniformBuffer(projection);
 
-    beginRenderPass();
-
-    setupFrame();
-
-    // Attempt to avoid possible floating point errors. Might be unnecessary.
+    setupFrame(commandBuffer); // Attempt to avoid possible floating point errors. Might be unnecessary.
     float zoom = mapView->getZoomFactor();
     auto floorZoom = std::floor(zoom);
     isDefaultZoom = floorZoom == zoom && floorZoom == 1;
@@ -225,21 +224,13 @@ void MapRenderer::render(VkFramebuffer frameBuffer, util::Size swapChainSize)
         drawCurrentAction();
         drawMapOverlay();
     }
-
-    vulkanInfo->vkCmdEndRenderPass(_currentFrame->commandBuffer);
-
-    vulkanInfo->frameReady();
-    // vulkanInfo->requestUpdate();
-    currentDescriptorSet = nullptr;
 }
 
-void MapRenderer::setupFrame()
+void MapRenderer::setupFrame(VkCommandBuffer cb)
 {
-    auto cb = _currentFrame->commandBuffer;
-
     vulkanInfo->vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-    const util::Size size = vulkanSwapChainImageSize;
+    const util::Size size = renderTargetSize;
 
     VkViewport viewport;
     viewport.x = viewport.y = 0;
@@ -260,6 +251,7 @@ void MapRenderer::setupFrame()
     vulkanInfo->vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
                                         &_currentFrame->uboDescriptorSet, 0, nullptr);
 
+    // quadMesh.bind(cb);
     vulkanInfo->vkCmdBindVertexBuffers(cb, 0, 1, &vertexBuffer.buffer, offsets);
     vulkanInfo->vkCmdBindIndexBuffer(cb, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 }
@@ -302,7 +294,7 @@ void MapRenderer::drawMap()
         flags |= ItemDrawFlags::DrawSelected;
     }
 
-    auto selectAction = mouseActionAs<MouseAction::Select>();
+    auto *selectAction = mouseActionAs<MouseAction::Select>();
     if (selectAction && selectAction->area)
     {
         flags |= ItemDrawFlags::ActiveSelectionArea;
@@ -1029,7 +1021,7 @@ void MapRenderer::drawRectangle(const Texture &texture, const WorldPosition from
 {
     VulkanTexture::Descriptor descriptor;
     descriptor.layout = textureDescriptorSetLayout;
-    descriptor.pool = descriptorPool;
+    descriptor.pool = _currentFrame->descriptorPool;
 
     auto &vulkanTexture = vulkanTextures[&texture];
     if (!vulkanTexture.hasResources())
@@ -1258,7 +1250,7 @@ VkDescriptorSet MapRenderer::objectDescriptorSet(const Texture &texture)
 {
     VulkanTexture::Descriptor descriptor;
     descriptor.layout = textureDescriptorSetLayout;
-    descriptor.pool = descriptorPool;
+    descriptor.pool = _currentFrame->descriptorPool;
     uint32_t id = texture.id();
 
     if (vulkanTexturesForAppearances.size() < id)
@@ -1302,33 +1294,6 @@ void MapRenderer::updateUniformBuffer(glm::mat4 projection)
  * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  *
  **/
-void MapRenderer::beginRenderPass()
-{
-    util::Size size = vulkanSwapChainImageSize;
-    VkRenderPassBeginInfo renderPassInfo = {};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = renderPass;
-    renderPassInfo.framebuffer = _currentFrame->frameBuffer;
-    renderPassInfo.renderArea.extent.width = size.width();
-    renderPassInfo.renderArea.extent.width = size.height();
-
-    VkExtent2D extent;
-    extent.width = size.width();
-    extent.height = size.height();
-    renderPassInfo.renderArea.extent = extent;
-
-    renderPassInfo.clearValueCount = 1;
-    VkClearValue clearValue;
-    clearValue.color = ClearColor;
-    renderPassInfo.pClearValues = &clearValue;
-
-    vulkanInfo->vkCmdBeginRenderPass(_currentFrame->commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-}
-
-void MapRenderer::createFrameBuffers()
-{
-    // TODO
-}
 
 void MapRenderer::createRenderPass()
 {
@@ -1560,36 +1525,13 @@ void MapRenderer::createUniformBuffers()
     }
 }
 
-void MapRenderer::createDescriptorPool()
-{
-    std::array<VkDescriptorPoolSize, 2> poolSizes{};
-    uint32_t descriptorCount = vulkanInfo->maxConcurrentFrameCount() * 2;
-
-    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = descriptorCount;
-
-    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = MAX_NUM_TEXTURES;
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = descriptorCount + MAX_NUM_TEXTURES;
-
-    if (vulkanInfo->vkCreateDescriptorPool(&poolInfo, nullptr, &this->descriptorPool) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create descriptor pool!");
-    }
-}
-
 void MapRenderer::createDescriptorSets()
 {
     const uint32_t maxFrames = 3;
     std::vector<VkDescriptorSetLayout> layouts(maxFrames, uboDescriptorSetLayout);
     VkDescriptorSetAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = descriptorPool;
+    allocInfo.descriptorPool = _currentFrame->descriptorPool;
     allocInfo.descriptorSetCount = maxFrames;
     allocInfo.pSetLayouts = layouts.data();
 

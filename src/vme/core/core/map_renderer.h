@@ -10,6 +10,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <vulkan/vulkan_core.h>
 
 #include "brushes/brush.h"
 #include "editor_action.h"
@@ -20,6 +21,7 @@
 #include "item.h"
 #include "items.h"
 #include "map.h"
+#include "render/quad_mesh.h"
 #include "util.h"
 
 class MapView;
@@ -182,12 +184,14 @@ VME_ENUM_OPERATORS(FrameDataFlag);
 
 struct FrameData
 {
-    VkFramebuffer frameBuffer = nullptr;
-    VkCommandBuffer commandBuffer = nullptr;
-    BoundBuffer uniformBuffer;
-    VkDescriptorSet uboDescriptorSet = nullptr;
+    int index = 0;
 
-    int currentFrameIndex = 0;
+    VkFramebuffer frameBuffer = VK_NULL_HANDLE;
+    BoundBuffer uniformBuffer;
+    VkDescriptorSet uboDescriptorSet = VK_NULL_HANDLE;
+
+    VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
 
     glm::mat4 projectionMatrix{};
 
@@ -224,12 +228,12 @@ class VulkanTexture
     void initResources(const Texture &texture, std::shared_ptr<VulkanInfo> &vulkanInfo, const VulkanTexture::Descriptor descriptor);
     void releaseResources();
 
-    inline bool hasResources() const
+    [[nodiscard]] bool hasResources() const
     {
-        return !(textureImage == VK_NULL_HANDLE && textureImageMemory == VK_NULL_HANDLE && _descriptorSet == VK_NULL_HANDLE);
+        return textureImage != VK_NULL_HANDLE || textureImageMemory != VK_NULL_HANDLE || _descriptorSet != VK_NULL_HANDLE;
     }
 
-    inline VkDescriptorSet descriptorSet() const
+    [[nodiscard]] VkDescriptorSet descriptorSet() const
     {
         return _descriptorSet;
     }
@@ -258,23 +262,16 @@ class MapRenderer
   public:
     MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapView> &mapView);
     ~MapRenderer();
-    static const int MAX_NUM_TEXTURES = 256 * 256;
 
     static const int TILE_SIZE = 32;
     static const uint32_t MAX_VERTICES = 64 * 1024;
 
-    void initResources();
-    void releaseResources();
+    void createResources();
+    void destroyResources();
 
-    void render(VkFramebuffer frameBuffer, util::Size swapChainSize);
+    void setRenderTargetSize(int width, int height);
 
-    void initSwapChainResources(VkSurfaceKHR surface, uint32_t width, uint32_t height);
-    void releaseSwapChainResources();
-
-    VkDescriptorPool &getDescriptorPool()
-    {
-        return descriptorPool;
-    }
+    void render(VkCommandBuffer commandBuffer, int frameIndex);
 
     VkDescriptorSetLayout &getTextureDescriptorSetLayout()
     {
@@ -330,11 +327,9 @@ class MapRenderer
     };
 
     void createRenderPass();
-    void createFrameBuffers();
     void createGraphicsPipeline();
     VkShaderModule createShaderModule(const std::vector<uint8_t> &code);
     void createUniformBuffers();
-    void createDescriptorPool();
     void createDescriptorSetLayouts();
     void createDescriptorSets();
     void createIndexBuffer();
@@ -344,8 +339,7 @@ class MapRenderer
 
     void updateUniformBuffer(glm::mat4 projection);
 
-    void beginRenderPass();
-    void setupFrame();
+    void setupFrame(VkCommandBuffer cb);
 
     VkCommandBuffer beginSingleTimeCommands(VulkanInfo *info);
     uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -358,8 +352,8 @@ class MapRenderer
 
     void drawRectangle(const RectangleDrawInfo &info);
 
-    void drawRectangle(const Texture &texture, const WorldPosition from, const WorldPosition to, float opacity = 1.0f);
-    void drawRectangle(const Texture &texture, const WorldPosition from, int width, int height, float opacity = 1.0f);
+    void drawRectangle(const Texture &texture, WorldPosition from, WorldPosition to, float opacity = 1.0f);
+    void drawRectangle(const Texture &texture, WorldPosition from, int width, int height, float opacity = 1.0f);
 
     DrawInfo::Object getItemDrawInfo(const Item &item, const Position &position, uint32_t drawFlags);
     DrawInfo::Object itemTypeDrawInfo(const ItemType &itemType, const Position &position, uint32_t drawFlags);
@@ -377,12 +371,12 @@ class MapRenderer
      */
     void drawTile(const TileLocation &tileLocation,
                   uint32_t drawFlags,
-                  const Position offset,
+                  Position offset,
                   const ItemPredicate &filter = nullptr);
     void drawTile(const TileLocation &tileLocation,
                   uint32_t drawFlags = ItemDrawFlags::DrawNonSelected,
                   const ItemPredicate &filter = nullptr);
-    void drawTile(Tile *tile, uint32_t flags, const Position offset, const ItemPredicate &filter = nullptr);
+    void drawTile(Tile *tile, uint32_t flags, Position offset, const ItemPredicate &filter = nullptr);
 
     WorldPosition getWorldPosForDraw(const ItemTypeDrawInfo &info, TextureAtlas *atlas) const;
 
@@ -390,13 +384,13 @@ class MapRenderer
     void drawItemType(const ItemTypeDrawInfo &drawInfo, QuadrantRenderType renderType);
     void drawItemType(const ItemTypeDrawInfo &drawInfo);
 
-    void drawOverlayItemType(uint32_t serverId, const WorldPosition position, const glm::vec4 color = colors::Default);
+    void drawOverlayItemType(uint32_t serverId, WorldPosition position, glm::vec4 color = colors::Default);
 
     void drawCreature(const DrawInfo::Creature &info);
-    void drawCreatureType(const CreatureType &creatureType, const Position position, Direction direction, glm::vec4 color, const DrawOffset &drawOffset = DrawOffset{0, 0});
+    void drawCreatureType(const CreatureType &creatureType, Position position, Direction direction, glm::vec4 color, const DrawOffset &drawOffset = DrawOffset{0, 0});
 
-    bool shouldDrawItem(const Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter = {}) const noexcept;
-    bool shouldDrawCreature(const Position pos, const Creature &creature, uint32_t flags) const noexcept;
+    bool shouldDrawItem(Position pos, const Item &item, uint32_t flags, const ItemPredicate &filter = {}) const noexcept;
+    bool shouldDrawCreature(Position pos, const Creature &creature, uint32_t flags) const noexcept;
 
     void drawBrushPreview(Brush *brush, const Position &position, int variation);
     void drawBrushPreviewAtWorldPos(Brush *brush, const WorldPosition &worldPos, int variation);
@@ -438,15 +432,15 @@ class MapRenderer
 
     // All sprites are drawn using this index buffer
 
+    
     BoundBuffer indexBuffer;
     BoundBuffer vertexBuffer;
 
+    QuadMesh quadMesh;
+
     FrameData *_currentFrame = nullptr;
 
-    std::vector<VkFramebuffer> swapChainFramebuffers;
-    VkRenderPass renderPass;
-
-    VkDescriptorPool descriptorPool = 0;
+    VkRenderPass renderPass = VK_NULL_HANDLE;
 
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline = 0;
@@ -464,9 +458,7 @@ class MapRenderer
         */
     std::unordered_map<const Texture *, VulkanTexture> vulkanTextures;
 
-    util::Size vulkanSwapChainImageSize;
-
-    VkDescriptorSet currentDescriptorSet;
+    util::Size renderTargetSize;
 
     bool isDefaultZoom = true;
 };

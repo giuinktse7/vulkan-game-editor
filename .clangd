@@ -16,13 +16,13 @@ Diagnostics:
             - readability-math-missing-parentheses
         CheckOptions:
             readability-identifier-length.MinimumVariableNameLength: 0
-            readability-identifier-length.IgnoredVariableNames: "^([XYZxyzits]|id|it|to|dx|dy)$"
+            readability-identifier-length.IgnoredVariableNames: "^([XYZxyzits]|id|it|to|dx|dy|cb)$"
             readability-identifier-length.MinimumLoopCounterNameLength: 3
             readability-identifier-length.IgnoredLoopCounterNames: "^([ijkxyz_]|idx|it)$"
             readability-identifier-length.MinimumExceptionNameLength: 2
             readability-identifier-length.IgnoredExceptionVariableNames: "^(e|ex)$"
             readability-identifier-length.MinimumParameterNameLength: 3
-            readability-identifier-length.IgnoredParameterNames: "^([XYZxyzits]|id|it|to|dx|dy)$"
+            readability-identifier-length.IgnoredParameterNames: "^([XYZxyzits]|id|it|to|dx|dy|cb)$"
 
     UnusedIncludes: Strict
 

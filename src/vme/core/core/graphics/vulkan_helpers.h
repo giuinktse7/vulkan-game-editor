@@ -1,8 +1,7 @@
 #pragma once
 
-#include <optional>
+#include <span>
 #include <stdexcept>
-#include <vector>
 
 #include <vulkan/vulkan.h>
 
@@ -13,14 +12,43 @@
 #include "../debug.h"
 #include "../util.h"
 
+#define VK_CHECK_RESULT(f)                                                                                                                   \
+    {                                                                                                                                        \
+        VkResult res = (f);                                                                                                                  \
+        if (res != VK_SUCCESS)                                                                                                               \
+        {                                                                                                                                    \
+            std::cout << "Fatal : VkResult is \"" << vk::tools::errorString(res) << "\" in " << __FILE__ << " at line " << __LINE__ << "\n"; \
+            assert(res == VK_SUCCESS);                                                                                                       \
+        }                                                                                                                                    \
+    }
+
 class MapView;
+class VulkanInfo;
+
+struct FrameBufferBundle
+{
+    VkFramebuffer framebuffer;
+    std::vector<VkImageView> attachmentViews;
+};
+
+struct PersistentRenderResources
+{
+    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+};
+
+struct FrameBufferAttachment
+{
+    VkImage image = VK_NULL_HANDLE;
+    VkDeviceMemory mem = VK_NULL_HANDLE;
+    VkImageView view = VK_NULL_HANDLE;
+    VkFormat format;
+
+    void destroy(VulkanInfo &vulkanInfo);
+};
 
 class RenderTarget
 {
   public:
-    virtual void frameReady() = 0;
-    virtual void requestUpdate() = 0;
-
     virtual util::Size windowSize() const = 0;
     virtual int maxConcurrentFrameCount() const = 0;
 
@@ -52,6 +80,7 @@ class VulkanInfo : public RenderTarget
     virtual void vkUpdateDescriptorSets(uint32_t descriptorWriteCount, const VkWriteDescriptorSet *pDescriptorWrites, uint32_t descriptorCopyCount, const VkCopyDescriptorSet *pDescriptorCopies) = 0;
     virtual VkResult vkAllocateDescriptorSets(const VkDescriptorSetAllocateInfo *pAllocateInfo, VkDescriptorSet *pDescriptorSets) = 0;
     virtual VkResult vkCreateSampler(const VkSamplerCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkSampler *pSampler) = 0;
+    virtual void vkDestroySampler(VkSampler sampler, const VkAllocationCallbacks *pAllocator) = 0;
     virtual void vkCmdCopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkBufferImageCopy *pRegions) = 0;
     virtual VkResult vkBindImageMemory(VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset) = 0;
     virtual VkResult vkAllocateMemory(const VkMemoryAllocateInfo *pAllocateInfo, const VkAllocationCallbacks *pAllocator, VkDeviceMemory *pMemory) = 0;
@@ -109,7 +138,7 @@ class VulkanInfo : public RenderTarget
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer buffer);
     void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
-    uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 };
 
 inline VkCommandBuffer VulkanInfo::beginSingleTimeCommands()
@@ -201,10 +230,10 @@ inline void VulkanInfo::transitionImageLayout(VkImage image, VkImageLayout oldLa
     endSingleTimeCommands(commandBuffer);
 }
 
-inline uint32_t VulkanInfo::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+inline uint32_t VulkanInfo::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
     VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+    vkGetPhysicalDeviceMemoryProperties(this->physicalDevice(), &memProperties);
 
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
     {
@@ -214,3 +243,71 @@ inline uint32_t VulkanInfo::findMemoryType(VkPhysicalDevice physicalDevice, uint
 
     ABORT_PROGRAM("Failed to find suitable memory type!");
 }
+
+namespace vk::tools
+{
+    inline std::string errorString(VkResult errorCode)
+    {
+        switch (errorCode)
+        {
+#define STR(r)   \
+    case VK_##r: \
+        return #r
+            STR(NOT_READY);
+            STR(TIMEOUT);
+            STR(EVENT_SET);
+            STR(EVENT_RESET);
+            STR(INCOMPLETE);
+            STR(ERROR_OUT_OF_HOST_MEMORY);
+            STR(ERROR_OUT_OF_DEVICE_MEMORY);
+            STR(ERROR_INITIALIZATION_FAILED);
+            STR(ERROR_DEVICE_LOST);
+            STR(ERROR_MEMORY_MAP_FAILED);
+            STR(ERROR_LAYER_NOT_PRESENT);
+            STR(ERROR_EXTENSION_NOT_PRESENT);
+            STR(ERROR_FEATURE_NOT_PRESENT);
+            STR(ERROR_INCOMPATIBLE_DRIVER);
+            STR(ERROR_TOO_MANY_OBJECTS);
+            STR(ERROR_FORMAT_NOT_SUPPORTED);
+            STR(ERROR_SURFACE_LOST_KHR);
+            STR(ERROR_NATIVE_WINDOW_IN_USE_KHR);
+            STR(SUBOPTIMAL_KHR);
+            STR(ERROR_OUT_OF_DATE_KHR);
+            STR(ERROR_INCOMPATIBLE_DISPLAY_KHR);
+            STR(ERROR_VALIDATION_FAILED_EXT);
+            STR(ERROR_INVALID_SHADER_NV);
+            STR(ERROR_INCOMPATIBLE_SHADER_BINARY_EXT);
+#undef STR
+            default:
+                return "UNKNOWN_ERROR";
+        }
+    }
+
+    void createFramebuffer(
+        VulkanInfo &vulkanInfo,
+        VkRenderPass renderPass,
+        uint32_t width,
+        uint32_t height,
+        std::span<const VkImageView> attachments,
+        VkFramebuffer &frameBuffer);
+
+    VkPipelineShaderStageCreateInfo loadShader(VulkanInfo &vulkanInfo, const std::string &fileName, VkShaderStageFlagBits stage);
+
+    VkWriteDescriptorSet writeDescriptorSet(
+        VkDescriptorSet dstSet,
+        VkDescriptorType type,
+        uint32_t binding,
+        VkDescriptorBufferInfo *bufferInfo,
+        uint32_t descriptorCount = 1);
+
+    VkWriteDescriptorSet writeDescriptorSet(
+        VkDescriptorSet dstSet,
+        VkDescriptorType type,
+        uint32_t binding,
+        VkDescriptorImageInfo *imageInfo,
+        uint32_t descriptorCount = 1);
+
+    void createAttachment(VulkanInfo &vulkanInfo, uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage, FrameBufferAttachment *attachment);
+
+    uint32_t findMemoryType(VulkanInfo &vulkanInfo, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+} // namespace vk::tools

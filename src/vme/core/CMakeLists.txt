@@ -45,19 +45,15 @@ set(HEADER_FILES
     core/graphics/buffer.h
     core/graphics/compression.h
     core/graphics/device_manager.h
-    core/graphics/engine.h
     core/graphics/protobuf/appearances.pb.h
     core/graphics/protobuf/map.pb.h
     core/graphics/protobuf/shared.pb.h
-    core/graphics/resource-descriptor.h
-    # core/graphics/swapchain.h
     core/graphics/texture.h
     core/graphics/texture_atlas.h
     core/graphics/validation.h
     core/graphics/vertex.h
     core/graphics/vulkan_debug.h
     core/graphics/vulkan_helpers.h
-    core/graphics/vulkan_screen_texture.h
     core/item.h
     core/item_data.h
     core/item_wrapper.h
@@ -92,6 +88,7 @@ set(HEADER_FILES
     core/load_map.h
     core/map_renderer.h
     core/render/quad_mesh.h
+    core/render/render_coordinator.h
     # map_renderer_qml.h
     core/map_copy_buffer.h
     core/map_view.h
@@ -157,16 +154,13 @@ set(SRC_FILES
     core/graphics/buffer.cpp
     core/graphics/compression.cpp
     core/graphics/device_manager.cpp
-    # graphics/engine.cpp
     core/graphics/protobuf/appearances.pb.cc
     core/graphics/protobuf/map.pb.cc
     core/graphics/protobuf/shared.pb.cc
-    # graphics/resource-descriptor.cpp
-    # core/graphics/swapchain.cpp
     core/graphics/texture.cpp
     core/graphics/texture_atlas.cpp
     core/graphics/vulkan_debug.cpp
-    core/graphics/vulkan_screen_texture.cpp
+    core/graphics/vulkan_helpers.cpp
     core/item.cpp
     core/item_data.cpp
     core/item_wrapper.cpp
@@ -182,6 +176,7 @@ set(SRC_FILES
     core/load_map.cpp
     core/map_renderer.cpp
     core/render/quad_mesh.cpp
+    core/render/render_coordinator.cpp
     # map_renderer_qml.cpp
     core/map_copy_buffer.cpp
     core/map_view.cpp

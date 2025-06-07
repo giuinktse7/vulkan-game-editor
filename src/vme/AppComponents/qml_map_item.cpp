@@ -7,7 +7,9 @@
 #include "core/brushes/brushes.h"
 #include "core/brushes/creature_brush.h"
 #include "core/const.h"
+#include "core/logger.h"
 #include "core/map_renderer.h"
+#include "core/render/render_coordinator.h"
 #include "core/settings.h"
 #include "core/time_util.h"
 #include "core/vendor/rollbear-visit/visit.hpp"
@@ -18,8 +20,10 @@
 #include <iterator>
 #include <qnamespace.h>
 #include <qpoint.h>
+#include <qsgtexture.h>
 #include <utility>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 QmlMapItemStore QmlMapItemStore::qmlMapItemStore;
 
@@ -187,12 +191,13 @@ void QmlMapItem::sync()
         vulkanInfo->setMaxConcurrentFrameCount(window()->graphicsStateInfo().framesInFlight);
     }
 
-    if (!textureNode)
+    if (!mapViewTextureNode)
     {
-        textureNode = new MapTextureNode(this, mapView, vulkanInfo, width(), height());
+        // TODO Use one descriptor pool per frame
+        mapViewTextureNode = new MapViewTextureNode(this, mapView, vulkanInfo, width(), height());
     }
 
-    textureNode->sync();
+    mapViewTextureNode->sync();
 
     // Update window for vulkan info
     static_cast<QtVulkanInfo *>(vulkanInfo.get())->setQmlWindow(window());
@@ -200,6 +205,7 @@ void QmlMapItem::sync()
 
 void QmlMapItem::cleanup()
 {
+    VME_LOG_D("QmlMapItem::cleanup");
 }
 
 QString QmlMapItem::qStrName()
@@ -214,22 +220,22 @@ void QmlMapItem::mapViewDrawRequested()
 
 QSGNode *QmlMapItem::updatePaintNode(QSGNode *qsgNode, UpdatePaintNodeData * /*unused*/)
 {
-    MapTextureNode *node = static_cast<MapTextureNode *>(qsgNode);
+    auto *node = static_cast<MapViewTextureNode *>(qsgNode);
 
     if (!node && (width() <= 0 || height() <= 0))
         return nullptr;
 
     if (!node)
     {
-        if (!textureNode)
+        if (!mapViewTextureNode)
         {
-            textureNode = new MapTextureNode(this, mapView, vulkanInfo, width(), height());
+            mapViewTextureNode = new MapViewTextureNode(this, mapView, vulkanInfo, width(), height());
         }
 
-        node = textureNode;
+        node = mapViewTextureNode;
     }
 
-    textureNode->sync();
+    mapViewTextureNode->sync();
 
     node->setTextureCoordinatesTransform(QSGSimpleTextureNode::NoTransform);
     node->setFiltering(QSGTexture::Linear);
@@ -649,12 +655,20 @@ bool QmlMapItem::containsMouse() const
 
 void QmlMapItem::invalidateSceneGraph() // called on the render thread when the scenegraph is invalidated
 {
-    textureNode = nullptr;
+    if (mapViewTextureNode)
+    {
+        delete mapViewTextureNode;
+        mapViewTextureNode = nullptr;
+    }
 }
 
 void QmlMapItem::releaseResources() // called on the gui thread if the item is removed from scene
 {
-    textureNode = nullptr;
+    if (mapViewTextureNode)
+    {
+        delete mapViewTextureNode;
+        mapViewTextureNode = nullptr;
+    }
 }
 
 void QmlMapItem::setEntryId(int id)
@@ -698,103 +712,139 @@ void QmlMapItem::delayedUpdate()
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>MapTextureNode>>>>>>>>>>>
+//>>>>>>>MapViewTextureNode>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-MapTextureNode::MapTextureNode(QmlMapItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, uint32_t width, uint32_t height)
-    : m_item(item), mapView(mapView), vulkanInfo(vulkanInfo), mapRenderer(std::make_unique<MapRenderer>(vulkanInfo, mapView)), screenTexture(vulkanInfo)
+MapViewTextureNode::MapViewTextureNode(QmlMapItem *item, const std::shared_ptr<MapView> &mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, uint32_t width, uint32_t height)
+    : m_item(item),
+      mapView(mapView),
+      vulkanInfo(vulkanInfo)
 {
     m_window = m_item->window();
 
-    mapRenderer->initResources();
+    renderCoordinator = std::make_unique<RenderCoordinator>(vulkanInfo, mapView, width, height);
 
-    connect(m_window, &QQuickWindow::beforeRendering, this, &MapTextureNode::render);
+    connect(m_window, &QQuickWindow::beforeRendering, this, &MapViewTextureNode::render);
     connect(m_window, &QQuickWindow::screenChanged, this, [this]() {
         if (m_window->effectiveDevicePixelRatio() != devicePixelRatio)
             m_item->update();
     });
+
+    qtSceneGraphTextures.fill(nullptr);
 }
 
-MapTextureNode::~MapTextureNode()
+MapViewTextureNode::~MapViewTextureNode()
 {
-    // VME_LOG_D("~MapTextureNode()");
+    // VME_LOG_D("~MapViewTextureNode()");
     delete texture();
 }
 
-QSGTexture *MapTextureNode::texture() const
+QSGTexture *MapViewTextureNode::texture() const
 {
     return QSGSimpleTextureNode::texture();
 }
 
-void MapTextureNode::freeTexture()
+void MapViewTextureNode::freeTexture()
 {
-    screenTexture.releaseResources();
+    renderCoordinator->destroyResources();
 }
 
-void MapTextureNode::sync()
+void MapViewTextureNode::syncTexture()
 {
+    int currentFrameSlot = m_window->graphicsStateInfo().currentFrameSlot;
+
+    // The native object is wrapped, but not owned, by the resulting QSGTexture.
+    // The caller of the function is responsible for deleting the returned QSGTexture,
+    // but that will not destroy the underlying native object.
+    // https://doc.qt.io/qt-6/qnativeinterface-qsgvulkantexture.html#fromNative
+    QSGTexture *texture = QNativeInterface::QSGVulkanTexture::fromNative(
+        renderCoordinator->frameResources[currentFrameSlot].mapAttachment.image,
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+        m_window,
+        textureSize);
+
+    // Make sure to delete the old texture before replacing it.
+    if (qtSceneGraphTextures[currentFrameSlot])
+    {
+        delete qtSceneGraphTextures[currentFrameSlot];
+    }
+
+    VME_LOG_D("Syncing texture for frame slot " << currentFrameSlot
+                                                << " with size: " << textureSize.width() << "x" << textureSize.height());
+    qtSceneGraphTextures[currentFrameSlot] = texture;
+
+    setTexture(texture);
+}
+
+void MapViewTextureNode::sync()
+{
+    uint32_t frameIndex = m_window->graphicsStateInfo().currentFrameSlot;
+
+    // Ensure that the texture is set to the current frame's texture.
+    auto *frameTexture = qtSceneGraphTextures[frameIndex];
+    if (texture() != qtSceneGraphTextures[frameIndex] && frameTexture)
+    {
+        setTexture(frameTexture);
+        VME_LOG_D("MapViewTextureNode::sync: Texture set for frame index " << frameIndex);
+    }
+
     devicePixelRatio = m_window->effectiveDevicePixelRatio();
     const QSize newSize = m_item->size().toSize() * devicePixelRatio;
-
-    bool needsNewTexture = false;
-
-    if (!texture())
+    auto MIN_RENDERING_SIZE = QSize(100, 100);
+    if (newSize.width() < MIN_RENDERING_SIZE.width() || newSize.height() < MIN_RENDERING_SIZE.height())
     {
-        needsNewTexture = true;
+        // TODO Investigate why we are getting loads of invalid sizes (~20x20 pixels)
+        // VME_LOG_D("MapViewTextureNode::sync: Invalid size, skipping sync.");
+        return;
     }
 
-    if (newSize != textureSize)
-    {
-        needsNewTexture = true;
-        textureSize = newSize;
-    }
+    bool needsNewTexture = !texture() || (textureSize != newSize);
 
     if (needsNewTexture)
     {
-        delete texture();
-        screenTexture.recreate(mapRenderer->getRenderPass(), textureSize.width(), textureSize.height());
 
-        VkImage texture = screenTexture.texture();
-        QSGTexture *wrapper = QNativeInterface::QSGVulkanTexture::fromNative(texture,
-                                                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                                             m_window,
-                                                                             textureSize);
-        setTexture(wrapper);
-
-        if (auto wMapView = mapView.lock())
+        if (newSize != textureSize)
         {
-            wMapView->setViewportSize(newSize.width(), newSize.height());
+            VME_LOG_D("New size: [" << newSize.width() << " x " << newSize.height() << "] (frameIndex: " << frameIndex << ")");
+            renderCoordinator->resize(newSize.width(), newSize.height());
+            if (auto wMapView = mapView.lock())
+            {
+                wMapView->setViewportSize(newSize.width(), newSize.height());
+            }
+            textureSize = newSize;
         }
+
+        syncTexture();
     }
 }
 
-void MapTextureNode::render()
+void MapViewTextureNode::render()
 {
     if (!m_item->isActive())
     {
         return;
     }
 
-    VkFramebuffer frameBuffer = screenTexture.vkFrameBuffer();
-
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
     auto *resource = renderInterface->getResource(m_window, QSGRendererInterface::CommandListResource);
+    if (!resource)
+    {
+        VME_LOG_D("No QSGRendererInterface::CommandListResource yet.");
+        return;
+    }
+
     VkCommandBuffer commandBuffer = *reinterpret_cast<VkCommandBuffer *>(resource);
     Q_ASSERT(commandBuffer);
 
     auto currentFrameSlot = m_window->graphicsStateInfo().currentFrameSlot;
+    // VME_LOG_D("Current frame slot: " << currentFrameSlot);
 
-    mapRenderer->setCurrentFrame(currentFrameSlot);
+    renderCoordinator->recordFrame(commandBuffer, currentFrameSlot);
 
-    auto *frame = mapRenderer->currentFrame();
-    frame->currentFrameIndex = currentFrameSlot;
-    frame->commandBuffer = commandBuffer;
-
-    mapRenderer->render(frameBuffer, util::Size(textureSize.width(), textureSize.height()));
-
-    if (Settings::RENDER_ANIMATIONS && mapRenderer->containsAnimation())
+    if (Settings::RENDER_ANIMATIONS && renderCoordinator->containsAnimation())
     {
+        // TODO Allow control of update frequence for animations
         constexpr int MILLIS_PER_FRAME = 1000 / 60;
         m_item->scheduleDraw(MILLIS_PER_FRAME);
     }
@@ -809,7 +859,7 @@ void MapTextureNode::render()
     imageTransitionBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
     imageTransitionBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     imageTransitionBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageTransitionBarrier.image = screenTexture.texture();
+    imageTransitionBarrier.image = renderCoordinator->frameResources[currentFrameSlot].mapAttachment.image;
     imageTransitionBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     imageTransitionBarrier.subresourceRange.levelCount = imageTransitionBarrier.subresourceRange.layerCount = 1;
 

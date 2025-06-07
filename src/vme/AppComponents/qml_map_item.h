@@ -11,12 +11,14 @@
 #include <QtQuick/QSGTextureProvider>
 
 #include <memory>
+#include <qsgtexture.h>
 #include <string>
 
 #include "core/graphics/vulkan_helpers.h"
-#include "core/graphics/vulkan_screen_texture.h"
 #include "core/map_renderer.h"
 #include "core/map_view.h"
+#include "core/render/light_renderer.h"
+#include "core/render/render_coordinator.h"
 #include "core/time_util.h"
 #include "enum_conversion.h"
 #include "qt_vulkan_info.h"
@@ -105,15 +107,15 @@ enum class ShortcutAction
     Rotate
 };
 
-class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
+class MapViewTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
 {
     Q_OBJECT
 
   public:
-    MapTextureNode(QmlMapItem *item, std::shared_ptr<MapView> mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, uint32_t width, uint32_t height);
-    ~MapTextureNode();
+    MapViewTextureNode(QmlMapItem *item, const std::shared_ptr<MapView> &mapView, std::shared_ptr<VulkanInfo> &vulkanInfo, uint32_t width, uint32_t height);
+    ~MapViewTextureNode();
 
-    QSGTexture *texture() const override;
+    [[nodiscard]] QSGTexture *texture() const override;
     void freeTexture();
 
     void releaseResources();
@@ -124,18 +126,20 @@ class MapTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
     void render();
 
   private:
+    void syncTexture();
     QmlMapItem *m_item = nullptr;
     QQuickWindow *m_window = nullptr;
     QSize textureSize;
     qreal devicePixelRatio;
 
+    std::unique_ptr<RenderCoordinator> renderCoordinator;
     std::shared_ptr<VulkanInfo> vulkanInfo;
     std::weak_ptr<MapView> mapView;
-    std::unique_ptr<MapRenderer> mapRenderer;
 
     std::unique_ptr<QSGTexture> textureWrapper;
 
-    VulkanScreenTexture screenTexture;
+    // QSGTextures wraps the Vulkan textures, so that we can use them in the scene graph.
+    std::array<QSGTexture *, 3> qtSceneGraphTextures;
 };
 
 class QmlMapItemStore
@@ -261,7 +265,7 @@ class QmlMapItem : public QQuickItem
 
     std::shared_ptr<VulkanInfo> vulkanInfo;
 
-    MapTextureNode *textureNode = nullptr;
+    MapViewTextureNode *mapViewTextureNode = nullptr;
 
     // Holds the current scroll amount. (see wheelEvent)
     int scrollAngleBuffer = 0;
