@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.16.0)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Building in Debug mode $ENV{PROTOBUF_ROOT_DEBUG}")
+    set(Protobuf_DIR "$ENV{PROTOBUF_ROOT_DEBUG}/lib/cmake/protobuf")
+else()
+    message(STATUS "Building in Release mode")
+    set(Protobuf_DIR "$ENV{PROTOBUF_ROOT_RELEASE}/lib/cmake/protobuf")
+endif()
+
 find_package(Vulkan REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 find_package(LibLZMA REQUIRED)
