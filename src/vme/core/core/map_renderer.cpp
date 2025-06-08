@@ -1313,27 +1313,47 @@ void MapRenderer::createRenderPass()
     colorReferences[LIGHT_MASK_ATTACHMENT_INDEX] = {.attachment = LIGHT_MASK_ATTACHMENT_INDEX};
     colorReferences[INDOOR_SHADOW_ATTACHMENT_INDEX] = {.attachment = INDOOR_SHADOW_ATTACHMENT_INDEX};
 
-    VkSubpassDescription subpass{};
+    VkSubpassDescription subpass = {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &colorAttachmentRef;
+    subpass.pColorAttachments = colorReferences.data();
+    subpass.colorAttachmentCount = static_cast<uint32_t>(colorReferences.size());
+    subpass.pDepthStencilAttachment = VK_NULL_HANDLE; // Use subpass dependencies for attachment layout transitions
+    std::array<VkSubpassDependency, 2> dependencies;
 
-    VkSubpassDependency dependency{};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.srcAccessMask = 0;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    // External to subpass dependency - prepares attachments for writing
+    auto &externalToSubpass = dependencies[0];
+    // Who depends on whom
+    externalToSubpass.srcSubpass = VK_SUBPASS_EXTERNAL; // Source is from before this render pass
+    externalToSubpass.dstSubpass = 0;                   // Destination is the first subpass of this render pass
+    // When does synchronization happen
+    externalToSubpass.srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;          // Which pipeline stages in the source need to be completed before the destination can proceed
+    externalToSubpass.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // Which pipeline stages in the destination subpass should wait on the source.
+    // What memory operations are synchronized
+    externalToSubpass.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;                                                  // Which memory accesses in the source are involved
+    externalToSubpass.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // Which memory accesses in the destination are affected
+    externalToSubpass.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;                                              // Makes the dependency framebuffer-local, i.e. only for overlapping pixels (good for performance)
 
-    VkRenderPassCreateInfo renderPassInfo{};
+    // Subpass to external dependency - makes attachments available for reading
+    auto &subpassToExternal = dependencies[1];
+    // Who depends on whom
+    subpassToExternal.srcSubpass = 0;
+    subpassToExternal.dstSubpass = VK_SUBPASS_EXTERNAL;
+    // When does synchronization happen
+    subpassToExternal.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    subpassToExternal.dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    // What memory operations are synchronized
+    subpassToExternal.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    subpassToExternal.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    subpassToExternal.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+    VkRenderPassCreateInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = 1;
-    renderPassInfo.pAttachments = &colorAttachment;
+    renderPassInfo.pAttachments = attachmentDescriptions.data();
+    renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentDescriptions.size());
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
-    renderPassInfo.dependencyCount = 1;
-    renderPassInfo.pDependencies = &dependency;
+    renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+    renderPassInfo.pDependencies = dependencies.data();
 
     if (vulkanInfo->vkCreateRenderPass(&renderPassInfo, nullptr, &this->renderPass) != VK_SUCCESS)
     {
@@ -1343,25 +1363,9 @@ void MapRenderer::createRenderPass()
 
 void MapRenderer::createGraphicsPipeline()
 {
-    std::vector<uint8_t> vertShaderCode = File::read("shaders/vert.spv");
-    std::vector<uint8_t> fragShaderCode = File::read("shaders/frag.spv");
-
-    VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
-    VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
-
-    VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
-    vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = vertShaderModule;
-    vertShaderStageInfo.pName = "main";
-
-    VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
-    fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderStageInfo.module = fragShaderModule;
-    fragShaderStageInfo.pName = "main";
-
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+    std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages;
+    shaderStages[0] = vk::tools::loadShader(*vulkanInfo, "shaders/vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
+    shaderStages[1] = vk::tools::loadShader(*vulkanInfo, "shaders/frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -1409,12 +1413,12 @@ void MapRenderer::createGraphicsPipeline()
     colorBlending.attachmentCount = static_cast<uint32_t>(colorBlendAttachmentStates.size());
     colorBlending.pAttachments = colorBlendAttachmentStates.data();
 
-    VkDynamicState dynEnable[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
-    VkPipelineDynamicStateCreateInfo dynamicInfo;
-    memset(&dynamicInfo, 0, sizeof(dynamicInfo));
-    dynamicInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dynamicInfo.dynamicStateCount = sizeof(dynEnable) / sizeof(VkDynamicState);
-    dynamicInfo.pDynamicStates = dynEnable;
+    std::array<VkDynamicState, 2> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+    VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
+    dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
+    dynamicStateCreateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+    dynamicStateCreateInfo.flags = 0;
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -1436,15 +1440,15 @@ void MapRenderer::createGraphicsPipeline()
 
     VkGraphicsPipelineCreateInfo pipelineInfo = {};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.stageCount = 2;
-    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.stageCount = shaderStages.size();
+    pipelineInfo.pStages = shaderStages.data();
     pipelineInfo.pVertexInputState = &vertexInputInfo;
     pipelineInfo.pInputAssemblyState = &inputAssembly;
     pipelineInfo.pViewportState = &viewportState;
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pColorBlendState = &colorBlending;
-    pipelineInfo.pDynamicState = &dynamicInfo;
+    pipelineInfo.pDynamicState = &dynamicStateCreateInfo;
     pipelineInfo.layout = pipelineLayout;
     pipelineInfo.renderPass = renderPass;
     pipelineInfo.subpass = 0;
@@ -1456,8 +1460,8 @@ void MapRenderer::createGraphicsPipeline()
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
-    vulkanInfo->vkDestroyShaderModule(fragShaderModule, nullptr);
-    vulkanInfo->vkDestroyShaderModule(vertShaderModule, nullptr);
+    vulkanInfo->vkDestroyShaderModule(shaderStages[0].module, nullptr);
+    vulkanInfo->vkDestroyShaderModule(shaderStages[1].module, nullptr);
 }
 
 void MapRenderer::createDescriptorSetLayouts()
