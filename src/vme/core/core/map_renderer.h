@@ -342,8 +342,6 @@ class MapRenderer
     void createUniformBuffers();
     void createDescriptorSetLayouts();
     void createDescriptorSets();
-    void createIndexBuffer();
-    void createVertexBuffer();
 
     static auto createColorBlendAttachmentStates() -> std::array<VkPipelineColorBlendAttachmentState, RENDER_ATTACHMENT_COUNT>;
 

@@ -1,5 +1,6 @@
 #include "map_renderer.h"
 
+#include <glm/ext/vector_int2.hpp>
 #include <glm/vec2.hpp>
 #include <stdexcept>
 #include <variant>
@@ -14,6 +15,7 @@
 #include "logger.h"
 #include "map_view.h"
 #include "position.h"
+#include "render/quad_mesh.h"
 #include "settings.h"
 #include "util.h"
 #include "vendor/rollbear-visit/visit.hpp"
@@ -32,53 +34,16 @@ struct PushConstantData
     glm::vec4 size;
 };
 
-struct NewVertex
-{
-    glm::ivec2 position;
-
-    static VkVertexInputBindingDescription getBindingDescription()
-    {
-        VkVertexInputBindingDescription bindingDescription{};
-
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(NewVertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        return bindingDescription;
-    }
-
-    static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions()
-    {
-        std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
-
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[0].offset = 0;
-
-        // attributeDescriptions[4].binding = 0;
-        // attributeDescriptions[4].location = 4;
-        // attributeDescriptions[4].format = VK_FORMAT_R8_UINT;
-        // attributeDescriptions[4].offset = offsetof(Vertex, useUbo);
-
-        return attributeDescriptions;
-    }
-};
-
 constexpr VkFormat ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
 constexpr VkClearColorValue ClearColor = {{0.0f, 0.0f, 0.0f, 1.0f}};
-
-// A rectangle is drawn using two triangles, each with 3 vertex indices.
-constexpr uint32_t IndexBufferSize = 6 * sizeof(uint16_t);
-constexpr uint32_t VertexBufferSize = 4 * sizeof(NewVertex);
 
 constexpr int MaxDrawOffsetPixels = 24;
 
 glm::vec4 colors::opacity(float value)
 {
     DEBUG_ASSERT(0 <= value && value <= 1, "value must be in range [0.0f, 1.0f].");
-    return glm::vec4(1.0f, 1.0f, 1.0f, value);
+    return {1.0F, 1.0F, 1.0F, value};
 }
 
 MapRenderer::MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapView> &mapView)
@@ -86,7 +51,7 @@ MapRenderer::MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_pt
       vulkanInfo(vulkanInfo),
       vulkanTexturesForAppearances(Appearances::textureAtlasCount()),
       renderTargetSize(0, 0),
-      quadMesh(vulkanInfo->device(), vulkanInfo->physicalDevice(), vulkanInfo->graphicsCommandPool(), vulkanInfo->graphicsQueue())
+      quadMesh(*vulkanInfo)
 {
     activeTextureAtlasIds.reserve(Appearances::textureAtlasCount());
 
@@ -117,8 +82,6 @@ void MapRenderer::createResources()
     createGraphicsPipeline();
     createUniformBuffers();
     createDescriptorSets();
-    createVertexBuffer();
-    createIndexBuffer();
 
     VME_LOG_D("End MapRenderer::createResources");
 }
@@ -141,9 +104,6 @@ void MapRenderer::destroyResources()
 
     vulkanInfo->vkDestroyRenderPass(renderPass, nullptr);
     renderPass = VK_NULL_HANDLE;
-
-    vertexBuffer.releaseResources();
-    indexBuffer.releaseResources();
 
     for (const auto id : activeTextureAtlasIds)
     {
@@ -251,9 +211,7 @@ void MapRenderer::setupFrame(VkCommandBuffer cb)
     vulkanInfo->vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
                                         &_currentFrame->uboDescriptorSet, 0, nullptr);
 
-    // quadMesh.bind(cb);
-    vulkanInfo->vkCmdBindVertexBuffers(cb, 0, 1, &vertexBuffer.buffer, offsets);
-    vulkanInfo->vkCmdBindIndexBuffer(cb, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+    quadMesh.bind(cb);
 }
 
 MouseAction_t MapRenderer::mouseAction() const
@@ -1370,8 +1328,8 @@ void MapRenderer::createGraphicsPipeline()
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    auto bindingDescription = NewVertex::getBindingDescription();
-    auto attributeDescriptions = NewVertex::getAttributeDescriptions();
+    auto bindingDescription = QuadMesh::getBindingDescription();
+    auto attributeDescriptions = QuadMesh::getAttributeDescriptions();
 
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -1554,71 +1512,6 @@ void MapRenderer::createDescriptorSets()
 
         vulkanInfo->vkUpdateDescriptorSets(1, &descriptorWrites, 0, nullptr);
     }
-}
-
-void MapRenderer::createVertexBuffer()
-{
-    std::array<glm::ivec2, 4> vertices{{{0, 0}, {0, 1}, {1, 1}, {1, 0}}};
-
-    Buffer::CreateInfo stagingInfo;
-    stagingInfo.vulkanInfo = vulkanInfo.get();
-    stagingInfo.size = VertexBufferSize;
-    stagingInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    stagingInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-    BoundBuffer stagingBuffer = Buffer::create(stagingInfo);
-
-    void *data;
-    vulkanInfo->vkMapMemory(stagingBuffer.deviceMemory, 0, VertexBufferSize, 0, &data);
-    memcpy(data, &vertices, sizeof(vertices));
-
-    Buffer::CreateInfo bufferInfo;
-    bufferInfo.vulkanInfo = vulkanInfo.get();
-    bufferInfo.size = VertexBufferSize;
-    bufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    bufferInfo.memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-    vertexBuffer = Buffer::create(bufferInfo);
-
-    VkCommandBuffer commandBuffer = vulkanInfo->beginSingleTimeCommands();
-    VkBufferCopy copyRegion = {};
-    copyRegion.size = VertexBufferSize;
-    vulkanInfo->vkCmdCopyBuffer(commandBuffer, stagingBuffer.buffer, vertexBuffer.buffer, 1, &copyRegion);
-    vulkanInfo->endSingleTimeCommands(commandBuffer);
-
-    vulkanInfo->vkUnmapMemory(stagingBuffer.deviceMemory);
-}
-
-void MapRenderer::createIndexBuffer()
-{
-    std::array<uint16_t, 6> indices{0, 1, 3, 3, 1, 2};
-    Buffer::CreateInfo stagingInfo;
-    stagingInfo.vulkanInfo = vulkanInfo.get();
-    stagingInfo.size = IndexBufferSize;
-    stagingInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    stagingInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-    BoundBuffer indexStagingBuffer = Buffer::create(stagingInfo);
-
-    void *data;
-    vulkanInfo->vkMapMemory(indexStagingBuffer.deviceMemory, 0, IndexBufferSize, 0, &data);
-    memcpy(data, &indices, sizeof(indices));
-
-    Buffer::CreateInfo bufferInfo;
-    bufferInfo.vulkanInfo = vulkanInfo.get();
-    bufferInfo.size = IndexBufferSize;
-    bufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-    bufferInfo.memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-    indexBuffer = Buffer::create(bufferInfo);
-
-    VkCommandBuffer commandBuffer = vulkanInfo->beginSingleTimeCommands();
-    VkBufferCopy copyRegion = {};
-    copyRegion.size = IndexBufferSize;
-    vulkanInfo->vkCmdCopyBuffer(commandBuffer, indexStagingBuffer.buffer, indexBuffer.buffer, 1, &copyRegion);
-    vulkanInfo->endSingleTimeCommands(commandBuffer);
-
-    vulkanInfo->vkUnmapMemory(indexStagingBuffer.deviceMemory);
 }
 
 VkShaderModule MapRenderer::createShaderModule(const std::vector<uint8_t> &code)

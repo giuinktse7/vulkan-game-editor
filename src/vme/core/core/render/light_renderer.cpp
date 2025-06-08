@@ -8,7 +8,7 @@
 LightRenderer::LightRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapView> mapView)
     : vulkanInfo(vulkanInfo),
       mapView(std::move(mapView)),
-      quadMesh(vulkanInfo->device(), vulkanInfo->physicalDevice(), vulkanInfo->graphicsCommandPool(), vulkanInfo->graphicsQueue()),
+      quadMesh(*vulkanInfo),
       lightDescriptorSet(vulkanInfo.get())
 {
 }
