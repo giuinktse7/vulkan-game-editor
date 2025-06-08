@@ -3,6 +3,16 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
+constexpr std::array<VkClearValue, 3> MAP_ATTACHMENT_CLEAR_COLOR_VALUES = {
+    VkClearValue{.color = {{0.0F, 0.0F, 0.0F, 0.0F}}}, // Map
+    VkClearValue{.color = {{0.0F, 0.0F, 0.0F, 0.0F}}}, // Light sources
+    VkClearValue{.color = {{1.0F, 1.0F, 1.0F, 1.0F}}}  // Indoor shadow
+};
+
+std::array<VkClearValue, 1> LIGHT_MASK_ATTACHMENT_CLEAR_COLOR_VALUES = {
+    VkClearValue{.color = {{0.0F, 0.0F, 0.0F, 0.0F}}} // Light mask
+};
+
 RenderCoordinator::RenderCoordinator(std::shared_ptr<VulkanInfo> vulkanInfo,
                                      std::shared_ptr<MapView> mapView,
                                      uint32_t width,
@@ -47,7 +57,7 @@ void RenderCoordinator::recordFrame(VkCommandBuffer cb, uint32_t frameIndex)
     // vkCmdBeginRenderPass(cb, &frameResource.lightRenderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
     // lightRenderer.render(cb, frameIndex);
     // vkCmdEndRenderPass(cb);    // Pass 2: Map
-    // TESTING: Only clear color, no draw calls
+
     vkCmdBeginRenderPass(cb, &frameResource.mapRenderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
     mapRenderer.render(cb, frameIndex);
     vkCmdEndRenderPass(cb);
@@ -69,14 +79,8 @@ void RenderCoordinator::createFrameBufferResources()
         createAttachments(frameResource);
         createMapRendererFrameBuffer(frameResource);
         createLightRendererFrameBuffer(frameResource);
+
         frameResource.mapRenderPassBeginInfo = mapRenderPassInfo(frameResource.mapFrameBuffer.framebuffer);
-
-        // Set up persistent clear values and update pointers
-        constexpr VkClearColorValue MapClearColor = {{0.0F, 0.0F, 0.0F, 1.0F}}; // Black
-
-        frameResource.mapClearValue.color = MapClearColor;
-        frameResource.mapRenderPassBeginInfo.pClearValues = &frameResource.mapClearValue;
-
         frameResource.lightRenderPassBeginInfo = lightRenderPassInfo(frameResource.lightFrameBuffer.framebuffer);
     }
 
@@ -178,8 +182,6 @@ void RenderCoordinator::destroyFrameBufferResources()
     }
 
     VME_LOG_D("destroyFrameBufferResources");
-    // Wait for device to be idle before resizing resources
-    // vkDeviceWaitIdle(device);
 
     for (auto &frameResource : frameResources)
     {
@@ -231,9 +233,8 @@ VkRenderPassBeginInfo RenderCoordinator::mapRenderPassInfo(VkFramebuffer frameBu
     renderPassInfo.renderArea.extent.width = width;
     renderPassInfo.renderArea.extent.height = height;
 
-    renderPassInfo.clearValueCount = 1;
-    // Note: pClearValues will be set to point to persistent storage in createFrameBufferResources
-    renderPassInfo.pClearValues = nullptr; // Will be updated to point to frameResource.mapClearValue
+    renderPassInfo.clearValueCount = MAP_ATTACHMENT_CLEAR_COLOR_VALUES.size();
+    renderPassInfo.pClearValues = MAP_ATTACHMENT_CLEAR_COLOR_VALUES.data();
 
     return renderPassInfo;
 }
@@ -246,11 +247,8 @@ VkRenderPassBeginInfo RenderCoordinator::lightRenderPassInfo(VkFramebuffer frame
     // TODO Don't hard-code
     // Ambience: Lower is darker
     // float ambienceFactor = 0.196f;
-    float ambienceFactor = 0.1568F;
-    const glm::vec4 AMBIENCE = glm::vec4(glm::vec3(ambienceFactor), 0.0f);
-
-    std::array<VkClearValue, 1> clearValues;
-    clearValues[0].color = {{AMBIENCE.r, AMBIENCE.g, AMBIENCE.b, AMBIENCE.a}};
+    float a = 0.1568F;
+    LIGHT_MASK_ATTACHMENT_CLEAR_COLOR_VALUES[0].color = {{a, a, a, 0.0F}};
 
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -258,8 +256,8 @@ VkRenderPassBeginInfo RenderCoordinator::lightRenderPassInfo(VkFramebuffer frame
     renderPassInfo.framebuffer = frameBuffer;
     renderPassInfo.renderArea.extent.width = width;
     renderPassInfo.renderArea.extent.height = height;
-    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-    renderPassInfo.pClearValues = clearValues.data();
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(LIGHT_MASK_ATTACHMENT_CLEAR_COLOR_VALUES.size());
+    renderPassInfo.pClearValues = LIGHT_MASK_ATTACHMENT_CLEAR_COLOR_VALUES.data();
 
     return renderPassInfo;
 }

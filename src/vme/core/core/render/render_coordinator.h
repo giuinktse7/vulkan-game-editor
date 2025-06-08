@@ -21,8 +21,6 @@ struct FrameResources
     VkRenderPassBeginInfo mapRenderPassBeginInfo;
     VkRenderPassBeginInfo lightRenderPassBeginInfo;
     
-    VkClearValue mapClearValue;
-    VkClearValue lightClearValue;
 
     // TODO Use frame-specific descriptor pools
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
