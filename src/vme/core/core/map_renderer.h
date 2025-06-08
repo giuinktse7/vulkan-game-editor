@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <vulkan/vulkan.h>
 
 #include <glm/mat4x4.hpp>
@@ -263,6 +264,15 @@ class MapRenderer
     MapRenderer(std::shared_ptr<VulkanInfo> &vulkanInfo, std::shared_ptr<MapView> &mapView);
     ~MapRenderer();
 
+    static constexpr int MAP_ATTACHMENT_INDEX = 0;
+    static constexpr int LIGHT_MASK_ATTACHMENT_INDEX = 1;
+    static constexpr int INDOOR_SHADOW_ATTACHMENT_INDEX = 2;
+
+    // 0: Map attachment
+    // 1: Light mask attachment
+    // 2: Indoor shadow attachment
+    static constexpr int RENDER_ATTACHMENT_COUNT = 3;
+
     static const int TILE_SIZE = 32;
     static const uint32_t MAX_VERTICES = 64 * 1024;
 
@@ -334,6 +344,8 @@ class MapRenderer
     void createDescriptorSets();
     void createIndexBuffer();
     void createVertexBuffer();
+
+    static auto createColorBlendAttachmentStates() -> std::array<VkPipelineColorBlendAttachmentState, RENDER_ATTACHMENT_COUNT>;
 
     bool insideMap(const Position &position);
 
@@ -432,7 +444,6 @@ class MapRenderer
 
     // All sprites are drawn using this index buffer
 
-    
     BoundBuffer indexBuffer;
     BoundBuffer vertexBuffer;
 

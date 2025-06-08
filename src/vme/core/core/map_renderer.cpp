@@ -9,8 +9,8 @@
 #include "brushes/raw_brush.h"
 #include "brushes/wall_brush.h"
 #include "debug.h"
-#include "file.h"
 #include "graphics/appearances.h"
+#include "graphics/vulkan_helpers.h"
 #include "logger.h"
 #include "map_view.h"
 #include "position.h"
@@ -1297,23 +1297,21 @@ void MapRenderer::updateUniformBuffer(glm::mat4 projection)
 
 void MapRenderer::createRenderPass()
 {
-    VkAttachmentDescription colorAttachment{};
-    // colorAttachment.format = swapchain->imageFormat();
-    colorAttachment.format = VK_FORMAT_R8G8B8A8_UNORM;
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    std::array<VkAttachmentDescription, RENDER_ATTACHMENT_COUNT> attachmentDescriptions = {};
+    attachmentDescriptions.fill({
+        .format = VK_FORMAT_R8G8B8A8_UNORM,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+    });
 
-    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-
-    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-
-    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    VkAttachmentReference colorAttachmentRef{};
-    colorAttachmentRef.attachment = 0;
-    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    std::array<VkAttachmentReference, RENDER_ATTACHMENT_COUNT> colorReferences{};
+    colorReferences.fill({.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+    colorReferences[MAP_ATTACHMENT_INDEX] = {.attachment = MAP_ATTACHMENT_INDEX};
+    colorReferences[LIGHT_MASK_ATTACHMENT_INDEX] = {.attachment = LIGHT_MASK_ATTACHMENT_INDEX};
+    colorReferences[INDOOR_SHADOW_ATTACHMENT_INDEX] = {.attachment = INDOOR_SHADOW_ATTACHMENT_INDEX};
 
     VkSubpassDescription subpass{};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -1404,25 +1402,12 @@ void MapRenderer::createGraphicsPipeline()
     multisampling.sampleShadingEnable = VK_FALSE;
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-    VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-    colorBlendAttachment.colorWriteMask =
-        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
-        VK_COLOR_COMPONENT_A_BIT;
-
-    colorBlendAttachment.blendEnable = VK_TRUE;
-    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-    // colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
-
+    auto colorBlendAttachmentStates = createColorBlendAttachmentStates();
     VkPipelineColorBlendStateCreateInfo colorBlending = {};
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     colorBlending.logicOpEnable = VK_FALSE;
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
+    colorBlending.attachmentCount = static_cast<uint32_t>(colorBlendAttachmentStates.size());
+    colorBlending.pAttachments = colorBlendAttachmentStates.data();
 
     VkDynamicState dynEnable[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
     VkPipelineDynamicStateCreateInfo dynamicInfo;
@@ -1671,6 +1656,31 @@ VkCommandBuffer MapRenderer::beginSingleTimeCommands(VulkanInfo *info)
 void MapRenderer::setRenderTargetSize(int width, int height)
 {
     renderTargetSize = util::Size{width, height};
+}
+
+auto MapRenderer::createColorBlendAttachmentStates() -> std::array<VkPipelineColorBlendAttachmentState, RENDER_ATTACHMENT_COUNT>
+{
+
+    auto mask =
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+
+    VkPipelineColorBlendAttachmentState base{};
+    base.colorWriteMask = mask;
+    base.blendEnable = VK_TRUE;
+    base.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    base.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    base.colorBlendOp = VK_BLEND_OP_ADD;
+    base.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    base.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    base.alphaBlendOp = VK_BLEND_OP_ADD;
+
+    std::array<VkPipelineColorBlendAttachmentState, 3> blendAttachmentStates{};
+
+    blendAttachmentStates[MAP_ATTACHMENT_INDEX] = base;
+    blendAttachmentStates[LIGHT_MASK_ATTACHMENT_INDEX] = base;
+    blendAttachmentStates[INDOOR_SHADOW_ATTACHMENT_INDEX] = base;
+
+    return blendAttachmentStates;
 }
 
 uint32_t MapRenderer::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)

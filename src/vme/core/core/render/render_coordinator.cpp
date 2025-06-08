@@ -123,24 +123,22 @@ void RenderCoordinator::resize(uint32_t newWidth, uint32_t newHeight)
 
 void RenderCoordinator::createMapRendererFrameBuffer(FrameResources &frameResource)
 {
-    frameResource.mapFrameBuffer.attachmentViews.clear();
+    auto &attachmentViews = frameResource.mapFrameBuffer.attachmentViews;
+    attachmentViews.clear();
+    attachmentViews.resize(MapRenderer::RENDER_ATTACHMENT_COUNT);
 
-    // Index 0: Map attachment
-    frameResource.mapFrameBuffer.attachmentViews.push_back(frameResource.mapAttachment.view);
+    attachmentViews.at(MapRenderer::MAP_ATTACHMENT_INDEX) = frameResource.mapAttachment.view;
+    attachmentViews.at(MapRenderer::LIGHT_MASK_ATTACHMENT_INDEX) = frameResource.lightMaskAttachment.view;
+    attachmentViews.at(MapRenderer::INDOOR_SHADOW_ATTACHMENT_INDEX) = frameResource.indoorShadowAttachment.view;
 
-    // // Index 1: Light mask attachment
-    // frameResource.mapFrameBuffer.attachmentViews.push_back(frameResource.lightMaskAttachment.view);
-
-    // // Index 2: Indoor shadow attachment
-    // frameResource.mapFrameBuffer.attachmentViews.push_back(frameResource.indoorShadowAttachment.view);
-
-    if (mapRenderer.getRenderPass() == VK_NULL_HANDLE)
+    auto *renderPass = mapRenderer.getRenderPass();
+    if (renderPass == VK_NULL_HANDLE)
     {
         throw std::runtime_error("Map renderer render pass is not initialized.");
     }
+
     vk::tools::createFramebuffer(
-        *vulkanInfo,
-        mapRenderer.getRenderPass(), width, height, frameResource.mapFrameBuffer.attachmentViews, frameResource.mapFrameBuffer.framebuffer);
+        *vulkanInfo, renderPass, width, height, attachmentViews, frameResource.mapFrameBuffer.framebuffer);
 }
 
 void RenderCoordinator::createLightRendererFrameBuffer(FrameResources &frameResource)
