@@ -52,7 +52,7 @@ void Tileset::addRawBrush(uint32_t serverId)
 {
     if (!Items::items.validItemType(serverId))
     {
-        VME_LOG_ERROR(serverId << " is not a valid server ID.");
+        // VME_LOG_ERROR(serverId << " is not a valid server ID.");
         return;
     }
 

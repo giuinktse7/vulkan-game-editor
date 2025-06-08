@@ -1,6 +1,5 @@
 #include "vulkan_helpers.h"
-#include <fstream>
-#include <iostream>
+#include "../file.h"
 #include <vulkan/vulkan_core.h>
 
 void FrameBufferAttachment::destroy(VulkanInfo &vulkanInfo)
@@ -40,46 +39,6 @@ namespace vk::tools
         fbufCreateInfo.layers = 1;
 
         VK_CHECK_RESULT(vulkanInfo.vkCreateFramebuffer(&fbufCreateInfo, nullptr, &frameBuffer));
-    }
-
-    VkPipelineShaderStageCreateInfo loadShader(VulkanInfo &vulkanInfo, const std::string &fileName, VkShaderStageFlagBits stage)
-    {
-        std::ifstream is(fileName, std::ios::binary | std::ios::in | std::ios::ate);
-
-        if (is.is_open())
-        {
-            size_t size = is.tellg();
-            is.seekg(0, std::ios::beg);
-            char *shaderCode = new char[size];
-            is.read(shaderCode, size);
-            is.close();
-
-            assert(size > 0);
-
-            VkPipelineShaderStageCreateInfo shaderStage = {};
-            shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            shaderStage.stage = stage;
-
-            VkShaderModule shaderModule{};
-            VkShaderModuleCreateInfo moduleCreateInfo{};
-            moduleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-            moduleCreateInfo.codeSize = size;
-            moduleCreateInfo.pCode = (uint32_t *)shaderCode;
-
-            VK_CHECK_RESULT(vulkanInfo.vkCreateShaderModule(&moduleCreateInfo, nullptr, &shaderModule));
-
-            shaderStage.module = shaderModule;
-
-            delete[] shaderCode;
-
-            shaderStage.pName = "main";
-            assert(shaderStage.module != VK_NULL_HANDLE);
-            return shaderStage;
-        }
-
-        std::cerr << "Error: Could not open shader file \"" << fileName << "\""
-                  << "\n";
-        exit(1);
     }
 
     VkWriteDescriptorSet writeDescriptorSet(
@@ -188,6 +147,28 @@ namespace vk::tools
         }
 
         throw std::runtime_error("Failed to find suitable memory type!");
+    }
+
+    VkPipelineShaderStageCreateInfo loadShader(VulkanInfo &vulkanInfo, const std::string &fileName, VkShaderStageFlagBits stage)
+    {
+        std::vector<uint8_t> code = File::read(fileName);
+
+        VkShaderModule shaderModule{};
+        VkShaderModuleCreateInfo moduleCreateInfo{};
+        moduleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        moduleCreateInfo.codeSize = code.size();
+        moduleCreateInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
+
+        VK_CHECK_RESULT(vulkanInfo.vkCreateShaderModule(&moduleCreateInfo, nullptr, &shaderModule));
+
+        VkPipelineShaderStageCreateInfo shaderStage = {};
+        shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        shaderStage.stage = stage;
+        shaderStage.module = shaderModule;
+        shaderStage.pName = "main";
+
+        assert(shaderStage.module != VK_NULL_HANDLE);
+        return shaderStage;
     }
 
 } // namespace vk::tools
