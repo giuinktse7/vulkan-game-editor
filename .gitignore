@@ -509,3 +509,4 @@ MigrationBackup/
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,qt,qtcreator,visualstudiocode,c++,cmake
 x64 Native Tools Command Prompt for VS 2022.lnk
 **.lnk
+cmake-out

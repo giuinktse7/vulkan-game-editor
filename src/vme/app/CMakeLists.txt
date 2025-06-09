@@ -42,3 +42,23 @@ set_target_properties(app PROPERTIES
     
     MACOSX_BUNDLE ON
 )
+
+# Copy protobuf DLL files to the app output directory
+# This became necessary when we switched to a custom-compiled version of protobuf. Can maybe remove if we switch
+# back to the vcpkg version.
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(PROTOBUF_DLL_PATH "$ENV{PROTOBUF_ROOT_DEBUG}/bin")
+    set(PROTOBUF_DLL_NAME "libprotobufd.dll")
+else()
+    set(PROTOBUF_DLL_PATH "$ENV{PROTOBUF_ROOT_RELEASE}/bin")
+    set(PROTOBUF_DLL_NAME "libprotobuf.dll")
+endif()
+
+add_custom_command(TARGET app POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${PROTOBUF_DLL_PATH}/${PROTOBUF_DLL_NAME}"
+        "${PROTOBUF_DLL_PATH}/libutf8_validity.dll"
+        $<TARGET_FILE_DIR:app>
+    COMMENT "Copying protobuf DLLs to output directory"
+    VERBATIM
+)
