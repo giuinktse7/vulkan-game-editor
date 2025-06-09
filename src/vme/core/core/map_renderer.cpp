@@ -1322,8 +1322,8 @@ void MapRenderer::createRenderPass()
 void MapRenderer::createGraphicsPipeline()
 {
     std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages;
-    shaderStages[0] = vk::tools::loadShader(*vulkanInfo, "shaders/vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-    shaderStages[1] = vk::tools::loadShader(*vulkanInfo, "shaders/frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+    shaderStages[0] = vk::tools::loadShader(*vulkanInfo, "shaders/shader-vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
+    shaderStages[1] = vk::tools::loadShader(*vulkanInfo, "shaders/shader-frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

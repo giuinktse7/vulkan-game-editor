@@ -253,9 +253,9 @@ void LightRenderer::createGraphicsPipeline()
 
     std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages;
 
-    shaderStages[0] = vk::tools::loadShader(*vulkanInfo, "./shaders/light/spv/light-vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
+    shaderStages[0] = vk::tools::loadShader(*vulkanInfo, "./shaders/light/light-vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
     shaderStages[1] =
-        vk::tools::loadShader(*vulkanInfo, "./shaders/light/spv/light-frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+        vk::tools::loadShader(*vulkanInfo, "./shaders/light/light-frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
     // Store shader modules for cleanup
     shaderModules.push_back(shaderStages[0].module);
