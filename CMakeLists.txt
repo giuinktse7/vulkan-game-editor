@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
+
+project(vme VERSION 1.0.0 LANGUAGES C CXX)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Required to enable testing for link-time optimization.
@@ -41,6 +44,13 @@ set(GLSL_FLAGS --target-env vulkan1.3)
 compile_shaders("${SHADERS}" OUTPUT_DIR "${COMPILE_SHADERS_OUTPUT_DIR}")
 add_custom_target(compile_shaders ALL DEPENDS ${COMPILED_SHADERS})
 
+# Copy data directory to build directory
+add_custom_target(copy_data ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/data
+        ${CMAKE_CURRENT_BINARY_DIR}/src/vme/app/data
+    COMMENT "Copying data directory to build location"
+)
 
 # If no build type was specified, set it to Release.
 if(NOT CMAKE_BUILD_TYPE)
@@ -60,7 +70,6 @@ endif()
 # Enable Vulkan debugging layer
 set(QSG_RHI_DEBUG_LAYER 1)
 
-project(vme VERSION 1.0.0 LANGUAGES C CXX)
 
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
