@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Required to enable testing for link-time optimization.
 # https://cmake.org/cmake/help/v3.11/module/CheckIPOSupported.html
@@ -15,6 +16,30 @@ set(CMAKE_PREFIX_PATH "C:/Qt/6.9.0/msvc2022_64/lib/cmake")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_definitions(${Qt6Core_DEFINITIONS})
+
+# Shaders
+include(CompileShaders)
+
+set(COMPILE_SHADERS_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/src/vme/app")
+message(STATUS "Shader output directory: ${COMPILE_SHADERS_OUTPUT_DIR}")
+
+# reset the global COMPILED_SHADERS var
+set(COMPILED_SHADERS)
+
+
+set(SHADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shader.vert
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shader.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/light/light.vert
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/light/light.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/sprite-atlas.vert
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/sprite-atlas.frag
+)
+
+set(GLSL_FLAGS --target-env vulkan1.3)
+
+compile_shaders("${SHADERS}" OUTPUT_DIR "${COMPILE_SHADERS_OUTPUT_DIR}")
+add_custom_target(compile_shaders ALL DEPENDS ${COMPILED_SHADERS})
 
 
 # If no build type was specified, set it to Release.
